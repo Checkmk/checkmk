@@ -27,6 +27,7 @@ py_library(
         "//cmk/plugins/plesk/agents",
         "//cmk/plugins/postgres/agents",
         "//cmk/plugins/sap/agents",
+        "//cmk/plugins/unitrends/agents",
     ],
     imports = ["../.."],
     visibility = [

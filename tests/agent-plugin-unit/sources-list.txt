@@ -20,6 +20,7 @@ cmk/plugins/plesk/agents/plesk_domains.py
 cmk/plugins/mtr/agents/mtr.py
 cmk/plugins/postgres/agents/mk_postgres.py
 cmk/plugins/sap/agents/mk_sap.py
+cmk/plugins/unitrends/agents/unitrends_replication.py
 tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
@@ -55,3 +56,4 @@ tests/unit/cmk/plugins/plesk/agents/test_plesk_domains.py
 tests/unit/cmk/plugins/mtr/agents/test_mtr.py
 tests/unit/cmk/plugins/postgres/agents/test_mk_postgres.py
 tests/unit/cmk/plugins/sap/agents/test_mk_sap.py
+tests/unit/cmk/plugins/unitrends/agents/test_unitrends_replication.py

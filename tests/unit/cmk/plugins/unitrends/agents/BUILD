@@ -1,0 +1,16 @@
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+
+py_cmk_test(
+    name = "agents",
+    # https://bazel.build/reference/be/common-definitions#test.size
+    size = "small",
+    srcs = [
+        "test_unitrends_replication.py",
+    ],
+    tags = ["legacy-python"],
+    use_project_pytest_config = True,
+    visibility = ["//visibility:private"],
+    deps = [
+        "//cmk/plugins/unitrends/agents",
+    ],
+)

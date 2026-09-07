@@ -76,6 +76,16 @@ class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
 ) -> None:
+
+    _SKIPPED_DUMPS = {
+        "agent-2.2.0p14-windows-veeam-backup": (
+            "SUP-30173; the canon in qa-test-data still expects UNKNOWN for a Veeam job "
+            "awaiting its first run, werk 22291 reports it as OK."
+        ),
+    }
+    if reason := _SKIPPED_DUMPS.get(agent_data_filename):
+        pytest.skip(reason=reason)
+
     agent_based_plugins = config.load_all_pluginX(repo_path() / "cmk/base/legacy_checks")
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections

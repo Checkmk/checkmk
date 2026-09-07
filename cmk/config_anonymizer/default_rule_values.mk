@@ -717,7 +717,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_saprouter', [])
 
 agent_config['mk_saprouter'] = [
-{'id': '7370c586-f64e-4660-a3f5-7b21b3c2aea0', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '7370c586-f64e-4660-a3f5-7b21b3c2aea0', 'value': {'deployment': ('sync', None), 'user': '', 'path': ''}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_saprouter']
 
 

@@ -16,7 +16,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     TimeMagnitude,
     TimeSpan,
-    validators,
 )
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
@@ -33,11 +32,13 @@ def migrate(value: object) -> Mapping[str, object]:
             if isinstance(interval, (int, float)) and interval > 60
             else ("sync", None)
         )
-        result: dict[str, object] = {"deployment": deployment}
-        for key in ("user", "path"):
-            if key in value:
-                result[key] = value[key]
-        return result
+        # Old rule ("first matching rule wins"): make all parameters explicit so that merging
+        # with other rules does not change the outcome. Empty strings are the bakelet's defaults.
+        return {
+            "deployment": deployment,
+            "user": value.get("user", ""),
+            "path": value.get("path", ""),
+        }
     raise ValueError(f"Unexpected value: {value!r}")
 
 
@@ -83,13 +84,13 @@ def _valuespec_agent_config_mk_saprouter() -> Dictionary:
             "user": DictElement(
                 parameter_form=String(
                     title=Title("Username"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+                    help_text=Help("Leave empty to not set a user."),
                 ),
             ),
             "path": DictElement(
                 parameter_form=String(
                     title=Title("Path to sapgenpse"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+                    help_text=Help("Leave empty to not set a path."),
                 ),
             ),
         },

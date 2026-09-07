@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 /**
  * Rewrites the command templates of the agent slideout for display.
  *
@@ -12,6 +11,9 @@
  * (`src/welcome/components/first-host/`) builds its commands in the frontend
  * and still substitutes `[AGENT_DOWNLOAD_OTT]` on its own.
  */
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
+import type { CommandBlock } from './types'
 
 /** What a command is for. Decides which `{{SERVER}}` and which token applies. */
 export type CommandScope = 'download' | 'registration'
@@ -104,4 +106,49 @@ export function applyToken(
       ? cmd.replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
       : cmd.replaceAll(DOWNLOAD_TOKEN_MACRO, token)
   return { text, tokenState: 'ready' }
+}
+
+export interface RenderedBlock {
+  title?: TranslatedString
+  warning?: TranslatedString
+  text: string
+}
+
+export interface RenderedBlocks {
+  blocks: RenderedBlock[]
+  /**
+   * The worst state among the commands. Not resolved means at least one still
+   * carries an unsatisfied placeholder, so none of them is shown.
+   */
+  tokenState: TokenState
+}
+
+/** Resolve a set of command blocks for display. */
+export function renderBlocks(
+  blocks: CommandBlock[],
+  scope: CommandScope,
+  macros: HostMacros,
+  token: TokenValue = null
+): RenderedBlocks {
+  const rendered = blocks.map((block) =>
+    applyToken(substituteMacros(block.command, scope, macros), scope, token)
+  )
+  const states = rendered.map((command) => command.tokenState)
+  return {
+    blocks: blocks.map((block, index) => ({
+      ...(block.title === undefined ? {} : { title: block.title }),
+      ...(block.warning === undefined ? {} : { warning: block.warning }),
+      text: rendered[index]!.text
+    })),
+    tokenState:
+      states.find((state) => state === 'failed') ??
+      states.find((state) => state === 'missing') ??
+      states.find((state) => state === 'ready') ??
+      'not-required'
+  }
+}
+
+/** Whether any of these commands cannot be run without a one-time token. */
+export function blocksNeedToken(blocks: CommandBlock[], scope: CommandScope): boolean {
+  return blocks.some((block) => requiresToken(block.command, scope))
 }

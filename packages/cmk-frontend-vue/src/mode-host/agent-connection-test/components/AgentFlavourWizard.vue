@@ -4,19 +4,21 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import CmkWizard from 'cmk-ui-library/components/CmkWizard'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
-import type { AgentSlideOutTabs } from '../lib/type_def'
+import type { HostMacros, TokenValue } from '../lib/commandTemplate'
+import type { AgentFlavour } from '../lib/types'
+import ShellToggle from './ShellToggle.vue'
 import InstallAgentStep from './steps/InstallAgentStep.vue'
 import RegisterAgent from './steps/RegisterAgent.vue'
 import SaveHostStep from './steps/SaveHostStep.vue'
 import TestConnectionStep from './steps/TestConnectionStep.vue'
 
 const props = defineProps<{
-  tab: AgentSlideOutTabs
+  flavour: AgentFlavour
+  macros: HostMacros
   saveHost: boolean
   hostExists: boolean
   setupError: boolean
@@ -45,8 +47,14 @@ type StepKind = 'save-host' | 'install' | 'register' | 'test-connection'
  * flavour without one of the steps from navigating into a gap.
  */
 const steps = computed<StepKind[]>(() => {
-  const kinds: StepKind[] = ['save-host', 'install', 'register']
-  if (props.isPushMode) {
+  const kinds: StepKind[] = ['save-host']
+  if (props.flavour.install) {
+    kinds.push('install')
+  }
+  if (props.flavour.register) {
+    kinds.push('register')
+  }
+  if (props.isPushMode && props.flavour.status) {
     kinds.push('test-connection')
   }
   return kinds
@@ -76,22 +84,22 @@ watch(steps, (kinds) => {
   currentStep.value = Math.min(Math.max(currentStep.value, 1), kinds.length)
 })
 
-const defaultPackageId = (): string => props.tab.subTabs?.[0]?.id ?? ''
-const packageId = ref(props.restoredPackageId ?? defaultPackageId())
+/** The package choices, when this flavour installs from one of several packages. */
+const packageChoices = computed(() =>
+  props.flavour.install?.kind === 'package-choice' ? props.flavour.install.choices : null
+)
+
+const packageId = ref(props.restoredPackageId ?? packageChoices.value?.[0]?.id ?? '')
 
 /** The download token. */
-const ott = ref<string | null | Error>(null)
+const ott = ref<TokenValue>(null)
 watch(packageId, () => {
   ott.value = null
 })
 </script>
 
 <template>
-  <CmkToggleButtonGroup
-    v-if="tab.subTabs && tab.subTabs.length > 1"
-    v-model="packageId"
-    :options="tab.subTabs.map((st) => ({ label: st.label, value: st.id }))"
-  />
+  <ShellToggle v-if="packageChoices" v-model="packageId" :choices="packageChoices" />
   <CmkWizard v-model="currentStep" mode="guided">
     <template v-for="(kind, position) in steps" :key="kind">
       <SaveHostStep
@@ -108,24 +116,26 @@ watch(packageId, () => {
       />
 
       <InstallAgentStep
-        v-else-if="kind === 'install'"
+        v-else-if="kind === 'install' && flavour.install"
         v-model:ott="ott"
-        v-model:selected-variant-id="shellId"
+        v-model:shell-id="shellId"
         v-model:package-id="packageId"
         :index="position + 1"
         :is-completed="() => isPast('install') || agentInstalled"
         :is-active="isActive('install')"
-        :tab="tab"
+        :spec="flavour.install"
+        :macros="macros"
         :site-id="siteId"
       />
 
       <RegisterAgent
-        v-else-if="kind === 'register'"
-        v-model:selected-variant-id="shellId"
+        v-else-if="kind === 'register' && flavour.register"
+        v-model:shell-id="shellId"
         :index="position + 1"
         :is-completed="() => isPast('register')"
         :is-active="isActive('register')"
-        :tab="tab"
+        :spec="flavour.register"
+        :macros="macros"
         :is-last-step="isLast('register')"
         :close-button-title="closeButtonTitle"
         :host-name="hostName"
@@ -136,12 +146,13 @@ watch(packageId, () => {
       />
 
       <TestConnectionStep
-        v-else-if="kind === 'test-connection'"
-        v-model:selected-variant-id="shellId"
+        v-else-if="kind === 'test-connection' && flavour.status"
+        v-model:shell-id="shellId"
         :index="position + 1"
         :is-completed="() => isPast('test-connection')"
         :is-active="isActive('test-connection')"
-        :tab="tab"
+        :spec="flavour.status"
+        :macros="macros"
         :close-button-title="closeButtonTitle"
         @close="emit('close')"
       />

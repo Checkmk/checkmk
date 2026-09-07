@@ -529,7 +529,12 @@ describe('AgentSlideOutContent', () => {
 
   test('asks for no download token when no command needs one', () => {
     renderContent({
-      agentInstallCmds: { ...installCmds, linux_deb: 'deb-install {{SERVER}}/{{SITE}}' }
+      agentInstallCmds: {
+        ...installCmds,
+        linux_deb: 'deb-install {{SERVER}}/{{SITE}}',
+        linux_rpm: '',
+        linux_tgz_download: ''
+      }
     })
 
     expect(

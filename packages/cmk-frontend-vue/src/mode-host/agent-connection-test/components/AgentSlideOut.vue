@@ -15,13 +15,15 @@ import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { ref } from 'vue'
 
+import type { HostMacros } from '../lib/commandTemplate'
 import { rememberBeforeSaveHost, takeRestoredState } from '../lib/slideoutSession'
-import type { AgentSlideOutTabs } from '../lib/type_def'
+import type { AgentFlavour } from '../lib/types'
 import AgentFlavourWizard from './AgentFlavourWizard.vue'
 
 const props = defineProps<{
   dialogMsg: TranslatedString
-  tabs: AgentSlideOutTabs[]
+  flavours: AgentFlavour[]
+  macros: HostMacros
   allAgentsUrl: string
   userSettingsUrl: string
   closeButtonTitle: TranslatedString
@@ -104,15 +106,16 @@ function saveHostAction(packageId: string) {
        not throw away wizard progress or a freshly generated one-time token. -->
   <CmkTabs v-model="openedTab" :unmount-on-hide="false">
     <template #tabs>
-      <CmkTab v-for="tab in tabs" :id="tab.id" :key="tab.id" class="tabs">
-        <CmkHeading type="h2">{{ tab.title }}</CmkHeading>
+      <CmkTab v-for="flavour in flavours" :id="flavour.id" :key="flavour.id" class="tabs">
+        <CmkHeading type="h2">{{ flavour.title }}</CmkHeading>
       </CmkTab>
     </template>
     <template #tab-contents>
-      <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
+      <CmkTabContent v-for="flavour in flavours" :id="flavour.id" :key="flavour.id">
         <AgentFlavourWizard
           v-model:shell-id="shellId"
-          :tab="tab"
+          :flavour="flavour"
+          :macros="macros"
           :save-host="saveHost"
           :host-exists="hostExists ?? false"
           :setup-error="setupError ?? false"
@@ -124,7 +127,7 @@ function saveHostAction(packageId: string) {
           :close-button-title="closeButtonTitle"
           :agent-receiver-port-is-default="agentReceiverPortIsDefault"
           :restored-package-id="
-            tab.id === restored.tabId ? (restored.packageId ?? undefined) : undefined
+            flavour.id === restored.tabId ? (restored.packageId ?? undefined) : undefined
           "
           @save-host="saveHostAction"
           @close="close"

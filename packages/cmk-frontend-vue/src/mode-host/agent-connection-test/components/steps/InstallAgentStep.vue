@@ -5,9 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
-import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import { CmkWizardButton } from 'cmk-ui-library/components/CmkWizard'
 import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -15,61 +13,71 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
-import { applyToken, isResolved, requiresToken } from '../../lib/commandTemplate'
-import type { AgentSlideOutTabs } from '../../lib/type_def'
+import {
+  type HostMacros,
+  type TokenValue,
+  blocksNeedToken,
+  isResolved,
+  renderBlocks
+} from '../../lib/commandTemplate'
+import type { CommandBlock, CommandChoice, InstallSpec } from '../../lib/types'
+import CommandBlockList from '../CommandBlockList.vue'
 import GenerateToken from '../GenerateToken.vue'
+import ShellToggle from '../ShellToggle.vue'
 
 const props = defineProps<{
   index: number
   isCompleted: () => boolean
   isActive: boolean
-  tab: AgentSlideOutTabs
+  spec: InstallSpec
+  macros: HostMacros
   siteId: string
 }>()
 
 /** The agent download token. */
-const ott = defineModel<string | null | Error>('ott', { required: true })
+const ott = defineModel<TokenValue>('ott', { required: true })
 /** The selected shell (PowerShell/Command Prompt). */
-const selectedVariantId = defineModel<string>('selectedVariantId', { default: '' })
+const shellId = defineModel<string>('shellId', { default: '' })
 /** The selected package (DEB/RPM/TGZ). */
 const packageId = defineModel<string>('packageId', { default: '' })
 
 const { _t } = usei18n()
 
-const activeSubTab = computed(() => props.tab.subTabs?.find((st) => st.id === packageId.value))
-
-/**
- * The install commands on screen, branching exactly like the template below so
- * that a command it never renders cannot influence the token handling.
- */
-const currentCmds = computed<string[]>(() => {
-  const variants = props.tab.installCmdVariants
-  const cmds: (string | undefined)[] = []
-  if (variants && variants.length > 1) {
-    const variant = variants.find((v) => v.id === selectedVariantId.value)
-    cmds.push(variant?.downloadCmd, variant?.installCmd)
-  } else if (props.tab.installDownloadCmd) {
-    cmds.push(props.tab.installDownloadCmd, props.tab.installCmd)
-  } else if (props.tab.installMsg && props.tab.installCmd) {
-    cmds.push(props.tab.installCmd)
-  }
-  cmds.push(activeSubTab.value?.downloadCmd, activeSubTab.value?.installCmd)
-  return cmds.filter((cmd): cmd is string => !!cmd)
-})
-
-/** Whether any command on screen cannot be run without a token. */
-const needsToken = computed(() => currentCmds.value.some((cmd) => requiresToken(cmd, 'download')))
-
-const installMsg = computed(() => {
-  if (props.tab.subTabs) {
-    return activeSubTab.value?.installMsg || props.tab.installMsg || ''
-  }
-  return props.tab.installMsg || ''
-})
-
-function cmdWithToken(cmd: string | undefined): string {
-  return applyToken(cmd, 'download', ott.value).text
+function pick(choices: CommandChoice[], id: string): CommandChoice {
+  return choices.find((choice) => choice.id === id) ?? choices[0]!
 }
+
+/** The choice the toggle currently selects, if this spec has one. */
+const choice = computed<CommandChoice | null>(() => {
+  switch (props.spec.kind) {
+    case 'shell-variants':
+      return pick(props.spec.variants, shellId.value)
+    case 'package-choice':
+      return pick(props.spec.choices, packageId.value)
+    default:
+      return null
+  }
+})
+
+const blocks = computed<CommandBlock[]>(() => {
+  if (choice.value !== null) {
+    return choice.value.blocks
+  }
+  return props.spec.kind === 'commands' || props.spec.kind === 'unbaked-fallback'
+    ? props.spec.blocks
+    : []
+})
+
+/** The text above the commands, which the package choice may override. */
+const intro = computed(() => {
+  if (props.spec.kind === 'package-choice') {
+    return choice.value?.intro ?? ''
+  }
+  return props.spec.kind === 'external-doc' ? props.spec.msg : props.spec.intro
+})
+
+const needsToken = computed(() => blocksNeedToken(blocks.value, 'download'))
+const rendered = computed(() => renderBlocks(blocks.value, 'download', props.macros, ott.value))
 
 /**
  * Latches once a token generation attempt failed. The agents page in the
@@ -91,9 +99,7 @@ watch(packageId, () => {
 })
 
 /** True when every command on screen can be shown as it stands. */
-const cmdsResolved = computed(() =>
-  currentCmds.value.every((cmd) => isResolved(applyToken(cmd, 'download', ott.value).tokenState))
-)
+const cmdsResolved = computed(() => isResolved(rendered.value.tokenState))
 </script>
 
 <template>
@@ -103,9 +109,21 @@ const cmdsResolved = computed(() =>
     </template>
     <template #content>
       <div v-if="isActive" class="download_install__content">
-        <template v-if="currentCmds.length > 0 && !tab.unbakedFallback">
-          <div class="download_install__token">
-            <CmkParagraph>{{ installMsg }}</CmkParagraph>
+        <div v-if="spec.kind === 'external-doc'" class="install_url__div">
+          <CmkParagraph>{{ spec.msg }}</CmkParagraph>
+          <CmkLinkCard
+            :title="spec.link.title"
+            :url="spec.link.url"
+            :icon-name="spec.link.icon"
+            :open-in-new-tab="true"
+          />
+        </div>
+        <template v-else>
+          <CmkAlertBox v-if="spec.kind === 'unbaked-fallback'" variant="warning">
+            {{ spec.intro }}
+          </CmkAlertBox>
+          <div v-else class="download_install__token">
+            <CmkParagraph>{{ intro }}</CmkParagraph>
             <GenerateToken
               v-if="needsToken"
               v-model="ott"
@@ -120,110 +138,19 @@ const cmdsResolved = computed(() =>
               :token-generation-body="{ site_id: siteId }"
             />
           </div>
-          <template v-if="cmdsResolved">
-            <template v-if="tab.installCmdVariants && tab.installCmdVariants.length > 1">
-              <CmkToggleButtonGroup
-                v-model="selectedVariantId"
-                class="shell-toggle"
-                :options="tab.installCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
-              />
-              <template v-for="variant in tab.installCmdVariants" :key="variant.id">
-                <template v-if="variant.id === selectedVariantId">
-                  <CmkCode
-                    :title="_t('Download the agent')"
-                    :code-text="cmdWithToken(variant.downloadCmd || '')"
-                    class="code"
-                    width="fill"
-                  />
-                  <CmkAlertBox v-if="tab.installWarning" variant="warning">
-                    {{ tab.installWarning }}
-                  </CmkAlertBox>
-                  <CmkCode
-                    :title="_t('Install the agent')"
-                    :code-text="variant.installCmd"
-                    class="code"
-                    width="fill"
-                  />
-                </template>
-              </template>
-            </template>
-            <template v-else-if="tab.installDownloadCmd">
-              <CmkCode
-                :title="_t('Download the agent')"
-                :code-text="cmdWithToken(tab.installDownloadCmd)"
-                class="code"
-                width="fill"
-              />
-              <CmkAlertBox v-if="tab.installWarning" variant="warning">
-                {{ tab.installWarning }}
-              </CmkAlertBox>
-              <CmkCode
-                :title="_t('Install the agent')"
-                :code-text="tab.installCmd || ''"
-                class="code"
-                width="fill"
-              />
-            </template>
-            <CmkCode
-              v-else-if="tab.installMsg && tab.installCmd"
-              :code-text="cmdWithToken(tab.installCmd)"
-              class="code"
-              width="fill"
-            />
-            <template v-if="activeSubTab">
-              <template v-if="activeSubTab.downloadCmd">
-                <CmkCode
-                  :title="_t('Download the agent')"
-                  :code-text="cmdWithToken(activeSubTab.downloadCmd)"
-                  class="code"
-                  width="fill"
-                />
-                <CmkAlertBox v-if="activeSubTab.installWarning" variant="warning">
-                  {{ activeSubTab.installWarning }}
-                </CmkAlertBox>
-                <CmkCode
-                  :title="_t('Install the agent')"
-                  :code-text="activeSubTab.installCmd"
-                  class="code"
-                  width="fill"
-                />
-              </template>
-              <CmkCode
-                v-else
-                :code-text="cmdWithToken(activeSubTab.installCmd)"
-                class="code"
-                width="fill"
-              />
-            </template>
-          </template>
-        </template>
-        <template v-else-if="tab.unbakedFallback">
-          <CmkAlertBox variant="warning">
-            {{ tab.unbakedFallback.intro }}
-          </CmkAlertBox>
-          <CmkCode
-            v-for="cmd in tab.unbakedFallback.commands"
-            :key="cmd"
-            :code-text="cmd"
-            class="code"
-            width="fill"
+          <ShellToggle
+            v-if="spec.kind === 'shell-variants' && cmdsResolved"
+            v-model="shellId"
+            :choices="spec.variants"
           />
+          <CommandBlockList v-if="cmdsResolved" :blocks="rendered.blocks" />
         </template>
-        <div v-else-if="tab.installUrl" class="install_url__div">
-          <CmkParagraph v-if="tab.installUrl.msg">{{ tab.installUrl.msg }}</CmkParagraph>
-          <CmkLinkCard
-            :title="tab.installUrl.title"
-            :url="tab.installUrl.url"
-            :icon-name="tab.installUrl.icon"
-            :open-in-new-tab="true"
-          />
-        </div>
       </div>
     </template>
     <template v-if="isActive" #actions>
       <CmkWizardButton
         type="next"
-        :disabled="!tab.unbakedFallback && !downloadFailed && !cmdsResolved"
+        :disabled="!downloadFailed && !cmdsResolved"
         :override-label="_t('Next step: Register agent')"
       />
       <CmkWizardButton type="previous" />
@@ -233,16 +160,6 @@ const cmdsResolved = computed(() =>
 
 <style scoped>
 /* stylelint-disable checkmk/vue-bem-naming-convention */
-.code {
-  margin: var(--dimension-5) 0 var(--dimension-7);
-  width: 100%;
-}
-
-.shell-toggle {
-  margin-top: var(--dimension-5);
-  margin-bottom: var(--dimension-5);
-}
-
 .install_url__div {
   margin-bottom: var(--spacing);
 }

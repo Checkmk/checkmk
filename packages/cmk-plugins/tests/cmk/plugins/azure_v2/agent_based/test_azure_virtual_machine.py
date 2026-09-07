@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Mapping
 
@@ -417,7 +415,7 @@ def test_check_azure_vm_network_io(
     params: Mapping[str, tuple[float, float]],
     section: Resource,
     expected_result: CheckResult,
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
 

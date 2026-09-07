@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import base64
 import hashlib
 import urllib.parse
@@ -57,7 +55,7 @@ def _stored_record(
 
 
 @pytest.fixture(autouse=True)
-def seeded_test_client(flask_app: Flask) -> None:
+def seeded_test_client(flask_app: Flask) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Issued tokens reference their client (tokens.client_id), so _VALID_FORM's
     # client has to exist in the registry for redemption to succeed. Raw SQL
     # because register() mints its own client_id.

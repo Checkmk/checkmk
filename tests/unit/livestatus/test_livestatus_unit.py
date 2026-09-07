@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import errno
 import socket
@@ -77,8 +79,8 @@ def test_quote_dict(inp: str, expected_result: str) -> None:
 
 def test_livestatus_local_connection_omd_root_not_set(
     monkeypatch: MonkeyPatch,
-    tmp_path: Path,  # noqa: ARG001
-    patch_omd_site: None,  # noqa: ARG001
+    tmp_path: Path,
+    patch_omd_site: None,
 ) -> None:
     monkeypatch.delenv("OMD_ROOT")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
@@ -163,7 +165,7 @@ def test_livestatus_ipv6_connection() -> None:
 def test_single_site_connection_socketurl(
     socket_url: str,
     result: tuple[socket.AddressFamily, str | tuple[str, int]] | None,
-    monkeypatch: MonkeyPatch,  # noqa: ARG001
+    monkeypatch: MonkeyPatch,
 ) -> None:
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
@@ -200,7 +202,7 @@ def test_create_socket_with_verification_using_custom_trust_store(
 
 
 def test_create_socket_with_verification_using_site_trust_store(
-    ca: SiteCA,  # noqa: ARG001
+    ca: SiteCA,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -214,7 +216,7 @@ def test_create_socket_with_verification_using_site_trust_store(
 
 
 def test_create_socket_without_verification(
-    ca: SiteCA,  # noqa: ARG001
+    ca: SiteCA,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -245,7 +247,7 @@ def test_create_socket_no_cert(tmp_path: Path) -> None:
             live._create_socket(socket.AF_INET)  # noqa: SLF001
 
 
-def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:  # noqa: ARG001
+def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
     live.add_table(
@@ -277,7 +279,7 @@ def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusC
         ("a'dmin", False),
     ],
 )
-def test_set_auth_user(patch_omd_site: None, user_id: str, allowed: bool) -> None:  # noqa: ARG001
+def test_set_auth_user(patch_omd_site: None, user_id: str, allowed: bool) -> None:
     if not allowed:
         with pytest.raises(ValueError, match="invalid username"):
             livestatus.LocalConnection().set_auth_user("mydomain", UserId(user_id))

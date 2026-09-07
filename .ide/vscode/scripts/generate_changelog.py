@@ -133,7 +133,7 @@ def main() -> int:
 
     floor = parse_version(args.since_version)
     if floor is None:
-        print(f"Invalid --since-version: {args.since_version}", file=sys.stderr)  # noqa: T201
+        print(f"Invalid --since-version: {args.since_version}", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         return 2
 
     root = repo_root()
@@ -163,9 +163,9 @@ def main() -> int:
             skipped_user_edited += 1
             continue
         path.write_text(new_content)
-        print(f"Wrote {path.relative_to(root)}")  # noqa: T201
+        print(f"Wrote {path.relative_to(root)}")  # noqa: T201  # It's OK for scripts to print()
         written += 1
-    print(  # noqa: T201
+    print(  # noqa: T201  # It's OK for scripts to print()
         f"Done. {written} file(s) updated, {skipped_old} version(s) skipped (< v{args.since_version}),"
         f" {skipped_user_edited} existing file(s) preserved (not the current package.json version)."
     )

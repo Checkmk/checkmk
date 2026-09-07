@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 import json
 from collections.abc import Mapping, Sequence
@@ -76,7 +74,7 @@ def params():
 
 @pytest.fixture
 def check_result(params, section, value_store):
-    return kube_pod_restarts._check(params, section, TIMESTAMP, value_store)
+    return kube_pod_restarts._check(params, section, TIMESTAMP, value_store)  # noqa: SLF001
 
 
 @pytest.fixture

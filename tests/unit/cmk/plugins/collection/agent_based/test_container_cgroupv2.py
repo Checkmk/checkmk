@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import typing
 
 import pytest
@@ -65,7 +63,7 @@ def test_parse_cpu_cgroupv2() -> None:
     )
 
 
-def test_check_cpu_cgroupv2(empty_value_store: None) -> None:
+def test_check_cpu_cgroupv2(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with pytest.raises(GetRateError):
         # no rate metrics yet
         _ = list(check_cpu_utilization_os({}, parse_cpu(AGENT_OUTPUT_0)))

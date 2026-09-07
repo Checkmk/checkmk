@@ -6,8 +6,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 import json
 from collections.abc import Mapping
@@ -117,7 +115,7 @@ def params(failed_state):
 
 @pytest.fixture
 def check_result(container_name, params, section):
-    return kube_pod_containers._check(TIMESTAMP, container_name, params, section)
+    return kube_pod_containers._check(TIMESTAMP, container_name, params, section)  # noqa: SLF001
 
 
 def test_parse(

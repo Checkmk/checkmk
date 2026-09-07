@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pathlib
 
 import pytest
@@ -49,7 +47,7 @@ def test_profile_switcher_under_various_settings(
     url: str,
     profiling_enabled_expected: bool,
     set_config: SetConfig,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     with set_config(**setting):
         environ = werkzeug.test.create_environ(url, method="GET")

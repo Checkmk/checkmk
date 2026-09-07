@@ -5,10 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-# ruff: noqa: ARG001
-# ruff: noqa: ARG005
-# ruff: noqa: SLF001
-
 from collections.abc import Callable, Iterator
 
 import pytest
@@ -47,7 +43,7 @@ def _generator_function() -> Iterator[None]:
     yield None
 
 
-def parse_dummy(string_table: object) -> None:
+def parse_dummy(string_table: object) -> None:  # noqa: ARG001
     return None
 
 
@@ -74,9 +70,9 @@ def test_validate_parse_function_type(parse_function: object) -> None:
     "parse_function",
     [
         # argument name must be string_table, and string_table only.
-        lambda foo: None,
-        lambda string_table, foo: None,
-        lambda foo, string_table: None,
+        lambda foo: None,  # noqa: ARG005
+        lambda string_table, foo: None,  # noqa: ARG005
+        lambda foo, string_table: None,  # noqa: ARG005
     ],
 )
 def test_validate_parse_function_value(parse_function: Callable[..., None]) -> None:  # type: ignore[misc]
@@ -111,12 +107,12 @@ def test_validate_supersedings_raise_duplicate() -> None:
     ]
 
     with pytest.raises(ValueError, match="duplicate"):
-        section_plugins._validate_supersedings(SectionName("jim"), supersedes)
+        section_plugins._validate_supersedings(SectionName("jim"), supersedes)  # noqa: SLF001
 
 
 def test_validate_supersedings_raise_self_superseding() -> None:
     with pytest.raises(ValueError, match="cannot supersede myself"):
-        section_plugins._validate_supersedings(SectionName("foo"), [SectionName("foo")])
+        section_plugins._validate_supersedings(SectionName("foo"), [SectionName("foo")])  # noqa: SLF001
 
 
 def test_create_agent_section_plugin() -> None:
@@ -136,7 +132,7 @@ def test_create_agent_section_plugin() -> None:
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is parse_dummy
-    assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_function is section_plugins._noop_host_label_function  # noqa: SLF001
     assert plugin.host_label_default_parameters is None
     assert plugin.host_label_ruleset_name is None
     assert plugin.host_label_ruleset_type == "merged"
@@ -160,7 +156,7 @@ def test_create_metrics_section_plugin() -> None:
     assert len(plugin) == 9
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
-    assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_function is section_plugins._noop_host_label_function  # noqa: SLF001
     assert plugin.host_label_default_parameters is None
     assert plugin.host_label_ruleset_name is None
     assert plugin.host_label_ruleset_type == "merged"
@@ -183,7 +179,7 @@ def test_create_metrics_section_plugin_defaults() -> None:
 
 
 def test_create_metrics_section_plugin_host_label_ruleset() -> None:
-    def host_labels(params: object, section: object) -> HostLabelGenerator:
+    def host_labels(params: object, section: object) -> HostLabelGenerator:  # noqa: ARG001
         yield from ()
 
     plugin = section_plugins.create_metrics_section_plugin(
@@ -267,7 +263,7 @@ def test_create_snmp_section_plugin() -> None:
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is parse_dummy
-    assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_function is section_plugins._noop_host_label_function  # noqa: SLF001
     assert plugin.host_label_default_parameters is None
     assert plugin.host_label_ruleset_name is None
     assert plugin.host_label_ruleset_type == "merged"

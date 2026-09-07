@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 
 # TODO: test the interface, not the private members
-# ruff: noqa: SLF001
 
 import contextlib
 import datetime
@@ -29,7 +28,7 @@ def mock_value_store() -> MutableMapping[str, Any]:
 def test_check_trend_raises() -> None:
     with pytest.raises(IgnoreResultsError):
         _ = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {},  # uninitialized -> raise
                 23.0,
                 {"period": 2},
@@ -44,7 +43,7 @@ def test_check_trend_raises() -> None:
 def test_check_trend_simple() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 17.0)},
                 23.0,
                 {"period": 2},
@@ -60,7 +59,7 @@ def test_check_trend_simple() -> None:
 def test_check_trend_ok() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 17.0)},
                 23.0,
                 {
@@ -80,7 +79,7 @@ def test_check_trend_ok() -> None:
 def test_check_trend_warn_upper() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 17.0)},
                 23.0,
                 {
@@ -105,7 +104,7 @@ def test_check_trend_warn_upper() -> None:
 def test_check_trend_crit_upper() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 17.0)},
                 23.0,
                 {
@@ -130,7 +129,7 @@ def test_check_trend_crit_upper() -> None:
 def test_check_trend_warn_lower() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, -17.0)},
                 -23.0,
                 {
@@ -155,7 +154,7 @@ def test_check_trend_warn_lower() -> None:
 def test_check_trend_crit_lower() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, -17.0)},
                 -23.0,
                 {
@@ -180,7 +179,7 @@ def test_check_trend_crit_lower() -> None:
 def test_check_trend_time_period_ok() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 5.0)},
                 10.0,
                 {
@@ -204,7 +203,7 @@ def test_check_trend_time_period_ok() -> None:
 def test_check_trend_time_period_warn_upper() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 5.0)},
                 10.0,
                 {
@@ -231,7 +230,7 @@ def test_check_trend_time_period_warn_upper() -> None:
 def test_check_trend_time_period_crit_upper() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 5.0)},
                 10.0,
                 {
@@ -258,7 +257,7 @@ def test_check_trend_time_period_crit_upper() -> None:
 def test_check_trend_time_period_warn_lower() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 10.0)},
                 5.0,
                 {
@@ -285,7 +284,7 @@ def test_check_trend_time_period_warn_lower() -> None:
 def test_check_trend_time_period_crit_lower() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 10.0)},
                 5.0,
                 {
@@ -312,7 +311,7 @@ def test_check_trend_time_period_crit_lower() -> None:
 def test_check_trend_time_period_zero_lower_bound() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 10.0)},
                 5.0,
                 {
@@ -339,7 +338,7 @@ def test_check_trend_time_period_zero_lower_bound() -> None:
 def test_check_trend_time_levels_above_crit() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 10.0)},
                 67.0,
                 {
@@ -369,7 +368,7 @@ def test_check_trend_time_levels_above_crit() -> None:
 def test_check_trend_time_levels_below_lower_crit() -> None:
     with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
-            temperature._check_trend(
+            temperature._check_trend(  # noqa: SLF001
                 {"temp.my_test.delta": (0, 27.0)},
                 25.0,
                 {

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import time
 from collections.abc import Mapping, Sequence
 
@@ -202,7 +204,7 @@ def test_fileinfo_groups_get_group_name_error(
     group_patterns: list[PatternConfig],
     filename: str,
     reftime: int,
-    expected_result: Mapping[str, Sequence[str]],  # noqa: ARG001
+    expected_result: Mapping[str, Sequence[str]],
 ) -> None:
     with pytest.raises(RuntimeError) as e:
         fileinfo_groups_get_group_name(group_patterns, filename, reftime)
@@ -635,12 +637,12 @@ def _set_local2gmtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
 
 
-def test_fileinfo_process_date_both_macros_replaced(local2gmtime: None) -> None:  # noqa: ARG001
+def test_fileinfo_process_date_both_macros_replaced(local2gmtime: None) -> None:
     assert (
         fileinfo_process_date(r"\\hi\there\($DATE:%Y$|$YESTERDAY:%Y$).log", 0)
         == r"\\hi\there\(1970|1969).log"
     )
 
 
-def test_fileinfo_process_date_multiple_occurances_replaced(local2gmtime: None) -> None:  # noqa: ARG001
+def test_fileinfo_process_date_multiple_occurances_replaced(local2gmtime: None) -> None:
     assert fileinfo_process_date(r"$DATE:%w$.$DATE:%Y$", -17502393600) == "3.1415"

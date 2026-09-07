@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 import pytest_mock
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -43,7 +41,7 @@ def deployments_api_sections() -> set[str]:
 
 def test_pod_deployment_controller_name() -> None:
     pod = APIPodFactory.build(controllers=[APIControllerFactory.build(name="hi", namespace="bye")])
-    pod_info = pod_handler._info(
+    pod_info = pod_handler._info(  # noqa: SLF001
         pod,
         "cluster",
         "host",
@@ -60,7 +58,7 @@ def test_deployment_conditions() -> None:
             for condition in ["available", "progressing", "replicafailure"]
         }
     )
-    conditions = deployment_handler._conditions(api_deployment_status)
+    conditions = deployment_handler._conditions(api_deployment_status)  # noqa: SLF001
     assert conditions is not None
     assert all(condition_details is not None for _, condition_details in conditions)
 

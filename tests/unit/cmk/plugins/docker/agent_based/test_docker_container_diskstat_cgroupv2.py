@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
@@ -127,7 +125,7 @@ def _split(string: str) -> StringTable:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_docker_container_diskstat_cgroupv2(empty_value_store: None) -> None:
+def test_docker_container_diskstat_cgroupv2(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet
         _ = list(

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import contextlib
 import logging
@@ -84,7 +82,7 @@ def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRe
         logger.removeHandler(queue_handler)
 
 
-def test_security_event(tmp_path: Path) -> None:
+def test_security_event(tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     details: Mapping[str, JsonSerializable] = {"a": ["serialize", "me"], "b": {"b.1": 42.23}}
     event = SecurityEvent("test security event", details, SecurityEvent.Domain.auth)
 

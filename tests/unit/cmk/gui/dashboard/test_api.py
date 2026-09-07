@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import copy
 from typing import get_args, get_type_hints
 
@@ -175,7 +173,7 @@ def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRe
             )
 
 
-def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
+def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
     # No queries are actually executed.
 

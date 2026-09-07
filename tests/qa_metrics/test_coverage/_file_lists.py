@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """Which files a coverage number is *about*, and how the steps pass them around.
 
 The repository-wide enumeration and the per-component one must answer the first
@@ -68,7 +66,7 @@ def existing(repo_root: Path, paths: Iterable[Path]) -> list[Path]:
         else:
             absent.append(path)
     if absent:
-        print(
+        print(  # noqa: T201  # It's OK for test/script helpers to print()
             f"Warning: {len(absent)} listed file(s) have no source under {repo_root}, so they "
             f"carry no line count and stay out of the denominator. First "
             f"{min(3, len(absent))}: {', '.join(str(path) for path in absent[:3])}",

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 """
@@ -80,7 +82,7 @@ class SomeSchema(BaseSchema):
 
 
 @pytest.fixture(name="test_endpoint")
-def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
+def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/unitest-endpoint-test-that-is-not-cleaned-up",
         method="post",
@@ -106,7 +108,7 @@ def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # 
 
 
 @pytest.fixture(name="test_multiple_accept_endpoint")
-def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
+def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/test_multiple_content_types",
         method="post",
@@ -135,7 +137,7 @@ def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedE
 
 # This looks like a good template for a test
 @pytest.fixture(name="test_internal_endpoint")
-def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
+def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/i_am_reserved",
         method="get",
@@ -144,7 +146,7 @@ def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
         output_empty=True,
         internal_user_only=True,
     )
-    def reserved_test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
+    def reserved_test(param: Mapping[str, object]) -> Response:
         return Response(status=204)
 
     endpoint_registry.register(reserved_test)
@@ -192,7 +194,7 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")
-def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
+def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_exception",
         method="get",
@@ -202,7 +204,7 @@ def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         raise ProblemException(418, "short", "long")
 
@@ -213,7 +215,7 @@ def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint
 
 
 @pytest.fixture(name="test_endpoint_accept_parameter")
-def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
+def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/test_accept_parameter",
         method="post",
@@ -224,7 +226,7 @@ def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         return Response(status=204)
 
@@ -235,7 +237,7 @@ def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
 
 
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(
-    test_endpoint_raise_status_code: WrappedEndpoint,  # noqa: ARG001
+    test_endpoint_raise_status_code: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """
@@ -360,7 +362,7 @@ def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig)
 
 # ========= Permission Validation =========
 def test_permission_exception(clients: ClientRegistry) -> None:
-    def validate(*args: object, **kwargs: object) -> bool:  # noqa: ARG001
+    def validate(*args: object, **kwargs: object) -> bool:
         return False
 
     with mock.patch("cmk.web.utils.permission_verification.BasePerm.validate", validate):
@@ -383,7 +385,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="test_endpoint_raise_auth_exception")
-def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
+def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_auth_exception",
         method="get",
@@ -393,7 +395,7 @@ def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         raise MKAuthException("We are sorry, but you lack the permission for this operation.")
 
@@ -404,7 +406,7 @@ def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[
 
 
 def test_openapi_endpoint_permission_denied_is_forbidden(
-    test_endpoint_raise_auth_exception: WrappedEndpoint,  # noqa: ARG001
+    test_endpoint_raise_auth_exception: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """A failed permission check of an authenticated user must result in a 403, not a 401."""
@@ -421,7 +423,7 @@ def test_openapi_endpoint_permission_denied_is_forbidden(
 
 @pytest.fixture(name="test_endpoint_raise_unauthenticated_exception")
 def install_endpoint_raise_unauthenticated_exception(
-    fresh_app_instance: None,  # noqa: ARG001
+    fresh_app_instance: None,
 ) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_unauthenticated_exception",
@@ -432,7 +434,7 @@ def install_endpoint_raise_unauthenticated_exception(
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         raise MKUnauthenticatedException("You are not authenticated.")
 
@@ -443,7 +445,7 @@ def install_endpoint_raise_unauthenticated_exception(
 
 
 def test_openapi_endpoint_unauthenticated_stays_unauthorized(
-    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,  # noqa: ARG001
+    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """Missing authentication must not be remapped to a 403."""
@@ -539,7 +541,7 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
 
 # ========= Accept parameter related Tests =========
 def test_invalid_content_type(
-    test_endpoint_accept_parameter: WrappedEndpoint,  # noqa: ARG001
+    test_endpoint_accept_parameter: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     response = aut_user_auth_wsgi_app.call_method(
@@ -565,7 +567,7 @@ def test_invalid_content_type(
     ],
 )
 def test_invalid_payload(
-    test_endpoint_accept_parameter: WrappedEndpoint,  # noqa: ARG001
+    test_endpoint_accept_parameter: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     payload: str,
 ) -> None:
@@ -582,7 +584,7 @@ def test_invalid_payload(
 
 
 def test_valid_gzip_file(
-    test_endpoint_accept_parameter: WrappedEndpoint,  # noqa: ARG001
+    test_endpoint_accept_parameter: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     payload = base64.b64decode(TEST_TARGZ_FILE)
@@ -604,7 +606,7 @@ def test_valid_gzip_file(
 )
 def test_endpoint_accept_multiple_types(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_multiple_accept_endpoint: WrappedEndpoint,  # noqa: ARG001
+    test_multiple_accept_endpoint: WrappedEndpoint,
     content_type: str,
     payload: str,
 ) -> None:
@@ -622,7 +624,7 @@ def test_endpoint_accept_multiple_types(
 # ========= Authorization of reserved endpoint validation =========
 def test_reserved_endpoint_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_internal_endpoint: WrappedEndpoint,  # noqa: ARG001
+    test_internal_endpoint: WrappedEndpoint,
     api_client: RestApiClient,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

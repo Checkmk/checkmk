@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Tests for `Ruleset.format_raw_value`'s self-bootstrapping output.
 
 The emitted `rules.mk` source must load against an empty exec context
@@ -70,7 +68,7 @@ def test_bundled_exec_materialises_parent_dict_in_locals(tmp_path: Path) -> None
     }
 
 
-def test_bundled_accumulates_across_files_in_shared_context(tmp_path: Path) -> None:
+def test_bundled_accumulates_across_files_in_shared_context(tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     """Two folders' rules.mk for the same bundled rulespec exec into the same
     globals/locals dict (the base-config load pattern). The second file must
     not clobber the first's contribution."""

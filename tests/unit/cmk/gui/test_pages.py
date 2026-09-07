@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import sys
 from typing import override
 
@@ -207,12 +209,12 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
 
 
 def test_page_registry_register_page_handler(
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
-    def page(ctx: PageContext) -> None:  # noqa: ARG001
+    def page(ctx: PageContext) -> None:
         sys.stdout.write("234")
 
     page_registry.register(PageEndpoint("234handler", page))

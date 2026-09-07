@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import subprocess
 from pathlib import Path
 
@@ -18,7 +16,7 @@ from tests.testlib.version import edition_from_env
     edition_from_env().is_cloud_edition(),
     reason="mkbackup is not shipped in the cloud edition",
 )
-def test_backup_dir(site: Site) -> None:
+def test_backup_dir(site: Site) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Typically, applications create these directories by using RuntimeDirectory in systemd.
     # However, since we don't ask users to use systemd on Debian-based distros (on RPM distros we
     # require systemd as a dependency), we create this directory every time `omd` runs as root.

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import logging
 from collections.abc import Iterator
@@ -52,7 +50,7 @@ def test_parse_arguments_debug() -> None:
 def test_main_calls_config_updater(
     monkeypatch: pytest.MonkeyPatch,
     mocker: MockerFixture,
-    tmp_path: Path,
+    tmp_path: Path,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     packages_dir = cmk.utils.paths.var_dir / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)

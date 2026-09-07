@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -45,7 +47,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
-def test_registered_painter_options(request_context: None) -> None:  # noqa: ARG001
+def test_registered_painter_options(request_context: None) -> None:
     expected = [
         "aggr_expand",
         "aggr_onlydiff",
@@ -328,7 +330,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert cmd.permission == cmk.gui.default_permissions.PermissionGeneralUse
 
 
-def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:  # noqa: ARG001
+def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
     painters: list[Painter] = [
@@ -364,10 +366,10 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
         assert painter.export_title(cell) == expected_title
 
 
-def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:  # noqa: ARG001
+def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
-    def rendr(row):  # noqa: ARG001
+    def rendr(row):
         return ("abc", "xyz")
 
     register_painter(

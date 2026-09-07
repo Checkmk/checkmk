@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # Agent plugins still need to support Python 3.4
-# ruff: noqa: UP006  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
 # ruff: noqa: UP007  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 # ruff: noqa: UP035  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
-# ruff: noqa: UP045  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -511,7 +511,7 @@ def _end_with(actual: Union[str, bytes], *, expected: bytes) -> bool:
     ],
 )
 def test_find_matching_logfiles(
-    fake_filesystem: str, pattern_suffix: unicode, file_suffixes: Iterable[Tuple[bytes, unicode]]
+    fake_filesystem: str, pattern_suffix: unicode, file_suffixes: Iterable[Tuple[bytes, unicode]]  # noqa: UP006  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
 ) -> None:
     fake_fs_path_u = ensure_text(fake_filesystem)
     fake_fs_path_b = bytes(fake_filesystem, "utf-8")
@@ -636,7 +636,7 @@ def _latin_1_encoding():
     ],
 )
 def test_non_ascii_line_processing(  # type: ignore[misc]
-    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result  # noqa: ARG001
+    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result
 ):
     # Write test logfile first
     log_path = os.path.join(str(tmpdir), "testlog")
@@ -822,7 +822,7 @@ def test_filter_maxcontextlines(
     ],
 )
 def test_filter_consecutive_duplicates(
-    input_lines: Sequence[str], nocontext: Optional[bool], expected_output: Sequence[str]
+    input_lines: Sequence[str], nocontext: Optional[bool], expected_output: Sequence[str]  # noqa: UP045  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 ) -> None:
     assert expected_output == list(lw._filter_consecutive_duplicates(input_lines, nocontext))  # noqa: SLF001
 
@@ -910,14 +910,14 @@ def _get_file_info(tmp_path, file_name):
     return lw.get_file_info(os.path.join(str(tmp_path), "root", file_name))
 
 
-def test_get_uniq_id_one_file(fake_filesystem, tmpdir):  # noqa: ARG001
+def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
     file_id, sz = _get_file_info(tmpdir, "file.log")
     assert file_id > 1
     assert sz == 0
     assert (file_id, sz) == _get_file_info(tmpdir, "file.log")
 
 
-def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):  # noqa: ARG001
+def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
     info = [
         _get_file_info(tmpdir, f)
         for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log")

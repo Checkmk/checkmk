@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -199,7 +197,7 @@ def manage_plugins_engine(request, plugin_dir):
 @pytest.mark.skip("This test is not conform with latest changes on Monitoring Site")
 def test_section_plugin_windows_if(  # type: ignore[misc]
     request,
-    testconfig,
+    testconfig,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     expected_output,
     actual_output,
     testfile,

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 from collections.abc import Iterable
 
@@ -96,7 +94,7 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="tree")
-def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:
+def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     return make_folder_tree(config)
 
 

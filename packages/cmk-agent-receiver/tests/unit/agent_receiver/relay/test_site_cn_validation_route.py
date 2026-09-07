@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 import fastapi
 import pytest
 from fastapi import APIRouter, FastAPI
@@ -37,7 +35,7 @@ def test_site_cn_validation_route(monkeypatch: pytest.MonkeyPatch) -> None:
         "/foo",
         headers={INJECTED_UUID_HEADER: "test-site-cn"},
     )
-    print(response.text)
+    print(response.text)  # noqa: T201  # It's OK for test/script helpers to print()
     assert response.status_code == 200
     assert response.json() == {"whatever": "data"}
 

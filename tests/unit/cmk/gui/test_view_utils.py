@@ -77,7 +77,7 @@ from cmk.web.utils.html import HTML
         ),
     ],
 )
-def test_button_url(args: str, expected: HTML, request_context: None) -> None:  # noqa: ARG001
+def test_button_url(args: str, expected: HTML, request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     assert format_plugin_output(args, request=request, must_escape=False) == expected
 
 

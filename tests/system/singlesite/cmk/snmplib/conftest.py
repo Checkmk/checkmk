@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
@@ -329,7 +327,7 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
 def backend_type_fixture(
     site: Site,
     request: pytest.FixtureRequest,
-    snmpsim: None,
+    snmpsim: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> SNMPBackendEnum:
     backend_type: SNMPBackendEnum = request.param
     if site.edition.is_community_edition() and backend_type is SNMPBackendEnum.INLINE:

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-def"
 
 import json
@@ -115,7 +113,7 @@ def test_check_all_metrics_values(check_result: CheckResult, section: ContainerC
 
 
 @pytest.fixture
-def check_levels(mocker, autouse=True):
+def check_levels(mocker, autouse=True):  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     return mocker.spy(kube_node_container_count, "check_levels_v1")
 
 

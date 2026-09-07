@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa A002  # we're shadowing `help` to be consistent with the argparse API
-
 import argparse
 
 from ._impl import dereference_secret, Secret
@@ -16,7 +14,7 @@ def parser_add_secret_option(
     *,
     short: str | None = None,
     long: str,
-    help: str,
+    help: str,  # noqa: A002  # we're shadowing `help` to be consistent with the argparse API
     required: bool,
 ) -> None:
     """Add mutually exclusive secret options to an argument parser.

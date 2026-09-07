@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """Shared helpers: URI reading, label/filename conversion, XML writing."""
 
 import re
@@ -62,7 +60,7 @@ def write_xml(root: ET.Element, path: Path) -> None:
     path.write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n' + ET.tostring(root, encoding="unicode") + "\n"
     )
-    print(f"wrote {path}", file=sys.stderr)
+    print(f"wrote {path}", file=sys.stderr)  # noqa: T201  # It's OK for test/script helpers to print()
 
 
 def make_xml(

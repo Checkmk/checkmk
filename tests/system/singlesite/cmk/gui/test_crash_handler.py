@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import base64
 import json
 from collections.abc import Iterator
@@ -55,7 +53,7 @@ def _get_crash_report(site: Site) -> tuple[Path, dict[str, object]] | None:
 
 
 @pytest.mark.skip_if_edition("cloud")
-def test_crash_report(site: Site, faulty_page: None) -> None:
+def test_crash_report(site: Site, faulty_page: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     web = CMKWebSession(site)
     web.login()
     web.get("foo.py?password=get_var_secret")

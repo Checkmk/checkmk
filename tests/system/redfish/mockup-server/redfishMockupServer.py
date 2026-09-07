@@ -3,7 +3,7 @@
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Mockup-Server/blob/main/LICENSE.md
 
-# ruff: noqa: T201
+# ruff: noqa: T201  # It's OK for scripts to print()
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
@@ -57,7 +55,7 @@ def _section() -> Section:
     return parse(table)
 
 
-def test_gcp_multi_month(section: Section) -> None:
+def test_gcp_multi_month(section: Section) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     assert sorted(discover(parse(TABLE_MULTI_MONTH))) == [
         Service(item="la"),
         Service(item="th"),

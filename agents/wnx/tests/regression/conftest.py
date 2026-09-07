@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -83,7 +81,7 @@ def _get_data_using_telnet(addr_host: str, addr_port: int) -> str:
 
 
 @pytest.fixture(name="actual_output")
-def actual_output_engine(write_config, wait_agent):
+def actual_output_engine(write_config, wait_agent):  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Run agent and yield telnet output.
     p = None
     try:

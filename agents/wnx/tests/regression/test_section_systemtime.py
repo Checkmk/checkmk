@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -31,5 +29,5 @@ def expected_output_engine():
     return [r"<<<systemtime>>>", r"\d+"]
 
 
-def test_section_systemtime(testconfig, expected_output, actual_output, testfile) -> None:
+def test_section_systemtime(testconfig, expected_output, actual_output, testfile) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     local_test(expected_output, actual_output, testfile)

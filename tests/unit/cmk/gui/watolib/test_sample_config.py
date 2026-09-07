@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from pathlib import Path
 
 import pytest
@@ -50,7 +48,7 @@ def test_get_sorted_generators() -> None:
     assert {g.ident() for g in sample_config_generator_registry.get_generators()} == set(expected)
 
 
-def test_init_wato_data_structures(request_context: None) -> None:
+def test_init_wato_data_structures(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     init_wato_datastructures(folder_tree())
     assert Path(omd_root, "etc/check_mk/conf.d/wato/rules.mk").exists()
     assert Path(omd_root, "etc/check_mk/multisite.d/wato/tags.mk").exists()

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import json
 from collections.abc import Mapping
 
@@ -68,7 +66,7 @@ def test_check_proxmox_ve_vm_info(
     params: Mapping[str, object],
     section: pvcu.Section,
     expected_results: CheckResult,
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     results = tuple(pvcu.check_proxmox_ve_cpu_util(params, section))
     assert results == expected_results

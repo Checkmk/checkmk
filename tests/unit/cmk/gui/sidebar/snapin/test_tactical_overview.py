@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -27,7 +25,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:

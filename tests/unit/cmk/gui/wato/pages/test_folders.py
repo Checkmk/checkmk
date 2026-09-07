@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Iterator
 
 import pytest
@@ -73,7 +71,7 @@ def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
 @pytest.mark.usefixtures("suppress_license_banner")
 def test_ajax_call_2(
     wsgi_app: WebTestAppForCMK,
-    mock_livestatus: MockLiveStatusConnection,
+    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     auth_request: Request,
 ) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"

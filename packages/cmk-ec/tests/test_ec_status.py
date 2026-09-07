@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import time
 
 import pytest
@@ -27,7 +25,7 @@ def test_handle_client(status_server: StatusServer) -> None:
 
 
 def test_mkevent_check_query_perf(
-    config: ec.ConfigFromWATO,
+    config: ec.ConfigFromWATO,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     event_status: EventStatus,
     status_server: StatusServer,
 ) -> None:

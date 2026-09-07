@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """Find all directories that are part of the given implicit namespace package."""
 
 import importlib
@@ -23,4 +21,4 @@ def find_namespace_package_paths(namespace_name: str) -> list[str]:
     return [os.path.abspath(path) for path in namespace_module.__path__]
 
 
-print("\n".join(find_namespace_package_paths("cmk")))
+print("\n".join(find_namespace_package_paths("cmk")))  # noqa: T201  # It's OK for test/script helpers to print()

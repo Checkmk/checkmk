@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 # The script parses an LCOV coverage data file and generates a CSV summary of line and function coverage per file.
 
 import argparse
@@ -180,7 +178,7 @@ def main() -> None:
     write_csv(file_data, output_csv, total_only=args.total_only)
 
     output_type = "Total" if args.total_only else "Detailed"
-    print(f"{output_type} coverage CSV summary written to {args.csv_output}")
+    print(f"{output_type} coverage CSV summary written to {args.csv_output}")  # noqa: T201  # It's OK for scripts to print()
 
 
 if __name__ == "__main__":

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Sequence
 
@@ -78,6 +76,6 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
 def test_check_kube_node_info(
     section: NodeInfo,
     expected_check_result: Sequence[Result | Metric],
-    mocker: pytest_mock.MockerFixture,
+    mocker: pytest_mock.MockerFixture,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert list(check_kube_node_info(1600000001.0, section)) == expected_check_result

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import threading
 import time
@@ -39,7 +37,7 @@ from tests.testlib.common.utils import wait_until
 tracer = get_tracer()
 
 
-def test_registered_background_jobs(load_plugins: None) -> None:
+def test_registered_background_jobs(load_plugins: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",

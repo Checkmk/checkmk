@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -27,7 +25,7 @@ GEN_ID_COUNT = {"c": 0}
 
 
 @pytest.fixture(autouse=True)
-def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
+def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     GEN_ID_COUNT["c"] = 0
 
     def _gen_id():

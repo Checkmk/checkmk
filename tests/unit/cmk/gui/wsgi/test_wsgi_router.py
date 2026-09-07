@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -42,7 +40,7 @@ def search_up(search_path: str, start_path: str) -> str:
         current_path = new_path
 
 
-def test_wsgi_app(request_context: None) -> None:
+def test_wsgi_app(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     app_file = search_up(
         "packages/cmk-wsgi/cmk/gui/wsgi/applications/index.wsgi", os.path.dirname(__file__)
     )

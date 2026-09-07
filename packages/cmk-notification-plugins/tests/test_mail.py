@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 
 from pathlib import Path
@@ -211,7 +209,7 @@ another line\\nlast line
 
 
 # TODO: validate the HTML content
-def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
+def test_mail_content_from_service_context(mocker: MockerFixture) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # The items below are added by the mail plugin
     context = mock_service_context()
     assert "EVENT_TXT" not in context

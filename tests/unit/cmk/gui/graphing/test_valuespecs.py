@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
@@ -108,7 +106,7 @@ def test_graph_render_options_can_drop_the_inline_title() -> None:
 
 
 def test_graph_title_without_the_inline_choice_tolerates_a_stored_inline_title(
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     show_title = _vs_show_title(True, with_inline_title=False)
     request.set_var("title", "inline")

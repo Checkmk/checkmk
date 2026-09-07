@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -1073,7 +1071,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
 def test_convert_to_legacy_valuespec(  # type: ignore[misc]
     new_valuespec: FormSpec,
     expected: legacy_valuespecs.ValueSpec,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     _compare_specs(
         convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected

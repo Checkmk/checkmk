@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: test the interface, not the private members
-# ruff: noqa: SLF001
 
 from cmk.plugins.lib import ps
 
@@ -122,7 +121,7 @@ def test_get_discovery_specs() -> None:
             {},
         ]
     ) == [
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="smss",
             pattern="~smss.exe",
             user=None,
@@ -130,7 +129,7 @@ def test_get_discovery_specs() -> None:
             host_labels_explicit={},
             default_params={"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="svchost",
             pattern="svchost.exe",
             user=None,
@@ -148,7 +147,7 @@ def test_get_discovery_specs() -> None:
                 "virtual_levels": (1073741824000, 2147483648000),
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="firefox is on %s",
             pattern="~.*(fire)fox",
             user=None,
@@ -159,7 +158,7 @@ def test_get_discovery_specs() -> None:
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="firefox is on %s",
             pattern="~.*(fire)fox",
             user=None,
@@ -170,7 +169,7 @@ def test_get_discovery_specs() -> None:
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="emacs %u",
             pattern="emacs",
             user=False,
@@ -186,7 +185,7 @@ def test_get_discovery_specs() -> None:
                 "icon": "emacs.png",
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="cron",
             pattern="~.*cron",
             user="root",
@@ -200,7 +199,7 @@ def test_get_discovery_specs() -> None:
                 "resident_levels": (104857600, 209715200),
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="sshd",
             pattern="~.*sshd",
             user=None,
@@ -208,7 +207,7 @@ def test_get_discovery_specs() -> None:
             host_labels_explicit={},
             default_params={"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="PS counter",
             pattern=None,
             user="zombie",
@@ -216,7 +215,7 @@ def test_get_discovery_specs() -> None:
             host_labels_explicit={},
             default_params={"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="Checkhelpers %s",
             pattern=r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
             user=None,
@@ -227,7 +226,7 @@ def test_get_discovery_specs() -> None:
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="Checkhelpers Overall",
             pattern=r"~/omd/sites/\w+/lib/cmc/checkhelper",
             user=None,
@@ -238,7 +237,7 @@ def test_get_discovery_specs() -> None:
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        ps._InventorySpec(
+        ps._InventorySpec(  # noqa: SLF001
             description="cron",
             pattern="/usr/sbin/cron",
             user=None,

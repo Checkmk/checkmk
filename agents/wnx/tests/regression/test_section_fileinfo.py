@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -155,7 +153,7 @@ def use_testfiles():
 @pytest.mark.usefixtures("use_testfiles")
 def test_section_fileinfo(  # type: ignore[misc]
     request,
-    testconfig,
+    testconfig,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     expected_output: Sequence[str] | None,
     actual_output,
     testfile,

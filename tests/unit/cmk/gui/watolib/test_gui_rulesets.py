@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -56,7 +58,7 @@ GEN_ID_COUNT = {"c": 0}
 
 
 @pytest.fixture(autouse=True)
-def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:  # noqa: ARG001
+def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 
     def _gen_id():
@@ -129,7 +131,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         h: HostName,
         r: Sequence[Sequence[RuleSpec]],
         *,
-        debug: bool,  # noqa: ARG001
+        debug: bool,
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
@@ -261,7 +263,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 )
 @pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
 def test_matches_search_with_rules(  # type: ignore[misc]
-    with_admin_login: UserId,  # noqa: ARG001
+    with_admin_login: UserId,
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,
     folder_name: str,
@@ -287,7 +289,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     def analyze_host_rule_effectiveness(
         r: Sequence[Sequence[RuleSpec]],
         *,
-        debug: bool,  # noqa: ARG001
+        debug: bool,
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -306,7 +308,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
 
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
 def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
-    with_admin_login: UserId,  # noqa: ARG001
+    with_admin_login: UserId,
 ) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
@@ -328,7 +330,7 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
 
 
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:  # noqa: ARG001
+def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
@@ -350,7 +352,7 @@ def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_logi
 
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
 def test_matches_search_with_rules_is_ineffective_finds_not_matching(
-    with_admin_login: UserId,  # noqa: ARG001
+    with_admin_login: UserId,
 ) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),

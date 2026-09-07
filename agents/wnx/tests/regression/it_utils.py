@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 # mypy: disable-error-code="no-untyped-call"
 
 import os
@@ -35,7 +33,7 @@ def safe_binary_remove(binary_path: str) -> None:
     try:
         os.unlink(binary_path)
     except OSError as os_error:
-        print("Error %s during file delete" % os_error.errno)
+        print("Error %s during file delete" % os_error.errno)  # noqa: T201  # It's OK for test/script helpers to print()
 
 
 def stop_ohm() -> None:

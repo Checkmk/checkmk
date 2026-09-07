@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping, Sequence
@@ -101,7 +99,7 @@ def test_check_prism_host_usage(  # type: ignore[misc]
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert (
         list(

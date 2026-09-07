@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 
 from argparse import Namespace as Args
@@ -300,7 +298,7 @@ def test_agent_aws_ecs_limits(
 
 
 def test_agent_aws_ecs_limits_without_quota_client(
-    get_ecs_sections: ECSSections,
+    get_ecs_sections: ECSSections,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     region = "region"
     config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)

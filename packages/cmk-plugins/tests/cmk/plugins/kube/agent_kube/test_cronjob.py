@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: SLF001  # Private member accessed
-
 from cmk.plugins.kube.agent_handlers import cronjob_handler
 from cmk.plugins.kube.schemata import api, section
 from tests.cmk.plugins.kube.agent_kube.factory import (
@@ -28,7 +26,7 @@ def test_cron_job_status_section() -> None:
         last_successful_time=api.Timestamp(2.0),
     )
 
-    cron_job_status = cronjob_handler._status(api_cron_job_status, [api_job])
+    cron_job_status = cronjob_handler._status(api_cron_job_status, [api_job])  # noqa: SLF001
 
     assert cron_job_status == section.CronJobStatus(
         active_jobs_count=1,
@@ -50,7 +48,7 @@ def test_cron_job_latest_job_section() -> None:
         pod_uids=[pod.uid for pod in api_pods],
     )
 
-    latest_job = cronjob_handler._latest_job(api_job, {pod.uid: pod for pod in api_pods})
+    latest_job = cronjob_handler._latest_job(api_job, {pod.uid: pod for pod in api_pods})  # noqa: SLF001
 
     assert len(latest_job.pods) == pod_number
     assert latest_job.status == section.JobStatus(

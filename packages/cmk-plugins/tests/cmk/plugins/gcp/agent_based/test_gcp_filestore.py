@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from typing import override
 
 import pytest
@@ -123,13 +125,13 @@ def generate_results(plugin: Plugin) -> CheckResult:
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_results_as_specified(plugin: Plugin, empty_value_store: None) -> None:  # noqa: ARG001
+def test_yield_results_as_specified(plugin: Plugin, empty_value_store: None) -> None:
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
     assert results == plugin.expected_results()
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_metrics_as_specified(plugin: Plugin, empty_value_store: None) -> None:  # noqa: ARG001
+def test_yield_metrics_as_specified(plugin: Plugin, empty_value_store: None) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == plugin.expected_metrics()
 

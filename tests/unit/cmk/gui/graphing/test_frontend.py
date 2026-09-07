@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import json
 
 import pytest
@@ -221,7 +219,7 @@ def test_global_time_picker_props_without_preferences() -> None:
 
 
 def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained(
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     refresh = global_time_picker_refresh()
 

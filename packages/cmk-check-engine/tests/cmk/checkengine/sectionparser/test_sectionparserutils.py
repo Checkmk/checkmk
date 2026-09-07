@@ -6,8 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: ARG005
-
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any
 
@@ -117,7 +115,7 @@ def test_get_section_kwargs(
             SectionsParser(
                 host_sections=node_sections,
                 host_name=host_key.hostname,
-                error_handling=lambda *args, **kw: "error",
+                error_handling=lambda *args, **kw: "error",  # noqa: ARG005
             ),
             section_plugins=dict((SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)),
         ),
@@ -193,7 +191,7 @@ def test_get_section_cluster_kwargs(  # type: ignore[misc]
             SectionsParser(
                 host_sections=node1_sections,
                 host_name=HostName("node1"),
-                error_handling=lambda *args, **kw: "error",
+                error_handling=lambda *args, **kw: "error",  # noqa: ARG005
             ),
             section_plugins=dict((SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)),
         ),
@@ -202,7 +200,7 @@ def test_get_section_cluster_kwargs(  # type: ignore[misc]
                 SectionsParser(
                     host_sections=node2_sections,
                     host_name=HostName("node2"),
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins=dict((SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)),
             )

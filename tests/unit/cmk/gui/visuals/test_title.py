@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from typing import cast
 
 from cmk.gui.type_defs import Visual
@@ -15,5 +13,5 @@ from cmk.gui.visuals import visual_title
 VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE = cast(Visual, {"title": "My view", "single_infos": []})
 
 
-def test_visual_title_without_add_context_to_title(request_context: None) -> None:
+def test_visual_title_without_add_context_to_title(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     assert visual_title("view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}) == "My view"

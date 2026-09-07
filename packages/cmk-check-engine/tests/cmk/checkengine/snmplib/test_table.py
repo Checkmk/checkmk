@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-# ruff: noqa: SLF001
-
 
 import dataclasses
 from collections.abc import Sequence
@@ -132,7 +130,8 @@ def test_sanitize_snmp_encoding(
     expected: Sequence[Sequence[_snmp_table.SNMPDecodedValues]],
 ) -> None:
     assert [
-        _snmp_table._decode_column(c, v, partial(ensure_str, encoding=encoding)) for c, v in columns
+        _snmp_table._decode_column(c, v, partial(ensure_str, encoding=encoding))  # noqa: SLF001
+        for c, v in columns
     ] == expected
 
 

@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 import json
 import logging
 from collections.abc import Mapping, Sequence
@@ -59,9 +57,9 @@ def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         response = requests.Response()
         response.status_code = 200
-        response._content = b"response-ok"
+        response._content = b"response-ok"  # noqa: SLF001
         mock_request.return_value = response
-        result = core_api._get_healthz("/some_health_endpoint")
+        result = core_api._get_healthz("/some_health_endpoint")  # noqa: SLF001
     assert result.status_code == 200
     assert result.response == "response-ok"
 
@@ -70,9 +68,9 @@ def test_raw_api_get_healthz_nok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         response = requests.Response()
         response.status_code = 500
-        response._content = b"response-nok"
+        response._content = b"response-nok"  # noqa: SLF001
         mock_request.return_value = response
-        result = core_api._get_healthz("/some_health_endpoint")
+        result = core_api._get_healthz("/some_health_endpoint")  # noqa: SLF001
 
     assert result.status_code == 500
     assert result.response == "response-nok"
@@ -169,7 +167,7 @@ def test_version_endpoint(
     version_json_dump = json.dumps(version_json)
     response = requests.Response()
     response.status_code = 200
-    response._content = version_json_dump.encode("utf-8")
+    response._content = version_json_dump.encode("utf-8")  # noqa: SLF001
     # act
     with patch(CALL_API) as mock_request:
         mock_request.return_value = response
@@ -186,7 +184,7 @@ def test_version_endpoint_no_json(core_api: CoreAPI) -> None:
     """
     response = requests.Response()
     response.status_code = 200
-    response._content = b"I'm not json"
+    response._content = b"I'm not json"  # noqa: SLF001
     with patch(CALL_API) as mock_request:
         mock_request.return_value = response
         result = core_api.query_raw_version()
@@ -203,7 +201,7 @@ def test_version_endpoint_invalid_json(core_api: CoreAPI) -> None:
     # arrange
     response = requests.Response()
     response.status_code = 200
-    response._content = b"{}"
+    response._content = b"{}"  # noqa: SLF001
     # act
     with patch(CALL_API) as mock_request:
         mock_request.return_value = response

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # This file initializes the pytest environment
 
 import argparse
@@ -85,7 +83,7 @@ def get_test_type(test_path: Path) -> str:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config) -> Iterator[None]:
+def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     session_timeout_cli = "--session-timeout"
     timeout_duration = (
         _session_timeout_option

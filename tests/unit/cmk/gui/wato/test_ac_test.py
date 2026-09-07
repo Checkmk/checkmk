@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Sequence
 from pathlib import Path
 from typing import override
@@ -39,7 +37,7 @@ from cmk.utils.paths import local_lib_dir, local_web_dir
 
 def test_local_connection_mocked(
     mock_livestatus: MockLiveStatusConnection,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])

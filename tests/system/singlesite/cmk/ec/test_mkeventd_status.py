@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import time
 
@@ -17,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
-def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
+def test_command_reload(site: Site, ec: CMKEventConsole) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")

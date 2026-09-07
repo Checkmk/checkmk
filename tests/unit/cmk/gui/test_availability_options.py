@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from cmk.gui.availability.options import get_default_avoptions
 
 
-def test_get_default_avoptions(request_context: None) -> None:
+def test_get_default_avoptions(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     """Lock the option defaults derived from the valuespecs.
 
     get_default_avoptions() derives its values from the ``default_value=`` of

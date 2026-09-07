@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
 
@@ -654,7 +652,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Feigling")
+        print("Feigling")  # noqa: T201  # It's OK for scripts to print()
     except Exception as e:
         raise e
     finally:

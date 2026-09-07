@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG005
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
@@ -29,11 +27,11 @@ _DUMMY_DF_PLUGIN = CheckPlugin(
     name=CheckPluginName("df"),
     sections=[],
     service_name="My df service for %s",
-    discovery_function=lambda *a: iter(()),
+    discovery_function=lambda *a: iter(()),  # noqa: ARG005
     discovery_default_parameters={},
     discovery_ruleset_name=None,
     discovery_ruleset_type="merged",
-    check_function=lambda *a: iter(()),
+    check_function=lambda *a: iter(()),  # noqa: ARG005
     check_default_parameters={},
     check_ruleset_name=RuleSetName("my_df_ruleset_name"),
     cluster_check_function=None,
@@ -246,8 +244,8 @@ def test_aggregate_enforced_services_filters_unclustered() -> None:
                 HostAddress("host1"): {sid1: ("ruleset_name1", _dummy_service(sid1))},
                 HostAddress("host2"): {sid2: ("ruleset_name2", _dummy_service(sid2))},
             },
-            lambda host_name, servic_name, discovered_labels: host_name == HostAddress("host1"),
-            lambda service_name, discovered_labels: discovered_labels,
+            lambda host_name, servic_name, discovered_labels: host_name == HostAddress("host1"),  # noqa: ARG005
+            lambda service_name, discovered_labels: discovered_labels,  # noqa: ARG005
         )
     ) == (_dummy_service(sid1),)
 
@@ -290,8 +288,8 @@ def test_aggregate_enforced_services_merge() -> None:
                     )
                 },
             },
-            lambda host_name, servic_name, discovered_labels: True,
-            lambda service_name, discovered_labels: discovered_labels,
+            lambda host_name, servic_name, discovered_labels: True,  # noqa: ARG005
+            lambda service_name, discovered_labels: discovered_labels,  # noqa: ARG005
         )
     ) == (
         ConfiguredService(

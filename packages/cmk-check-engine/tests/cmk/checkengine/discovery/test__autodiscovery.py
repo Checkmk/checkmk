@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG002
-
 import datetime
 import logging
 import time
@@ -82,19 +80,19 @@ class _AutochecksConfigDummy:
     def __init__(self, *, effective_host: HostName) -> None:
         self._effective_host = effective_host
 
-    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:  # noqa: ARG002
         return False
 
-    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:  # noqa: ARG002
         return False
 
-    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:  # noqa: ARG002
         return self._effective_host
 
-    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:  # noqa: ARG002
         return f"{entry.check_plugin_name} / {entry.item}"
 
-    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
 
 

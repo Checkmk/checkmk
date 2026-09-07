@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-# ruff: noqa: SLF001  # tests call kube_pod_conditions._check to control `now`
-
 
 import json
 from collections.abc import Mapping
@@ -221,7 +219,7 @@ def test_check_all_ok_when_age_is_zero(ready_status: ConditionStatus) -> None:
         containersready=ready_status,
         ready=ready_status,
     )
-    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))
+    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))  # noqa: SLF001
     assert all(isinstance(r, Result) and r.state == State.OK for r in results)
 
 
@@ -229,7 +227,7 @@ def test_check_all_ok_when_age_is_zero(ready_status: ConditionStatus) -> None:
 def test_check_all_ok_when_status_expected_regardless_of_age(age_minutes: int) -> None:
     """Status matching expectations: never alerts, no matter how old."""
     section = _make_section(age_minutes=age_minutes)
-    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))
+    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))  # noqa: SLF001
     assert all(isinstance(r, Result) and r.state == State.OK for r in results)
 
 
@@ -251,7 +249,7 @@ def test_check_all_ok_when_status_unexpected_but_no_levels_configured(
         ready=ConditionStatus.FALSE,
         age_minutes=age_minutes,
     )
-    results = list(kube_pod_conditions._check(TIMESTAMP, params, section))
+    results = list(kube_pod_conditions._check(TIMESTAMP, params, section))  # noqa: SLF001
     assert all(isinstance(r, Result) and r.state == State.OK for r in results)
 
 
@@ -282,7 +280,7 @@ def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
     not threshold behavior.
     """
     section = _pod_conditions_section_status_unexpected(age_minutes)
-    results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))
+    results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))  # noqa: SLF001
     time_diff = render.timespan(age_minutes * MINUTE)
     expected = [
         f"{name.upper()}: {value} ({REASON}: {DETAIL}) for {time_diff}"
@@ -311,7 +309,7 @@ def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
 def test_check_results_when_all_status_unexpected(age_minutes: int, expected_state: State) -> None:
     """Validate service states based on the provided thresholds."""
     section = _pod_conditions_section_status_unexpected(age_minutes)
-    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))
+    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))  # noqa: SLF001
     assert all(r.state == expected_state for r in results if isinstance(r, Result))
 
 
@@ -324,7 +322,7 @@ def test_check_disruption_target_condition() -> None:
             last_transition_time=TIMESTAMP,
         ),
     )
-    results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))
+    results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))  # noqa: SLF001
     assert [r.summary for r in results if isinstance(r, Result)] == [
         "SCHEDULED: True",
         "HASNETWORK: True",
@@ -346,7 +344,7 @@ def test_check_handles_unknown_status() -> None:
     reported as 'Unknown' in the service summary.
     """
     section = _make_section(scheduled=ConditionStatus.UNKNOWN)
-    assert list(kube_pod_conditions._check(TIMESTAMP, {}, section)) == [
+    assert list(kube_pod_conditions._check(TIMESTAMP, {}, section)) == [  # noqa: SLF001
         Result(
             state=State.OK,
             summary=f"SCHEDULED: Unknown ({REASON}: {DETAIL}) for 0 seconds",

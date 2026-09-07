@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import os
 import shutil
 from collections.abc import Iterator, Mapping, Sequence
@@ -100,7 +98,7 @@ class _LogwatchConfigMocker:
 def test_checks_executor(
     agent_data_filename: str,
     request: pytest.FixtureRequest,
-    setup_dirs: Iterator[None],
+    setup_dirs: Iterator[None],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     _SKIP_LIST = [
         "agent-2.2.0p14-proxmox",

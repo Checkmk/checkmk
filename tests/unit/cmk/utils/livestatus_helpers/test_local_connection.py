@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import livestatus
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
-def test_local_table_assoc(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:
+def test_local_table_assoc(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
     live.add_table(

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Sequence
 
 import pytest
@@ -26,7 +28,7 @@ from cmk.gui.views.store import multisite_builtin_views
 
 
 @pytest.fixture(name="view_spec")
-def view_spec_fixture(request_context: None) -> ViewSpec:  # noqa: ARG001
+def view_spec_fixture(request_context: None) -> ViewSpec:
     return multisite_builtin_views["allhosts"]
 
 
@@ -89,10 +91,10 @@ def test_replace_action_url_macros(
         assert replace_action_url_macros(url, what, row) == result
 
 
-def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:  # noqa: ARG001
+def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
     monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
 
-    def rendr(row: Row) -> tuple[str, str]:  # noqa: ARG001
+    def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
 
     register_painter(

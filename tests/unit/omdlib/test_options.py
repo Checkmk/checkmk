@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from pathlib import Path
 
 import pytest
@@ -811,7 +809,7 @@ def test_parse_args_or_exec_other_omd_no_version_link_rm_warns(
 
 def test_parse_args_or_exec_other_omd_use_site_version(
     tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+    capsys: pytest.CaptureFixture[str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     site_dir = tmp_path / "sites" / "v250"
     site_dir.mkdir(parents=True)

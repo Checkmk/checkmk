@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -79,7 +81,7 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
 
 def test_remove_hosts_no_rules_early_return(
     activate_changes_mock: MagicMock,
-    patch_omd_site: None,  # noqa: ARG001
+    patch_omd_site: None,
 ) -> None:
     automatic_host_removal.execute_host_removal_job(Config())
     activate_changes_mock.assert_not_called()
@@ -104,7 +106,7 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="tree")
-def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:  # noqa: ARG001
+def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:
     return make_folder_tree(config)
 
 
@@ -245,7 +247,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
         h: HostName,
         r: Sequence[Sequence[RuleSpec]],
         *,
-        debug: bool,  # noqa: ARG001
+        debug: bool,
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """Generate Windows and Linux dumps from Jinja2 templates.
 
 This script processes a Jinja2 template file and renders it with dynamic values.
@@ -37,4 +35,4 @@ if __name__ == "__main__":
     with open(sys.argv[1]) as file:
         template = jinja2.Template(file.read())
 
-    print(template.render(timestamp=int(time.time())))
+    print(template.render(timestamp=int(time.time())))  # noqa: T201  # It's OK for scripts to print()

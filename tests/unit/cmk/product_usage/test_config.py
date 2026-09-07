@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pprint
 import typing
 from pathlib import Path
@@ -100,7 +98,7 @@ def test_get_proxy_config(
     assert proxy_config == expected_proxy_config
 
 
-def test_read_config_file_with_missing_file(tmp_path: Path) -> None:
+def test_read_config_file_with_missing_file(tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with pytest.raises(ConfigError):
         read_config_file(Path("/non_existent_directory"))
 

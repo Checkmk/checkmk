@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 
@@ -168,7 +166,7 @@ def test_check_f5_bigip_vserver_division_regression_with_params(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_f5_bigip_vserver_division_regression_disabled(string_table: list[list[str]]) -> None:
+def test_check_f5_bigip_vserver_division_regression_disabled(string_table: list[list[str]]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Modify string table to have a disabled virtual server
     disabled_string_table = [
         [

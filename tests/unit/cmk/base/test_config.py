@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -2658,7 +2660,7 @@ def test_host_config_add_discovery_check(
 
 
 def test_get_config_file_paths_with_confd(
-    folder_path_test_config: BaseConfig,  # noqa: ARG001
+    folder_path_test_config: BaseConfig,
 ) -> None:
     # NOTE: there are still some globals at play here, otherwise we would have to use
     # the folder_path_test_config somewhere.
@@ -2761,7 +2763,7 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
 
 @pytest.fixture(name="folder_path_test_config")
 def folder_path_test_config_fixture(
-    monkeypatch: MonkeyPatch,  # noqa: ARG001
+    monkeypatch: MonkeyPatch,
 ) -> Iterator[BaseConfig]:
     config_dir = cmk.utils.paths.check_mk_config_dir
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -2893,7 +2895,7 @@ explicit_host_conf['{setting_name}'].update({values_})
         )
 
 
-def test_explicit_setting_loading(patch_omd_site: None) -> None:  # noqa: ARG001
+def test_explicit_setting_loading(patch_omd_site: None) -> None:
     main_mk_file = cmk.utils.paths.main_config_file
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),
@@ -2952,10 +2954,10 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         check_function=list,
     )
 
-    def _noop_disco(section: None) -> Iterable[Service]:  # noqa: ARG001
+    def _noop_disco(section: None) -> Iterable[Service]:
         yield from ()
 
-    def _noop_check(section: None) -> Iterable[Result]:  # noqa: ARG001
+    def _noop_check(section: None) -> Iterable[Result]:
         yield from ()
 
     new_style_plugin = CheckPlugin(
@@ -2996,7 +2998,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     duplicate_plugin = (LegacyCheckDefinition(name="duplicate_plugin"),)
 
-    def dummy_parse_function(string_table: StringTable) -> int:  # noqa: ARG001
+    def dummy_parse_function(string_table: StringTable) -> int:
         return 42
 
     new_style_section = SimpleSNMPSection(

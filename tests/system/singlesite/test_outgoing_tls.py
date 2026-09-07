@@ -74,7 +74,7 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
 
 
 @pytest.mark.parametrize("tls_version", TLS_VERSIONS, ids=lambda v: v.name)
-def test_test_utils(site: Site, tmp_path: Path, tls_version: ssl.TLSVersion) -> None:  # noqa: ARG001
+def test_test_utils(site: Site, tmp_path: Path, tls_version: ssl.TLSVersion) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     """make sure that our tls_connect indeed could connect to an old TLS version"""
     with tls_listening_socket(tmp_path, tls_version) as (port, ca_path):
         tls_connect("localhost", port, ca_path, tls_version)

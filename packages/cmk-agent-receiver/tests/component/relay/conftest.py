@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 import pathlib
 from collections.abc import Iterator
 
@@ -48,7 +46,7 @@ def test_client(site_context: Config) -> Iterator[TestClient]:
     client = TestClient(app)
     yield client
 
-    print(site_context.log_path.read_text())
+    print(site_context.log_path.read_text())  # noqa: T201  # It's OK for test/script helpers to print()
 
 
 @pytest.fixture(scope="session")

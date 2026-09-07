@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import typing
 
 import pytest
@@ -45,7 +43,7 @@ def test_discovery(section: df_zos.Section) -> None:
     assert sorted(df_zos.discover_df_zos([{"groups": []}], section)) == [Service(item="/ALF0")]
 
 
-def test_check_no_item(section: df_zos.Section, empty_value_store: None) -> None:
+def test_check_no_item(section: df_zos.Section, empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     assert not list(df_zos.check_df_zos("knut", {}, section))
 
 

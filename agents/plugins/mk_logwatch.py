@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Agent plugins still need to support Python 3.4
-# ruff: noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
-
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -133,7 +130,7 @@ def ensure_text_type(s, encoding="utf-8", errors="strict"):
 
 def escaped(char):
     # type: (int) -> str
-    return ensure_text_type("\\x{:02x}".format(char))
+    return ensure_text_type("\\x{:02x}".format(char))  # noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
 
 
 if PY_GE_35:

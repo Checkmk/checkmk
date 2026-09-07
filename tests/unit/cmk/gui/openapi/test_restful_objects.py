@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import json
 from collections.abc import Sequence
@@ -211,7 +209,7 @@ def test_status_codes_match() -> None:
 def test_no_config_generation_on_certain_posts(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
-    with_host: Sequence[HostName],
+    with_host: Sequence[HostName],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch: pytest.MonkeyPatch,
     mocker: MockerFixture,
 ) -> None:

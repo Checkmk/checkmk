@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import time
 
@@ -134,7 +132,7 @@ def test_filtered_services_combined_graphs(
 
 def test_no_errors_on_combined_graphs_page(
     dashboard_page: MainDashboard,
-    linux_hosts: list[str],
+    linux_hosts: list[str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     """Test that there are no errors on the 'Combined graphs - Service search' page."""
     service_search_page = ServiceSearchPage(dashboard_page.page)

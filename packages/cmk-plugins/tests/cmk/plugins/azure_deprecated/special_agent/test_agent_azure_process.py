@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping, Sequence
@@ -417,7 +419,7 @@ def test_get_vm_labels_section(
 )
 @patch("cmk.plugins.azure_deprecated.special_agent.agent_azure", return_value=None)
 def test_process_resource(  # type: ignore[misc]
-    mock_gather_metrics: MagicMock,  # noqa: ARG001
+    mock_gather_metrics: MagicMock,
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,
@@ -875,7 +877,7 @@ def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str
     )
 
 
-def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG001
+def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )

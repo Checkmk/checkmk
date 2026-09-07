@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Agent plugins still need to support Python 3.4
-# ruff: noqa: FLY002  # flake8-flynt introduces f-strings (Python 3.6 feature)
-
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -588,7 +585,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
         if len(subinstance) > 1:
             instance_out = ",".join((inst.name,) + subinstance[:-1])
         elif inst_add is not None:
-            instance_out = ",".join((inst.name, inst_add))
+            instance_out = ",".join((inst.name, inst_add))  # noqa: FLY002  # flake8-flynt introduces f-strings (Python 3.6 feature)
         else:
             instance_out = inst.name
         instance_out = instance_out.replace(" ", "_")

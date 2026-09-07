@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """Pack a directory tree into a Microsoft Cabinet (MSZIP-compressed).
 
 Replaces the historical ``makecab.exe`` invocation in the windows agent's
@@ -60,7 +58,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if not args.root.is_dir():
-        print(f"error: {args.root} is not a directory", file=sys.stderr)
+        print(f"error: {args.root} is not a directory", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         return 1
 
     # makecab's directive enumerated the install root's files first, then the

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """List the Python source files the repository-wide coverage number is about.
 
 One list, handed to ``scope`` twice over: it decides which records survive in
@@ -33,7 +31,7 @@ def main() -> None:
             "is nothing to measure."
         )
     args.paths_out.write_text("".join(f"{path}\n" for path in paths))
-    print(f"{len(paths)} source file(s) to measure", file=sys.stderr)
+    print(f"{len(paths)} source file(s) to measure", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
 
 
 @dataclass(frozen=True, kw_only=True)

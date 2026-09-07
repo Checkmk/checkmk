@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from unittest.mock import MagicMock
 
 from pytest_mock import MockerFixture
@@ -48,7 +46,7 @@ def _flatten(dropdowns: list[PageMenuDropdown]) -> list[str]:
 
 def test_add_to_visual_topics_for_pnpgraph_with_community_edition(
     mocker: MockerFixture,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     mocker.patch(
         "cmk.gui.visuals._add_to_visual.visual_type_registry",

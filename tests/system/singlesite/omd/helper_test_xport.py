@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 import ast
 import sys
 
@@ -12,7 +10,7 @@ import rrdtool  # type: ignore[import-not-found]
 
 rrd_database, qstart, qend = ast.literal_eval(sys.stdin.read())
 
-print(
+print(  # noqa: T201  # It's OK for test/script helpers to print()
     rrdtool.xport(
         [
             f"DEF:fir={rrd_database}:one:AVERAGE",

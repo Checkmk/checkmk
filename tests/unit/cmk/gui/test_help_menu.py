@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from cmk.gui import help_menu
 from cmk.gui.main_menu import MainMenuRegistry
 
 
-def test_unack_incomp_werks_button_links_to_filtered_werks(request_context: None) -> None:
+def test_unack_incomp_werks_button_links_to_filtered_werks(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     registry = MainMenuRegistry()
     help_menu.register(
         registry,

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from datetime import datetime, timedelta, UTC
 
 import pytest
@@ -26,7 +24,7 @@ _TOKEN_TTL = timedelta(minutes=5)
 
 
 @pytest.fixture(name="client_id")
-def fixture_client_id(flask_app: Flask) -> str:
+def fixture_client_id(flask_app: Flask) -> str:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with get_client_store() as store:
         registered = store.register(["https://client.example/callback"], None)
     assert registered.is_ok()

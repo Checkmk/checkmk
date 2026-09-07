@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-def"
 
 import logging
@@ -31,7 +29,7 @@ def test_parse_arguments_debug() -> None:
     assert main.parse_arguments(["--debug", "old"]).debug is True
 
 
-def test_parse_argument_site_id(capsys: pytest.CaptureFixture[str]) -> None:
+def test_parse_argument_site_id(capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with pytest.raises(SystemExit, match="2"):
         main.parse_arguments([])
     assert main.parse_arguments(["hurz"]).old_site_id == "hurz"

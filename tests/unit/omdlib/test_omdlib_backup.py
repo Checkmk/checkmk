@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 
 import socket
 import tarfile
@@ -149,7 +147,7 @@ def test_backup_site_to_tarfile_socket_fail(tmp_path: Path) -> None:
 
     test_file = site_home / "test_file"
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    print(str(test_file))
+    print(str(test_file))  # noqa: T201  # It's OK for test/script helpers to print()
     server.bind(str(test_file))
 
     tar_path = tmp_path / "backup.tar"

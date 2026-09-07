@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -274,7 +272,7 @@ def test_check_fjdarye_ca_ports(
     item: str,
     section: Mapping[str, Mapping[str, float | str]],
     check_result_showing_mode: Result,
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     check_result = list(check_fjdarye_ca_ports(item=item, params={}, section=section))
     assert check_result[0] == check_result_showing_mode

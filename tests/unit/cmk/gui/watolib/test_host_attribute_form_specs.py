@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping
 
 import pytest
@@ -112,7 +110,7 @@ def test_show_in_table_attributes_are_paintable_as_plain_text() -> None:
 
 
 @pytest.fixture(name="form_spec_attribute")
-def _fixture_form_spec_attributes(load_config: object) -> dict[str, ABCHostAttributeFormSpec]:
+def _fixture_form_spec_attributes(load_config: object) -> dict[str, ABCHostAttributeFormSpec]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     return form_spec_attributes()
 
 

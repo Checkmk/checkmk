@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import pytest
 
@@ -231,7 +229,7 @@ def test_end_closes_table_when_header_open() -> None:
 def test_vars_to_delete(
     request_vars: list[tuple[str, str]],
     expected_removed: list[str],
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     form_prefix: str = "search_p_rule"
     for var, val in request_vars:

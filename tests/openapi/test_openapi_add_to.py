@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping
 
 from cmk.graphing_engine import (
@@ -95,7 +93,7 @@ _EMPTY_DASHBOARD = {
 
 def test_add_to_visual_stores_the_graph_in_the_dashboard(
     clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
+    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     # mock_livestatus is required because graph widgets want the connected site PIDs; no queries
     # are actually executed.

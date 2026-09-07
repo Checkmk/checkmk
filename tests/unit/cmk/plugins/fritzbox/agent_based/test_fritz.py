@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import datetime
 from zoneinfo import ZoneInfo
 
@@ -200,7 +198,7 @@ def test_discover_fritz_wan_if(
 def test_check_fritz_wan_if(
     section: Section,
     expected_result: CheckResult,
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert (
         list(

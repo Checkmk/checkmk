@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -610,8 +612,8 @@ def test_get_aggregation_state_filter_names_no_match(
 @pytest.mark.parametrize("wato_enabled", [True, False])
 def test_post_bi_pack_creating_contact_groups_regression(
     clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001
-    wato_enabled: bool,  # noqa: ARG001
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
 ) -> None:
     contact_group = "i_should_never_exists"
 

@@ -5,9 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-# ruff: noqa: SLF001
-# ruff: noqa: ARG001
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -235,8 +232,8 @@ def test__get_service_filter_func_no_lists(
     parameters_rediscovery: filters.RediscoveryParameters,
 ) -> None:
     service_filters = filters.ServiceFilters.from_settings(parameters_rediscovery)
-    assert service_filters.new is filters._accept_all_services
-    assert service_filters.vanished is filters._accept_all_services
+    assert service_filters.new is filters._accept_all_services  # noqa: SLF001
+    assert service_filters.vanished is filters._accept_all_services  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -249,7 +246,9 @@ def test__get_service_filter_func_no_lists(
     ],
 )
 def test__get_service_filter_func_same_lists(
-    monkeypatch: pytest.MonkeyPatch, whitelist: Sequence[str], result: bool
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    whitelist: Sequence[str],
+    result: bool,
 ) -> None:
     service_filters = filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
     assert service_filters.new is not None
@@ -753,7 +752,7 @@ def test__get_service_filters_lists(
     changed_params_whitelist: list[str] | None,
     changed_params_blacklist: list[str] | None,
 ) -> None:
-    service_filter_lists = filters._get_service_filter_lists(parameters)
+    service_filter_lists = filters._get_service_filter_lists(parameters)  # noqa: SLF001
     assert service_filter_lists.new_whitelist == new_whitelist
     assert service_filter_lists.new_blacklist == new_blacklist
     assert service_filter_lists.vanished_whitelist == vanished_whitelist

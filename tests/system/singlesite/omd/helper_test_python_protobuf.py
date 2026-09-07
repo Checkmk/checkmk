@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 # Tools are not aware of our generated test module
 import test_pb2  # type: ignore[import-not-found]
 
@@ -19,4 +17,4 @@ serialized = address_book.SerializeToString()
 
 address_book2 = test_pb2.AddressBook()
 address_book2.ParseFromString(serialized)
-print(len(address_book.people))
+print(len(address_book.people))  # noqa: T201  # It's OK for test/script helpers to print()

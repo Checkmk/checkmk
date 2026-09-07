@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 import dataclasses
@@ -91,7 +93,7 @@ class QuietSnapin(SidebarSnapin):
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None,  # noqa: ARG001
+    request_context: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
@@ -333,7 +335,7 @@ def test_vue_snapin_config_of_a_closed_snapin() -> None:
 
 @pytest.mark.usefixtures("patch_theme", "extra_snapins")
 def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
     load_config: Config,
 ) -> None:
     """The sidebar polls the regularly refreshed snap-ins, re-renders the restart-dependent
@@ -765,7 +767,7 @@ def test_renderer_without_content(monkeypatch: pytest.MonkeyPatch, load_config: 
 
 
 @pytest.mark.usefixtures("patch_theme")
-def test_body_start_marks_screenshot_mode(load_config: Config) -> None:  # noqa: ARG001
+def test_body_start_marks_screenshot_mode(load_config: Config) -> None:
     with output_funnel.plugged():
         SidebarRenderer()._show_body_start(  # noqa: SLF001
             screenshot_mode=True, sidebar_notify_interval=None, kiosk=False
@@ -777,7 +779,7 @@ def test_body_start_marks_screenshot_mode(load_config: Config) -> None:  # noqa:
 
 
 @pytest.mark.usefixtures("patch_theme")
-def test_body_start_of_a_kiosk_page_has_no_sidebar_shell(load_config: Config) -> None:  # noqa: ARG001
+def test_body_start_of_a_kiosk_page_has_no_sidebar_shell(load_config: Config) -> None:
     """Kiosk pages (widget iframes) host no sidebar, so they must not get its body styling."""
     with output_funnel.plugged():
         SidebarRenderer()._show_body_start(  # noqa: SLF001
@@ -815,7 +817,7 @@ def test_page_side_uses_the_configured_sidebar(
 ) -> None:
     seen: dict[str, Any] = {}
 
-    def _show(self: SidebarRenderer, **kwargs: Any) -> None:  # noqa: ARG001
+    def _show(self: SidebarRenderer, **kwargs: Any) -> None:
         seen.update(kwargs)
 
     with monkeypatch.context() as m:

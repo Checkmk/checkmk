@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import datetime
 
@@ -1267,7 +1265,7 @@ def test_openapi_service_description_for_single_downtime(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_modify_downtime_without_parameters(
     clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
+    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     clients.Downtime.modify(
         modify_type="by_id",

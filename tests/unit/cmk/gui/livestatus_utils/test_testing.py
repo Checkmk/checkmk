@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import livestatus
 
 from cmk.gui import sites
@@ -13,7 +11,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 def test_intercept_queries(
     mock_livestatus: MockLiveStatusConnection,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     with mock_livestatus(expect_status_query=True):
         live = sites.live()

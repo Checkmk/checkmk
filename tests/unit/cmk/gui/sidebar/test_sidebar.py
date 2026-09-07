@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Iterator, Sequence
@@ -24,7 +22,7 @@ from cmk.gui.utils.roles import UserPermissions
 
 
 @pytest.fixture(scope="function", autouse=True)
-def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
         m.setattr(user, "may", lambda x: True)  # noqa: ARG005

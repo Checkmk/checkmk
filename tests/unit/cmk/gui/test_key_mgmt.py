@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import time
 from pathlib import Path
 
@@ -18,7 +16,7 @@ from cmk.utils.keypair_store import Key
 
 
 @pytest.mark.usefixtures("request_context")
-def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch.setattr(time, "time", lambda: 123)
 
     key = key_mgmt.generate_key(

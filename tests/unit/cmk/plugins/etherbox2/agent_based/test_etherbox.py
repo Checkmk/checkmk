@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
@@ -193,7 +191,7 @@ def test_check_humidity() -> None:
     }
 
 
-def test_check_temp(empty_value_store: None) -> None:
+def test_check_temp(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     section = etherbox.etherbox_convert(
         [
             [["0"]],

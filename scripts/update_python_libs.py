@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """This script checks the deps before and after running `make relock_venv` and writes the diff to a
 file to be then picked up as git commit message."""
 
@@ -177,7 +175,7 @@ def _main() -> None:
         )
         subprocess.check_call(["git", "commit", "-F", ".git-commit-msg"])
     else:
-        print("git commit -F .git-commit-msg")
+        print("git commit -F .git-commit-msg")  # noqa: T201  # It's OK for scripts to print()
 
 
 if __name__ == "__main__":

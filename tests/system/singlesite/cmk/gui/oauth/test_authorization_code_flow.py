@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """System-level tests for the RFC 6749 + PKCE authorization-code flow.
 
 Walks the whole flow over real HTTP against a running site -- dynamic client
@@ -197,7 +195,7 @@ def test_authorize_deny_redirects_with_access_denied(
 
 @pytest.mark.skip_if_edition("community", "cloud")
 def test_authorize_returns_400_for_unknown_client_id(
-    mcp_enabled_site: Site,
+    mcp_enabled_site: Site,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     web: CMKWebSession,
 ) -> None:
     """A client_id that was never dynamically registered must not reach the consent screen."""

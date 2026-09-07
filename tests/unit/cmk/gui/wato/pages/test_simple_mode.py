@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Sequence
 from os import devnull
@@ -115,7 +113,7 @@ def test_page_form_render_entry_valuespec(
     new: bool,
     clone: str | None,
     expected_form: bool,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     test_edition: Edition,
 ) -> None:
     mode_type = SomeModeType()

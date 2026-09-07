@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
@@ -58,7 +56,7 @@ from cmk.web.utils.html import HTML
     ],
 )
 def test_text_with_links_to_user_translated_html(
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     elements: list[tuple[str, str | None]],
     separator: HTML | None,
     rendered_title: HTML,

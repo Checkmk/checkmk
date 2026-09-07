@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -234,7 +232,7 @@ def _value_spec_attributes() -> dict[str, ABCHostAttributeValueSpec]:
 
 @pytest.fixture(name="value_spec_attributes")
 def _fixture_value_spec_attributes(
-    load_config: object,
+    load_config: object,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> dict[str, ABCHostAttributeValueSpec]:
     return _value_spec_attributes()
 

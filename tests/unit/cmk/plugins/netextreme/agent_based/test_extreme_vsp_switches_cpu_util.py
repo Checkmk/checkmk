@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import datetime
 from collections.abc import Mapping, Sequence
 from zoneinfo import ZoneInfo
@@ -91,7 +89,7 @@ def test_check_vsp_switches_cpu_util(
     string_table: StringTable,
     params: Mapping[str, object],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     with time_machine.travel(datetime.datetime(2023, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):
         assert (

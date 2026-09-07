@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 # mypy: disable-error-code="explicit-any"
 
 """Act as a datasource program for a Checkmk site.
@@ -172,7 +170,7 @@ def print_data(*data: object, file: TextIO | None = None, **kwargs: Any) -> None
     kwargs["sep"] = SEPARATOR
     kwargs["end"] = SEPARATOR
     kwargs["file"] = file
-    print(*data, **kwargs)
+    print(*data, **kwargs)  # noqa: T201  # It's OK for scripts to print()
 
 
 class TypeCliArgs(Namespace):

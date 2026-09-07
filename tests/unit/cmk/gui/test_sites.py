@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
@@ -135,7 +133,7 @@ def test_site_config_for_livestatus_tcp_tls() -> None:
     assert site_config["proxy"] is None
 
 
-def test_sorted_sites(request_context: None) -> None:
+def test_sorted_sites(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     expected = [
         ("site1", "Site 1"),
         ("site12", "Site 12"),

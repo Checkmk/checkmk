@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -463,7 +461,7 @@ def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRe
     clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(404)
 
 
-def test_unknown_site_404(clients: ClientRegistry, remote_site: str) -> None:
+def test_unknown_site_404(clients: ClientRegistry, remote_site: str) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     clients.GlobalSetting.get_site("no_such_site", INT_VAR, expect_ok=False).assert_status_code(404)
 
 

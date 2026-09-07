@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import sys
 
@@ -61,7 +59,7 @@ def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> Non
     assert capsys.readouterr() == ("", "")
 
 
-def test_warning(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
+def test_warning(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     console.warning("  hello  ", file=sys.stderr)
     assert capsys.readouterr() == ("", "  hello  \n")
 

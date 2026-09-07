@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 # Golden Tests for the LDAP connector
@@ -186,7 +188,7 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
     )
 
 
-def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:  # noqa: ARG001
+def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     ldap_result = [
         ("user1", {"uid": [b"USER1_ID"]}),
         ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
@@ -238,7 +240,7 @@ class AnyOrderMatcher:
         return f"AnyOrderMatcher({self.args})"
 
 
-def test_do_sync(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
+def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     loaded_users: Users = {
         UserId("alice"): {"connector": "htpasswd"},
@@ -253,12 +255,12 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:  # noqa:
 
     def assert_expected_users(
         users_to_save: Users,
-        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG001
-        user_connections: Sequence[UserConnectionConfig],  # noqa: ARG001
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         _now: datetime.datetime,
         _pprint_value: bool,
         _call_users_saved_hook: bool,
-        changed_users: list[UserId] | Literal["all"] = "all",  # noqa: ARG001
+        changed_users: list[UserId] | Literal["all"] = "all",
     ) -> None:
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
@@ -283,7 +285,7 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:  # noqa:
 
 
 def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """The LDAP sync's stale-user removal leaves a user owned by
     another connector (here the SAML connector) untouched, and raises no error,
@@ -317,8 +319,8 @@ def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
 
 def test_check_credentials_valid(
     mocker: MockerFixture,
-    mock_ldap: MagicMock,  # noqa: ARG001
-    request_context: None,  # noqa: ARG001
+    mock_ldap: MagicMock,
+    request_context: None,
 ) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
@@ -343,7 +345,7 @@ def test_check_credentials_valid(
 
 def test_login_of_an_unknown_ldap_user_syncs_it(
     mocker: MockerFixture,
-    mock_ldap: MagicMock,  # noqa: ARG001
+    mock_ldap: MagicMock,
     wsgi_app: WebTestAppForCMK,
 ) -> None:
     """Flask opens the session while pushing the request context, so the sync that runs
@@ -371,7 +373,7 @@ def test_login_of_an_unknown_ldap_user_syncs_it(
     assert UserId("carol") in load_users()
 
 
-def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:  # noqa: ARG001
+def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
@@ -391,7 +393,7 @@ def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) 
         )
 
 
-def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:  # noqa: ARG001
+def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
         connector.connect()
@@ -611,7 +613,7 @@ sync_data: list[SyncLdapData] = [
 def test_ldap_sync(
     mocker: MockerFixture,
     sync_ldap_data: SyncLdapData,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
     # The connector is treated as an authentication connection so the "user
@@ -686,8 +688,8 @@ _test_config_with_auth_expire = LDAPUserConnectionConfig(
 
 def test_check_credentials_with_auth_expire(
     mocker: MockerFixture,
-    mock_ldap: MagicMock,  # noqa: ARG001
-    request_context: None,  # noqa: ARG001
+    mock_ldap: MagicMock,
+    request_context: None,
 ) -> None:
     """Login with auth_expire plugin enabled must request all needed LDAP attributes.
 
@@ -814,7 +816,7 @@ _test_config_no_suffix = LDAPUserConnectionConfig(
 )
 
 
-def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
+def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context: None) -> None:
     """A SAML-owned user with a matching LDAP entry is taken over by LDAP sync.
 
     Connector flips to the LDAP id and LDAP-managed attributes are written.
@@ -846,7 +848,7 @@ def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context:
 
 def test_takeover_drops_attributes_provided_by_saml(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """On takeover, attributes the SAML connector managed are dropped.
 
@@ -899,7 +901,7 @@ def test_takeover_drops_attributes_provided_by_saml(
     assert taken_over["temperature_unit"] == "celsius"
 
 
-def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
+def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:
     """A SAML-owned user with NO matching LDAP entry is left untouched.
 
     ``do_sync`` only iterates fetched LDAP users, so a SAML-only user is never reached by the takeover path.
@@ -931,7 +933,7 @@ def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_conte
     )
 
 
-def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
+def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:
     """A regular LDAP-owned user still receives the standard modify event.
 
     The new takeover branch must not affect users that were already owned by the LDAP connector.
@@ -988,7 +990,7 @@ def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_conte
 
 def test_sync_does_not_take_over_htpasswd_user(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """Takeover is SAML-only — htpasswd-owned users fall through to today's
     name-conflict skip path.
@@ -1027,7 +1029,7 @@ def test_sync_does_not_take_over_htpasswd_user(
 
 def test_takeover_emits_security_event_and_change(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """Takeover records a 'user modified' security event AND a change entry
     that explicitly names the ownership transfer.
@@ -1071,7 +1073,7 @@ def test_takeover_emits_security_event_and_change(
 
 def test_takeover_with_suffix_keeps_bare_userid(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """Takeover reuses the bare UserId even when the LDAP connector has a
     suffix configured. Existing users are never renamed
@@ -1114,7 +1116,7 @@ def test_takeover_with_suffix_keeps_bare_userid(
 
 def test_sync_skips_creation_for_attr_only_connector(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """A connector absent from `authentication_connections` must not create a
     new user during the periodic background sync (`login_attempt=False`).
@@ -1146,7 +1148,7 @@ def test_sync_skips_creation_for_attr_only_connector(
 
 def test_sync_creates_user_for_authentication_connector(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """A connector listed in `authentication_connections` still creates new
     users during the periodic sync — the gate does not change this path.
@@ -1181,7 +1183,7 @@ def test_sync_creates_user_for_authentication_connector(
 
 def test_sync_updates_existing_user_for_attr_only_connector(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """An attribute-sync-only connector still updates an existing user it owns.
     The creation gate sits on the new-user branch only.
@@ -1227,7 +1229,7 @@ def test_sync_updates_existing_user_for_attr_only_connector(
 
 def test_sync_takeover_still_works_for_attr_only_connector(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     """The CMK-33824 SAML->LDAP takeover still applies for a connector that is
     only in `user_attribute_sync_connections`: takeover acts on an
@@ -1261,7 +1263,7 @@ def test_sync_takeover_still_works_for_attr_only_connector(
 
 def test_sync_attr_only_connector_deletes_owned_user_gone_from_ldap(
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
     set_config: SetConfig,
 ) -> None:
     """Deletion follows ownership, not auth membership: an attribute-sync-only
@@ -1520,8 +1522,8 @@ def test_fetch_needed_groups_for_groups_to_roles_multiple_groups_in_one_role(
 
     def _memberships(
         names: list[str],
-        filt_attr: str | None = None,  # noqa: ARG001
-        nested: bool = False,  # noqa: ARG001
+        filt_attr: str | None = None,
+        nested: bool = False,
     ) -> dict[str, dict[str, object]]:
         return {name: {"cn": name, "members": ["alice"]} for name in names}
 

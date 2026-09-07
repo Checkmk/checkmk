@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# ruff: noqa: ARG001
-
 from collections.abc import Iterator
 
 import pytest
@@ -15,7 +13,7 @@ from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName, Parsed
 from cmk.discover_plugins import PluginLocation
 
 
-def dummy_generator(section: object) -> Iterator[str]:
+def dummy_generator(section: object) -> Iterator[str]:  # noqa: ARG001
     yield "this will raise an exception, when encountered"
 
 
@@ -40,7 +38,7 @@ def test_create_inventory_plugin_not_a_generator() -> None:
 
 
 def test_create_inventory_plugin_wrong_arg_name() -> None:
-    def dummy_generator(noitces: object) -> Iterator[str]:
+    def dummy_generator(noitces: object) -> Iterator[str]:  # noqa: ARG001
         return
         yield
 

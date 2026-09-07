@@ -6,8 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: ARG005
-
 
 import copy
 import itertools
@@ -551,12 +549,12 @@ class TestAgentParser:
         monkeypatch.setattr(
             SectionStore,
             "load",
-            lambda self: {
+            lambda self: {  # noqa: ARG005
                 SectionName("persisted"): (42, 69, [["content"]]),
             },
         )
         # Patch IO:
-        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
+        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)  # noqa: ARG005
 
         raw_data = AgentRawData(
             b"\n".join(

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.gui.monitor.services._api import _action_menu
@@ -41,7 +43,7 @@ def test_serialize_entry_skips_entries_without_url() -> None:
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> None:  # noqa: ARG001
+def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.reload),
@@ -51,7 +53,7 @@ def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> Non
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_maps_link(passthrough_macros: None) -> None:  # noqa: ARG001
+def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.logwatch),
@@ -66,7 +68,7 @@ def test_serialize_entry_maps_link(passthrough_macros: None) -> None:  # noqa: A
     assert isinstance(item.target, ApiOmitted)
 
 
-def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:  # noqa: ARG001
+def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.graph),
@@ -82,7 +84,7 @@ def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:  
 def test_serialize_entry_substitutes_the_service_macros(monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[str] = []
 
-    def record_what(url: str, what: str, row: Row) -> str:  # noqa: ARG001
+    def record_what(url: str, what: str, row: Row) -> str:
         seen.append(what)
         return url
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Sequence
 
 import pytest
@@ -163,7 +161,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
     staleness: float,
     threshold: float,
     expected_stale: bool,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     set_config: SetConfig,
 ) -> None:
     row = {

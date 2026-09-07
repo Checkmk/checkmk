@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import urllib.parse
 from collections.abc import Mapping
 from pathlib import Path
@@ -70,7 +68,7 @@ class _InventoryClient:
 
 
 def test_openapi_get_inventory_trees(
-    tmp_path: Path,
+    tmp_path: Path,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     mock_livestatus: MockLiveStatusConnection,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:

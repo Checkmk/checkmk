@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 import contextlib
@@ -534,16 +536,16 @@ def test_openapi_bulk_simple(clients: ClientRegistry) -> None:
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_bulk_with_failed(
     clients: ClientRegistry,
-    base: str,  # noqa: ARG001
+    base: str,
     monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,  # noqa: ARG001
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     def _raise(
         _self: Folder,
         _host_name: HostName,
         _attributes: HostAttributes,
         *,
-        acting_user: LoggedInUser,  # noqa: ARG001
+        acting_user: LoggedInUser,
     ) -> HostAttributes:
         if _host_name == "foobar":
             raise MKUserError(None, "fail")
@@ -862,7 +864,7 @@ def test_openapi_host_rename_locked_by_quick_setup(
 def test_openapi_host_delete_locked_by_quick_setup(
     clients: ClientRegistry,
     quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -886,7 +888,7 @@ def test_openapi_host_delete_locked_by_quick_setup(
 def test_openapi_host_update_locked_by_quick_setup(
     clients: ClientRegistry,
     quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -1047,7 +1049,7 @@ def test_openapi_create_host_with_contact_group(clients: ClientRegistry) -> None
 
 def test_openapi_host_with_custom_attributes(
     clients: ClientRegistry,
-    custom_host_attribute_basic_topic: None,  # noqa: ARG001
+    custom_host_attribute_basic_topic: None,
 ) -> None:
     resp = clients.HostConfig.create(
         host_name="example.com",
@@ -1172,7 +1174,7 @@ def test_openapi_host_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_host(self: FolderTree, _hostname: HostName) -> Host:  # noqa: ARG001
+    def mock_host(self: FolderTree, _hostname: HostName) -> Host:
         return Host(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),
@@ -2060,7 +2062,7 @@ def test_openapi_host_config_correct_contactgroup_default(
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry,
     with_admin: tuple[str, str],
-    test_edition: version.Edition,  # noqa: ARG001
+    test_edition: version.Edition,
 ) -> None:
     username, password = with_admin
     clients.HostConfig.set_credentials(username, password)

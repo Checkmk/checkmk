@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 import json
 from collections.abc import Mapping
@@ -202,7 +200,7 @@ def test_parse_collector_components() -> None:
 
 def test_cache_result_zero_maxsize() -> None:
     cache = CacheSizeInfo(size=100, maxsize=0)
-    result = kube_collector_info._cache_result(
+    result = kube_collector_info._cache_result(  # noqa: SLF001
         cache,
         "Test cache",
         ("fixed", (80.0, 95.0)),
@@ -409,7 +407,7 @@ def test_check_with_errored_handled_component_section() -> None:
 
     # Act
     result = list(
-        kube_collector_info._component_check(
+        kube_collector_info._component_check(  # noqa: SLF001
             State.CRIT, "container_metrics", collector_processing_logs.container
         )
     )
@@ -481,7 +479,7 @@ def test_collector_component_versions() -> None:
         )
     ]
     assert (
-        kube_collector_info._collector_component_versions(components)
+        kube_collector_info._collector_component_versions(components)  # noqa: SLF001
         == "Container Metrics: Checkmk_kube_agent v1, component 1"
     )
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001
-
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -93,7 +91,7 @@ class TestAutochecksStore:
 def test_memoizer_get_autochecks_of(
     autochecks_content: str,
     expected_result: Sequence[AutocheckEntry],
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     with (cmk.utils.paths.autochecks_dir / "host.mk").open("w", encoding="utf-8") as f:
         f.write(autochecks_content)

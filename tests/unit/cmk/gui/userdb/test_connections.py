@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from cmk.ccc.site import omd_site
 from cmk.gui.config import Config
 from cmk.gui.userdb import effective_authentication_connections
@@ -43,7 +41,7 @@ def _local_self_site(auth_connections: object) -> SiteConfiguration:
 
 def test_effective_authentication_connections_on_remote_prefers_propagated_global(
     load_config: Config,
-    remote_site: None,
+    remote_site: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     load_config.sites = SiteConfigurations(
         {omd_site(): _local_self_site(("all", ["ldap", "saml"]))}

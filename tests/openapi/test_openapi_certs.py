@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import json
 from collections.abc import Iterator
 from unittest.mock import patch
@@ -94,7 +92,7 @@ Oaxu+XnWKm3p
 
 
 @pytest.fixture
-def forbid_agent_pairing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:
+def forbid_agent_pairing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with patch(
         "cmk.gui.logged_in.LoggedInUser.may",
         return_value=False,

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import subprocess
 from collections.abc import Callable, Iterator
@@ -98,7 +96,7 @@ Execute = Callable[[list[str]], CommandOutput]
 
 
 @pytest.fixture(name="execute")
-def execute_fixture(test_cfg: None, site: Site) -> Execute:
+def execute_fixture(test_cfg: None, site: Site) -> Execute:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     def _execute(command: list[str]) -> CommandOutput:
         p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=None)
         stdout, stderr = p.communicate()

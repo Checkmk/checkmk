@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import re
 from pathlib import Path
 from typing import Final, Literal
@@ -242,7 +240,7 @@ def test_mk_oracle_section_performance(
 
 
 def test_mk_oracle_section_performance_categories(
-    oracle: OracleDatabase,
+    oracle: OracleDatabase,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     mk_oracle_sections: dict[str, list[str]],
 ) -> None:
     """Each performance row must use a known category and the expected column count."""

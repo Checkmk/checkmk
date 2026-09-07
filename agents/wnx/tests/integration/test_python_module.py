@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import shutil
 from pathlib import Path
 
@@ -36,7 +34,7 @@ def copy_cmk_updater(source_dir: Path, target_dir: Path) -> None:
 def test_python_module(
     main_exe: Path,
     default_yaml_config: YamlDict,
-    unpack: object,
+    unpack: object,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     module_dir: Path,
     data_dir: Path,
     repo_root: Path,

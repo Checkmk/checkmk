@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
+# ruff: noqa: T201  # It's OK for scripts to print()
 
 """
 Plot performance data from filesystem or database.

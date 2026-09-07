@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import uuid
 from collections.abc import Iterable
 
@@ -242,7 +240,7 @@ def test_create_non_existing_oauth2_connection(
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_create_non_existing_oauth2_connection_without_permissions(
     clients: ClientRegistry,
-    with_admin: tuple[str, str],
+    with_admin: tuple[str, str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     # GIVEN
     clients.User.create(

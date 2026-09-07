@@ -93,7 +93,7 @@ def capture_diagnostic_bundle(
     if json_errors:
         # stdout may be closed
         with contextlib.suppress(OSError):
-            print(json.dumps(bundle, indent=2, default=str))  # noqa: T201
+            print(json.dumps(bundle, indent=2, default=str))  # noqa: T201  # It's OK for test/script helpers to print()
 
     return crash_path
 
@@ -386,7 +386,7 @@ def _write_bundle(bundle: dict[str, object]) -> Path | None:
 
 def _print_write_warning() -> None:
     """Warn that the diagnostic bundle could not be saved."""
-    print(  # noqa: T201
+    print(  # noqa: T201  # It's OK for test/script helpers to print()
         f"WARNING: Could not save diagnostic bundle to {_diagnostics_dir()}",
         file=sys.stderr,
     )
@@ -395,10 +395,10 @@ def _print_write_warning() -> None:
 def _print_error_output(error: BaseException, crash_path: Path | None) -> None:
     """Print human-readable error output with recovery hints to stderr."""
     msg = str(error)
-    print(f"\nERROR: {msg}", file=sys.stderr)  # noqa: T201
+    print(f"\nERROR: {msg}", file=sys.stderr)  # noqa: T201  # It's OK for test/script helpers to print()
 
     if crash_path is not None:
-        print(  # noqa: T201
+        print(  # noqa: T201  # It's OK for test/script helpers to print()
             f"\n  Diagnostic bundle saved to:\n"
             f"    {crash_path}\n\n"
             f"  Share it with the tool maintainer:\n"

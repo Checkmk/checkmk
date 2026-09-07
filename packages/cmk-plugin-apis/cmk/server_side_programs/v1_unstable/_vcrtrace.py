@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Arguments: unused / shadowing builtins. But we're following argparse.Action protocol.
-# ruff: noqa: A001, A002
+# ruff: noqa: A002
 
 import argparse
 import atexit
@@ -68,7 +68,7 @@ def vcrtrace(
             metavar: str | tuple[str, ...] | None = "TRACEFILE",
         ):
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
-            help = f"{help_part} {help}" if help else help_part
+            help = f"{help_part} {help}" if help else help_part  # noqa: A001
 
             super().__init__(
                 option_strings=option_strings,

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import json
 import logging
 from collections.abc import Iterator
@@ -162,7 +160,7 @@ def test_create_rules(
     test_site: Site,
     dashboard_page: MainDashboard,
     pytestconfig: pytest.Config,
-    restore_site_state: None,
+    restore_site_state: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     with (
         _write_rules_to_disk(test_site)

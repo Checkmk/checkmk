@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import threading
 from datetime import datetime, timedelta, UTC
 
@@ -18,7 +20,7 @@ def reraise_exception(exc: Exception) -> str:
     raise exc
 
 
-def test_run_scheduled_jobs(load_plugins: None) -> None:  # noqa: ARG001
+def test_run_scheduled_jobs(load_plugins: None) -> None:
     called = {
         "job1": 0,
         "job2": 0,
@@ -62,7 +64,7 @@ def test_run_scheduled_jobs(load_plugins: None) -> None:  # noqa: ARG001
     assert state.job_executions == {"job1": 3, "job2": 2}
 
 
-def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:  # noqa: ARG001
+def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:
     called = threading.Event()
     state = SchedulerState()
     jobs = [
@@ -89,7 +91,7 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     shall_terminate = threading.Event()
     state = SchedulerState()
 
-    def _wait(config: Config) -> None:  # noqa: ARG001
+    def _wait(config: Config) -> None:
         shall_terminate.wait()
 
     jobs = [

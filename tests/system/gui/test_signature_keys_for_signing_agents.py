@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import time
 from collections.abc import Callable, Iterator
@@ -137,7 +135,7 @@ def with_key_fixture(
         SignatureKeysPage(dashboard_page.page).delete_key(key_name)
 
 
-def test_download_key(dashboard_page: MainDashboard, with_key: str) -> None:
+def test_download_key(dashboard_page: MainDashboard, with_key: str) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     """Test downloading a key.
 
     First a wrong password is provided, checking the error message;

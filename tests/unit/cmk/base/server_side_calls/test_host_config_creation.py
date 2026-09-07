@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import socket
 from collections.abc import Sequence
 
@@ -41,7 +43,7 @@ def make_config_cache_mock(
 
 
 def mock_ip_address_of(
-    host_name: HostName,  # noqa: ARG001
+    host_name: HostName,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress:
     if family == socket.AF_INET6:
@@ -108,7 +110,7 @@ def test_get_host_config_no_ip() -> None:
     )
 
 
-def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG001
+def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
         ip_stack=ip_lookup.IPStackConfig.IPv4,
@@ -142,7 +144,7 @@ def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa:
     )
 
 
-def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG001
+def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("ignore.v4.ipv6")], [HostAddress("::42")]),
         ip_stack=ip_lookup.IPStackConfig.IPv6,
@@ -176,7 +178,7 @@ def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa:
     )
 
 
-def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG001
+def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("2.3.4.2")], [HostAddress("::42")]),
         ip_stack=ip_lookup.IPStackConfig.DUAL_STACK,

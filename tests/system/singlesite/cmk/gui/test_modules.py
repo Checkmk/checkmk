@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterator
@@ -49,7 +47,7 @@ def fixture_result_file(site: Site) -> Iterator[None]:
 
 @pytest.mark.usefixtures("plugin_path", "result_file")
 @pytest.mark.skip_if_edition("cloud")
-def test_load_dashboard_plugin_omd_restart(request: pytest.FixtureRequest, site: Site) -> None:
+def test_load_dashboard_plugin_omd_restart(request: pytest.FixtureRequest, site: Site) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Restart apache so new WSGI workers pick up the plugin.
     # A reload is not sufficient because old workers may still serve requests
     # without loading the new plugin.

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-def"
 
 import time
@@ -22,7 +24,7 @@ def fixture_transaction_ids() -> list[str]:
 
 @pytest.fixture(name="tm")
 def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager]:
-    def transids(lock=False):  # noqa: ARG001
+    def transids(lock=False):
         return transaction_ids
 
     def save_transids(transids: list[str]) -> None:
@@ -69,7 +71,7 @@ def test_transaction_valid(
     ignore_transids: bool,
     result: bool,
     is_existing: bool,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     assert tm._ignore_transids is False  # noqa: SLF001
     if ignore_transids:
@@ -90,7 +92,7 @@ def test_transaction_valid(
 
 
 @pytest.mark.usefixtures("monkeypatch")
-def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:  # noqa: ARG001
+def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:
     assert tm.check_transaction(request) is False
 
 
@@ -99,7 +101,7 @@ def test_check_transaction_valid(
     transaction_ids: list[str],
     tm: TransactionManager,
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     valid_transid = "%d/abc" % time.time()
     request.set_var("_transid", valid_transid)
@@ -114,7 +116,7 @@ def test_check_transaction_valid(
 def test_check_transaction_automation(
     tm: TransactionManager,
     mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001
+    request_context: None,
 ) -> None:
     tm.ignore()
     request.set_var("_transid", "-1")

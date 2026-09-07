@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
@@ -50,7 +48,7 @@ NETWORK_SECTION = [
 ]
 
 
-def test_network_check(empty_value_store: None) -> None:
+def test_network_check(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     section = gcp.parse_piggyback(NETWORK_SECTION)
     params = CHECK_DEFAULT_PARAMETERS
     item = "nic0"

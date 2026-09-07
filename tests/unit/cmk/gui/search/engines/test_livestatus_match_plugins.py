@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Iterator
 
 import pytest
@@ -426,7 +424,7 @@ _TAG_CONFIG: TagConfigSpec = {
 
 
 @pytest.fixture(name="tags")
-def fixture_tags(request_context: None) -> Iterator[None]:
+def fixture_tags(request_context: None) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     original = active_config.tags
     active_config.tags = TagConfig.from_config(_TAG_CONFIG)
     try:

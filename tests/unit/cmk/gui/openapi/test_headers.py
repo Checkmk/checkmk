@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import cmk.ccc.version as cmk_version
 from cmk.utils import paths
@@ -34,7 +32,7 @@ def test_headers_exposed(
 
 def test_headers_not_exposed_for_unauthorized_users(
     wsgi_app: WebTestAppForCMK,
-    request_context: None,
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     resp = _get_version(
         wsgi_app,

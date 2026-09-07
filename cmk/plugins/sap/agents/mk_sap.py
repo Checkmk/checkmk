@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Agent plugins still need to support Python 3.4
-# ruff: noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
-
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -291,7 +288,7 @@ def mon_tree(conn, cfg_entry, ms_name, mon_name):
             node["PATH"] = ms_name + SEPARATOR + node_path(tree, node)
         except RecursionError:
             raise SapError(
-                (
+                (  # noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
                     "Could not calculate path, recursion limit reached. "
                     "Reorganise your SAP data to get past this error. "
                     "Element that causes this: {node}"

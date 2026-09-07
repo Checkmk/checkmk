@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import datetime
 
@@ -49,7 +47,7 @@ def test_check_timemachine_state_ok_with_suffix() -> None:
     ]
 
 
-def test_check_timemachine_state_crit(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_check_timemachine_state_crit(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     section = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-01-202610"
     result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))  # noqa: SLF001
     assert result == [

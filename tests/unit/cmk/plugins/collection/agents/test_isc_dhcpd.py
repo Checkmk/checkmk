@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Agent plugins still need to support Python 3.4
-# ruff: noqa: UP007  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
@@ -17,7 +14,7 @@ from _pytest.capture import CaptureFixture
 from cmk.plugins.collection.agents import isc_dhcpd
 
 
-def test_parse_config_emits_pool_ranges(tmpdir: Union[str, bytes], capsys: CaptureFixture) -> None:
+def test_parse_config_emits_pool_ranges(tmpdir: Union[str, bytes], capsys: CaptureFixture) -> None:  # noqa: UP007  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
     included_file = os.path.join(str(tmpdir), "included.conf")
     with open(included_file, "w") as f:
         f.write("range 10.0.0.100 10.0.0.200;\n")

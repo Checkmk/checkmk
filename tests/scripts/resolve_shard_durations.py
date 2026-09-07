@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: T201
-
 """Name the build the shards balance against, and log what it holds.
 
 Prints "<job>#<number>" for the trigger job to pass on. The shards read that
@@ -86,7 +84,7 @@ def main() -> None:
         return
 
     # The only thing on stdout, the trigger reads this line as it is.
-    print(reference)
+    print(reference)  # noqa: T201  # It's OK for scripts to print()
 
 
 if __name__ == "__main__":

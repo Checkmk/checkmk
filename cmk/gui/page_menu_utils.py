@@ -54,10 +54,6 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
         view.context, view.spec["single_infos"]
     )
 
-    # Forward site so that link_from() can verify inventory data exists.
-    if "site" not in singlecontext_request_vars and (site := request.var("site")):
-        singlecontext_request_vars["site"] = site
-
     # Reports are displayed by separate dropdown (Export > Report)
     linked_visuals = list(
         _collect_linked_visuals(

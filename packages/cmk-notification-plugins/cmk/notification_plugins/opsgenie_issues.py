@@ -199,7 +199,7 @@ def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
     if isinstance(proxy, EnvironmentProxyConfig):
         parsed_url = parse_url(url or "https://api.opsgenie.com")
         proxies = get_environ_proxies(parsed_url.url)
-        return proxies.get(parsed_url.scheme)
+        return None if parsed_url.scheme is None else proxies.get(parsed_url.scheme)
 
     if isinstance(proxy, NoProxyConfig):
         return None

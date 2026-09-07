@@ -38,6 +38,15 @@ def test_plugin(
     if any(_ in request.node.name for _ in xfail_list):
         pytest.xfail(reason="CMK-33568")
 
+    skipped_dumps = {
+        "agent-2.2.0p14-windows-veeam-backup": (
+            "SUP-30173; the canon in qa-test-data still expects UNKNOWN for a Veeam job "
+            "awaiting its first run, werk 22291 reports it as OK."
+        ),
+    }
+    if reason := skipped_dumps.get(host_name):
+        pytest.skip(reason=reason)
+
     with setup_host(test_site, host_name):
         disk_dump = read_disk_dump(host_name)
         dump_type = "snmp" if disk_dump[0] == "." else "agent"

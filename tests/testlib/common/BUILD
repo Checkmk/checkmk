@@ -21,7 +21,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//buildscripts/scripts:__pkg__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],

@@ -253,7 +253,7 @@ CLOUD_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-agent-registration-extended:wheel",
     "//non-free/packages/cmk-cloud:wheel",
     "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
-    "//non-free/packages/cmk-metric-backend:wheel",
+    "//non-free/packages/cmk-data-backend:wheel",
     "//non-free/packages/cmk-network-flow:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-otel-collector:wheel-auth-only",
@@ -267,7 +267,7 @@ CLOUD_WHEELS = PRO_WHEELS + [
 ULTIMATE_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-agent-registration-extended:wheel",
     "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
-    "//non-free/packages/cmk-metric-backend:wheel",
+    "//non-free/packages/cmk-data-backend:wheel",
     "//non-free/packages/cmk-network-flow:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-plugins-nonfree:wheel-aws_extended",

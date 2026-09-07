@@ -150,7 +150,7 @@ annotated-types==0.8.0 \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
     #   pydantic
 anyio==4.14.2 \
@@ -815,7 +815,7 @@ clickhouse-connect==1.8.0 \
     --hash=sha256:f143e86a50d6096f4a0e2e4650ad65f61fcdb2eb80f4f61810b3e09ce1872b76 \
     --hash=sha256:f45b8f01dc4cdc238c44d816e4307f8b6b67237fbbbde0650bdf08e3b95bca8a
     # via
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
 cmk-werk-zeug==0.4.0 \
     --hash=sha256:21a7975bf76c0698e1dc2dac5309d727dbf60d18c7c5c7bc54e088059f72847c \
@@ -3358,8 +3358,8 @@ numpy==2.5.3 \
     --hash=sha256:ffdc76bfcae6b255dff75202c5e7feaf95b40246bc0a17944facc1fecf9f79ab
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/dev-requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-robotmk/dev-requirements.in
     #   contourpy
     #   matplotlib
@@ -4090,10 +4090,10 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-bakery/requirements.in
     #   -r non-free/packages/cmk-cloud/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   -r non-free/packages/cmk-liveproxyd/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
@@ -4517,11 +4517,11 @@ pytest==9.1.1 \
     #   -r non-free/packages/cmk-bakery/dev-requirements.in
     #   -r non-free/packages/cmk-cloud/dev-requirements.in
     #   -r non-free/packages/cmk-core-helpers/dev-requirements.in
+    #   -r non-free/packages/cmk-data-backend/dev-requirements.in
     #   -r non-free/packages/cmk-dcd/dev-requirements.in
     #   -r non-free/packages/cmk-licensing-nonfree/dev-requirements.in
     #   -r non-free/packages/cmk-liveproxyd/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
-    #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
     #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
     #   -r non-free/packages/cmk-multi-tenancy/dev-requirements.in
     #   -r non-free/packages/cmk-network-flow/dev-requirements.in
@@ -4594,7 +4594,7 @@ pytest-benchmark==5.3.0 \
     --hash=sha256:358444d4e89be901ee2b6404fb043ac3d7684002ad7f3563cc153fca6339c965 \
     --hash=sha256:920ab1dfcffa718d49aa15ba144c7e357bda59216a0dc308016cc1c7236f719d
     # via
-    #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
+    #   -r non-free/packages/cmk-data-backend/dev-requirements.in
     #   -r tests/dev-requirements.in
 pytest-check==2.9.1 \
     --hash=sha256:2d8c9f1fe5cceb0b41c480e1454e95e9ed6a3a534bf2c7e3e0f39167b11cf88b \
@@ -5093,8 +5093,8 @@ requests==2.34.2 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crash/requirements.in
@@ -5663,7 +5663,7 @@ tenacity==9.1.4 \
     --hash=sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55 \
     --hash=sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a
     # via
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in

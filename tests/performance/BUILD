@@ -40,7 +40,7 @@ py_library(
     imports = ["../.."],
     # Also used by performance suites living in their components, so their
     # resource tracking feeds the same reporting pipeline.
-    visibility = ["//non-free/packages/cmk-metric-backend:__pkg__"],
+    visibility = ["//non-free/packages/cmk-data-backend:__pkg__"],
     deps = [
         "//tests:pkg_marker",
         "//tests/testlib",
@@ -56,7 +56,7 @@ test_suite(
     name = "bazel_performance",
     tags = ["manual"],
     tests = [
-        "//non-free/packages/cmk-metric-backend:performance",
+        "//non-free/packages/cmk-data-backend:performance",
     ],
 )
 

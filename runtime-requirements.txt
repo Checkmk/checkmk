@@ -149,7 +149,7 @@ annotated-types==0.8.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
     #   pydantic
 anyio==4.14.2 \
@@ -716,7 +716,7 @@ clickhouse-connect==1.8.0 \
     --hash=sha256:f45b8f01dc4cdc238c44d816e4307f8b6b67237fbbbde0650bdf08e3b95bca8a
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
 contourpy==1.3.3 \
     --hash=sha256:023b44101dfe49d7d53932be418477dba359649246075c996866106da069af69 \
@@ -2438,7 +2438,7 @@ numpy==2.5.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   contourpy
     #   matplotlib
 oauthlib==3.3.1 \
@@ -3106,10 +3106,10 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-bakery/requirements.in
     #   -r non-free/packages/cmk-cloud/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   -r non-free/packages/cmk-liveproxyd/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
@@ -3781,8 +3781,8 @@ requests==2.34.2 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crash/requirements.in
@@ -4146,7 +4146,7 @@ tenacity==9.1.4 \
     --hash=sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   opsgenie-sdk

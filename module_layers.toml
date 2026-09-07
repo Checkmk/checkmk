@@ -28,7 +28,7 @@ livestatus_client = ["cmk.livestatus_client"]
 
 messaging = ["cmk.messaging"]
 
-metric_backend = ["cmk.metric_backend"]
+data_backend = ["cmk.data_backend"]
 
 mkp_tool = ["cmk.mkp_tool"]
 
@@ -112,7 +112,7 @@ clean = [
 # azure_v2 — Edition, HostAddress
 # datadog — bypasses APIs to talk to the EC
 # jolokia — import hack, resolve by migrating the bakery plugin
-# metric_backend — cmk.metric_backend, cmk.utils.paths
+# data_backend — cmk.data_backend, cmk.utils.paths
 # otel
 # vnx_quotas — TODO: make the authorized keys configurable?
 
@@ -211,7 +211,7 @@ allows = [
 
 [plugin_families.violations.custom_query_metric_backend]
 allows = [
-  "cmk.metric_backend",
+  "cmk.data_backend",
   "cmk.shared_typing.consolidation",
   "cmk.telemetry.custom_query_rule_value",
   "cmk.utils.macros",
@@ -220,7 +220,7 @@ allows = [
 
 [plugin_families.violations.custom_service]
 # MetricBackendCustomQuery FormSpec
-allows = ["cmk.metric_backend.gui"]
+allows = ["cmk.data_backend.gui"]
 
 [plugin_families.violations.datadog]
 allows = [
@@ -260,8 +260,8 @@ allows = [
   "cmk.logwatch",
 ]
 
-[plugin_families.violations.metric_backend]
-allows = ["cmk.metric_backend"]
+[plugin_families.violations.data_backend]
+allows = ["cmk.data_backend"]
 
 [plugin_families.violations.metric_backend_connector]
 allows = [
@@ -269,15 +269,15 @@ allows = [
   "cmk.dcd.daemon",
   "cmk.dcd.gui",
   "cmk.gui",
-  "cmk.metric_backend",
+  "cmk.data_backend",
   "cmk.telemetry.gui",
   "cmk.telemetry.host_name_template",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.utils",
 ]
 
-[plugin_families.violations.metric_backend_omd]
-allows = ["cmk.metric_backend"]
+[plugin_families.violations.data_backend_telemetry_metrics_omd]
+allows = ["cmk.data_backend"]
 
 [plugin_families.violations.otel]
 allows = [
@@ -743,20 +743,20 @@ allows = ["@ccc"]
 [components."cmk.message_broker_certs"]
 allows = ["@ccc", "@messaging", "cmk.utils"]
 
-[components."cmk.metric_backend"]
+[components."cmk.data_backend"]
 allows = [
   "@ccc",
   "@plugin_apis",
   "cmk.discover_plugins",
-  # metric_backend.license_usage provides a license usage counter plug-in
+  # data_backend.license_usage provides a license usage counter plug-in
   "cmk.licensing.usage_counters",
   # schema_manager gates per-feature provisioning on the feature's license option
   "cmk.licensing.basics.options",
 ]
 
-[components."cmk.metric_backend.adapters"]
+[components."cmk.data_backend.adapters"]
 allows = [
-  "@metric_backend",
+  "@data_backend",
   "cmk.shared_typing.aggregation",
   "cmk.shared_typing.attribute_filter",
   "cmk.shared_typing.consolidation",
@@ -785,7 +785,7 @@ allows = [
   "cmk.base.config",
   "cmk.discover_plugins",
   "cmk.checkengine.fetchers",
-  "cmk.metric_backend",
+  "cmk.data_backend",
   "cmk.shared_typing.consolidation",
   "cmk.utils.paths",
 ]
@@ -881,7 +881,7 @@ allows = [
   "cmk.dcd.gui",
   "cmk.gui",
   "cmk.gui.nonfree",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.gui",
   "cmk.network_flow.gui",
   "cmk.otel_collector",
   "cmk.telemetry.gui",
@@ -983,7 +983,7 @@ allows = [
   "@ccc",
   "@crypto",
   "@livestatus_client",
-  "@metric_backend",
+  "@data_backend",
   "@plugin_apis",
   "cmk.backup",
   "cmk.checkengine",
@@ -995,8 +995,8 @@ allows = [
   "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
-  "cmk.metric_backend.adapters",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.adapters",
+  "cmk.data_backend.gui",
   "cmk.telemetry.gui",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
@@ -1035,7 +1035,7 @@ allows = [
   "cmk.liveproxyd.gui",
   "cmk.livestatus_client",
   "cmk.multi_tenancy.shared",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.gui",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui",
   "cmk.piggyback",
@@ -1064,7 +1064,7 @@ allows = [
   "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
-  "cmk.metric_backend.gui.register",
+  "cmk.data_backend.gui.register",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui",
   "cmk.shared_typing",
@@ -1299,7 +1299,7 @@ allows = [
   "cmk.gui",
   "cmk.licensing",
   "cmk.message_broker_certs",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
   "cmk.telemetry.host_name_template",
@@ -1312,7 +1312,7 @@ allows = [
 allows = [
   "@ccc",
   "@messaging",
-  "@metric_backend",
+  "@data_backend",
   "@mkp_tool",
   "@plugin_apis",
   "@trace",
@@ -1325,7 +1325,7 @@ allows = [
   "cmk.checkengine.fetchers",
   "cmk.gui",
   "cmk.message_broker_certs",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
   "cmk.telemetry.host_name_template",
@@ -1374,7 +1374,7 @@ allows = [
   "cmk.gui",
   "cmk.licensing",
   "cmk.message_broker_certs",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.gui",
   "cmk.otel_collector",
   "cmk.plugins",
   "cmk.robotmk",
@@ -1409,12 +1409,12 @@ allows = ["@ccc", "@trace"]
 [components."cmk.mknotifyd"]
 allows = ["@ccc", "cmk.crash", "cmk.events"]
 
-[components."cmk.metric_backend.gui"]
+[components."cmk.data_backend.gui"]
 allows = [
   "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
-  "@metric_backend",
+  "@data_backend",
   "@plugin_apis",
   "cmk.fields",
   "cmk.gui",
@@ -1492,7 +1492,7 @@ allows = [
   "cmk.cloud",
   "cmk.gui",
   "cmk.livestatus_client",
-  "cmk.metric_backend",
+  "cmk.data_backend",
   "cmk.otel_collector",
   "cmk.rulesets",
   "cmk.utils",
@@ -1540,8 +1540,8 @@ allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]
 [components."cmk.testlib.mcp"]
 allows = ["cmk.mcp"]
 
-[components."cmk.testlib.metric_backend"]
-allows = ["cmk.metric_backend"]
+[components."cmk.testlib.data_backend"]
+allows = ["cmk.data_backend"]
 
 [components."cmk.testlib.network_flow"]
 allows = ["@network_flow", "cmk.network_flow.gui"]
@@ -1833,7 +1833,7 @@ allows = [
   "cmk.fields",
   "cmk.gui",
   "cmk.gui.nonfree.pro.graphing.openapi.models.attribute_filter",
-  "cmk.metric_backend.gui",
+  "cmk.data_backend.gui",
   "cmk.otel_collector.gui",
   "cmk.ruleset_matcher.matcher",
   "cmk.shared_typing.aggregation",

@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
-
 import json
 import os
 import os.path
@@ -15,13 +13,16 @@ import sys
 from collections.abc import Mapping
 from typing import Any, TYPE_CHECKING
 
+_ = Mapping  # only used in type comments; make ruff happy
+
 if TYPE_CHECKING:
-    from rados import Rados  # type: ignore[import-not-found]
+    from rados import Rados  # type: ignore[import-not-found]  # noqa: F401
 
 __version__ = "3.0.0b1"
 
 
-def _bail_out_missing_dependency() -> int:
+def _bail_out_missing_dependency():
+    # type: () -> int
     pip = "pip3" if sys.version_info.major == 3 else "pip"
     error = (
         "Error: mk_ceph requires the library 'rados'."
@@ -32,37 +33,44 @@ def _bail_out_missing_dependency() -> int:
     return 0
 
 
-def _output_json_section(name: str, data: Any) -> None:
+def _output_json_section(name, data):
+    # type: (str, Any) -> None
     sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
 
 
 class RadosCMD:
-    def __init__(self, client: Rados) -> None:
+    def __init__(self, client):
+        # type: (Rados) -> None
         self.client = client
 
-    def command_mon(self, cmd: str, params: Mapping[str, Any] | None = None) -> Any:
+    def command_mon(self, cmd, params=None):
+        # type: (str, Mapping[str, Any] | None) -> Any
         data = {"prefix": cmd, "format": "json"}
         if params:
             data.update(params)
         return self.client.mon_command(json.dumps(data), b"", timeout=5)
 
-    def command_mgr(self, cmd: str) -> Any:
+    def command_mgr(self, cmd):
+        # type: (str) -> Any
         return self.client.mgr_command(
             json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5
         )
 
-    def command_osd(self, osdid: int, cmd: str) -> Any:
+    def command_osd(self, osdid, cmd):
+        # type: (int, str) -> Any
         return self.client.osd_command(
             osdid, json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5
         )
 
-    def command_pg(self, pgid: str, cmd: str) -> Any:
+    def command_pg(self, pgid, cmd):
+        # type: (str, str) -> Any
         return self.client.pg_command(
             pgid, json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5
         )
 
 
-def _load_plugin_config(mk_confdir: str) -> tuple[str, str]:
+def _load_plugin_config(mk_confdir):
+    # type: (str) -> tuple[str, str]
     ceph_config = "/etc/ceph/ceph.conf"
     ceph_client = "client.admin"
 
@@ -84,9 +92,8 @@ def _load_plugin_config(mk_confdir: str) -> tuple[str, str]:
     return ceph_config, ceph_client
 
 
-def _make_bluefs_section(
-    raw: str, hostname: str, fqdn: str, fsid: str
-) -> tuple[dict[str, Any], list[int]]:
+def _make_bluefs_section(raw, hostname, fqdn, fsid):
+    # type: (str, str, str, str) -> tuple[dict[str, Any], list[int]]
     localosds: list[int] = []
     out: dict[str, Any] = {"end": {}}
     for osd in json.loads(raw):
@@ -113,7 +120,8 @@ def _make_bluefs_section(
     return out, localosds
 
 
-def _make_osd_section(raw_df: str, raw_perf: str, localosds: list[int]) -> dict[str, Any]:
+def _make_osd_section(raw_df, raw_perf, localosds):
+    # type: (str, str, list[int]) -> dict[str, Any]
     osddf = json.loads(raw_df)
     osdperf = json.loads(raw_perf)
     osds = []
@@ -133,7 +141,8 @@ def _make_osd_section(raw_df: str, raw_perf: str, localosds: list[int]) -> dict[
     return {"df": {"nodes": osds}, "perf": {"osd_perf_infos": perfs}}
 
 
-def main() -> int:
+def main():
+    # type: () -> int
     try:
         # We must not exit (not even successfully) upon import in case
         # we're importing this module for testing purposes.

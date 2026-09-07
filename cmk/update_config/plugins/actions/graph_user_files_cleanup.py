@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
-from contextlib import suppress
 from itertools import chain
 from logging import Logger
 from pathlib import Path
 from typing import override
 
 import cmk.utils.paths
-from cmk.ccc.user import UserId
 from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.plugins.lib.user_profiles import user_directories
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -32,7 +30,7 @@ class RemoveOrphanedGraphUserFiles(UpdateAction):
     @staticmethod
     def remove_orphaned_files(profile_dir: Path, logger: Logger) -> None:
         removed = 0
-        for user_dir in _user_directories(profile_dir):
+        for user_dir in user_directories(profile_dir):
             # "graph_pin.mk" is still in use, so do not widen these patterns to "graph_*".
             for path in chain(
                 user_dir.glob("graph_size.mk"),
@@ -47,20 +45,6 @@ class RemoveOrphanedGraphUserFiles(UpdateAction):
 
         if removed:
             logger.info("Removed %(count)d orphaned graph files", {"count": removed})
-
-
-def _user_directories(profile_dir: Path) -> Iterator[Path]:
-    # A missing or unreadable profile directory means there is nothing to clean up.
-    with suppress(OSError):
-        for entry in profile_dir.iterdir():
-            try:
-                UserId(entry.name)
-            except ValueError:
-                continue  # files such as ldap_*_sync_time.mk live here, too
-            # Not is_dir(): a symlink named like a user would lead the sweep out of
-            # the profile directory.
-            if entry.is_dir(follow_symlinks=False):
-                yield entry
 
 
 update_action_registry.register(

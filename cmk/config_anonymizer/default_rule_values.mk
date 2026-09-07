@@ -735,7 +735,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_site_object_counts', [])
 
 agent_config['mk_site_object_counts'] = [
-{'id': '0190f9b7-d98b-4ce9-9ae9-e1ef18d8f64d', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '0190f9b7-d98b-4ce9-9ae9-e1ef18d8f64d', 'value': {'deployment': ('sync', None), 'tags': [], 'service_check_commands': [], 'sites': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_site_object_counts']
 
 

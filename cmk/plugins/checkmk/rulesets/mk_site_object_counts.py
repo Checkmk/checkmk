@@ -38,15 +38,15 @@ def migrate(value: object) -> Mapping[str, object]:
     if value is None:
         return {"deployment": ("do_not_deploy", None)}
     if isinstance(value, dict):
-        result: dict[str, object] = {"deployment": ("sync", None)}
-        for key in ("tags", "service_check_commands"):
-            if key in value:
-                result[key] = value[key]
-        if "sites" in value:
-            sites = value["sites"]
-            if isinstance(sites, (list, tuple)):
-                result["sites"] = [_migrate_site(s) for s in sites]
-        return result
+        # Old rule ("first matching rule wins"): make all parameters explicit so that merging
+        # with other rules does not change the outcome. Empty lists mean "nothing configured".
+        sites = value.get("sites", [])
+        return {
+            "deployment": ("sync", None),
+            "tags": value.get("tags", []),
+            "service_check_commands": value.get("service_check_commands", []),
+            "sites": [_migrate_site(s) for s in sites] if isinstance(sites, (list, tuple)) else [],
+        }
     raise ValueError(f"Unexpected value: {value!r}")
 
 

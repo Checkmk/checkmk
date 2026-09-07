@@ -1760,6 +1760,46 @@ def test_legacy_tree() -> None:
     assert table_node.table.rows == [{"col": "value"}]
 
 
+def test_update_attributes_from_previous() -> None:
+    previous_tree = deserialize_tree(
+        {
+            "Attributes": {
+                "Pairs": {"a1": "A1: prev", "a2": "A2: only prev"},
+                "Retentions": {"a1": (1, 2, 3), "a2": (1, 2, 3)},
+            },
+            "Table": {},
+            "Nodes": {},
+        }
+    )
+    current_tree_ = MutableTree()
+    current_tree_.add(
+        path=(),
+        pairs=[{SDKey("a1"): "A1: cur", SDKey("a3"): "A3: only cur"}],
+    )
+    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices.add_pairs_choice(choice="all", cache_info=(4, 5))
+
+    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    assert current_tree_.get_update_results() == {
+        (): [
+            "[Attributes] Added pairs: a2",
+            "[Attributes] Keep until: a1 (15), a2 (6), a3 (15)",
+        ]
+    }
+
+    current_tree = _make_immutable_tree(current_tree_)
+    assert current_tree.attributes.pairs == {
+        "a1": "A1: cur",
+        "a2": "A2: only prev",
+        "a3": "A3: only cur",
+    }
+    assert current_tree.attributes.retentions == {
+        "a1": RetentionInterval(4, 5, 6, "current"),
+        "a2": RetentionInterval(1, 2, 3, "previous"),
+        "a3": RetentionInterval(4, 5, 6, "current"),
+    }
+
+
 def test_update_from_previous_1() -> None:
     previous_tree = deserialize_tree(
         {
@@ -1786,8 +1826,8 @@ def test_update_from_previous_1() -> None:
     current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
-            "[Table] 'KC': Added row: message",
-            "[Table] 'KC': Keep until: message",
+            "[Table] 'KC': Added row: c2, kc",
+            "[Table] 'KC': Keep until: c1 (15), c2 (6), c3 (15), kc (15)",
         ]
     }
 
@@ -1831,8 +1871,8 @@ def test_update_from_previous_2() -> None:
     current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
-            "[Table] 'KC': Added row: message",
-            "[Table] 'KC': Keep until: message",
+            "[Table] 'KC': Added row: c2, kc",
+            "[Table] 'KC': Keep until: c2 (6), c3 (15)",
         ],
     }
 

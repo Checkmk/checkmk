@@ -195,10 +195,8 @@ class _DictKeys[T]:
 #   .--mutable tree--------------------------------------------------------.
 
 
-# TODO: The ARG001 suppression below hides a real bug: the f-string interpolates the
-# literal "message" instead of the argument. Fix that and drop the suppression.
-def _format_update_result_attrs(*, title: str, message: str) -> str:  # noqa: ARG001
-    return f"[Attributes] {title}: message"
+def _format_update_result_attrs(*, title: str, message: str) -> str:
+    return f"[Attributes] {title}: {message}"
 
 
 @dataclass(kw_only=True)
@@ -283,10 +281,8 @@ class _MutableAttributes:
         }
 
 
-# TODO: The ARG001 suppression below hides a real bug: the f-string interpolates the
-# literal "message" instead of the argument. Fix that and drop the suppression.
-def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:  # noqa: ARG001
-    return f"[Table] '{', '.join(map(str, ident))}': {title}: message"
+def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:
+    return f"[Table] '{', '.join(map(str, ident))}': {title}: {message}"
 
 
 @dataclass(kw_only=True)

@@ -35,7 +35,7 @@
         <td style=" padding: 10px 10px 0 0; ">
             {% set ns = namespace(has_labels = false) %}
             {% for key, value in data.items() %}
-                {% if key.startswith('SERVICELABEL_') %}
+                {% if key.startswith("SERVICELABEL_") %}
                     {% set ns.has_labels = true %}
                     <span style="margin: 0px 5px 10px 0;
                                  display: inline-block;

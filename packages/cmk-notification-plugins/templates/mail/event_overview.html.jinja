@@ -62,7 +62,7 @@
             {% endif %}
         </td>
     </tr>
-    {% if data.get('NOTIFICATIONTYPE', '').startswith('ALERTHANDLER') %}
+    {% if data.get("NOTIFICATIONTYPE", "").startswith("ALERTHANDLER") %}
         <tr>
             <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Name of alert handler:</td>
             <td style="padding:5px 0;line-height:1.4;">{{ data.get('ALERTHANDLERNAME', '') }}</td>
@@ -92,7 +92,7 @@
                            overflow-wrap:break-word;
                            word-break:break-word;
                            line-height:1.4">
-                    {% if data.get('LONGSERVICEOUTPUT_HTML') %}
+                    {% if data.get("LONGSERVICEOUTPUT_HTML") %}
                         {{ macros.replace_statemarker(data.get('LONGSERVICEOUTPUT_HTML')) }}
                     {% else %}
                         No details available

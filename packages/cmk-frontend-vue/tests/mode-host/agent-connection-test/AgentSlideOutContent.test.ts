@@ -51,12 +51,24 @@ async function selectTab(name: string) {
 
 /** Switch a package or shell variant in a toggle button group. */
 async function toggle(label: string) {
-  await fireEvent.click(screen.getByRole('button', { name: `Toggle ${label}` }))
+  await fireEvent.click(within(panel()).getByRole('button', { name: `Toggle ${label}` }))
+}
+
+/**
+ * The panel of the selected tab. Hidden panels stay mounted, so every DOM
+ * query has to be scoped to the visible one.
+ */
+function panel(): HTMLElement {
+  const visible = document.querySelector('[role="tabpanel"]:not([hidden])')
+  if (visible === null) {
+    throw new Error('no tab panel is visible')
+  }
+  return visible as HTMLElement
 }
 
 /** The `<li>` of a wizard step, addressed by its heading. */
 function step(heading: string): HTMLElement {
-  const element = screen.getByText(heading).closest('li')
+  const element = within(panel()).getByText(heading).closest('li')
   if (element === null) {
     throw new Error(`step "${heading}" is not inside an <li>`)
   }
@@ -64,21 +76,21 @@ function step(heading: string): HTMLElement {
 }
 
 function activeStepHeading(): string {
-  const current = document.querySelector('li[aria-current="step"]')
+  const current = panel().querySelector('li[aria-current="step"]')
   if (current === null) {
     throw new Error('no step is marked as current')
   }
   return current.querySelector('h1, h2, h3, h4, h5, h6')?.textContent?.trim() ?? ''
 }
 
-/** Text of every rendered code block, in document order. */
+/** Text of every code block in the visible panel, in document order. */
 function codeTexts(): string[] {
-  return [...document.querySelectorAll('pre code')].map((el) => el.textContent ?? '')
+  return [...panel().querySelectorAll('pre code')].map((el) => el.textContent ?? '')
 }
 
 async function generateToken() {
-  await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
-  await screen.findByText(/Successfully generated one-time token/)
+  await fireEvent.click(within(panel()).getByRole('button', { name: /generate one-time token/i }))
+  await within(panel()).findByText(/Successfully generated one-time token/)
 }
 
 describe('AgentSlideOutContent', () => {
@@ -116,7 +128,7 @@ describe('AgentSlideOutContent', () => {
     expect(step('Save host')).toBeInTheDocument()
     expect(step('Download and install')).toBeInTheDocument()
     expect(step('Register agent')).toBeInTheDocument()
-    expect(screen.queryByText('Test connection')).not.toBeInTheDocument()
+    expect(within(panel()).queryByText('Test connection')).not.toBeInTheDocument()
   })
 
   test('adds the Test connection step in push mode', () => {
@@ -169,6 +181,31 @@ describe('AgentSlideOutContent', () => {
     })
   })
 
+  test('keeps each platform on its own step', async () => {
+    mockTokenGeneration('download_token')
+    renderContent()
+    await generateToken()
+    await fireEvent.click(within(panel()).getByRole('button', { name: /next step/i }))
+    expect(activeStepHeading()).toBe('Register agent')
+
+    await selectTab('Windows')
+    expect(activeStepHeading()).toBe('Download and install')
+
+    await selectTab('Linux')
+    expect(activeStepHeading()).toBe('Register agent')
+  })
+
+  test('keeps a generated token when another platform is inspected', async () => {
+    mockTokenGeneration('download_token')
+    renderContent()
+    await generateToken()
+
+    await selectTab('Windows')
+    await selectTab('Linux')
+
+    expect(within(panel()).getByText(/Successfully generated one-time token/)).toBeInTheDocument()
+  })
+
   test('substitutes site macros and the download token into the install command', async () => {
     mockTokenGeneration('download_token')
     renderContent()
@@ -198,7 +235,9 @@ describe('AgentSlideOutContent', () => {
     await toggle('TGZ')
     await generateToken()
 
-    expect(screen.getByText(/extracts files directly into the root directory/)).toBeInTheDocument()
+    expect(
+      within(panel()).getByText(/extracts files directly into the root directory/)
+    ).toBeInTheDocument()
     expect(codeTexts().join('\n')).toContain('tgz-download')
     expect(codeTexts().join('\n')).toContain('tgz-extract')
   })
@@ -210,7 +249,9 @@ describe('AgentSlideOutContent', () => {
 
     await toggle('RPM')
 
-    expect(screen.queryByText(/Successfully generated one-time token/)).not.toBeInTheDocument()
+    expect(
+      within(panel()).queryByText(/Successfully generated one-time token/)
+    ).not.toBeInTheDocument()
   })
 
   test('offers the Windows shell variants and switches both commands', async () => {
@@ -265,14 +306,16 @@ describe('AgentSlideOutContent', () => {
     renderContent({ agentInstalled: true })
     await generateToken()
 
-    const fallback = screen
+    const fallback = within(panel())
       .getAllByText(/--user agent_registration/)
       .map((el) => el.closest('pre'))
       .at(-1)
     expect(fallback).not.toBeVisible()
 
     await fireEvent.click(
-      screen.getByText(/Troubleshooting registration issues/, { selector: 'button, div, span' })
+      within(panel()).getByText(/Troubleshooting registration issues/, {
+        selector: 'button, div, span'
+      })
     )
 
     expect(fallback).toBeVisible()
@@ -284,7 +327,7 @@ describe('AgentSlideOutContent', () => {
 
     await generateToken()
 
-    expect(screen.getByText(/uses the default port \(8000\)/)).toBeInTheDocument()
+    expect(within(panel()).getByText(/uses the default port \(8000\)/)).toBeInTheDocument()
   })
 
   test('shows the unbaked fallback commands instead of a download token', () => {
@@ -295,20 +338,22 @@ describe('AgentSlideOutContent', () => {
       }
     })
 
-    expect(screen.getByText(/Use the following command to download/)).toBeInTheDocument()
+    expect(within(panel()).getByText(/Use the following command to download/)).toBeInTheDocument()
     expect(codeTexts().join('\n')).toContain(
       `wget ${contentProps.siteServer}/${contentProps.siteId}/agent.rpm`
     )
     expect(
-      screen.queryByRole('button', { name: /generate one-time token/i })
+      within(panel()).queryByRole('button', { name: /generate one-time token/i })
     ).not.toBeInTheDocument()
   })
 
   test('offers a close-and-review action when saving the host failed', () => {
     renderContent({ saveHost: true, setupError: true })
 
-    expect(screen.getByRole('button', { name: /Close & review/ })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Save host & next step/ })).not.toBeInTheDocument()
+    expect(within(panel()).getByRole('button', { name: /Close & review/ })).toBeInTheDocument()
+    expect(
+      within(panel()).queryByRole('button', { name: /Save host & next step/ })
+    ).not.toBeInTheDocument()
   })
 
   test('submits the edit-host form when the host is saved', async () => {
@@ -316,7 +361,7 @@ describe('AgentSlideOutContent', () => {
     vi.stubGlobal('cmk', { page_menu: { form_submit: formSubmit } })
     renderContent({ saveHost: true, agentInstalled: true })
 
-    await fireEvent.click(screen.getByRole('button', { name: /Save host & next step/ }))
+    await fireEvent.click(within(panel()).getByRole('button', { name: /Save host & next step/ }))
 
     expect(formSubmit).toHaveBeenCalledWith('edit_host', 'save_and_edit')
   })
@@ -356,7 +401,7 @@ describe('AgentSlideOutContent', () => {
     renderContent({ agentInstalled: true, isPushMode: true })
     await generateToken()
 
-    await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+    await fireEvent.click(within(panel()).getByRole('button', { name: /next step/i }))
 
     expect(codeTexts().join('\n')).toContain('linux-status')
   })
@@ -365,13 +410,15 @@ describe('AgentSlideOutContent', () => {
     mockFailingTokenGeneration()
     renderContent({ agentInstalled: true, isPushMode: false })
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
-    await screen.findByText(/Error generating one-time token/)
+    await fireEvent.click(within(panel()).getByRole('button', { name: /generate one-time token/i }))
+    await within(panel()).findByText(/Error generating one-time token/)
 
     // The troubleshooting fallback stays in the DOM on purpose; what must be
     // gone is the second, token-bearing command block.
     expect(codeTexts().filter((text) => text.includes('linux-register'))).toHaveLength(1)
-    expect(screen.queryByText(/run this command on your Linux host/)).not.toBeInTheDocument()
+    expect(
+      within(panel()).queryByText(/run this command on your Linux host/)
+    ).not.toBeInTheDocument()
     expect(codeTexts().join('\n')).not.toContain('--ott 0:')
     // Registering with the agent_registration user is a legitimate way out, so
     // the step must stay finishable after a failed token.
@@ -461,8 +508,8 @@ describe('AgentSlideOutContent', () => {
     mockFailingTokenGeneration()
     renderContent()
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
-    await screen.findByText(/Error generating one-time token/)
+    await fireEvent.click(within(panel()).getByRole('button', { name: /generate one-time token/i }))
+    await within(panel()).findByText(/Error generating one-time token/)
 
     expect(codeTexts().join('\n')).not.toContain('deb-install')
     expect(codeTexts().join('\n')).not.toContain('[AGENT_DOWNLOAD_OTT]')
@@ -475,7 +522,7 @@ describe('AgentSlideOutContent', () => {
     })
 
     expect(
-      screen.getByRole('link', { name: /Install the legacy Checkmk agent/ })
+      within(panel()).getByRole('link', { name: /Install the legacy Checkmk agent/ })
     ).toBeInTheDocument()
     expect(codeTexts().join('\n')).not.toContain('-install')
   })
@@ -486,7 +533,7 @@ describe('AgentSlideOutContent', () => {
     })
 
     expect(
-      screen.queryByRole('button', { name: /generate one-time token/i })
+      within(panel()).queryByRole('button', { name: /generate one-time token/i })
     ).not.toBeInTheDocument()
     expect(codeTexts().join('\n')).toContain('deb-install')
   })

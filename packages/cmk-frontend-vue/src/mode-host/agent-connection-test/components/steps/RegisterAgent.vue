@@ -12,7 +12,6 @@ import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import { CmkWizardButton } from 'cmk-ui-library/components/CmkWizard'
 import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue'
-import { getWizardContext } from 'cmk-ui-library/components/CmkWizard/utils.ts'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -28,8 +27,10 @@ const { _t } = usei18n()
 const props = defineProps<{
   index: number
   isCompleted: () => boolean
+  isActive: boolean
   tab: AgentSlideOutTabs
-  isPushMode: boolean
+  /** True when no step follows, so this step finishes the wizard. */
+  isLastStep: boolean
   closeButtonTitle: TranslatedString
   hostName: string
   siteId: string
@@ -39,7 +40,6 @@ const props = defineProps<{
 
 const selectedVariantId = defineModel<string>('selectedVariantId', { default: '' })
 const emit = defineEmits(['close'])
-const context = getWizardContext()
 const ott = ref<string | null | Error>(null)
 const collapsibleOpen = ref<boolean>(false)
 
@@ -101,7 +101,7 @@ function reset() {
       <CmkHeading> {{ _t('Register agent') }}</CmkHeading>
     </template>
     <template #content>
-      <div v-if="context.isSelected(index)">
+      <div v-if="isActive">
         <div v-if="tab.registrationMsg && (tab.registrationCmd || tab.registrationCmdVariants)">
           <div class="register-heading-row">
             <CmkParagraph>
@@ -198,9 +198,9 @@ function reset() {
         </CmkIndent>
       </CmkCollapsible>
     </template>
-    <template v-if="context.isSelected(index)" #actions>
+    <template v-if="isActive" #actions>
       <CmkWizardButton
-        v-if="!isPushMode"
+        v-if="isLastStep"
         type="finish"
         :override-label="closeButtonTitle"
         :disabled="waitingForToken"

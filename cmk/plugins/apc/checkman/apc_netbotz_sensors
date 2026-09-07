@@ -5,7 +5,13 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature sensors of APC Netbotz devices
- which support the NETBOTZV2 MIB, e.g. Netbotz 450 series.
+ which support the NETBOTZV2 MIB, e.g. Netbotz 450 series, or the
+ NETBOTZ50 MIB, e.g. Netbotz 50.
+
+ It also monitors the wireless temperature sensors (NBWS100T, NBWS100H)
+ of the Netbotz Rack Monitor series, e.g. Netbotz 250. Those devices
+ report their wireless sensors via the wirelessSensorStatusTable of the
+ PowerNet MIB instead of one of the Netbotz MIBs.
 
  You can configure lower and upper levels for {CRIT} and {WARN}
  (default: {WARN}: 25, 30 {CRIT}: 20, 35)
@@ -14,10 +20,12 @@ description:
  than given upper levels or lower than the given lower levels.
  Otherwise it returns {OK}.
 
- This check uses the NETBOTZV2-MIB.
+ This check uses the NETBOTZV2-MIB, the NETBOTZ50-MIB and the PowerNet-MIB.
 
 item:
- The temperature sensor identifier.
+ The temperature sensor identifier. For wireless sensors this is the sensor
+ name configured on the device, or {Wireless sensor <index>} if the sensor
+ has no name.
 
 discovery:
  One service is created for each temperature sensor.

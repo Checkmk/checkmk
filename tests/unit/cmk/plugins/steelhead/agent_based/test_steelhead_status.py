@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.steelhead_status import (
+from cmk.plugins.steelhead.agent_based.steelhead_status import (
     check_steelhead_status,
     discover_steelhead_status,
     parse_steelhead_status,

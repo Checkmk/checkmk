@@ -38,6 +38,7 @@ import {
   composeSeries,
   composedValueDomain,
   createM4CacheStore,
+  hasMirroredMetric,
   withoutOffPlotNeighbours
 } from './render/composeSeries'
 import { drawHorizontalLines } from './render/horizontalLines'
@@ -164,6 +165,7 @@ const yFormatter = computed((): NotationFormatter | null => {
   const unit = props.options.y_axis?.unit
   return unit ? userSpecificUnit(unit, 'celsius').formatter : null
 })
+const isMirroredGraph = computed(() => hasMirroredMetric(props.metrics))
 
 const xScale = scaleTime()
 const yScale = scaleLinear()
@@ -175,7 +177,8 @@ const { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawT
   plotWidth,
   plotHeight,
   yStepping,
-  yFormatter
+  yFormatter,
+  isMirroredGraph
 )
 
 const {

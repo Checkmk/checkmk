@@ -5,6 +5,7 @@
  */
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { select } from 'd3-selection'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
@@ -88,8 +89,7 @@ const STACKED_METRIC: Metric = {
   data_points: [1, 2, 3, 4, 5]
 }
 
-// inverse mirrors the metric below the baseline, which forces the y-domain symmetric
-// around zero.
+// inverse mirrors the metric below the baseline.
 const INVERSE_METRIC: Metric = {
   metadata: { name: 'if_out', title: 'Output bandwidth', unit: UNIT, color: '#0000ff' },
   render: { stack: null, inverse: true, hidden: false },
@@ -136,6 +136,11 @@ const MEMORY_METRIC: Metric = {
 const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
   metrics: [MEMORY_METRIC],
   options: { ...DEFAULT_PROPS.options, y_axis: { unit: IEC_UNIT } }
+}
+
+// A y-axis unit makes the axis label itself through the unit's formatter rather than d3's raw ticks.
+const UNIT_AXIS_PROPS: Partial<TimeSeriesGraphProps> = {
+  options: { ...DEFAULT_PROPS.options, y_axis: { unit: UNIT } }
 }
 
 function drawnXs(): number[] {
@@ -211,6 +216,20 @@ function timeAxisLabels(container: Element): string[] {
 
 function drawnValueAxisLabels(container: Element): string[] {
   return valueAxisLabels(container).filter((label) => label !== '')
+}
+
+// Tick label text is applied when the d3 axis transition starts, hence the wait.
+async function drawnValueAxisTicks(
+  container: Element
+): Promise<Array<{ position: number; text: string }>> {
+  await waitFor(() => expect(drawnValueAxisLabels(container)).not.toHaveLength(0))
+  return Array.from(
+    container.querySelectorAll('g.graphing-time-series-graph__y-axis .tick text')
+  ).map((label) => ({ position: select(label).datum() as number, text: label.textContent ?? '' }))
+}
+
+function signedLabels(ticks: Array<{ text: string }>): string[] {
+  return ticks.map((tick) => tick.text).filter((text) => text.includes('-'))
 }
 
 describe('TimeSeriesGraph', () => {
@@ -444,19 +463,26 @@ describe('TimeSeriesGraph', () => {
     expect(screen.queryByRole('button', { name: 'Step back in time' })).not.toBeInTheDocument()
   })
 
-  test('labels the y-axis on both sides of zero for a mirrored metric', async () => {
+  test('draws a lone mirrored metric below zero and labels it without a sign', async () => {
     const metrics = [INVERSE_METRIC]
 
-    const { container } = renderComponent({ metrics })
+    const { container } = renderComponent({ ...UNIT_AXIS_PROPS, metrics })
 
-    // Tick label text is applied when the d3 axis transition starts, hence the waitFor.
-    await waitFor(() => {
-      const tickValues = Array.from(
-        container.querySelectorAll('g.graphing-time-series-graph__y-axis .tick text')
-      ).map((tickLabel) => Number(tickLabel.textContent))
-      expect(tickValues.some((value) => value < 0)).toBe(true)
-      expect(tickValues.some((value) => value > 0)).toBe(true)
-    })
+    const ticks = await drawnValueAxisTicks(container)
+    expect(ticks.filter((tick) => tick.position > 0)).toEqual([])
+    expect(ticks.filter((tick) => tick.position < 0)).not.toHaveLength(0)
+    expect(signedLabels(ticks)).toEqual([])
+  })
+
+  test('labels both sides of zero without a sign when mirrored and unmirrored metrics mix', async () => {
+    const metrics = [LINE_METRIC, INVERSE_METRIC]
+
+    const { container } = renderComponent({ ...UNIT_AXIS_PROPS, metrics })
+
+    const ticks = await drawnValueAxisTicks(container)
+    expect(ticks.filter((tick) => tick.position < 0)).not.toHaveLength(0)
+    expect(ticks.filter((tick) => tick.position > 0)).not.toHaveLength(0)
+    expect(signedLabels(ticks)).toEqual([])
   })
 
   test('sizes the value axis to hold its widest label', async () => {

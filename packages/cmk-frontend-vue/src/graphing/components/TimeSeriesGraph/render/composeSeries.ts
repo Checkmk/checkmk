@@ -55,9 +55,17 @@ export function composeSeries(options: {
   }
 }
 
+export function hasMirroredMetric(metrics: Metric[]): boolean {
+  return metrics.some((metric) => metric.render.inverse)
+}
+
+function mixesMirroredAndUnmirrored(metrics: Metric[]): boolean {
+  return hasMirroredMetric(metrics) && metrics.some((metric) => !metric.render.inverse)
+}
+
 /**
  * The value extent the y-axis must cover. Line metrics contribute their drawn extremes; stacked
- * metrics their cumulative band extents. Forced symmetric around zero when any metric is inverse.
+ * metrics their cumulative band extents.
  */
 export function composedValueDomain(metrics: Metric[], composed: ComposedSeries): [number, number] {
   const domainBuckets = metrics.map((_, i) =>
@@ -69,8 +77,7 @@ export function composedValueDomain(metrics: Metric[], composed: ComposedSeries)
         }))
       : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
   )
-  const anyInverse = metrics.some((metric) => metric.render.inverse)
-  return computeYDomain(domainBuckets, { symmetric: anyInverse })
+  return computeYDomain(domainBuckets, { symmetric: mixesMirroredAndUnmirrored(metrics) })
 }
 
 export interface M4CacheStore {

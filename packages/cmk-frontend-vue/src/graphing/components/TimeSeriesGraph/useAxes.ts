@@ -55,18 +55,42 @@ function asValueLabels(labels: Label[]): ValueLabel[] {
   return labels.map((label) => ({ position: label.value, text: label.text }))
 }
 
-// Labels must land where the unit considers round, which d3's decimal-only ticks cannot do: an IEC
-// axis steps in powers of two, so a 2 * 10^6 byte step reads as "1.91 MiB" and contradicts the
-// legend. renderYLabels takes one sign at a time, hence the split below.
-function computeValueLabels(
+function reflectedAcrossZero(labels: Label[]): Label[] {
+  return labels
+    .filter((label) => label.value !== 0)
+    .map((label) => ({ value: -label.value, text: label.text }))
+}
+
+function computeMirroredValueLabels(
   formatter: NotationFormatter,
   domainMin: number,
   domainMax: number,
   targetCount: number
 ): ValueLabel[] {
-  if (targetCount <= 0) {
-    return []
-  }
+  const straddlesZero = domainMin < 0 && domainMax > 0
+  const maxMagnitude = Math.max(Math.abs(domainMin), Math.abs(domainMax))
+  const minMagnitude = straddlesZero ? 0 : Math.min(Math.abs(domainMin), Math.abs(domainMax))
+  const labelCount = straddlesZero
+    ? Math.max(1, Math.round((targetCount * maxMagnitude) / (domainMax - domainMin)))
+    : targetCount
+  const magnitudes = formatter.renderYLabels(
+    { kind: 'positive', start: minMagnitude, end: maxMagnitude },
+    labelCount
+  )
+  return asValueLabels([...reflectedAcrossZero(magnitudes), ...magnitudes]).filter(
+    (label) => label.position >= domainMin && label.position <= domainMax
+  )
+}
+
+// Labels must land where the unit considers round, which d3's decimal-only ticks cannot do: an IEC
+// axis steps in powers of two, so a 2 * 10^6 byte step reads as "1.91 MiB" and contradicts the
+// legend. renderYLabels takes one sign at a time, hence the split below.
+function computeSignedValueLabels(
+  formatter: NotationFormatter,
+  domainMin: number,
+  domainMax: number,
+  targetCount: number
+): ValueLabel[] {
   if (domainMin >= 0) {
     return asValueLabels(
       formatter.renderYLabels({ kind: 'positive', start: domainMin, end: domainMax }, targetCount)
@@ -91,6 +115,21 @@ function computeValueLabels(
   return [...asValueLabels(negative.slice(1)), ...asValueLabels(positive)]
 }
 
+function computeValueLabels(
+  formatter: NotationFormatter,
+  domainMin: number,
+  domainMax: number,
+  targetCount: number,
+  isMirroredGraph: boolean
+): ValueLabel[] {
+  if (targetCount <= 0) {
+    return []
+  }
+  return isMirroredGraph
+    ? computeMirroredValueLabels(formatter, domainMin, domainMax, targetCount)
+    : computeSignedValueLabels(formatter, domainMin, domainMax, targetCount)
+}
+
 /** Halve the gap between neighbouring labels, for the grid's unlabelled intermediate lines. */
 function withMidpoints(positions: number[]): number[] {
   const ascending = [...positions].sort((first, second) => first - second)
@@ -106,7 +145,8 @@ export function useAxes(
   plotWidth: Ref<number>,
   plotHeight: Ref<number>,
   yStepping: Ref<'binary' | 'decimal'>,
-  yFormatter: Ref<NotationFormatter | null>
+  yFormatter: Ref<NotationFormatter | null>,
+  isMirroredGraph: Ref<boolean>
 ) {
   const yStep = ref<number>(1)
 
@@ -145,12 +185,15 @@ export function useAxes(
     const tickCount = yTickCount()
     const formatter = yFormatter.value
     const unitLabels = formatter
-      ? computeValueLabels(formatter, domainMin, domainMax, tickCount)
+      ? computeValueLabels(formatter, domainMin, domainMax, tickCount, isMirroredGraph.value)
       : []
     if (unitLabels.length > 0) {
       return unitLabels
     }
-    return yScale.ticks(tickCount).map((value) => ({ position: value, text: String(value) }))
+    return yScale.ticks(tickCount).map((value) => ({
+      position: value,
+      text: String(isMirroredGraph.value ? Math.abs(value) : value)
+    }))
   }
 
   function valueTickLabels(): string[] {

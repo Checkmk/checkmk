@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import {
+  DecimalFormatter,
   IECFormatter,
   type NotationFormatter
 } from 'cmk-ui-library/lib/unit-format/notationFormatter'
@@ -40,7 +41,8 @@ function expectBinaryAlignment(positions: number[]): void {
 
 function setup(
   stepping: 'binary' | 'decimal' = 'decimal',
-  formatter: NotationFormatter | null = null
+  formatter: NotationFormatter | null = null,
+  isMirroredGraph = false
 ) {
   const axisGroupRef = ref<SVGGElement | null>(document.createElementNS(SVG_NS, 'g') as SVGGElement)
   const plotWidth = ref(PLOT_WIDTH)
@@ -53,7 +55,16 @@ function setup(
     .range([0, PLOT_WIDTH])
   const yScale = scaleLinear().domain([0, 1]).range([PLOT_HEIGHT, 0])
 
-  const axes = useAxes(axisGroupRef, xScale, yScale, plotWidth, plotHeight, yStepping, yFormatter)
+  const axes = useAxes(
+    axisGroupRef,
+    xScale,
+    yScale,
+    plotWidth,
+    plotHeight,
+    yStepping,
+    yFormatter,
+    ref(isMirroredGraph)
+  )
   return { axes, group: axisGroupRef.value!, xScale, yScale }
 }
 
@@ -65,6 +76,34 @@ function valueAxisTickTexts(group: Element): string[] {
 
 function setupIec() {
   return setup('binary', new IECFormatter('B', { type: 'auto', digits: 2 }))
+}
+
+function percentFormatter(): NotationFormatter {
+  return new DecimalFormatter('%', { type: 'auto', digits: 2 })
+}
+
+function setupPercent() {
+  return setup('decimal', percentFormatter())
+}
+
+function setupMirroredPercent() {
+  return setup('decimal', percentFormatter(), true)
+}
+
+// Tick label text is applied when the d3 axis transition starts, hence the wait.
+async function drawnValueAxisTicks(
+  group: Element
+): Promise<Array<{ position: number; text: string }>> {
+  await vi.waitFor(() => {
+    expect(valueAxisTickTexts(group).filter((label) => label !== '')).not.toHaveLength(0)
+  })
+  return Array.from(group.querySelectorAll(`g.${AXIS_CLASSES.valueAxis} .tick text`)).map(
+    (label) => ({ position: select(label).datum() as number, text: label.textContent ?? '' })
+  )
+}
+
+function signedLabels(ticks: Array<{ text: string }>): string[] {
+  return ticks.map((tick) => tick.text).filter((text) => text.includes('-'))
 }
 
 describe('prepareValueDomain', () => {
@@ -253,7 +292,7 @@ describe('drawValueGrid and drawValueAxis', () => {
     expectBinaryAlignment(drawnTickPositions(group, AXIS_CLASSES.valueGrid))
   })
 
-  test('labels both sides of a mirrored IEC axis on binary values', () => {
+  test('labels both sides of an IEC axis straddling zero on binary values', () => {
     const { axes, group } = setupIec()
 
     axes.prepareValueDomain(-4 * ONE_MIB, 4 * ONE_MIB)
@@ -263,6 +302,78 @@ describe('drawValueGrid and drawValueAxis', () => {
     expect(positions.some((position) => position < 0)).toBe(true)
     expect(positions.some((position) => position > 0)).toBe(true)
     expectBinaryAlignment(positions)
+  })
+})
+
+describe('a mirrored value axis', () => {
+  test('writes the same unsigned text on both sides of zero', async () => {
+    const { axes, group } = setupMirroredPercent()
+    const percentLimit = 30
+
+    axes.prepareValueDomain(-percentLimit, percentLimit)
+    axes.drawValueAxis({ showLabels: true })
+
+    const ticks = await drawnValueAxisTicks(group)
+    const textAt = new Map(ticks.map((tick) => [tick.position, tick.text]))
+    const belowZero = ticks.filter((tick) => tick.position < 0)
+    expect(belowZero).not.toHaveLength(0)
+    expect(belowZero.map((tick) => tick.text)).toEqual(
+      belowZero.map((tick) => textAt.get(-tick.position))
+    )
+    expect(signedLabels(ticks)).toEqual([])
+  })
+
+  test('labels an axis lying wholly below zero without a sign', async () => {
+    const { axes, group } = setupMirroredPercent()
+    const percentLimit = 30
+
+    axes.prepareValueDomain(-percentLimit, 0)
+    axes.drawValueAxis({ showLabels: true })
+
+    const ticks = await drawnValueAxisTicks(group)
+    expect(ticks.filter((tick) => tick.position > 0)).toEqual([])
+    expect(ticks.filter((tick) => tick.position < 0)).not.toHaveLength(0)
+    expect(signedLabels(ticks)).toEqual([])
+  })
+
+  test('keeps its labels inside a domain that is not centred on zero', () => {
+    const { axes, group } = setupMirroredPercent()
+    const [domainMin, domainMax] = [-25, 5]
+
+    axes.prepareValueDomain(domainMin, domainMax, 'explicit')
+    axes.drawValueAxis({ showLabels: true })
+
+    const positions = drawnTickPositions(group, AXIS_CLASSES.valueAxis)
+    expect(positions).not.toHaveLength(0)
+    expect(Math.min(...positions)).toBeGreaterThanOrEqual(domainMin)
+    expect(Math.max(...positions)).toBeLessThanOrEqual(domainMax)
+  })
+
+  test('places its labels where an unmirrored axis would on a domain that never reaches zero', () => {
+    const mirrored = setupMirroredPercent()
+    const unmirrored = setupPercent()
+    const [domainMin, domainMax] = [-1000, -960]
+
+    mirrored.axes.prepareValueDomain(domainMin, domainMax, 'explicit')
+    mirrored.axes.drawValueAxis({ showLabels: true })
+    unmirrored.axes.prepareValueDomain(domainMin, domainMax, 'explicit')
+    unmirrored.axes.drawValueAxis({ showLabels: true })
+
+    const mirroredPositions = drawnTickPositions(mirrored.group, AXIS_CLASSES.valueAxis)
+    expect(mirroredPositions.length).toBeGreaterThan(1)
+    expect(mirroredPositions).toEqual(drawnTickPositions(unmirrored.group, AXIS_CLASSES.valueAxis))
+  })
+
+  test('drops the sign of the raw ticks it falls back to without a unit', async () => {
+    const { axes, group } = setup('decimal', null, true)
+    const rawLimit = 30
+
+    axes.prepareValueDomain(-rawLimit, rawLimit)
+    axes.drawValueAxis({ showLabels: true })
+
+    const ticks = await drawnValueAxisTicks(group)
+    expect(ticks.filter((tick) => tick.position < 0)).not.toHaveLength(0)
+    expect(signedLabels(ticks)).toEqual([])
   })
 })
 

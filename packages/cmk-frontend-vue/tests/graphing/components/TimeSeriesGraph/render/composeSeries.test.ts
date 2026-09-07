@@ -120,13 +120,28 @@ describe('composedValueDomain', () => {
     expect(yMax).toBeGreaterThan(flat)
   })
 
-  test('any inverse metric forces the domain symmetric around zero', () => {
-    const metrics = [makeMetric([8, 9], { inverse: true })]
+  test('a graph of only mirrored metrics mirrors its extent below zero instead of centring on it', () => {
+    const nearestToZero = 8
+    const furthestFromZero = 9
+    const metrics = [makeMetric([nearestToZero, furthestFromZero], { inverse: true })]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(-furthestFromZero)
+    expect(yMax).toBe(-nearestToZero)
+  })
+
+  // The mirrored side peaks higher than the upright one, so a domain centred on anything but the
+  // mirrored extent would leave its curve outside the plot.
+  test('mixing mirrored and unmirrored metrics centres the domain on zero', () => {
+    const mirroredPeak = 9
+    const uprightPeak = 2
+    const metrics = [makeMetric([1, mirroredPeak], { inverse: true }), makeMetric([1, uprightPeak])]
 
     const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
 
     expect(yMin).toBe(-yMax)
-    expect(yMax).toBeGreaterThan(0)
+    expect(yMax).toBeGreaterThanOrEqual(mirroredPeak)
   })
 })
 

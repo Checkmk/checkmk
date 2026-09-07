@@ -96,8 +96,9 @@ scope unchanged, and the epic builds on its output.
 | D11 | Concurrency token is the **table version already in the read model**, made a precondition of every write                                                          | Supersedes an earlier hash-based choice: the client already holds it and it is `0` during a scan, so one mechanism covers a stale page, an intervening scan and a concurrent admin — and it _replaces_ the job-active probe rather than adding to it (DM §9.4, matrix §11.4 item 6). How strict it is at the boundary is an API-ownership call: DM §12.7 |
 | D12 | Accepting host labels does **not** attempt to recompute which services are discovered                                                                             | Label-based rule matching can change discovery; requiring an explicit rescan is acceptable, as today                                                                                                                                                                                                                                                     |
 | D13 | PM/UX are **not yet involved but must not be excluded**                                                                                                           | See Phase 4 and risk R3                                                                                                                                                                                                                                                                                                                                  |
-| D14 | Feature-flag toggles are used during implementation                                                                                                               | Enables incremental landing and a controlled cutover                                                                                                                                                                                                                                                                                                     |
+| D14 | Feature-flag toggles are used during implementation — **frontend only**                                                                                           | Enables incremental landing and a controlled cutover of the page. The backend gets none: D16                                                                                                                                                                                                                                                             |
 | D15 | **CMK-38599 (§10.5) is fixed before Phase 1 starts**                                                                                                              | The only confirmed divergence that changes data on every use and has no guardrail in any tier                                                                                                                                                                                                                                                            |
+| D16 | The backend is **replaced by a module swap, not gated by a runtime flag**                                                                                         | A central-site toggle cannot reach the remote site's automations (D7's skew envelope), and an activated write is not undone by flipping it back. If a parallel implementation is wanted, the seam is D5's internal endpoints — versioned and opt-in per caller — not site config. See Phase 3                                                            |
 
 ### Compatibility envelope (D7)
 
@@ -245,9 +246,15 @@ Documenting these endpoints properly also retires part of **CMK-29094**.
 **Exit criteria:** schema merged; TS types generated from it; the frontend can build against a
 mock that satisfies the schema.
 
-### Phase 3 — Backend cleanup (parallel with Phase 4)
+### Phase 3 — Backend replacement (parallel with Phase 4)
 
 Scoped to the code that survives. **No old GUI code is touched here** (D10).
+
+The transition core is **replaced, not refactored** (D16). `compute_discovery_transition` is
+already a fold producing a `DiscoveryTransition` value — pure once `_verify_permissions` and
+`_get_table_target` are lifted to parameters — so it is swapped as one module in one commit, with
+the Phase 0 matrix as the acceptance gate. The 208 → 10 collapse below cannot be reached in
+behaviour-preserving steps, which is why there is no incremental path here and no flag.
 
 - **Decompose `DiscoveryState`.** Its 15 declared values (13 reachable) conflate four orthogonal
   axes — lifecycle (new/unchanged/changed/vanished), disposition
@@ -270,8 +277,9 @@ Scoped to the code that survives. **No old GUI code is touched here** (D10).
   success criterion for "less error-prone". A second one: **T1b.12 must XPASS**, because §10.11
   disappears by construction in this model rather than by fix (matrix §11.4 item 7).
 
-Verify that `bulk_discovery.py`, DCD and periodic discovery still behave once the primitives
-are extracted. They are not being migrated here, but they are consumers.
+`bulk_discovery.py`, DCD and periodic discovery consume `check_mk_automations` directly and never
+import `watolib.services`, so the swap does not reach them. Only three call sites do: the legacy
+page, the REST endpoints and Quick Setup.
 
 ### Phase 4 — Frontend (parallel with Phase 3)
 
@@ -351,22 +359,40 @@ Then, as separate work: **CMK-35050** (faithful source failures — reopens D7),
 
 ### The divergence tickets from Phase 0
 
-All thirteen are linked to CMK-32255 and filed against Check and Discovery Engine. Off the critical
-path except CMK-38599 (D15): each is a fix a later phase would otherwise subsume. Ten own a
-strict-xfail guardrail that must be deleted with the fix — the Jira label `discovery-quarantine`
-finds the ones that forgot, and is the only part of that mechanism living outside the repo, the
-guardrails themselves being self-enforcing. One literal is shared by CMK-38589 and CMK-38593, so it
-clears only once both land.
+All thirteen are linked to CMK-32255 and filed against Check and Discovery Engine. The `swap`
+column says what Phase 3's replacement does to each: **✅** five disappear by construction; **◐**
+two lose the transition-level defect but keep a second one in another layer; **—** six sit in a layer
+the swap never touches — Phase 2's contract, a caller, or below the automation boundary — and must be
+fixed on their own.
 
-| ticket    | §            | ticket    | §     |
-| --------- | ------------ | --------- | ----- |
-| CMK-38587 | 10.1         | CMK-38594 | 10.4  |
-| CMK-38588 | 10.3 + 10.14 | CMK-38595 | 10.9  |
-| CMK-38589 | 10.8         | CMK-38596 | 10.10 |
-| CMK-38590 | 10.11        | CMK-38597 | 10.15 |
-| CMK-38591 | 10.13        | CMK-38598 | 10.18 |
-| CMK-38592 | 10.16 + 11.3 | CMK-38599 | 10.5  |
-| CMK-38593 | 10.17        |           |       |
+| ticket    | §            | swap | ticket    | §     | swap |
+| --------- | ------------ | ---- | --------- | ----- | ---- |
+| CMK-38587 | 10.1         | ✅   | CMK-38594 | 10.4  | —    |
+| CMK-38588 | 10.3 + 10.14 | —    | CMK-38595 | 10.9  | ◐    |
+| CMK-38589 | 10.8         | ✅   | CMK-38596 | 10.10 | —    |
+| CMK-38590 | 10.11        | ✅   | CMK-38597 | 10.15 | —    |
+| CMK-38591 | 10.13        | —    | CMK-38598 | 10.18 | —    |
+| CMK-38592 | 10.16 + 11.3 | ✅   | CMK-38599 | 10.5  | ✅   |
+| CMK-38593 | 10.17        | ◐    |           |       |      |
+
+Off the critical path except CMK-38599 (D15), with one caveat: the swap is master-only, so **a
+backport un-subsumes**. Any **✅** ticket a customer needs in a released branch is fixed twice — on
+the branch, and preserved through the swap. CMK-38599 is the live case and the template. Land the
+**—** rows before the swap so its verification is not confounded; CMK-38591 and CMK-38596 are cheap
+and sit in files it never touches. CMK-38597 (§10.15) belongs to the Nagios config writer and should
+be re-parented off this epic.
+
+Ten own a strict-xfail guardrail, deleted with the fix when a ticket is fixed on its own — the
+conformance test beside it already pins the result. **When one change clears several at once, flip
+instead of delete**: drop the `xfail` mark, delete the paired `test_current_outcome`, keep
+`test_intended_outcome` as a plain assertion. Both halves of a pair go red on the swap, so the
+quarantine file changes in that commit either way; flipping makes it gain guardrails instead of
+shedding ten. The Jira label `discovery-quarantine` finds the ones that forgot, and is the only part
+of that mechanism living outside the repo, the guardrails themselves being self-enforcing. One
+literal is shared by CMK-38589 and CMK-38593, so it clears only once both land.
+
+Five **✅** tickets are five separately observable behaviour changes, and werks are searched by
+symptom — so the swap needs five werks, not one.
 
 **The §10 items that own no ticket.** §10.2 is resolved as not-a-defect. §10.19 is left unticketed
 as low priority — Phase 2 disposes of it. §10.6, §10.7, §10.12 and §10.14 step 3 are requirements of

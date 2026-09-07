@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.steelhead_connections import (
     check_steelhead_connections,
     discover_steelhead_connections,
@@ -30,24 +28,22 @@ from cmk.legacy_checks.steelhead_connections import (
                 ["6.0", "347"],
                 ["7.0", "3009"],
             ],
-            [(None, {})],
+            [Service()],
         ),
     ],
 )
 def test_discover_steelhead_connections(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for steelhead_connections check."""
-    parsed = parse_steelhead_connections(string_table)
-    result = list(discover_steelhead_connections(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    section = parse_steelhead_connections(string_table)
+    result = list(discover_steelhead_connections(section))
+    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, string_table, expected_results",
     [
         (
-            None,
             {},
             [
                 ["1.0", "1619"],
@@ -59,24 +55,27 @@ def test_discover_steelhead_connections(
                 ["7.0", "3009"],
             ],
             [
-                (0, "Total connections: 3009", []),
-                (0, "Passthrough: 1390", [("passthrough", 1390)]),
-                (0, "Optimized: 1619", []),
-                (0, "Active: 347", [("active", 347)]),
-                (0, "Established: 1615", [("established", 1615)]),
-                (0, "Half opened: 0", [("halfOpened", 0)]),
-                (0, "Half closed: 4", [("halfClosed", 4)]),
+                Result(state=State.OK, summary="Total connections: 3009"),
+                Result(state=State.OK, summary="Passthrough: 1390"),
+                Metric("passthrough", 1390),
+                Result(state=State.OK, summary="Optimized: 1619"),
+                Result(state=State.OK, summary="Active: 347"),
+                Metric("active", 347),
+                Result(state=State.OK, summary="Established: 1615"),
+                Metric("established", 1615),
+                Result(state=State.OK, summary="Half opened: 0"),
+                Metric("halfOpened", 0),
+                Result(state=State.OK, summary="Half closed: 4"),
+                Metric("halfClosed", 4),
             ],
         ),
     ],
 )
 def test_check_steelhead_connections(
-    item: str,
-    params: Mapping[str, object],
+    params: Mapping[str, tuple[int, int]],
     string_table: StringTable,
-    expected_results: Sequence[object],
+    expected_results: Sequence[Result | Metric],
 ) -> None:
-    """Test check function for steelhead_connections check."""
-    parsed = parse_steelhead_connections(string_table)
-    result = list(check_steelhead_connections(item, params, parsed))
+    section = parse_steelhead_connections(string_table)
+    result = list(check_steelhead_connections(params, section))
     assert result == expected_results

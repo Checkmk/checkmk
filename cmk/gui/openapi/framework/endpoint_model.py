@@ -23,7 +23,7 @@ from cmk.gui.utils.dataclasses import DataclassInstance
 from .._type_adapter import get_cached_type_adapter
 from ._context import ApiContext
 from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
-from ._utils import iter_dataclass_fields, resolve_type
+from ._utils import get_resolved_origin, iter_dataclass_fields, resolve_type
 from .content_types import convert_request_body
 from .model import api_field
 from .model.response import ApiResponse, TypedResponse
@@ -215,17 +215,24 @@ class _IgnoreExtra:
 
 
 def _configure_extra_forbid(tp: type) -> None:
-    """Recursively set extra="forbid" on BaseModel/dataclass types, unwrapping Annotated, TypeAliasType and unions."""
+    """Set extra="forbid" on a BaseModel/dataclass type, and on every member of a union.
+
+    Unwraps Annotated and TypeAliasType. A parameterized generic model is configured on its
+    origin class, so the setting applies to every parameterization of that model.
+    """
     stripped = resolve_type(tp)
     if isinstance(stripped, types.UnionType):
         for member in get_args(stripped):
             _configure_extra_forbid(member)
-    elif issubclass(stripped, BaseModel):
-        stripped.model_config.setdefault("extra", "forbid")
-    elif dataclasses.is_dataclass(stripped) and isinstance(stripped, type):
-        config = getattr(stripped, "__pydantic_config__", ConfigDict())
+        return
+
+    origin = get_resolved_origin(stripped)
+    if issubclass(origin, BaseModel):
+        origin.model_config.setdefault("extra", "forbid")
+    elif dataclasses.is_dataclass(origin):
+        config = getattr(origin, "__pydantic_config__", ConfigDict())
         config.setdefault("extra", "forbid")
-        stripped.__pydantic_config__ = config  # type: ignore[attr-defined]
+        origin.__pydantic_config__ = config  # type: ignore[attr-defined]
 
 
 def _build_input_model(parameters: Parameters, request_body_type: type | None) -> ApiInputModel:

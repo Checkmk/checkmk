@@ -44,6 +44,11 @@ class _TestBody:
     str_field: str
 
 
+@dataclasses.dataclass
+class _TestGenericBody[T]:
+    value: T
+
+
 _PATH_PARAM = PathParam(description="Path parameter", example="example")
 _QUERY_PARAM = QueryParam(description="Query parameter", example="example")
 _QUERY_PARAM_ALIASED = QueryParam(description="Query parameter", example="example", alias="alias")
@@ -593,3 +598,33 @@ def test_query_parameter_optional_list_default() -> None:
     model = EndpointModel.build(_optional_list_query_handler)
     bound = model._validate_request_parameters(_request_data(), None, _api_context())  # noqa: SLF001
     assert bound.arguments["items"] is None
+
+
+def _generic_body_endpoint_handler(body: _TestGenericBody[_TestBody]) -> None:
+    raise NotImplementedError
+
+
+def test_generic_body_is_validated() -> None:
+    model = EndpointModel.build(_generic_body_endpoint_handler)
+    bound = model._validate_request_parameters(  # noqa: SLF001
+        request_data=_request_data(body={"value": {"int_field": 1, "str_field": "test"}}),
+        content_type="application/json",
+        api_context=_api_context(),
+    )
+    assert bound.arguments["body"] == _TestGenericBody(
+        value=_TestBody(int_field=1, str_field="test")
+    )
+
+
+def test_generic_body_forbids_extra_fields() -> None:
+    """`extra="forbid"` must be configured on the origin of a parameterized generic body."""
+    model = EndpointModel.build(_generic_body_endpoint_handler)
+    # type=unexpected_keyword_argument happens only because we use dataclasses (with extra=forbid)
+    with pytest.raises(ValidationError, match="type=unexpected_keyword_argument"):
+        model._validate_request_parameters(  # noqa: SLF001
+            request_data=_request_data(
+                body={"value": {"int_field": 1, "str_field": "test"}, "extra": "field"}
+            ),
+            content_type="application/json",
+            api_context=_api_context(),
+        )

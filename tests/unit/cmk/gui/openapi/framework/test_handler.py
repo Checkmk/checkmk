@@ -59,6 +59,11 @@ class _TestResponseOmitted:
     omitted: str | ApiOmitted = ApiOmitted()
 
 
+@dataclass
+class _TestGenericResponse[T]:
+    value: list[T]
+
+
 def test_dump_response_empty() -> None:
     result = dump_body(None, None, is_testing=True)
     assert result is None
@@ -122,6 +127,20 @@ def test_dump_response_union_second_member() -> None:
         _TestResponseB(name="hello"), _TestResponse | _TestResponseB, is_testing=True
     )
     assert result == b'{"name":"hello"}'
+
+
+def test_dump_response_generic() -> None:
+    result = dump_body(
+        _TestGenericResponse(value=[_TestResponse(field=1)]),
+        _TestGenericResponse[_TestResponse],
+        is_testing=True,
+    )
+    assert result == b'{"value":[{"field":1}]}'
+
+
+def test_dump_response_generic_wrong_type_raises() -> None:
+    with pytest.raises(ValueError, match="should be"):
+        dump_body(object(), _TestGenericResponse[_TestResponse], is_testing=True)
 
 
 def test_dump_response_union_wrong_type_raises() -> None:

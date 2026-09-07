@@ -3,13 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import types
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Annotated, cast
+from typing import Annotated, cast, Literal, TypeVar
 
 import pytest
 
-from cmk.gui.openapi.framework._utils import get_resolved_origin, resolve_type
+from cmk.gui.openapi.framework._utils import (
+    get_resolved_origin,
+    resolve_type,
+    substitute_type_vars,
+)
 
 
 @dataclass
@@ -75,3 +81,83 @@ def test_resolve_type_preserves_inner_generic_annotated() -> None:
 )
 def test_get_resolved_origin(input_type: type, expected: type) -> None:
     assert get_resolved_origin(input_type) is expected
+
+
+type _TRecursiveAlias = list[_TRecursiveAlias] | str
+
+
+@dataclass
+class _Annotations[T, D]:
+    """The annotations under test.
+
+    They live on a dataclass because a type checker rejects a type variable inside a value
+    expression, which is what an inline `list[T]` would be.
+    """
+
+    in_list: list[T]
+    in_dict: dict[str, T]
+    in_sequence: Sequence[T]
+    nested: list[dict[str, T]]
+    in_union: T | None
+    annotated: Annotated[list[T], "meta"]
+    two_type_vars: dict[D, list[T]]
+    literal: Literal["a", "b"]
+    plain_model: _A
+    plain_container: list[str]
+    alias: _TAliasOfListStr
+    recursive_alias: _TRecursiveAlias
+    recursive_alias_in_list: list[_TRecursiveAlias]
+
+
+_T, _D = cast(tuple[TypeVar, TypeVar], _Annotations.__type_params__)
+_ANNOTATION = {field.name: field.type for field in dataclasses.fields(_Annotations)}
+
+
+class TestSubstituteTypeVars:
+    def test_bare_type_var(self) -> None:
+        assert substitute_type_vars(_T, {_T: _A}) is _A
+
+    def test_unbound_type_var(self) -> None:
+        with pytest.raises(ValueError, match="Unbound type variable"):
+            substitute_type_vars(_T, {_D: _A})
+
+    @pytest.mark.parametrize(
+        "name, expected",
+        [
+            pytest.param("in_list", list[_A], id="list"),
+            pytest.param("in_dict", dict[str, _A], id="dict-value"),
+            pytest.param("in_sequence", Sequence[_A], id="abstract-sequence"),
+            pytest.param("nested", list[dict[str, _A]], id="nested-container"),
+        ],
+    )
+    def test_substitutes_inside_a_container(self, name: str, expected: object) -> None:
+        assert substitute_type_vars(_ANNOTATION[name], {_T: _A}) == expected
+
+    def test_union_stays_a_union_type(self) -> None:
+        substituted = substitute_type_vars(_ANNOTATION["in_union"], {_T: _A})
+        assert isinstance(substituted, types.UnionType)
+        assert set(substituted.__args__) == {_A, type(None)}
+
+    def test_annotated_keeps_its_metadata(self) -> None:
+        substituted = substitute_type_vars(_ANNOTATION["annotated"], {_T: _A})
+        assert substituted == Annotated[list[_A], "meta"]
+
+    def test_multiple_type_vars(self) -> None:
+        substituted = substitute_type_vars(_ANNOTATION["two_type_vars"], {_T: _A, _D: _B})
+        assert substituted == dict[_B, list[_A]]
+
+    @pytest.mark.parametrize(
+        "name",
+        ["literal", "plain_model", "plain_container", "alias", "recursive_alias"],
+    )
+    def test_annotation_without_type_vars_is_returned_unchanged(self, name: str) -> None:
+        annotation = _ANNOTATION[name]
+        assert substitute_type_vars(annotation, {_T: _A, _D: _B}) is annotation
+
+    def test_recursive_type_alias_terminates(self) -> None:
+        annotation = _ANNOTATION["recursive_alias_in_list"]
+        assert substitute_type_vars(annotation, {_T: _A}) == annotation
+
+    def test_empty_substitutions_leave_the_annotation_alone(self) -> None:
+        annotation = _ANNOTATION["in_list"]
+        assert substitute_type_vars(annotation, {}) is annotation

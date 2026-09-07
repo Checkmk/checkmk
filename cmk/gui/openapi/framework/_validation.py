@@ -19,7 +19,7 @@ from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
 from ._context import ApiContext
 from ._types import HeaderParam, PathParam, QueryParam
-from ._utils import get_resolved_origin, resolve_type
+from ._utils import get_dataclass_origin, get_resolved_origin, iter_model_fields, resolve_type
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
 from .model.response import ApiErrorDataclass
@@ -51,7 +51,7 @@ def _validate_defaults_parameter(
     """Validate the default values for parameters.
 
     If no default is set, `field_default` should be `dataclasses.MISSING`."""
-    if dataclasses.is_dataclass(field_type):
+    if get_dataclass_origin(field_type) is not None:
         _validate_defaults_model(f"{path}", field_type, other_defaults_allowed=True)
         return
 
@@ -74,19 +74,13 @@ def _validate_defaults_model(
     If `other_defaults_allowed` is true, `default` and `default_factory` are allowed to be set to
     any value, for types *not* containing `ApiOmitted`. This should be used only for request models.
     """
-    if not dataclasses.is_dataclass(schema):
-        raise ValueError(f"Expected a dataclass annotation for `{path}`.")
-
-    for field in dataclasses.fields(schema):
-        if isinstance(field.type, str):
-            raise ValueError(f"String annotation for `{path}.{field.name}` is not allowed.")
-
+    for field, field_type in iter_model_fields(schema, path=path):
         # without the cast we would have to check for GenericAlias, UnionType, DataclassInstance
         # and Literal. The dataclass instance check also has no proper return type
-        type_ = cast(type, field.type)
-        if dataclasses.is_dataclass(type_):
+        type_ = cast(type, field_type)
+        if get_dataclass_origin(type_) is not None:
             _validate_defaults_model(
-                f"{path}.{field.name}", field.type, other_defaults_allowed=other_defaults_allowed
+                f"{path}.{field.name}", type_, other_defaults_allowed=other_defaults_allowed
             )
             continue
 
@@ -273,12 +267,13 @@ class EndpointValidator:
             body_type = resolve_type(body.annotation)
             if isinstance(body_type, types.UnionType):
                 if not all(
-                    dataclasses.is_dataclass(resolve_type(arg)) for arg in get_args(body_type)
+                    get_dataclass_origin(resolve_type(arg)) is not None
+                    for arg in get_args(body_type)
                 ):
                     raise ValueError(
                         "All union members of request body annotation must be dataclasses"
                     )
-            elif not dataclasses.is_dataclass(body_type):
+            elif get_dataclass_origin(body_type) is None:
                 raise ValueError("Request body annotation must be a dataclass")
 
         if "api_context" in signature.parameters:

@@ -543,22 +543,22 @@ def render_number_function(timeformat: str) -> Callable[[AVTimeStamp, int], str]
 
     elif timeformat == "seconds":
 
-        def render_number(n: AVTimeStamp, d: int) -> str:
+        def render_number(n: AVTimeStamp, d: int) -> str:  # noqa: ARG001
             return "%d s" % n
 
     elif timeformat == "minutes":
 
-        def render_number(n: AVTimeStamp, d: int) -> str:
+        def render_number(n: AVTimeStamp, d: int) -> str:  # noqa: ARG001
             return "%d min" % (n / 60)
 
     elif timeformat == "hours":
 
-        def render_number(n: AVTimeStamp, d: int) -> str:
+        def render_number(n: AVTimeStamp, d: int) -> str:  # noqa: ARG001
             return "%d h" % (n / 3600)
 
     else:
 
-        def render_number(n: AVTimeStamp, d: int) -> str:
+        def render_number(n: AVTimeStamp, d: int) -> str:  # noqa: ARG001
             minn, sec = divmod(n, 60)
             hours, minn = divmod(minn, 60)
             return "%02d:%02d:%02d" % (hours, minn, sec)

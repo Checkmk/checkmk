@@ -14,7 +14,11 @@ from .agent_aws_fake_clients import CEGetCostsAndUsageIB
 
 class FakeCEClient:
     def get_cost_and_usage(
-        self, TimePeriod: object, Granularity: object, Metrics: object, GroupBy: object
+        self,
+        TimePeriod: object,  # noqa: ARG002
+        Granularity: object,  # noqa: ARG002
+        Metrics: object,  # noqa: ARG002
+        GroupBy: object,  # noqa: ARG002
     ) -> dict[str, object]:
         return {
             "NextPageToken": "string",

@@ -429,7 +429,7 @@ class BIAggregationPackSchema(Schema):
     )
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPack, many: bool = False) -> dict:  # type: ignore[misc]
+    def pre_dumper(self, obj: BIAggregationPack, many: bool = False) -> dict:  # type: ignore[misc]  # noqa: ARG002
         # Convert aggregations and rules to list
         return {
             "id": obj.id,
@@ -446,7 +446,7 @@ class BIAggregationPacksSchema(Schema):
     packs = ReqList(ReqNested(BIAggregationPackSchema), description="List of BI packs.")
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPacks, many: bool = False) -> dict:  # type: ignore[misc]
+    def pre_dumper(self, obj: BIAggregationPacks, many: bool = False) -> dict:  # type: ignore[misc]  # noqa: ARG002
         # Convert packs to list
         return {"packs": obj.packs.values()}
 

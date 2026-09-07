@@ -43,7 +43,7 @@ def _validate_oracle_password(forbidden_chars: str) -> Callable[[tuple[str, str]
     Validates only the explicit password entry, not password store references.
     """
 
-    def _validate(value: tuple[str, str], varprefix: str) -> None:
+    def _validate(value: tuple[str, str], varprefix: str) -> None:  # noqa: ARG001
         mode, password = value
         if mode == "password":
             # Only validate direct password entry, not password store references

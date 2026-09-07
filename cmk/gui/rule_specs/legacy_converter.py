@@ -233,7 +233,7 @@ def convert_to_legacy_rulespec(
 
 def _convert_to_legacy_check_parameter_rulespec(
     to_convert: ruleset_api_v1.rule_specs.CheckParameters,
-    edition_only: Edition,
+    edition_only: Edition,  # noqa: ARG001
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
     convert_condition = to_convert.condition
@@ -277,7 +277,7 @@ def _convert_to_legacy_check_parameter_rulespec(
 
 def _convert_to_legacy_manual_check_parameter_rulespec(
     to_convert: ruleset_api_v1.rule_specs.EnforcedService,
-    edition_only: Edition,
+    edition_only: Edition,  # noqa: ARG001
     localizer: Callable[[str], str],
 ) -> ManualCheckParameterRulespec:
     match to_convert.condition:

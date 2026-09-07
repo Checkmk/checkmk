@@ -84,7 +84,7 @@ def _patch_resolution(
     )
     monkeypatch.setattr(_check_credentials, "user_locked", lambda _u, _s: False)
 
-    def _load_users(lock: bool = False) -> dict[UserId, UserSpec]:
+    def _load_users(lock: bool = False) -> dict[UserId, UserSpec]:  # noqa: ARG001
         calls["load_users"] += 1
         return {}
 
@@ -117,7 +117,7 @@ def test_create_non_existing_user_is_noop_when_user_exists(
     so a second connector neither overwrites nor duplicates the record."""
     calls = _patch_resolution(monkeypatch, connectors=[], existing=True)
 
-    _check_credentials._create_non_existing_user(
+    _check_credentials._create_non_existing_user(  # noqa: SLF001
         "saml2", UserId("bob"), [], [], _NOW, _default_profile(), pprint_value=False, debug=False
     )
 
@@ -133,7 +133,7 @@ def test_create_non_existing_user_creates_when_absent(
     `user_exists`, not always skipping."""
     calls = _patch_resolution(monkeypatch, connectors=[], existing=False)
 
-    _check_credentials._create_non_existing_user(
+    _check_credentials._create_non_existing_user(  # noqa: SLF001
         "ldap", UserId("carol"), [], [], _NOW, _default_profile(), pprint_value=False, debug=False
     )
 

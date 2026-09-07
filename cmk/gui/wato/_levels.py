@@ -245,7 +245,7 @@ def PredictiveLevels(
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
 def Levels(
-    help: str | None = None,
+    help: str | None = None,  # noqa: A002
     default_levels: tuple[float, float] = (0.0, 0.0),
     default_difference: tuple[float, float] = (0.0, 0.0),
     default_value: tuple[float, float] | None = None,

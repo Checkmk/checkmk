@@ -76,7 +76,7 @@ _MAP_DIAG_STATES = {
 }
 
 
-def discover_perle_chassis(section: _Section) -> DiscoveryResult:
+def discover_perle_chassis(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -94,11 +94,11 @@ check_plugin_perle_chassis = CheckPlugin(
 )
 
 
-def discover_perle_chassis_temp(section: _Section) -> DiscoveryResult:
+def discover_perle_chassis_temp(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="chassis")
 
 
-def check_perle_chassis_temp(item: str, params: TempParamType, section: _Section) -> CheckResult:
+def check_perle_chassis_temp(item: str, params: TempParamType, section: _Section) -> CheckResult:  # noqa: ARG001
     yield from check_temperature(
         reading=section.temp,
         params=params,

@@ -27,7 +27,7 @@ def parse_innovaphone_temp(string_table: StringTable) -> Celsius | None:
             return None
 
 
-def discover_innovaphone_temp(section: Celsius) -> DiscoveryResult:
+def discover_innovaphone_temp(section: Celsius) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Ambient")
 
 

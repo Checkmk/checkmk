@@ -164,7 +164,7 @@ class ViewWidgetIFramePageHelper:
         config: Config,
         *,
         is_reload: bool,
-        is_debug: bool,
+        is_debug: bool,  # noqa: ARG003
         is_preview: bool = False,
         is_public: bool = False,
     ) -> None:
@@ -184,7 +184,7 @@ class ViewWidgetIFramePageHelper:
                 GUIViewRenderer(
                     view,
                     show_buttons=False,
-                    page_menu_dropdowns_callback=lambda x, y, z: None,
+                    page_menu_dropdowns_callback=lambda x, y, z: None,  # noqa: ARG005
                     render_row_limit_warning=(
                         cls._public_dashboard_row_limit_warning if is_public else None
                     ),
@@ -724,7 +724,7 @@ class ViewWidgetEditPage(Page):
         return cast(ViewWidgetEditPage.Mode, mode)
 
     @staticmethod
-    def _get_owner(request: Request, mode: Mode) -> UserId:
+    def _get_owner(request: Request, mode: Mode) -> UserId:  # noqa: ARG004
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         # Applies to all modes (create, copy, edit): editing foreign dashboards
         # requires the general.edit_foreign_dashboards permission.

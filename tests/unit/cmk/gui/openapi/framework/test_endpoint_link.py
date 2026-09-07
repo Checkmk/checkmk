@@ -42,14 +42,14 @@ def _registry_fixture() -> Generator[None]:
     """Register the family and snapshot/restore the endpoint registry per-test."""
     fam = EndpointFamilyFactory.build(name=_FAMILY_NAME, doc_group="Setup")
     endpoint_family_registry.register(fam)
-    original = {v: dict(eps) for v, eps in versioned_endpoint_registry._versions.items()}
+    original = {v: dict(eps) for v, eps in versioned_endpoint_registry._versions.items()}  # noqa: SLF001
     # ``_discover_endpoints`` memoizes its result per process; clear before and
     # after each test so registrations done here cannot leak into unrelated tests.
     _discover_endpoints.cache_clear()  # type: ignore[attr-defined]
     try:
         yield
     finally:
-        versioned_endpoint_registry._versions = original
+        versioned_endpoint_registry._versions = original  # noqa: SLF001
         endpoint_family_registry.unregister(fam.name)
         _discover_endpoints.cache_clear()  # type: ignore[attr-defined]
 
@@ -105,17 +105,17 @@ def _link(
 
 
 def _handler_with_path_param(
-    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],
+    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],  # noqa: ARG001
 ) -> None:
     return None
 
 
 def _handler_with_path_and_query(
-    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],
-    query_filter: Annotated[
+    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],  # noqa: ARG001
+    query_filter: Annotated[  # noqa: ARG001
         str | None, QueryParam(alias="filter", description="Filter", example="x")
     ] = None,
-    limit: Annotated[str | None, QueryParam(description="Limit", example="5")] = None,
+    limit: Annotated[str | None, QueryParam(description="Limit", example="5")] = None,  # noqa: ARG001
 ) -> None:
     return None
 
@@ -206,8 +206,8 @@ def test_path_to_endpoint_not_registered_raises() -> None:
 
 
 def _handler_with_required_header(
-    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],
-    x_custom: Annotated[str, HeaderParam(description="Custom header", example="val")],
+    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],  # noqa: ARG001
+    x_custom: Annotated[str, HeaderParam(description="Custom header", example="val")],  # noqa: ARG001
 ) -> None:
     return None
 
@@ -220,8 +220,8 @@ def test_path_to_endpoint_required_header_raises() -> None:
 
 
 def _handler_with_optional_header(
-    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],
-    x_custom: Annotated[str, HeaderParam(description="Custom header", example="val")] = "default",
+    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],  # noqa: ARG001
+    x_custom: Annotated[str, HeaderParam(description="Custom header", example="val")] = "default",  # noqa: ARG001
 ) -> None:
     return None
 
@@ -238,8 +238,8 @@ def test_path_to_endpoint_optional_header_allowed() -> None:
 
 
 def _handler_with_body(
-    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],
-    body: dict[str, str | int],
+    thing_id: Annotated[str, PathParam(description="Thing ID", example="abc")],  # noqa: ARG001
+    body: dict[str, str | int],  # noqa: ARG001
 ) -> None:
     return None
 
@@ -317,7 +317,7 @@ def test_link_to_endpoint_title_omitted_by_default() -> None:
 
 
 def _handler_with_aliased_path_param(
-    thing: Annotated[str, PathParam(alias="thing_id", description="Thing ID", example="abc")],
+    thing: Annotated[str, PathParam(alias="thing_id", description="Thing ID", example="abc")],  # noqa: ARG001
 ) -> None:
     return None
 

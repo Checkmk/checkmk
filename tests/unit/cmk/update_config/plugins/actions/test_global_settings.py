@@ -36,7 +36,7 @@ def test_update_global_config_transform_values(
         group=ConfigVariableGroupUserInterface,
         primary_domain=ConfigDomainGUI,
         ident="key",
-        valuespec=lambda context: Transform(
+        valuespec=lambda context: Transform(  # noqa: ARG005
             TextInput(), forth=lambda x: "new" if x == "old" else x
         ),
     )
@@ -66,7 +66,7 @@ def test_update_global_config_migrates_form_spec_values(
         group=ConfigVariableGroupUserInterface,
         primary_domain=ConfigDomainGUI,
         ident="key",
-        form_spec=lambda context: String(migrate=lambda x: "new" if x == "old" else str(x)),
+        form_spec=lambda context: String(migrate=lambda x: "new" if x == "old" else str(x)),  # noqa: ARG005
     )
 
     registry = ConfigVariableRegistry()
@@ -152,7 +152,7 @@ def test_update_global_config(
 
 
 def test_remove_options() -> None:
-    assert global_settings._remove_options(
+    assert global_settings._remove_options(  # noqa: SLF001
         logging.getLogger(),
         {
             "global_a": True,

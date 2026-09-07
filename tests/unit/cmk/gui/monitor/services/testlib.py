@@ -63,21 +63,21 @@ def get_fake_host_services_repository(
 
         def fetch(
             self,
-            hostname: str,
+            hostname: str,  # noqa: ARG002
             *,
             limit: int | None,
             query: str,
             sorters: Sequence[ServiceSort],
-            filters: ServiceFilter,
-            fields: Set[ServiceOptionalField] = frozenset(),
+            filters: ServiceFilter,  # noqa: ARG002
+            fields: Set[ServiceOptionalField] = frozenset(),  # noqa: ARG002
         ) -> Sequence[Service]:
             matches = [s for s in self._services if query.lower() in s.name.lower()]
             return sorted(matches, key=service_sorter(sorters))[:limit]
 
-        def count_total(self, hostname: str) -> int:
+        def count_total(self, hostname: str) -> int:  # noqa: ARG002
             return len(self._services)
 
-        def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
+        def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:  # noqa: ARG002
             # Not implementing filter matching as we don't need to test a fake implementation of
             # this.
             return len([s for s in self._services if query.lower() in s.name.lower()])

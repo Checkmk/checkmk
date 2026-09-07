@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator, Mapping
 from typing import cast
 
@@ -54,12 +56,12 @@ def _on_remote_site(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(name="serving_customer")
 def _serving_customer(request_context: None) -> Iterator[None]:
     """The customer a remote site is told it serves, as the synced configuration states it."""
-    original = active_config._raw_config
-    active_config._raw_config = {**original, "current_customer": "customer_b"}
+    original = active_config._raw_config  # noqa: SLF001
+    active_config._raw_config = {**original, "current_customer": "customer_b"}  # noqa: SLF001
     try:
         yield
     finally:
-        active_config._raw_config = original
+        active_config._raw_config = original  # noqa: SLF001
 
 
 def _resolve(site_id: str, *, sites: SiteConfigurations = _SITES) -> str | None:

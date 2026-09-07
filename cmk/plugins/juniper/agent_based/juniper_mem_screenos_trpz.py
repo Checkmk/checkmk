@@ -36,7 +36,7 @@ def parse_juniper_trpz_mem(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_juniper_mem_generic(section: Section) -> DiscoveryResult:
+def discover_juniper_mem_generic(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

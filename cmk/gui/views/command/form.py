@@ -123,7 +123,7 @@ def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Com
 # True -> Actions have been done
 # False -> No actions done because now rows selected
 def do_actions(
-    view: ViewSpec,
+    view: ViewSpec,  # noqa: ARG001
     what: InfoName,
     action_rows: Rows,
     backurl: str,

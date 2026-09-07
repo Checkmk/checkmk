@@ -38,7 +38,7 @@ agent_section_sap_hana_db_status = AgentSection(
 
 def discover_sap_hana_db_status(
     section_sap_hana_db_status: SectionDBStatus | None,
-    section_sap_hana_replication_status: sap_hana.ParsedSection | None,
+    section_sap_hana_replication_status: sap_hana.ParsedSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_sap_hana_db_status:
         return

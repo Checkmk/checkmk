@@ -28,7 +28,7 @@ _DETAIL = "The Agent bakery is not available with your license"
 
 
 @pytest.fixture(name="disabled_legacy_stub")
-def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/test-disabled-legacy-stub",
         method="get",
@@ -38,7 +38,7 @@ def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEnd
         update_config_generation=False,
         skip_locking=True,
     )
-    def _real(param: Mapping[str, object]) -> Response:
+    def _real(param: Mapping[str, object]) -> Response:  # noqa: ARG001
         return Response(status=204)
 
     stub = disabled_legacy(_real, _DETAIL)
@@ -48,7 +48,7 @@ def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEnd
 
 
 @pytest.fixture(name="disabled_versioned_stub")
-def create_disabled_versioned_stub(fresh_app_instance: None) -> Iterator[VersionedEndpoint]:
+def create_disabled_versioned_stub(fresh_app_instance: None) -> Iterator[VersionedEndpoint]:  # noqa: ARG001
     def _real() -> None:
         return None
 
@@ -70,7 +70,7 @@ def create_disabled_versioned_stub(fresh_app_instance: None) -> Iterator[Version
 
 
 def test_disabled_legacy_stub_returns_403(
-    disabled_legacy_stub: WrappedEndpoint,
+    disabled_legacy_stub: WrappedEndpoint,  # noqa: ARG001
     clients: ClientRegistry,
 ) -> None:
     resp = clients.DisabledEndpointStub.get_legacy(expect_ok=False)
@@ -81,7 +81,7 @@ def test_disabled_legacy_stub_returns_403(
 
 
 def test_disabled_versioned_stub_returns_403(
-    disabled_versioned_stub: VersionedEndpoint,
+    disabled_versioned_stub: VersionedEndpoint,  # noqa: ARG001
     clients: ClientRegistry,
 ) -> None:
     resp = clients.DisabledEndpointStub.get_versioned(expect_ok=False)

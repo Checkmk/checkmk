@@ -419,12 +419,12 @@ def attribute_painter_from_hint(
         load_inv=True,
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint),
-        export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),
-        export_for_csv=lambda row, cell: (
+        export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),  # noqa: ARG005
+        export_for_csv=lambda row, cell: (  # noqa: ARG005
             "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
         ),
-        export_for_json=lambda row, cell: _compute_attribute_painter_data(row, path, key),
-        groupby=lambda row, cell: (
+        export_for_json=lambda row, cell: _compute_attribute_painter_data(row, path, key),  # noqa: ARG005
+        groupby=lambda row, cell: (  # noqa: ARG005
             r
             if isinstance(
                 r := _paint_host_inventory_attribute(row, path, key, hint)[1], (str | HTML)
@@ -482,9 +482,9 @@ def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFrom
         params=FixedValue(PainterParameters(), totext=""),
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_column(row, hint),
-        export_for_python=lambda row, cell: row.get(hint.name),
-        export_for_csv=lambda row, cell: "" if (data := row.get(hint.name)) is None else str(data),
-        export_for_json=lambda row, cell: row.get(hint.name),
+        export_for_python=lambda row, cell: row.get(hint.name),  # noqa: ARG005
+        export_for_csv=lambda row, cell: "" if (data := row.get(hint.name)) is None else str(data),  # noqa: ARG005
+        export_for_json=lambda row, cell: row.get(hint.name),  # noqa: ARG005
     )
 
 
@@ -566,11 +566,11 @@ def node_painter_from_hint(
         load_inv=True,
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
-        export_for_python=lambda row, cell: serialize_tree(
+        export_for_python=lambda row, cell: serialize_tree(  # noqa: ARG005
             _compute_node_painter_data(row, hint.path)
         ),
-        export_for_csv=lambda row, cell: _export_node_for_csv(),
-        export_for_json=lambda row, cell: serialize_tree(
+        export_for_csv=lambda row, cell: _export_node_for_csv(),  # noqa: ARG005
+        export_for_json=lambda row, cell: serialize_tree(  # noqa: ARG005
             _compute_node_painter_data(row, hint.path)
         ),
     )

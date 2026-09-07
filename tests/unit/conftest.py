@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import logging
@@ -66,7 +68,7 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
         mp.setattr(
             cmk_version,
             "omd_version",
-            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",  # noqa: ARG005
         )
         cmk_version.edition.cache_clear()
         yield
@@ -237,17 +239,17 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
 def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: DummyLicensingHandler.make,
+        lambda omd_root: DummyLicensingHandler.make,  # noqa: ARG005
     )
 
 
 @pytest.fixture(name="suppress_license_expiry_header")
 def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_expiry", lambda x, y: None)
+    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_expiry", lambda x, y: None)  # noqa: ARG005
 
 
 @pytest.fixture(name="suppress_license_banner")
 def fixture_suppress_license_banner(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_banner", lambda x, y: None)
+    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_banner", lambda x, y: None)  # noqa: ARG005

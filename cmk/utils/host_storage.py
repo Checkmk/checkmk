@@ -340,7 +340,7 @@ class ABCHostsStorageLoader[THostsReadData](abc.ABC):
     def file_exists(self, file_path: Path) -> bool:
         return self._storage.exists(file_path)
 
-    def file_valid(self, file_path: Path) -> bool:
+    def file_valid(self, file_path: Path) -> bool:  # noqa: ARG002
         return True
 
     def read_and_apply(self, file_path: Path, global_dict: dict[str, Any]) -> bool:

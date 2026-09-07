@@ -194,7 +194,7 @@ def ajax_add_visual(ctx: PageContext) -> None:
     )
 
 
-def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> list[PageMenuTopic]:
+def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> list[PageMenuTopic]:  # noqa: ARG001
     entries: list[PageMenuEntry] = []
     if visual_type != "availability":
         entries = [
@@ -234,7 +234,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
     ]
 
 
-def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     return get_visual_choices(
         visual_type_name="dashboards",
         value=value,

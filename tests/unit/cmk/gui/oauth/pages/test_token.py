@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import base64
 import hashlib
 import urllib.parse
@@ -60,7 +62,7 @@ def seeded_test_client(flask_app: Flask) -> None:
     # client has to exist in the registry for redemption to succeed. Raw SQL
     # because register() mints its own client_id.
     with get_client_store() as store:
-        store._connection.execute(
+        store._connection.execute(  # noqa: SLF001
             """
             INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
             VALUES ('test-client', '["https://client.example/callback"]', NULL, 0)

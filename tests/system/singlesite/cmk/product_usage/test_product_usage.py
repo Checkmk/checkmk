@@ -110,7 +110,7 @@ def run_product_usage_upload(site: Site, mock_url: str) -> None:
     assert result.wait() == 0, f"Product usage upload failed: {result.stderr}"
 
 
-def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:
+def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:  # noqa: ARG001
     """Validate that the product usage request contains required metadata and data."""
     data = json.loads(body)
     assert "metadata" in data, "Missing metadata in request"

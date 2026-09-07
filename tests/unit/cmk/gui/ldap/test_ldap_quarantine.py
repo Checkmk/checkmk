@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from time import time
 
 import pytest
@@ -52,7 +54,7 @@ def test_vanished_user_is_quarantined(
     users = Users({UserId("bob"): _synced_user()})
 
     with set_config(ldap_quarantine_period=30 * 86400):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
 
     assert UserId("bob") in users, "quarantined user must not be deleted"
     assert users[UserId("bob")]["locked"] is True
@@ -71,7 +73,7 @@ def test_already_quarantined_user_is_left_untouched(
     users = Users({UserId("bob"): user})
 
     with set_config(ldap_quarantine_period=30 * 86400):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
 
     assert users[UserId("bob")]["ldap_quarantine"]["quarantined_on"] == 123
     assert sync_result.changes == []
@@ -86,7 +88,7 @@ def test_vanished_user_is_deleted_when_quarantine_disabled(
     users = Users({UserId("bob"): _synced_user()})
 
     with set_config(ldap_quarantine_period=None):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
 
     assert UserId("bob") not in users, "immediate-deletion behavior must be preserved"
     assert any("Removed user bob" in change for change in sync_result.changes)
@@ -101,7 +103,7 @@ def test_present_user_is_not_quarantined(
     users = Users({UserId("bob"): _synced_user()})
 
     with set_config(ldap_quarantine_period=30 * 86400):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(
+        connector._quarantine_or_remove_users_no_longer_in_ldap(  # noqa: SLF001
             users,
             {"bob": None},  # type: ignore[dict-item]
             sync_result,

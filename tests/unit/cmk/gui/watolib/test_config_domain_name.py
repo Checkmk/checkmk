@@ -36,7 +36,7 @@ def test_config_variable_add_domain() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda context: FixedValue(None),
+        valuespec=lambda context: FixedValue(None),  # noqa: ARG005
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainOMD)
@@ -52,7 +52,7 @@ def test_config_variable_add_domain_unique() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda context: FixedValue(None),
+        valuespec=lambda context: FixedValue(None),  # noqa: ARG005
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
@@ -69,7 +69,7 @@ def test_config_variable_valuespec_backend() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda context: FixedValue(None),
+        valuespec=lambda context: FixedValue(None),  # noqa: ARG005
     )
     assert isinstance(test_var.value_model(DUMMY_CONTEXT), FixedValue)
 
@@ -79,7 +79,7 @@ def test_config_variable_form_spec_backend() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        form_spec=lambda context: Integer(),
+        form_spec=lambda context: Integer(),  # noqa: ARG005
     )
     assert isinstance(test_var.value_model(DUMMY_CONTEXT), FormSpec)
 
@@ -89,7 +89,7 @@ def test_config_variable_valuespec_on_form_spec_raises() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        form_spec=lambda context: Integer(),
+        form_spec=lambda context: Integer(),  # noqa: ARG005
     )
     with pytest.raises(RuntimeError, match="declared with a form spec"):
         test_var.valuespec(DUMMY_CONTEXT)
@@ -108,6 +108,6 @@ def test_config_variable_requires_exactly_one_backend() -> None:
             group=ConfigVariableGroupSiteManagement,
             primary_domain=ConfigDomainGUI,
             ident="test_var",
-            valuespec=lambda context: FixedValue(None),
-            form_spec=lambda context: Integer(),
+            valuespec=lambda context: FixedValue(None),  # noqa: ARG005
+            form_spec=lambda context: Integer(),  # noqa: ARG005
         )

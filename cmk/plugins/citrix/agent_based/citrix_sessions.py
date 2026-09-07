@@ -31,7 +31,7 @@ def parse_citrix_sessions(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_citrix_sessions(section: StringTable) -> DiscoveryResult:
+def discover_citrix_sessions(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

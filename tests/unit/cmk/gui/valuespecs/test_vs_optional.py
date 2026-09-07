@@ -24,7 +24,7 @@ class TestOptional:
         assert vs.Optional(vs.Password()).mask("password") == "******"
         assert vs.Optional(vs.Password()).mask(None) is None
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
         with request_var(o_use="smth", o_value="1"):
             assert vs.Optional(vs.Integer()).from_html_vars("o") == 1
             assert vs.Optional(vs.Integer(), negate=True).from_html_vars("o") is None

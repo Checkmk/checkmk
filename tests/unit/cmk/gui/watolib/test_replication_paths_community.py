@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Generator
 
 import pytest
@@ -214,7 +216,7 @@ def test_get_replication_components(
         ]
 
     assert sorted(
-        activate_changes._get_replication_components(site_config),
+        activate_changes._get_replication_components(site_config),  # noqa: SLF001
         key=lambda replication_path: replication_path.ident,
     ) == sorted(
         expected,

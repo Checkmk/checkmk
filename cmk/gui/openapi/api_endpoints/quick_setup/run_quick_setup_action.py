@@ -36,11 +36,11 @@ def run_quick_setup_action_v1(
     api_context: ApiContext,
     quick_setup_id: Annotated[str, PathParam(description="The quick setup id", example="aws")],
     body: QuickSetupFinalActionRequestModel,
-    mode: Annotated[
+    mode: Annotated[  # noqa: ARG001
         Literal["guided", "overview"] | None,
         QueryParam(description="The quick setup mode", example="overview"),
     ] = "guided",
-    search: Annotated[
+    search: Annotated[  # noqa: ARG001
         str | None,
         QueryParam(
             description="Optional search query to preserve when redirecting after save",

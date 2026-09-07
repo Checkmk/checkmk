@@ -121,7 +121,9 @@ class TestValueSpecFloat:
         return_value="some_random_icon_path.svg",
     )
     def test_render_input_complain_phase_keeps_stored_icon(  # type: ignore[misc]
-        self, _mock_icon_path: MagicMock, request_context: None
+        self,
+        _mock_icon_path: MagicMock,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         """In the complain phase the surrounding valuespecs render their default value
         (None) instead of the stored one, so the icon has to be recovered from the HTML
@@ -138,7 +140,9 @@ class TestValueSpecFloat:
         return_value="some_random_icon_path.svg",
     )
     def test_render_input_back_url_excludes_form_vars(  # type: ignore[misc]
-        self, _mock_icon_path: MagicMock, request_context: None
+        self,
+        _mock_icon_path: MagicMock,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         """The back URL of the popup must not carry the form vars of the surrounding
         valuespec: with long lists the request line grows beyond the web server limit."""

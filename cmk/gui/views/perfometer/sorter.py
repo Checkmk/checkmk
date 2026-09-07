@@ -27,9 +27,9 @@ def _sort_perfometer(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,
-    request: Request,
+    request: Request,  # noqa: ARG001
 ) -> int:
     try:
         v1 = Perfometer(r1, registered_metrics_, registered_perfometers).sort_value()

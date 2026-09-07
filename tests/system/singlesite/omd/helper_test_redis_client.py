@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 from cmk.utils.redis import get_redis_client, redis_server_reachable
 
 print(redis_server_reachable(get_redis_client()))

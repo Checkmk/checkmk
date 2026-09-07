@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import logging
 from collections.abc import Iterator
@@ -30,7 +32,7 @@ def ensure_logging_framework_not_altered() -> Iterator[None]:
 
 
 def test_parse_arguments_defaults() -> None:
-    default_args = main._parse_arguments([])
+    default_args = main._parse_arguments([])  # noqa: SLF001
     assert not default_args.debug
     assert not default_args.verbose
 
@@ -40,11 +42,11 @@ def test_parse_arguments_defaults() -> None:
     [(v_level,) for v_level in range(4)],
 )
 def test_parse_arguments_verbose(v_level: int) -> None:
-    assert main._parse_arguments(["-v"] * v_level).verbose == v_level
+    assert main._parse_arguments(["-v"] * v_level).verbose == v_level  # noqa: SLF001
 
 
 def test_parse_arguments_debug() -> None:
-    assert main._parse_arguments(["--debug"]).debug is True
+    assert main._parse_arguments(["--debug"]).debug is True  # noqa: SLF001
 
 
 def test_main_calls_config_updater(
@@ -113,7 +115,7 @@ def test_config_updater_executes_plugins(
 
 
 def test_load_plugins(test_edition: Edition) -> None:
-    main._load_plugins(test_edition, logging.getLogger())
+    main._load_plugins(test_edition, logging.getLogger())  # noqa: SLF001
     assert registry.update_action_registry
 
 

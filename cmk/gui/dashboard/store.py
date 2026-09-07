@@ -104,7 +104,7 @@ class DashboardStore:
     def _load_permitted_to_edit(
         self,
         all_dashboards: dict[tuple[UserId, DashboardName], DashboardConfig],
-        user_permissions: UserPermissions,
+        user_permissions: UserPermissions,  # noqa: ARG002
     ) -> dict[DashboardName, dict[UserId, DashboardConfig]]:
         """Returns all definitions that a user is allowed to edit"""
         may_edit_foreign = user.may("general.edit_foreign_dashboards")

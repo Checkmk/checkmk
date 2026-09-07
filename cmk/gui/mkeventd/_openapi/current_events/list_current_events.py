@@ -46,7 +46,7 @@ class CurrentEventsCollectionModel(DomainObjectCollectionModel):
 
 
 def list_current_events_v1(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     site_id: Annotated[
         SiteId | None,
         QueryParam(

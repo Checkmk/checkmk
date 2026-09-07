@@ -220,7 +220,7 @@ agent_section_apt = AgentSection(
 )
 
 
-def discover_apt(section: Section) -> DiscoveryResult:
+def discover_apt(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

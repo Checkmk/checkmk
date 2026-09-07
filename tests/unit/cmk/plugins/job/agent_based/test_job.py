@@ -275,23 +275,26 @@ TIME = 1594300620.0
 
 
 def test_split_job_tables() -> None:
-    assert list(job._split_job_tables(STRING_TABLE_1[:14])) == [
-        (["==>", "SHREK", "<=="], STRING_TABLE_1[1:12]),
-        (["==>", "SNOWWHITE", "<=="], STRING_TABLE_1[13:14]),
-    ]
+    assert (
+        list(job._split_job_tables(STRING_TABLE_1[:14]))  # noqa: SLF001
+        == [
+            (["==>", "SHREK", "<=="], STRING_TABLE_1[1:12]),
+            (["==>", "SNOWWHITE", "<=="], STRING_TABLE_1[13:14]),
+        ]
+    )
 
 
 def test_split_job_tables_yields_empty_bodies() -> None:
     # mk-job creates the file before it has anything to write into it, so the
     # agent can pick it up while it is still empty.
-    assert list(job._split_job_tables([["==>", "a", "<=="], ["==>", "b", "<=="]])) == [
+    assert list(job._split_job_tables([["==>", "a", "<=="], ["==>", "b", "<=="]])) == [  # noqa: SLF001
         (["==>", "a", "<=="], []),
         (["==>", "b", "<=="], []),
     ]
 
 
 def test_split_job_tables_drops_lines_before_the_first_header() -> None:
-    assert list(job._split_job_tables([["junk"], ["==>", "a", "<=="], ["start_time", "1"]])) == [
+    assert list(job._split_job_tables([["junk"], ["==>", "a", "<=="], ["start_time", "1"]])) == [  # noqa: SLF001
         (["==>", "a", "<=="], [["start_time", "1"]]),
     ]
 
@@ -351,7 +354,7 @@ def test_split_job_tables_drops_lines_before_the_first_header() -> None:
 def test_parse_header(
     header: list[str], expected_result: tuple[str, job.RunState, int | None] | None
 ) -> None:
-    assert job._parse_header(header) == expected_result
+    assert job._parse_header(header) == expected_result  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -363,7 +366,7 @@ def test_parse_header(
     ],
 )
 def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
-    assert job._job_parse_real_time(timestr) == expected_result
+    assert job._job_parse_real_time(timestr) == expected_result  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -436,7 +439,7 @@ def test_metrics_from_dict(values: Mapping[str, str], expected: job.Metrics) -> 
 def test_metric_specs_cover_all_metrics() -> None:
     # check_job renders every field of Metrics via _METRIC_SPECS, so a field
     # without an entry would only blow up while checking a service.
-    assert {field.name for field in fields(job.Metrics)} == set(job._METRIC_SPECS)
+    assert {field.name for field in fields(job.Metrics)} == set(job._METRIC_SPECS)  # noqa: SLF001
 
 
 def test_incomplete_information_results() -> None:

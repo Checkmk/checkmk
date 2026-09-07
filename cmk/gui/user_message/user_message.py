@@ -245,13 +245,13 @@ def show_message_actions(
         )
 
 
-def ajax_delete_user_message(ctx: PageContext) -> None:
+def ajax_delete_user_message(ctx: PageContext) -> None:  # noqa: ARG001
     check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)
 
 
-def ajax_acknowledge_user_message(ctx: PageContext) -> None:
+def ajax_acknowledge_user_message(ctx: PageContext) -> None:  # noqa: ARG001
     check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.acknowledge_gui_message(msg_id)

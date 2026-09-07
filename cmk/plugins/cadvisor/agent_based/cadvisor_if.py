@@ -62,7 +62,7 @@ agent_section_cadvisor_if = AgentSection(
 )
 
 
-def discover_cadvisor_if(section: Section) -> DiscoveryResult:
+def discover_cadvisor_if(section: Section) -> DiscoveryResult:  # noqa: ARG001
     """
     >>> list(discover_cadvisor_if({"if_out_discards": 1.}))
     [Service(item='Summary')]

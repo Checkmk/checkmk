@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 # Simple python script to replace version in the file
 # first param is a file usually wnx\include\common\wnx_version.h
 # second param is version without double quotes, for example, 2.0.0i1

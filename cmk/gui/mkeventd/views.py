@@ -769,7 +769,7 @@ def _get_event_host_link(host_name: HostName, row: Row, cell: Cell, *, request: 
     link_type: str = "view_name"
     filename: str = "view.py"
     link_target: str = "ec_events_of_host"
-    if link_spec := cell._link_spec:
+    if link_spec := cell._link_spec:  # noqa: SLF001
         if link_spec.type_name == "dashboards":
             link_type = "name"
             filename = "dashboard.py"
@@ -1503,7 +1503,7 @@ class ECCommand(Command):
         LivestatusClient(sites.live()).command(command, site)
 
 
-def command_update_event_render(what: str) -> None:
+def command_update_event_render(what: str) -> None:  # noqa: ARG001
     html.open_table(border="0", cellpadding="0", cellspacing="3")
     if user.may("mkeventd.update_comment"):
         html.open_tr()
@@ -1535,9 +1535,9 @@ def command_update_event_render(what: str) -> None:
 def command_update_event_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_mkeventd_update"):
@@ -1597,9 +1597,9 @@ PermissionECChangeEventState = Permission(
 
 
 def command_change_state_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
-    row: Row,
-    action_rows: Rows,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
+    row: Row,  # noqa: ARG001
+    action_rows: Rows,  # noqa: ARG001
 ) -> HTML:
     value = MonitoringState().from_html_vars("_mkeventd_state")
     assert value is not None
@@ -1618,7 +1618,7 @@ def command_change_state_confirm_dialog_additions(
     )
 
 
-def command_change_state_render(what: str) -> None:
+def command_change_state_render(what: str) -> None:  # noqa: ARG001
     MonitoringState(label="Select new event state").render_input("_mkeventd_state", 2)
     html.br()
     html.br()
@@ -1631,9 +1631,9 @@ def command_change_state_render(what: str) -> None:
 def command_change_state_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_mkeventd_changestate"):
@@ -1671,7 +1671,7 @@ PermissionECCustomActions = Permission(
 )
 
 
-def command_custom_actions_render(what: str) -> None:
+def command_custom_actions_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     for action_id, title in action_choices(omit_hidden=True):
         html.button("_action_" + action_id, title, cssclass="border_hot")
@@ -1684,9 +1684,9 @@ def command_custom_actions_render(what: str) -> None:
 def command_custom_actions_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     for action_id, _title in action_choices(omit_hidden=True):
@@ -1723,7 +1723,7 @@ PermissionECArchiveEvent = Permission(
 )
 
 
-def command_archive_event_render(what: str) -> None:
+def command_archive_event_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_delete_event", _("Archive event"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
@@ -1733,9 +1733,9 @@ def command_archive_event_render(what: str) -> None:
 def command_archive_event_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_delete_event"):
@@ -1767,16 +1767,16 @@ PermissionECArchiveEventsOfHost = Permission(
 
 
 def command_archive_events_of_host_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
-    row: Row,
-    action_rows: Rows,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
+    row: Row,  # noqa: ARG001
+    action_rows: Rows,  # noqa: ARG001
 ) -> HTML:
     return HTML.empty() + _(
         "All events of the host '%(host)s' will be removed from the open events list. You can still access them in the archive."
     ) % {"host": active_request.var("host")}
 
 
-def command_archive_events_of_host_render(what: str) -> None:
+def command_archive_events_of_host_render(what: str) -> None:  # noqa: ARG001
     html.help(
         _(
             "Note: With this command you can archive all events of one host. "
@@ -1793,9 +1793,9 @@ def command_archive_events_of_host_render(what: str) -> None:
 def command_archive_events_of_host_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_archive_events_of_hosts"):
@@ -1836,9 +1836,9 @@ def _sort_service_level(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 

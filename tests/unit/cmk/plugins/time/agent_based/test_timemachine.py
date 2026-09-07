@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import datetime
 
@@ -27,7 +29,7 @@ def test_discovery_timemachine_no_discovered_service() -> None:
 
 def test_check_timemachine_state_ok() -> None:
     info = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-05-202610"
-    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=info))
+    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=info))  # noqa: SLF001
     assert result == [
         Result(
             state=State.OK,
@@ -38,7 +40,7 @@ def test_check_timemachine_state_ok() -> None:
 
 def test_check_timemachine_state_ok_with_suffix() -> None:
     info = "/Volumes/.timemachine/ACB123AB-C123-ABC1-23AB-C123ABC123AB/2022-05-05-202610.backup/2022-05-05-202610.backup"
-    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=info))
+    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=info))  # noqa: SLF001
     assert result == [
         Result(
             state=State.OK,
@@ -49,7 +51,7 @@ def test_check_timemachine_state_ok_with_suffix() -> None:
 
 def test_check_timemachine_state_crit(monkeypatch: pytest.MonkeyPatch) -> None:
     section = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-01-202610"
-    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))
+    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))  # noqa: SLF001
     assert result == [
         Result(
             state=State.CRIT,
@@ -60,7 +62,7 @@ def test_check_timemachine_state_crit(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_check_timemachine_state_warn() -> None:
     section = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-04-202610"
-    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))
+    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))  # noqa: SLF001
     assert result == [
         Result(
             state=State.WARN,
@@ -79,7 +81,7 @@ def test_check_agent_failure() -> None:
 
 def test_check_future_backup_date() -> None:
     section = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-07-202610"
-    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))
+    result = list(timemachine._check(now=NOW, params={"age": (86400, 172800)}, section=section))  # noqa: SLF001
     assert result == [
         Result(
             state=State.UNKNOWN,

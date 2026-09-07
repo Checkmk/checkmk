@@ -40,7 +40,7 @@ def _register_graph_dispatchers(registry: GraphDispatcherRegistry, codec: GraphC
 
 
 def register(
-    edition: Edition,
+    edition: Edition,  # noqa: ARG001
     page_registry: PageRegistry,
     config_variable_registry: ConfigVariableRegistry,
     autocompleter_registry: AutocompleterRegistry,
@@ -52,7 +52,7 @@ def register(
     config_variable_registry.register(ConfigVariableGraphTimeranges)
 
     def wrapped_autocompleter(
-        config: object,
+        config: object,  # noqa: ARG001
         value: str,
         params: dict,  # type: ignore[type-arg]
     ) -> Choices:

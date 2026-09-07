@@ -85,7 +85,7 @@ def test_inventorize_solaris_pkginfo(
     string_table: StringTable,
     expected_result: InventoryResult,
 ) -> None:
-    monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
+    monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)  # noqa: ARG005
     assert list(inventorize_solaris_pkginfo(parse_solaris_pkginfo(string_table))) == list(
         expected_result
     )

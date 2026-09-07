@@ -323,7 +323,7 @@ class RuleMatcher:
             return None
         return MatchPriority(has_match=has_match, has_canceling_match=has_canceling_match)
 
-    def event_rule_matches_site(self, rule: Rule, event: Event) -> MatchResult:
+    def event_rule_matches_site(self, rule: Rule, event: Event) -> MatchResult:  # noqa: ARG002
         if "match_site" not in rule or self._omd_site in rule["match_site"]:
             return MatchSuccess(cancelling=False, match_groups=MatchGroups())
         return MatchFailure(reason="The site does not match.")
@@ -363,7 +363,7 @@ class RuleMatcher:
 
         return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
-    def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:
+    def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:  # noqa: ARG002
         if "match_timeperiod" in rule and not self._is_active_time_period(rule["match_timeperiod"]):
             return MatchFailure(
                 reason=f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"

@@ -362,7 +362,7 @@ check_plugin_mknotifyd = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_mknotifyd_connection(section: MkNotifySection) -> DiscoveryResult:
+def discover_mknotifyd_connection(section: MkNotifySection) -> DiscoveryResult:  # noqa: ARG001
     # deprecated, do not discover anything
     return
     yield

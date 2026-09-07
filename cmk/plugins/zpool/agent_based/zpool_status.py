@@ -119,7 +119,7 @@ def discover_zpool_status(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     state: State = State.OK
     messages: list[str] = []
 

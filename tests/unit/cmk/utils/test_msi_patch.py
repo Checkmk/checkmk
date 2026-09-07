@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import os
 import shutil
@@ -61,7 +63,7 @@ def fixture_work_file(conf_dir: Path) -> Path:
 def test_parse_command_line() -> None:
     try:
         params = msi_patch.parse_command_line(["/path/to/executable", "win_ver", "msi", "param"])
-        assert params == msi_patch._Parameters(
+        assert params == msi_patch._Parameters(  # noqa: SLF001
             mode="win_ver",
             file_name=Path("msi"),
             mode_parameter="param",
@@ -71,7 +73,7 @@ def test_parse_command_line() -> None:
 
     try:
         params = msi_patch.parse_command_line(["/path/to/executable", "code", "msi"])
-        assert params == msi_patch._Parameters(
+        assert params == msi_patch._Parameters(  # noqa: SLF001
             mode="code",
             file_name=Path("msi"),
             mode_parameter="",

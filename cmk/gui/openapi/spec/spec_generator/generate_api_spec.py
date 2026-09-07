@@ -635,7 +635,7 @@ def build_spec(
     doc_target: EndpointTarget,
     output_file: Path,
     version: APIVersion = APIVersion.V1,
-    format: OutputFormat = "yaml",
+    format: OutputFormat = "yaml",  # noqa: A002
 ) -> None:
     spec = _make_spec(version)
     populate_spec(version, spec, doc_target, set(), "checkmk")

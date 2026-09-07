@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import dataclasses
 
 from cmk.ccc.user import UserId
@@ -21,7 +23,7 @@ def _without_setup(config: Config) -> Config:
     so put it back - a gate reading `config.raw` would otherwise see nothing.
     """
     disabled = dataclasses.replace(config, wato_enabled=False)
-    disabled._raw_config = config.raw
+    disabled._raw_config = config.raw  # noqa: SLF001
     return disabled
 
 
@@ -38,7 +40,8 @@ def test_all_links_offered_to_admin(with_admin_login: UserId, load_config: Confi
 
 
 def test_no_links_without_the_setup_permissions(
-    with_user_login: UserId, load_config: Config
+    with_user_login: UserId,
+    load_config: Config,
 ) -> None:
     """Offering a link into a mode the user may not open would only produce an error page."""
     assert acknowledge_presets_url(load_config) is None

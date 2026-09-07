@@ -189,7 +189,7 @@ def test_get_source_and_piggyback_hosts() -> None:
 
     piggybacked = backend.get_piggybacked_host_with_sources(cmk.utils.paths.omd_root)
 
-    pprint.pprint(piggybacked)  # pytest won't show it :-(
+    pprint.pprint(piggybacked)  # pytest won't show it :-(  # noqa: T203
     assert piggybacked == {
         HostAddress("test-host"): [
             backend.PiggybackMetaData(

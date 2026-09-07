@@ -186,8 +186,8 @@ class TestLinux:
     def test_factory_with_instance(  # type: ignore[misc]
         self,
         mock_Popen,
-        mock_isfile,
-        monkeypatch,
+        mock_isfile,  # noqa: ARG002
+        monkeypatch,  # noqa: ARG002
     ):
         instance = {
             "pg_database": "mydb",
@@ -226,7 +226,7 @@ class TestLinux:
     def test_run_sql_as_db_user_su_options_precede_user(  # type: ignore[misc]
         self,
         mock_Popen: Mock,
-        mock_isfile: Mock,
+        mock_isfile: Mock,  # noqa: ARG002
     ) -> None:
         process_mock = Mock()
         process_mock.configure_mock(**{"communicate.return_value": (b"", None), "returncode": 0})
@@ -252,7 +252,7 @@ class TestLinux:
     def test_get_instances(  # type: ignore[misc]
         self,
         mock_Popen,
-        monkeypatch,
+        monkeypatch,  # noqa: ARG002
     ):
         instance = {
             "pg_database": "mydb",
@@ -361,7 +361,7 @@ class TestLinux:
 
     def test_parse_INSTANCE_value(self) -> None:
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass", SEP_LINUX
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
@@ -369,7 +369,7 @@ class TestLinux:
 
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
         # This is a weird edge case, that was broken in 2.1.0p30 and 2.2.0p4 .
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/.env:USER_NAME:/PATH/TO/.pgpass", SEP_LINUX
         )
         expected = ("/home/postgres/.env", "USER_NAME", "/PATH/TO/.pgpass", "")
@@ -377,14 +377,14 @@ class TestLinux:
 
         # Bad configuration, we keep this around to migrate users from old to new config format
         # But instance_name should really empty, or we should disallow this
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:", SEP_LINUX
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
         assert got == expected
 
         # Correct configuration
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:hi", SEP_LINUX
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
@@ -548,7 +548,7 @@ class TestWindows:
 
     def test_parse_INSTANCE_value(self) -> None:
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
@@ -556,7 +556,7 @@ class TestWindows:
 
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
         # This is a weird edge case, that was broken in 2.1.0p30 and 2.2.0p4 .
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/.env", "USER_NAME", "/PATH/TO/.pgpass", "")
@@ -564,20 +564,20 @@ class TestWindows:
 
         # Bad configuration, we keep this around to migrate users from old to new config format
         # But instance_name should really empty, or we should disallow this
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
         assert got == expected
 
         # Correct configuration
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|hi", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
         assert got == expected
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
@@ -585,7 +585,7 @@ class TestWindows:
 
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
         # This is a weird edge case, that was broken in 2.1.0p30 and 2.2.0p4 .
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/.env", "USER_NAME", "/PATH/TO/.pgpass", "")
@@ -593,14 +593,14 @@ class TestWindows:
 
         # Bad configuration, we keep this around to migrate users from old to new config format
         # But instance_name should really empty, or we should disallow this
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
         assert got == expected
 
         # Correct configuration
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|hi", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")

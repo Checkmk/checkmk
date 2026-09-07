@@ -665,7 +665,7 @@ def test_check_new_counters_in_oldstabe(
     fetcher_checker_counters: CheckResult,
 ) -> None:
     yielded_results = list(
-        livestatus_status._generate_livestatus_results(
+        livestatus_status._generate_livestatus_results(  # noqa: SLF001
             "oldstable",
             livestatus_status.livestatus_status_default_levels,
             PARSED_STATUS,
@@ -769,7 +769,7 @@ def test_check() -> None:
         datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))
     ):  # needed for certificate validity string
         yielded_results = list(
-            livestatus_status._generate_livestatus_results(
+            livestatus_status._generate_livestatus_results(  # noqa: SLF001
                 "heute",
                 livestatus_status.livestatus_status_default_levels,
                 PARSED_STATUS,
@@ -848,11 +848,11 @@ def _has_nagios_warn(results: CheckResult) -> bool:
 )
 def test_site_uses_commercial_edition(used_version: str, expected: bool) -> None:
     section_omd_info = {"sites": {"mysite": {"used_version": used_version}}}
-    assert livestatus_status._site_uses_commercial_edition(section_omd_info, "mysite") is expected
+    assert livestatus_status._site_uses_commercial_edition(section_omd_info, "mysite") is expected  # noqa: SLF001
 
 
 def test_site_uses_commercial_edition_site_missing() -> None:
-    assert livestatus_status._site_uses_commercial_edition({"sites": {}}, "mysite") is False
+    assert livestatus_status._site_uses_commercial_edition({"sites": {}}, "mysite") is False  # noqa: SLF001
 
 
 def _run_core_warn_check(
@@ -862,7 +862,7 @@ def _run_core_warn_check(
     status = _nagios_status()
     status["program_version"] = program_version
     return list(
-        livestatus_status._generate_livestatus_results(
+        livestatus_status._generate_livestatus_results(  # noqa: SLF001
             "mysite",
             livestatus_status.livestatus_status_default_levels,
             {"mysite": status},
@@ -886,7 +886,7 @@ def test_check_no_warn_on_nagios_with_community_edition() -> None:
 
 def test_check_no_warn_on_cmc_with_commercial_edition() -> None:
     results = list(
-        livestatus_status._generate_livestatus_results(
+        livestatus_status._generate_livestatus_results(  # noqa: SLF001
             "heute",
             livestatus_status.livestatus_status_default_levels,
             PARSED_STATUS,
@@ -917,7 +917,7 @@ _INCOMPLETE_STATUS = {
 
 def test_check_incomplete_status_data() -> None:
     assert list(
-        livestatus_status._generate_livestatus_results(
+        livestatus_status._generate_livestatus_results(  # noqa: SLF001
             "mysite",
             livestatus_status.livestatus_status_default_levels,
             _INCOMPLETE_STATUS,

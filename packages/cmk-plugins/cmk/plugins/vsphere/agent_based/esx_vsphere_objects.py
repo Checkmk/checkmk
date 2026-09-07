@@ -127,7 +127,7 @@ check_plugin_esx_vsphere_objects = CheckPlugin(
 )
 
 
-def discovery_esx_vsphere_objects_count(section: ParsedSection) -> DiscoveryResult:
+def discovery_esx_vsphere_objects_count(section: ParsedSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

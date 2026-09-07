@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -742,7 +744,10 @@ def test_check_memory_fails(  # type: ignore[misc]
     ],
 )
 def test_check_memory(  # type: ignore[misc]
-    params: Mapping, meminfo: memory.SectionMemUsed, expected: CheckResult, empty_value_store: None
+    params: Mapping,
+    meminfo: memory.SectionMemUsed,
+    expected: CheckResult,
+    empty_value_store: None,
 ) -> None:
     copy_info = meminfo.copy()
 

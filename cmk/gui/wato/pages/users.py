@@ -1485,7 +1485,7 @@ class ModeEditUser(WatoMode):
         ],
         custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]] | None,
         is_automation: bool,
-        sites: SiteConfigurations,
+        sites: SiteConfigurations,  # noqa: ARG002
         user_permissions: UserPermissions,
     ) -> None:
         forms.header(_("Security"))

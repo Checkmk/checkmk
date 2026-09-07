@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
@@ -115,7 +117,7 @@ def test_encode_socket_for_livestatus_tcp6() -> None:
 
 
 def test_site_config_for_livestatus_tcp_tls() -> None:
-    site_config = sites._site_config_for_livestatus(
+    site_config = sites._site_config_for_livestatus(  # noqa: SLF001
         SiteId("mysite"),
         default_site_config()
         | {

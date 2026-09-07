@@ -18,8 +18,8 @@ class _SMBShareDiskUsageOK:
 
     def __call__(
         self,
-        *args: object,
-        **kwargs: object,
+        *args: object,  # noqa: ARG002
+        **kwargs: object,  # noqa: ARG002
     ) -> SMBShare:
         return SMBShare(
             mountpoint=self.mountpoint,
@@ -35,8 +35,8 @@ class _SMBShareDiskUsageError:
 
     def __call__(
         self,
-        *args: object,
-        **kwargs: object,
+        *args: object,  # noqa: ARG002
+        **kwargs: object,  # noqa: ARG002
     ) -> ErrorResult:
         return ErrorResult(
             state=self.state,

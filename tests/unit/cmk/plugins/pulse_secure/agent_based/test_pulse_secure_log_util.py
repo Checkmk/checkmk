@@ -24,7 +24,7 @@ from cmk.plugins.pulse_secure.agent_based.pulse_secure_log_util import (
 def test_discover_pulse_secure_log(info: StringTable, expected_discoveries: Sequence[bool]) -> None:
     """Test discovery function for pulse_secure_log_util check."""
     parsed = parse_pulse_secure_log_utils(info)
-    if parsed is not None:
+    if parsed is not None:  # noqa: SIM108
         result = list(discover_pulse_secure_log_util(parsed))
     else:
         result = []

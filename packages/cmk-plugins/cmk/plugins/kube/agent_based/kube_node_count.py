@@ -94,7 +94,7 @@ def parse(string_table: StringTable) -> NodeCount:
     return NodeCount.model_validate_json(string_table[0][0])
 
 
-def discovery(section: NodeCount) -> DiscoveryResult:
+def discovery(section: NodeCount) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

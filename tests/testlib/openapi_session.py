@@ -2488,7 +2488,7 @@ class DashboardAPI(BaseAPI):
 class AgentReceiverRelayAPI(ARBaseAPI):
     @property
     def base_url(self) -> str:
-        return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"
+        return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"  # noqa: SLF001
 
     def register(self, relay_id: str, alias: str, csr: str) -> RelayRegistrationResponse:
         body = RelayRegistrationRequest(relay_id=relay_id, alias=alias, csr=csr)

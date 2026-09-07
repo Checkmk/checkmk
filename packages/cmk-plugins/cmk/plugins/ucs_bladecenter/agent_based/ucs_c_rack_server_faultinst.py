@@ -94,7 +94,7 @@ def check_ucs_c_rack_server_faultinst(section: Mapping[str, Sequence[str]]) -> C
         start_str = ""
 
 
-def discover_ucs_c_rack_server_faultinst(section: Mapping[str, Sequence[str]]) -> DiscoveryResult:
+def discover_ucs_c_rack_server_faultinst(section: Mapping[str, Sequence[str]]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

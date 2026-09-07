@@ -1211,7 +1211,7 @@ class TableRenderer:
         # Now compute the available width, i.e. take the usable page width
         # and substract spacing and padding.
         available_width = (
-            self.pdf._inner_width - ((num_cols - 1) * x_spacing) - (num_cols * 2 * x_padding)
+            self.pdf._inner_width - ((num_cols - 1) * x_spacing) - (num_cols * 2 * x_padding)  # noqa: SLF001
         )
 
         # If there is space enough for not breaking single words, then
@@ -1384,21 +1384,21 @@ class TableRenderer:
         if row_shading["enabled"]:
             h = (row_height + 2 * y_padding) / mm  # fixed: true-division
             self.pdf.render_rect(
-                self.pdf._left / mm,  # fixed: true-division
-                self.pdf._linepos / mm - h,  # fixed: true-divisioin
-                self.pdf._inner_width / mm,  # fixed: true-division
+                self.pdf._left / mm,  # fixed: true-division  # noqa: SLF001
+                self.pdf._linepos / mm - h,  # fixed: true-divisioin  # noqa: SLF001
+                self.pdf._inner_width / mm,  # fixed: true-division  # noqa: SLF001
                 h,
                 fill_color=row_shading[row_oddeven],
             )
 
         # Finally paint
-        left = self.pdf._left
+        left = self.pdf._left  # noqa: SLF001
         for column_width, render_object in zip(column_widths, row):
-            old_linepos = self.pdf._linepos
+            old_linepos = self.pdf._linepos  # noqa: SLF001
             render_object.render(
                 self.pdf,
                 left / mm,
-                self.pdf._linepos / mm,  # fixed: true-division
+                self.pdf._linepos / mm,  # fixed: true-division  # noqa: SLF001
                 column_width / mm + 2 * x_padding / mm,  # fixed: true-division
                 (row_height + 2 * y_padding) / mm,
                 x_padding / mm,  # fixed: true-division
@@ -1406,7 +1406,7 @@ class TableRenderer:
                 row_oddeven if row_shading["enabled"] else None,
             )
 
-            self.pdf._linepos = old_linepos
+            self.pdf._linepos = old_linepos  # noqa: SLF001
 
             self._paint_vrule(rule_width, y_padding, row_height, vrules, left)
             left += column_width + 2 * x_padding + x_spacing
@@ -1428,10 +1428,13 @@ class TableRenderer:
         left: SizeInternal,
     ) -> None:
         if vrules:
-            self.pdf._canvas.setLineWidth(rule_width)
-            self.pdf._canvas.setStrokeColorRGB(*black)
-            self.pdf._canvas.line(
-                left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
+            self.pdf._canvas.setLineWidth(rule_width)  # noqa: SLF001
+            self.pdf._canvas.setStrokeColorRGB(*black)  # noqa: SLF001
+            self.pdf._canvas.line(  # noqa: SLF001
+                left,
+                self.pdf._linepos,  # noqa: SLF001
+                left,
+                self.pdf._linepos - row_height - 2 * y_padding,  # noqa: SLF001
             )
 
     def _paint_stepwise(
@@ -1559,7 +1562,7 @@ class TextCell(CellRenderer):
     def can_add_dynamic_width(self) -> bool:
         return not self._narrow
 
-    def width(self, pdfdoc: Document) -> SizeMM:
+    def width(self, pdfdoc: Document) -> SizeMM:  # noqa: ARG002
         return self._width
 
     # Do wrapping of text to actual width. width() and height()

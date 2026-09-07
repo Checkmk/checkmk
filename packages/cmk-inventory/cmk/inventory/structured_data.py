@@ -195,7 +195,9 @@ class _DictKeys[T]:
 #   .--mutable tree--------------------------------------------------------.
 
 
-def _format_update_result_attrs(*, title: str, message: str) -> str:
+# TODO: The ARG001 suppression below hides a real bug: the f-string interpolates the
+# literal "message" instead of the argument. Fix that and drop the suppression.
+def _format_update_result_attrs(*, title: str, message: str) -> str:  # noqa: ARG001
     return f"[Attributes] {title}: message"
 
 
@@ -223,7 +225,7 @@ class _MutableAttributes:
         self,
         now: int,
         previous: ImmutableAttributes,
-        path: SDPath,
+        path: SDPath,  # noqa: ARG002
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
@@ -281,7 +283,9 @@ class _MutableAttributes:
         }
 
 
-def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:
+# TODO: The ARG001 suppression below hides a real bug: the f-string interpolates the
+# literal "message" instead of the argument. Fix that and drop the suppression.
+def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:  # noqa: ARG001
     return f"[Table] '{', '.join(map(str, ident))}': {title}: message"
 
 
@@ -334,7 +338,7 @@ class _MutableTable:
         self,
         now: int,
         previous: ImmutableTable,
-        path: SDPath,
+        path: SDPath,  # noqa: ARG002
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
@@ -911,9 +915,9 @@ def _make_filter_func[CT: (SDKey, SDNodeName)](
 ) -> Callable[[CT], bool]:
     match choice:
         case "nothing":
-            return lambda k: False
+            return lambda k: False  # noqa: ARG005
         case "all":
-            return lambda k: True
+            return lambda k: True  # noqa: ARG005
         case _:
             return lambda k: k in choice
 

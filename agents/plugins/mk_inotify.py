@@ -169,7 +169,7 @@ def get_watched_files() -> set[str]:
     return files
 
 
-def wakeup_handler(signum: int, frame: object) -> None:
+def wakeup_handler(signum: int, frame: object) -> None:  # noqa: ARG001
     global output
     if output:
         if opt_foreground:

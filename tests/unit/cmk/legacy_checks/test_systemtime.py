@@ -52,7 +52,10 @@ def test_discover_systemtime(
     ],
 )
 def test_check_systemtime(
-    item: str, params: Params, string_table: StringTable, expected_results: Sequence[object]
+    item: str,  # noqa: ARG001
+    params: Params,
+    string_table: StringTable,
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for systemtime check."""
     with time_machine.travel(

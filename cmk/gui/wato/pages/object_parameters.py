@@ -359,7 +359,7 @@ class ModeObjectParameters(WatoMode):
             _("Determined by discovery"),
             "",
             False,
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),  # noqa: SLF001
         )
         render_labels()
 
@@ -402,7 +402,7 @@ class ModeObjectParameters(WatoMode):
         )
         assert isinstance(rulespec.valuespec, Tuple)
         html.write_text_permissive(
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])  # noqa: SLF001
         )
         html.close_td()
         html.close_tr()
@@ -415,7 +415,7 @@ class ModeObjectParameters(WatoMode):
         all_rulesets: AllRulesets,
         rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
-        render_labels: Callable[[], None],
+        render_labels: Callable[[], None],  # noqa: ARG002
         *,
         debug: bool,
     ) -> None:
@@ -498,8 +498,8 @@ class ModeObjectParameters(WatoMode):
     def _get_custom_check_origin_rule(
         self,
         ruleset: Ruleset,
-        hostname: str,
-        svc_desc: str,
+        hostname: str,  # noqa: ARG002
+        svc_desc: str,  # noqa: ARG002
         service_result: AnalyseServiceResult,
         *,
         debug: bool,

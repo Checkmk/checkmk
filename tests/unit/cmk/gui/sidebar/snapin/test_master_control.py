@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator, Sequence
@@ -30,11 +32,12 @@ type SiteState = Literal[
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -64,7 +67,7 @@ def _site_state(
 
 
 def _all_toggles_on() -> dict[SiteId, list]:
-    return {SiteId("heute"): [1] * len(MasterControlSnapin()._core_toggles())}
+    return {SiteId("heute"): [1] * len(MasterControlSnapin()._core_toggles())}  # noqa: SLF001
 
 
 def _show_site(
@@ -78,10 +81,10 @@ def _show_site(
             sites, "states", lambda: {} if site_state is None else {SiteId("heute"): site_state}
         )
         with output_funnel.plugged():
-            MasterControlSnapin()._show_master_control_site(
+            MasterControlSnapin()._show_master_control_site(  # noqa: SLF001
                 SiteId("heute"),
                 _all_toggles_on() if site_status_info is None else site_status_info,
-                MasterControlSnapin()._core_toggles(),
+                MasterControlSnapin()._core_toggles(),  # noqa: SLF001
             )
             return output_funnel.drain()
 
@@ -103,11 +106,11 @@ def test_page_handlers_expose_the_switch_endpoint() -> None:
 def test_core_toggles_cover_both_handler_flavours() -> None:
     """Event handlers and alert handlers share one livestatus column; the snap-in lists it
     twice and picks the right label per core, so both entries must stay present."""
-    titles = [title for _colname, title in MasterControlSnapin()._core_toggles()]
+    titles = [title for _colname, title in MasterControlSnapin()._core_toggles()]  # noqa: SLF001
 
     assert "Event handlers" in titles
     assert "Alert handlers" in titles
-    assert [colname for colname, title in MasterControlSnapin()._core_toggles()].count(
+    assert [colname for colname, title in MasterControlSnapin()._core_toggles()].count(  # noqa: SLF001
         "enable_event_handlers"
     ) == 2
 
@@ -190,10 +193,10 @@ def test_show_site_links_each_toggle_to_the_opposite_state(
     with monkeypatch.context() as m:
         m.setattr(sites, "states", lambda: {SiteId("heute"): _site_state("online")})
         with output_funnel.plugged():
-            MasterControlSnapin()._show_master_control_site(
+            MasterControlSnapin()._show_master_control_site(  # noqa: SLF001
                 SiteId("heute"),
                 {SiteId("heute"): [1, 0, 1, 1, 1, 1, 1]},
-                MasterControlSnapin()._core_toggles(),
+                MasterControlSnapin()._core_toggles(),  # noqa: SLF001
             )
             rendered = output_funnel.drain()
 
@@ -215,7 +218,7 @@ def test_show_reports_a_broken_site_without_hiding_the_others(
         m.setattr(
             MasterControlSnapin,
             "_show_master_control_site",
-            lambda *args: (_ for _ in ()).throw(ValueError("boom")),
+            lambda *args: (_ for _ in ()).throw(ValueError("boom")),  # noqa: ARG005
         )
         with output_funnel.plugged():
             MasterControlSnapin().show(load_config)

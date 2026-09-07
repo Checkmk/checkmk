@@ -51,7 +51,7 @@ def test_create_notify_host_files(tmp_path: Path, monkeypatch: MonkeyPatch) -> N
     monkeypatch.setattr(
         cmk.events.notify,
         "make_notify_host_file_path",
-        lambda config_path, host_name: test_file,
+        lambda config_path, host_name: test_file,  # noqa: ARG005
     )
     assert read_notify_host_file(host_name, tmp_path) == NHC_EXPECTED
 

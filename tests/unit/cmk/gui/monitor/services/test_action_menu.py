@@ -20,7 +20,7 @@ from cmk.gui.views.icon.entries import IconEntry
 def _passthrough_macros(monkeypatch: pytest.MonkeyPatch) -> None:
     # replace_action_url_macros reads the global user; the mapping logic under test does not
     # depend on macro substitution, so we neutralize it.
-    monkeypatch.setattr(_action_menu, "replace_action_url_macros", lambda url, what, row: url)
+    monkeypatch.setattr(_action_menu, "replace_action_url_macros", lambda url, what, row: url)  # noqa: ARG005
 
 
 def test_icon_name_from_static_icon() -> None:
@@ -41,7 +41,7 @@ def test_serialize_entry_skips_entries_without_url() -> None:
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> None:
+def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> None:  # noqa: ARG001
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.reload),
@@ -51,7 +51,7 @@ def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> Non
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
+def test_serialize_entry_maps_link(passthrough_macros: None) -> None:  # noqa: ARG001
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.logwatch),
@@ -66,7 +66,7 @@ def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
     assert isinstance(item.target, ApiOmitted)
 
 
-def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:
+def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:  # noqa: ARG001
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.graph),
@@ -82,7 +82,7 @@ def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:
 def test_serialize_entry_substitutes_the_service_macros(monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[str] = []
 
-    def record_what(url: str, what: str, row: Row) -> str:
+    def record_what(url: str, what: str, row: Row) -> str:  # noqa: ARG001
         seen.append(what)
         return url
 

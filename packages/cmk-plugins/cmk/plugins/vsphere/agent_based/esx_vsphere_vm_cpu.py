@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.vsphere.lib import esx_vsphere
 
 
-def discover_cpu(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
+def discover_cpu(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

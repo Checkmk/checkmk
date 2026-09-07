@@ -13,20 +13,20 @@ from cmk.gui.watolib import git
 
 
 def test_add_message_commit_separation(flask_app: flask.Flask) -> None:
-    prev = git._git_messages()
+    prev = git._git_messages()  # noqa: SLF001
     assert not prev
 
     with flask_app.test_request_context("/NO_SITE/check_mk/login.py"):
         flask_app.preprocess_request()
 
-        assert not git._git_messages()
+        assert not git._git_messages()  # noqa: SLF001
         git.add_message("dingdong")
-        assert git._git_messages() == ["dingdong"]
+        assert git._git_messages() == ["dingdong"]  # noqa: SLF001
 
         flask_app.process_response(flask.Response())
 
-    assert not git._git_messages()
-    assert id(git._git_messages()) != id(prev)
+    assert not git._git_messages()  # noqa: SLF001
+    assert id(git._git_messages()) != id(prev)  # noqa: SLF001
 
 
 def _touch(config_dir: Path, *rel_paths: str) -> None:
@@ -67,9 +67,9 @@ def test_git_add_files_tracks_setup_managed_configuration(tmp_path: Path) -> Non
         "mkeventd.d/mkp/stray.mk",
     )
 
-    git._git_command(["init"], tmp_path)
-    git._write_gitignore_files(tmp_path)
-    git._git_add_files(tmp_path)
+    git._git_command(["init"], tmp_path)  # noqa: SLF001
+    git._write_gitignore_files(tmp_path)  # noqa: SLF001
+    git._git_add_files(tmp_path)  # noqa: SLF001
 
     tracked = subprocess.run(
         ["git", "ls-files"],

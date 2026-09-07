@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Sequence
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -56,7 +58,7 @@ class _LegacySource:
     def add(self, menu: _LegacyMenu) -> None:
         self._menus.append(menu)
 
-    def host_menus(self, *, hostname: str, site_id: str) -> Sequence[_LegacyMenu]:
+    def host_menus(self, *, hostname: str, site_id: str) -> Sequence[_LegacyMenu]:  # noqa: ARG002
         return self._menus
 
 

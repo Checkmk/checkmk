@@ -23,11 +23,11 @@ OS_ERROR_PAGE = "test_oserror_page"
 OS_ERROR_WSGI_PAGE = "test_oserror_wsgi_page"
 
 
-def _oserror_wsgi_handler(ctx: PageContext) -> None:
+def _oserror_wsgi_handler(ctx: PageContext) -> None:  # noqa: ARG001
     raise OSError("Apache/mod_wsgi request data read error: Input is already in error state.")
 
 
-def _oserror_handler(ctx: PageContext) -> None:
+def _oserror_handler(ctx: PageContext) -> None:  # noqa: ARG001
     raise OSError("Random OS Error")
 
 
@@ -45,7 +45,7 @@ def _oserror_pages() -> Iterator[None]:
 def test_oserror_wsgi_from_page_handler_returns_400(
     wsgi_app: WebTestAppForCMK,
     monkeypatch: pytest.MonkeyPatch,
-    oserror_pages: None,
+    oserror_pages: None,  # noqa: ARG001
 ) -> None:
     """Touching request.values in a broken request body state raises OSError.
 
@@ -71,7 +71,7 @@ def test_oserror_wsgi_from_page_handler_returns_400(
 def test_non_wsgi_oserror_from_page_handler_propagates(
     wsgi_app: WebTestAppForCMK,
     monkeypatch: pytest.MonkeyPatch,
-    oserror_pages: None,
+    oserror_pages: None,  # noqa: ARG001
 ) -> None:
     """Non-mod_wsgi OSErrors must not be swallowed as 400.
 
@@ -94,11 +94,11 @@ CSP_PAGE = "test_csp_page"
 CSP_STRICT_PAGE = "test_csp_strict_page"
 
 
-def _csp_page(ctx: PageContext) -> None:
+def _csp_page(ctx: PageContext) -> None:  # noqa: ARG001
     html.write_html(HTML.without_escaping("<div>hello</div>"))
 
 
-def _csp_strict_page(ctx: PageContext) -> None:
+def _csp_strict_page(ctx: PageContext) -> None:  # noqa: ARG001
     response.set_content_security_policy(STRICT_CONTENT_SECURITY_POLICY)
     html.write_html(HTML.without_escaping("<div>hello</div>"))
 
@@ -115,7 +115,8 @@ def _csp_pages() -> Iterator[None]:
 
 
 def test_csp_default_legacy_policy_is_applied(
-    logged_in_wsgi_app: WebTestAppForCMK, csp_pages: None
+    logged_in_wsgi_app: WebTestAppForCMK,
+    csp_pages: None,  # noqa: ARG001
 ) -> None:
     """A page that sets no policy gets the legacy CSP from the central hook."""
     resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_PAGE}.py", status=200)
@@ -123,7 +124,8 @@ def test_csp_default_legacy_policy_is_applied(
 
 
 def test_csp_page_can_opt_into_strict_policy(
-    logged_in_wsgi_app: WebTestAppForCMK, csp_pages: None
+    logged_in_wsgi_app: WebTestAppForCMK,
+    csp_pages: None,  # noqa: ARG001
 ) -> None:
     """A page that opts into the strict policy keeps it; the hook does not overwrite it."""
     resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_STRICT_PAGE}.py", status=200)

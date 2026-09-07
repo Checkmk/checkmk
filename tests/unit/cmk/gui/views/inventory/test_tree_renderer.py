@@ -550,7 +550,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_a",
                         title="",
@@ -568,7 +568,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_b",
                         title="",
@@ -586,7 +586,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_d",
                         title="",
@@ -604,7 +604,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_c",
                         title="",
@@ -691,7 +691,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_a",
                         title="",
@@ -709,7 +709,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_b",
                         title="",
@@ -727,7 +727,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_d",
                         title="",
@@ -745,7 +745,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_c",
                         title="",

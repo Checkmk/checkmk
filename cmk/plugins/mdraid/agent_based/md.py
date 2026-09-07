@@ -190,7 +190,7 @@ def discover_md(section: Section) -> DiscoveryResult:
             yield Service(item=device)
 
 
-def check_md(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_md(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     data = section.get(item)
     if data is None:
         return

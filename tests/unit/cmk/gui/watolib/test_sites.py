@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 """Tests for the ``authentication_connections`` and
@@ -196,8 +198,8 @@ def test_saml_endpoint_widgets_carry_pending_placeholder() -> None:
     computed on save), so both widgets must announce the pending URL via
     their placeholder instead of rendering an empty field."""
     for widget in (
-        SiteManagement._saml_metadata_endpoint_widget(),
-        SiteManagement._saml_acs_endpoint_widget(),
+        SiteManagement._saml_metadata_endpoint_widget(),  # noqa: SLF001
+        SiteManagement._saml_acs_endpoint_widget(),  # noqa: SLF001
     ):
         assert widget.placeholder is not None
         assert (
@@ -354,7 +356,7 @@ def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(
 def _editable_connection_elements(*, saml_supported: bool) -> list[Any]:
     """Return the per-entry connection choices of the nested ``"list"`` widget
     built from stubbed connection choices."""
-    template = SiteManagement._editable_connections_form_spec(
+    template = SiteManagement._editable_connections_form_spec(  # noqa: SLF001
         ldap_choices=[("ldap_a", "LDAP A")],
         saml_choices=[("saml_a", "SAML A")] if saml_supported else None,
     ).element_template
@@ -385,7 +387,7 @@ def test_connection_pick_accepts_dash_in_connection_id() -> None:
     otherwise required to be Python identifiers, which a dash is not — so
     building the pick must not choke on an id the creation form let through.
     """
-    template = SiteManagement._editable_connections_form_spec(
+    template = SiteManagement._editable_connections_form_spec(  # noqa: SLF001
         ldap_choices=[("ldap-with-dash", "LDAP dashed")],
         saml_choices=[("saml-with-dash", "SAML dashed")],
     ).element_template
@@ -420,7 +422,7 @@ def test_editable_connections_form_spec_rejects_empty_list(request_context: None
     """Choosing "Use the following" requires at least one connection entry —
     an empty list would be semantically "disabled" behind a misleading label."""
     visitor = get_visitor(
-        SiteManagement._editable_connections_form_spec(
+        SiteManagement._editable_connections_form_spec(  # noqa: SLF001
             ldap_choices=[("ldap_a", "LDAP A")], saml_choices=None
         ),
         VisitorOptions(migrate_values=False, mask_values=False),

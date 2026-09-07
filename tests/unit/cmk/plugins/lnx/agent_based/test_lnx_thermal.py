@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Sequence
 
 import pytest
@@ -279,7 +281,10 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
     ],
 )
 def test_check_functions_perfdata_2(
-    line: list[str], item: str, result: list[Metric | Result], empty_value_store: None
+    line: list[str],
+    item: str,
+    result: list[Metric | Result],
+    empty_value_store: None,
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.check_lnx_thermal(item, {}, section)) == result

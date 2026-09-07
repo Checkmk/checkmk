@@ -27,7 +27,9 @@ class _RequestMock:
         self.selection_id = selection_id
 
     def get_validated_type_input_mandatory(
-        self, type_: type[SelectionId], name: str
+        self,
+        type_: type[SelectionId],  # noqa: ARG002
+        name: str,
     ) -> SelectionId:
         assert name == "selection"
         if not self.selection_id:

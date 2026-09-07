@@ -78,7 +78,7 @@ class Modes:
         return Mode(
             long_option="help",
             short_option="h",
-            handler_function=lambda *a, **kw: print_(self.help()),
+            handler_function=lambda *a, **kw: print_(self.help()),  # noqa: ARG005
             short_help="Print this help",
         )
 

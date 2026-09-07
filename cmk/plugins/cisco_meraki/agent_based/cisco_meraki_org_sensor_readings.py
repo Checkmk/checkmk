@@ -152,7 +152,7 @@ def discover_sensor_battery(section: Section) -> DiscoveryResult:
         yield Service(item="Sensor")
 
 
-def check_sensor_battery(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_sensor_battery(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     if not section.battery:
         return
 
@@ -185,7 +185,7 @@ def discover_sensor_humidity(section: Section) -> DiscoveryResult:
         yield Service(item="Sensor")
 
 
-def check_sensor_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_sensor_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     if not section.humidity:
         return
 

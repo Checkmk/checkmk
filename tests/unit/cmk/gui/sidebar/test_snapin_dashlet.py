@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Iterator
@@ -63,10 +65,11 @@ class PlainSnapin(StyledSnapin):
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -107,7 +110,7 @@ def test_dashlet_title_of_an_unknown_snapin(load_config: Config) -> None:
 
 
 def test_snapin_instance_of_a_known_snapin() -> None:
-    instance = SnapinWidgetIFramePage._get_snapin_instance("tactical_overview", USER_PERMISSIONS)
+    instance = SnapinWidgetIFramePage._get_snapin_instance("tactical_overview", USER_PERMISSIONS)  # noqa: SLF001
 
     assert instance.type_name() == "tactical_overview"
 
@@ -116,12 +119,12 @@ def test_snapin_instance_of_an_unknown_snapin() -> None:
     """The widget name comes from the dashboard configuration, which may still reference a
     snap-in that was removed - that has to be a user error, not a crash."""
     with pytest.raises(MKUserError, match="does not exist"):
-        SnapinWidgetIFramePage._get_snapin_instance("no_such_snapin", USER_PERMISSIONS)
+        SnapinWidgetIFramePage._get_snapin_instance("no_such_snapin", USER_PERMISSIONS)  # noqa: SLF001
 
 
 def test_scrollbar_wraps_its_body() -> None:
     with output_funnel.plugged():
-        with SnapinWidgetIFramePage._scrollbar():
+        with SnapinWidgetIFramePage._scrollbar():  # noqa: SLF001
             html.write_text_permissive("body")
         rendered = output_funnel.drain()
 
@@ -130,7 +133,7 @@ def test_scrollbar_wraps_its_body() -> None:
 
 def test_scrollbar_is_closed_even_when_the_body_raises() -> None:
     with output_funnel.plugged():
-        with pytest.raises(ValueError), SnapinWidgetIFramePage._scrollbar():
+        with pytest.raises(ValueError), SnapinWidgetIFramePage._scrollbar():  # noqa: SLF001
             raise ValueError("boom")
         rendered = output_funnel.drain()
 
@@ -139,15 +142,15 @@ def test_scrollbar_is_closed_even_when_the_body_raises() -> None:
 
 def test_snapin_container_carries_the_show_more_state(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
-        m.setattr(user, "get_show_more_setting", lambda more_id: True)
+        m.setattr(user, "get_show_more_setting", lambda more_id: True)  # noqa: ARG005
         with output_funnel.plugged():
-            with SnapinWidgetIFramePage._snapin_container("tactical_overview"):
+            with SnapinWidgetIFramePage._snapin_container("tactical_overview"):  # noqa: SLF001
                 pass
             more = output_funnel.drain()
 
-        m.setattr(user, "get_show_more_setting", lambda more_id: False)
+        m.setattr(user, "get_show_more_setting", lambda more_id: False)  # noqa: ARG005
         with output_funnel.plugged():
-            with SnapinWidgetIFramePage._snapin_container("tactical_overview"):
+            with SnapinWidgetIFramePage._snapin_container("tactical_overview"):  # noqa: SLF001
                 pass
             less = output_funnel.drain()
 
@@ -158,7 +161,7 @@ def test_snapin_container_carries_the_show_more_state(monkeypatch: pytest.Monkey
 
 def test_show_snapin_injects_the_snapin_styles(load_config: Config) -> None:
     with output_funnel.plugged():
-        SnapinWidgetIFramePage._show_snapin(StyledSnapin(), load_config)
+        SnapinWidgetIFramePage._show_snapin(StyledSnapin(), load_config)  # noqa: SLF001
         rendered = output_funnel.drain()
 
     assert 'id="snapin_styled"' in rendered
@@ -168,7 +171,7 @@ def test_show_snapin_injects_the_snapin_styles(load_config: Config) -> None:
 
 def test_show_snapin_without_styles_renders_no_style_tag(load_config: Config) -> None:
     with output_funnel.plugged():
-        SnapinWidgetIFramePage._show_snapin(PlainSnapin(), load_config)
+        SnapinWidgetIFramePage._show_snapin(PlainSnapin(), load_config)  # noqa: SLF001
         rendered = output_funnel.drain()
 
     assert "<style" not in rendered
@@ -183,7 +186,7 @@ def test_page_renders_a_standalone_document_around_the_snapin(
     trigger the sidebar's browser reload."""
     request.set_var("name", "time")
     with monkeypatch.context() as m:
-        m.setattr(user, "get_show_more_setting", lambda more_id: False)
+        m.setattr(user, "get_show_more_setting", lambda more_id: False)  # noqa: ARG005
         with output_funnel.plugged():
             SnapinWidgetIFramePage().page(_page_context(load_config))
             rendered = output_funnel.drain()

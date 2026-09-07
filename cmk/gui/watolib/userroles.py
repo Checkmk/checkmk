@@ -88,7 +88,9 @@ def role_exists(role_id: RoleID) -> bool:
 
 
 def delete_role(
-    role_id: RoleID, user_attributes: Sequence[tuple[str, UserAttribute]], pprint_value: bool
+    role_id: RoleID,
+    user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG001
+    pprint_value: bool,
 ) -> None:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_delete: UserRole = get_role(role_id)

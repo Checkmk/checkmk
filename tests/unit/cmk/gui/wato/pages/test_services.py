@@ -98,12 +98,12 @@ class TestDiscoveryPageRendererFolder:
     def test_action_menu_url_vars_carry_the_hosts_folder(self, sub_host: Host) -> None:
         renderer = DiscoveryPageRenderer(host=sub_host, options=_discovery_options())
 
-        url_vars = renderer._action_menu_url_vars("checkbox_name", _changed_entry())
+        url_vars = renderer._action_menu_url_vars("checkbox_name", _changed_entry())  # noqa: SLF001
 
         assert ("folder", "sub") in url_vars
         assert ("hostname", "sub_host") in url_vars
 
-    def test_link_builders_point_to_the_hosts_folder(self, sub_host: Host) -> None:
+    def test_link_builders_point_to_the_hosts_folder(self, sub_host: Host) -> None:  # noqa: ARG002
         request.set_var("folder", "sub")
         request.set_var("host", "sub_host")
 

@@ -40,7 +40,7 @@ def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_enterasys_lsnat(section: StringTable) -> DiscoveryResult:
+def discover_enterasys_lsnat(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

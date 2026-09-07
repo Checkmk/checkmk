@@ -201,7 +201,7 @@ class ABCConfigDomain(abc.ABC):
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
-    def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
+    def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:  # noqa: ARG003
         return DomainRequest(cls.ident())
 
     @classmethod

@@ -26,7 +26,7 @@ from cmk.gui.views.store import multisite_builtin_views
 
 
 @pytest.fixture(name="view_spec")
-def view_spec_fixture(request_context: None) -> ViewSpec:
+def view_spec_fixture(request_context: None) -> ViewSpec:  # noqa: ARG001
     return multisite_builtin_views["allhosts"]
 
 
@@ -89,10 +89,10 @@ def test_replace_action_url_macros(
         assert replace_action_url_macros(url, what, row) == result
 
 
-def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
+def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:  # noqa: ARG001
     monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
 
-    def rendr(row: Row) -> tuple[str, str]:
+    def rendr(row: Row) -> tuple[str, str]:  # noqa: ARG001
         return ("abc", "xyz")
 
     register_painter(

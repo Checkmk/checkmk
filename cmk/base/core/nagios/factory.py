@@ -20,13 +20,13 @@ from cmk.utils.timeperiod import get_all_timeperiods
 
 
 def create_core(
-    edition: Edition,
-    matcher: RulesetMatcher,
-    label_manager: LabelManager,
+    edition: Edition,  # noqa: ARG001
+    matcher: RulesetMatcher,  # noqa: ARG001
+    label_manager: LabelManager,  # noqa: ARG001
     loaded_config: BaseConfig,
-    snmp_plugin_store: SNMPPluginStore,
-    config_cache: ConfigCache,
-    plugins: AgentBasedPlugins,
+    snmp_plugin_store: SNMPPluginStore,  # noqa: ARG001
+    config_cache: ConfigCache,  # noqa: ARG001
+    plugins: AgentBasedPlugins,  # noqa: ARG001
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "nagios":

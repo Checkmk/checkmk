@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 """
 This script helps managing Bandit '# nosec' exclusions in our codebase.
 It can scan the codebase for all instances of '# nosec' and cross-reference
@@ -328,7 +330,7 @@ def cmd_check(args: argparse.Namespace) -> None:
 
     excluded = _resolve_excluded(args)
 
-    if args.rg:
+    if args.rg:  # noqa: SIM108
         markers = find_nosecs_rg(args.src_root)
     else:
         markers = find_nosecs(args.src_root, excluded)

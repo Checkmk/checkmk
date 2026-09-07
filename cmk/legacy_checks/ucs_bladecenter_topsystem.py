@@ -15,11 +15,11 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def discover_ucs_bladecenter_topsystem(info):
+def discover_ucs_bladecenter_topsystem(info):  # noqa: ARG001
     yield None, None
 
 
-def check_ucs_bladecenter_topsystem(item, _no_params, info):
+def check_ucs_bladecenter_topsystem(item, _no_params, info):  # noqa: ARG001
     for entry in info[0][1:]:
         tokens = entry.split(" ", 1)
         if len(tokens) == 2:

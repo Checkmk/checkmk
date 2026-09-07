@@ -192,7 +192,7 @@ class TimeperiodSelection(DropdownChoice[str]):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,
+        help: str | None = None,  # noqa: A002
     ) -> None:
         super().__init__(
             choices=self._get_choices,

@@ -486,7 +486,7 @@ class RuleState(CascadingDropdown):
     def __init__(
         self,
         title: str,
-        help: str,
+        help: str,  # noqa: A002
         default_value: int,
     ) -> None:
         choices: list[CascadingDropdownChoice] = [
@@ -3820,7 +3820,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
     def _process_uploaded_zip_file(
         self,
-        filename: str,
+        filename: str,  # noqa: ARG002
         content: bytes,
         *,
         pending_changes: PendingChanges,
@@ -3888,7 +3888,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         if filename.startswith(".") or "/" in filename:
             raise Exception(_("Invalid file name"))
 
-    def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:
+    def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:  # noqa: ARG002
         if not content or content.isspace():
             raise Exception(_("The file is empty"))
         results = ec.compile_mib(
@@ -4138,7 +4138,7 @@ ConfigVariableEventConsole = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_mkeventd",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=MultipleChoiceExtended(
             elements=[
                 MultipleChoiceElementExtended(
@@ -4171,7 +4171,7 @@ ConfigVariableEventConsoleRemoteStatus = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="remote_status",
-    valuespec=lambda context: Optional(
+    valuespec=lambda context: Optional(  # noqa: ARG005
         valuespec=Tuple(
             elements=[
                 Integer(
@@ -4231,7 +4231,7 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="replication",
-    valuespec=lambda context: Optional(
+    valuespec=lambda context: Optional(  # noqa: ARG005
         valuespec=Dictionary(
             optional_keys=["takeover", "fallback", "disabled", "logging"],
             elements=[
@@ -4348,7 +4348,7 @@ ConfigVariableEventConsoleRetentionInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="retention_interval",
-    form_spec=lambda context: fs.TimeSpan(
+    form_spec=lambda context: fs.TimeSpan(  # noqa: ARG005
         title=Title("State retention interval"),
         help_text=Help(
             "In this interval the event daemon will save its state to disk, so that you won't lose your current event "
@@ -4362,7 +4362,7 @@ ConfigVariableEventConsoleHousekeepingInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="housekeeping_interval",
-    form_spec=lambda context: fs.TimeSpan(
+    form_spec=lambda context: fs.TimeSpan(  # noqa: ARG005
         title=Title("Housekeeping interval"),
         help_text=Help(
             "From time to time the eventd checks for messages that are expected to "
@@ -4378,7 +4378,7 @@ ConfigVariableEventConsoleSqliteHousekeepingInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="sqlite_housekeeping_interval",
-    form_spec=lambda context: fs.TimeSpan(
+    form_spec=lambda context: fs.TimeSpan(  # noqa: ARG005
         title=Title("Event Console housekeeping interval"),
         help_text=Help(
             "From time to time the Event Console history requires maintenance. "
@@ -4394,7 +4394,7 @@ ConfigVariableEventConsoleSqliteFreelistSize = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="sqlite_freelist_size",
-    form_spec=lambda context: fs.DataSize(
+    form_spec=lambda context: fs.DataSize(  # noqa: ARG005
         title=Title("Event Console history fragmentation limit size"),
         help_text=Help(
             "Event Console history can become fragmented over time. "
@@ -4420,7 +4420,7 @@ ConfigVariableEventConsoleStatisticsInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="statistics_interval",
-    form_spec=lambda context: fs.TimeSpan(
+    form_spec=lambda context: fs.TimeSpan(  # noqa: ARG005
         title=Title("Statistics interval"),
         help_text=Help(
             "The event daemon keeps statistics about the rate of messages, events "
@@ -4436,7 +4436,7 @@ ConfigVariableEventConsoleLogMessages = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="log_messages",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Syslog-like message logging"),
         label=Label("Log all messages into Syslog-like log files"),
         help_text=Help(
@@ -4449,7 +4449,7 @@ ConfigVariableEventConsoleRuleOptimizer = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="rule_optimizer",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Optimize rule execution"),
         label=Label("enable optimized rule execution"),
         help_text=Help("This option turns on a faster algorithm for matching events to rules. "),
@@ -4460,7 +4460,7 @@ ConfigVariableEventConsoleActions = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="actions",
-    valuespec=lambda context: ActionList(
+    valuespec=lambda context: ActionList(  # noqa: ARG005
         Foldable(
             valuespec=Dictionary(
                 title=_("Action"),
@@ -4590,7 +4590,7 @@ ConfigVariableEventConsoleArchiveOrphans = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="archive_orphans",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Force message archiving"),
         label=Label("Archive messages that do not match any rule"),
         help_text=Help(
@@ -4606,7 +4606,7 @@ ConfigVariableHostnameTranslation = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="hostname_translation",
-    valuespec=lambda context: HostnameTranslation(
+    valuespec=lambda context: HostnameTranslation(  # noqa: ARG005
         title=_("Host name translation for incoming messages"),
         help_txt=_(
             "When the Event Console receives a message than the host name "
@@ -4700,7 +4700,7 @@ ConfigVariableEventConsoleEventLimit = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="event_limit",
-    valuespec=lambda context: Dictionary(
+    valuespec=lambda context: Dictionary(  # noqa: ARG005
         title=_("Limit amount of current events"),
         help=_(
             "This option helps you to protect the Event Console from resource "
@@ -4747,7 +4747,7 @@ ConfigVariableEventConsoleHistoryRotation = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="history_rotation",
-    form_spec=lambda context: fs.SingleChoice(
+    form_spec=lambda context: fs.SingleChoice(  # noqa: ARG005
         title=Title("Event history log file rotation"),
         help_text=Help(
             "Specify at which time period a new file for the event history will be created."
@@ -4764,7 +4764,7 @@ ConfigVariableEventConsoleHistoryLifetime = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="history_lifetime",
-    form_spec=lambda context: FSInteger(
+    form_spec=lambda context: FSInteger(  # noqa: ARG005
         title=Title("Event history lifetime"),
         help_text=Help(
             "After this number of days old log files of the event history will be deleted."
@@ -4778,7 +4778,7 @@ ConfigVariableEventConsoleSocketQueueLength = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="socket_queue_len",
-    form_spec=lambda context: FSInteger(
+    form_spec=lambda context: FSInteger(  # noqa: ARG005
         title=Title("Max. number of pending connections to the status socket"),
         help_text=Help(
             "When the graphical user interface (GUI) or the active check check_mkevents connects "
@@ -4797,7 +4797,7 @@ ConfigVariableEventConsoleEventSocketQueueLength = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="eventsocket_queue_len",
-    form_spec=lambda context: FSInteger(
+    form_spec=lambda context: FSInteger(  # noqa: ARG005
         title=Title("Max. number of pending connections to the event socket"),
         help_text=Help(
             "The event socket is an alternative way for sending events "
@@ -4816,7 +4816,7 @@ ConfigVariableEventConsoleTranslateSNMPTraps = ConfigVariable(
     group=ConfigVariableGroupEventConsoleSNMP,
     primary_domain=ConfigDomainEventConsole,
     ident="translate_snmptraps",
-    valuespec=lambda context: CascadingDropdown(
+    valuespec=lambda context: CascadingDropdown(  # noqa: ARG005
         title=_("Translate SNMP traps"),
         help=_(
             "When this option is enabled all available SNMP MIB files will be used "
@@ -4850,7 +4850,7 @@ ConfigVariableEventConsoleSNMPCredentials = ConfigVariable(
     group=ConfigVariableGroupEventConsoleSNMP,
     primary_domain=ConfigDomainEventConsole,
     ident="snmp_credentials",
-    valuespec=lambda context: ListOf(
+    valuespec=lambda context: ListOf(  # noqa: ARG005
         valuespec=Dictionary(
             elements=[
                 (
@@ -4897,7 +4897,7 @@ ConfigVariableEventConsoleDebugRules = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="debug_rules",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Debug rule execution"),
         label=Label("enable extensive rule logging"),
         help_text=Help(
@@ -4913,7 +4913,7 @@ ConfigVariableEventConsoleLogLevel = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="log_level",
-    valuespec=lambda context: Dictionary(
+    valuespec=lambda context: Dictionary(  # noqa: ARG005
         title=_("Log level"),
         help=_(
             "You can configure the Event Console to log more details about its actions. "
@@ -4983,7 +4983,7 @@ ConfigVariableEventLogRuleHits = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="log_rulehits",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Log rule hits"),
         label=Label("Log hits for rules in log of Event Console"),
         help_text=Help(
@@ -5000,7 +5000,7 @@ ConfigVariableEventConsoleConnectTimeout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_connect_timeout",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Connect timeout to status socket of Event Console"),
         help_text=Help(
             "When the graphical user interface (GUI) connects the socket of the event daemon "
@@ -5016,7 +5016,7 @@ ConfigVariableEventConsolePrettyPrintRules = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_pprint_rules",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Pretty-Print rules in config file of Event Console"),
         label=Label("enable pretty-printing of rules"),
         help_text=Help(
@@ -5051,7 +5051,7 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_contactgroup",
-    form_spec=lambda context: SingleChoiceExtended[str](
+    form_spec=lambda context: SingleChoiceExtended[str](  # noqa: ARG005
         title=Title("Send notifications to Event Console"),
         label=Label("send notifications to contact group:"),
         help_text=Help(
@@ -5074,7 +5074,7 @@ ConfigVariableEventConsoleNotifyRemoteHost = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_remotehost",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=String(
             label=Label("Host running Event Console"),
             prefill=DefaultValue(""),
@@ -5099,7 +5099,7 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_facility",
-    form_spec=lambda context: SingleChoiceExtended[int](
+    form_spec=lambda context: SingleChoiceExtended[int](  # noqa: ARG005
         title=Title("Syslog facility for Event Console notifications"),
         help_text=Help(
             "When sending notifications from the monitoring system to the Event Console, "
@@ -5122,7 +5122,7 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_service_levels",
-    form_spec=lambda context: FSList(
+    form_spec=lambda context: FSList(  # noqa: ARG005
         element_template=FSTuple(
             elements=[
                 FSInteger(
@@ -5515,7 +5515,7 @@ ExtraServiceConfECContact = ServiceRulespec(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notification_configuration(
-    hosts: Mapping[HostName, CollectedHostAttributes],
+    hosts: Mapping[HostName, CollectedHostAttributes],  # noqa: ARG001
 ) -> None:
     contactgroup = active_config.mkeventd_notify_contactgroup
     remote_console = active_config.mkeventd_notify_remotehost

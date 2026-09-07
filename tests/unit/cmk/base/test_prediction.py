@@ -23,10 +23,10 @@ Timestamp = int
 @pytest.mark.parametrize(
     "group_by, timestamp, result",
     [
-        (_grouping._group_by_wday, 1543402800, ("wednesday", 43200)),
-        (_grouping._group_by_day, 1543402800, ("everyday", 43200)),
-        (_grouping._group_by_day_of_month, 1543402800, ("28", 43200)),
-        (_grouping._group_by_everyhour, 1543402820, ("everyhour", 20)),
+        (_grouping._group_by_wday, 1543402800, ("wednesday", 43200)),  # noqa: SLF001
+        (_grouping._group_by_day, 1543402800, ("everyday", 43200)),  # noqa: SLF001
+        (_grouping._group_by_day_of_month, 1543402800, ("28", 43200)),  # noqa: SLF001
+        (_grouping._group_by_everyhour, 1543402820, ("everyhour", 20)),  # noqa: SLF001
     ],
 )
 def test_group_by(
@@ -206,7 +206,7 @@ def approx(value_in: float) -> float:
 def test_data_stats(
     slices: list[Sequence[float | None]], result: Sequence[DataStat | None]
 ) -> None:
-    assert _prediction._data_stats(slices) == result
+    assert _prediction._data_stats(slices) == result  # noqa: SLF001
 
 
 class TestPredictionStore:

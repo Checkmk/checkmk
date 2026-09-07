@@ -41,7 +41,7 @@ class CheckParameters(TypedDict):
     check_demand: bool
 
 
-def discovery_hyperv_vm_ram(section: Section) -> DiscoveryResult:
+def discovery_hyperv_vm_ram(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

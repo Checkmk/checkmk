@@ -26,7 +26,7 @@ ConfigVariableCrashReportURL = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainGUI,
     ident="crash_report_url",
-    form_spec=lambda context: fs.String(
+    form_spec=lambda context: fs.String(  # noqa: ARG005
         title=Title("Crash report HTTP URL"),
         help_text=Help("By default, crash reports will be sent to our crash reporting server."),
         field_size=fs.FieldSize.LARGE,
@@ -38,7 +38,7 @@ ConfigVariableCrashReportTarget = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainGUI,
     ident="crash_report_target",
-    form_spec=lambda context: fs.String(
+    form_spec=lambda context: fs.String(  # noqa: ARG005
         title=Title("Crash report fallback mail address"),
         help_text=Help(
             "By default, crash reports will be sent to our crash reporting server. In case "
@@ -59,7 +59,7 @@ ConfigVariableAutomaticCrashReportUpload = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainGUI,
     ident="automatic_crash_report_upload",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         # The EmailAddress validator is what makes "enabled but no address"
         # unsaveable: it rejects the empty string.
         parameter_form=fs.String(

@@ -2115,7 +2115,8 @@ class ConfigCache:
         )
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = load_resource_cfg_macros(
-            cmk.utils.paths.nagios_resource_cfg, None if cmk.ccc.debug.enabled() else lambda x: None
+            cmk.utils.paths.nagios_resource_cfg,
+            None if cmk.ccc.debug.enabled() else lambda x: None,  # noqa: ARG005
         )
         macros = {**host_macros, **resource_macros}
         active_check_config = ActiveCheck(

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """This test module verifies the distributed monitoring setup through the GUI."""
 
 from collections.abc import Iterator
@@ -82,7 +84,8 @@ def _check_host_is_monitored_from_remote_site(
 
 @pytest.fixture(name="remote_site", scope="module")
 def fixture_remote_site(
-    request: pytest.FixtureRequest, site_factory: SiteFactory
+    request: pytest.FixtureRequest,
+    site_factory: SiteFactory,
 ) -> Iterator[Site]:
     """Return the remote Checkmk site object."""
 

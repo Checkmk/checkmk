@@ -22,12 +22,12 @@ AutocompleterFunc = Callable[[Config, str, dict[str, object]], Choices]
 class AutocompleterRegistry(Registry[AutocompleterFunc]):
     @override
     def plugin_name(self, instance: AutocompleterFunc) -> str:
-        return instance._ident  # type: ignore[attr-defined, no-any-return]
+        return instance._ident  # type: ignore[attr-defined, no-any-return]  # noqa: SLF001
 
     def register_autocompleter(self, ident: str, func: AutocompleterFunc) -> None:
         if not callable(func):
             raise TypeError
-        func._ident = ident  # type: ignore[attr-defined]
+        func._ident = ident  # type: ignore[attr-defined]  # noqa: SLF001
         self.register(func)
 
 

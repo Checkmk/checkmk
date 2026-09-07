@@ -18,7 +18,7 @@ def reraise_exception(exc: Exception) -> str:
     raise exc
 
 
-def test_run_scheduled_jobs(load_plugins: None) -> None:
+def test_run_scheduled_jobs(load_plugins: None) -> None:  # noqa: ARG001
     called = {
         "job1": 0,
         "job2": 0,
@@ -27,12 +27,12 @@ def test_run_scheduled_jobs(load_plugins: None) -> None:
     jobs = [
         CronJob[Config](
             name="job1",
-            callable=lambda config: called.update({"job1": called["job1"] + 1}),
+            callable=lambda config: called.update({"job1": called["job1"] + 1}),  # noqa: ARG005
             interval=timedelta(minutes=1),
         ),
         CronJob[Config](
             name="job2",
-            callable=lambda config: called.update({"job2": called["job2"] + 1}),
+            callable=lambda config: called.update({"job2": called["job2"] + 1}),  # noqa: ARG005
             interval=timedelta(minutes=5),
         ),
     ]
@@ -62,13 +62,13 @@ def test_run_scheduled_jobs(load_plugins: None) -> None:
     assert state.job_executions == {"job1": 3, "job2": 2}
 
 
-def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:
+def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:  # noqa: ARG001
     called = threading.Event()
     state = SchedulerState()
     jobs = [
         CronJob[Config](
             name="threaded_job",
-            callable=lambda config: called.set(),
+            callable=lambda config: called.set(),  # noqa: ARG005
             run_in_thread=True,
             interval=timedelta(minutes=5),
         ),
@@ -89,7 +89,7 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     shall_terminate = threading.Event()
     state = SchedulerState()
 
-    def _wait(config: Config) -> None:
+    def _wait(config: Config) -> None:  # noqa: ARG001
         shall_terminate.wait()
 
     jobs = [

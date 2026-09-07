@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -80,7 +82,7 @@ _AGENT_OUTPUT_2 = [
 
 @pytest.fixture(name="get_rate_zero", scope="function")
 def _get_rate_zero(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(opc, "get_rate", lambda *a, **kw: 0.0)
+    monkeypatch.setattr(opc, "get_rate", lambda *a, **kw: 0.0)  # noqa: ARG005
 
 
 @pytest.mark.parametrize(
@@ -220,7 +222,9 @@ def test_check_oracle_performance(
     ],
 )
 def test_inventorize_oracle_performance(
-    string_table: StringTable, expected_result: InventoryResult, empty_value_store: None
+    string_table: StringTable,
+    expected_result: InventoryResult,
+    empty_value_store: None,
 ) -> None:
     assert (
         list(inventorize_oracle_performance(parse_oracle_performance(string_table)))

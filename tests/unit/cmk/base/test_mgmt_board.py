@@ -106,8 +106,8 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
 def test_mgmt_config_ruleset(
     monkeypatch: MonkeyPatch,
     protocol: str,
-    cred_attribute: str,
-    credentials: str | Mapping[str, str],
+    cred_attribute: str,  # noqa: ARG001
+    credentials: str | Mapping[str, str],  # noqa: ARG001
     ruleset_credentials: str | Mapping[str, str],
 ) -> None:
     ts = Scenario()
@@ -155,10 +155,10 @@ def test_mgmt_config_ruleset(
 )
 def test_mgmt_config_ruleset_order(
     monkeypatch: MonkeyPatch,
-    protocol: str,
-    cred_attribute: str,
-    folder_credentials: str | Mapping[str, str],
-    ruleset_credentials: str | Mapping[str, str],
+    protocol: str,  # noqa: ARG001
+    cred_attribute: str,  # noqa: ARG001
+    folder_credentials: str | Mapping[str, str],  # noqa: ARG001
+    ruleset_credentials: str | Mapping[str, str],  # noqa: ARG001
 ) -> None:
     ts = Scenario()
     ts.set_ruleset(

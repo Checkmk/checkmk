@@ -64,7 +64,7 @@ class SidebarSnapin(abc.ABC):
         return default_authorized_builtin_role_ids
 
     @classmethod
-    def may_see(cls, user_permissions: UserPermissions) -> bool:
+    def may_see(cls, user_permissions: UserPermissions) -> bool:  # noqa: ARG003
         return user.may(cls.permission_name())
 
     @classmethod

@@ -37,7 +37,7 @@ def test_password_hack_apply() -> None:
             command_spec,
             PASSWORDS,
             Path("/some/path/to/store"),
-            lambda x: None,
+            lambda x: None,  # noqa: ARG005
             "log_label_smth",
         )
         == APPLIED

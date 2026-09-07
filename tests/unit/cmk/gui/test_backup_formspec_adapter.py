@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.backup.gui.formspec_adapter import FormspecAdapter
@@ -175,7 +178,8 @@ _ALL_TARGET_CONFIGS = [
     "target_config", _ALL_TARGET_CONFIGS, ids=[c["title"] for c in _ALL_TARGET_CONFIGS]
 )
 def test_target_config_round_trips_through_form_visitor(
-    request_context: None, target_config: TargetConfig
+    request_context: None,
+    target_config: TargetConfig,
 ) -> None:
     form_value = FormspecAdapter.to_form_spec(target_config)
 

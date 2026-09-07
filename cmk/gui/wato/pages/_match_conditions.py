@@ -86,7 +86,7 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, title: str, help: str) -> None:
+    def __init__(self, title: str, help: str) -> None:  # noqa: A002
         super().__init__(
             title=title, help=help, choices=lambda: folder_tree().folder_choices_fulltitle(user)
         )

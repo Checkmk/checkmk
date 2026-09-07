@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.ccc.version import Edition
@@ -22,7 +24,7 @@ def test_mode_configuration_bundle_action_crashes_when_bundle_missing(
     # POST (save), _from_vars() sets self._existing_bundle=False and returns early
     # without setting self._bundle. action() then crashes accessing self._bundle.
     request.set_var("bundle_id", "azure_config_2")
-    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda self: {})
+    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda self: {})  # noqa: ARG005
 
     # __init__ calls _from_vars(), which finds the bundle missing and returns early
     # without setting self._bundle — exactly mirroring the crash scenario.

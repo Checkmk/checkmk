@@ -628,7 +628,7 @@ class AllRulesets(RulesetCollection):
         """
         if tree is None:
             tree = folder_tree()
-        rulesets = RulesetCollection._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = AllRulesets(rulesets, tree)
         self._load_rulesets_recursively(tree.root_folder())
         return self
@@ -702,7 +702,7 @@ class SingleRulesetRecursively(RulesetCollection):
     def load_single_ruleset_recursively(
         tree: FolderTree, name: RulesetName
     ) -> SingleRulesetRecursively:
-        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
+        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)  # noqa: SLF001
         self = SingleRulesetRecursively(rulesets)
         self._load_rulesets_recursively(tree.root_folder(), only_varname=name)
         return self
@@ -720,13 +720,13 @@ class FolderRulesets(RulesetCollection):
 
     @staticmethod
     def load_folder_rulesets(folder: Folder) -> FolderRulesets:
-        rulesets = RulesetCollection._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = FolderRulesets(rulesets, folder=folder)
         self._load_folder_rulesets(folder)
         return self
 
     def save_folder(self, *, pprint_value: bool, debug: bool) -> None:
-        if RulesetCollection._save_folder(
+        if RulesetCollection._save_folder(  # noqa: SLF001
             self._folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
         ):
             update_merged_password_file(debug=debug)
@@ -2129,8 +2129,8 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         return store.load_mk_file(
             path,
             default={
-                **RulesetCollection._context_helpers(folder),
-                **RulesetCollection._prepare_empty_rulesets(),
+                **RulesetCollection._context_helpers(folder),  # noqa: SLF001
+                **RulesetCollection._prepare_empty_rulesets(),  # noqa: SLF001
             },
             lock=lock,
         )

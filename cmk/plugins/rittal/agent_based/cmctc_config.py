@@ -24,7 +24,7 @@ from cmk.plugins.rittal.lib.cmctc import DETECT_CMCTC
 # .1.3.6.1.4.1.2606.4.3.1.5.0 2
 
 
-def discover_cmctc_config(section: StringTable) -> DiscoveryResult:
+def discover_cmctc_config(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

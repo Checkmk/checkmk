@@ -475,7 +475,7 @@ def _automation_service_discovery(
 
 def _automation_special_agent_discovery_preview(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryPreviewResult:
@@ -585,7 +585,7 @@ def _automation_discovery_preview(
     fetcher = CMKFetcher(
         config_cache,
         env.host_tags,
-        get_relay_id=lambda hn: relay_id,
+        get_relay_id=lambda hn: relay_id,  # noqa: ARG005
         make_trigger=lambda relay_id: env.make_fetcher_trigger(
             relay_id, config_source=ConfigSource.PENDING
         ),
@@ -1027,7 +1027,7 @@ def _warn_service_name_conflicts(host_name: HostName, check_preview: CheckPrevie
 
 def _automation_autodiscovery(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> AutodiscoveryResult:
@@ -1041,7 +1041,7 @@ def _automation_autodiscovery(
 def _make_configured_notify_relay(
     relays_present: bool,
 ) -> Callable[[Callable[[str], object]], None]:
-    noop = lambda *a, **kw: None
+    noop = lambda *a, **kw: None  # noqa: ARG005
 
     if not relays_present:
         return noop
@@ -1440,7 +1440,7 @@ def _make_get_effective_host_of_autocheck_callback(
 # Consider changing the name back to 'set-autochecks' in 2.6
 def _automation_set_autochecks_v2(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> SetAutochecksV2Result:
@@ -1502,7 +1502,7 @@ def _automation_set_autochecks_v2(
 def _automation_update_host_labels(
     _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> UpdateHostLabelsResult:
     """Set the new collection of discovered host labels"""
@@ -1539,7 +1539,7 @@ class AutomationRenameHosts:
     def execute(
         self,
         app: CheckmkBaseApp,
-        args: list[str],
+        args: list[str],  # noqa: ARG002
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RenameHostsResult:
@@ -1575,7 +1575,7 @@ class AutomationRenameHosts:
         # it now.
         core_was_running = core.core_client.is_running()
         if core_was_running:
-            core.core_client.run(CoreAction.STOP, log=lambda x: None)
+            core.core_client.run(CoreAction.STOP, log=lambda x: None)  # noqa: ARG005
 
         try:
             for oldname, newname in renamings:
@@ -2194,7 +2194,7 @@ class AutomationAnalyseServices:
 def _automation_analyse_host(
     _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyseHostResult:
     host_name = HostName(args[0])
@@ -2214,7 +2214,7 @@ def _automation_analyse_host(
 def _automation_analyze_host_rule_matches(
     _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyzeHostRuleMatchesResult:
     host_name = HostName(args[0])
@@ -2246,7 +2246,7 @@ def _automation_analyze_host_rule_matches(
 def _automation_analyze_service_rule_matches(
     _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyzeServiceRuleMatchesResult:
     host_name = HostName(args[0])
@@ -2267,7 +2267,7 @@ def _automation_analyze_service_rule_matches(
     return AnalyzeServiceRuleMatchesResult(
         {
             rules[0]["id"]: list(
-                ruleset_matcher._get_service_ruleset_values(
+                ruleset_matcher._get_service_ruleset_values(  # noqa: SLF001
                     host_name,
                     service_or_item,
                     service_labels,
@@ -2287,8 +2287,8 @@ def _automation_analyze_service_rule_matches(
 
 def _automation_analyze_host_rule_effectiveness(
     _app: object,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> AnalyzeHostRuleEffectivenessResult:
     # We read the list of rules from stdin since it could be too much for the command line
@@ -2389,10 +2389,10 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts):
     def execute(
         self,
-        app: CheckmkBaseApp,
+        app: CheckmkBaseApp,  # noqa: ARG002
         args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: config.LoadingResult | None,  # noqa: ARG002
     ) -> DeleteHostsResult:
         self._execute(args)
         return DeleteHostsResult()
@@ -2446,10 +2446,10 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
 
     def execute(
         self,
-        app: CheckmkBaseApp,
+        app: CheckmkBaseApp,  # noqa: ARG002
         args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: config.LoadingResult | None,  # noqa: ARG002
     ) -> DeleteHostsKnownRemoteResult:
         self._execute(args)
         return DeleteHostsKnownRemoteResult()
@@ -2665,7 +2665,7 @@ def _execute_silently(
 
 def _automation_get_configuration(
     _app: object,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> GetConfigurationResult:
@@ -2693,10 +2693,10 @@ def _automation_get_configuration(
 
 
 def _automation_get_check_information(
-    app: CheckmkBaseApp,
-    args: list[str],
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> GetCheckInformationResult:
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
@@ -2739,10 +2739,10 @@ def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: Chec
 
 
 def _automation_get_section_information(
-    app: CheckmkBaseApp,
-    args: object,
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: object,  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> GetSectionInformationResult:
     plugins = plugins or load_plugins()
     section_infos = {
@@ -2813,7 +2813,7 @@ def _automation_scan_parents(
         raise MKAutomationError("%s" % e)
 
 
-def _disabled_ip_lookup(host_name: object, family: object = None) -> None:
+def _disabled_ip_lookup(host_name: object, family: object = None) -> None:  # noqa: ARG001
     # TODO: this adds the restriction of only being able to use NO_IP hosts for now. When having an
     #  implementation for IP hosts, without using the config_cache, this restriction can be removed.
 
@@ -2871,10 +2871,10 @@ def get_special_agent_commandline(
 
 
 def _automation_diag_special_agent(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
+    loading_result: config.LoadingResult | None,  # noqa: ARG001
 ) -> DiagSpecialAgentResult:
     diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
     return DiagSpecialAgentResult(
@@ -2952,10 +2952,10 @@ def _execute_diag_special_agent(
 
 
 def _automation_ping_host(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loaded_config: config.LoadingResult | None,
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
+    loaded_config: config.LoadingResult | None,  # noqa: ARG001
 ) -> PingHostResult:
     ping_host_input = PingHostInput.deserialize(sys.stdin.read())
     return PingHostResult(*_execute_ping(ping_host_input.ip_or_dns_name, ping_host_input.base_cmd))
@@ -2995,8 +2995,8 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
 
 
 def _automation_diag_cmk_agent(
-    app: CheckmkBaseApp,
-    args: list[str],
+    app: CheckmkBaseApp,  # noqa: ARG001
+    args: list[str],  # noqa: ARG001
     _plugins: AgentBasedPlugins | None,
     _loading_result: config.LoadingResult | None,
 ) -> DiagCmkAgentResult:
@@ -3090,7 +3090,7 @@ def _automation_diag_cmk_agent(
 
 def _automation_diag_snmp(
     _app: object,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     _plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> DiagSnmpResult:
@@ -3714,7 +3714,7 @@ class AutomationActiveCheck:
         ip_address_of = ip_lookup.ConfiguredIPLookup(
             ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
             allow_empty=env.hosts_config.clusters,
-            error_handler=lambda *a, **kw: None,
+            error_handler=lambda *a, **kw: None,  # noqa: ARG005
         )
 
         if plugin == "custom":
@@ -3811,7 +3811,7 @@ class AutomationActiveCheck:
         macros.update(
             config.load_resource_cfg_macros(
                 cmk.utils.paths.nagios_resource_cfg,
-                None if cmk.ccc.debug.enabled() else lambda x: None,
+                None if cmk.ccc.debug.enabled() else lambda x: None,  # noqa: ARG005
             )
         )
 
@@ -3854,8 +3854,8 @@ class AutomationActiveCheck:
 
 def _automation_update_passwords_merged_file(
     _app: object,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
+    args: list[str],  # noqa: ARG001
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
     loading_result = loading_result or load_config()
@@ -3868,7 +3868,7 @@ def _automation_update_passwords_merged_file(
 
 def _automation_update_dns_cache(
     app: CheckmkBaseApp,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> UpdateDNSCacheResult:
@@ -4149,7 +4149,7 @@ def _automation_get_agent_output(
 
 def _automation_find_unknown_check_parameter_rule_sets(
     _app: object,
-    args: list[str],
+    args: list[str],  # noqa: ARG001
     plugins: AgentBasedPlugins | None,
     loaded_config: config.LoadingResult | None,
 ) -> UnknownCheckParameterRuleSetsResult:

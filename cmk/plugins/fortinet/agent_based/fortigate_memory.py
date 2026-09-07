@@ -35,7 +35,7 @@ def parse_fortigate_memory(string_table: StringTable) -> Section | None:
         return None
 
 
-def discover_fortigate_memory(section: Section) -> DiscoveryResult:
+def discover_fortigate_memory(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

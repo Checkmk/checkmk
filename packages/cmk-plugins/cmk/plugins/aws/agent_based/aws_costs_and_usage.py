@@ -63,7 +63,9 @@ def discover_aws_costs_and_usage_summary(section: Section) -> DiscoveryResult:
 
 
 def check_aws_costs_and_usage_summary(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str,  # noqa: ARG001
+    params: Mapping[str, Any],
+    section: Section,
 ) -> CheckResult:
     amounts_by_metrics: dict[tuple[str, str, str, str], float] = collections.defaultdict(float)
     for (timeperiod, _service_name), metrics in section.items():

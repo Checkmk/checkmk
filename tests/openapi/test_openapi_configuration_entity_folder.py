@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import os
 import shutil
 from collections.abc import Iterator
@@ -36,7 +39,9 @@ def _noop_pending_changes() -> PendingChanges:
 
 @pytest.fixture(autouse=True)
 def create_folder_test_environment(
-    with_admin_login: None, load_config: None, clients: ClientRegistry
+    with_admin_login: None,
+    load_config: None,
+    clients: ClientRegistry,
 ) -> Iterator[None]:
     tree = folder_tree()
     tree.invalidate_caches()

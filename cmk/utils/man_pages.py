@@ -344,7 +344,7 @@ def make_man_page_path_map(
     return {
         name: Path(dir, name)
         for source in reversed(families_man_paths)
-        for dir, _subdirs, files in os.walk(source)
+        for dir, _subdirs, files in os.walk(source)  # noqa: A001
         for name in files
         if _is_valid_basename(name) and os.path.realpath(Path(dir, name)) not in blocked_paths
     }

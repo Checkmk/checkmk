@@ -57,11 +57,11 @@ class _DummyAutomationResult(ABCAutomationResult):
 class _DummyAutomationEngineSuccess:
     def execute(
         self,
-        app: CheckmkBaseApp,
-        cmd: str,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: LoadingResult | None,
+        app: CheckmkBaseApp,  # noqa: ARG002
+        cmd: str,  # noqa: ARG002
+        args: list[str],  # noqa: ARG002
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> _DummyAutomationResult:
         sys.stdout.write("stdout_success")
         sys.stderr.write("stderr_success")
@@ -71,11 +71,11 @@ class _DummyAutomationEngineSuccess:
 class _DummyAutomationEngineFailure:
     def execute(
         self,
-        app: CheckmkBaseApp,
-        cmd: str,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: LoadingResult | None,
+        app: CheckmkBaseApp,  # noqa: ARG002
+        cmd: str,  # noqa: ARG002
+        args: list[str],  # noqa: ARG002
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> AutomationError:
         sys.stdout.write("stdout_failure")
         sys.stderr.write("stderr_failure")
@@ -85,11 +85,11 @@ class _DummyAutomationEngineFailure:
 class _DummyAutomationEngineSystemExit:
     def execute(
         self,
-        app: CheckmkBaseApp,
-        cmd: str,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: LoadingResult | None,
+        app: CheckmkBaseApp,  # noqa: ARG002
+        cmd: str,  # noqa: ARG002
+        args: list[str],  # noqa: ARG002
+        plugins: AgentBasedPlugins | None,  # noqa: ARG002
+        loading_result: LoadingResult | None,  # noqa: ARG002
     ) -> AutomationError:
         sys.stdout.write("stdout_system_exit")
         sys.stderr.write("stderr_system_exit")
@@ -144,7 +144,7 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        lambda config_cache, hosts_config: None,
+        lambda config_cache, hosts_config: None,  # noqa: ARG005
         reloader_config=ReloaderConfig(
             active=True,
             poll_interval=0.0,
@@ -279,7 +279,7 @@ def test_health_check(cache: Cache) -> None:
                 builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
             ),
         ),
-        lambda config_cache, hosts_config: None,
+        lambda config_cache, hosts_config: None,  # noqa: ARG005
     ) as client:
         resp = client.get("/health")
 
@@ -490,7 +490,7 @@ def test_automation_cache_error_on_stale_config() -> None:
                 builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
             ),
         ),
-        lambda config_cache, hosts_config: None,
+        lambda config_cache, hosts_config: None,  # noqa: ARG005
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 

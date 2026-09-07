@@ -61,7 +61,7 @@ STRING_TABLE_WITH_BAILOUT: StringTable = [
 )
 def test_parse_azure_agent_info(
     string_table: StringTable,
-    monitored_resources: list[str],
+    monitored_resources: list[str],  # noqa: ARG001
     issues: dict[str, list[dict[str, str]]],
     agent_bailouts: list[tuple[int, str]],
 ) -> None:

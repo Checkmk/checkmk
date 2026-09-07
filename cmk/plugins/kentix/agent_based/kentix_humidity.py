@@ -41,7 +41,7 @@ def parse_kentix_humidity(string_table: Sequence[StringTable]) -> Section | None
     )
 
 
-def discover_kentix_humidity(section: Section) -> DiscoveryResult:
+def discover_kentix_humidity(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

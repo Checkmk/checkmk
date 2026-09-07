@@ -103,12 +103,16 @@ def test_phase_reraises_when_debug(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_fetch_sections_continues_when_one_section_raises(
-    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    capsys: pytest.CaptureFixture[str],  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     redfishobj = _make_redfishobj()
 
     def fake_fetch_data(
-        _client: Any, url: str, _component: object, timeout: int | None = None
+        _client: Any,
+        url: str,
+        _component: object,
+        timeout: int | None = None,  # noqa: ARG001
     ) -> Any:
         if "Memory" in url:
             raise RuntimeError("Memory endpoint blew up")
@@ -144,7 +148,10 @@ def test_fetch_list_of_elements_continues_when_one_section_raises(
     redfishobj = _make_redfishobj()
 
     def fake_fetch_data(
-        _client: Any, url: str, _component: object, timeout: int | None = None
+        _client: Any,
+        url: str,
+        _component: object,
+        timeout: int | None = None,  # noqa: ARG001
     ) -> Any:
         if "drive" in url.lower():
             raise RuntimeError("Drive endpoint blew up")

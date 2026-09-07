@@ -158,7 +158,8 @@ def run_piggyback_hub(
         return 0
 
     signal.signal(
-        signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM"))
+        signal.SIGTERM,
+        lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM")),  # noqa: ARG005
     )
 
     # All processes should run forever. Die if either finishes.
@@ -175,7 +176,7 @@ def main(
     argv: list[str],
     *,
     crash_report_callback: Callable[[], str] = lambda: "No crash report created",
-    invalid_hostname_callback: Callable[[HostNameValidationError], None] = lambda e: None,
+    invalid_hostname_callback: Callable[[HostNameValidationError], None] = lambda e: None,  # noqa: ARG005
 ) -> int:
     # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
     # "forkserver", see

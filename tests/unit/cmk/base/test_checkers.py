@@ -54,7 +54,7 @@ def test_predictive_otel_metrics_hack_gate_covers_both_otel_plugins() -> None:
     assert (
         CheckPluginName("otel_metrics"),
         CheckPluginName("otel_azure_metrics"),
-    ) == checkers._PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK
+    ) == checkers._PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK  # noqa: SLF001
 
 
 def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_metric_and_direction() -> (
@@ -73,7 +73,7 @@ def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_m
         )
     }
 
-    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
 
     assert result == {
         "metrics": (
@@ -118,7 +118,7 @@ def test_special_processing_hack_for_predictive_otel_metrics_defaults_missing_le
         )
     }
 
-    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
 
     assert result == {
         "metrics": (
@@ -157,7 +157,7 @@ def test_special_processing_hack_for_predictive_otel_metrics_defaults_missing_le
         )
     }
 
-    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
 
     assert result == {
         "metrics": (
@@ -198,7 +198,7 @@ def test_special_processing_hack_for_predictive_otel_metrics_multiple_metrics_mi
         )
     }
 
-    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
 
     assert result == {
         "metrics": (
@@ -265,7 +265,7 @@ def test_aggregate_result(
     subresults: FinalCheckResult, aggregated_results: ServiceCheckResult
 ) -> None:
     assert (
-        checkers._aggregate_results(checkers._consume_check_results(subresults))
+        checkers._aggregate_results(checkers._consume_check_results(subresults))  # noqa: SLF001
         == aggregated_results
     )
 
@@ -273,12 +273,12 @@ def test_aggregate_result(
 def test_config_cache_get_clustered_service_node_keys_no_cluster() -> None:
     # empty, we have no cluster:
     assert (
-        checkers._get_clustered_service_node_keys(
+        checkers._get_clustered_service_node_keys(  # noqa: SLF001
             HostName("cluster.test"),
             SourceType.HOST,
             make_service("Test Service"),
             cluster_nodes=(),
-            get_effective_host=lambda hn, *args, **kw: hn,
+            get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
         )
         == []
     )
@@ -289,12 +289,12 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service() -> No
 
     # empty for a node:
     assert (
-        checkers._get_clustered_service_node_keys(
+        checkers._get_clustered_service_node_keys(  # noqa: SLF001
             HostName("node1.test"),
             SourceType.HOST,
             make_service("Test Service"),
             cluster_nodes=(),
-            get_effective_host=lambda hn, *args, **kw: hn,
+            get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
         )
         == []
     )
@@ -303,12 +303,12 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service() -> No
     assert [
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
-    ] == checkers._get_clustered_service_node_keys(
+    ] == checkers._get_clustered_service_node_keys(  # noqa: SLF001
         cluster_test,
         SourceType.HOST,
         make_service("Test Service"),
         cluster_nodes=[HostName("node1.test"), HostName("node2.test")],
-        get_effective_host=lambda hn, *args, **kw: hn,
+        get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
     )
 
 
@@ -317,12 +317,12 @@ def test_config_cache_get_clustered_service_node_keys_clustered() -> None:
     node2 = HostName("node2.test")
     cluster = HostName("cluster.test")
 
-    assert checkers._get_clustered_service_node_keys(
+    assert checkers._get_clustered_service_node_keys(  # noqa: SLF001
         cluster,
         SourceType.HOST,
         make_service("Test Service"),
         cluster_nodes=[node1, node2],
-        get_effective_host=lambda hn, *args, **kw: hn,
+        get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
     ) == [
         HostKey(node1, SourceType.HOST),
         HostKey(node2, SourceType.HOST),
@@ -330,12 +330,12 @@ def test_config_cache_get_clustered_service_node_keys_clustered() -> None:
     assert [
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
-    ] == checkers._get_clustered_service_node_keys(
+    ] == checkers._get_clustered_service_node_keys(  # noqa: SLF001
         cluster,
         SourceType.HOST,
         make_service("Test Unclustered"),
         cluster_nodes=[node1, node2],
-        get_effective_host=lambda hn, *args, **kw: hn,
+        get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
     )
 
 
@@ -509,7 +509,7 @@ def test_is_preview_injection() -> None:
 
 
 def test_consume_check_results_clamps_inf_levels() -> None:
-    _, perfdata, _ = checkers._consume_check_results(
+    _, perfdata, _ = checkers._consume_check_results(  # noqa: SLF001
         [MetricV3Unstable("m", 1.0, levels=(float("inf"), float("-inf")))]
     )
     assert len(perfdata) == 1
@@ -518,7 +518,7 @@ def test_consume_check_results_clamps_inf_levels() -> None:
 
 
 def test_consume_check_results_clamps_inf_lower_levels() -> None:
-    _, perfdata, _ = checkers._consume_check_results(
+    _, perfdata, _ = checkers._consume_check_results(  # noqa: SLF001
         [
             MetricV3Unstable(
                 "m",

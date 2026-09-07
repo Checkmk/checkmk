@@ -265,7 +265,7 @@ _FAKE_DNS_OPTION = Option(
 
 def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
     if _fake_dns is not None:
-        return lambda hn, family: _fake_dns
+        return lambda hn, family: _fake_dns  # noqa: ARG005
     if _enforce_localhost:
         return ip_lookup.local_ip_for
     return None
@@ -573,7 +573,7 @@ def _get_ds_type(
     return _DSType.AGENT_SNMP
 
 
-def _mode_list_checks(app: CheckmkBaseApp) -> None:
+def _mode_list_checks(app: CheckmkBaseApp) -> None:  # noqa: ARG001
     from cmk.utils import man_pages
 
     plugins = load_checks()
@@ -1064,7 +1064,7 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
     return omd_root / "local/share/snmp/mibs"
 
 
-def _mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:
+def _mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:  # noqa: ARG001
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
@@ -1622,7 +1622,7 @@ mode_nagios_config = Mode(
 def _make_configured_notify_relay(
     relays_present: bool,
 ) -> Callable[[Callable[[str], object]], None]:
-    noop = lambda *a, **kw: None
+    noop = lambda *a, **kw: None  # noqa: ARG005
 
     if not relays_present:
         return noop
@@ -1982,7 +1982,7 @@ mode_reload = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) -> None:
+def _mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) -> None:  # noqa: ARG001
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -2053,7 +2053,7 @@ mode_man = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_browse_man(app: CheckmkBaseApp) -> None:
+def _mode_browse_man(app: CheckmkBaseApp) -> None:  # noqa: ARG001
     from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(

@@ -124,7 +124,7 @@ agent_section_netapp_ontap_fc_interfaces_counters = AgentSection(
 
 def discovery_netapp_ontap_fcp(
     section_netapp_ontap_fc_ports: FcPortsSection | None,
-    section_netapp_ontap_fc_interfaces_counters: FcInterfacesCountersSection | None,
+    section_netapp_ontap_fc_interfaces_counters: FcInterfacesCountersSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_netapp_ontap_fc_ports:
         return
@@ -244,7 +244,9 @@ def _io_bytes_results(
 
 
 def _io_ops_results(
-    item: str, params: Mapping[str, Any], fcp_if: Mapping[str, int | float]
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    fcp_if: Mapping[str, int | float],
 ) -> CheckResult:
     now = fcp_if["now"]
     value_store = get_value_store()

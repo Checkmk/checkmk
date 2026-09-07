@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import time
 
@@ -93,7 +95,9 @@ SECTION_DOMINO_TASKS_DATA = (
     ],
 )
 def test_check_domino_tasks(
-    params: Parameters, expected_result: CheckResult, empty_value_store: None
+    params: Parameters,
+    expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     result = check_domino_tasks("mock_item", params, SECTION_DOMINO_TASKS_DATA, None)
     assert list(result) == expected_result

@@ -377,7 +377,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         self,
         filter_header: str,
         only_sites: list[SiteId] | None,
-        limit: int | None,
+        limit: int | None,  # noqa: ARG002
         host_columns: list,
         bygroup: bool,
         required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],

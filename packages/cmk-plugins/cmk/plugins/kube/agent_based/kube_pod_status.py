@@ -96,9 +96,9 @@ def _container_status_details(containers: Sequence[ContainerStatus]) -> CheckRes
 
 
 def discovery_kube_pod_status(
-    section_kube_pod_containers: PodContainers | None,
-    section_kube_pod_init_containers: PodContainers | None,
-    section_kube_pod_lifecycle: PodLifeCycle | None,
+    section_kube_pod_containers: PodContainers | None,  # noqa: ARG001
+    section_kube_pod_init_containers: PodContainers | None,  # noqa: ARG001
+    section_kube_pod_lifecycle: PodLifeCycle | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

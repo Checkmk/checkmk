@@ -74,7 +74,7 @@ def test_filter_usable_entries_with_permission(test_store: PredefinedConditionSt
 def test_filter_usable_entries_owned_and_shared(
     test_store: PredefinedConditionStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1", "group2"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1", "group2"])  # noqa: ARG005
     assert set(test_store.filter_usable_entries(test_store.load_for_reading(), _user())) == {
         "owned",
         "shared",
@@ -84,7 +84,7 @@ def test_filter_usable_entries_owned_and_shared(
 def test_filter_usable_entries_shared_but_not_owned(
     test_store: PredefinedConditionStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])  # noqa: ARG005
     assert set(test_store.filter_usable_entries(test_store.load_for_reading(), _user())) == {
         "shared"
     }
@@ -93,7 +93,7 @@ def test_filter_usable_entries_shared_but_not_owned(
 def test_filter_usable_entries_no_matching_group(
     test_store: PredefinedConditionStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group42"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group42"])  # noqa: ARG005
     assert test_store.filter_usable_entries(test_store.load_for_reading(), _user()) == {}
 
 
@@ -108,7 +108,7 @@ def test_filter_editable_entries_with_permission(test_store: PredefinedCondition
 def test_filter_editable_entries_owned_by_user_group(
     test_store: PredefinedConditionStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])  # noqa: ARG005
     assert set(test_store.filter_editable_entries(test_store.load_for_reading(), _user())) == {
         "owned"
     }
@@ -117,5 +117,5 @@ def test_filter_editable_entries_owned_by_user_group(
 def test_filter_editable_entries_excludes_shared_only(
     test_store: PredefinedConditionStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])  # noqa: ARG005
     assert test_store.filter_editable_entries(test_store.load_for_reading(), _user()) == {}

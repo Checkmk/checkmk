@@ -21,9 +21,9 @@ from cmk.web.utils.urls import makeuri, makeuri_contextless
 def _render_wato_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
     icon_config: IconConfig,
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     def may_see_hosts() -> bool:
@@ -60,7 +60,7 @@ def _wato_link(
     folder: str, hostname: str, where: Literal["edithost", "inventory"]
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     if display_options.enabled(display_options.X):
-        vars: HTTPVariables = [
+        vars: HTTPVariables = [  # noqa: A001
             ("folder", folder),
             ("host", hostname),
         ]
@@ -82,8 +82,8 @@ def _render_download_agent_output_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
 
@@ -102,8 +102,8 @@ def _render_download_snmp_walk_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
 
@@ -121,7 +121,7 @@ def _paint_download_host_info(
     what: Literal["host", "service"],
     row: Row,
     tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
+    custom_vars: Mapping[str, str],  # noqa: ARG001
     ty: Literal["agent", "walk"],
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     if (

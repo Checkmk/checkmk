@@ -11,7 +11,9 @@ from cmk.gui.utils.roles import UserPermissions
 
 
 def verify_requirements(
-    user_permissions: UserPermissions, permission: str, wato_enabled: bool
+    user_permissions: UserPermissions,  # noqa: ARG001
+    permission: str,
+    wato_enabled: bool,
 ) -> None:
     if not user.id:
         raise MKUserError(None, _("Not logged in."))

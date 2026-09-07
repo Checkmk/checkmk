@@ -401,14 +401,14 @@ def test_state_load(
 
     # In case the file is not created yet, read should not raise
     state = lw.State(file_path).read()
-    assert not state._data
+    assert not state._data  # noqa: SLF001
 
     with open(file_path, "wb") as f:
         f.write(state_data.encode("utf-8"))
 
     # loading and __getitem__
     state = lw.State(file_path).read()
-    assert state._data == state_dict
+    assert state._data == state_dict  # noqa: SLF001
     for expected_data in state_dict.values():
         key = expected_data['file']
         assert isinstance(key, str)
@@ -441,7 +441,7 @@ def test_state_write(tmpdir: str | bytes, state_dict: Mapping[str, Mapping[str, 
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
     state = lw.State(file_path)
-    assert not state._data
+    assert not state._data  # noqa: SLF001
 
     # writing
     for data in state_dict.values():
@@ -454,7 +454,7 @@ def test_state_write(tmpdir: str | bytes, state_dict: Mapping[str, Mapping[str, 
     state.write()
 
     read_state = lw.State(file_path).read()
-    assert read_state._data == state_dict
+    assert read_state._data == state_dict  # noqa: SLF001
 
 
 STAR_FILES = [
@@ -546,7 +546,7 @@ def test_log_lines_iter_encoding(
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
     with lw.LogLinesIter('void', None) as log_iter:
-        assert log_iter._enc == encoding
+        assert log_iter._enc == encoding  # noqa: SLF001
         assert log_iter.get_position() == position
 
 
@@ -625,7 +625,7 @@ def _latin_1_encoding():
     ],
 )
 def test_non_ascii_line_processing(  # type: ignore[misc]
-    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result
+    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result  # noqa: ARG001
 ):
     # Write test logfile first
     log_path = os.path.join(str(tmpdir), "testlog")
@@ -635,7 +635,7 @@ def test_non_ascii_line_processing(  # type: ignore[misc]
     # Now test processing
     with lw.LogLinesIter(log_path, None) as log_iter:
         if use_specific_encoding:
-            log_iter._enc = use_specific_encoding
+            log_iter._enc = use_specific_encoding  # noqa: SLF001
 
         result = []
         while True:
@@ -769,7 +769,7 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expecte
     # we want to test utf-8 file, so please
     if os.name == "nt":
         section.options.values.update({"encoding": "utf-8"})
-    section._compiled_patterns = patterns
+    section._compiled_patterns = patterns  # noqa: SLF001
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     header, warning_and_errors = lw.process_logfile(section, state, False)
@@ -797,7 +797,7 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expecte
 def test_filter_maxcontextlines(
     input_lines: list[str], before: int, after: int, expected_output: list[str]
 ) -> None:
-    assert expected_output == list(lw._filter_maxcontextlines(input_lines, before, after))
+    assert expected_output == list(lw._filter_maxcontextlines(input_lines, before, after))  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -825,7 +825,7 @@ def test_filter_maxcontextlines(
 def test_filter_consecutive_duplicates(
     input_lines: Sequence[str], nocontext: bool, expected_output: Sequence[str]
 ) -> None:
-    assert expected_output == list(lw._filter_consecutive_duplicates(input_lines, nocontext))
+    assert expected_output == list(lw._filter_consecutive_duplicates(input_lines, nocontext))  # noqa: SLF001
 
 
 @pytest.fixture
@@ -911,14 +911,14 @@ def _get_file_info(tmp_path, file_name):
     return lw.get_file_info(os.path.join(str(tmp_path), "root", file_name))
 
 
-def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
+def test_get_uniq_id_one_file(fake_filesystem, tmpdir):  # noqa: ARG001
     file_id, sz = _get_file_info(tmpdir, "file.log")
     assert file_id > 1
     assert sz == 0
     assert (file_id, sz) == _get_file_info(tmpdir, "file.log")
 
 
-def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
+def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):  # noqa: ARG001
     info = [
         _get_file_info(tmpdir, f)
         for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log")

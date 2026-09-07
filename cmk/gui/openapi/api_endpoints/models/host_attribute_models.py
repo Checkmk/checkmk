@@ -228,7 +228,7 @@ class BaseHostAttributeModel:
     )
 
     waiting_for_discovery: bool | ApiOmitted = api_field(
-        description=HostAttributeWaitingForDiscovery()._help_text(),
+        description=HostAttributeWaitingForDiscovery()._help_text(),  # noqa: SLF001
         default_factory=ApiOmitted,
     )
 

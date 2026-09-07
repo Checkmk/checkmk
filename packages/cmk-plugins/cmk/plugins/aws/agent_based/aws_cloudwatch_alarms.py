@@ -31,7 +31,7 @@ _AWS_CLOUDWATCH_ALARM_TEXTS: Final[Mapping[str, str]] = {
 }
 
 
-def discover_aws_cloudwatch_alarms(section: GenericAWSSection) -> DiscoveryResult:
+def discover_aws_cloudwatch_alarms(section: GenericAWSSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

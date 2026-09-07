@@ -65,7 +65,7 @@ class FakeELBClient:
         )
         return {"TagDescriptions": [lb for lb in lbs if lb["LoadBalancerName"] in tagged_lbs]}
 
-    def describe_instance_health(self, LoadBalancerName: str | None = None) -> Mapping[str, object]:
+    def describe_instance_health(self, LoadBalancerName: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {"InstanceStates": ELBDescribeInstanceHealthIB.create_instances(amount=1)}
 
     def get_paginator(self, operation_name: str) -> Paginator:
@@ -175,8 +175,8 @@ def test_agent_aws_elb_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, _elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
     elb_limits_results = elb_limits.run().results
@@ -198,7 +198,7 @@ def test_agent_aws_elb_summary(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
@@ -223,7 +223,7 @@ def test_agent_aws_elb_labels(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
     found_instances_with_labels: Sequence[str],
 ) -> None:
     elb_limits, elb_summary, elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
@@ -245,7 +245,7 @@ def test_agent_aws_elb_health(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, elb_summary, _elb_labels, elb_health, _elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
@@ -266,7 +266,7 @@ def test_agent_aws_elb(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
@@ -289,7 +289,7 @@ def test_agent_aws_elb_summary_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     _elb_limits, elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
     elb_summary_results = elb_summary.run().results
@@ -313,7 +313,7 @@ def test_agent_aws_elb_labels_without_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
     found_instances_with_labels: Sequence[str],
 ) -> None:
     _elb_limits, elb_summary, elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
@@ -334,7 +334,7 @@ def test_agent_aws_elb_health_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     _elb_limits, elb_summary, _elb_labels, elb_health, _elb = get_elb_sections(names, tags)
     _elb_summary_results = elb_summary.run().results
@@ -354,7 +354,7 @@ def test_agent_aws_elb_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     _elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections(names, tags)
     _elb_summary_results = elb_summary.run().results

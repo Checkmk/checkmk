@@ -202,7 +202,7 @@ def test_bulk_import_csv_parsing(
 
     # Mock here is pretty unavoidable because of the use of nested function definitions
     with mock.patch("cmk.gui.wato.pages.bulk_import.ModeBulkImport._delete_csv_file"):
-        mode_bulk_import._import(
+        mode_bulk_import._import(  # noqa: SLF001
             folder_tree(),
             csv_bulk_import,
             host_attributes,
@@ -417,7 +417,7 @@ def test_host_rows_to_bulk_exceptions(
 def test_determine_dialect(sample: str, delimiter: str, expected_delimeter: str) -> None:
     handle = StringIO(sample)
     assert (
-        CSVBulkImport(handle=handle, has_title_line=False, delimiter=delimiter)._dialect.delimiter
+        CSVBulkImport(handle=handle, has_title_line=False, delimiter=delimiter)._dialect.delimiter  # noqa: SLF001
         == expected_delimeter
     )
 

@@ -33,7 +33,7 @@ agent_section_mongodb_asserts = AgentSection(
 )
 
 
-def discover_mongodb_asserts(section: Mapping[str, int]) -> DiscoveryResult:
+def discover_mongodb_asserts(section: Mapping[str, int]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 from unittest import mock
 
@@ -59,7 +61,8 @@ def test_oauth2_connection_setup_to_disk(
 
 
 def test_oauth2_connection_setup_to_vue(
-    request_context: None, with_user: tuple[UserId, str]
+    request_context: None,
+    with_user: tuple[UserId, str],
 ) -> None:
     user_id = with_user[0]
     with UserContext(user_id, UserPermissions({}, {}, {}, [])):

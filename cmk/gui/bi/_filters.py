@@ -99,7 +99,7 @@ def register(filter_registry: FilterRegistry) -> None:
             info="service",
             query_filter=query_filters.TristateQuery(
                 ident="aggr_service_used",
-                filter_code=lambda x: "",
+                filter_code=lambda x: "",  # noqa: ARG005
                 filter_row=bi_aggr_service_used,
             ),
             is_show_more=True,

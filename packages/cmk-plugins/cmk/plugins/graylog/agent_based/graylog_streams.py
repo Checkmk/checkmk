@@ -95,7 +95,7 @@ def parse_graylog_streams(string_table: StringTable) -> Section:
     return section
 
 
-def discovery_graylog_streams(section: Section) -> DiscoveryResult:
+def discovery_graylog_streams(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

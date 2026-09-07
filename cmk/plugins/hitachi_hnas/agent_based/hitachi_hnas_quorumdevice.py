@@ -32,7 +32,7 @@ def parse_hitachi_hnas_quorumdevice(string_table: StringTable) -> StringTable | 
     return string_table or None
 
 
-def discover_hitachi_hnas_quorumdevice(section: StringTable) -> DiscoveryResult:
+def discover_hitachi_hnas_quorumdevice(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

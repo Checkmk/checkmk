@@ -230,7 +230,7 @@ def discover_aws_ec2_disk_io(section: Section) -> DiscoveryResult:
 
 
 def check_aws_ec2_disk_io(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:

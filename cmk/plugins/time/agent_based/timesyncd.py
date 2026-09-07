@@ -186,7 +186,7 @@ def _fixed_levels(levels: NoLevelsT | FixedLevelsT[float] | None) -> tuple[float
 
 def discover_timesyncd(
     section_timesyncd: Section | None,
-    section_timesyncd_ntpmessage: NTPMessageSection | None,
+    section_timesyncd_ntpmessage: NTPMessageSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_timesyncd:
         yield Service()

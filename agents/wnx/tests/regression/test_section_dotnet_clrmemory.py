@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -65,7 +67,11 @@ def expected_output_engine():
 
 
 def test_section_dotnet_clrmemory(
-    request, testconfig, expected_output, actual_output, testfile
+    request,
+    testconfig,
+    expected_output,
+    actual_output,
+    testfile,
 ) -> None:
     # special case wmi may timeout
     required_lines = 5

@@ -92,8 +92,8 @@ def api_field(
     discriminator: str | None = None,
     deprecated: bool = False,
     init: bool = True,
-    repr: bool = True,
-    hash: bool | None = None,
+    repr: bool = True,  # noqa: A002
+    hash: bool | None = None,  # noqa: A002
     compare: bool = True,
     kw_only: bool | None = None,
     additional_metadata: Mapping[str, object] | None = None,

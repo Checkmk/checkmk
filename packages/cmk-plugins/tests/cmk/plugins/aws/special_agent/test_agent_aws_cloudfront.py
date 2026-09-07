@@ -197,7 +197,7 @@ TAGGING_PAGINATOR_RESULT = {
 
 
 class Paginator:
-    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
         yield PAGINATOR_RESULT
 
 
@@ -209,7 +209,7 @@ class FakeCloudFrontClient:
 
 
 class TaggingPaginator:
-    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
         yield TAGGING_PAGINATOR_RESULT
 
 

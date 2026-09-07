@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -50,7 +52,7 @@ def patch_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         ABCConfigDomain,
         "get_all_default_globals",
         classmethod(
-            lambda cls: {
+            lambda cls: {  # noqa: ARG005
                 **get_config_domain(GUI).default_globals(),
                 **get_config_domain("ec").default_globals(),
             }
@@ -128,14 +130,14 @@ def _register_variable(
     monkeypatch.setattr(
         ABCConfigDomain,
         "get_all_default_globals",
-        classmethod(lambda cls: {**defaults, varname: default}),
+        classmethod(lambda cls: {**defaults, varname: default}),  # noqa: ARG005
     )
     config_variable_registry.register(
         ConfigVariable(
             group=ConfigVariableGroupUserInterface,
             primary_domain=domain,
             ident=varname,
-            form_spec=lambda context: form_spec,
+            form_spec=lambda context: form_spec,  # noqa: ARG005
         )
     )
     yield varname

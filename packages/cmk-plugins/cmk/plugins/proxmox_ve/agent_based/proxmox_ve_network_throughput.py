@@ -42,7 +42,7 @@ def parse_proxmox_ve_network_throughput(string_table: StringTable) -> Section:
     )
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

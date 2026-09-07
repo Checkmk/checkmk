@@ -209,7 +209,7 @@ def user_exists_according_to_profile(username: UserId) -> bool:
     return base_path.joinpath("transids.mk").exists() or base_path.joinpath("serial.mk").exists()
 
 
-def is_customer_user_allowed_to_login(user_id: UserId, user_spec: UserSpec) -> bool:
+def is_customer_user_allowed_to_login(user_id: UserId, user_spec: UserSpec) -> bool:  # noqa: ARG001
     if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.ULTIMATEMT:
         return True
 
@@ -226,5 +226,5 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
     )
 
 
-def user_locked(user_id: UserId, user_spec: UserSpec) -> bool:
+def user_locked(user_id: UserId, user_spec: UserSpec) -> bool:  # noqa: ARG001
     return user_spec["locked"]

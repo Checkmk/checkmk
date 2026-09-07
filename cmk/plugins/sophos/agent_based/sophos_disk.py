@@ -32,7 +32,7 @@ def parse_sophos_disk(string_table: StringTable) -> int | None:
         return None
 
 
-def discover_sophos_disk(section: int) -> DiscoveryResult:
+def discover_sophos_disk(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

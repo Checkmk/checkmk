@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
 class OpenshiftElement:
     def __call__(
         self,
-        tcp_timeouts: Dictionary,
+        tcp_timeouts: Dictionary,  # noqa: ARG002
     ) -> Iterable[CascadingSingleChoiceElement[Mapping[str, object]]]:
         return ()
 

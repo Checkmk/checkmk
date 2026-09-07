@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import os
 from pathlib import Path
 
@@ -327,10 +329,10 @@ def test_load_tree(
     request_context: None,
 ) -> None:
     monkeypatch.setattr(
-        cmk.gui.inventory._tree,
+        cmk.gui.inventory._tree,  # noqa: SLF001
         "_load_tree_from_file",
         (
-            lambda *args, **kw: (
+            lambda *args, **kw: (  # noqa: ARG005
                 deserialize_tree({"loaded": "tree"})
                 if kw["tree_type"] == "status_data"
                 else ImmutableTree()
@@ -561,7 +563,8 @@ def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
 
 
 def test_load_latest_delta_tree_no_archive_and_inv_tree(
-    tmp_path: Path, request_context: None
+    tmp_path: Path,
+    request_context: None,
 ) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")

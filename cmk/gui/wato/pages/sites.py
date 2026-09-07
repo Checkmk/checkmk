@@ -548,7 +548,7 @@ class ModeEditSite(WatoMode):
             headers.append((_("User configuration"), list(user_config.keys())))
         return create_flat_catalog_from_dictionary(spec, headers=headers)
 
-    def _basic_elements(self, config: Config) -> dict[str, DictElement]:
+    def _basic_elements(self, config: Config) -> dict[str, DictElement]:  # noqa: ARG002
         if self._new:
             id_form_spec: FixedValue | String = String(
                 title=Title("Site ID"),
@@ -1627,7 +1627,11 @@ class ModeDistributedMonitoring(WatoMode):
         table.cell(_("Accepting peer"), connection.connectee.site_id)
 
     def _show_basic_settings(
-        self, table: Table, site_id: SiteId, site: SiteConfiguration, config: Config
+        self,
+        table: Table,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        config: Config,  # noqa: ARG002
     ) -> None:
         table.cell(_("ID"), site_id)
         table.cell(_("Alias"), site.get("alias", ""))
@@ -1645,7 +1649,10 @@ class ModeDistributedMonitoring(WatoMode):
         )
 
     def _show_status_connection_status(
-        self, table: Table, site_id: SiteId, site: SiteConfiguration
+        self,
+        table: Table,
+        site_id: SiteId,
+        site: SiteConfiguration,  # noqa: ARG002
     ) -> None:
         table.cell("")
 
@@ -1668,7 +1675,10 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
     def _show_config_connection_config(
-        self, table: Table, site_id: SiteId, site: SiteConfiguration
+        self,
+        table: Table,
+        site_id: SiteId,  # noqa: ARG002
+        site: SiteConfiguration,
     ) -> None:
         table.cell(_("Configuration connection"))
         if not is_replication_enabled(site):

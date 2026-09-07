@@ -36,20 +36,23 @@ class FakeWAFV2Client:
     def __init__(self) -> None:
         self._web_acls = WAFV2GetWebACLIB.create_instances(amount=3)
 
-    def list_web_acls(self, Scope: str | None = None) -> Mapping[str, object]:
+    def list_web_acls(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {"WebACLs": WAFV2ListOperationIB.create_instances(amount=3)}
 
-    def list_rule_groups(self, Scope: str | None = None) -> Mapping[str, object]:
+    def list_rule_groups(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {"RuleGroups": WAFV2ListOperationIB.create_instances(amount=4)}
 
-    def list_ip_sets(self, Scope: str | None = None) -> Mapping[str, object]:
+    def list_ip_sets(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {"IPSets": WAFV2ListOperationIB.create_instances(amount=5)}
 
-    def list_regex_pattern_sets(self, Scope: str | None = None) -> Mapping[str, object]:
+    def list_regex_pattern_sets(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {"RegexPatternSets": WAFV2ListOperationIB.create_instances(amount=6)}
 
     def get_web_acl(
-        self, Name: str | None = None, Scope: str | None = None, Id: str | None = None
+        self,
+        Name: str | None = None,
+        Scope: str | None = None,  # noqa: ARG002
+        Id: str | None = None,  # noqa: ARG002
     ) -> Mapping[str, object]:
         assert Name is not None
         idx = int(Name[-1])
@@ -246,7 +249,7 @@ def test_agent_aws_wafv2_limits(
     get_wafv2_sections: CreateWafv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_limits(wafv2_sections)

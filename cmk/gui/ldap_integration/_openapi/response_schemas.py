@@ -576,7 +576,7 @@ class LDAPGroupsToRoles(LDAPCheckbox):
         result_data: dict[str, Any],
         original_data: dict[str, Any],
         *,
-        many: bool = False,
+        many: bool = False,  # noqa: ARG002
     ) -> dict[str, Any]:
         for field in self.fields:
             original_data.pop(field, None)
@@ -595,7 +595,7 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 class LDAPSyncPlugins(BaseSchema):
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     @pre_dump
-    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         data["mega_menu_icons"] = data.get("main_menu_icons")
         return data
 
@@ -697,7 +697,7 @@ class LDAPSyncPlugins(BaseSchema):
         result_data: dict[str, Any],
         original_data: dict[str, Any],
         *,
-        many: bool = False,
+        many: bool = False,  # noqa: ARG002
     ) -> dict[str, Any]:
         for field in self.fields:
             original_data.pop(field, None)

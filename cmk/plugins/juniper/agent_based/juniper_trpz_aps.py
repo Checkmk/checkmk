@@ -30,7 +30,7 @@ def parse_juniper_trpz_aps(string_table: Sequence[StringTable]) -> Section | Non
     return (int(string_table[0][0][0]), int(string_table[0][0][1])) if string_table[0] else None
 
 
-def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:
+def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

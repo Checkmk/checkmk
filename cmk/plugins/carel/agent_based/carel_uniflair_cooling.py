@@ -32,7 +32,7 @@ from cmk.agent_based.v2 import (
 DETECT_NEVER = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
 
 
-def discover_carel_uniflair_cooling(section: StringTable) -> DiscoveryResult:
+def discover_carel_uniflair_cooling(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

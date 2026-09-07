@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -225,7 +227,11 @@ def verify_eventstate():
 # disabled tests
 @pytest.mark.usefixtures("no_statefile")
 def test_section_eventlog__no_statefile__no_events(  # type: ignore[misc]
-    request, testconfig, expected_output_no_events, actual_output, testfile
+    request,
+    testconfig,
+    expected_output_no_events,
+    actual_output,
+    testfile,
 ):
     # request.node.name gives test name
     local_test(expected_output_no_events, actual_output, testfile, request.node.name)
@@ -233,7 +239,11 @@ def test_section_eventlog__no_statefile__no_events(  # type: ignore[misc]
 
 @pytest.mark.usefixtures("with_statefile", "create_events")
 def test_section_eventlog__application_warnings(  # type: ignore[misc]
-    request, testconfig, expected_output_application_events, actual_output, testfile
+    request,
+    testconfig,
+    expected_output_application_events,
+    actual_output,
+    testfile,
 ):
     # request.node.name gives test name
     local_test(expected_output_application_events, actual_output, testfile, request.node.name)

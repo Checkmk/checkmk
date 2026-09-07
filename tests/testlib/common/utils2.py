@@ -192,7 +192,7 @@ def spawn_expect_process(
                     if counter >= dialog.count >= 1:
                         # max count reached
                         break
-            if p.isalive():
+            if p.isalive():  # noqa: SIM108
                 rc = p.expect(pexpect.EOF, timeout=timeout)
             else:
                 rc = p.status  # type: ignore[assignment]

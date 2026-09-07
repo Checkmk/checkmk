@@ -38,7 +38,7 @@ def parse_gerrit_version(string_table: StringTable) -> VersionInfo | None:
             return None
 
 
-def discover_gerrit_version(section: VersionInfo | None) -> DiscoveryResult:
+def discover_gerrit_version(section: VersionInfo | None) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

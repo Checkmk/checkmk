@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """Tests for the snap-ins that list visuals: views and dashboards."""
 
 # mypy: disable-error-code="explicit-any"
@@ -34,10 +36,11 @@ USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -114,7 +117,7 @@ def test_view_menu_items_skips_the_hardcoded_pages_without_the_permission(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: False)
+        m.setattr(user, "may", lambda x: False)  # noqa: ARG005
         m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_views", dict)
         m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_dashboards", dict)
         items = view_menu_items(USER_PERMISSIONS)
@@ -207,7 +210,7 @@ def test_dashboard_menu_items_are_grouped_into_topics(monkeypatch: pytest.Monkey
             "cmk.gui.sidebar._snapin._dashboards.get_permitted_dashboards",
             lambda: {"main": _visual("main", "Main dashboard")},
         )
-        topics = Dashboards()._get_dashboard_menu_items(USER_PERMISSIONS)
+        topics = Dashboards()._get_dashboard_menu_items(USER_PERMISSIONS)  # noqa: SLF001
 
     assert "main" in {entry.id for topic in topics for entry in topic.entries}
 

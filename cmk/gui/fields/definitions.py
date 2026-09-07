@@ -214,7 +214,7 @@ class FolderField(base.String):
         if folder_id == "/":
             folder = tree.root_folder()
         elif _ishexdigit(folder_id):
-            folder = tree._by_id(folder_id)
+            folder = tree._by_id(folder_id)  # noqa: SLF001
         else:
             folder_id = cls._normalize_folder(folder_id)
             folder = tree.folder(folder_id[1:])
@@ -586,12 +586,12 @@ class HostField(base.String):
 
         if host:
             try:
-                host._user_needs_permission("read", user)
+                host._user_needs_permission("read", user)  # noqa: SLF001
             except MKAuthException:
                 raise self.make_error("not_found_or_no_permission", host_name=host.name())
 
             if self._permission_type == "setup_write":
-                host._user_needs_permission("write", user)
+                host._user_needs_permission("write", user)  # noqa: SLF001
 
     @override
     def _deserialize(

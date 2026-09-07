@@ -302,7 +302,7 @@ def test_password_from_html_vars_not_set() -> None:
 )
 def test_default_value_in_cascading_dropdown(  # type: ignore[misc]
     choices,
-    default_value,
+    default_value,  # noqa: ARG001
     expected_default,
 ):
     assert vs.CascadingDropdown(choices=choices).default_value() == expected_default
@@ -333,7 +333,7 @@ def test_default_value_in_cascading_dropdown(  # type: ignore[misc]
 )
 def test_canonical_value_in_cascading_dropdown(  # type: ignore[misc]
     choices,
-    default_value,
+    default_value,  # noqa: ARG001
     expected_canonical,
 ):
     assert vs.CascadingDropdown(choices=choices).canonical_value() == expected_canonical

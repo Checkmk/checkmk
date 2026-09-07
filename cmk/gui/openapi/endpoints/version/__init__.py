@@ -28,7 +28,7 @@ from cmk.utils import paths
     method="get",
     response_schema=InstalledVersions,
 )
-def search(params: Mapping[str, object]) -> Response:
+def search(params: Mapping[str, object]) -> Response:  # noqa: ARG001
     """Display some version information"""
     if request.args.get("fail"):
         raise Exception("This is an intentional failure.")

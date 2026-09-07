@@ -68,7 +68,7 @@ def acme_sbc_parse_function(string_table: StringTable) -> Section:
     return states, settings
 
 
-def discover_acme_sbc(section: Section) -> DiscoveryResult:
+def discover_acme_sbc(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

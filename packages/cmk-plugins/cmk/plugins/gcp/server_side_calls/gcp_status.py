@@ -16,7 +16,7 @@ class _Params(BaseModel, frozen=True):
 
 def _commands_function(
     params: _Params,
-    host_config: HostConfig,
+    host_config: HostConfig,  # noqa: ARG001
 ) -> Iterable[SpecialAgentCommand]:
     yield SpecialAgentCommand(
         command_arguments=[region.replace("_", "-") for region in params.regions]

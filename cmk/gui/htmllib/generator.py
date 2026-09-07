@@ -237,21 +237,21 @@ class HTMLWriter:
     def render_message(
         self,
         msg: HTML | str,
-        flashed: bool = False,
+        flashed: bool = False,  # noqa: ARG002
     ) -> HTML:
         return self._render_message(msg, "message")
 
     def render_error(
         self,
         msg: HTML | str,
-        flashed: bool = False,
+        flashed: bool = False,  # noqa: ARG002
     ) -> HTML:
         return self._render_message(msg, "error")
 
     def render_warning(
         self,
         msg: HTML | str,
-        flashed: bool = False,
+        flashed: bool = False,  # noqa: ARG002
     ) -> HTML:
         return self._render_message(msg, "warning")
 

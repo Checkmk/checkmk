@@ -50,7 +50,7 @@ def parse_bazel_cache_go(string_table: StringTable) -> Section:
     }
 
 
-def discover_bazel_cache(section: Section) -> DiscoveryResult:
+def discover_bazel_cache(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

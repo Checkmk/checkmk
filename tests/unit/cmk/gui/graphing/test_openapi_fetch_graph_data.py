@@ -257,7 +257,7 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,
+            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {

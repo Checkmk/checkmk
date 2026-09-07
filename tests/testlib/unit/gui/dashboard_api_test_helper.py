@@ -88,7 +88,9 @@ def check_widget_create(
 
 class TestProblemGraphContent:
     def test_create(
-        self, clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,  # noqa: ARG002
     ) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
@@ -104,7 +106,9 @@ class TestProblemGraphContent:
 
 class TestCombinedGraphContent:
     def test_create(
-        self, clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,  # noqa: ARG002
     ) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
@@ -122,7 +126,9 @@ class TestCombinedGraphContent:
 
 class TestSingleTimeseriesContent:
     def test_create(
-        self, clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,  # noqa: ARG002
     ) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.

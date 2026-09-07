@@ -54,7 +54,7 @@ snmp_section_cisco_ucs_psu = SimpleSNMPSection(
 
 def discover_cisco_ucs_psu(
     section_cisco_ucs_psu: Mapping[str, PSUModule] | None,
-    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_cisco_ucs_psu:
         return

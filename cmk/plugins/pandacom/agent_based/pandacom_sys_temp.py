@@ -21,11 +21,11 @@ def parse_pandacom_sys_temp(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_pandacom_sys_temp(section: StringTable) -> DiscoveryResult:
+def discover_pandacom_sys_temp(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="System")
 
 
-def check_pandacom_sys_temp(item: str, params: TempParamDict, section: StringTable) -> CheckResult:
+def check_pandacom_sys_temp(item: str, params: TempParamDict, section: StringTable) -> CheckResult:  # noqa: ARG001
     yield from check_temperature(int(section[0][0]), params)
 
 

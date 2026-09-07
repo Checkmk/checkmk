@@ -206,7 +206,7 @@ def confirmed_form_submit_options(
     message: str | HTML | None = None,
     confirm_text: str | None = None,
     cancel_text: str | None = None,
-    icon: str | None = None,
+    icon: str | None = None,  # noqa: ARG001
     warning: bool = False,
 ) -> dict[str, str | dict[str, str]]:
     return {
@@ -831,7 +831,7 @@ class SuggestedEntryRenderer:
             target=item.link.target,
         )
 
-    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             entry,
             url="javascript:void(0)",
@@ -894,7 +894,7 @@ class ShortcutRenderer:
             target=item.link.target,
         )
 
-    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             entry,
             url="javascript:void(0)",
@@ -969,7 +969,7 @@ class DropdownEntryRenderer:
 
         self._show_link(url=url, onclick=onclick, target=item.link.target, icon=icon, title=title)
 
-    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             url="javascript:void(0)",
             onclick="cmk.page_menu.toggle_popup(%s)" % json.dumps("popup_%s" % entry.name),

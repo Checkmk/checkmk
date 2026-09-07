@@ -45,11 +45,11 @@ snmp_section_emc_isilon_ifs = SimpleSNMPSection(
 )
 
 
-def discover_emc_isilon_ifs(section: FSBlock) -> DiscoveryResult:
+def discover_emc_isilon_ifs(section: FSBlock) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Cluster")
 
 
-def check_emc_isilon_ifs(item: str, params: Mapping[str, Any], section: FSBlock) -> CheckResult:
+def check_emc_isilon_ifs(item: str, params: Mapping[str, Any], section: FSBlock) -> CheckResult:  # noqa: ARG001
     yield from df_check_filesystem_list(get_value_store(), "ifs", params, [section])
 
 

@@ -40,10 +40,10 @@ class _FakeHandler:
         self._may_see = may_see
         self._visible = visible
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return self._may_see
 
-    def get_visibility_check(self, category: str) -> Callable[[str], bool]:
+    def get_visibility_check(self, category: str) -> Callable[[str], bool]:  # noqa: ARG002
         return lambda _url: self._visible
 
 

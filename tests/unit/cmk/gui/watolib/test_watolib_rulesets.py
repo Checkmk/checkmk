@@ -74,7 +74,7 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
         num_hosts=0,
         hosts=None,
     )
-    root_folder._subfolders["sub"] = sub_folder
+    root_folder._subfolders["sub"] = sub_folder  # noqa: SLF001
     tree.all_folders = lambda: {"": root_folder, "sub": sub_folder}  # type: ignore[method-assign]
     ruleset.append_rule(
         folder=root_folder,
@@ -117,7 +117,7 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
     ["callback"],
     [
         pytest.param(None, id="Successful hook call"),
-        pytest.param(lambda *args, **kwargs: 1 / 0, id="Exception in hook call"),
+        pytest.param(lambda *args, **kwargs: 1 / 0, id="Exception in hook call"),  # noqa: ARG005
     ],
 )
 @pytest.mark.usefixtures("request_context")

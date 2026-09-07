@@ -204,7 +204,7 @@ def _check_auth_by_custom_http_header(config: Config) -> UserId | None:
     return None
 
 
-def _check_auth_by_remote_user(config: Config) -> UserId | None:
+def _check_auth_by_remote_user(config: Config) -> UserId | None:  # noqa: ARG001
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
@@ -372,7 +372,7 @@ def _is_oauth_shaped(token: str) -> bool:
     return " " not in token and looks_like_token(token)
 
 
-def _check_auth_by_oauth_token(config: Config) -> Credential | None:
+def _check_auth_by_oauth_token(config: Config) -> Credential | None:  # noqa: ARG001
     """Authenticate via an OAuth-issued access token in the Bearer header.
 
     Returns:
@@ -422,7 +422,7 @@ def _check_auth_by_bearer_header(config: Config) -> UserId | None:
     )
 
 
-def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:
+def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:  # noqa: ARG001
     if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith(
         "InternalToken "
     ):

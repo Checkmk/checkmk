@@ -97,7 +97,9 @@ class TestEffectiveAuthenticationConnections:
     """
 
     def test_central_site_uses_its_own_value_not_the_propagated_global(
-        self, set_config: SetConfig, request_context: None
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         per_site = [_saml_entry("per_site_saml")]
         with set_config(authentication_connections=[_saml_entry("global_saml")]):
@@ -109,10 +111,14 @@ class TestEffectiveAuthenticationConnections:
             )
 
     def test_remote_site_uses_the_propagated_global(
-        self, set_config: SetConfig, request_context: None, monkeypatch: pytest.MonkeyPatch
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(
-            "cmk.gui.userdb._connections.is_distributed_setup_remote_site", lambda sites: True
+            "cmk.gui.userdb._connections.is_distributed_setup_remote_site",
+            lambda sites: True,  # noqa: ARG005
         )
         propagated = [_saml_entry("propagated_saml")]
         with set_config(authentication_connections=propagated):
@@ -124,16 +130,22 @@ class TestEffectiveAuthenticationConnections:
             )
 
     def test_remote_site_without_propagated_value_resolves_to_empty_list(
-        self, set_config: SetConfig, request_context: None, monkeypatch: pytest.MonkeyPatch
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(
-            "cmk.gui.userdb._connections.is_distributed_setup_remote_site", lambda sites: True
+            "cmk.gui.userdb._connections.is_distributed_setup_remote_site",
+            lambda sites: True,  # noqa: ARG005
         )
         with set_config(authentication_connections=None):
             assert effective_authentication_connections(_site_config()) == []
 
     def test_explicitly_disabled_site_authenticates_against_nothing(
-        self, set_config: SetConfig, request_context: None
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         with set_config(user_connections=[_ldap_connection("my_ldap")]):
             assert (
@@ -175,7 +187,9 @@ class TestResolvedAuthenticationConnections:
         )
 
     def test_absent_key_falls_back_to_all_available_connections(
-        self, set_config: SetConfig, request_context: None
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         with set_config(user_connections=[_ldap_connection("my_ldap")]):
             assert resolved_authentication_connections(_site_config()) == [("ldap", "my_ldap")]
@@ -189,7 +203,9 @@ class TestGetSamlConnectionsForCurrentSite:
         monkeypatch.setattr("cmk.gui.userdb._connections.omd_site", lambda: _CENTRAL_SITE)
 
     def test_empty_when_site_has_no_saml_entries(
-        self, set_config: SetConfig, request_context: None
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         with set_config(
             sites={_CENTRAL_SITE: _site_config(authentication_connections=[])},
@@ -198,7 +214,9 @@ class TestGetSamlConnectionsForCurrentSite:
             assert get_saml_connections_for_current_site() == {}
 
     def test_returns_referenced_enabled_saml_connection(
-        self, set_config: SetConfig, request_context: None
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         saml = _saml_connection("my_saml")
         with set_config(
@@ -210,7 +228,9 @@ class TestGetSamlConnectionsForCurrentSite:
             assert get_saml_connections_for_current_site() == {"my_saml": saml}
 
     def test_disabled_connection_is_not_returned(
-        self, set_config: SetConfig, request_context: None
+        self,
+        set_config: SetConfig,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         with set_config(
             sites={
@@ -234,7 +254,8 @@ class TestLoginPageSsoButtonGating:
         monkeypatch.setattr("cmk.gui.userdb._connections.omd_site", lambda: _CENTRAL_SITE)
 
     def test_login_page_renders_no_sso_button_when_no_connections(
-        self, request_context: None
+        self,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         with output_funnel.plugged():
             show_saml2_login([], None, "index.py")
@@ -244,7 +265,8 @@ class TestLoginPageSsoButtonGating:
         assert "login_separator" not in rendered
 
     def test_login_page_renders_sso_button_for_assigned_connection(
-        self, request_context: None
+        self,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         saml = _saml_connection("my_saml")
 

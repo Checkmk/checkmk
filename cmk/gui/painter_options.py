@@ -29,7 +29,7 @@ from cmk.gui.view_utils import CellSpec
 _GRAPH_TIME_OPTION_NAMES: Final[Sequence[str]] = ["pnp_timerange", "refresh"]
 
 
-def register(painter_option_registry_: PainterOptionRegistry) -> None:
+def register(painter_option_registry_: PainterOptionRegistry) -> None:  # noqa: ARG001
     painter_option_registry.register(PainterOptionRefresh())
     painter_option_registry.register(PainterOptionNumColumns())
 

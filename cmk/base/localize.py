@@ -32,7 +32,7 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:
+def _mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:  # noqa: ARG001
     do_localize(args)
 
 

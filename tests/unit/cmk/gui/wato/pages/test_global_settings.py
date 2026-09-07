@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import json
 from collections.abc import Iterable
 from typing import override
@@ -64,7 +66,7 @@ def test_match_item_generator_settings(
         group=group,
         primary_domain=ConfigDomainCore,
         ident="ident",
-        valuespec=lambda context: TextInput(title="title"),
+        valuespec=lambda context: TextInput(title="title"),  # noqa: ARG005
     )
 
     class SomeSettingsMode(DefaultModeEditGlobals):
@@ -113,7 +115,7 @@ def test_match_item_generator_settings_looks_through_transform(
         group=group,
         primary_domain=ConfigDomainCore,
         ident="ident",
-        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
             wrapped_form_spec=Integer(title=Title("Wrapped title")),
             from_disk=lambda value: value,
             to_disk=lambda value: value,
@@ -150,7 +152,7 @@ def test_parse_submitted_value_keeps_cleartext_password_for_storage(
             group=ConfigVariableGroupUserInterface,
             primary_domain=ConfigDomainGUI,
             ident="test_secret",
-            form_spec=lambda context: Password(title=Title("Secret")),
+            form_spec=lambda context: Password(title=Title("Secret")),  # noqa: ARG005
         )
     )
     monkeypatch.setattr(global_settings, "config_variable_registry", registry)
@@ -159,7 +161,7 @@ def test_parse_submitted_value_keeps_cleartext_password_for_storage(
     # PasswordVisitor frontend model: (type, password_id, password, encrypted)
     request.set_var("_vue_global_settings", json.dumps(["explicit_password", "", "hunter2", False]))
 
-    submitted = global_settings.ModeEditGlobalSetting(
+    submitted = global_settings.ModeEditGlobalSetting(  # noqa: SLF001
         test_edition, PageContext(config=Config(), request=request)
     )._parse_submitted_value()
 
@@ -221,7 +223,7 @@ def _valuespec_config_variable() -> ConfigVariable:
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
-        valuespec=lambda context: TextInput(),
+        valuespec=lambda context: TextInput(),  # noqa: ARG005
     )
 
 
@@ -230,7 +232,7 @@ def _form_spec_config_variable() -> ConfigVariable:
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
-        form_spec=lambda context: Integer(),
+        form_spec=lambda context: Integer(),  # noqa: ARG005
     )
 
 
@@ -297,7 +299,7 @@ def test_diff_text_valuespec_secret_is_redacted(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
-        valuespec=lambda context: PasswordValuespec(),
+        valuespec=lambda context: PasswordValuespec(),  # noqa: ARG005
     )
     diff_text = global_settings_diff_text(
         config_variable,
@@ -317,7 +319,7 @@ def test_diff_text_form_spec_secret_is_redacted(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
-        form_spec=lambda context: SimplePassword(),
+        form_spec=lambda context: SimplePassword(),  # noqa: ARG005
     )
     diff_text = global_settings_diff_text(
         config_variable,

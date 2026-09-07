@@ -71,7 +71,7 @@ def parse_cisco_asa_failover(string_table: StringTable) -> Section | None:
         return None
 
 
-def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:
+def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -6524,7 +6524,11 @@ class AbstractColumnSpecificMetric(Painter):
         )
 
     def _render(
-        self, row: Row, cell: Cell, perf_data_entries: str, check_command: str
+        self,
+        row: Row,  # noqa: ARG002
+        cell: Cell,
+        perf_data_entries: str,
+        check_command: str,
     ) -> tuple[str, str]:
         parameters = cell.painter_parameters()
         assert parameters is not None

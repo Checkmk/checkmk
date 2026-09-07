@@ -111,7 +111,7 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
 
     @override
     def registration_hook(self, instance: Permission) -> None:
-        instance._sort_index = self._index_counter
+        instance._sort_index = self._index_counter  # noqa: SLF001
         self._index_counter += 1
 
     def get_sorted_permissions(self, section: PermissionSection) -> list[Permission]:

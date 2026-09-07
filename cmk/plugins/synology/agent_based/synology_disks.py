@@ -90,7 +90,7 @@ def get_data_or_go_stale(item: str, section: Section) -> Disk:
     raise IgnoreResultsError("Data not present at the moment")
 
 
-def check_synology_disks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_synology_disks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     disk = get_data_or_go_stale(item, section)
     temperature_result = list(
         temperature.check_temperature(

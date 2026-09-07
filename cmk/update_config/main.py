@@ -88,7 +88,9 @@ def main(
 
 
 def main_update_config(
-    edition: Edition, logger: logging.Logger, conflict: ConflictMode
+    edition: Edition,
+    logger: logging.Logger,
+    conflict: ConflictMode,  # noqa: ARG001
 ) -> Literal[0, 1]:
     _load_plugins(edition, logger)
 
@@ -251,7 +253,7 @@ def _load_pre_plugins(edition: Edition) -> None:
 # TODO(sk): check_config can't raise exception(raise is an reaction on check, i.e. 2 in 1):
 # change name assert_config or ensure_valid_config for example
 # or change logic
-def check_config(edition: Edition, logger: logging.Logger, conflict_mode: ConflictMode) -> None:
+def check_config(edition: Edition, logger: logging.Logger, conflict_mode: ConflictMode) -> None:  # noqa: ARG001
     """Raise exception on failure"""
     pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(pre_update_actions)
@@ -276,7 +278,7 @@ def check_config(edition: Edition, logger: logging.Logger, conflict_mode: Confli
     logger.info("Done (%(green)ssuccess%(normal)s)\n", {"green": tty.green, "normal": tty.normal})
 
 
-def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
+def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:  # noqa: ARG001
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -374,7 +376,7 @@ class ForbiddenPendingChangeWriteError(RuntimeError):
 def _forbid_pending_change_writes() -> Iterator[None]:
     original_append = PendingChangesStore.append
 
-    def _raise(self: PendingChangesStore, site_id: SiteId, entry: ChangeSpec) -> None:
+    def _raise(self: PendingChangesStore, site_id: SiteId, entry: ChangeSpec) -> None:  # noqa: ARG001
         raise ForbiddenPendingChangeWriteError(
             "Update config actions must use a NoopPendingChangesStore to not record any change."
         )

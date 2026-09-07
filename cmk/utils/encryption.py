@@ -79,7 +79,7 @@ def fetch_certificate_details(
             valid_from=str(cmk_cert.not_valid_before),
             valid_till=str(cmk_cert.not_valid_after),
             signature_algorithm=algo.name
-            if (algo := cmk_cert._cert.signature_hash_algorithm)
+            if (algo := cmk_cert._cert.signature_hash_algorithm)  # noqa: SLF001
             else "Unknown signature algorithm",
             digest_sha256=cmk_cert.show_fingerprint(),
             serial_number=cmk_cert.serial_number,

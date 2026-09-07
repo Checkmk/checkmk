@@ -40,7 +40,7 @@ snmp_section_infoblox_dhcp_stats = SimpleSNMPSection(
 )
 
 
-def discover_infoblox_dhcp_stats(section: StringTable) -> DiscoveryResult:
+def discover_infoblox_dhcp_stats(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from typing import cast
 
 import pytest
@@ -36,7 +38,7 @@ def test_host_hierarchy_breadcrumb_stops_at_host_without_service_context(
     )
 
     assert (
-        view_breadcrumbs._host_hierarchy_breadcrumb(_single_service_view_without_service_context())
+        view_breadcrumbs._host_hierarchy_breadcrumb(_single_service_view_without_service_context())  # noqa: SLF001
         == HOST_BREADCRUMB
     )
 
@@ -48,7 +50,8 @@ ALLHOSTS_VIEW_SPEC = cast(
 
 
 def test_make_host_breadcrumb_without_permission_for_the_host_view(
-    monkeypatch: pytest.MonkeyPatch, request_context: None
+    monkeypatch: pytest.MonkeyPatch,
+    request_context: None,
 ) -> None:
     # The user may see the host list, but not the host home page view
     monkeypatch.setattr(

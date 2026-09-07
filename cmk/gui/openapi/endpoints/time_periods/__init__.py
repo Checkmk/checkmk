@@ -260,7 +260,7 @@ def show_time_period(params: Mapping[str, Any]) -> Response:
     response_schema=TimePeriodResponseCollection,
     permissions_required=PERMISSIONS,
 )
-def list_time_periods(params: Mapping[str, Any]) -> Response:
+def list_time_periods(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all time periods"""
     user.need_permission("wato.timeperiods")
     return serve_json(

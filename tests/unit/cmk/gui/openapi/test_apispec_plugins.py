@@ -84,7 +84,7 @@ class MovieSchema(Schema):
     year = fields.Integer(required=True)
 
     @post_load
-    def make_movie(self, data, **kwargs):  # type: ignore[misc]
+    def make_movie(self, data, **kwargs):  # type: ignore[misc]  # noqa: ARG002
         return Movie(**data)
 
 

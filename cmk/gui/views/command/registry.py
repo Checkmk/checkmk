@@ -34,7 +34,7 @@ def register_legacy_command(spec: dict[str, Any]) -> None:
             permission=permission_registry[spec["permission"]],
             tables=spec["tables"],
             render=spec["render"],
-            action=lambda command, cmdtag, cmd_spec, row, row_index, action_rows: spec["action"](
+            action=lambda command, cmdtag, cmd_spec, row, row_index, action_rows: spec["action"](  # noqa: ARG005
                 cmdtag, cmd_spec, row
             ),
             group=command_group_registry[spec.get("group", "various")],

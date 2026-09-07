@@ -33,7 +33,7 @@ def parse_qmail_stats(string_table: StringTable) -> Queue | None:
     return Queue(int(raw_length))
 
 
-def discover_qmail_stats(section: Queue) -> DiscoveryResult:
+def discover_qmail_stats(section: Queue) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

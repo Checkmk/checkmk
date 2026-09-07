@@ -145,7 +145,7 @@ def _host_label_function_test_labels(section: Mapping[str, str]) -> HostLabelGen
         yield _APIHostLabel(name, value)
 
 
-def _no_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
+def _no_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:  # noqa: ARG001
     yield from ()
 
 
@@ -184,7 +184,7 @@ _TEST_LABELS_SECTION = AgentSectionPlugin(
 )
 
 
-def _check_function_unused(*args: object, **kw: object) -> FinalCheckResult:
+def _check_function_unused(*args: object, **kw: object) -> FinalCheckResult:  # noqa: ARG001
     yield from ()
 
 
@@ -830,7 +830,7 @@ def test__get_post_discovery_services(
             grouped_services,
             service_filters,
             result,
-            get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+            get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
             settings=DiscoverySettings.from_vs(mode),
             keep_clustered_vanished_services=True,
         ).values()
@@ -877,7 +877,7 @@ def test__get_post_discovery_services_drops_ignored_from_autochecks() -> None:
         services_by_transition,
         ServiceFilters.accept_all(),
         result,
-        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
         settings=DiscoverySettings(
             update_host_labels=True,
             add_new_services=True,
@@ -1386,7 +1386,7 @@ def test__check_service_table(
         services_by_transition=grouped_services,
         params=parameters,
         service_filters=ServiceFilters.from_settings(rediscovery_parameters),
-        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
         discovery_mode=discovery_mode,
     )
 
@@ -1516,7 +1516,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                         }
                     ),
                     host_name=HostName("test_node"),
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     SectionName("agent_only"): _trivial("agent_only"),
@@ -1535,7 +1535,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                         }
                     ),
                     host_name=HostName("test_node"),
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     SectionName("shared"): _trivial("shared"),
@@ -1653,34 +1653,34 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     fetcher = CMKFetcher(
         config_cache,
         loading_result.host_tags,
-        get_relay_id=lambda hn: None,
-        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),
+        get_relay_id=lambda hn: None,  # noqa: ARG005
+        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),  # noqa: ARG005
         source_config=config_cache.make_source_config(
             config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
+            ip_lookup=lambda *a: HostAddress(""),  # noqa: ARG005
             service_name_config=service_name_config,
-            enforced_services_table=lambda hn: {},
+            enforced_services_table=lambda hn: {},  # noqa: ARG005
             snmp_fetcher_config=SNMPFetcherConfig(
                 on_error=OnError.RAISE,
-                missing_sys_description=lambda host_name: False,
+                missing_sys_description=lambda host_name: False,  # noqa: ARG005
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 base_path=Path("/"),
                 relative_stored_walk_path=Path("dev/null"),
                 relative_walk_cache_path=Path("dev/null"),
                 relative_section_cache_path=Path("dev/null"),
-                caching_config=lambda host_name: {},
+                caching_config=lambda host_name: {},  # noqa: ARG005
             ),
         ),
         plugins=plugins,
         clusters=loading_result.hosts_config.clusters,
-        default_address_family=lambda *a: socket.AddressFamily.AF_INET,
+        default_address_family=lambda *a: socket.AddressFamily.AF_INET,  # noqa: ARG005
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,
-        ip_address_of=lambda *a: HostAddress(""),
-        ip_address_of_mandatory=lambda *a: HostAddress(""),
-        ip_address_of_mgmt=lambda *a: HostAddress(""),
+        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,  # noqa: ARG005
+        ip_address_of=lambda *a: HostAddress(""),  # noqa: ARG005
+        ip_address_of_mandatory=lambda *a: HostAddress(""),  # noqa: ARG005
+        ip_address_of_mgmt=lambda *a: HostAddress(""),  # noqa: ARG005
         mode=Mode.DISCOVERY,
         simulation_mode=True,
         secrets_config_relay=AdHocSecrets(
@@ -1699,7 +1699,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(_TEST_AGENT_SECTIONS),
-        section_error_handling=lambda *args, **kw: "error",
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
         host_label_plugins=HostLabelPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
             sections=_TEST_AGENT_SECTIONS,
@@ -1755,19 +1755,19 @@ class _CommandlineAutochecksConfig:
         self._ignored_services = ignored_services
         self._ignored_plugins = ignored_plugins
 
-    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:
+    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:  # noqa: ARG002
         return plugin_name in self._ignored_plugins
 
     def ignore_service(self, host_name: HostName, entry: AutocheckEntry) -> bool:
         return self.service_description(host_name, entry) in self._ignored_services
 
-    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:  # noqa: ARG002
         return host_name
 
-    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:  # noqa: ARG002
         return f"{entry.check_plugin_name} {entry.item}"
 
-    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
 
 
@@ -1786,7 +1786,7 @@ def _test_discovery_plugin() -> DiscoveryPlugin:
     return DiscoveryPlugin(
         sections=[_TEST_PARSED_NAME],
         function=discover,
-        parameters=lambda host_name: None,
+        parameters=lambda host_name: None,  # noqa: ARG005
     )
 
 
@@ -1802,7 +1802,7 @@ def _test_providers(host_name: HostName, rows: StringTable) -> Mapping[HostKey, 
                     sections={_TEST_SECTION_NAME: rows}
                 ),
                 host_name=host_name,
-                error_handling=lambda *args, **kw: "error",
+                error_handling=lambda *args, **kw: "error",  # noqa: ARG005
             ),
             section_plugins={_TEST_SECTION_NAME: _section_plugin(_TEST_SECTION)},
         )
@@ -2019,7 +2019,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                         }
                     ),
                     host_name=hostname,
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2082,7 +2082,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         }
                     ),
                     host_name=node1_hostname,
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2100,7 +2100,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         }
                     ),
                     host_name=node2_hostname,
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2480,19 +2480,19 @@ def test__perform_host_label_discovery_on_cluster(
 
 
 class _AutochecksConfigDummy:
-    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:  # noqa: ARG002
         return False
 
-    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:  # noqa: ARG002
         return False
 
-    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:  # noqa: ARG002
         return host_name
 
-    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:  # noqa: ARG002
         return "desc"
 
-    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
 
 

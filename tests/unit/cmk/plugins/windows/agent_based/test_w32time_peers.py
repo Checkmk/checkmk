@@ -1098,7 +1098,7 @@ def test_check_w32time_peers(
     string_table: StringTable, item: str, params: w32time_peers.Params, expected: CheckResult
 ) -> None:
     parsed = w32time_peers.parse_w32time_peers(string_table)
-    result = list(w32time_peers._check_w32time_peers(item, params, parsed, now=0.0, value_store={}))
+    result = list(w32time_peers._check_w32time_peers(item, params, parsed, now=0.0, value_store={}))  # noqa: SLF001
     assert result == expected
 
 
@@ -1365,7 +1365,7 @@ def test_check_w32time_peers_summary(
         "universal": universal,
     }
     result = list(
-        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})  # noqa: SLF001
     )
     assert result == expected
 
@@ -1471,7 +1471,7 @@ def test_check_w32time_peers_summary_mixed_failures(
         "universal": universal,
     }
     result = list(
-        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})  # noqa: SLF001
     )
     assert result == expected
 
@@ -1519,7 +1519,7 @@ def test_check_w32time_peers_summary_edge_cases(
         "universal": False,
     }
     result = list(
-        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})  # noqa: SLF001
     )
     assert result == expected
 
@@ -1575,7 +1575,7 @@ def test_check_w32time_peers_summary_missing_peer_name(
         "universal": False,
     }
     result = list(
-        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})  # noqa: SLF001
     )
     assert result == expected
 
@@ -1625,7 +1625,7 @@ def test_last_successful_sync_time_null_lifecycle() -> None:
 
     # First time we see it, we have not hit levels, so report default (UNKN)
     result = list(
-        w32time_peers._last_successful_sync_time(
+        w32time_peers._last_successful_sync_time(  # noqa: SLF001
             NULL_PEER, State.UNKNOWN, NULL_PEER_LEVELS, now=0.0, value_store=value_store
         )
     )
@@ -1638,7 +1638,7 @@ def test_last_successful_sync_time_null_lifecycle() -> None:
 
     # Still "(null)" 11 minutes later: past the warn level (10 min).
     result = list(
-        w32time_peers._last_successful_sync_time(
+        w32time_peers._last_successful_sync_time(  # noqa: SLF001
             NULL_PEER, State.UNKNOWN, NULL_PEER_LEVELS, now=660.0, value_store=value_store
         )
     )
@@ -1654,7 +1654,7 @@ def test_last_successful_sync_time_null_lifecycle() -> None:
 
     # Still "(null)" 31 minutes later: past the crit level (30 min).
     result = list(
-        w32time_peers._last_successful_sync_time(
+        w32time_peers._last_successful_sync_time(  # noqa: SLF001
             NULL_PEER, State.UNKNOWN, NULL_PEER_LEVELS, now=1860.0, value_store=value_store
         )
     )
@@ -1664,7 +1664,7 @@ def test_last_successful_sync_time_null_lifecycle() -> None:
     # reporting the (now meaningful) last successful sync time.
     synced = replace(NULL_PEER, last_successful_sync_time="9/18/2025 6:41:48 PM")
     result = list(
-        w32time_peers._last_successful_sync_time(
+        w32time_peers._last_successful_sync_time(  # noqa: SLF001
             synced, State.UNKNOWN, NULL_PEER_LEVELS, now=2000.0, value_store=value_store
         )
     )
@@ -1682,7 +1682,7 @@ def test_last_successful_sync_time_null_timer_does_not_reset() -> None:
     value_store: dict[str, object] = {}
     for now in (0.0, 100.0, 200.0, 300.0):
         list(
-            w32time_peers._last_successful_sync_time(
+            w32time_peers._last_successful_sync_time(  # noqa: SLF001
                 NULL_PEER, State.OK, None, now=now, value_store=value_store
             )
         )
@@ -1710,7 +1710,7 @@ def test_check_w32time_peers_null_state_from_int_param(
         "peer_never_synced_state": configured_state,
     }
     result = list(
-        w32time_peers._check_w32time_peers("example.com", params, parsed, now=0.0, value_store={})
+        w32time_peers._check_w32time_peers("example.com", params, parsed, now=0.0, value_store={})  # noqa: SLF001
     )
     assert (
         Result(
@@ -1756,7 +1756,7 @@ def test_check_w32time_peers_summary_never_synced_alert(
         "reachability-bad.example.com:last_successful_sync_time_null": 0.0
     }
     result = list(
-        w32time_peers._check_w32time_peers_summary(
+        w32time_peers._check_w32time_peers_summary(  # noqa: SLF001
             params, parsed, now=100.0, value_store=value_store
         )
     )
@@ -1811,7 +1811,7 @@ def test_check_w32time_peers_summary_never_synced_state_override(
         params["peer_never_synced_state"] = configured_state
 
     result = list(
-        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})  # noqa: SLF001
     )
     assert Result(state=State.OK, summary=expected_failed) in result
     never_synced_results = [
@@ -1842,7 +1842,7 @@ def test_check_w32time_peers_summary_clears_stale_never_synced_keys() -> None:
         "reachability-bad.example.com:last_successful_sync_time_null": 0.0,
     }
     list(
-        w32time_peers._check_w32time_peers_summary(
+        w32time_peers._check_w32time_peers_summary(  # noqa: SLF001
             params, parsed, now=100.0, value_store=value_store
         )
     )

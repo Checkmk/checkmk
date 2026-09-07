@@ -108,7 +108,7 @@ def _serialize_broker_connection(
     response_schema=BrokerConnectionResponseCollection,
     permissions_required=PERMISSIONS,
 )
-def show_broker_connections(params: Mapping[str, Any]) -> Response:
+def show_broker_connections(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all peer to peer broker connections"""
     user.need_permission("wato.sites")
     all_connections: BrokerConnections = SitesApiMgr().get_broker_connections()

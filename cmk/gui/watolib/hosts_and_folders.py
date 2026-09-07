@@ -824,20 +824,25 @@ class NullFolderCache:
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder] | None:
         return None
 
-    def folder_metadata(self, path: PathWithoutSlash) -> FolderMetaData | None:
+    def folder_metadata(self, path: PathWithoutSlash) -> FolderMetaData | None:  # noqa: ARG002
         return None
 
     def num_hosts_recursively(
-        self, path_with_slash: PathWithSlash, acting_user: LoggedInUser
+        self,
+        path_with_slash: PathWithSlash,  # noqa: ARG002
+        acting_user: LoggedInUser,  # noqa: ARG002
     ) -> int | None:
         return None
 
     def choices_for_moving(
-        self, path: PathWithoutSlash, move_type: _MoveType, acting_user: LoggedInUser
+        self,
+        path: PathWithoutSlash,  # noqa: ARG002
+        move_type: _MoveType,  # noqa: ARG002
+        acting_user: LoggedInUser,  # noqa: ARG002
     ) -> Choices | None:
         return None
 
-    def recursive_subfolders_for_path(self, path: PathWithSlash) -> Sequence[PathWithSlash] | None:
+    def recursive_subfolders_for_path(self, path: PathWithSlash) -> Sequence[PathWithSlash] | None:  # noqa: ARG002
         return None
 
     def folder_updated(self, filesystem_path: str) -> None:
@@ -2191,7 +2196,7 @@ class Folder:
             self._subfolders.values(), key=operator.methodcaller("title"), reverse=True
         ):
             visible_subfolders = (
-                subfolder._walk_tree(
+                subfolder._walk_tree(  # noqa: SLF001
                     results, current_depth=current_depth + 1, pretty=pretty, acting_user=acting_user
                 )
                 or visible_subfolders
@@ -3219,7 +3224,7 @@ class Folder:
         self._load_hosts_on_demand()
         assert self._hosts is not None
         self._hosts[host.name()] = host
-        host._folder = self
+        host._folder = self  # noqa: SLF001
         self._num_hosts = len(self._hosts)
 
     def _remove_host(self, host: Host) -> None:
@@ -3234,7 +3239,7 @@ class Folder:
         for host in self.hosts().values():
             site_ids.add(host.site_id())
         for subfolder in self.subfolders():
-            subfolder._add_all_sites_to_set(site_ids)
+            subfolder._add_all_sites_to_set(site_ids)  # noqa: SLF001
 
     # .-----------------------------------------------------------------------.
     # | HTML Generation                                                       |
@@ -3532,7 +3537,7 @@ class SearchFolder:
     def show_locking_information(self) -> None:
         pass
 
-    def has_subfolder(self, name: str) -> bool:
+    def has_subfolder(self, name: str) -> bool:  # noqa: ARG002
         return False
 
     def has_subfolders(self) -> bool:

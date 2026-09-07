@@ -46,7 +46,7 @@ def distribute_piggyback_hub_configs(
     logger: Logger,
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
-    site_to_activate: Collection[SiteId],  # only needed in multi-tenancy case.
+    site_to_activate: Collection[SiteId],  # only needed in multi-tenancy case.  # noqa: ARG001
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
     publish_persisted_locations_for_sites(

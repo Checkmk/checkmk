@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_vms_queuejobs(section: StringTable) -> DiscoveryResult:
+def discover_vms_queuejobs(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

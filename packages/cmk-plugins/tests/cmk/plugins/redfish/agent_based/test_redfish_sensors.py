@@ -68,7 +68,7 @@ def _make_modern_sensor(
 
 
 def _make_legacy_sensor(
-    sensor_id: str = "CPU1_Temp",
+    sensor_id: str = "CPU1_Temp",  # noqa: ARG001
     *,
     reading_celsius: float = 42.0,
     upper_warn: float | None = 80.0,

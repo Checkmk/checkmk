@@ -45,10 +45,10 @@ class BaseWidgetContent(ABC):
 
     def iter_validation_errors(
         self,
-        location: tuple[str | int, ...],
-        context: ApiContext,
+        location: tuple[str | int, ...],  # noqa: ARG002
+        context: ApiContext,  # noqa: ARG002
         *,
-        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],  # noqa: ARG002
     ) -> Iterable[ErrorDetails]:
         """Run additional validation based on the config.
 

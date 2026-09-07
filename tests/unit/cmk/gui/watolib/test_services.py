@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import dataclasses
 import json
@@ -163,7 +165,7 @@ def fixture_sample_host(
     yield host
     root_folder.delete_hosts(
         [hostname],
-        automation=lambda *args, **kwargs: DeleteHostsResult(),
+        automation=lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
         pprint_value=False,
         debug=False,
         pending_changes=_TEST_PENDING_CHANGES,

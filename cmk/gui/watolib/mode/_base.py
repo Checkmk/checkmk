@@ -76,7 +76,7 @@ class WatoMode[RequestOK](abc.ABC):
         given HTTP variables."""
         return
 
-    def _parse_data_from_request(self, request: Request) -> Result[RequestOK, None]:
+    def _parse_data_from_request(self, request: Request) -> Result[RequestOK, None]:  # noqa: ARG002
         """Parses request and returns a data structure of type T or None"""
         return Error(None)
 
@@ -161,11 +161,11 @@ class WatoMode[RequestOK](abc.ABC):
     # The `config` argument of the handlers below is transitional: Now that the
     # mode carries its page context, these callers should read `self._ctx.config`
     # directly (CMK-35767).
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:  # noqa: ARG002
         """Returns the data structure representing the page menu for this mode"""
         return PageMenu(breadcrumb=breadcrumb)
 
-    def action(self, config: Config) -> ActionResult:
+    def action(self, config: Config) -> ActionResult:  # noqa: ARG002
         return None  # Yes, there are various modes without an action.
 
     @abc.abstractmethod

@@ -35,10 +35,12 @@ def _view(browser_reload: int) -> View:
 
 def _rendered_refresh(view: View) -> Mapping[str, object]:
     renderer = GUIViewRenderer(
-        view, show_buttons=False, page_menu_dropdowns_callback=lambda *args: None
+        view,
+        show_buttons=False,
+        page_menu_dropdowns_callback=lambda *args: None,  # noqa: ARG005
     )
     with output_funnel.plugged():
-        renderer._render_time_picker()
+        renderer._render_time_picker()  # noqa: SLF001
         rendered = output_funnel.drain()
 
     element = re.search(r'<cmk-global-time-picker data="([^"]*)"', rendered)

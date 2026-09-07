@@ -16,14 +16,14 @@ def test_activate_bakes_agents_before_the_core_picks_up_the_config(
 ) -> None:
     calls: list[str] = []
 
-    def bake(**kwargs: object) -> None:
+    def bake(**kwargs: object) -> None:  # noqa: ARG001
         calls.append("bake")
 
-    def restart(*args: object, **kwargs: object) -> RestartResult:
+    def restart(*args: object, **kwargs: object) -> RestartResult:  # noqa: ARG001
         calls.append("restart")
         return RestartResult([])
 
-    def reload(*args: object, **kwargs: object) -> ReloadResult:
+    def reload(*args: object, **kwargs: object) -> ReloadResult:  # noqa: ARG001
         calls.append("reload")
         return ReloadResult([])
 

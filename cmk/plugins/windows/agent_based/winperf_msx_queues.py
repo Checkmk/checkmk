@@ -72,7 +72,7 @@ def discover_winperf_msx_queues(
 
 
 def check_winperf_msx_queues(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     section: ParsedSection,
 ) -> CheckResult:

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-def"
 
 from dataclasses import asdict
@@ -194,7 +196,7 @@ def test_feature_config_defaults_appear_in_default_config() -> None:
         config = cmk.gui.config.make_config_object(default_config)
         assert config.raw["_test_feature_var"] == 42
     finally:
-        cmk.gui.config._feature_config_defaults.pop("_test_feature_var", None)
+        cmk.gui.config._feature_config_defaults.pop("_test_feature_var", None)  # noqa: SLF001
 
 
 def test_feature_config_defaults_not_mutated_by_config_loading() -> None:
@@ -208,12 +210,12 @@ def test_feature_config_defaults_not_mutated_by_config_loading() -> None:
         default_config = cmk.gui.config.get_default_config()
         default_config["_test_mutable_var"]["injected_key"] = "injected_value"
 
-        assert cmk.gui.config._feature_config_defaults["_test_mutable_var"] == {}
+        assert cmk.gui.config._feature_config_defaults["_test_mutable_var"] == {}  # noqa: SLF001
 
         default_config_2 = cmk.gui.config.get_default_config()
         assert default_config_2["_test_mutable_var"] == {}
     finally:
-        cmk.gui.config._feature_config_defaults.pop("_test_mutable_var", None)
+        cmk.gui.config._feature_config_defaults.pop("_test_mutable_var", None)  # noqa: SLF001
 
 
 def test_load_config(request_context: None) -> None:

@@ -25,7 +25,7 @@ agent_section_vnx_version = AgentSection(
 )
 
 
-def discover_vnx_version(section: StringTable) -> DiscoveryResult:
+def discover_vnx_version(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -123,7 +123,7 @@ def show_ldap_connection(params: Mapping[str, Any]) -> Response:
     permissions_required=RO_PERMISSIONS,
     family_name=LDAP_CONNECTION_FAMILY.name,
 )
-def show_ldap_connections(params: Mapping[str, Any]) -> Response:
+def show_ldap_connections(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all LDAP connections"""
     user.need_permission("wato.seeall")
     user.need_permission("wato.users")

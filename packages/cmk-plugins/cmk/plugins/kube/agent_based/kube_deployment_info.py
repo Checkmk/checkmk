@@ -43,7 +43,7 @@ agent_section_kube_deployment_info_v1 = AgentSection[DeploymentInfo](
 )
 
 
-def discovery(section: DeploymentInfo) -> DiscoveryResult:
+def discovery(section: DeploymentInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

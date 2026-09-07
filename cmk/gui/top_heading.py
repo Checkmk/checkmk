@@ -112,7 +112,10 @@ def show_license_banner(writer: HTMLWriter, user_role_ids: Sequence[str]) -> Non
 
 
 def _make_default_page_state(
-    writer: HTMLWriter, request: Request, *, browser_reload: float
+    writer: HTMLWriter,
+    request: Request,  # noqa: ARG001
+    *,
+    browser_reload: float,
 ) -> PageState | None:
     """Create a general page state for all pages without specific one"""
     if not browser_reload:

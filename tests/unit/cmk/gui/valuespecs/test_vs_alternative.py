@@ -19,7 +19,7 @@ FAILURE_MATCH = "The data type of the value does not match any of the allowed al
 
 
 def get_alternative(
-    match: Callable[[vs.AlternativeModel], int] | None = None,
+    match: Callable[[vs.AlternativeModel], int] | None = None,  # noqa: ARG001
     show_alternative_title: bool = False,
     default_value: vs.ValueSpecDefault[vs.AlternativeModel] = vs.DEF_VALUE,
 ) -> vs.Alternative:
@@ -92,7 +92,7 @@ class TestValuespecAlternative:
             "testing"
         ) == HTML.without_escaping("text<br />testing")
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
         with request_var(a_use="2", a_2_0="2", a_2_1="3"):
             assert get_alternative().from_html_vars("a") == (2, 3)
 
@@ -102,7 +102,7 @@ class TestValuespecAlternative:
         with pytest.raises(ValueError, match=r"^Invalid value: \('a', 'b'\)"):
             assert get_alternative().value_to_json(("a", "b"))
 
-    def test_render_input_type_mismatch_uses_default(self, request_context: None) -> None:
+    def test_render_input_type_mismatch_uses_default(self, request_context: None) -> None:  # noqa: ARG002
         """When the user switches alternatives, the old value may not match the new type.
 
         Regression test for CMK-31604: cloning an SNMP host and switching from SNMPv3

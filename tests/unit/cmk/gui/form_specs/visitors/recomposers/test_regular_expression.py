@@ -17,7 +17,7 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
         RawDiskData(""),  # Acceptable at the moment
     ],
 )
-def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
+def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:  # noqa: ARG001
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
@@ -26,7 +26,7 @@ def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
     assert not errors
 
 
-def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
+def test_global_flags_in_middle_is_invalid(request_context: None) -> None:  # noqa: ARG001
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     global_flags_in_middle_regex = RawDiskData(
@@ -39,7 +39,7 @@ def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
     assert errors[0].message.startswith("Invalid regular expression:")
 
 
-def test_syntax_error_is_invalid(request_context: None) -> None:
+def test_syntax_error_is_invalid(request_context: None) -> None:  # noqa: ARG001
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     syntax_error_regex = RawDiskData("^(.*server.*}$")
@@ -50,8 +50,8 @@ def test_syntax_error_is_invalid(request_context: None) -> None:
     assert errors[0].message.startswith("Invalid regular expression:")
 
 
-def test_custom_validate_is_applied(request_context: None) -> None:
-    def custom_validator(value: str) -> str:
+def test_custom_validate_is_applied(request_context: None) -> None:  # noqa: ARG001
+    def custom_validator(value: str) -> str:  # noqa: ARG001
         raise ValidationError(Message("Custom validation failed"))
 
     form_spec = RegularExpression(

@@ -2,6 +2,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 import argparse
 import json
 import sys
@@ -269,9 +271,9 @@ def _main() -> None:
         f.write("\n")
 
     if errors:
-        print(f"\n{len(errors)} license lookup(s) failed:", file=sys.stderr)  # noqa: T201
+        print(f"\n{len(errors)} license lookup(s) failed:", file=sys.stderr)
         for component, exc in errors:
-            print(f"  - {component.purl.purl_str()}: {exc}", file=sys.stderr)  # noqa: T201
+            print(f"  - {component.purl.purl_str()}: {exc}", file=sys.stderr)
         sys.exit(1)
 
 

@@ -210,7 +210,7 @@ def discover_icom_repeater_temp(section: Any) -> DiscoveryResult:
         yield Service(item="System")
 
 
-def check_icom_repeater_temp(item: str, params: TempParamType, section: Any) -> CheckResult:
+def check_icom_repeater_temp(item: str, params: TempParamType, section: Any) -> CheckResult:  # noqa: ARG001
     yield from check_temperature(
         reading=section["temp"],
         params=params,

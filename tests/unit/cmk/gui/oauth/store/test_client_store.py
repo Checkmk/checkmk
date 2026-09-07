@@ -28,7 +28,7 @@ def store() -> ClientStore:
 
 
 def _seed_clients(store: ClientStore, n: int) -> None:
-    store._connection.executemany(
+    store._connection.executemany(  # noqa: SLF001
         """
         INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
         VALUES (?, '["https://client.example/callback"]', NULL, 0)
@@ -70,7 +70,7 @@ def test_register_does_not_add_a_row_when_store_is_at_capacity(store: ClientStor
 
     store.register(["https://client.example/callback"], "Example")
 
-    count = store._connection.execute("SELECT COUNT(*) FROM clients").fetchone()[0]
+    count = store._connection.execute("SELECT COUNT(*) FROM clients").fetchone()[0]  # noqa: SLF001
     assert count == 1000
 
 
@@ -91,7 +91,7 @@ def test_list_returns_empty_list_when_store_is_empty(store: ClientStore) -> None
 
 
 def test_list_returns_all_clients_sorted_by_registered_at_ascending(store: ClientStore) -> None:
-    store._connection.executemany(
+    store._connection.executemany(  # noqa: SLF001
         """
         INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
         VALUES (?, '["https://client.example/callback"]', NULL, ?)
@@ -154,7 +154,7 @@ def test_delete_on_empty_store_returns_zero(store: ClientStore) -> None:
 def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
     registered = store.register(["https://client.example/callback"], "Example")
     assert registered.is_ok()
-    token_store = TokenStore(store._connection)
+    token_store = TokenStore(store._connection)  # noqa: SLF001
     token = token_store.issue_token(
         UserId("cmkadmin"),
         expires_at=datetime.now(UTC) + timedelta(minutes=5),

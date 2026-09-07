@@ -88,7 +88,7 @@ class BackgroundJobManager:
             self._logger.exception("Error during background job housekeeping")
 
 
-def execute_housekeeping_job(config: Config) -> None:
+def execute_housekeeping_job(config: Config) -> None:  # noqa: ARG001
     housekeep_classes = list(job_registry.values())
     BackgroundJobManager(log.logger).do_housekeeping(housekeep_classes)
 

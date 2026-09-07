@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.ccc.user import UserId
@@ -143,7 +145,9 @@ def test_quick_setup_collect_passwords_from_form_data() -> None:
 
 @pytest.mark.skip("There currently is no quick setup rule with defaults we could test with.")
 def test_quick_setup_collect_params_with_defaults_from_form_data(
-    with_user: tuple[UserId, str], patch_theme: None, test_edition: Edition
+    with_user: tuple[UserId, str],
+    patch_theme: None,
+    test_edition: Edition,
 ) -> None:
     load_special_agents(raise_errors=True)  # why?
     with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):

@@ -17,7 +17,7 @@ def discover_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
         yield Service()
 
 
-def check_f5_bigip_apm(item, _no_params, info):
+def check_f5_bigip_apm(item, _no_params, info):  # noqa: ARG001
     count = info[0][0]
     perfdata = [("connections_ssl_vpn", int(count), None, None, 0, None)]
     return 0, "Connections: %s" % count, perfdata

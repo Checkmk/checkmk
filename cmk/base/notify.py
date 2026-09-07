@@ -339,7 +339,7 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
     Otherwise, return a function that raises a RuntimeError with the given message.
     """
     if monitoring_core == "nagios":
-        return lambda msg: None
+        return lambda msg: None  # noqa: ARG005
 
     def ensure_nagios(msg: str) -> None:
         raise RuntimeError(msg)
@@ -941,7 +941,7 @@ def _automation_notification_test(
 def _automation_get_bulks(
     _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"
@@ -1244,7 +1244,7 @@ def _create_notifications(
 def _process_notifications(
     enriched_context: EnrichedEventContext,
     notifications: Notifications,
-    parameters: NotificationParameterSpecs,
+    parameters: NotificationParameterSpecs,  # noqa: ARG001
     num_rule_matches: int,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -1846,7 +1846,9 @@ def rbn_rule_contacts(
 
 
 def _rbn_match_contact_macros(
-    rule: EventRule, contactname: ContactName, contact: Contact
+    rule: EventRule,
+    contactname: ContactName,  # noqa: ARG001
+    contact: Contact,
 ) -> str | None:
     if "contact_match_macros" in rule:
         for macro_name, regexp in rule["contact_match_macros"]:

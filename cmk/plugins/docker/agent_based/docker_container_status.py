@@ -314,7 +314,7 @@ def discover_docker_container_status_uptime(
 def check_docker_container_status_uptime(
     params: Mapping[str, Any],
     section_docker_container_status: Section | None,
-    section_uptime: uptime.Section | None,
+    section_uptime: uptime.Section | None,  # noqa: ARG001
 ) -> CheckResult:
     if not section_docker_container_status:
         return

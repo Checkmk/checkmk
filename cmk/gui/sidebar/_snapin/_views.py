@@ -97,7 +97,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
-def ajax_export_views(ctx: PageContext) -> None:
+def ajax_export_views(ctx: PageContext) -> None:  # noqa: ARG001
     for view in get_permitted_views().values():
         view["owner"] = UserId.builtin()
         view["public"] = True
@@ -121,7 +121,7 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
             continue
 
         for page in page_type.load(user_permissions).pages(user_permissions):
-            if page._show_in_sidebar():
+            if page._show_in_sidebar():  # noqa: SLF001
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes
                 visual["icon"] = None  # Is currently not configurable for pagetypes

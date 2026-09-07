@@ -73,7 +73,7 @@ snmp_section_zertificon_mail_queues = SimpleSNMPSection(
 )
 
 
-def discover_zertificon_mail_queues(section: Section) -> DiscoveryResult:
+def discover_zertificon_mail_queues(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

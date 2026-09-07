@@ -54,7 +54,7 @@ snmp_section_synology_status = SimpleSNMPSection(
 )
 
 
-def discovery(section: Section) -> DiscoveryResult:
+def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

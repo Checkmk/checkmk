@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: T201
+
 """Regenerate the pinned win_amd64 wheel closure for ``python-3.cab``.
 
 The Windows agent CAB ships the Pipfile packages (and their transitive

@@ -36,7 +36,7 @@ DEFAULT_CHECK_PARAMETERS = Params(
 
 
 def discover_podman_container_status(
-    section: SectionPodmanContainerInspect,
+    section: SectionPodmanContainerInspect,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

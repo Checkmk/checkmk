@@ -11,11 +11,11 @@ from cmk.gui.utils.output_funnel import OutputFunnel
 
 
 def written(funnel: OutputFunnel) -> bytes:
-    return funnel._response_stack[-1].get_data()
+    return funnel._response_stack[-1].get_data()  # noqa: SLF001
 
 
 def response_texts(funnel: OutputFunnel) -> list[list[str]]:
-    return [[e.decode("utf-8") for e in r.iter_encoded()] for r in funnel._response_stack[1:]]
+    return [[e.decode("utf-8") for e in r.iter_encoded()] for r in funnel._response_stack[1:]]  # noqa: SLF001
 
 
 @pytest.fixture(name="funnel")

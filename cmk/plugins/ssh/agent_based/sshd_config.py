@@ -67,7 +67,7 @@ agent_section_sshd_config = AgentSection(
 )
 
 
-def discover_sshd_config(section: _Section) -> DiscoveryResult:
+def discover_sshd_config(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

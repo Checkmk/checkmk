@@ -58,7 +58,7 @@ def _get_service_labels(service: gcp.GCPAsset, item: str) -> list[ServiceLabel]:
 
 
 def discover(
-    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_service_cloud_sql: gcp.Section | None,  # noqa: ARG001
     section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")

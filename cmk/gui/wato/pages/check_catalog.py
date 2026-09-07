@@ -194,7 +194,7 @@ class ModeCheckPluginSearch(WatoMode):
         collection: dict[str, list[CatalogEntry]] = {}
         handled_check_names: set[str] = set()
 
-        def entry_part_matches(entry: CatalogEntry, value: str) -> bool:
+        def entry_part_matches(entry: CatalogEntry, value: str) -> bool:  # noqa: ARG001
             return self._search is not None and self._search in value.lower()
 
         def get_matched_entry(entry: CatalogEntry) -> CatalogEntry | None:
@@ -405,7 +405,7 @@ def _add_breadcrumb_topic_items(
 def _render_manpage_list(
     titles: Mapping[str, str],
     manpage_list: Sequence[CatalogEntry],
-    path_comp: str,
+    path_comp: str,  # noqa: ARG001
     heading: str,
     *,
     table_row_limit: int,

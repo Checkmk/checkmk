@@ -179,17 +179,17 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
-    assert ca.certificate._cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(  # noqa: SLF001
         x509.SubjectKeyIdentifier
-    ).value == x509.SubjectKeyIdentifier.from_public_key(ca.certificate.public_key._key), (
+    ).value == x509.SubjectKeyIdentifier.from_public_key(ca.certificate.public_key._key), (  # noqa: SLF001
         "subject key identifier is set and corresponds to the cert's public key"
     )
 
-    assert ca.certificate._cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(  # noqa: SLF001
         x509.BasicConstraints
     ).value == x509.BasicConstraints(ca=True, path_length=0), "is a CA certificate"
 
-    assert ca.certificate._cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(  # noqa: SLF001
         x509.KeyUsage
     ).value == x509.KeyUsage(
         digital_signature=False,
@@ -205,7 +205,7 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
 
     assert filename.exists()
     loaded = RootCA.load(filename)
-    assert loaded.certificate._cert == ca.certificate._cert
+    assert loaded.certificate._cert == ca.certificate._cert  # noqa: SLF001
     assert _rsa_private_keys_equal(loaded.private_key, ca.private_key)
 
 
@@ -291,7 +291,7 @@ def test_relays_ca_create_and_load(tmp_path: Path) -> None:
     cert_dir = tmp_path / "etc" / "ssl"
     relays_ca = RelaysCA.create(cert_dir=cert_dir, site_id=SiteId("relay"), key_size=1024)
 
-    relays_ca_path = RelaysCA._ca_file(cert_dir)
+    relays_ca_path = RelaysCA._ca_file(cert_dir)  # noqa: SLF001
     assert relays_ca_path == cert_dir / "relays" / "ca.pem"
     assert relays_ca_path.is_file()
 

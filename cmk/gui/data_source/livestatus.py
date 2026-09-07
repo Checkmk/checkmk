@@ -183,7 +183,7 @@ def _merge_data(
 
     mergefuncs: list[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
         # site column is not merged
-        lambda a, b: ""
+        lambda a, b: ""  # noqa: ARG005
     ]
 
     def worst_host_state(a: int, b: int) -> int:
@@ -200,7 +200,7 @@ def _merge_data(
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a
+            mergefunc = lambda a, b: a  # noqa: ARG005
 
         mergefuncs.append(mergefunc)
 

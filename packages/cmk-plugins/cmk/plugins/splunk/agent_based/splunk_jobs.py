@@ -103,7 +103,7 @@ def parse_splunk_jobs(string_table: StringTable) -> JobsInfo:
     return JobsInfo(jobs=tuple(jobs), meta=JobsMetaInfo.from_jobs(jobs))
 
 
-def discover_splunk_jobs(section: JobsInfo) -> DiscoveryResult:
+def discover_splunk_jobs(section: JobsInfo) -> DiscoveryResult:  # noqa: ARG001
     """Runs empty discovery since there is only a single service."""
     yield Service()
 

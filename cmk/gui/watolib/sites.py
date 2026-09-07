@@ -999,7 +999,7 @@ class LivestatusViaTCP(_LegacyDictionary):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,
+        help: str | None = None,  # noqa: A002
         tcp_port: int = 6557,
     ) -> None:
         elements: list[tuple[str, ValueSpec]] = [

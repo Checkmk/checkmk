@@ -243,7 +243,8 @@ def _generated_ping_service_config(
     )
 
     final_service_name_config = make_final_service_name_config(
-        config_cache._loaded_config, config_cache.ruleset_matcher
+        config_cache._loaded_config,  # noqa: SLF001
+        config_cache.ruleset_matcher,
     )
     outfile = io.StringIO()
     create_nagios_servicedefs(
@@ -256,7 +257,7 @@ def _generated_ping_service_config(
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config
         ),
-        enforced_services_table=lambda hn: {},
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=hostname,
         ip_stack_config=ip_stack_config,
@@ -265,7 +266,7 @@ def _generated_ping_service_config(
         stored_passwords={},
         license_counter=Counter("services"),
         ip_address_of=ip_address_of_return_local,
-        service_depends_on=lambda *a: (),
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
     return outfile.getvalue()
@@ -273,14 +274,14 @@ def _generated_ping_service_config(
 
 def _make_core_objects_config(config_cache: config.ConfigCache) -> config.CoreObjectsConfig:
     return config.CoreObjectsConfig(
-        config_cache._loaded_config,
+        config_cache._loaded_config,  # noqa: SLF001
         config_cache.ruleset_matcher,
         config_cache.label_manager,
     )
 
 
 def ip_address_of_return_local(
-    host_name: HostName,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
+    host_name: HostName,  # noqa: ARG001
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,  # noqa: ARG001
 ) -> HostAddress:
     return HostAddress("127.0.0.1")

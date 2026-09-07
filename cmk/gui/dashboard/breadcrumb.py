@@ -137,7 +137,7 @@ def azure_dashboard_breadcrumb(
 
 def kubernetes_dashboard_breadcrumb(
     name: str,
-    board: DashboardConfig,
+    board: DashboardConfig,  # noqa: ARG001
     title: str,
     breadcrumb: Breadcrumb,
     context: VisualContext,

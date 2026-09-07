@@ -168,7 +168,7 @@ def test_permission_action_same_target_permission_triggers_no_action() -> None:
 def test_permission_action_user_and_new_changed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)  # noqa: ARG005
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
@@ -188,7 +188,7 @@ def test_permission_action_user_and_new_changed(
 def test_permission_action_user_and_new_changed_set_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)  # noqa: ARG005
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
@@ -257,7 +257,7 @@ def test_permission_action_old_and_new_changed_set_to_new() -> None:
 
 
 def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)  # noqa: ARG005
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
@@ -277,7 +277,7 @@ def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyP
 def test_permission_action_all_changed_incl_type_ask_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)  # noqa: ARG005
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",

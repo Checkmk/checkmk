@@ -35,7 +35,7 @@ snmp_section_bluecat_dns = SimpleSNMPSection(
 )
 
 
-def discover_bluecat_dns(section: Section) -> DiscoveryResult:
+def discover_bluecat_dns(section: Section) -> DiscoveryResult:  # noqa: ARG001
     """
     >>> list(discover_bluecat_dns({'oper_state': 1}))
     [Service()]

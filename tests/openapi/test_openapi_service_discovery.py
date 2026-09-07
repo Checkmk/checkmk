@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 from typing import get_args, get_type_hints
@@ -1903,7 +1905,9 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_bulk_discovery_with_default_options(
-    base: str, clients: ClientRegistry, mocker: MockerFixture
+    base: str,
+    clients: ClientRegistry,
+    mocker: MockerFixture,
 ) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(

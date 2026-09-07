@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Iterator, Sequence
@@ -41,11 +43,12 @@ from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry, TopicIt
 
 @pytest.fixture(name="rendering_user", autouse=True)
 def fixture_rendering_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -226,7 +229,7 @@ def _site_choice(
 ) -> tuple[list[SiteId] | None, str]:
     with monkeypatch.context() as m:
         m.setattr(_helpers, "states", lambda: states)
-        m.setattr(user, "load_file", lambda *args, **kwargs: stored)
+        m.setattr(user, "load_file", lambda *args, **kwargs: stored)  # noqa: ARG005
         with output_funnel.plugged():
             only_sites = snapin_site_choice("performance", choices)
             return only_sites, output_funnel.drain()

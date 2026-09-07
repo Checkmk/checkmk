@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 """Which files a coverage number is *about*, and how the steps pass them around.
 
 The repository-wide enumeration and the per-component one must answer the first

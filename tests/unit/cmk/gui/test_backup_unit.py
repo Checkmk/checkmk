@@ -32,7 +32,7 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         mode = ModeBackupEditKey(test_edition, PageContext(config=GUIConfig(), request=request))
 
         # First create a backup key
-        mode._create_key(
+        mode._create_key(  # noqa: SLF001
             alias="älias", passphrase=Password("passphra$e"), use_git=False, default_key_size=1024
         )
 

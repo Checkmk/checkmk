@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 from typing import override
 
@@ -40,10 +42,11 @@ class BogusGroups(GroupSnapin):
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -219,7 +221,7 @@ def fail_on_unannotated_background_job_start(
 def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
+        side_effect=lambda *args, **kw: None,  # noqa: ARG005
     )
 
 

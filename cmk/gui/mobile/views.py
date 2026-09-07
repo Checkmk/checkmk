@@ -925,10 +925,10 @@ multisite_builtin_views.update(
 def render_mobile_table(
     rows: Rows,
     view: ViewSpec,
-    group_cells: Sequence[Cell],
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
     num_columns: int,
-    show_checkboxes: bool,
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -1006,11 +1006,11 @@ class LayoutMobileTable(Layout):
 
 def render_mobile_list(
     rows: Rows,
-    view: ViewSpec,
-    group_cells: Sequence[Cell],
+    view: ViewSpec,  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
     num_columns: int,
-    show_checkboxes: bool,
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -1094,11 +1094,11 @@ class LayoutMobileList(Layout):
 
 def render_mobile_dataset(
     rows: Rows,
-    view: ViewSpec,
-    group_cells: Sequence[Cell],
+    view: ViewSpec,  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
-    num_columns: int,
-    show_checkboxes: bool,
+    num_columns: int,  # noqa: ARG001
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):

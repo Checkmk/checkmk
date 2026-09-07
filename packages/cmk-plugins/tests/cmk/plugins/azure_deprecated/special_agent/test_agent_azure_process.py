@@ -417,7 +417,7 @@ def test_get_vm_labels_section(
 )
 @patch("cmk.plugins.azure_deprecated.special_agent.agent_azure", return_value=None)
 def test_process_resource(  # type: ignore[misc]
-    mock_gather_metrics: MagicMock,
+    mock_gather_metrics: MagicMock,  # noqa: ARG001
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,
@@ -875,7 +875,7 @@ def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str
     )
 
 
-def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:
+def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG001
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )

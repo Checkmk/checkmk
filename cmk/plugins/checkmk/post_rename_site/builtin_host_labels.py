@@ -17,7 +17,9 @@ from cmk.ruleset_matcher.labels import BuiltinLabelsKey, update_builtin_host_lab
 
 
 def update_builtin_host_labels_site(
-    old_site_id: SiteId, new_site_id: SiteId, logger: Logger
+    old_site_id: SiteId,  # noqa: ARG001
+    new_site_id: SiteId,
+    logger: Logger,
 ) -> None:
     """Refresh the ``cmk/site`` builtin host label to the new site id"""
     logger.debug(

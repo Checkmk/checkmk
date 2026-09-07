@@ -501,7 +501,7 @@ def pass_availability_filter(row: AVEntry, avoptions: AVOptions) -> bool:
 # Each entry is a pair of group_name and availability_table.
 # It is sorted by the group names
 def compute_availability_groups(
-    what: AVObjectType,
+    what: AVObjectType,  # noqa: ARG001
     av_data: AVData,
     avoptions: AVOptions,
 ) -> AVGroups:
@@ -638,7 +638,7 @@ def check_av_levels(ok_seconds: float, av_levels: AVLevels, considered_duration:
     return 0
 
 
-def get_av_groups(availability_table: AVData, avoptions: AVOptions) -> set[AVGroupKey]:
+def get_av_groups(availability_table: AVData, avoptions: AVOptions) -> set[AVGroupKey]:  # noqa: ARG001
     all_group_ids: set[AVGroupKey] = set()
     for entry in availability_table:
         if entry["groups"] is None or len(entry["groups"]) == 0:

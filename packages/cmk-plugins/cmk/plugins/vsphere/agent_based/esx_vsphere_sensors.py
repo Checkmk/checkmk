@@ -41,7 +41,7 @@ _SENSOR_STATES: Final = {
 }
 
 
-def discover_esx_vsphere_sensors(section: _Section) -> DiscoveryResult:
+def discover_esx_vsphere_sensors(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

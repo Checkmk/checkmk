@@ -595,4 +595,4 @@ def test_check_timesyncd_default_last_ntp_message(
 def test_parse_ntp_message_timestamp(
     ntp_message: str, timezone: str, expected_timestamp: float
 ) -> None:
-    assert timesyncd._parse_ntp_message_timestamp(ntp_message, timezone) == expected_timestamp
+    assert timesyncd._parse_ntp_message_timestamp(ntp_message, timezone) == expected_timestamp  # noqa: SLF001

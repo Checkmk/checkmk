@@ -40,7 +40,7 @@ def parse(string_table: StringTable) -> _ExceptionSection:
 agent_section_gcp_exceptions = AgentSection(name="gcp_exceptions", parse_function=parse)
 
 
-def discover(section: _ExceptionSection) -> DiscoveryResult:
+def discover(section: _ExceptionSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

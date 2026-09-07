@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import os
 import shutil
@@ -41,7 +44,9 @@ def _noop_pending_changes() -> PendingChanges:
 
 @pytest.fixture(autouse=True)
 def test_env(
-    monkeypatch: MonkeyPatch, with_admin_login: UserId, load_config: None
+    monkeypatch: MonkeyPatch,
+    with_admin_login: UserId,
+    load_config: None,
 ) -> Iterator[None]:
     monkeypatch.setattr(
         check_mk_automations,
@@ -128,7 +133,7 @@ def test_rename_host(
             "",
             logging.getLogger(),
             threading.Event(),
-            lambda x: gui_context(),
+            lambda x: gui_context(),  # noqa: ARG005
             progress_update,
         )
         if use_subfolder:
@@ -196,7 +201,7 @@ def test_rename_host(
     # This also caused the bug in the first place: The cluster renaming
     # created its hosts/folders from Hosts.all() which was not affected by
     # the cache invalidation of _rename_host_in_folder as expected.
-    folder._hosts = None
+    folder._hosts = None  # noqa: SLF001
     hosts = folder.hosts()
     assert set(hosts) == expected_hosts
     for cluster, expected_nodes in expected_clusters.items():

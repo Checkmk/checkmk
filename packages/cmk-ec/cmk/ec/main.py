@@ -3640,7 +3640,7 @@ def main() -> None:
 
         with cmk.ccc.daemon.pid_file_lock(pid_path):
 
-            def signal_handler(signum: int, stack_frame: FrameType | None) -> None:
+            def signal_handler(signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG001
                 logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
                 raise MKSignalException(signum)
 

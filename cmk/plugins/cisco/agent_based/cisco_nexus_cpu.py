@@ -33,7 +33,7 @@ class Section:
     cpu_perc: float
 
 
-def discover_cisco_nexus_cpu(section: Section) -> DiscoveryResult:
+def discover_cisco_nexus_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

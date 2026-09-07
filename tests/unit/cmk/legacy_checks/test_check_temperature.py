@@ -319,7 +319,7 @@ def test_check_temperature_trend_exception() -> None:
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
-    def raises_exception(*args, **kwargs) -> None:
+    def raises_exception(*args, **kwargs) -> None:  # noqa: ARG001
         raise IgnoreResultsError("Value Store does not have any valid values")
 
     with (

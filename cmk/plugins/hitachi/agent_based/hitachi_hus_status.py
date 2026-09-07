@@ -42,7 +42,7 @@ def parse_hitachi_hus_status(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_hitachi_hus_status(section: StringTable) -> DiscoveryResult:
+def discover_hitachi_hus_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

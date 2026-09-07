@@ -516,7 +516,8 @@ def _get_needed_regular_columns(
     # Add columns requested by filters for post-livestatus filtering
     columns.update(
         chain.from_iterable(
-            filter.columns_for_filter_table(view.context) for filter in all_active_filters
+            filter.columns_for_filter_table(view.context)
+            for filter in all_active_filters  # noqa: A001
         )
     )
 

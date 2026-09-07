@@ -29,7 +29,7 @@ def parse_viprinet_serial(string_table: StringTable) -> Serial | None:
             return None
 
 
-def discover_viprinet_serial(section: Serial) -> DiscoveryResult:
+def discover_viprinet_serial(section: Serial) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -33,7 +33,7 @@ def parse_fortigate_sessions(string_table: StringTable) -> Section | None:
         return None
 
 
-def discover_fortigate_sessions(section: Section) -> DiscoveryResult:
+def discover_fortigate_sessions(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

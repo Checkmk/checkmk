@@ -65,7 +65,7 @@ def move_folder_v1(
             detail=exc.message,
         )
 
-    moved_folder = make_folder_tree(api_context.config)._by_id(folder_id)
+    moved_folder = make_folder_tree(api_context.config)._by_id(folder_id)  # noqa: SLF001
     return ApiResponse(
         body=serialize_folder(moved_folder, show_hosts=False, api_context=api_context),
         status_code=200,

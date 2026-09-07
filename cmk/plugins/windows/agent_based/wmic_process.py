@@ -27,13 +27,13 @@ def parse_wmic_process(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_wmic_process(section: StringTable) -> DiscoveryResult:
+def discover_wmic_process(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     # wmic_process is only available as an enforced/manual service.
     yield from ()
 
 
 def check_wmic_process(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     section: StringTable,
 ) -> CheckResult:

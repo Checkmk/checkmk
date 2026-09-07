@@ -32,7 +32,7 @@ def parse_logins(string_table: StringTable) -> Section | None:
         return None
 
 
-def discover_logins(section: Section) -> DiscoveryResult:
+def discover_logins(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

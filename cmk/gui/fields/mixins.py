@@ -58,7 +58,7 @@ class CheckmkTuple:
     converter: _ConverterTuple = ()
 
     @post_load
-    def to_checkmk_tuple(self, data: Mapping[str, object], **kwargs: object) -> tuple:  # type: ignore[misc]
+    def to_checkmk_tuple(self, data: Mapping[str, object], **kwargs: object) -> tuple:  # type: ignore[misc]  # noqa: ARG002
         def _convert_to_tuple(
             _fields: _TupleFields, _converter: _ConverterTuple, _result: list
         ) -> tuple:
@@ -83,7 +83,7 @@ class CheckmkTuple:
         return _convert_to_tuple(self.tuple_fields, self.converter, [])
 
     @pre_dump
-    def from_checkmk_tuple(self, data: tuple, **kwargs: object) -> Mapping[str, object]:  # type: ignore[misc]
+    def from_checkmk_tuple(self, data: tuple, **kwargs: object) -> Mapping[str, object]:  # type: ignore[misc]  # noqa: ARG002
         # We use result as the aggregation variable. In this case a dict we pass around everywhere.
         def _convert_tuple(
             _fields: _TupleFields,

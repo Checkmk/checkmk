@@ -177,7 +177,8 @@ class TestMigrateDashboardConfigDashletsToWidgets:
 
 class TestMigrateDashboardConfigRelativeGrid:
     def test_no_layout_key_triggers_widget_migration(
-        self, mock_dashlet_registry: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
     ) -> None:
         dashboard = _make_dashboard(widgets={"w1": {"type": "hoststats", "position": (1, 1)}})
         # No "layout" key → defaults to relative_grid → _migrate_widgets runs
@@ -190,7 +191,8 @@ class TestMigrateDashboardConfigRelativeGrid:
         assert "embedded_views" in result
 
     def test_explicit_relative_grid_triggers_widget_migration(
-        self, mock_dashlet_registry: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
     ) -> None:
         dashboard = _make_dashboard(
             widgets={"w1": {"type": "hoststats", "position": (1, 1)}},
@@ -220,7 +222,8 @@ class TestMigrateDashboardConfigRelativeGrid:
 
 class TestMigrateWidgetsSize:
     def test_widget_without_size_gets_default_from_registry(
-        self, mock_dashlet_registry: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
     ) -> None:
         widget: StatsDashletConfig = {"type": "hoststats", "position": (1, 1)}
         assert "size" not in widget
@@ -230,7 +233,7 @@ class TestMigrateWidgetsSize:
 
         assert result["widgets"]["w1"]["size"] == (12, 12)
 
-    def test_widget_with_existing_size_preserved(self, mock_dashlet_registry: MagicMock) -> None:
+    def test_widget_with_existing_size_preserved(self, mock_dashlet_registry: MagicMock) -> None:  # noqa: ARG002
         widget: StatsDashletConfig = {"type": "hoststats", "position": (1, 1), "size": (30, 18)}
         dashboard = _make_dashboard(widgets={"w1": widget})
 
@@ -240,7 +243,7 @@ class TestMigrateWidgetsSize:
 
 
 class TestMigrateWidgetsViewWidget:
-    def test_view_widget_converted_to_embedded_view(self, mock_dashlet_registry: MagicMock) -> None:
+    def test_view_widget_converted_to_embedded_view(self, mock_dashlet_registry: MagicMock) -> None:  # noqa: ARG002
         view_widget = _make_view_widget()
         dashboard = _make_dashboard(widgets={"w1": view_widget})
 
@@ -268,7 +271,8 @@ class TestMigrateWidgetsViewWidget:
         assert ev["single_infos"] == ["host"]
 
     def test_view_widget_optional_fields_copied_when_present(
-        self, mock_dashlet_registry: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
     ) -> None:
         view_widget = _make_view_widget(
             background=True,
@@ -303,7 +307,8 @@ class TestMigrateWidgetsViewWidget:
         assert ev["inventory_join_macros"] == {"macros": []}
 
     def test_view_widget_optional_fields_absent_when_not_present(
-        self, mock_dashlet_registry: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
     ) -> None:
         view_widget = _make_view_widget()
         dashboard = _make_dashboard(widgets={"w1": view_widget})
@@ -324,7 +329,8 @@ class TestMigrateWidgetsViewWidget:
         assert "inventory_join_macros" not in ev
 
     def test_view_widget_missing_embedded_view_fields_get_defaults(
-        self, mock_dashlet_registry: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
     ) -> None:
         # typing is a total lie below... :-/
         view_widget: dict[str, object] = _make_view_widget()  # type: ignore[assignment]
@@ -347,7 +353,7 @@ class TestMigrateWidgetsViewWidget:
         assert ev["column_headers"] == "pergroup"
         assert ev["sorters"] == []
 
-    def test_existing_embedded_views_preserved(self, mock_dashlet_registry: MagicMock) -> None:
+    def test_existing_embedded_views_preserved(self, mock_dashlet_registry: MagicMock) -> None:  # noqa: ARG002
         existing_ev: DashboardEmbeddedViewSpec = {
             "single_infos": [],
             "datasource": "services",
@@ -375,9 +381,9 @@ class TestMigrateWidgetsViewWidget:
 class TestInternalDashboardToRuntimeDashboard:
     def test_sets_defaults(
         self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
+        mock_view_conversion: MagicMock,  # noqa: ARG002
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         raw = dict(_make_dashboard())
         del raw["packaged"]
@@ -390,9 +396,9 @@ class TestInternalDashboardToRuntimeDashboard:
 
     def test_with_widgets_key_uses_widgets(
         self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
+        mock_view_conversion: MagicMock,  # noqa: ARG002
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         widget = {"type": "hoststats", "position": (1, 1), "size": (30, 18)}
         raw = _make_dashboard(widgets={"my-widget": widget})
@@ -403,9 +409,9 @@ class TestInternalDashboardToRuntimeDashboard:
 
     def test_with_dashlets_generates_widget_ids(
         self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
+        mock_view_conversion: MagicMock,  # noqa: ARG002
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         raw = dict(_make_dashboard())
         del raw["widgets"]
@@ -422,9 +428,9 @@ class TestInternalDashboardToRuntimeDashboard:
 
     def test_view_widget_calls_internal_view_to_runtime_view(
         self,
-        mock_dashlet_registry: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
         mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         view_widget = _make_view_widget()
         raw = _make_dashboard(widgets={"w1": view_widget})
@@ -435,9 +441,9 @@ class TestInternalDashboardToRuntimeDashboard:
 
     def test_non_view_widget_not_transformed(
         self,
-        mock_dashlet_registry: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
         mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         widget = {"type": "hoststats", "position": (1, 1), "size": (30, 18)}
         raw = _make_dashboard(widgets={"w1": widget})
@@ -448,7 +454,9 @@ class TestInternalDashboardToRuntimeDashboard:
         assert result["widgets"]["w1"]["type"] == "hoststats"
 
     def test_embedded_views_converted(
-        self, mock_dashlet_registry: MagicMock, mock_view_conversion: MagicMock
+        self,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
+        mock_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         raw_ev: DashboardEmbeddedViewSpec = {
             "single_infos": [],
@@ -477,9 +485,9 @@ class TestInternalDashboardToRuntimeDashboard:
 
     def test_no_embedded_views_gives_empty_dict(
         self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
+        mock_view_conversion: MagicMock,  # noqa: ARG002
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         raw = _make_dashboard(
             embedded_views={},
@@ -492,9 +500,9 @@ class TestInternalDashboardToRuntimeDashboard:
 
     def test_dashlets_key_removed_from_output(
         self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        mock_dashlet_registry: MagicMock,  # noqa: ARG002
+        mock_view_conversion: MagicMock,  # noqa: ARG002
+        mock_embedded_view_conversion: MagicMock,  # noqa: ARG002
     ) -> None:
         raw = dict(_make_dashboard())
         raw["dashlets"] = [{"type": "hoststats", "position": (1, 1), "size": (30, 18)}]

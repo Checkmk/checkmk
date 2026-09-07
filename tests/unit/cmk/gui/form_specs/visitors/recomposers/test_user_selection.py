@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.ccc.user import UserId
@@ -18,7 +20,7 @@ def _known_user(monkeypatch: pytest.MonkeyPatch) -> UserId:
     monkeypatch.setattr(
         user_selection,
         "generate_wato_users_elements_function",
-        lambda *args, **kwargs: lambda: [(user_id, f"{user_id} - Administrator")],
+        lambda *args, **kwargs: lambda: [(user_id, f"{user_id} - Administrator")],  # noqa: ARG005
     )
     return user_id
 
@@ -27,7 +29,8 @@ _OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
 
 
 def test_user_selection_saves_selected_user_as_plain_str(
-    request_context: None, known_user: UserId
+    request_context: None,
+    known_user: UserId,
 ) -> None:
     # Regression for crash SUP-29570: selecting a user and saving must not raise.
     visitor = get_visitor(UserSelection(), _OPTIONS)

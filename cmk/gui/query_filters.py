@@ -55,7 +55,7 @@ class Query:
     ):
         self.ident = ident
         self.request_vars = request_vars
-        self.livestatus_query = livestatus_query or (lambda x: "")
+        self.livestatus_query = livestatus_query or (lambda x: "")  # noqa: ARG005
         self.rows_filter = rows_filter or (lambda _ctx, rows: rows)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:

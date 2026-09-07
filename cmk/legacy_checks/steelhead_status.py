@@ -17,7 +17,7 @@ def discover_steelhead_status(info):
         yield None, {}
 
 
-def check_steelhead_status(item, params, info):
+def check_steelhead_status(item, params, info):  # noqa: ARG001
     health, status = info[0]
     if health == "Healthy" and status == "running":
         return (0, "Healthy and running")

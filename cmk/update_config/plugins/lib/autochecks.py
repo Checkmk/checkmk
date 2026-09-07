@@ -42,9 +42,9 @@ type TDiscoveredParametersTransforms = Mapping[CheckPluginName, ParameterTransfo
 
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     # cpu_loads no longer discovers any parameters, hence we can just drop them on update
-    CheckPluginName("cpu_loads"): lambda x: {},
+    CheckPluginName("cpu_loads"): lambda x: {},  # noqa: ARG005
     # f5_bigip_pool no longer discovers any parameters after migration to agent_based.v2
-    CheckPluginName("f5_bigip_pool"): lambda x: {},
+    CheckPluginName("f5_bigip_pool"): lambda x: {},  # noqa: ARG005
 }
 
 _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
@@ -172,7 +172,7 @@ def _transformed_params[T: LegacyCheckParameters](
     params: T,
     all_rulesets: RulesetCollection,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    host: str,
+    host: str,  # noqa: ARG001
 ) -> Mapping[str, object]:
     if (ruleset := _get_ruleset(plugin_name, all_rulesets, check_plugins)) is None:
         if not params:

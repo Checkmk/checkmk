@@ -284,7 +284,7 @@ def test_table_cubical(
     limit: int,
     output_format: str,
 ) -> None:
-    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)  # noqa: ARG005
 
     # Test data
     rows = [(i, i**3) for i in range(10)]

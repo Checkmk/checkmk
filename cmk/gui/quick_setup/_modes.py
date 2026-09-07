@@ -309,7 +309,7 @@ class ModeEditConfigurationBundles(WatoMode):
         *,
         user_permissions: UserPermissions,
         pprint_value: bool,
-        use_git: bool,
+        use_git: bool,  # noqa: ARG002
         debug: bool,
         pending_changes: PendingChanges,
     ) -> None:

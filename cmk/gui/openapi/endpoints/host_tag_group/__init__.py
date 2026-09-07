@@ -149,7 +149,7 @@ def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     response_schema=HostTagGroupCollection,
     permissions_required=PERMISSIONS,
 )
-def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
+def list_host_tag_groups(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all host tag groups"""
     user.need_permission("wato.hosttags")
     tag_config = load_tag_config()

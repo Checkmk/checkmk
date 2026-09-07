@@ -3,6 +3,8 @@
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Mockup-Server/blob/main/LICENSE.md
 
+# ruff: noqa: T201
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -957,7 +959,7 @@ def main():
 
     myServer = HTTPServer((hostname, port), RfMockupServer)
 
-    def sigterm_handler(signal_number, frame):
+    def sigterm_handler(signal_number, frame):  # noqa: ARG001
         logger.info("SIGTERM: Shutting down http server")
         myServer.server_close()
         sys.exit(0)

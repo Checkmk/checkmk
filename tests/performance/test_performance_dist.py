@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 """Performance test: Distributed site
 
@@ -42,7 +44,9 @@ def _perftest_dist(
 
 
 def test_performance_hosts(
-    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
+    perftest_dist: PerformanceTest,
+    benchmark: BenchmarkFixture,
+    track_system_resources: None,
 ) -> None:
     """Bulk host creation"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
@@ -54,7 +58,9 @@ def test_performance_hosts(
 
 
 def test_performance_bulk_change_activation(
-    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
+    perftest_dist: PerformanceTest,
+    benchmark: BenchmarkFixture,
+    track_system_resources: None,
 ) -> None:
     """Bulk host creation"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]

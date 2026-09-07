@@ -77,5 +77,5 @@ class _FakeConductor(ABCQuicksearchConductor):
         return []
 
 
-def _noop_build_url(addvars: HTTPVariables) -> str:
+def _noop_build_url(addvars: HTTPVariables) -> str:  # noqa: ARG001
     return ""

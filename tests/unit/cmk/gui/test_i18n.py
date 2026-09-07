@@ -107,7 +107,7 @@ def test_underscore_localization() -> None:
         assert i18n._("") == ""
 
     with application_and_request_context():
-        i18n._unlocalize()
+        i18n._unlocalize()  # noqa: SLF001
         assert i18n._("Age") == "Age"
         assert i18n.get_current_language() == "en"
 
@@ -115,7 +115,7 @@ def test_underscore_localization() -> None:
 @pytest.mark.usefixtures("local_translation")
 def test_lazy_localization() -> None:
     with application_and_request_context():
-        lazy_str = i18n._l("Age")
+        lazy_str = i18n._l("Age")  # noqa: SLF001
         assert lazy_str == "Age"
 
     with application_and_request_context():
@@ -123,14 +123,14 @@ def test_lazy_localization() -> None:
         assert lazy_str == "Alter"
 
     with application_and_request_context():
-        i18n._unlocalize()
+        i18n._unlocalize()  # noqa: SLF001
         assert lazy_str == "Age"
 
 
 @pytest.mark.usefixtures("local_translation")
 def test_lazy_with_args() -> None:
     with application_and_request_context():
-        lazy_str = i18n._l("Edit foreign %s") % "zeugs"
+        lazy_str = i18n._l("Edit foreign %s") % "zeugs"  # noqa: SLF001
         assert lazy_str == "Edit foreign zeugs"
 
     with application_and_request_context():
@@ -138,17 +138,17 @@ def test_lazy_with_args() -> None:
         assert lazy_str == "Fremde(n) zeugs editieren"
 
     with application_and_request_context():
-        i18n._unlocalize()
+        i18n._unlocalize()  # noqa: SLF001
         assert lazy_str == "Edit foreign zeugs"
 
 
 def test_init_language_not_existing() -> None:
-    assert i18n._init_language("xz") is None
+    assert i18n._init_language("xz") is None  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("local_translation", "request_context")
 def test_init_language_with_local_modification() -> None:
-    trans = i18n._init_language("de")
+    trans = i18n._init_language("de")  # noqa: SLF001
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
@@ -160,7 +160,7 @@ def test_init_language_with_local_modification() -> None:
 
 @pytest.mark.usefixtures("local_translation", "request_context")
 def test_init_language_with_package_localization() -> None:
-    trans = i18n._init_language("de")
+    trans = i18n._init_language("de")  # noqa: SLF001
     assert trans is not None
     translated = trans.gettext("pkg1")
     assert isinstance(translated, str)

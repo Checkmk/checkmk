@@ -127,9 +127,9 @@ def test_user_permissions_constructor() -> None:
         default_user_profile_roles=["guest"],
     )
 
-    assert user_permissions._roles is roles
-    assert user_permissions._permissions is permissions
-    assert user_permissions._user_roles is user_roles
+    assert user_permissions._roles is roles  # noqa: SLF001
+    assert user_permissions._permissions is permissions  # noqa: SLF001
+    assert user_permissions._user_roles is user_roles  # noqa: SLF001
 
 
 def test_user_permissions_from_config() -> None:
@@ -140,12 +140,12 @@ def test_user_permissions_from_config() -> None:
 
     user_permissions = UserPermissions.from_config(config, permissions)
 
-    assert user_permissions._roles == config.roles
-    assert user_permissions._permissions is permissions
+    assert user_permissions._roles == config.roles  # noqa: SLF001
+    assert user_permissions._permissions is permissions  # noqa: SLF001
     expected_user_roles = {
         UserId(user_id): user_spec["roles"] for user_id, user_spec in config.multisite_users.items()
     }
-    assert user_permissions._user_roles == expected_user_roles
+    assert user_permissions._user_roles == expected_user_roles  # noqa: SLF001
 
 
 def test_user_permissions_from_serializable_config() -> None:
@@ -161,12 +161,12 @@ def test_user_permissions_from_serializable_config() -> None:
         UserPermissionSerializableConfig(**ast.literal_eval(serialized)), permissions
     )
 
-    assert user_permissions._roles == config.roles
-    assert user_permissions._permissions is permissions
+    assert user_permissions._roles == config.roles  # noqa: SLF001
+    assert user_permissions._permissions is permissions  # noqa: SLF001
     expected_user_roles = {
         UserId(user_id): user_spec["roles"] for user_id, user_spec in config.multisite_users.items()
     }
-    assert user_permissions._user_roles == expected_user_roles
+    assert user_permissions._user_roles == expected_user_roles  # noqa: SLF001
 
 
 def test_user_permissions_to_serializable_config() -> None:
@@ -344,31 +344,31 @@ def test_user_may_memoization() -> None:
     user_permissions = UserPermissions.from_config(config, permissions)
 
     # Initially memo should be empty
-    assert len(user_permissions._user_may_memo) == 0
+    assert len(user_permissions._user_may_memo) == 0  # noqa: SLF001
 
     # First call should compute and cache the result
     result1 = user_permissions.user_may(UserId("admin_user"), "general.use")
     assert result1 is True
-    assert len(user_permissions._user_may_memo) == 1
-    assert (UserId("admin_user"), "general.use") in user_permissions._user_may_memo
-    assert user_permissions._user_may_memo[(UserId("admin_user"), "general.use")] is True
+    assert len(user_permissions._user_may_memo) == 1  # noqa: SLF001
+    assert (UserId("admin_user"), "general.use") in user_permissions._user_may_memo  # noqa: SLF001
+    assert user_permissions._user_may_memo[(UserId("admin_user"), "general.use")] is True  # noqa: SLF001
 
     # Second call with same parameters should use cached result
     result2 = user_permissions.user_may(UserId("admin_user"), "general.use")
     assert result2 is True
-    assert len(user_permissions._user_may_memo) == 1  # Still only one entry
+    assert len(user_permissions._user_may_memo) == 1  # Still only one entry  # noqa: SLF001
 
     # Different user should create new cache entry
     result3 = user_permissions.user_may(UserId("normal_user"), "general.use")
     assert result3 is True
-    assert len(user_permissions._user_may_memo) == 2
-    assert (UserId("normal_user"), "general.use") in user_permissions._user_may_memo
+    assert len(user_permissions._user_may_memo) == 2  # noqa: SLF001
+    assert (UserId("normal_user"), "general.use") in user_permissions._user_may_memo  # noqa: SLF001
 
     # Different permission should create new cache entry
     result4 = user_permissions.user_may(UserId("admin_user"), "wato.edit")
     assert result4 is True
-    assert len(user_permissions._user_may_memo) == 3
-    assert (UserId("admin_user"), "wato.edit") in user_permissions._user_may_memo
+    assert len(user_permissions._user_may_memo) == 3  # noqa: SLF001
+    assert (UserId("admin_user"), "wato.edit") in user_permissions._user_may_memo  # noqa: SLF001
 
 
 def test_user_may_memoization_preserves_behavior() -> None:
@@ -402,4 +402,4 @@ def test_user_may_memoization_preserves_behavior() -> None:
         assert result1 is result2, f"Memoized result differs for {user_id}, {permission}"
 
     # Verify all test cases were cached
-    assert len(user_permissions._user_may_memo) == len(test_cases)
+    assert len(user_permissions._user_may_memo) == len(test_cases)  # noqa: SLF001

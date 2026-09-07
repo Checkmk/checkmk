@@ -1243,7 +1243,7 @@ class IPMICredentials(Alternative):
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[AlternativeModel] | None = None,
     ):

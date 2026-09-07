@@ -221,7 +221,7 @@ def test_cache_clear_all() -> None:
     cached_function(42)
     other_cached_function(42)
 
-    hooks._thread_cache.cache_clear_all()
+    hooks._thread_cache.cache_clear_all()  # noqa: SLF001
     assert cached_function.cache_info() is None  # type: ignore[attr-defined]
     assert other_cached_function.cache_info() is None  # type: ignore[attr-defined]
 

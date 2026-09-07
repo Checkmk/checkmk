@@ -59,7 +59,7 @@ class TestPermissionHandler:
         permissions_handler = SetupPermissionsHandler(
             test_edition, PageContext(config=config, request=http_request)
         )
-        for category in permissions_handler._category_permissions:
+        for category in permissions_handler._category_permissions:  # noqa: SLF001
             assert permissions_handler.may_see_category(category)
 
     @pytest.mark.usefixtures("request_context")

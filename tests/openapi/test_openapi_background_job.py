@@ -12,7 +12,10 @@ from tests.testlib.rest_api_client import ClientRegistry
 class TestBackgroundJobSnapshot:
     @pytest.mark.usefixtures("inline_background_jobs")
     def test_openapi_background_job_snapshot(
-        self, base: str, clients: ClientRegistry, mocker: MockerFixture
+        self,
+        base: str,  # noqa: ARG002
+        clients: ClientRegistry,
+        mocker: MockerFixture,
     ) -> None:
         clients.HostConfig.create(host_name="foobar")
 

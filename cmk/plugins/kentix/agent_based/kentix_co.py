@@ -37,7 +37,7 @@ def parse_kentix_co(string_table: StringTable) -> int | None:
     return None
 
 
-def discover_kentix_co(section: int) -> DiscoveryResult:
+def discover_kentix_co(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

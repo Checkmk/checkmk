@@ -68,12 +68,14 @@ snmp_section_atto_fibrebridge_chassis = SimpleSNMPSection(
 #   '----------------------------------------------------------------------'
 
 
-def discover_atto_fibrebridge_chassis_temp(section: Section) -> DiscoveryResult:
+def discover_atto_fibrebridge_chassis_temp(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Chassis")
 
 
 def check_atto_fibrebridge_chassis_temp(
-    item: str, params: TempParamType, section: Section
+    item: str,  # noqa: ARG001
+    params: TempParamType,
+    section: Section,
 ) -> CheckResult:
     yield from check_temperature(
         params=params,
@@ -104,7 +106,7 @@ check_plugin_atto_fibrebridge_chassis_temp = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_atto_fibrebridge_chassis(section: Section) -> DiscoveryResult:
+def discover_atto_fibrebridge_chassis(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

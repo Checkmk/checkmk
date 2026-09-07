@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import threading
 import time
@@ -96,11 +98,11 @@ class DummyBackgroundJob(BackgroundJob):
 
         super().__init__(self.job_prefix)
 
-    def execute_hello(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+    def execute_hello(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:  # noqa: ARG002
         job_interface.send_progress_update("Hallo :-)")
         self.finish_hello_event.wait()
 
-    def execute_endless(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+    def execute_endless(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:  # noqa: ARG002
         job_interface.send_progress_update("Hanging loop")
         while not job_interface.stop_event.is_set():
             time.sleep(0.1)
@@ -450,14 +452,14 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
 
 @pytest.fixture(name="reset_global_tracer_provider")
 def _fixture_reset_global_tracer_provider() -> Iterator[None]:
-    provider_orig = otel_trace._TRACER_PROVIDER
+    provider_orig = otel_trace._TRACER_PROVIDER  # noqa: SLF001
     try:
-        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
-        otel_trace._TRACER_PROVIDER = None
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False  # noqa: SLF001
+        otel_trace._TRACER_PROVIDER = None  # noqa: SLF001
         yield
     finally:
-        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
-        otel_trace._TRACER_PROVIDER = provider_orig
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False  # noqa: SLF001
+        otel_trace._TRACER_PROVIDER = provider_orig  # noqa: SLF001
 
 
 class JobArgs(BaseModel, frozen=True):

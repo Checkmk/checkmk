@@ -4145,7 +4145,7 @@ class ABCNotificationParameterMode(WatoMode):
         action_name: str,
         text: str,
         pending_changes: PendingChanges,
-        site_configs: SiteConfigurations,
+        site_configs: SiteConfigurations,  # noqa: ARG002
     ) -> None:
         pending_changes.add(
             Change(

@@ -64,7 +64,7 @@ def test_discovery() -> None:
 
 def test_check_postgres_stats_no_data() -> None:
     assert list(
-        postgres_stats._check_postgres_stats(
+        postgres_stats._check_postgres_stats(  # noqa: SLF001
             item="ANALYZE this",
             params={},
             section=SECTION,
@@ -77,20 +77,20 @@ def test_check_postgres_stats_no_data() -> None:
 def test_check_postgres_stats_empty_data() -> None:
     item = "ANALYZE this"
     assert list(
-        postgres_stats._check_postgres_stats(
+        postgres_stats._check_postgres_stats(  # noqa: SLF001
             item=item,
             params={},
             section={"this": []},
             value_store={},
             now=NOW,
         )
-    ) == list(postgres_stats._check_never_checked("", [], {}, {}, NOW))
+    ) == list(postgres_stats._check_never_checked("", [], {}, {}, NOW))  # noqa: SLF001
 
 
 def test_check_postgres_stats_oldest_table() -> None:
     item = "ANALYZE adwebconnect"
     assert list(
-        postgres_stats._check_postgres_stats(
+        postgres_stats._check_postgres_stats(  # noqa: SLF001
             item=item,
             params={},
             section=SECTION,
@@ -101,7 +101,7 @@ def test_check_postgres_stats_oldest_table() -> None:
         Result(state=State.OK, summary="Table: serveraktion"),
         Result(state=State.OK, summary="Not analyzed for: 11 days 2 hours"),
     ] + list(
-        postgres_stats._check_never_checked(
+        postgres_stats._check_never_checked(  # noqa: SLF001
             "analyzed", ["anrede", "auftrag_mediadaten"], {}, {}, NOW
         )
     )
@@ -109,7 +109,7 @@ def test_check_postgres_stats_oldest_table() -> None:
 
 def _test_never_checked_nothing() -> None:
     value_store: dict[str, object] = {}
-    assert list(postgres_stats._check_never_checked("", [], {}, value_store, NOW)) == [
+    assert list(postgres_stats._check_never_checked("", [], {}, value_store, NOW)) == [  # noqa: SLF001
         Result(state=State.OK, summary="No never checked tables"),
     ]
 
@@ -119,7 +119,7 @@ def _test_never_checked_nothing() -> None:
 def _test_never_checked_tables_never_seen() -> None:
     value_store: dict[str, object] = {}
     assert list(
-        postgres_stats._check_never_checked(
+        postgres_stats._check_never_checked(  # noqa: SLF001
             "loved",
             list("ABCDE"),
             {},
@@ -140,7 +140,7 @@ def _test_never_checked_tables_never_seen() -> None:
 def _test_never_checked_tables_warn() -> None:
     value_store: dict[str, object] = {"item": NOW - 24.23 * 3600}
     assert list(
-        postgres_stats._check_never_checked(
+        postgres_stats._check_never_checked(  # noqa: SLF001
             "loved",
             list("AB"),
             {"never_analyze_vacuum": (10, 25 * 3600)},

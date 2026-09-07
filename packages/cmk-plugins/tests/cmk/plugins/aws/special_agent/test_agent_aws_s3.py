@@ -134,7 +134,7 @@ def test_agent_aws_s3_limits(
     get_s3_sections: CreateS3Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    amount_buckets: int,
+    amount_buckets: int,  # noqa: ARG001
 ) -> None:
     s3_limits, _s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
     s3_limits_results = s3_limits.run().results

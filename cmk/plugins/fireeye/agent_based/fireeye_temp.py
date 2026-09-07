@@ -26,7 +26,7 @@ def discover_fireeye_temp(section: StringTable) -> DiscoveryResult:
         yield Service(item="system")
 
 
-def check_fireeye_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+def check_fireeye_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:  # noqa: ARG001
     reading_str, status, health = section[0]
     dev_status = 0
     dev_status_name = ""

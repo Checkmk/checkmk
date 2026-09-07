@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 """Maps a given Docker Image Alias name (e.g. IMAGE_CMK_BASE) to an unambiguous
 image ID, defined in correspondingly named folders containing Dockerfiles.
 So the mapping is SCM tracked and thus branch specific and reproducible."""

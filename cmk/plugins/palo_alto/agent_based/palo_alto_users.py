@@ -56,7 +56,7 @@ snmp_section_palo_alto_users = SimpleSNMPSection(
 )
 
 
-def discover(section: Section) -> DiscoveryResult:
+def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

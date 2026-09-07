@@ -194,7 +194,7 @@ def test_agent_aws_dynamodb_limits(
     get_dynamodb_sections: DynamobSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
 ) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
     dynamodb_limits = dynamodb_sections["dynamodb_limits"]

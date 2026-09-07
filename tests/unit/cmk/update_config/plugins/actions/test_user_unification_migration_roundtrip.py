@@ -66,7 +66,7 @@ def _drive(
     monkeypatch.setattr(
         UserConnectionConfigFile,
         "save",
-        lambda _self, _cfg, pprint_value: conn_saved.__setitem__("called", True),
+        lambda _self, _cfg, pprint_value: conn_saved.__setitem__("called", True),  # noqa: ARG005
     )
 
     MigrateUserSyncToAuthConnections(

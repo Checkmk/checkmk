@@ -1808,7 +1808,7 @@ def main_graph_client(args: Args) -> None:
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
+def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:  # noqa: ARG001
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",

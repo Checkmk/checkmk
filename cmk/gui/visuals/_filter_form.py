@@ -42,7 +42,7 @@ def show_filter_form(
         _show_filter_form_buttons(
             varprefix,
             filter_list_id,
-            vs_filters._page_request_vars,
+            vs_filters._page_request_vars,  # noqa: SLF001
             page_name,
             reset_ajax_page,
             context,

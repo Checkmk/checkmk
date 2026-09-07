@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 from typing import cast
 
@@ -30,10 +32,11 @@ USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -112,7 +115,7 @@ def test_reserved_unique_ids_block_the_builtin_snapin_names() -> None:
 
 
 def test_customizable_snapin_type_choices_are_sorted_by_id() -> None:
-    choices = CustomSnapins._customizable_snapin_type_choices()
+    choices = CustomSnapins._customizable_snapin_type_choices()  # noqa: SLF001
     idents = [str(choice[0]) for choice in choices]
 
     assert idents == sorted(idents)

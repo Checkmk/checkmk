@@ -37,7 +37,7 @@ def parse_graylog_messages(string_table: StringTable) -> Section | None:
             return None
 
 
-def discover_graylog_messages(section: Section) -> DiscoveryResult:
+def discover_graylog_messages(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

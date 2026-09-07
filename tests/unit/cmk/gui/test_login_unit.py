@@ -89,7 +89,9 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 
 
 def test_login_two_factor_redirect(
-    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
+    wsgi_app: WebTestAppForCMK,
+    request_context: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
@@ -111,7 +113,9 @@ def test_login_two_factor_redirect(
 
 
 def test_login_forced_password_change(
-    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
+    wsgi_app: WebTestAppForCMK,
+    request_context: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> None:
     custom_attrs: UserSpec = {
         "enforce_pw_change": True,
@@ -123,7 +127,9 @@ def test_login_forced_password_change(
 
 
 def test_login_two_factor_has_precedence_over_password_change(
-    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
+    wsgi_app: WebTestAppForCMK,
+    request_context: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
@@ -148,8 +154,8 @@ def test_login_two_factor_has_precedence_over_password_change(
 def test_login_with_cookies(
     wsgi_app: WebTestAppForCMK,
     with_user: tuple[UserId, str],
-    mock_livestatus: MockLiveStatusConnection,
-    patch_theme: None,
+    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> None:
     # We will be redirected to the login page
     response = wsgi_app.get("/NO_SITE/check_mk/")
@@ -173,7 +179,7 @@ def test_login_with_cookies(
     assert response.status_code == 302
 
     test_environ = create_environ("/NO_SITE/", method="GET")
-    wsgi_app._add_cookies_to_wsgi(test_environ)
+    wsgi_app._add_cookies_to_wsgi(test_environ)  # noqa: SLF001
 
     # request context with cookie yields a user
     assert session.user.id == with_user[0]
@@ -272,7 +278,7 @@ def _legacy_bearer_header(username: UserId, password: str) -> str:
     return f"Bearer {username} {password}"
 
 
-def _oauth_bearer_header(username: UserId, password: str) -> str:
+def _oauth_bearer_header(username: UserId, password: str) -> str:  # noqa: ARG001
     with get_client_store() as clients:
         registration = clients.register(["https://client.example/callback"], None)
     assert registration.is_ok()
@@ -404,7 +410,7 @@ def test_authenticate_success(flask_app: flask.Flask, user_id: UserId) -> None:
     assert user.id is None  # type: ignore[unreachable]
 
 
-def test_authenticate_fails(flask_app: flask.Flask, with_user: UserId) -> None:
+def test_authenticate_fails(flask_app: flask.Flask, with_user: UserId) -> None:  # noqa: ARG001
     assert user.id is None
 
     with (
@@ -569,8 +575,8 @@ def _validate_check_and_process_file_complete(expected_state: str) -> bool:
     ],
 )
 def test_check_and_update_two_factor_auth(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
+    user_login: WebTestAppForCMK,  # noqa: ARG001
+    auth_request: http.Request,  # noqa: ARG001
     two_factor_creds: TwoFactorCredentials,
     expected_state_two_factor_setting: bool,
     expected_state: str,
@@ -619,8 +625,8 @@ def _validate_pw_change_file_saved(expected_password_change_setting: int) -> boo
     ],
 )
 def test_check_and_update_password_change(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
+    user_login: WebTestAppForCMK,  # noqa: ARG001
+    auth_request: http.Request,  # noqa: ARG001
     expected_password_change_setting: int,
     expected_state: str,
 ) -> None:
@@ -854,8 +860,8 @@ def simplified_auth_check_false() -> bool:
     ],
 )
 def test_state_transition_flow_logic(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
+    user_login: WebTestAppForCMK,  # noqa: ARG001
+    auth_request: http.Request,  # noqa: ARG001
     two_fa_auth_needed: Callable[[], bool],
     two_fa_setup_needed: Callable[[], bool],
     pw_changed_needed: Callable[[], bool],
@@ -893,8 +899,8 @@ def test_state_transition_flow_logic(
 
 
 def test_state_transition_invalid_state(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
+    user_login: WebTestAppForCMK,  # noqa: ARG001
+    auth_request: http.Request,  # noqa: ARG001
 ) -> None:
     try:
         session.logout()

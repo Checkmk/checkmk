@@ -325,7 +325,7 @@ class GraphApi(_Connection):
             secret=self.auth.client_secret,
             authority_urls=self.authority_urls,
             pw_store=PasswordStore(store_secret),
-            pw_store_file=storage._full_dir / "stored_tokens",
+            pw_store_file=storage._full_dir / "stored_tokens",  # noqa: SLF001
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,

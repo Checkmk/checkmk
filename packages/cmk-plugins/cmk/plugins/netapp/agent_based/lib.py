@@ -138,7 +138,7 @@ def get_summary_check(
     error_key, _number_key = DEV_KEYS[device_type]
 
     def check_summary(
-        item: str,
+        item: str,  # noqa: ARG001
         section: SectionSingleInstance,
     ) -> CheckResult:
         total = len(section)

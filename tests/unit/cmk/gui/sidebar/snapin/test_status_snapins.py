@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """Tests for the thin livestatus-backed status snap-ins: server time, Speed-O-Meter and
 server performance."""
 
@@ -28,10 +30,11 @@ PERFORMANCE_COLUMNS = 16
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -108,7 +111,7 @@ def _ajax_speedometer(
     request.set_var("program_start", program_start)
     with monkeypatch.context() as m:
         m.setattr(sites, "live", lambda: live)
-        Speedometer()._ajax_speedometer(_page_context(config))
+        Speedometer()._ajax_speedometer(_page_context(config))  # noqa: SLF001
     payload = json.loads(response.get_data())
     assert isinstance(payload, dict)
     return payload
@@ -174,8 +177,8 @@ def test_performance_sums_the_rates_of_all_sites(
     )
     with monkeypatch.context() as m:
         m.setattr(sites, "live", lambda: live)
-        m.setattr("cmk.gui.sidebar._snapin._performance.snapin_site_choice", lambda *a: None)
-        m.setattr("cmk.gui.sidebar._snapin._performance.site_config.enabled_sites", lambda s: {})
+        m.setattr("cmk.gui.sidebar._snapin._performance.snapin_site_choice", lambda *a: None)  # noqa: ARG005
+        m.setattr("cmk.gui.sidebar._snapin._performance.site_config.enabled_sites", lambda s: {})  # noqa: ARG005
         with output_funnel.plugged():
             Performance().show(load_config)
             rendered = output_funnel.drain()
@@ -194,10 +197,10 @@ def test_performance_shows_the_command_buffer_only_for_a_single_site(
     live = FakeLive(rows=[[7.0] * PERFORMANCE_COLUMNS])
     with monkeypatch.context() as m:
         m.setattr(sites, "live", lambda: live)
-        m.setattr("cmk.gui.sidebar._snapin._performance.snapin_site_choice", lambda *a: None)
+        m.setattr("cmk.gui.sidebar._snapin._performance.snapin_site_choice", lambda *a: None)  # noqa: ARG005
         m.setattr(
             "cmk.gui.sidebar._snapin._performance.site_config.enabled_sites",
-            lambda s: {SiteId("heute"): {}},
+            lambda s: {SiteId("heute"): {}},  # noqa: ARG005
         )
         with output_funnel.plugged():
             Performance().show(load_config)
@@ -216,11 +219,11 @@ def test_performance_restricted_to_one_site_skips_the_command_buffer(
         m.setattr(sites, "live", lambda: live)
         m.setattr(
             "cmk.gui.sidebar._snapin._performance.snapin_site_choice",
-            lambda *a: [SiteId("heute")],
+            lambda *a: [SiteId("heute")],  # noqa: ARG005
         )
         m.setattr(
             "cmk.gui.sidebar._snapin._performance.site_config.enabled_sites",
-            lambda s: {SiteId("heute"): {}},
+            lambda s: {SiteId("heute"): {}},  # noqa: ARG005
         )
         with output_funnel.plugged():
             Performance().show(load_config)

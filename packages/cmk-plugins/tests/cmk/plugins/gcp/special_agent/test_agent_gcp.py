@@ -53,7 +53,7 @@ class FakeMonitoringClient:
     def __init__(self, timeseries: Iterable[str] | None = None) -> None:
         self._timeseries = timeseries
 
-    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
+    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:  # noqa: ARG002
         if self._timeseries is None:
             yield from self._fixed_list_time_series()
         else:
@@ -128,7 +128,7 @@ class FakeAssetClient:
         else:
             self._assets = assets
 
-    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
+    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:  # noqa: ARG002
         if self._exception is not None:
             raise self._exception
         return (agent_gcp.Asset.deserialize(a).asset for a in self._assets)
@@ -153,7 +153,7 @@ class FakeClient:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset_client.list_assets(request)
 
-    def list_costs(self, tableid: str) -> tuple[agent_gcp.Schema, agent_gcp.Pages]:
+    def list_costs(self, tableid: str) -> tuple[agent_gcp.Schema, agent_gcp.Pages]:  # noqa: ARG002
         schema = [
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
             {"name": "id", "type": "STRING", "mode": "NULLABLE"},
@@ -614,7 +614,7 @@ def test_connection_test_resolves_credentials_from_password_store(
     )
     captured: dict[str, Any] = {}
 
-    def fake_list_assets(self: agent_gcp.Client, request: Any) -> Iterable[Any]:
+    def fake_list_assets(self: agent_gcp.Client, request: Any) -> Iterable[Any]:  # noqa: ARG001
         captured["account_info"] = self.account_info
         return []
 

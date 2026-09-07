@@ -126,7 +126,7 @@ def _make_flag_config_variable(name: str, field_info: FieldInfo) -> ConfigVariab
         group=ConfigVariableGroupExperimentalFlags,
         primary_domain=ConfigDomainExperimentalFlags,
         ident=name,
-        form_spec=lambda context: fs.BooleanChoice(
+        form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
             title=Title(name),  # astrein: disable=localization-checker
             label=Label("Enabled"),
             help_text=help_text,

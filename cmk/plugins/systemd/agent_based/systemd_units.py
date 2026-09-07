@@ -848,11 +848,11 @@ check_plugin_systemd_units_sockets = CheckPlugin(
 )
 
 
-def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResult:
+def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
-def discovery_systemd_units_sockets_summary(section: Section) -> DiscoveryResult:
+def discovery_systemd_units_sockets_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

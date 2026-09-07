@@ -98,9 +98,9 @@ def test_cell_render_html_content(input_html: str, expected_output: str) -> None
     )
 
     # Test with string input
-    result = cell._render_html_content(input_html)
+    result = cell._render_html_content(input_html)  # noqa: SLF001
     assert result == expected_output
 
     # Test with HTML object input
-    result_html = cell._render_html_content(HTML.without_escaping(input_html))
+    result_html = cell._render_html_content(HTML.without_escaping(input_html))  # noqa: SLF001
     assert result_html == expected_output

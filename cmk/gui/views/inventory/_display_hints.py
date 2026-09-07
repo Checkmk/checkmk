@@ -156,7 +156,7 @@ PaintFunctionFromAPI = Callable[[float, SDValue], PaintResultFromAPI]
 
 
 def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
-    def _wrap(now: float, value: SDValue) -> PaintResultFromAPI:
+    def _wrap(now: float, value: SDValue) -> PaintResultFromAPI:  # noqa: ARG001
         css_class, rendered_value = paint_function(value)
         return (
             TDStyles(
@@ -563,7 +563,7 @@ def _parse_attr_field_from_api(
 
 def _parse_col_field_from_api(
     node_title: str,
-    key: str,
+    key: str,  # noqa: ARG001
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
 ) -> ColumnDisplayHint:
     title = _make_str(field_from_api.title)
@@ -795,7 +795,7 @@ def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]
         # TODO Do we still need this?
         return title  # type: ignore[unreachable]
 
-    return lambda word: str(title)
+    return lambda word: str(title)  # noqa: ARG005
 
 
 def _make_long_title(parent_title: str, title: str) -> str:

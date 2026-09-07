@@ -45,7 +45,7 @@ class AutocompleterConfigModel:
             ident=autocompleter.ident,
             params=dict(autocompleter.params),
             dynamic_params_callback_name=ApiOmitted.from_optional(
-                autocompleter._dynamic_params_callback_name
+                autocompleter._dynamic_params_callback_name  # noqa: SLF001
             ),
         )
 

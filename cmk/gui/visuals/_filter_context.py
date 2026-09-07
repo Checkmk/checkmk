@@ -166,7 +166,7 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     # construct crosslinks manually without the filter menu.
     # We must merge with the view context as many views have defaults, which
     # are not included in the crosslink.
-    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
+    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):  # noqa: SLF001
         with request.stashed_vars():
             request.set_var("_active", flag)
             return get_merged_context(context, vs_filterlist.from_html_vars(""))
@@ -184,7 +184,7 @@ def requested_context_from_request(infos: SingleInfos) -> VisualContext:
 
     # Test if filters are in url and reconstruct them. This is because we
     # construct cross-links manually without the filter menu.
-    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
+    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):  # noqa: SLF001
         with request.stashed_vars():
             request.set_var("_active", flag)
             return vs_filterlist.from_html_vars("")

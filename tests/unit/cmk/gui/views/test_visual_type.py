@@ -38,23 +38,32 @@ def _path(*names: str) -> SDPath:
 
 
 def _base_returns_true(
-    single_infos: SingleInfos, rows: Rows, visual: Visual, context_vars: HTTPVariables
+    single_infos: SingleInfos,  # noqa: ARG001
+    rows: Rows,  # noqa: ARG001
+    visual: Visual,  # noqa: ARG001
+    context_vars: HTTPVariables,  # noqa: ARG001
 ) -> bool:
     return True
 
 
 def _base_checks_rows(
-    single_infos: SingleInfos, rows: Rows, visual: Visual, context_vars: HTTPVariables
+    single_infos: SingleInfos,  # noqa: ARG001
+    rows: Rows,
+    visual: Visual,  # noqa: ARG001
+    context_vars: HTTPVariables,  # noqa: ARG001
 ) -> bool:
     return bool(rows)
 
 
-def _tree_found(hostname: HostName, site_id: SiteId, path: SDPath | None, is_history: bool) -> bool:
+def _tree_found(hostname: HostName, site_id: SiteId, path: SDPath | None, is_history: bool) -> bool:  # noqa: ARG001
     return path is not None
 
 
 def _tree_not_found(
-    hostname: HostName, site_id: SiteId, path: SDPath | None, is_history: bool
+    hostname: HostName,  # noqa: ARG001
+    site_id: SiteId,  # noqa: ARG001
+    path: SDPath | None,  # noqa: ARG001
+    is_history: bool,  # noqa: ARG001
 ) -> bool:
     return False
 
@@ -170,7 +179,10 @@ def test_label_filter_suppresses_link_when_label_mismatches() -> None:
     row: dict[str, object] = {}
 
     def _base_rejects(
-        single_infos: SingleInfos, rows: Rows, visual: Visual, context_vars: HTTPVariables
+        single_infos: SingleInfos,  # noqa: ARG001
+        rows: Rows,  # noqa: ARG001
+        visual: Visual,  # noqa: ARG001
+        context_vars: HTTPVariables,  # noqa: ARG001
     ) -> bool:
         return False
 
@@ -462,7 +474,10 @@ def test_returns_true_when_either_tree_or_history_matches() -> None:
     context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
 
     def only_history(
-        hostname: HostName, site_id: SiteId, path: SDPath | None, is_history: bool
+        hostname: HostName,  # noqa: ARG001
+        site_id: SiteId,  # noqa: ARG001
+        path: SDPath | None,
+        is_history: bool,
     ) -> bool:
         return is_history and path is not None
 

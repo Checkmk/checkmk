@@ -32,7 +32,7 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def discover_dell_chassis_power(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_power(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

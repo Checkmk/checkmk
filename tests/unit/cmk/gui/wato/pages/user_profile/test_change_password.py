@@ -59,4 +59,4 @@ def test_change_password_action_blocked_on_remote_site(monkeypatch: pytest.Monke
     )
     page = UserChangePasswordPage(MagicMock())  # edition is irrelevant to the guard
     with pytest.raises(MKAuthException, match="remote sites"):
-        page._action(request=MagicMock(), config=MagicMock())
+        page._action(request=MagicMock(), config=MagicMock())  # noqa: SLF001

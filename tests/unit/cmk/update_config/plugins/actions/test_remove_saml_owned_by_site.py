@@ -46,7 +46,7 @@ def _run(
         lambda _self: cast(list[ConfigurableUserConnectionSpec], connections),
     )
 
-    def _save(_self: object, cfg: object, pprint_value: bool) -> None:
+    def _save(_self: object, cfg: object, pprint_value: bool) -> None:  # noqa: ARG001
         saved["cfg"] = cast(list[dict[str, object]], cfg)
 
     monkeypatch.setattr(UserConnectionConfigFile, "save", _save)

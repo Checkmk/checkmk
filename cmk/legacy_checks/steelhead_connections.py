@@ -17,7 +17,7 @@ def discover_steelhead_connections(info):
         yield None, {}
 
 
-def check_steelhead_connections(item, params, info):
+def check_steelhead_connections(item, params, info):  # noqa: ARG001
     if params is None:
         params = {}
 

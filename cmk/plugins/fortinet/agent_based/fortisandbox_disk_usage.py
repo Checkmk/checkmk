@@ -44,7 +44,7 @@ def parse_fortisandbox_disk(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_fortisandbox_disk(section: Section) -> DiscoveryResult:
+def discover_fortisandbox_disk(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="system")
 
 

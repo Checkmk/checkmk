@@ -42,7 +42,7 @@ def parse_liebert_maintenence(string_table: StringTable) -> Section | None:
     return parse_liebert_without_unit([string_table], int) or None
 
 
-def discover_liebert_maintenance(section: Section) -> DiscoveryResult:
+def discover_liebert_maintenance(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

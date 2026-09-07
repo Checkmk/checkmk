@@ -99,7 +99,9 @@ class AuxTagAttrsUpdate(BaseSchema):
 
     @post_load
     def verify_at_least_one(  # type: ignore[misc]
-        self, *args: Mapping[str, object], **kwargs: object
+        self,
+        *args: Mapping[str, object],
+        **kwargs: object,  # noqa: ARG002
     ) -> Mapping[str, object]:
         at_least_one_of = {"topic", "title", "help"}
         if not at_least_one_of & set(args[0]):

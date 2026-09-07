@@ -33,7 +33,7 @@ snmp_section_orion_backup = SimpleSNMPSection(
 )
 
 
-def discover_orion_backup(section: StringTable) -> DiscoveryResult:
+def discover_orion_backup(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

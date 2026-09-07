@@ -99,7 +99,7 @@ def _render_dashboard_columns() -> Callable[[Table, VisualName, TVisual], None]:
         table.cell(_("Link created"), "")
         table.cell(_("Comments"), "")
 
-    def render(table: Table, dashboard_name: VisualName, dashboard_config: TVisual) -> None:
+    def render(table: Table, dashboard_name: VisualName, dashboard_config: TVisual) -> None:  # noqa: ARG001
         # do not add columns for built-in dashboards
         if dashboard_config.get("owner") == UserId.builtin():
             return

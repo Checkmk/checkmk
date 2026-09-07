@@ -118,7 +118,11 @@ def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> Non
     ],
 )
 def test_unauthenticated_users(
-    user: LoggedInUser, alias: str, email: str, role_ids: Sequence[str], baserole_id: str
+    user: LoggedInUser,
+    alias: str,
+    email: str,
+    role_ids: Sequence[str],
+    baserole_id: str,  # noqa: ARG001
 ) -> None:
     assert user.id is None
     assert user.alias == alias
@@ -328,7 +332,8 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
 
 
 def test_may_is_narrowed_by_the_request_authorization(
-    request_context: None, monitoring_user: LoggedInUser
+    request_context: None,  # noqa: ARG001
+    monitoring_user: LoggedInUser,
 ) -> None:
     # Assuming "user" role
     assert monitoring_user.may("general.use")
@@ -341,7 +346,8 @@ def test_may_is_narrowed_by_the_request_authorization(
 
 
 def test_scope_never_grants_what_roles_deny(
-    request_context: None, monitoring_user: LoggedInUser
+    request_context: None,  # noqa: ARG001
+    monitoring_user: LoggedInUser,
 ) -> None:
     """The scope's allow-list is not a grant -- roles still decide."""
     session.authorization = Authorization.from_scopes({ScopeId.READ})
@@ -362,7 +368,7 @@ def test_super_user_is_narrowed_by_the_request_authorization() -> None:
         assert not global_user.may("wato.activate")
 
 
-def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:
+def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:  # noqa: ARG001
     assert monitoring_user.id == "test"
     assert monitoring_user.alias == "Test user"
     assert monitoring_user.email == "test_user_test@checkmk.com"
@@ -407,7 +413,8 @@ def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -
 
 
 def test_monitoring_user_read_broken_file(
-    request_context: None, monitoring_user: LoggedInUser
+    request_context: None,  # noqa: ARG001
+    monitoring_user: LoggedInUser,
 ) -> None:
     assert monitoring_user.confdir
     with Path(monitoring_user.confdir, "unittest.mk").open("w") as f:
@@ -419,7 +426,7 @@ def test_monitoring_user_read_broken_file(
 def test_monitoring_user_permissions(
     mocker: MockerFixture,
     monkeypatch: MonkeyPatch,
-    request_context: None,
+    request_context: None,  # noqa: ARG001
     monitoring_user: LoggedInUser,
 ) -> None:
     mocker.patch.object(permissions, "permission_registry")

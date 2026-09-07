@@ -202,7 +202,9 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @classmethod
     def create_empty_session(
-        cls, exc: MKException | None, user_permissions: UserPermissions
+        cls,
+        exc: MKException | None,
+        user_permissions: UserPermissions,  # noqa: ARG003
     ) -> CheckmkFileBasedSession:
         """Create a new and empty and logged-out session.
 
@@ -323,7 +325,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             """
             This does not check if a user already has configured their 2FA as it shouldn't be reached if they have.
             """
-            return self.two_factor_enforced(self.user.ident, self.user._user_permissions)
+            return self.two_factor_enforced(self.user.ident, self.user._user_permissions)  # noqa: SLF001
 
         def _is_pw_change_needed() -> bool:
             pw_change_reason = userdb.need_to_change_pw(self.user.ident, datetime.now())
@@ -512,7 +514,11 @@ class FileBasedSession(SessionInterface):
         return sess
 
     def _authenticate_and_open(
-        self, app: Flask, request: flask.Request, config: Config, user_permissions: UserPermissions
+        self,
+        app: Flask,  # noqa: ARG002
+        request: flask.Request,
+        config: Config,
+        user_permissions: UserPermissions,
     ) -> CheckmkFileBasedSession:
         """Authenticate and open new session
 

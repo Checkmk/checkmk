@@ -22,7 +22,7 @@ def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
     return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
 
 
-def hostgroup_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def hostgroup_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
@@ -44,7 +44,7 @@ def hostgroup_autocompleter(config: Config, value: str, params: dict) -> Choices
     return choices
 
 
-def tag_group_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def tag_group_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     return sorted(
         (v for v in config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
@@ -64,7 +64,7 @@ def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> Cho
     return grouped
 
 
-def check_types_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def check_types_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     return [
         (str(cn), f"{cn} - {c['title']}")
         for (cn, c) in get_check_information_cached(debug=config.debug).items()

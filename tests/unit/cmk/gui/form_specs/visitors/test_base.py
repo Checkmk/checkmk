@@ -18,7 +18,7 @@ from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
-def nonstop_complainer(name: str) -> None:
+def nonstop_complainer(name: str) -> None:  # noqa: ARG001
     raise ValidationError(Message("Ugh, tests, am I right?"))
 
 

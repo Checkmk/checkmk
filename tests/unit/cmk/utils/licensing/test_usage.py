@@ -50,7 +50,7 @@ def test_try_update_license_usage(omd_root: Path) -> None:
         Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(time.time() * 2))), tz=""),
         instance_id,
         site_hash,
-        lambda *args, **kwargs: LicenseUsageSample(
+        lambda *args, **kwargs: LicenseUsageSample(  # noqa: ARG005
             instance_id=instance_id,
             site_hash=site_hash,
             version="",
@@ -99,7 +99,7 @@ def test_try_update_license_usage_livestatus_socket_error(omd_root: Path) -> Non
             Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(0))), tz=""),
             instance_id,
             site_hash,
-            lambda *args, **kwargs: _mock_livestatus(),
+            lambda *args, **kwargs: _mock_livestatus(),  # noqa: ARG005
             omd_root=omd_root,
         )
     assert (
@@ -125,7 +125,7 @@ def test_try_update_license_usage_livestatus_not_found_error(omd_root: Path) -> 
             Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(0))), tz=""),
             instance_id,
             site_hash,
-            lambda *args, **kwargs: _mock_livestatus(),
+            lambda *args, **kwargs: _mock_livestatus(),  # noqa: ARG005
             omd_root=omd_root,
         )
     assert (
@@ -146,7 +146,7 @@ def test_try_update_license_usage_next_run_ts_not_reached(omd_root: Path) -> Non
         Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(-1))), tz=""),
         instance_id,
         site_hash,
-        lambda *args, **kwargs: LicenseUsageSample(
+        lambda *args, **kwargs: LicenseUsageSample(  # noqa: ARG005
             instance_id=instance_id,
             site_hash=site_hash,
             version="",

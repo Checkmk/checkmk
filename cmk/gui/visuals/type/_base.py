@@ -94,7 +94,7 @@ class VisualType(abc.ABC):
         linking_view_single_infos: SingleInfos,
         linking_view_rows: Rows,
         visual: Visual,
-        context_vars: HTTPVariables,
+        context_vars: HTTPVariables,  # noqa: ARG002
     ) -> bool:
         """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
 

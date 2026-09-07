@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterable, Iterator
 
 import pytest
@@ -26,7 +28,9 @@ def mock_update_passwords_merged_file(monkeypatch: pytest.MonkeyPatch) -> Iterab
 
 @pytest.fixture(autouse=True)
 def create_password_test_environment(
-    with_admin_login: None, load_config: None, clients: ClientRegistry
+    with_admin_login: None,
+    load_config: None,
+    clients: ClientRegistry,
 ) -> Iterator[None]:
     clients.ContactGroup.create(
         name="protected",

@@ -29,7 +29,7 @@ agent_section_sansymphony_alerts = AgentSection(
 )
 
 
-def discover_sansymphony_alerts(section: StringTable) -> DiscoveryResult:
+def discover_sansymphony_alerts(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

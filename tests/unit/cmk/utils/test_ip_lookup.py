@@ -64,7 +64,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         socket,
         "getaddrinfo",
-        lambda host, port, family=None, *args, **kwargs: {
+        lambda host, port, family=None, *args, **kwargs: {  # noqa: ARG005
             (localhost, socket.AddressFamily.AF_INET): [
                 (family, None, None, None, ("127.0.0.1", 0))
             ],
@@ -75,7 +75,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=loading_result.hosts_config.clusters,
-        error_handler=lambda *a: None,
+        error_handler=lambda *a: None,  # noqa: ARG005
     )
 
     assert ip_lookup_config.default_address_family(localhost) is socket.AddressFamily.AF_INET
@@ -393,7 +393,7 @@ class TestIPLookupCache:
     def test_repr(self) -> None:
         assert isinstance(repr(ip_lookup.IPLookupCache({})), str)
 
-    def test_load_invalid_syntax(self, tmp_path: Path) -> None:
+    def test_load_invalid_syntax(self, tmp_path: Path) -> None:  # noqa: ARG002
         with ip_lookup.IPLookupCache.PATH.open(mode="w", encoding="utf-8") as f:
             f.write("{...")
 
@@ -402,7 +402,7 @@ class TestIPLookupCache:
             cache.load_persisted()
         assert not cache
 
-    def test_update_empty_file(self, tmp_path: Path) -> None:
+    def test_update_empty_file(self, tmp_path: Path) -> None:  # noqa: ARG002
         cache_id: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache[cache_id] = HostAddress("127.0.0.1")
@@ -411,7 +411,7 @@ class TestIPLookupCache:
         new_cache_instance.load_persisted()
         assert new_cache_instance[cache_id] == HostAddress("127.0.0.1")
 
-    def test_update_existing_file(self, tmp_path: Path) -> None:
+    def test_update_existing_file(self, tmp_path: Path) -> None:  # noqa: ARG002
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
@@ -424,7 +424,7 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id1] == HostAddress("127.0.0.1")
         assert new_cache_instance[cache_id2] == HostAddress("127.0.0.2")
 
-    def test_update_existing_entry(self, tmp_path: Path) -> None:
+    def test_update_existing_entry(self, tmp_path: Path) -> None:  # noqa: ARG002
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
@@ -443,7 +443,7 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id1] == HostAddress("127.0.0.1")
         assert new_cache_instance[cache_id2] == HostAddress("2")
 
-    def test_update_without_persistence(self, tmp_path: Path) -> None:
+    def test_update_without_persistence(self, tmp_path: Path) -> None:  # noqa: ARG002
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
@@ -458,7 +458,7 @@ class TestIPLookupCache:
         new_cache_instance.load_persisted()
         assert new_cache_instance[cache_id1] == HostAddress("0.0.0.0")
 
-    def test_load_legacy(self, tmp_path: Path) -> None:
+    def test_load_legacy(self, tmp_path: Path) -> None:  # noqa: ARG002
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
@@ -471,7 +471,7 @@ class TestIPLookupCache:
         assert cache[cache_id1] == HostAddress("127.0.0.1")
         assert cache[cache_id2] == HostAddress("127.0.0.2")
 
-    def test_clear(self, tmp_path: Path) -> None:
+    def test_clear(self, tmp_path: Path) -> None:  # noqa: ARG002
         ip_lookup.IPLookupCache(
             {(HostName("host1"), socket.AddressFamily.AF_INET): HostAddress("127.0.0.1")}
         ).save_persisted()
@@ -500,7 +500,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         socket,
         "getaddrinfo",
-        lambda host, port, family=None, socktype=None, proto=None, flags=None: {
+        lambda host, port, family=None, socktype=None, proto=None, flags=None: {  # noqa: ARG005
             ("blub", socket.AddressFamily.AF_INET): [
                 (family, None, None, None, (HostAddress("127.0.0.13"), 1337))
             ],
@@ -608,7 +608,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
     monkeypatch.setattr(
         socket,
         "getaddrinfo",
-        lambda host, port, family=None, socktype=None, proto=None, flags=None: {
+        lambda host, port, family=None, socktype=None, proto=None, flags=None: {  # noqa: ARG005
             # That looks like a tautological tests.  It's most likely useless.
             (HostName("localhost"), socket.AddressFamily.AF_INET6): [
                 (family, None, None, None, (result_address, 0))

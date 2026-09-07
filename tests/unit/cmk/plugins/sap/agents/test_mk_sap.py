@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -37,10 +39,10 @@ class FakeConnectionTree:
     def invoke(self):
         pass
 
-    def discover(self, what):
+    def discover(self, what):  # noqa: ARG002
         return self
 
-    def call(self, func_name, **kwargs):
+    def call(self, func_name, **kwargs):  # noqa: ARG002
         return self
 
     def create_function_call(self):

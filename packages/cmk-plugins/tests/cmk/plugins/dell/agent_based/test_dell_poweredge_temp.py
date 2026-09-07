@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
@@ -84,7 +86,9 @@ def test_discover_fallback_naming_without_location() -> None:
     ],
 )
 def test_check_dell_poweredge_temp_normal(
-    item: str, expected_temp: float, empty_value_store: None
+    item: str,
+    expected_temp: float,
+    empty_value_store: None,
 ) -> None:
     parsed = parse_dell_poweredge_temp(STRING_TABLE)
     result = list(check_dell_poweredge_temp(item, {}, parsed))

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import io
 import logging
@@ -85,11 +87,12 @@ def test_active_connectors_for_user_preservation_includes_saml_connection_id(
     saml_entry: SAMLAuthenticationEntry = {"connection_id": "my_saml"}
     entries: list[AuthenticationConnectionEntry] = [("saml", saml_entry)]
     site_config["authentication_connections"] = entries
-    assert activate_changes._active_connectors_for_user_preservation(site_config) == ["my_saml"]
+    assert activate_changes._active_connectors_for_user_preservation(site_config) == ["my_saml"]  # noqa: SLF001
 
 
 def test_active_connectors_for_user_preservation_uses_propagated_attr_sync(
-    load_config: Config, remote_site: None
+    load_config: Config,
+    remote_site: None,
 ) -> None:
     """On a remote site the attribute-sync connection list configured on the
     central site arrives via the propagated global; the seeded ``"all"`` in
@@ -98,7 +101,7 @@ def test_active_connectors_for_user_preservation_uses_propagated_attr_sync(
     assert site_config["user_attribute_sync_connections"] == "all"  # the seeded self-default
     load_config.user_attribute_sync_connections = ["ldap_x"]
     load_config.authentication_connections = []
-    assert activate_changes._active_connectors_for_user_preservation(site_config) == ["ldap_x"]
+    assert activate_changes._active_connectors_for_user_preservation(site_config) == ["ldap_x"]  # noqa: SLF001
 
 
 def test_automation_get_config_sync_state(request_context: None) -> None:
@@ -202,7 +205,7 @@ def test_get_config_sync_file_infos() -> None:
             site_path="links",
         ),
     ]
-    sync_infos = activate_changes._get_config_sync_file_infos(replication_paths, base_dir)
+    sync_infos = activate_changes._get_config_sync_file_infos(replication_paths, base_dir)  # noqa: SLF001
 
     assert sync_infos == {
         "bla/blub/f2": ConfigSyncFileInfo(
@@ -548,7 +551,7 @@ def _get_test_sync_archive(tmp_path: Path) -> bytes:
     tmp_path.joinpath("broken-symlink").symlink_to("eeg")
     tmp_path.joinpath("working-symlink").symlink_to("ding")
 
-    return activate_changes._get_sync_archive(
+    return activate_changes._get_sync_archive(  # noqa: SLF001
         [
             "etc/abc",
             "file-to-dir/aaa",
@@ -566,7 +569,7 @@ class TestAutomationReceiveConfigSync:
         self,
         monkeypatch: pytest.MonkeyPatch,
         tmp_path: Path,
-        request_context: None,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         remote_path = tmp_path / "remote"
         monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
@@ -575,7 +578,7 @@ class TestAutomationReceiveConfigSync:
         monkeypatch.setattr(
             cmk.gui.watolib.activate_changes,
             "_execute_post_config_sync_actions",
-            lambda site_id, local_files_changed, use_git: None,
+            lambda site_id, local_files_changed, use_git: None,  # noqa: ARG005
         )
 
         remote_path.mkdir(parents=True, exist_ok=True)
@@ -716,12 +719,12 @@ class TestAutomationReceiveConfigSync:
 
 
 def test_get_current_config_generation() -> None:
-    assert activate_changes._get_current_config_generation() == 0
+    assert activate_changes._get_current_config_generation() == 0  # noqa: SLF001
     activate_changes.update_config_generation()
-    assert activate_changes._get_current_config_generation() == 1
+    assert activate_changes._get_current_config_generation() == 1  # noqa: SLF001
     activate_changes.update_config_generation()
     activate_changes.update_config_generation()
-    assert activate_changes._get_current_config_generation() == 3
+    assert activate_changes._get_current_config_generation() == 3  # noqa: SLF001
 
 
 def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> None:
@@ -1089,20 +1092,20 @@ class TestGetAllDataRequiredForActivationPopout:
         monkeypatch.setattr(
             activate_changes,
             "get_licensing_user_effect",
-            lambda *args, **kwargs: _NoLicenseEffect(),
+            lambda *args, **kwargs: _NoLicenseEffect(),  # noqa: ARG005
         )
         monkeypatch.setattr(activate_changes, "_get_license_block_effect", lambda: None)
         monkeypatch.setattr(
             activate_changes,
             "get_status_for_site",
-            lambda site_id, site: (
+            lambda site_id, site: (  # noqa: ARG005
                 SiteStatus({"state": "disabled"})
                 if site.get("disabled")
                 else SiteStatus({"state": "online"})
             ),
         )
 
-    def test_no_pending_changes_returns_empty_summary(self, with_admin_login: UserId) -> None:
+    def test_no_pending_changes_returns_empty_summary(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
 
         result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
@@ -1131,7 +1134,7 @@ class TestGetAllDataRequiredForActivationPopout:
         finally:
             site_changes.clear()
 
-    def test_activated_change_excluded_from_pending(self, with_admin_login: UserId) -> None:
+    def test_activated_change_excluded_from_pending(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         site_changes = SiteChanges(self.SITE_ID)
         site_changes.append(_make_change_spec("change-activated", has_been_activated=True))
         site_changes.append(_make_change_spec("change-pending"))
@@ -1144,7 +1147,7 @@ class TestGetAllDataRequiredForActivationPopout:
         finally:
             site_changes.clear()
 
-    def test_site_change_counter_counts_only_pending(self, with_admin_login: UserId) -> None:
+    def test_site_change_counter_counts_only_pending(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         site_changes = SiteChanges(self.SITE_ID)
         site_changes.append(_make_change_spec("c-1"))
         site_changes.append(_make_change_spec("c-2"))
@@ -1171,7 +1174,7 @@ class TestGetAllDataRequiredForActivationPopout:
         finally:
             site_changes.clear()
 
-    def test_which_sites_all_sites_when_single_site(self, with_admin_login: UserId) -> None:
+    def test_which_sites_all_sites_when_single_site(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         site_changes = SiteChanges(self.SITE_ID)
         site_changes.append(_make_change_spec("c-1"))
         try:
@@ -1183,7 +1186,8 @@ class TestGetAllDataRequiredForActivationPopout:
             site_changes.clear()
 
     def test_which_sites_specific_when_only_one_of_two_sites_affected(
-        self, with_admin_login: UserId
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         site_a = SiteId("popout_site_a")
         site_b = SiteId("popout_site_b")
@@ -1203,14 +1207,15 @@ class TestGetAllDataRequiredForActivationPopout:
             site_changes_a.clear()
 
     def test_last_activation_status_is_none_without_persisted_state(
-        self, with_admin_login: UserId
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
         result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
 
         assert result.sites[0].lastActivationStatus is None
 
-    def test_last_activation_status_from_persisted_state(self, with_admin_login: UserId) -> None:
+    def test_last_activation_status_from_persisted_state(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         persisted_path = Path(ActivateChangesManager.persisted_site_state_path(self.SITE_ID))
         persisted_path.parent.mkdir(parents=True, exist_ok=True)
         ccc_store.save_object_to_file(
@@ -1240,7 +1245,8 @@ class TestGetAllDataRequiredForActivationPopout:
             persisted_path.unlink(missing_ok=True)
 
     def test_last_activation_status_with_activation_id_reads_live_state(
-        self, with_admin_login: UserId
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         activation_id = "abcdef12-1234-1234-1234-abcdef123456"
         live_path = Path(ActivateChangesManager.site_state_path(activation_id, self.SITE_ID))
@@ -1270,7 +1276,8 @@ class TestGetAllDataRequiredForActivationPopout:
             live_path.unlink(missing_ok=True)
 
     def test_last_activation_status_falls_back_to_persisted_when_live_absent(
-        self, with_admin_login: UserId
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         activation_id = "fallback12-1234-1234-1234-abcdef123456"
         persisted_path = Path(ActivateChangesManager.persisted_site_state_path(self.SITE_ID))
@@ -1300,7 +1307,7 @@ class TestGetAllDataRequiredForActivationPopout:
         finally:
             persisted_path.unlink(missing_ok=True)
 
-    def test_html_stripped_from_status_details(self, with_admin_login: UserId) -> None:
+    def test_html_stripped_from_status_details(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         persisted_path = Path(ActivateChangesManager.persisted_site_state_path(self.SITE_ID))
         persisted_path.parent.mkdir(parents=True, exist_ok=True)
         ccc_store.save_object_to_file(
@@ -1327,19 +1334,21 @@ class TestGetAllDataRequiredForActivationPopout:
             persisted_path.unlink(missing_ok=True)
 
     def test_site_version_strips_build_suffix(
-        self, with_admin_login: UserId, monkeypatch: pytest.MonkeyPatch
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(
             activate_changes,
             "get_status_for_site",
-            lambda site_id, site: SiteStatus({"livestatus_version": "2.4.0p1-20250101"}),
+            lambda site_id, site: SiteStatus({"livestatus_version": "2.4.0p1-20250101"}),  # noqa: ARG005
         )
         sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
         result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
 
         assert result.sites[0].version == "2.4.0p1"
 
-    def test_disabled_site_returns_empty_version(self, with_admin_login: UserId) -> None:
+    def test_disabled_site_returns_empty_version(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         sites = SiteConfigurations(
             {self.SITE_ID: _make_local_site_config(self.SITE_ID, disabled=True)}
         )
@@ -1348,7 +1357,9 @@ class TestGetAllDataRequiredForActivationPopout:
         assert result.sites[0].version == ""
 
     def test_license_message_included_in_summary(
-        self, with_admin_login: UserId, monkeypatch: pytest.MonkeyPatch
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         class _FakeHeader:
             message_html = "Your license is expiring soon."
@@ -1359,7 +1370,7 @@ class TestGetAllDataRequiredForActivationPopout:
         monkeypatch.setattr(
             activate_changes,
             "get_licensing_user_effect",
-            lambda *args, **kwargs: _FakeLicenseEffect(),
+            lambda *args, **kwargs: _FakeLicenseEffect(),  # noqa: ARG005
         )
         monkeypatch.setattr(activate_changes, "_get_license_block_effect", lambda: None)
 
@@ -1370,7 +1381,9 @@ class TestGetAllDataRequiredForActivationPopout:
         assert result.licenseIsBlocking is False
 
     def test_license_is_blocking_when_block_effect_present(
-        self, with_admin_login: UserId, monkeypatch: pytest.MonkeyPatch
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         class _FakeBlock:
             pass
@@ -1387,7 +1400,8 @@ class TestSiteHasForeignChanges:
     SITE_ID = SiteId("foreign_changes_test_site")
 
     def test_activated_foreign_change_does_not_count_as_foreign(
-        self, with_admin_login: UserId
+        self,
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         site_changes = SiteChanges(self.SITE_ID)
         site_changes.append(
@@ -1408,7 +1422,7 @@ class TestSiteHasForeignChanges:
         finally:
             site_changes.clear()
 
-    def test_pending_foreign_change_still_counts_as_foreign(self, with_admin_login: UserId) -> None:
+    def test_pending_foreign_change_still_counts_as_foreign(self, with_admin_login: UserId) -> None:  # noqa: ARG002
         site_changes = SiteChanges(self.SITE_ID)
         site_changes.append(_make_change_spec("pending-by-other", user_id="other_user"))
         try:

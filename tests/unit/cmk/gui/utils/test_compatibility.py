@@ -392,7 +392,7 @@ def test_license_compatibility_distributed_setup(
     if not isinstance(expected_compatibility, LicensingCompatible) and not isinstance(
         actual_compatibility, LicensingCompatible
     ):
-        assert actual_compatibility._reason == expected_compatibility._reason
+        assert actual_compatibility._reason == expected_compatibility._reason  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -694,4 +694,4 @@ def test_license_compatibility_distributed_monitoring(
     if not isinstance(expected_compatibility, LicensingCompatible) and not isinstance(
         actual_compatibility, LicensingCompatible
     ):
-        assert actual_compatibility._reason == expected_compatibility._reason
+        assert actual_compatibility._reason == expected_compatibility._reason  # noqa: SLF001

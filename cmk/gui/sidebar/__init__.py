@@ -517,7 +517,7 @@ class SidebarRenderer:
                 sidebar_update_interval=nav.sidebar_update_interval,
             )
         html.open_div(id_="content_area")
-        html._main_navigation_open = True
+        html._main_navigation_open = True  # noqa: SLF001
 
     def render_main_navigation_close(self) -> None:
         """Close the page started by :meth:`render_main_navigation_open`.
@@ -530,7 +530,11 @@ class SidebarRenderer:
         html.body_end()
 
     def _show_body_start(
-        self, *, screenshot_mode: bool, sidebar_notify_interval: int | None, kiosk: bool
+        self,
+        *,
+        screenshot_mode: bool,
+        sidebar_notify_interval: int | None,  # noqa: ARG002
+        kiosk: bool,
     ) -> None:
         # Chrome-bearing pages now host the main content in the same document as
         # the sidebar, so the body needs both the sidebar's ``body.side`` shell
@@ -540,7 +544,7 @@ class SidebarRenderer:
         # snapin previews embedded elsewhere) keep only the default ``body.main``.
         # Both paths preserve extra body classes that the page registered via
         # ``html.add_body_css_class`` (e.g. ``view``, ``dashlet``, ``inline``).
-        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes]
+        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes]  # noqa: SLF001
         if screenshot_mode:
             body_classes.append("screenshotmode")
 
@@ -627,10 +631,10 @@ class SidebarRenderer:
 
     def _show_snapin_bar(
         self,
-        config: Config,
+        config: Config,  # noqa: ARG002
         user_config: UserSidebarConfig,
         *,
-        show_scrollbar: bool,
+        show_scrollbar: bool,  # noqa: ARG002
         sidebar_update_interval: float,
     ) -> None:
         html.vue_component(

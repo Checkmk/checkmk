@@ -48,7 +48,7 @@ def _check_dns_requests(params: Params, section: DNSRequests) -> CheckResult:
     )
 
 
-def _discover_dns_requests(section: DNSRequests) -> DiscoveryResult:
+def _discover_dns_requests(section: DNSRequests) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

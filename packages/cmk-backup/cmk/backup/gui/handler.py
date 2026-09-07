@@ -2397,7 +2397,7 @@ class ModeBackupRestore(WatoMode[object]):
             return self._start_encrypted_restore(backup_ident, key_digest)
         return self._start_unencrypted_restore(backup_ident)
 
-    def _complete_restore(self, backup_ident: str | None) -> None:
+    def _complete_restore(self, backup_ident: str | None) -> None:  # noqa: ARG002
         RestoreJob(self._target_ident, None).complete()
 
     def _start_encrypted_restore(self, backup_ident: str, key_digest: str) -> ActionResult:
@@ -2589,5 +2589,5 @@ class PageBackupRestoreState:
     def job(self) -> MKBackupJob:
         return self._job
 
-    def page(self, config: Config) -> None:
+    def page(self, config: Config) -> None:  # noqa: ARG002
         job_page(self.job, "restore")

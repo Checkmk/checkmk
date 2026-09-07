@@ -151,7 +151,7 @@ def test_context_to_uri_vars(
         ),
     ],
 )
-def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_context):  # type: ignore[misc]
+def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_context):  # type: ignore[misc]  # noqa: ARG001
     for key, val in uri_vars:
         request.set_var(key, val)
 
@@ -207,7 +207,7 @@ def test_get_merged_context(
     infos: SingleInfos | None,
     context_vis: VisualContext,
     expected_context: VisualContext,
-    request_context: None,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)

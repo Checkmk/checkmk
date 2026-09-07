@@ -877,8 +877,8 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         entries: dict[str, T],
         *,
         pprint_value: bool,
-        debug: bool,
-        pending_changes: PendingChanges,
+        debug: bool,  # noqa: ARG002
+        pending_changes: PendingChanges,  # noqa: ARG002
     ) -> None:
         self._store.save(entries, pprint_value=pprint_value)
 

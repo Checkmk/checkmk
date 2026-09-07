@@ -48,7 +48,7 @@ def discover_3ware_disks(section: StringTable) -> DiscoveryResult:
             yield Service(item=line[0])
 
 
-def check_3ware_disks(item: str, params: object, section: StringTable) -> CheckResult:
+def check_3ware_disks(item: str, params: object, section: StringTable) -> CheckResult:  # noqa: ARG001
     for line in section:
         if line[0] != item:
             continue

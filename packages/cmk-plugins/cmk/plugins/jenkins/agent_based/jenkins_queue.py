@@ -73,7 +73,7 @@ def parse_jenkins_queue(string_table: StringTable) -> JenkinsQueue:
     return parsed
 
 
-def discover_jenkins_queue(section: JenkinsQueue) -> DiscoveryResult:
+def discover_jenkins_queue(section: JenkinsQueue) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

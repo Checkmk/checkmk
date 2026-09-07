@@ -32,7 +32,7 @@ def _get_list_choice(allow_empty: bool = True) -> vs.ListChoice:
 
 def _load_elements(lc: vs.ListChoice) -> Sequence[vs.ListChoiceChoice]:
     lc.load_elements()
-    return lc._elements
+    return lc._elements  # noqa: SLF001
 
 
 class TestListChoice:
@@ -60,7 +60,7 @@ class TestListChoice:
         assert _get_list_choice().value_to_json([1, 2]) == [1, 2]
         assert _get_list_choice().value_from_json([1, 2]) == [1, 2]
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
         with request_var(l_0="on", l_2="on"):
             assert _get_list_choice().from_html_vars("l") == [1, 3]
 

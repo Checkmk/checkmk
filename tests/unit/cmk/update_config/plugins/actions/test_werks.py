@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import datetime
 import logging
 from pathlib import Path
@@ -72,7 +74,8 @@ def test_update_livecycle() -> None:
 
 
 def test_version_of_werk_keeps_first_incompatible_version(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     unacknowledged_werks_file = Path(tmp_path, "ut_unacked")
     acknowledge_werks_file = Path(tmp_path, "ut_acked")

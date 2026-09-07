@@ -68,7 +68,7 @@ class _FakeRRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         self.requested_ranges.append(time_range)

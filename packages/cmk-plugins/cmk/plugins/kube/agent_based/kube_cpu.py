@@ -31,9 +31,9 @@ from cmk.plugins.kube.schemata.section import AllocatableResource, PerformanceUs
 
 
 def discovery_kube_cpu(
-    section_kube_performance_cpu: PerformanceUsage | None,
-    section_kube_cpu_resources: Resources | None,
-    section_kube_allocatable_cpu_resource: AllocatableResource | None,
+    section_kube_performance_cpu: PerformanceUsage | None,  # noqa: ARG001
+    section_kube_cpu_resources: Resources | None,  # noqa: ARG001
+    section_kube_allocatable_cpu_resource: AllocatableResource | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

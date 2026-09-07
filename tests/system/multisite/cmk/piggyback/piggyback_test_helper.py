@@ -114,7 +114,7 @@ def _timeout(seconds: int, error_msg: str) -> Iterator[None]:
         PBTimeoutError: when `seconds` amount of time has passed.
     """
 
-    def _raise_timeout(signum: int, frame: FrameType | None) -> None:
+    def _raise_timeout(signum: int, frame: FrameType | None) -> None:  # noqa: ARG001
         raise PBTimeoutError(error_msg)
 
     alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)

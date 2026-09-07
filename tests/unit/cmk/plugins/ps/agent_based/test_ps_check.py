@@ -567,7 +567,7 @@ def test_inventory_common() -> None:
             s.item: s
             for s in ps_utils.discover_ps(
                 PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
-                ps_section._parse_ps(int(time.time()), info),
+                ps_section._parse_ps(int(time.time()), info),  # noqa: SLF001
                 None,
                 None,
                 None,
@@ -990,13 +990,15 @@ check_results = [
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
 def test_check_ps_common(
-    inv_item: Service, reference: Sequence[Result | Metric], empty_value_store: None
+    inv_item: Service,
+    reference: Sequence[Result | Metric],
+    empty_value_store: None,  # noqa: ARG001
 ) -> None:
     parsed: list = []
 
     now = 1540375342
     for info in generate_inputs():
-        _cpu_cores, data, _ = ps_section._parse_ps(now, info)
+        _cpu_cores, data, _ = ps_section._parse_ps(now, info)  # noqa: SLF001
         parsed.extend((None, ps_info, cmd_line, now) for (ps_info, cmd_line) in data)
 
     factory_defaults = {**ps_check.CHECK_DEFAULT_PARAMETERS, **inv_item.parameters}
@@ -1114,9 +1116,9 @@ cpu_util_data = [
 
 @pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data: cpu_config, empty_value_store: None) -> None:
+def test_check_ps_common_cpu(data: cpu_config, empty_value_store: None) -> None:  # noqa: ARG001
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
-        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(  # noqa: SLF001
             check_time, splitter(agent_info.format(cputime))
         )
         lines_with_node_name = [
@@ -1186,9 +1188,9 @@ def test_check_ps_common_cpu(data: cpu_config, empty_value_store: None) -> None:
 def test_check_ps_common_count(
     levels: tuple[int, int, int, int],
     reference: Sequence[Result | Metric],
-    empty_value_store: None,
+    empty_value_store: None,  # noqa: ARG001
 ) -> None:
-    _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+    _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(  # noqa: SLF001
         int(time.time()), splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
     lines_with_node_name = [
@@ -1215,8 +1217,8 @@ def test_check_ps_common_count(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_subset_patterns(empty_value_store: None) -> None:
-    section_ps = ps_section._parse_ps(
+def test_subset_patterns(empty_value_store: None) -> None:  # noqa: ARG001
+    section_ps = ps_section._parse_ps(  # noqa: SLF001
         int(time.time()),
         splitter(
             """(user,0,0,0.5) main
@@ -1293,7 +1295,7 @@ def test_subset_patterns(empty_value_store: None) -> None:
 
 @pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None) -> None:
+def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None) -> None:  # noqa: ARG001
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
@@ -1312,7 +1314,7 @@ def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None)
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(  # noqa: SLF001
             check_time, splitter(agent_info.format(cputime))
         )
         lines_with_node_name = [
@@ -1389,8 +1391,8 @@ def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None)
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_parse_ps_windows(mocker: MockerFixture, empty_value_store: None) -> None:
-    section_ps = ps_section._parse_ps(
+def test_parse_ps_windows(mocker: MockerFixture, empty_value_store: None) -> None:  # noqa: ARG001
+    section_ps = ps_section._parse_ps(  # noqa: SLF001
         int(time.time()),
         splitter(
             """(\\LS\0Checkmk,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
@@ -1502,7 +1504,7 @@ def test_discover_empty_command_line() -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_empty_command_line(empty_value_store: None) -> None:
+def test_check_empty_command_line(empty_value_store: None) -> None:  # noqa: ARG001
     assert list(
         ps_check.check_ps(
             "my_proc",
@@ -1536,7 +1538,7 @@ def test_check_empty_command_line(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_ps_check_percent_memory_unknown(empty_value_store: None) -> None:
+def test_ps_check_percent_memory_unknown(empty_value_store: None) -> None:  # noqa: ARG001
     assert Result(
         state=State.UNKNOWN, summary="Percentual RAM levels configured, but total RAM is unknown"
     ) in list(
@@ -1553,7 +1555,7 @@ def test_ps_check_percent_memory_unknown(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_ps_check_percent_memory_mem_total(empty_value_store: None) -> None:
+def test_ps_check_percent_memory_mem_total(empty_value_store: None) -> None:  # noqa: ARG001
     assert Result(
         state=State.CRIT,
         summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",
@@ -1571,7 +1573,7 @@ def test_ps_check_percent_memory_mem_total(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_ps_check_percent_memory_mem_used(empty_value_store: None) -> None:
+def test_ps_check_percent_memory_mem_used(empty_value_store: None) -> None:  # noqa: ARG001
     assert Result(
         state=State.CRIT,
         summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",

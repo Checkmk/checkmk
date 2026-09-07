@@ -37,7 +37,7 @@ def make_header(
     if writer.output_format != "html":
         return
 
-    if writer._header_sent:
+    if writer._header_sent:  # noqa: SLF001
         return
 
     # Navigation is auto-built per request when ``show_main_navigation`` is
@@ -59,7 +59,7 @@ def make_header(
                 inline_help_as_text=inline_help_as_text,
             )
 
-    writer._header_sent = True
+    writer._header_sent = True  # noqa: SLF001
 
     breadcrumb = breadcrumb or Breadcrumb()
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Sequence
 
 import pytest
@@ -84,7 +86,9 @@ def test_discover_quanta_temperature() -> None:
     ],
 )
 def test_check_quanta_temperature(
-    item: str, expected_results: Sequence[object], empty_value_store: None
+    item: str,
+    expected_results: Sequence[object],
+    empty_value_store: None,
 ) -> None:
     parsed = parse_quanta(_INFO)
     result = list(check_quanta_temperature(item, {}, parsed))

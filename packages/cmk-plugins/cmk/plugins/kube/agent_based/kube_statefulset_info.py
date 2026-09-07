@@ -44,7 +44,7 @@ agent_section_kube_statefulset_info_v1 = AgentSection(
 )
 
 
-def discovery(section: StatefulSetInfo) -> DiscoveryResult:
+def discovery(section: StatefulSetInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

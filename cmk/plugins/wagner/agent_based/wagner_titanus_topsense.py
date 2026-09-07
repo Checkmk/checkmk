@@ -96,7 +96,7 @@ def _get_model_data(section: Section) -> list[StringTable]:
 #   .--titanus info--------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_info(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_info(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -135,7 +135,7 @@ check_plugin_wagner_titanus_topsense_info = CheckPlugin(
 #   .--overall status------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_overall_status(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_overall_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -160,7 +160,7 @@ check_plugin_wagner_titanus_topsense_overall_status = CheckPlugin(
 #   .--alarm---------------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_alarm(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_alarm(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -206,7 +206,7 @@ check_plugin_wagner_titanus_topsense_alarm = CheckPlugin(
 #   .--smoke percent-------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_smoke(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_smoke(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -244,7 +244,7 @@ check_plugin_wagner_titanus_topsense_smoke = CheckPlugin(
 #   .--chamber deviation---------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_chamber_deviation(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_chamber_deviation(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -278,7 +278,7 @@ check_plugin_wagner_titanus_topsense_chamber_deviation = CheckPlugin(
 #   .--air flow deviation--------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_airflow_deviation(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_airflow_deviation(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -321,7 +321,7 @@ check_plugin_wagner_titanus_topsense_airflow_deviation = CheckPlugin(
 #   .--air temp------------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_temp(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_temp(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Ambient 1")
     yield Service(item="Ambient 2")
 

@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from cmk.ccc.user import UserId
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs.unstable import (

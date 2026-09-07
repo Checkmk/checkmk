@@ -573,7 +573,7 @@ def delete_bi_aggregation(params: Mapping[str, Any]) -> Response:
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=RO_PERMISSIONS,
 )
-def get_bi_packs(params: Mapping[str, Any]) -> Response:
+def get_bi_packs(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all BI packs"""
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()

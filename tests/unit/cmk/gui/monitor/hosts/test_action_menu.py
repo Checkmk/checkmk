@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.gui.monitor.hosts._api import _action_menu
@@ -16,7 +18,7 @@ from cmk.gui.views.icon.entries import IconEntry
 def _passthrough_macros(monkeypatch: pytest.MonkeyPatch) -> None:
     # replace_action_url_macros reads the global user; the mapping logic under test does not
     # depend on macro substitution, so we neutralize it.
-    monkeypatch.setattr(_action_menu, "replace_action_url_macros", lambda url, what, row: url)
+    monkeypatch.setattr(_action_menu, "replace_action_url_macros", lambda url, what, row: url)  # noqa: ARG005
 
 
 def test_icon_name_from_static_icon() -> None:

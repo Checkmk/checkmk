@@ -53,7 +53,7 @@ snmp_section_brocade_sys = SimpleSNMPSection(
 )
 
 
-def discover_brocade_sys_mem(section: Section) -> DiscoveryResult:
+def discover_brocade_sys_mem(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -78,7 +78,7 @@ check_plugin_brocade_sys_mem = CheckPlugin(
 )
 
 
-def discover_brocade_sys(section: Section) -> DiscoveryResult:
+def discover_brocade_sys(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

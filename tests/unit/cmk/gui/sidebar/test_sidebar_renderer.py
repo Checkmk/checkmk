@@ -91,11 +91,12 @@ class QuietSnapin(SidebarSnapin):
 
 @pytest.fixture(name="permissive_user", autouse=True)
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -123,7 +124,7 @@ def _only_test_snapins(monkeypatch: pytest.MonkeyPatch) -> None:
     the code under test here."""
     monkeypatch.setattr(
         "cmk.gui.sidebar.all_snapins",
-        lambda user_permissions: {"quiet": QuietSnapin, "noisy": NoisySnapin},
+        lambda user_permissions: {"quiet": QuietSnapin, "noisy": NoisySnapin},  # noqa: ARG005
     )
 
 
@@ -298,11 +299,11 @@ def test_render_snapin_offers_the_more_button_for_show_more_snapins(
 @pytest.mark.usefixtures("extra_snapins")
 def test_snapin_styles_are_only_rendered_when_there_are_any() -> None:
     with output_funnel.plugged():
-        SidebarRenderer()._render_snapin_styles(QuietSnapin())
+        SidebarRenderer()._render_snapin_styles(QuietSnapin())  # noqa: SLF001
         assert output_funnel.drain() == ""
 
     with output_funnel.plugged():
-        SidebarRenderer()._render_snapin_styles(NoisySnapin())
+        SidebarRenderer()._render_snapin_styles(NoisySnapin())  # noqa: SLF001
         assert "<style>" in output_funnel.drain()
 
 
@@ -311,8 +312,8 @@ def test_vue_snapin_config_carries_the_refresh_behaviour(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr(user, "get_show_more_setting", lambda more_id: True)
-        config = SidebarRenderer()._migrate_to_vue_sidbar_snapin_config(_user_snapin(QuietSnapin))
+        m.setattr(user, "get_show_more_setting", lambda more_id: True)  # noqa: ARG005
+        config = SidebarRenderer()._migrate_to_vue_sidbar_snapin_config(_user_snapin(QuietSnapin))  # noqa: SLF001
 
     assert config.name == "quiet"
     assert config.title == "Quiet"
@@ -323,7 +324,7 @@ def test_vue_snapin_config_carries_the_refresh_behaviour(
 
 @pytest.mark.usefixtures("extra_snapins")
 def test_vue_snapin_config_of_a_closed_snapin() -> None:
-    config = SidebarRenderer()._migrate_to_vue_sidbar_snapin_config(
+    config = SidebarRenderer()._migrate_to_vue_sidbar_snapin_config(  # noqa: SLF001
         _user_snapin(QuietSnapin, SnapinVisibility.CLOSED)
     )
 
@@ -332,7 +333,8 @@ def test_vue_snapin_config_of_a_closed_snapin() -> None:
 
 @pytest.mark.usefixtures("patch_theme", "extra_snapins")
 def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(
-    monkeypatch: pytest.MonkeyPatch, load_config: Config
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
+    load_config: Config,
 ) -> None:
     """The sidebar polls the regularly refreshed snap-ins, re-renders the restart-dependent
     ones only after a core restart, and never touches the static ones."""
@@ -370,7 +372,7 @@ def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(
     )
 
     with output_funnel.plugged():
-        refresh, restart, static = SidebarRenderer()._show_snapins(load_config, user_config)
+        refresh, restart, static = SidebarRenderer()._show_snapins(load_config, user_config)  # noqa: SLF001
         output_funnel.drain()
 
     assert [name for name, _url in refresh] == ["regular", "restart"]
@@ -381,7 +383,7 @@ def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(
 @pytest.mark.usefixtures("patch_theme")
 def test_add_snapin_button_links_to_the_add_page() -> None:
     with output_funnel.plugged():
-        SidebarRenderer()._show_add_snapin_button()
+        SidebarRenderer()._show_add_snapin_button()  # noqa: SLF001
         rendered = output_funnel.drain()
 
     assert 'id="add_snapin"' in rendered
@@ -390,15 +392,15 @@ def test_add_snapin_button_links_to_the_add_page() -> None:
 
 def test_icon_path_is_none_without_a_custom_logo(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
-        m.setattr(theme, "has_custom_logo", lambda name: False)
-        assert sidebar._get_icon_path() is None
+        m.setattr(theme, "has_custom_logo", lambda name: False)  # noqa: ARG005
+        assert sidebar._get_icon_path() is None  # noqa: SLF001
 
 
 def test_icon_path_of_a_custom_logo(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
-        m.setattr(theme, "has_custom_logo", lambda name: True)
-        m.setattr(theme, "detect_icon_path", lambda icon_name, prefix: "images/navbar_logo.svg")
-        assert sidebar._get_icon_path() == "images/navbar_logo.svg"
+        m.setattr(theme, "has_custom_logo", lambda name: True)  # noqa: ARG005
+        m.setattr(theme, "detect_icon_path", lambda icon_name, prefix: "images/navbar_logo.svg")  # noqa: ARG005
+        assert sidebar._get_icon_path() == "images/navbar_logo.svg"  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("extra_snapins")
@@ -407,9 +409,9 @@ def test_used_snapins_lists_the_configured_snapins(monkeypatch: pytest.MonkeyPat
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("quiet", "open")]},
+            lambda self: {"fold": False, "snapins": [("quiet", "open")]},  # noqa: ARG005
         )
-        assert sidebar._used_snapins(Config(), USER_PERMISSIONS) == ["quiet"]
+        assert sidebar._used_snapins(Config(), USER_PERMISSIONS) == ["quiet"]  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("patch_theme", "extra_snapins")
@@ -421,7 +423,7 @@ def test_ajax_snapin_renders_the_requested_snapin(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("quiet", "open")]},
+            lambda self: {"fold": False, "snapins": [("quiet", "open")]},  # noqa: ARG005
         )
         sidebar.ajax_snapin(_page_context(load_config))
 
@@ -437,7 +439,7 @@ def test_ajax_snapin_renders_several_snapins_by_name(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("quiet", "open")]},
+            lambda self: {"fold": False, "snapins": [("quiet", "open")]},  # noqa: ARG005
         )
         sidebar.ajax_snapin(_page_context(load_config))
 
@@ -453,7 +455,7 @@ def test_ajax_snapin_reports_a_failing_snapin_without_failing_the_request(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("noisy", "open")]},
+            lambda self: {"fold": False, "snapins": [("noisy", "open")]},  # noqa: ARG005
         )
         sidebar.ajax_snapin(_page_context(load_config))
 
@@ -472,7 +474,7 @@ def test_ajax_snapin_skips_a_restart_snapin_without_a_restart(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("hostgroups", "open")]},
+            lambda self: {"fold": False, "snapins": [("hostgroups", "open")]},  # noqa: ARG005
         )
         m.setattr(sites, "states", dict)
         sidebar.ajax_snapin(_page_context(load_config))
@@ -524,7 +526,7 @@ def test_open_close_of_a_snapin_that_is_not_configured(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": []},
+            lambda self: {"fold": False, "snapins": []},  # noqa: ARG005
         )
 
         assert sidebar.AjaxOpenCloseSnapin().page(_page_context(load_config)) is None
@@ -567,7 +569,7 @@ def test_add_snapin_rejects_an_already_enabled_snapin(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("quiet", "open")]},
+            lambda self: {"fold": False, "snapins": [("quiet", "open")]},  # noqa: ARG005
         )
         with pytest.raises(MKUserError, match="already enabled"):
             sidebar.AjaxAddSnapin().page(_page_context(load_config))
@@ -583,9 +585,9 @@ def test_add_snapin_returns_the_rendered_snapin(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": []},
+            lambda self: {"fold": False, "snapins": []},  # noqa: ARG005
         )
-        m.setattr(sidebar.UserSidebarConfig, "save", lambda self: None)
+        m.setattr(sidebar.UserSidebarConfig, "save", lambda self: None)  # noqa: ARG005
         result = sidebar.AjaxAddSnapin().page(_page_context(load_config))
 
     assert isinstance(result, dict)
@@ -602,7 +604,7 @@ def test_available_snapins_exclude_the_configured_ones(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": [("quiet", "open")]},
+            lambda self: {"fold": False, "snapins": [("quiet", "open")]},  # noqa: ARG005
         )
         available = sidebar.AjaxGetAvialableSnapins().page(_page_context(load_config))
 
@@ -623,7 +625,7 @@ def test_available_snapins_preview_a_failing_snapin(
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
-            lambda self: {"fold": False, "snapins": []},
+            lambda self: {"fold": False, "snapins": []},  # noqa: ARG005
         )
         available = sidebar.AjaxGetAvialableSnapins().page(_page_context(load_config))
 
@@ -659,7 +661,7 @@ def test_set_snapin_site_stores_all_sites(
     request.set_var("ident", "quiet")
     request.set_var("site", "")
     with monkeypatch.context() as m:
-        m.setattr(user, "load_file", lambda *args, **kwargs: {})
+        m.setattr(user, "load_file", lambda *args, **kwargs: {})  # noqa: ARG005
         m.setattr(user, "save_file", lambda name, content: saved.update({name: content}))
         sidebar.ajax_set_snapin_site(_page_context(load_config))
 
@@ -678,7 +680,7 @@ def test_set_snapin_site_stores_a_configured_site(
             "cmk.gui.sidebar.get_configured_site_choices",
             lambda: [(SiteId("NO_SITE"), "Local site")],
         )
-        m.setattr(user, "load_file", lambda *args, **kwargs: {})
+        m.setattr(user, "load_file", lambda *args, **kwargs: {})  # noqa: ARG005
         m.setattr(user, "save_file", lambda name, content: saved.update({name: content}))
         sidebar.ajax_set_snapin_site(_page_context(load_config))
 
@@ -696,7 +698,7 @@ def test_add_snapin_page_needs_the_configure_permission(
 
 
 class _NeverCalled:
-    def __call__(self, *args: object, **kwargs: object) -> None:
+    def __call__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
         raise AssertionError("must not be called")
 
 
@@ -710,12 +712,12 @@ def test_renderer_writes_the_content_between_navigation_and_close(
         m.setattr(
             SidebarRenderer,
             "render_main_navigation_with_open_content_area",
-            lambda self, title, nav: calls.append("open"),
+            lambda self, title, nav: calls.append("open"),  # noqa: ARG005
         )
         m.setattr(
             SidebarRenderer,
             "render_main_navigation_close",
-            lambda self: calls.append("close"),
+            lambda self: calls.append("close"),  # noqa: ARG005
         )
         with output_funnel.plugged():
             SidebarRenderer().show(
@@ -742,9 +744,9 @@ def test_renderer_without_content(monkeypatch: pytest.MonkeyPatch, load_config: 
         m.setattr(
             SidebarRenderer,
             "render_main_navigation_with_open_content_area",
-            lambda self, title, nav: None,
+            lambda self, title, nav: None,  # noqa: ARG005
         )
-        m.setattr(SidebarRenderer, "render_main_navigation_close", lambda self: None)
+        m.setattr(SidebarRenderer, "render_main_navigation_close", lambda self: None)  # noqa: ARG005
         with output_funnel.plugged():
             SidebarRenderer().show(
                 config=load_config,
@@ -763,9 +765,9 @@ def test_renderer_without_content(monkeypatch: pytest.MonkeyPatch, load_config: 
 
 
 @pytest.mark.usefixtures("patch_theme")
-def test_body_start_marks_screenshot_mode(load_config: Config) -> None:
+def test_body_start_marks_screenshot_mode(load_config: Config) -> None:  # noqa: ARG001
     with output_funnel.plugged():
-        SidebarRenderer()._show_body_start(
+        SidebarRenderer()._show_body_start(  # noqa: SLF001
             screenshot_mode=True, sidebar_notify_interval=None, kiosk=False
         )
         rendered = output_funnel.drain()
@@ -775,10 +777,10 @@ def test_body_start_marks_screenshot_mode(load_config: Config) -> None:
 
 
 @pytest.mark.usefixtures("patch_theme")
-def test_body_start_of_a_kiosk_page_has_no_sidebar_shell(load_config: Config) -> None:
+def test_body_start_of_a_kiosk_page_has_no_sidebar_shell(load_config: Config) -> None:  # noqa: ARG001
     """Kiosk pages (widget iframes) host no sidebar, so they must not get its body styling."""
     with output_funnel.plugged():
-        SidebarRenderer()._show_body_start(
+        SidebarRenderer()._show_body_start(  # noqa: SLF001
             screenshot_mode=False, sidebar_notify_interval=None, kiosk=True
         )
         rendered = output_funnel.drain()
@@ -795,7 +797,7 @@ def test_sidebar_is_replaced_by_a_placeholder_without_the_permission(
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x != "general.see_sidebar")
         with output_funnel.plugged():
-            SidebarRenderer()._show_sidebar(
+            SidebarRenderer()._show_sidebar(  # noqa: SLF001
                 load_config,
                 USER_PERMISSIONS,
                 load_config.sidebar,
@@ -813,7 +815,7 @@ def test_page_side_uses_the_configured_sidebar(
 ) -> None:
     seen: dict[str, Any] = {}
 
-    def _show(self: SidebarRenderer, **kwargs: Any) -> None:
+    def _show(self: SidebarRenderer, **kwargs: Any) -> None:  # noqa: ARG001
         seen.update(kwargs)
 
     with monkeypatch.context() as m:

@@ -95,7 +95,7 @@ def make_product_usage_analytics_config_variable(
             }
         ),
         hint=hint,
-        form_spec=lambda context: fs.Dictionary(
+        form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
             title=Title("Product usage analytics"),
             elements={
                 "enabled": fs.DictElement(

@@ -82,7 +82,11 @@ def status_result_oracle_diva_csm(reading: str) -> tuple[int, str]:
 
 
 def check_oracle_diva_csm_status(
-    name: str, idx: int, item: str, params: Mapping[str, Any], info: Sequence[StringTable]
+    name: str,
+    idx: int,
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    info: Sequence[StringTable],
 ) -> CheckResult:
     for line in info[idx]:
         if len(line) == 2:

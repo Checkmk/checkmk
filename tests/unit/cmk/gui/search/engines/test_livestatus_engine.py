@@ -50,9 +50,9 @@ class TestGetSearchUrlParams:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = "hosts"
-        conductor._rows = [{"site": "mysite", "name": "myhost", "host_name": "myhost"}]
-        conductor._used_search_plugins = [HostMatchPlugin(livestatus_field="name", name="h")]
+        conductor._livestatus_table = "hosts"  # noqa: SLF001
+        conductor._rows = [{"site": "mysite", "name": "myhost", "host_name": "myhost"}]  # noqa: SLF001
+        conductor._used_search_plugins = [HostMatchPlugin(livestatus_field="name", name="h")]  # noqa: SLF001
 
         url_params = conductor.get_search_url_params()
 
@@ -66,12 +66,12 @@ class TestGetSearchUrlParams:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = "hosts"
-        conductor._rows = [
+        conductor._livestatus_table = "hosts"  # noqa: SLF001
+        conductor._rows = [  # noqa: SLF001
             {"site": "site1", "name": "myhost", "host_name": "myhost"},
             {"site": "site2", "name": "myhost", "host_name": "myhost"},
         ]
-        conductor._used_search_plugins = [HostMatchPlugin(livestatus_field="name", name="h")]
+        conductor._used_search_plugins = [HostMatchPlugin(livestatus_field="name", name="h")]  # noqa: SLF001
 
         url_params = conductor.get_search_url_params()
 
@@ -82,9 +82,9 @@ class TestGetSearchUrlParams:
         conductor = LivestatusQuicksearchConductor(
             {"hg": ["mygroup"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = "hostgroups"
-        conductor._rows = [{"site": "mysite", "name": "mygroup"}]
-        conductor._used_search_plugins = [GroupMatchPlugin(group_type="host", name="hg")]
+        conductor._livestatus_table = "hostgroups"  # noqa: SLF001
+        conductor._rows = [{"site": "mysite", "name": "mygroup"}]  # noqa: SLF001
+        conductor._used_search_plugins = [GroupMatchPlugin(group_type="host", name="hg")]  # noqa: SLF001
 
         url_params = conductor.get_search_url_params()
 
@@ -98,16 +98,16 @@ class TestGetSearchUrlParams:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"], "hg": ["mygroup"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._determine_livestatus_table()
-        conductor._used_search_plugins = conductor._get_used_search_plugins()
-        conductor._rows = [
+        conductor._determine_livestatus_table()  # noqa: SLF001
+        conductor._used_search_plugins = conductor._get_used_search_plugins()  # noqa: SLF001
+        conductor._rows = [  # noqa: SLF001
             {"site": "mysite", "name": "myhost", "host_name": "myhost", "host_groups": ["mygroup"]}
         ]
 
         url_params = conductor.get_search_url_params()
 
         assert conductor.livestatus_table == "hosts"
-        assert {plugin.name for plugin in conductor._used_search_plugins} == {"h", "hg"}
+        assert {plugin.name for plugin in conductor._used_search_plugins} == {"h", "hg"}  # noqa: SLF001
         assert ("view_name", "host") in url_params
         assert ("host", "myhost") in url_params
         assert not any("group" in key for key, _value in url_params)
@@ -123,7 +123,7 @@ class TestIsInvalidRegex:
         ],
     )
     def test_glob_query_is_not_rejected_before_it_gets_sanitized(self, query: str) -> None:
-        assert LivestatusSearchEngine._is_invalid_regex(query) is False
+        assert LivestatusSearchEngine._is_invalid_regex(query) is False  # noqa: SLF001
 
     @pytest.mark.parametrize(
         "query",
@@ -134,7 +134,7 @@ class TestIsInvalidRegex:
         ],
     )
     def test_broken_regex_is_rejected(self, query: str) -> None:
-        assert LivestatusSearchEngine._is_invalid_regex(query) is True
+        assert LivestatusSearchEngine._is_invalid_regex(query) is True  # noqa: SLF001
 
 
 class TestFindSearchObjectExpressions:
@@ -151,14 +151,15 @@ class TestFindSearchObjectExpressions:
         ],
     )
     def test_expressions_are_extracted(self, query: str, expected: list[tuple[str, int]]) -> None:
-        assert QuicksearchManager._find_search_object_expressions(query) == expected
+        assert QuicksearchManager._find_search_object_expressions(query) == expected  # noqa: SLF001
 
 
 class TestGetUsedFiltersFromQuery:
     @staticmethod
     def _used_filters(query: str) -> UsedFilters:
-        return QuicksearchManager._get_used_filters_from_query(
-            query, QuicksearchManager._find_search_object_expressions(query)
+        return QuicksearchManager._get_used_filters_from_query(  # noqa: SLF001
+            query,
+            QuicksearchManager._find_search_object_expressions(query),  # noqa: SLF001
         )
 
     @pytest.mark.parametrize(
@@ -209,7 +210,7 @@ class TestDetermineLivestatusTable:
             used_filters, FilterBehaviour.CONTINUE, row_limit=80
         )
 
-        conductor._determine_livestatus_table()
+        conductor._determine_livestatus_table()  # noqa: SLF001
 
         assert conductor.livestatus_table == expected
 
@@ -230,9 +231,9 @@ class TestGetTargetView:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = livestatus_table
+        conductor._livestatus_table = livestatus_table  # noqa: SLF001
 
-        assert conductor._get_target_view(exact_match=True) == expected
+        assert conductor._get_target_view(exact_match=True) == expected  # noqa: SLF001
 
     @pytest.mark.parametrize(
         "livestatus_table, expected",
@@ -249,18 +250,18 @@ class TestGetTargetView:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = livestatus_table
+        conductor._livestatus_table = livestatus_table  # noqa: SLF001
 
-        assert conductor._get_target_view(exact_match=False) == expected
+        assert conductor._get_target_view(exact_match=False) == expected  # noqa: SLF001
 
     def test_unknown_table_has_no_target_view(self) -> None:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = ""
+        conductor._livestatus_table = ""  # noqa: SLF001
 
         with pytest.raises(NotImplementedError):
-            conductor._get_target_view()
+            conductor._get_target_view()  # noqa: SLF001
 
 
 class TestGenerateDisplayTexts:
@@ -271,7 +272,7 @@ class TestGenerateDisplayTexts:
         conductor = LivestatusQuicksearchConductor(
             used_filters or {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = livestatus_table
+        conductor._livestatus_table = livestatus_table  # noqa: SLF001
         return conductor
 
     def test_service_titles_are_taken_from_the_description(self) -> None:
@@ -285,7 +286,7 @@ class TestGenerateDisplayTexts:
             )
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [(result.title, result.url, result.context) for result in results] == [
             ("CPU load", "view.py?a=1", "")
@@ -308,7 +309,7 @@ class TestGenerateDisplayTexts:
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [(result.url, result.context) for result in results] == [
             ("view.py?a=1&host_regex=myhost", "myhost"),
@@ -332,7 +333,7 @@ class TestGenerateDisplayTexts:
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [result.context for result in results] == ["My alias", "Another alias"]
 
@@ -353,7 +354,7 @@ class TestGenerateDisplayTexts:
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [(result.title, result.url, result.context) for result in results] == [
             ("10.10.15.200", "view.py?a=1", "myhost"),
@@ -371,7 +372,7 @@ class TestGenerateDisplayTexts:
             )
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [(result.title, result.context) for result in results] == [("My alias", "")]
 
@@ -386,7 +387,7 @@ class TestGenerateDisplayTexts:
             )
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [result.context for result in results] == [""]
 
@@ -401,7 +402,7 @@ class TestGenerateDisplayTexts:
             )
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [(result.title, result.url, result.context) for result in results] == [
             ("myhost", "view.py?a=1", "")
@@ -418,7 +419,7 @@ class TestGenerateDisplayTexts:
             )
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [(result.title, result.context) for result in results] == [("CPU load", "")]
 
@@ -439,7 +440,7 @@ class TestGenerateDisplayTexts:
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)
+        results = conductor._generate_display_texts(elements)  # noqa: SLF001
 
         assert [result.title for result in results] == ["mygroup"]
 
@@ -503,9 +504,9 @@ class TestLivestatusTable:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = livestatus_table
+        conductor._livestatus_table = livestatus_table  # noqa: SLF001
 
-        assert conductor._get_livestatus_default_columns() == expected
+        assert conductor._get_livestatus_default_columns() == expected  # noqa: SLF001
 
 
 class TestGenerateLivestatusCommand:
@@ -514,8 +515,8 @@ class TestGenerateLivestatusCommand:
         conductor = LivestatusQuicksearchConductor(
             used_filters, FilterBehaviour.CONTINUE, row_limit=row_limit
         )
-        conductor._generate_livestatus_command()
-        return conductor._livestatus_command
+        conductor._generate_livestatus_command()  # noqa: SLF001
+        return conductor._livestatus_command  # noqa: SLF001
 
     @staticmethod
     def _columns(command: str) -> list[str]:
@@ -563,7 +564,9 @@ class TestExecuteLivestatusCommand:
         )
 
     def test_rows_are_labelled_with_the_site_they_came_from(
-        self, load_config: Config, mock_livestatus: MockLiveStatusConnection
+        self,
+        load_config: Config,  # noqa: ARG002
+        mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.set_sites(["NO_SITE"])
         mock_livestatus.add_table(
@@ -579,12 +582,14 @@ class TestExecuteLivestatusCommand:
             conductor.do_query()
 
         assert conductor.num_rows() == 1
-        assert conductor._rows[0]["site"] == "NO_SITE"
-        assert conductor._rows[0]["name"] == "myhost"
+        assert conductor._rows[0]["site"] == "NO_SITE"  # noqa: SLF001
+        assert conductor._rows[0]["name"] == "myhost"  # noqa: SLF001
         assert conductor.row_limit_exceeded() is False
 
     def test_exceeding_the_row_limit_drops_the_probe_row(
-        self, load_config: Config, mock_livestatus: MockLiveStatusConnection
+        self,
+        load_config: Config,  # noqa: ARG002
+        mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.set_sites(["NO_SITE"])
         mock_livestatus.add_table(
@@ -605,7 +610,9 @@ class TestExecuteLivestatusCommand:
         assert conductor.row_limit_exceeded() is True
 
     def test_an_empty_livestatus_response_yields_no_rows(
-        self, load_config: Config, mock_livestatus: MockLiveStatusConnection
+        self,
+        load_config: Config,  # noqa: ARG002
+        mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.set_sites(["NO_SITE"])
         mock_livestatus.add_table("hosts", [], site="NO_SITE")
@@ -627,8 +634,8 @@ class TestCreateResults:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = "hosts"
-        conductor._rows = [{"site": "mysite", "name": "myhost", "host_name": "myhost"}]
+        conductor._livestatus_table = "hosts"  # noqa: SLF001
+        conductor._rows = [{"site": "mysite", "name": "myhost", "host_name": "myhost"}]  # noqa: SLF001
 
         results = conductor.create_results(_build_url())
 
@@ -643,8 +650,8 @@ class TestCreateResults:
         conductor = LivestatusQuicksearchConductor(
             {"hg": ["mygroup"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._livestatus_table = "hostgroups"
-        conductor._rows = [{"site": "mysite", "name": "mygroup"}]
+        conductor._livestatus_table = "hostgroups"  # noqa: SLF001
+        conductor._rows = [{"site": "mysite", "name": "mygroup"}]  # noqa: SLF001
 
         results = conductor.create_results(_build_url())
 
@@ -657,8 +664,8 @@ class TestCreateResults:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"], "hg": ["mygroup"]}, FilterBehaviour.CONTINUE, row_limit=80
         )
-        conductor._determine_livestatus_table()
-        conductor._rows = [
+        conductor._determine_livestatus_table()  # noqa: SLF001
+        conductor._rows = [  # noqa: SLF001
             {"site": "mysite", "name": "myhost", "host_name": "myhost", "host_groups": ["mygroup"]}
         ]
 
@@ -724,7 +731,7 @@ class TestConductSearch:
         first = _FakeConductor(["a"], FilterBehaviour.CONTINUE, row_limit=10)
         second = _FakeConductor(["b"], FilterBehaviour.CONTINUE, row_limit=10)
 
-        self._manager(row_limit=10)._conduct_search([first, second])
+        self._manager(row_limit=10)._conduct_search([first, second])  # noqa: SLF001
 
         assert (first.queried, second.queried) == (True, True)
         assert (first.titles, second.titles) == (["a"], ["b"])
@@ -733,7 +740,7 @@ class TestConductSearch:
         first = _FakeConductor(["a", "b"], FilterBehaviour.CONTINUE, row_limit=3)
         second = _FakeConductor(["c", "d"], FilterBehaviour.CONTINUE, row_limit=3)
 
-        self._manager(row_limit=3)._conduct_search([first, second])
+        self._manager(row_limit=3)._conduct_search([first, second])  # noqa: SLF001
 
         assert (first.titles, second.titles) == (["a", "b"], ["c"])
 
@@ -741,7 +748,7 @@ class TestConductSearch:
         first = _FakeConductor(["a"], FilterBehaviour.FINISHED, row_limit=10)
         second = _FakeConductor(["b"], FilterBehaviour.CONTINUE, row_limit=10)
 
-        self._manager(row_limit=10)._conduct_search([first, second])
+        self._manager(row_limit=10)._conduct_search([first, second])  # noqa: SLF001
 
         assert first.queried is True
         assert second.queried is False
@@ -750,7 +757,7 @@ class TestConductSearch:
         first = _FakeConductor([], FilterBehaviour.FINISHED, row_limit=10)
         second = _FakeConductor(["b"], FilterBehaviour.CONTINUE, row_limit=10)
 
-        self._manager(row_limit=10)._conduct_search([first, second])
+        self._manager(row_limit=10)._conduct_search([first, second])  # noqa: SLF001
 
         assert second.queried is True
         assert second.titles == ["b"]
@@ -760,7 +767,7 @@ class TestConductSearch:
         second = _FakeConductor(["b"], FilterBehaviour.FINISHED_DISTINCT, row_limit=10)
         third = _FakeConductor(["c"], FilterBehaviour.CONTINUE, row_limit=10)
 
-        self._manager(row_limit=10)._conduct_search([first, second, third])
+        self._manager(row_limit=10)._conduct_search([first, second, third])  # noqa: SLF001
 
         assert (first.titles, second.titles) == ([], ["b"])
         assert third.queried is False
@@ -774,7 +781,7 @@ class TestEvaluateResults:
             _FakeConductor(["My alias"], FilterBehaviour.CONTINUE, 10, topic="Host alias"),
         ]
 
-        results = list(manager._evaluate_results(conductors))
+        results = list(manager._evaluate_results(conductors))  # noqa: SLF001
 
         assert [(topic, [result.title for result in items]) for topic, items in results] == [
             ("Host name", ["myhost"]),
@@ -787,7 +794,7 @@ class TestEvaluateResults:
             _FakeConductor([], FilterBehaviour.CONTINUE, 10, topic="Host name"),
         ]
 
-        assert list(manager._evaluate_results(conductors)) == []
+        assert list(manager._evaluate_results(conductors)) == []  # noqa: SLF001
 
 
 class TestDetermineSearchObjects:
@@ -804,21 +811,21 @@ class TestDetermineSearchObjects:
     ) -> None:
         user_permissions = UserPermissions.from_config(load_config, permission_registry)
 
-        search_objects = self._manager()._determine_search_objects(
+        search_objects = self._manager()._determine_search_objects(  # noqa: SLF001
             "h:myhost s:CPU", user_permissions
         )
 
         assert len(search_objects) == 1
         assert isinstance(search_objects[0], LivestatusQuicksearchConductor)
-        assert search_objects[0]._used_filters == {"h": ["myhost"], "s": ["CPU"]}
+        assert search_objects[0]._used_filters == {"h": ["myhost"], "s": ["CPU"]}  # noqa: SLF001
 
     def test_a_plain_query_is_offered_to_every_configured_filter(self, load_config: Config) -> None:
         user_permissions = UserPermissions.from_config(load_config, permission_registry)
 
-        search_objects = self._manager()._determine_search_objects("myhost", user_permissions)
+        search_objects = self._manager()._determine_search_objects("myhost", user_permissions)  # noqa: SLF001
 
         assert [
-            (search_object._used_filters, search_object.filter_behaviour)
+            (search_object._used_filters, search_object.filter_behaviour)  # noqa: SLF001
             for search_object in search_objects
         ] == [
             ({"h": ["myhost"]}, FilterBehaviour.CONTINUE),
@@ -828,9 +835,9 @@ class TestDetermineSearchObjects:
     def test_a_glob_query_is_converted_to_a_regex(self, load_config: Config) -> None:
         user_permissions = UserPermissions.from_config(load_config, permission_registry)
 
-        search_objects = self._manager()._determine_search_objects("my*host", user_permissions)
+        search_objects = self._manager()._determine_search_objects("my*host", user_permissions)  # noqa: SLF001
 
-        assert search_objects[0]._used_filters == {"h": ["my.*host"]}
+        assert search_objects[0]._used_filters == {"h": ["my.*host"]}  # noqa: SLF001
 
 
 class TestSearch:
@@ -892,7 +899,7 @@ class TestBasicPluginQuicksearchConductor:
             UserPermissions({}, {}, {}, []),
             row_limit,
         )
-        conductor._results = [SearchResult(title=title, url="index.py") for title in titles]
+        conductor._results = [SearchResult(title=title, url="index.py") for title in titles]  # noqa: SLF001
         return conductor
 
     def test_results_are_stripped_from_the_end(self) -> None:
@@ -929,7 +936,7 @@ class TestRemoveRowsFromEndOfLivestatusRows:
         conductor = LivestatusQuicksearchConductor(
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=10
         )
-        conductor._rows = [{"site": "mysite", "name": f"myhost{idx}"} for idx in range(3)]
+        conductor._rows = [{"site": "mysite", "name": f"myhost{idx}"} for idx in range(3)]  # noqa: SLF001
 
         conductor.remove_rows_from_end(2)
 

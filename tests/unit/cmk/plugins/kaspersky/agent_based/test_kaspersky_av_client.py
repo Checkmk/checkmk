@@ -38,7 +38,7 @@ def set_fixed_timezone() -> Iterator[None]:
 def test_parse_kaspersky_av_client(
     string_table: StringTable, now: int, expected_section: kaspersky_av_client.Section
 ) -> None:
-    assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section
+    assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

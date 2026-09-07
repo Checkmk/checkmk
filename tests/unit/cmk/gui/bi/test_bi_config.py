@@ -128,7 +128,7 @@ class ModeBIEditRuleFake(ModeBIEditRule):
 def test_validate_rule_id() -> None:
     edit_rule_mode = ModeBIEditRuleFake()
 
-    edit_rule_mode._validate_rule_id("unique_rule_id")
+    edit_rule_mode._validate_rule_id("unique_rule_id")  # noqa: SLF001
 
     with pytest.raises(MKUserError, match="There is already a rule with the ID <b>networking</b>."):
-        edit_rule_mode._validate_rule_id("networking")
+        edit_rule_mode._validate_rule_id("networking")  # noqa: SLF001

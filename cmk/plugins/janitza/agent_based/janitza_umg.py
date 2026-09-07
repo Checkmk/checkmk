@@ -202,11 +202,11 @@ check_plugin_janitza_umg = CheckPlugin(
 )
 
 
-def discover_janitza_umg_freq(section: Section) -> DiscoveryResult:
+def discover_janitza_umg_freq(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")  # why?? :-(
 
 
-def check_janitza_umg_freq(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_janitza_umg_freq(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     yield from check_levels(
         section.frequency,
         "in_freq",

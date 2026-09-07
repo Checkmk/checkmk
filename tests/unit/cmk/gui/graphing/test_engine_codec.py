@@ -271,8 +271,8 @@ def test_every_engine_quantity_kind_is_covered() -> None:
 def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
     duplicate = QuantitySpec(
         "constant",
-        lambda quantity, codec: {},
-        lambda data, codec: Constant(0.0),
+        lambda quantity, codec: {},  # noqa: ARG005
+        lambda data, codec: Constant(0.0),  # noqa: ARG005
     )
     with pytest.raises(ValueError, match="duplicate quantity kind: constant"):
         graph_codec((*COMMUNITY_QUANTITY_SPECS, duplicate))

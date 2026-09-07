@@ -51,7 +51,7 @@ agent_section_netapp_ontap_status = AgentSection(
 )
 
 
-def discovery_netapp_ontap_status(section: Section) -> DiscoveryResult:
+def discovery_netapp_ontap_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

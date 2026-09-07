@@ -75,7 +75,7 @@ class MainMenuRegistry(Registry[MainMenuItem | MainMenuLinkItem | ConfigurableMa
     def menu_user(self) -> MainMenuItem:
         return self._get_item_by_id(NavItemIdEnum.user)
 
-    def _get_item_by_id(self, id: str) -> MainMenuItem:
+    def _get_item_by_id(self, id: str) -> MainMenuItem:  # noqa: A002
         item = self[id]
         assert isinstance(item, MainMenuItem)
         return item

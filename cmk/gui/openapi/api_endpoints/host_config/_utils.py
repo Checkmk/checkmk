@@ -40,7 +40,7 @@ from .models.response_models import (
 
 
 class AgentLinkHook:
-    create_links: Callable[[HostName], list[LinkModel]] = lambda h: []
+    create_links: Callable[[HostName], list[LinkModel]] = lambda h: []  # noqa: ARG005
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:

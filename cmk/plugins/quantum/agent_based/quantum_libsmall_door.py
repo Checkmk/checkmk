@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 _Section = list[list[str]] | None
 
 
-def discovery_quantum_libsmall_door(section: _Section) -> DiscoveryResult:
+def discovery_quantum_libsmall_door(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item=None, parameters=None)
 
 

@@ -37,10 +37,10 @@ def main() -> None:
             user=UserId("cmdbuild"),
         )
         client.command(comment_command)
-        print("Successfully added host comment.")
+        print("Successfully added host comment.")  # noqa: T201
 
     except Exception as e:
-        print(f"Livestatus error: {e}")
+        print(f"Livestatus error: {e}")  # noqa: T201
 
 
 if __name__ == "__main__":

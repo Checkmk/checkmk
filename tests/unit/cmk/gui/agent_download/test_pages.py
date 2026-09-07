@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -190,11 +192,11 @@ def fixture_uncached_plugin_family_agents() -> Iterator[None]:
     Clearing it upfront keeps the real families found at import time from shadowing the
     patched ones, clearing it afterwards keeps the patched ones out of later tests.
     """
-    _pages._plugin_family_agents.cache_clear()
+    _pages._plugin_family_agents.cache_clear()  # noqa: SLF001
     try:
         yield
     finally:
-        _pages._plugin_family_agents.cache_clear()
+        _pages._plugin_family_agents.cache_clear()  # noqa: SLF001
 
 
 def test_plugin_family_agents_groups_shipped_and_local_dirs_of_one_family(
@@ -215,7 +217,8 @@ def test_plugin_family_agents_groups_shipped_and_local_dirs_of_one_family(
     )
 
     assert {
-        family.title: [d.is_local for d in family.dirs] for family in _pages._plugin_family_agents()
+        family.title: [d.is_local for d in family.dirs]
+        for family in _pages._plugin_family_agents()  # noqa: SLF001
     } == {
         # Both directories belong to one family, the shipped one first.
         "Oracle": [False, True],
@@ -252,7 +255,7 @@ def test_other_mode_shows_shipped_and_local_file_in_one_section(
     )
 
     sections = list(
-        ModeDownloadAgentsOther(
+        ModeDownloadAgentsOther(  # noqa: SLF001
             test_edition, PageContext(config=Config(), request=global_request)
         )._extra_sections()
     )
@@ -279,7 +282,7 @@ def test_other_mode_titles_share_tree_section_by_path(
 ) -> None:
     # Files below the share tree keep their existing label.
     assert (
-        ModeDownloadAgentsOther(
+        ModeDownloadAgentsOther(  # noqa: SLF001
             test_edition, PageContext(config=Config(), request=global_request)
         )._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins")
         == "Plug-ins"

@@ -189,7 +189,7 @@ def _paint_time_graph_cmk(
     cell: Cell,
     *,
     debug: bool,
-    user: LoggedInUser,
+    user: LoggedInUser,  # noqa: ARG001
     request: Request,
     response: Response,
     painter_options: PainterOptions,

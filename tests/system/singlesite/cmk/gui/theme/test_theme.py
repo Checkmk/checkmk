@@ -48,13 +48,13 @@ def test_detect_icon_path(th: Theme) -> None:
 
 def test_url(th: Theme) -> None:
     # default theme is modern dark, but asd/eee does not exist, so it falls back to facelift.
-    assert th._url("asd/eee") == "themes/facelift/asd/eee"
+    assert th._url("asd/eee") == "themes/facelift/asd/eee"  # noqa: SLF001
     # when the file exists in the current theme, then the correct url is returned:
-    assert th._url("images/icon_aws.svg") == "themes/modern-dark/images/icon_aws.svg"
+    assert th._url("images/icon_aws.svg") == "themes/modern-dark/images/icon_aws.svg"  # noqa: SLF001
 
 
 def test_base_dir(th: Theme) -> None:
-    assert th.base_dir() == th._local_web_dir / "htdocs" / "themes" / "modern-dark"
+    assert th.base_dir() == th._local_web_dir / "htdocs" / "themes" / "modern-dark"  # noqa: SLF001
 
 
 def test_modern_dark_images(th: Theme) -> None:
@@ -62,7 +62,7 @@ def test_modern_dark_images(th: Theme) -> None:
     same name (may have a different file extension) within the facelift images dir. This holds only
     for the root theme dirs where the builtin images are located, not for the local theme dirs
     (th.base_dir())."""
-    root_themes_dir = th._web_dir / "htdocs" / "themes"
+    root_themes_dir = th._web_dir / "htdocs" / "themes"  # noqa: SLF001
     md_images_dir = root_themes_dir / th.get() / "images"
     fl_images_dir = root_themes_dir / "facelift" / "images"
 

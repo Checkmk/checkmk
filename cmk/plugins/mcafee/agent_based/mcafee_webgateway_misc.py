@@ -14,7 +14,7 @@ from cmk.plugins.mcafee import libgateway
 
 
 def discovery_webgateway_misc(
-    section: libgateway.Section,
+    section: libgateway.Section,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

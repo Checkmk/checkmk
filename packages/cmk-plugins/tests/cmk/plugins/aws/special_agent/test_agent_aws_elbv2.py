@@ -63,19 +63,19 @@ class FakeELBv2Client:
         )
         return {"TagDescriptions": [lb for lb in lbs if lb["LoadBalancerArn"] in tagged_lbs]}
 
-    def describe_target_groups(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:
+    def describe_target_groups(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {
             "TargetGroups": ELBv2DescribeTargetGroupsIB.create_instances(amount=1),
             "NextMarker": "string",
         }
 
-    def describe_listeners(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:
+    def describe_listeners(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {
             "Listeners": ELBv2DescribeListenersIB.create_instances(amount=1),
             "NextMarker": "string",
         }
 
-    def describe_rules(self, ListenerArn: str | None = None) -> Mapping[str, object]:
+    def describe_rules(self, ListenerArn: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {
             "Rules": ELBv2DescribeRulesIB.create_instances(amount=1),
             "NextMarker": "string",
@@ -87,7 +87,7 @@ class FakeELBv2Client:
             "NextMarker": "string",
         }
 
-    def describe_target_health(self, TargetGroupArn: str | None = None) -> Mapping[str, object]:
+    def describe_target_health(self, TargetGroupArn: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {
             "TargetHealthDescriptions": ELBv2DescribeTargetHealthIB.create_instances(amount=1),
         }
@@ -315,8 +315,8 @@ def test_agent_aws_elbv2_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_limits = get_elbv2_sections(names, tags).elbv2_limits
     elbv2_limits_results = elbv2_limits.run().results
@@ -339,7 +339,7 @@ def test_agent_aws_elbv2_summary(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary = elbv2_sections.elbv2_summary
@@ -365,7 +365,7 @@ def test_agent_aws_elbv2_labels(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
     found_instances_with_labels: Sequence[str],
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
@@ -388,7 +388,7 @@ def test_agent_aws_elbv2_target_groups(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_limits.run()
@@ -410,7 +410,7 @@ def test_agent_aws_elbv2_application(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_limits.run()
@@ -458,7 +458,7 @@ def test_agent_aws_elbv2_network(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_limits.run()
@@ -482,7 +482,7 @@ def test_agent_aws_elbv2_summary_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary = elbv2_sections.elbv2_summary
@@ -507,7 +507,7 @@ def test_agent_aws_elbv2_labels_without_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
     found_instances_with_labels: Sequence[str],
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
@@ -529,7 +529,7 @@ def test_agent_aws_elbv2_target_groups_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_summary.run()
@@ -550,7 +550,7 @@ def test_agent_aws_elbv2_application_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary_results = elbv2_sections.elbv2_summary.run().results
@@ -598,7 +598,7 @@ def test_agent_aws_elbv2_network_without_limits(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],
+    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_summary.run()

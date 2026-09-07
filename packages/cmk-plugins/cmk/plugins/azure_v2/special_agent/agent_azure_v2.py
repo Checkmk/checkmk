@@ -2085,7 +2085,7 @@ async def get_resource_groups(
 
 def write_group_info(
     monitored_groups: Mapping[str, AzureResourceGroup],
-    monitored_resources: Sequence[AzureResource],
+    monitored_resources: Sequence[AzureResource],  # noqa: ARG001
     subscription: AzureSubscription,
 ) -> None:
     labels = {
@@ -2592,7 +2592,7 @@ async def process_bulk_resources(
     groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
-    subscription: AzureSubscription,
+    subscription: AzureSubscription,  # noqa: ARG001
 ) -> Sequence[AzureSection]:
     tasks = set()
     if FetchedResource.VIRTUAL_MACHINES.type in monitored_services:

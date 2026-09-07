@@ -163,8 +163,8 @@ agent_section_livestatus_ssl_certs = AgentSection(
 
 def discovery_livestatus_status(
     section_livestatus_status: LivestatusSection | None,
-    section_livestatus_ssl_certs: LivestatusSection | None,
-    section_omd_info: OmdInfoSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,  # noqa: ARG001
+    section_omd_info: OmdInfoSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -247,7 +247,7 @@ def _generate_livestatus_results(
     section_livestatus_status: LivestatusSection | None,
     section_livestatus_ssl_certs: LivestatusSection | None,
     section_omd_info: OmdInfoSection | None,
-    value_store: MutableMapping[str, Any],
+    value_store: MutableMapping[str, Any],  # noqa: ARG001
     this_time: float,
 ) -> CheckResult:
     if section_livestatus_status is None or item not in section_livestatus_status:

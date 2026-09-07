@@ -83,7 +83,7 @@ agent_section_kube_namespace_info_v1 = AgentSection(
 )
 
 
-def discovery_kube_namespace_info(section: NamespaceInfo) -> DiscoveryResult:
+def discovery_kube_namespace_info(section: NamespaceInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

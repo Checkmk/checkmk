@@ -90,7 +90,7 @@ def _sidebar_position_id(stored_value: str) -> str:
 
 
 def default_user_menu_topics(
-    user_permissions: UserPermissions,
+    user_permissions: UserPermissions,  # noqa: ARG001
     add_change_password_menu_item: bool = True,
     add_two_factor_menu_item: bool = True,
 ) -> list[NavItemTopic]:

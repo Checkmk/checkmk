@@ -74,11 +74,11 @@ def _is_daily_build_version(v: str) -> bool:
 
 
 def discover_checkmk_agent(
-    section_check_mk: CheckmkSection | None,
-    section_checkmk_agent_plugins: PluginSection | None,
-    section_cmk_agent_ctl_status: ControllerSection | None,
-    section_cmk_update_agent_status: CMKAgentUpdateSection | None,
-    section_checkmk_cached_plugins: CachedPluginsSection | None,
+    section_check_mk: CheckmkSection | None,  # noqa: ARG001
+    section_checkmk_agent_plugins: PluginSection | None,  # noqa: ARG001
+    section_cmk_agent_ctl_status: ControllerSection | None,  # noqa: ARG001
+    section_cmk_update_agent_status: CMKAgentUpdateSection | None,  # noqa: ARG001
+    section_checkmk_cached_plugins: CachedPluginsSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()

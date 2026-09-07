@@ -46,7 +46,7 @@ def _past(minutes: int) -> datetime:
 
 def _overwrite_stored_scope(store: TokenStore, token: str, raw_scope: str | None) -> None:
     """Put a value in the scope column that this version would never write there."""
-    store._connection.execute(
+    store._connection.execute(  # noqa: SLF001
         "UPDATE tokens SET scope = ? WHERE token_hash = ?",
         (raw_scope, _token_hash(token)),
     )
@@ -117,7 +117,7 @@ def test_issue_token_stores_only_a_hash_never_the_plaintext(store: TokenStore) -
     )
     assert token.is_ok()
 
-    stored_hashes = [row[0] for row in store._connection.execute("SELECT token_hash FROM tokens")]
+    stored_hashes = [row[0] for row in store._connection.execute("SELECT token_hash FROM tokens")]  # noqa: SLF001
     assert token.ok not in stored_hashes
 
 
@@ -249,7 +249,7 @@ def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
     record = store.get_by_token(token.ok)
     assert record is not None
     assert record.scope == {ScopeId.READ, ScopeId.WRITE}
-    assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read write"
+    assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read write"  # noqa: SLF001
 
 
 @pytest.mark.parametrize("stored_scope", ["mcp", None])

@@ -28,7 +28,7 @@ def parse_innovaphone_mem(string_table: StringTable) -> Utilization | None:
             return None
 
 
-def discover_innovaphone_mem(section: Utilization) -> DiscoveryResult:
+def discover_innovaphone_mem(section: Utilization) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

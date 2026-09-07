@@ -70,7 +70,7 @@ def check_mk_root(site: str) -> ResponseTypes:
 
 
 @checkmk.route("/<path:path>", methods=["GET", "PUT", "POST", "DELETE"])
-def page(site: str, path: str) -> WSGIApplication:
+def page(site: str, path: str) -> WSGIApplication:  # noqa: ARG001
     # TODO: Carve out parts from CheckmkApp and move them into this file.
     # Rationale:
     #   Currently the CheckmkApp itself has an internal "router", which potentially duplicates

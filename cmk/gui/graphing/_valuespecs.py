@@ -312,7 +312,7 @@ class ValuesWithUnits(CascadingDropdown):
         metric_vs_name: str,
         elements: Sequence[ValueWithUnitElement],
         validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
     ):
         temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         super().__init__(

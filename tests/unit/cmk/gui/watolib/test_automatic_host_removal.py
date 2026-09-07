@@ -79,7 +79,7 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
 
 def test_remove_hosts_no_rules_early_return(
     activate_changes_mock: MagicMock,
-    patch_omd_site: None,
+    patch_omd_site: None,  # noqa: ARG001
 ) -> None:
     automatic_host_removal.execute_host_removal_job(Config())
     activate_changes_mock.assert_not_called()
@@ -104,7 +104,7 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="tree")
-def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:
+def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:  # noqa: ARG001
     return make_folder_tree(config)
 
 
@@ -242,7 +242,10 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ts.apply(monkeypatch)
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
+        h: HostName,
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,  # noqa: ARG001
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)

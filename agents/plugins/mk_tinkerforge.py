@@ -268,12 +268,12 @@ def enumerate_callback(
     device_handlers,
     settings,
     uid,
-    connected_uid,
-    position,
-    hardware_version,
-    firmware_version,
+    connected_uid,  # noqa: ARG001
+    position,  # noqa: ARG001
+    hardware_version,  # noqa: ARG001
+    firmware_version,  # noqa: ARG001
     device_identifier,
-    enumeration_type,
+    enumeration_type,  # noqa: ARG001
 ):
     if device_identifier == 237:
         global segment_display
@@ -282,7 +282,7 @@ def enumerate_callback(
         device_handlers[device_identifier](conn, settings, uid)
 
 
-def read_config(env):
+def read_config(env):  # noqa: ARG001
     settings = DEFAULT_SETTINGS
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 

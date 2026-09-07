@@ -137,7 +137,7 @@ class ModeKeyManagement(WatoMode[object]):
     def component_name(self) -> CertManagementEvent.ComponentType:
         raise NotImplementedError
 
-    def _log_delete_action(self, key_id: KeyId, key: Key, *, use_git: bool) -> None:
+    def _log_delete_action(self, key_id: KeyId, key: Key, *, use_git: bool) -> None:  # noqa: ARG002
         log_security_event(
             CertManagementEvent(
                 event="certificate removed",
@@ -240,7 +240,12 @@ class ModeEditKey(WatoMode[object]):
         return None
 
     def _create_key(
-        self, alias: str, passphrase: PasswordType, *, use_git: bool, default_key_size: int = 4096
+        self,
+        alias: str,
+        passphrase: PasswordType,
+        *,
+        use_git: bool,  # noqa: ARG002
+        default_key_size: int = 4096,
     ) -> None:
         assert user.id is not None
         key = generate_key(alias, passphrase, user.id, omd_site(), key_size=default_key_size)

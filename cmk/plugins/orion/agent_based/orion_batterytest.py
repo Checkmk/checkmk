@@ -33,7 +33,7 @@ snmp_section_orion_batterytest = SimpleSNMPSection(
 )
 
 
-def discover_orion_batterytest(section: StringTable) -> DiscoveryResult:
+def discover_orion_batterytest(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -294,7 +294,7 @@ class Discovery:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        use_git: bool,  # noqa: ARG002
         pending_changes: PendingChanges,
     ) -> None:
         if (
@@ -1166,7 +1166,7 @@ def get_check_table(
     user_permission_config: UserPermissionSerializableConfig,
     raise_errors: bool,
     debug: bool,
-    use_git: bool,
+    use_git: bool,  # noqa: ARG001
     pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     """Gathers the check table using a background job

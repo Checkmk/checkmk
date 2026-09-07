@@ -491,7 +491,7 @@ class LoggedInUser:
         if permitted_by_roles and permitted_by_request:
             return
 
-        perm = self._user_permissions._permissions.get(permission)
+        perm = self._user_permissions._permissions.get(permission)  # noqa: SLF001
         title = permission if perm is None else perm.title
         log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
 

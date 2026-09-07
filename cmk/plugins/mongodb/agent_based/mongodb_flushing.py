@@ -31,7 +31,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_mongodb_flushing(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_flushing(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup
     yield Service()

@@ -183,7 +183,7 @@ agent_section_solaris_fmadm = AgentSection(
 )
 
 
-def discover_solaris_fmadm(section: Mapping[str, Any]) -> DiscoveryResult:
+def discover_solaris_fmadm(section: Mapping[str, Any]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

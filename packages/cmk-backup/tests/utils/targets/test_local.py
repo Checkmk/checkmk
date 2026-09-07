@@ -45,7 +45,7 @@ class TestLocalTarget:
         expected_error_msg: str,
     ) -> None:
         monkeypatch.setattr("os.getcwd", lambda: "/test")
-        monkeypatch.setattr("os.path.islink", lambda x: False)
+        monkeypatch.setattr("os.path.islink", lambda x: False)  # noqa: ARG005
         with pytest.raises(
             MKGeneralException,
             match=expected_error_msg,

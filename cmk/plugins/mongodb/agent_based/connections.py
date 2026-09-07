@@ -28,12 +28,14 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_mongodb_connections(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_connections(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Connections")
 
 
 def check_mongodb_connections(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str,  # noqa: ARG001
+    params: Mapping[str, Any],
+    section: StringTable,
 ) -> CheckResult:
     info_dict = {x[0]: x[1] for x in section}
 

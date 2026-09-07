@@ -97,7 +97,7 @@ def discover_hr_ps(params: Sequence[Mapping[str, Any]], section: Section) -> Dis
     yield from (Service(item=i, parameters=p) for i, p in discovered_items.items())
 
 
-def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     match_name_or_path = params.get("match_name_or_path")
     match_status = params.get("match_status")
     match_groups = params.get("match_groups")

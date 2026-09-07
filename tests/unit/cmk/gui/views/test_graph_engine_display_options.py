@@ -59,7 +59,7 @@ def _forwarded(
         return HTML.empty()
 
     monkeypatch.setattr(graph_views, "render_engine_graph_group", _record)
-    graph_views._render_engine_graph_group(
+    graph_views._render_engine_graph_group(  # noqa: SLF001
         {"host_name": "host", "service_description": "CPU load"},
         _SPECIFICATION,
         display_config,

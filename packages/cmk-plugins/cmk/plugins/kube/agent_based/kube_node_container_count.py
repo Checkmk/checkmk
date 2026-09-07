@@ -27,7 +27,7 @@ def parse(string_table: StringTable) -> ContainerCount:
     return ContainerCount.model_validate_json(string_table[0][0])
 
 
-def discovery(section: ContainerCount) -> DiscoveryResult:
+def discovery(section: ContainerCount) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

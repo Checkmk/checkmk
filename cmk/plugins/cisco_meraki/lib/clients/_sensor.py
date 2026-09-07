@@ -23,7 +23,7 @@ class SensorClient:
     def __init__(self, sdk: SensorSDK) -> None:
         self._sdk = sdk
 
-    def get_sensor_readings(self, id: str, /) -> Sequence[schema.RawSensorReadings]:
+    def get_sensor_readings(self, id: str, /) -> Sequence[schema.RawSensorReadings]:  # noqa: A002
         try:
             return self._sdk.getOrganizationSensorReadingsLatest(id, total_pages="all")
         except APIError as e:

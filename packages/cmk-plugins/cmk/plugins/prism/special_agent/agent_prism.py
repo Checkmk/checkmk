@@ -130,7 +130,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def fetch_ha(
-    session_manager: SessionManager, base_url_v2: str, hosts_obj: dict[str, Any]
+    session_manager: SessionManager,
+    base_url_v2: str,
+    hosts_obj: dict[str, Any],  # noqa: ARG001
 ) -> dict[str, Any]:
     try:
         return session_manager.get(f"{base_url_v2}/ha")

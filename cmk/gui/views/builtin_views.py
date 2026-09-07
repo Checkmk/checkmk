@@ -6191,7 +6191,9 @@ class BuiltinViewExtenderRegistry(Registry[BuiltinViewExtender]):
 
 
 def noop_builtin_view_extender(
-    views: Mapping[ViewName, ViewSpec], data_source_registry: DataSourceRegistry, config: Config
+    views: Mapping[ViewName, ViewSpec],
+    data_source_registry: DataSourceRegistry,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
 ) -> dict[ViewName, ViewSpec]:
     return {**views}
 

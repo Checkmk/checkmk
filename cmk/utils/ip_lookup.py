@@ -86,7 +86,7 @@ def make_lookup_mgmt_board_ip_address(
     ip_config: IPLookupConfig,
 ) -> IPLookupOptional:
     if ip_config.fake_dns:
-        return lambda host_name, family: ip_config.fake_dns
+        return lambda host_name, family: ip_config.fake_dns  # noqa: ARG005
     if ip_config.simulation_mode:
         return local_ip_for
 
@@ -134,7 +134,7 @@ def make_lookup_ip_address(
     ip_config: IPLookupConfig,
 ) -> IPLookup:
     if ip_config.fake_dns:
-        return lambda host_name, family: ip_config.fake_dns
+        return lambda host_name, family: ip_config.fake_dns  # noqa: ARG005
     if ip_config.simulation_mode:
         return local_ip_for
 
@@ -214,7 +214,7 @@ def is_fallback_ip(ip: HostAddress | str) -> bool:
 
 
 def local_ip_for(
-    host_name: HostName,
+    host_name: HostName,  # noqa: ARG001
     family: SupportedAddressFamily,
 ) -> HostAddress:
     match family:

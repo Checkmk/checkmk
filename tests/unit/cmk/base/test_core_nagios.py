@@ -56,7 +56,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 def _make_core_objects_config(config_cache: config.ConfigCache) -> config.CoreObjectsConfig:
     return config.CoreObjectsConfig(
-        config_cache._loaded_config,
+        config_cache._loaded_config,  # noqa: SLF001
         config_cache.ruleset_matcher,
         config_cache.label_manager,
     )
@@ -77,8 +77,8 @@ def ip_address_of_never_called(
 
 
 def ip_address_of_return_local(
-    host_name: HostName,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
+    host_name: HostName,  # noqa: ARG001
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,  # noqa: ARG001
 ) -> HostAddress:
     return HostAddress("127.0.0.1")
 
@@ -90,9 +90,9 @@ def _patch_plugin_loading(
     # Patch the module that holds the binding actually being read, not the
     # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
-        config._impl,
+        config._impl,  # noqa: SLF001
         "load_active_checks",
-        lambda *a, **kw: loaded_active_checks,
+        lambda *a, **kw: loaded_active_checks,  # noqa: ARG005
     )
 
 
@@ -384,7 +384,9 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     config_cache = loading_result.config_cache
 
     host_attrs = config_cache.get_host_attributes(
-        hostname, socket.AddressFamily.AF_INET, ip_address_of=lambda *a: HostAddress("")
+        hostname,
+        socket.AddressFamily.AF_INET,
+        ip_address_of=lambda *a: HostAddress(""),  # noqa: ARG005
     )
 
     cfg = NagiosConfig(io.StringIO(), [hostname], timeperiods={})
@@ -398,7 +400,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
         hostname,
         socket.AddressFamily.AF_INET,
         host_attrs,
-        ip_address_of=lambda *a: HostAddress(""),
+        ip_address_of=lambda *a: HostAddress(""),  # noqa: ARG005
     )
     assert host_spec["_SERVICE_PERIOD"] == "24X7"
     assert "service_period" not in host_spec
@@ -488,14 +490,14 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path)
     host_check = dump_precompiled_hostcheck(
         loading_result.hosts_config,
         config_cache,
-        passive_service_name_config=lambda *a: "",
-        enforced_services_table=lambda hn: {},
+        passive_service_name_config=lambda *a: "",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         config_path=config_path,
         hostname=hostname,
-        get_ip_stack_config=lambda *a: ip_lookup.IPStackConfig.IPv4,
+        get_ip_stack_config=lambda *a: ip_lookup.IPStackConfig.IPv4,  # noqa: ARG005
         plugins=_make_plugins_for_test(),
         precompile_mode=PrecompileMode.INSTANT,
-        ip_address_of=lambda *a: HostAddress("1.2.3.4"),
+        ip_address_of=lambda *a: HostAddress("1.2.3.4"),  # noqa: ARG005
     )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
@@ -509,7 +511,7 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path)
 MOCK_PLUGIN = ActiveCheckConfig(
     name="my_active_check",
     parameter_parser=lambda x: x,
-    commands_function=lambda params, host_config: (
+    commands_function=lambda params, host_config: (  # noqa: ARG005
         ActiveCheckCommand(
             service_description=f"Active check of {host_config.name}",
             command_arguments=("--arg1", "arument1", "--host_alias", f"{host_config.alias}"),
@@ -638,7 +640,7 @@ def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
     monkeypatch: MonkeyPatch,
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})  # noqa: ARG005
 
     hostname = HostName("my_host")
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
@@ -658,10 +660,11 @@ def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
     )
     monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
 
     final_service_name_config = make_final_service_name_config(
-        config_cache._loaded_config, config_cache.ruleset_matcher
+        config_cache._loaded_config,  # noqa: SLF001
+        config_cache.ruleset_matcher,
     )
     outfile = io.StringIO()
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
@@ -676,7 +679,7 @@ def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config
         ),
-        enforced_services_table=lambda hn: {},
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=hostname,
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
@@ -685,7 +688,7 @@ def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
         stored_passwords={},
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
-        service_depends_on=lambda *a: (),
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
 
@@ -726,9 +729,9 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         config_cache=config_cache,
         core_objects_config=_make_core_objects_config(config_cache),
         nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
-        final_service_name_config=lambda *a: "",
-        passive_service_name_config=lambda *a: "",
-        enforced_services_table=lambda hn: {},
+        final_service_name_config=lambda *a: "",  # noqa: ARG005
+        passive_service_name_config=lambda *a: "",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=hostname,
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
@@ -737,7 +740,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         stored_passwords={},
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
-        service_depends_on=lambda *a: (),
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
 
@@ -758,7 +761,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
                 _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description="My description",
                             command_arguments=("--option", "value"),
@@ -768,7 +771,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
                 PluginLocation(_TEST_LOCATION.module, "some_other_name"): ActiveCheckConfig(
                     name="my_active_check2",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description="My description",
                             command_arguments=("--option", "value"),
@@ -810,7 +813,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
                 _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description="",
                             command_arguments=("--option", "value"),
@@ -842,7 +845,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})  # noqa: ARG005
 
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
@@ -853,10 +856,11 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
     )
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
 
     final_service_name_config = make_final_service_name_config(
-        config_cache._loaded_config, config_cache.ruleset_matcher
+        config_cache._loaded_config,  # noqa: SLF001
+        config_cache.ruleset_matcher,
     )
 
     hostname = HostName("my_host")
@@ -873,7 +877,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config
         ),
-        enforced_services_table=lambda hn: {},
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=HostName("my_host"),
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
@@ -882,7 +886,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
         stored_passwords={},
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
-        service_depends_on=lambda *a: (),
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
 
@@ -903,7 +907,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
                 _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description=f"Active check of {host_config.name}",
                             command_arguments=("--option", "value"),
@@ -931,7 +935,7 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
     monkeypatch: MonkeyPatch,
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})  # noqa: ARG005
 
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
@@ -942,7 +946,7 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
     )
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
     outfile = io.StringIO()
@@ -955,9 +959,9 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
         config_cache=config_cache,
         core_objects_config=_make_core_objects_config(config_cache),
         nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
-        final_service_name_config=lambda *a: "",
-        passive_service_name_config=lambda *a: "",
-        enforced_services_table=lambda hn: {},
+        final_service_name_config=lambda *a: "",  # noqa: ARG005
+        passive_service_name_config=lambda *a: "",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=hostname,
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
@@ -966,7 +970,7 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
         stored_passwords={},
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
-        service_depends_on=lambda *a: (),
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
 
@@ -985,7 +989,7 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
                 PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description=f"Active check of {host_config.name}",
                             command_arguments=("--option", 42),  # type: ignore[arg-type]  # invalid on purpose
@@ -1026,7 +1030,7 @@ def test_create_nagios_servicedefs_invalid_args(  # type: ignore[misc]
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
     )
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
@@ -1041,9 +1045,9 @@ def test_create_nagios_servicedefs_invalid_args(  # type: ignore[misc]
         config_cache=config_cache,
         core_objects_config=_make_core_objects_config(config_cache),
         nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
-        final_service_name_config=lambda *a: "",
-        passive_service_name_config=lambda *a: "",
-        enforced_services_table=lambda hn: {},
+        final_service_name_config=lambda *a: "",  # noqa: ARG005
+        passive_service_name_config=lambda *a: "",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=hostname,
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
@@ -1052,7 +1056,7 @@ def test_create_nagios_servicedefs_invalid_args(  # type: ignore[misc]
         stored_passwords={},
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
-        service_depends_on=lambda *a: (),
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
 
@@ -1111,7 +1115,7 @@ def test_create_nagios_config_commands(
             _TEST_LOCATION: ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda x: x,
-                commands_function=lambda params, host_config: (
+                commands_function=lambda params, host_config: (  # noqa: ARG005
                     ActiveCheckCommand(
                         service_description=f"Active check of {host_config.name}",
                         command_arguments=("--option", "value"),
@@ -1120,7 +1124,7 @@ def test_create_nagios_config_commands(
             ),
         },
     )
-    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})  # noqa: ARG005
 
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
@@ -1131,10 +1135,11 @@ def test_create_nagios_config_commands(
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
     )
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
 
     final_service_name_config = make_final_service_name_config(
-        config_cache._loaded_config, config_cache.ruleset_matcher
+        config_cache._loaded_config,  # noqa: SLF001
+        config_cache.ruleset_matcher,
     )
     hostname = HostName("my_host")
     outfile = io.StringIO()
@@ -1150,7 +1155,7 @@ def test_create_nagios_config_commands(
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config
         ),
-        enforced_services_table=lambda hn: {},
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
         plugins={},
         hostname=hostname,
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
@@ -1158,8 +1163,8 @@ def test_create_nagios_config_commands(
         host_attrs=host_attrs,
         stored_passwords={},
         license_counter=license_counter,
-        ip_address_of=lambda *a: HostAddress("127.0.0.1"),
-        service_depends_on=lambda *a: (),
+        ip_address_of=lambda *a: HostAddress("127.0.0.1"),  # noqa: ARG005
+        service_depends_on=lambda *a: (),  # noqa: ARG005
         for_relay=False,
     )
     create_nagios_config_commands(

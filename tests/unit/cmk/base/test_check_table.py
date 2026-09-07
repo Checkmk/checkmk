@@ -60,11 +60,11 @@ def _make_plugin(
         name=CheckPluginName(name),
         sections=[ParsedSectionName(name)],
         service_name=service_name,
-        discovery_function=lambda *args, **kw: iter(()),
+        discovery_function=lambda *args, **kw: iter(()),  # noqa: ARG005
         discovery_default_parameters=None,
         discovery_ruleset_name=None,
         discovery_ruleset_type="merged",
-        check_function=lambda *args, **kw: iter(()),
+        check_function=lambda *args, **kw: iter(()),  # noqa: ARG005
         check_default_parameters=check_default_parameters,
         check_ruleset_name=None,
         cluster_check_function=None,
@@ -136,7 +136,7 @@ def test_cluster_ignores_nodes_parameters(
         _TEST_CHECK_PLUGINS,
         service_configurer=service_configurer,
         service_name_config=service_name_config,
-        enforced_services_table=lambda hn: {},
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
     )[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet({}, ()),
@@ -745,7 +745,7 @@ def test_check_table_of_mgmt_boards(
                 {},
                 config_cache.make_service_configurer({}, service_name_config),
                 service_name_config,
-                lambda hn: {},
+                lambda hn: {},  # noqa: ARG005
             ).keys()
         )
         == expected_result
@@ -843,14 +843,14 @@ def test_check_table_skips_services_with_invalid_names(
     loading_result = ts.apply(monkeypatch)
     config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)  # noqa: SLF001
     )
     service_configurer = config_cache.make_service_configurer(
         _TEST_CHECK_PLUGINS, service_name_config
     )
 
     def enforced_services_table(
-        hn: HostName,
+        hn: HostName,  # noqa: ARG001
     ) -> Mapping[ServiceID, tuple[object, ConfiguredService]]:
         return {empty_name_service.id(): ("enforced", empty_name_service)}
 

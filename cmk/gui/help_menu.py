@@ -272,7 +272,7 @@ def _help_menu_topics(
     developer_entries: Callable[[], list[NavItemTopicEntry]],
     about_checkmk_entries: Callable[[], list[NavItemTopicEntry]],
 ) -> Callable[[UserPermissions], list[NavItemTopic]]:
-    def _fun(user_permissions: UserPermissions) -> list[NavItemTopic]:
+    def _fun(user_permissions: UserPermissions) -> list[NavItemTopic]:  # noqa: ARG001
         return [
             NavItemTopic(
                 id="learning_checkmk",

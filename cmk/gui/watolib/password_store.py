@@ -135,7 +135,7 @@ def register(config_file_registry: ConfigFileRegistry) -> None:
 
 def IndividualOrStoredPassword(
     title: str | None = None,
-    help: valuespec.ValueSpecHelp | None = None,
+    help: valuespec.ValueSpecHelp | None = None,  # noqa: A002
     allow_empty: bool = True,
     size: int = 25,
     validate: ValueSpecValidateFunc | None = None,
@@ -180,7 +180,7 @@ def IndividualOrStoredPassword(
 
 def MigrateNotUpdatedToIndividualOrStoredPassword(
     title: str | None = None,
-    help: valuespec.ValueSpecHelp | None = None,
+    help: valuespec.ValueSpecHelp | None = None,  # noqa: A002
     allow_empty: bool = True,
     size: int = 25,
 ) -> valuespec.MigrateNotUpdated:
@@ -197,7 +197,7 @@ def MigrateNotUpdatedToIndividualOrStoredPassword(
 
 def MigrateToIndividualOrStoredPassword(
     title: str | None = None,
-    help: valuespec.ValueSpecHelp | None = None,
+    help: valuespec.ValueSpecHelp | None = None,  # noqa: A002
     allow_empty: bool = True,
     size: int = 25,
     validate: ValueSpecValidateFunc | None = None,

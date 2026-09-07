@@ -794,7 +794,7 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
         )
 
 
-def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:
+def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:  # noqa: ARG001
     """Overridden in some editions to extend the page menu"""
     yield from []
 
@@ -1235,7 +1235,7 @@ class PageAjaxPingHost(AjaxPage):
         )
 
         if cmd == PingHostCmd.PING6 and ":" in ip_or_dns_name:
-            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):
+            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):  # noqa: SLF001
                 return {
                     "status_code": 99,
                     "message": "Not a valid IPv6 address.",

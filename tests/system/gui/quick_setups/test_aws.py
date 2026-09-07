@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import re
 from collections.abc import Iterator
@@ -50,7 +53,9 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="aws_qs_config_page")
 def fixture_aws_qs_config_page(
-    fake_aws_dump: None, dashboard_page: MainDashboard, test_site: Site
+    fake_aws_dump: None,
+    dashboard_page: MainDashboard,
+    test_site: Site,
 ) -> Iterator[AWSAddNewConfiguration]:
     """Navigate to the AWS Quick setup page and add new configuration page"""
     configuration_name = "my_aws_account"

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Sequence
 
 import pytest
@@ -35,7 +37,7 @@ def test_discover_pulse_secure_temp(
 ) -> None:
     """Test discovery function for pulse_secure_temp check."""
     parsed = parse_pulse_secure_temp(string_table)
-    if parsed is not None:
+    if parsed is not None:  # noqa: SIM108
         result = [(s.item,) for s in discover_pulse_secure_temp(parsed)]
     else:
         result = []

@@ -2729,7 +2729,7 @@ def _start_js_call(
     return f"cmk.service_discovery.start({params})"
 
 
-def ajax_popup_service_action_menu(ctx: PageContext) -> None:
+def ajax_popup_service_action_menu(ctx: PageContext) -> None:  # noqa: ARG001
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))

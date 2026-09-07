@@ -22,7 +22,7 @@ class Schema(BaseSchema):
         super().__init__(*args, **kwargs)
 
     @post_load
-    def _validate(self, data, many=False, partial=None):  # type: ignore[misc]
+    def _validate(self, data, many=False, partial=None):  # type: ignore[misc]  # noqa: ARG002
         for key in self.required:
             if key not in data:
                 raise ValidationError({key: f"Required for load: {key} ({data})/{self.required}"})
@@ -107,7 +107,7 @@ def test_loading_data_invalid_in_all_schemas_fails():
 
     class SchemaB(BaseSchema):
         @post_load
-        def _post_load(self, data, many=False, partial=None):  # type: ignore[misc]
+        def _post_load(self, data, many=False, partial=None):  # type: ignore[misc]  # noqa: ARG002
             raise ValidationError("B")
 
     class MixedMultiNestedSchema(BaseSchema):

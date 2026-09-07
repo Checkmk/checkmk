@@ -1134,7 +1134,8 @@ def _render_tree_json(
             user.save_tree_states()
 
     def render_node_json(
-        tree: BIAggrTreeState | BILeafTreeState, show_host: bool
+        tree: BIAggrTreeState | BILeafTreeState,
+        show_host: bool,  # noqa: ARG001
     ) -> dict[str, Any]:
         is_leaf = len(tree) == 3
         if is_leaf:
@@ -1230,7 +1231,7 @@ class CommandGroupAggregations(CommandGroup):
         return 10
 
 
-def _handle_command_freeze_aggregation_render(what: str) -> None:
+def _handle_command_freeze_aggregation_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button(_FREEZE_AGGREGATION_BUTTON_VARNAME, _("Freeze selected"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
@@ -1238,7 +1239,8 @@ def _handle_command_freeze_aggregation_render(what: str) -> None:
 
 
 def _handle_command_freeze_aggregation_affected(
-    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    len_action_rows: int,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
 ) -> HTML:
     return HTML.without_escaping(
         _("Affected %(aggregations)s: %(count)s")
@@ -1256,9 +1258,9 @@ def _handle_command_freeze_aggregation_affected(
 def _handle_command_freeze_aggregation_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if not request.has_var(_FREEZE_AGGREGATION_BUTTON_VARNAME):
@@ -1281,7 +1283,7 @@ def _handle_command_freeze_aggregation_action(
     return None
 
 
-def _handle_command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
+def _handle_command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:  # noqa: ARG001
     """Function that is called to execute this action"""
     assert isinstance(command, Dummy)
     Path(command.arg).unlink(missing_ok=True)

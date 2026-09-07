@@ -19,7 +19,7 @@ class ServerConfig(BaseModel, frozen=True):
     error_log: Path
 
 
-def default_config(omd_root: Path, run_path: Path, log_path: Path) -> ServerConfig:
+def default_config(omd_root: Path, run_path: Path, log_path: Path) -> ServerConfig:  # noqa: ARG001
     return ServerConfig(
         unix_socket=run_path / "ui-job-scheduler.sock",
         access_log=log_path / "access.log",

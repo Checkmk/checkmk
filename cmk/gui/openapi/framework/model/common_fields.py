@@ -252,7 +252,7 @@ class _FolderValidation:
     def validate_in_tree(cls, value: str, tree: FolderTree) -> Folder:
         try:
             if cls._is_hex(value):
-                return tree._by_id(value)
+                return tree._by_id(value)  # noqa: SLF001
 
             value = cls._normalize_folder(value)
             if value == "":

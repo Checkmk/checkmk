@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 
@@ -219,7 +221,7 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
         mp.setattr(
             cmk_version,
             "omd_version",
-            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",  # noqa: ARG005
         )
         cmk_version.edition.cache_clear()
         yield
@@ -246,7 +248,7 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
 def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: DummyLicensingHandler,
+        lambda omd_root: DummyLicensingHandler,  # noqa: ARG005
     )
 
 
@@ -363,7 +365,7 @@ def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMo
     )
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
+        side_effect=lambda *args, **kw: None,  # noqa: ARG005
     )
 
 

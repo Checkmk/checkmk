@@ -219,20 +219,20 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
         """
         migrate: Callable | None = None
         if isinstance((valuespec := notification_parameter.spec()), ValueSpecMigrate):
-            if isinstance(valuespec._valuespec, ValueSpecDictionary):
-                valuespec_elements = valuespec._valuespec._elements()
-                required_keys = valuespec._valuespec._required_keys
+            if isinstance(valuespec._valuespec, ValueSpecDictionary):  # noqa: SLF001
+                valuespec_elements = valuespec._valuespec._elements()  # noqa: SLF001
+                required_keys = valuespec._valuespec._required_keys  # noqa: SLF001
                 migrate = valuespec.to_valuespec
             else:
                 raise MKUserError(
                     None,
                     _("No Dictionary ValueSpec within Migrate: %(valuespec)s")
-                    % {"valuespec": valuespec._valuespec},
+                    % {"valuespec": valuespec._valuespec},  # noqa: SLF001
                 )
         else:
             # Dictionary
-            valuespec_elements = valuespec._elements()
-            required_keys = valuespec._required_keys
+            valuespec_elements = valuespec._elements()  # noqa: SLF001
+            required_keys = valuespec._required_keys  # noqa: SLF001
 
         new_elements: dict[str, DictElement] = {}
         for entry in valuespec_elements:

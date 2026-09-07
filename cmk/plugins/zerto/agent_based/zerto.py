@@ -33,7 +33,7 @@ def parse(string_table: StringTable) -> Section:
 agent_section_zerto_agent = AgentSection(name="zerto_agent", parse_function=parse)
 
 
-def discovery(section: Section) -> DiscoveryResult:
+def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

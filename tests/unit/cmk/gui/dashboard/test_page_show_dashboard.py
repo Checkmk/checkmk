@@ -57,14 +57,14 @@ def _registry_with(domain: ABCConfigDomain | None) -> ConfigDomainRegistry:
 
 
 def test_network_flow_active_no_domain() -> None:
-    assert page_show_dashboard._network_flow_active(_registry_with(None)) is False
+    assert page_show_dashboard._network_flow_active(_registry_with(None)) is False  # noqa: SLF001
 
 
 def test_network_flow_active_enabled() -> None:
     registry = _registry_with(_FakeNetworkFlowDomain(("enabled", {})))
-    assert page_show_dashboard._network_flow_active(registry) is True
+    assert page_show_dashboard._network_flow_active(registry) is True  # noqa: SLF001
 
 
 def test_network_flow_active_disabled() -> None:
     registry = _registry_with(_FakeNetworkFlowDomain(("disabled", None)))
-    assert page_show_dashboard._network_flow_active(registry) is False
+    assert page_show_dashboard._network_flow_active(registry) is False  # noqa: SLF001

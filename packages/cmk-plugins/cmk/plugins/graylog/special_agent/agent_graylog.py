@@ -363,7 +363,7 @@ def _do_post(
     return response
 
 
-def _do_get(url: str, args: argparse.Namespace, session: requests.Session) -> requests.Response:
+def _do_get(url: str, args: argparse.Namespace, session: requests.Session) -> requests.Response:  # noqa: ARG001
     response = session.get(url, timeout=DEFAULT_HTTP_TIMEOUT)
     response.raise_for_status()
     return response

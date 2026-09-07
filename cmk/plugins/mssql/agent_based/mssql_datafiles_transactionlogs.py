@@ -208,7 +208,7 @@ def discover_mssql_common(
 def discover_mssql_datafiles(
     params: list[Mapping[str, Any]],
     section_mssql_datafiles: SectionDatafiles | None,
-    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_mssql_datafiles:
         return
@@ -218,7 +218,7 @@ def discover_mssql_datafiles(
 def discover_mssql_transactionlogs(
     params: list[Mapping[str, Any]],
     section_mssql_transactionlogs: SectionDatafiles | None,
-    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_mssql_transactionlogs:
         return

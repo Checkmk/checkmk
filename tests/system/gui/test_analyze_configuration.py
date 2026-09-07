@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 
 import pytest
@@ -75,7 +78,8 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
 
 @pytest.mark.skip(reason="CMK-27392; investigating root-cause.")
 def test_analyze_configuration_page(
-    dashboard_page: MainDashboard, simulate_deprecations: None
+    dashboard_page: MainDashboard,
+    simulate_deprecations: None,
 ) -> None:
     """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
 

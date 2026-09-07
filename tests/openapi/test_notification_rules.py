@@ -1923,7 +1923,7 @@ def test_create_notification_custom_plugin_invalid_list_config(  # type: ignore[
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
 
     config = notification_rule_request_example()
@@ -1947,7 +1947,7 @@ def test_create_notification_custom_plugin_valid_list_config(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
 
     plugin_params: APIPluginList = {
@@ -2080,7 +2080,7 @@ def test_create_notification_custom_plugin_valid_dict_config(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
 
     config = notification_rule_request_example()
@@ -2142,7 +2142,7 @@ def test_create_notification_custom_plugin_invalid_dict_config(  # type: ignore[
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {

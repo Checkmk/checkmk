@@ -38,7 +38,7 @@ from .models.response_models import HostAvailabilityCollection, HostAvailability
 
 
 def list_host_availability_v1(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     time_range_from: Annotated[
         dt.datetime,
         AwareDatetime,

@@ -125,7 +125,7 @@ def test_linked_libraries(site: Site) -> None:
 
     lib_python = f"lib/python{sys.version_info.major}.{sys.version_info.minor}"
     site_packages = f"{lib_python}/site-packages"
-    so_suffix = f".{sys.implementation.cache_tag}-{sys.implementation._multiarch}.so"
+    so_suffix = f".{sys.implementation.cache_tag}-{sys.implementation._multiarch}.so"  # noqa: SLF001
 
     exclude_entirely = [
         # These are platform specific binaries.

@@ -545,7 +545,7 @@ def discover_winperf_if(
     section_winperf_if: SectionCounters | None,
     section_winperf_if_teaming: SectionTeaming | None,
     section_winperf_if_extended: SectionExtended | None,
-    section_winperf_if_dhcp: SectionDHPC | None,
+    section_winperf_if_dhcp: SectionDHPC | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_winperf_if:
         return

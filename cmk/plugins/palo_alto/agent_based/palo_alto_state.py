@@ -49,7 +49,7 @@ snmp_section_palo_alto = SimpleSNMPSection(
 )
 
 
-def discover(section: SectionPaloAlto) -> DiscoveryResult:
+def discover(section: SectionPaloAlto) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

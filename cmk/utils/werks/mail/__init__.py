@@ -411,7 +411,7 @@ def send_mail(
             send_mail_sendmail(mail, MailString(str(mail_address)), MailString(""))
         else:
             sys.stdout.write(
-                textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True) + "\n"
+                textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True) + "\n"  # noqa: ARG005
             )
 
 

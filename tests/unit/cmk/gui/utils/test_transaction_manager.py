@@ -22,7 +22,7 @@ def fixture_transaction_ids() -> list[str]:
 
 @pytest.fixture(name="tm")
 def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager]:
-    def transids(lock=False):
+    def transids(lock=False):  # noqa: ARG001
         return transaction_ids
 
     def save_transids(transids: list[str]) -> None:
@@ -38,10 +38,10 @@ def test_request_context_integration() -> None:
 
 
 def test_transaction_new_id(tm: TransactionManager) -> None:
-    assert tm._new_transids == []
+    assert tm._new_transids == []  # noqa: SLF001
     trans_id = tm.get()
     assert isinstance(trans_id, str)
-    assert tm._new_transids == [trans_id]
+    assert tm._new_transids == [trans_id]  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("mocker")
@@ -69,12 +69,12 @@ def test_transaction_valid(
     ignore_transids: bool,
     result: bool,
     is_existing: bool,
-    request_context: None,
+    request_context: None,  # noqa: ARG001
 ) -> None:
-    assert tm._ignore_transids is False
+    assert tm._ignore_transids is False  # noqa: SLF001
     if ignore_transids:
         tm.ignore()
-        assert tm._ignore_transids is True
+        assert tm._ignore_transids is True  # noqa: SLF001
 
     if transid is not None:
         transid = transid.replace("%time%", str(int(time.time())))
@@ -90,7 +90,7 @@ def test_transaction_valid(
 
 
 @pytest.mark.usefixtures("monkeypatch")
-def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:
+def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:  # noqa: ARG001
     assert tm.check_transaction(request) is False
 
 
@@ -99,7 +99,7 @@ def test_check_transaction_valid(
     transaction_ids: list[str],
     tm: TransactionManager,
     mocker: MockerFixture,
-    request_context: None,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     valid_transid = "%d/abc" % time.time()
     request.set_var("_transid", valid_transid)
@@ -114,7 +114,7 @@ def test_check_transaction_valid(
 def test_check_transaction_automation(
     tm: TransactionManager,
     mocker: MockerFixture,
-    request_context: None,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     tm.ignore()
     request.set_var("_transid", "-1")

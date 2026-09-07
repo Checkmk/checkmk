@@ -196,7 +196,7 @@ def _sync_valid_session_2fa_checking() -> None:
     )
 
     updated_infos = {}
-    for id, session_info in all_user_sessions_infos.items():
+    for id, session_info in all_user_sessions_infos.items():  # noqa: A001
         if session_info.session_state == "logged_in" and id != session.session_info.session_id:
             session_info.session_state = "second_factor_auth_needed"
         updated_infos[id] = session_info

@@ -83,7 +83,7 @@ agent_section_wmi_cpuload = AgentSection(
 )
 
 
-def discover_wmi_cpuload(section: Section) -> DiscoveryResult:
+def discover_wmi_cpuload(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

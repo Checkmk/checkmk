@@ -80,7 +80,7 @@ class SomeSchema(BaseSchema):
 
 
 @pytest.fixture(name="test_endpoint")
-def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/unitest-endpoint-test-that-is-not-cleaned-up",
         method="post",
@@ -106,7 +106,7 @@ def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
 
 
 @pytest.fixture(name="test_multiple_accept_endpoint")
-def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/test_multiple_content_types",
         method="post",
@@ -135,7 +135,7 @@ def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedE
 
 # This looks like a good template for a test
 @pytest.fixture(name="test_internal_endpoint")
-def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/i_am_reserved",
         method="get",
@@ -144,7 +144,7 @@ def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
         output_empty=True,
         internal_user_only=True,
     )
-    def reserved_test(param: Mapping[str, object]) -> Response:
+    def reserved_test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
         return Response(status=204)
 
     endpoint_registry.register(reserved_test)
@@ -183,16 +183,16 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
     # here we create a code path, that requests the permission "one"
     call("one")
     # we expect to see this permission in the collection:
-    assert test_endpoint.endpoint._used_permissions == {"one"}
+    assert test_endpoint.endpoint._used_permissions == {"one"}  # noqa: SLF001
     # then we create a code path that requests the permission "two"
     call("two")
     # and expect only "two" in the collection, because "one" was requested in
     # another call. before the fix, both "one" and "two" were in this set.
-    assert test_endpoint.endpoint._used_permissions == {"two"}
+    assert test_endpoint.endpoint._used_permissions == {"two"}  # noqa: SLF001
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")
-def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/raise_exception",
         method="get",
@@ -202,7 +202,7 @@ def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
         """Smth"""
         raise ProblemException(418, "short", "long")
 
@@ -213,7 +213,7 @@ def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint
 
 
 @pytest.fixture(name="test_endpoint_accept_parameter")
-def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/test_accept_parameter",
         method="post",
@@ -224,7 +224,7 @@ def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
         """Smth"""
         return Response(status=204)
 
@@ -235,7 +235,8 @@ def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
 
 
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(
-    test_endpoint_raise_status_code: WrappedEndpoint, aut_user_auth_wsgi_app: WebTestAppForCMK
+    test_endpoint_raise_status_code: WrappedEndpoint,  # noqa: ARG001
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """
     before this test, the Endpoint did not check for exceptions that change the
@@ -359,7 +360,7 @@ def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig)
 
 # ========= Permission Validation =========
 def test_permission_exception(clients: ClientRegistry) -> None:
-    def validate(*args: object, **kwargs: object) -> bool:
+    def validate(*args: object, **kwargs: object) -> bool:  # noqa: ARG001
         return False
 
     with mock.patch("cmk.web.utils.permission_verification.BasePerm.validate", validate):
@@ -382,7 +383,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="test_endpoint_raise_auth_exception")
-def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
+def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:  # noqa: ARG001
     @Endpoint(
         path="/raise_auth_exception",
         method="get",
@@ -392,7 +393,7 @@ def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
         """Smth"""
         raise MKAuthException("We are sorry, but you lack the permission for this operation.")
 
@@ -403,7 +404,7 @@ def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[
 
 
 def test_openapi_endpoint_permission_denied_is_forbidden(
-    test_endpoint_raise_auth_exception: WrappedEndpoint,
+    test_endpoint_raise_auth_exception: WrappedEndpoint,  # noqa: ARG001
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """A failed permission check of an authenticated user must result in a 403, not a 401."""
@@ -420,7 +421,7 @@ def test_openapi_endpoint_permission_denied_is_forbidden(
 
 @pytest.fixture(name="test_endpoint_raise_unauthenticated_exception")
 def install_endpoint_raise_unauthenticated_exception(
-    fresh_app_instance: None,
+    fresh_app_instance: None,  # noqa: ARG001
 ) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_unauthenticated_exception",
@@ -431,7 +432,7 @@ def install_endpoint_raise_unauthenticated_exception(
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, object]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:  # noqa: ARG001
         """Smth"""
         raise MKUnauthenticatedException("You are not authenticated.")
 
@@ -442,7 +443,7 @@ def install_endpoint_raise_unauthenticated_exception(
 
 
 def test_openapi_endpoint_unauthenticated_stays_unauthorized(
-    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,
+    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,  # noqa: ARG001
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """Missing authentication must not be remapped to a 403."""
@@ -462,7 +463,7 @@ def test_openapi_endpoint_unauthenticated_stays_unauthorized(
 def test_audit_log_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)  # noqa: ARG005
     resp = clients.AuditLog.get_all(date="2017-07-21", expect_ok=False)
     resp.assert_status_code(403)
     assert "lack the permission" in resp.json["detail"]
@@ -471,7 +472,7 @@ def test_audit_log_permission_denied_is_forbidden(
 def test_pending_changes_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)  # noqa: ARG005
     resp = clients.ActivateChanges.list_pending_changes(expect_ok=False)
     resp.assert_status_code(403)
     assert "lack the permission" in resp.json["detail"]
@@ -538,7 +539,7 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
 
 # ========= Accept parameter related Tests =========
 def test_invalid_content_type(
-    test_endpoint_accept_parameter: WrappedEndpoint,
+    test_endpoint_accept_parameter: WrappedEndpoint,  # noqa: ARG001
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     response = aut_user_auth_wsgi_app.call_method(
@@ -564,7 +565,7 @@ def test_invalid_content_type(
     ],
 )
 def test_invalid_payload(
-    test_endpoint_accept_parameter: WrappedEndpoint,
+    test_endpoint_accept_parameter: WrappedEndpoint,  # noqa: ARG001
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     payload: str,
 ) -> None:
@@ -581,7 +582,7 @@ def test_invalid_payload(
 
 
 def test_valid_gzip_file(
-    test_endpoint_accept_parameter: WrappedEndpoint,
+    test_endpoint_accept_parameter: WrappedEndpoint,  # noqa: ARG001
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     payload = base64.b64decode(TEST_TARGZ_FILE)
@@ -603,7 +604,7 @@ def test_valid_gzip_file(
 )
 def test_endpoint_accept_multiple_types(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_multiple_accept_endpoint: WrappedEndpoint,
+    test_multiple_accept_endpoint: WrappedEndpoint,  # noqa: ARG001
     content_type: str,
     payload: str,
 ) -> None:
@@ -621,7 +622,7 @@ def test_endpoint_accept_multiple_types(
 # ========= Authorization of reserved endpoint validation =========
 def test_reserved_endpoint_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_internal_endpoint: WrappedEndpoint,
+    test_internal_endpoint: WrappedEndpoint,  # noqa: ARG001
     api_client: RestApiClient,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

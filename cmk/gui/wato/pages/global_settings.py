@@ -526,7 +526,12 @@ class ABCEditGlobalSettingMode(WatoMode):
         raise NotImplementedError
 
     def _save(
-        self, tree: FolderTree, *, pprint_value: bool, use_git: bool, liveproxyd_enabled: bool
+        self,
+        tree: FolderTree,  # noqa: ARG002
+        *,
+        pprint_value: bool,  # noqa: ARG002
+        use_git: bool,  # noqa: ARG002
+        liveproxyd_enabled: bool,  # noqa: ARG002
     ) -> None:
         save_global_settings(self._current_settings)
 
@@ -846,7 +851,7 @@ def is_a_checkbox(vs: ValueSpec) -> bool:
     if isinstance(vs, Checkbox):
         return True
     if isinstance(vs, Transform):
-        return is_a_checkbox(vs._valuespec)
+        return is_a_checkbox(vs._valuespec)  # noqa: SLF001
     return False
 
 

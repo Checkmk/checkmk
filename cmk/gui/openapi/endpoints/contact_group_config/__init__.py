@@ -279,7 +279,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     response_schema=ContactGroupCollection,
     permissions_required=PERMISSIONS,
 )
-def list_group(params: Mapping[str, Any]) -> Response:
+def list_group(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all contact groups"""
     user.need_permission("wato.users")
     collection = [

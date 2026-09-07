@@ -61,7 +61,7 @@ def parse_netapp_fcpio(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_netapp_fcpio(section: StringTable) -> DiscoveryResult:
+def discover_netapp_fcpio(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

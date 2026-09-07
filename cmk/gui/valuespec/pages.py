@@ -38,7 +38,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_popup_icon_selector", ajax_popup_icon_selector))
 
 
-def ajax_popup_icon_selector(ctx: PageContext) -> None:
+def ajax_popup_icon_selector(ctx: PageContext) -> None:  # noqa: ARG001
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")
     value = request.var("value")

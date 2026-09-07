@@ -37,7 +37,7 @@ def is_locked(
     attempt_count: int,
     duration: timedelta,
     timed_out_at: datetime | None,
-    last_attempt: datetime,
+    last_attempt: datetime,  # noqa: ARG001
     now: datetime,
 ) -> bool:
     if attempt_count < limit or timed_out_at is None:
@@ -145,7 +145,7 @@ class LoginTimeoutStore:
         self._io.write(data.model_dump_json().encode())
 
     @contextmanager
-    def read_write_locked(self, now: datetime) -> Generator[TimeoutData]:
+    def read_write_locked(self, now: datetime) -> Generator[TimeoutData]:  # noqa: ARG002
         with self._locked():
             data = self._read()
             yield data

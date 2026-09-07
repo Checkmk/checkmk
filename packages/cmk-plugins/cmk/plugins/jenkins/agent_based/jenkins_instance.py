@@ -54,11 +54,11 @@ agent_section_jenkins_instance = AgentSection(
 )
 
 
-def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:
+def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
-def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:
+def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:  # noqa: ARG001
     if not section:
         return
 

@@ -23,7 +23,7 @@ def parse_cisco_ucs_system(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_cisco_ucs_system(section: StringTable) -> DiscoveryResult:
+def discover_cisco_ucs_system(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -129,7 +129,7 @@ class TestValueSpecDictionary:
             "d": 1,
         }
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
         with request_var(v_p_a="a", v_p_b="2", v_p_c="c", v_p_d="4"):
             assert vs.Dictionary(elements=_test_elements()).from_html_vars("v") == {}
             assert vs.Dictionary(elements=_test_elements(), optional_keys=False).from_html_vars(

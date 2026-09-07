@@ -127,7 +127,7 @@ def fetch_durations(reference: str, timeout: int = FETCH_TIMEOUT_SECONDS) -> Dur
         with jenkins_client(timeout) as jenkins:
             # No typed wrapper for testReport in jenkins_utils, and python-jenkins
             # itself is untyped, hence the ignores rather than a hand-rolled request.
-            url = jenkins.client._build_url(  # type: ignore[no-untyped-call, unused-ignore]
+            url = jenkins.client._build_url(  # type: ignore[no-untyped-call, unused-ignore]  # noqa: SLF001
                 f"/{job_path}/{number}/testReport/api/json?tree={REPORT_TREE}"
             )
             response = jenkins.client.jenkins_request(  # type: ignore[no-untyped-call, unused-ignore]

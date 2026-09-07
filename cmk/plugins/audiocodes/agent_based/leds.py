@@ -209,8 +209,8 @@ snmp_section_audiocodes_leds = SNMPSection(
 
 
 def discover_audiocodes_leds(
-    section_audiocodes_module_names: Mapping[str, str] | None,
-    section_audiocodes_leds: LEDResults | None,
+    section_audiocodes_module_names: Mapping[str, str] | None,  # noqa: ARG001
+    section_audiocodes_leds: LEDResults | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

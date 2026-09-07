@@ -88,7 +88,7 @@ def _with_file(path: Path) -> Iterator[None]:
             path.unlink(missing_ok=True)
 
 
-def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
+def argument_function_with_exception(*args: object, **kwargs: object) -> Never:  # noqa: ARG001
     raise RuntimeError("Can't create argument list")
 
 

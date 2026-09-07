@@ -46,7 +46,7 @@ class OrganizationsClient:
             log.LOGGER.debug("Get organisations: %(error)r", {"error": e})
             return []
 
-    def get_api_response_codes(self, id: str, /) -> Sequence[schema.RawApiResponseCodes]:
+    def get_api_response_codes(self, id: str, /) -> Sequence[schema.RawApiResponseCodes]:  # noqa: A002
         try:
             return self._sdk.getOrganizationApiRequestsOverviewResponseCodesByInterval(
                 id,
@@ -58,10 +58,10 @@ class OrganizationsClient:
             log.LOGGER.debug(f"Get API response codes {id}: {e}")
             return []
 
-    def get_devices(self, id: str, /) -> Sequence[schema.RawDevice]:
+    def get_devices(self, id: str, /) -> Sequence[schema.RawDevice]:  # noqa: A002
         return self._sdk.getOrganizationDevices(id, total_pages="all")
 
-    def get_device_statuses(self, id: str, /) -> Sequence[schema.RawDevicesStatus]:
+    def get_device_statuses(self, id: str, /) -> Sequence[schema.RawDevicesStatus]:  # noqa: A002
         try:
             return self._sdk.getOrganizationDevicesStatuses(id, total_pages="all")
         except APIError as e:
@@ -71,7 +71,7 @@ class OrganizationsClient:
             )
             return []
 
-    def get_device_uplink_addresses(self, id: str, /) -> Sequence[schema.RawDeviceUplinksAddress]:
+    def get_device_uplink_addresses(self, id: str, /) -> Sequence[schema.RawDeviceUplinksAddress]:  # noqa: A002
         try:
             return self._sdk.getOrganizationDevicesUplinksAddressesByDevice(id, total_pages="all")
         except APIError as e:
@@ -81,7 +81,7 @@ class OrganizationsClient:
             )
             return []
 
-    def get_licenses_overview(self, id: str, name: str, /) -> schema.LicensesOverview | None:
+    def get_licenses_overview(self, id: str, name: str, /) -> schema.LicensesOverview | None:  # noqa: A002
         try:
             raw_overview = self._sdk.getOrganizationLicensesOverview(id)
         except APIError as e:
@@ -93,7 +93,7 @@ class OrganizationsClient:
 
         return schema.LicensesOverview(organisation_id=id, organisation_name=name, **raw_overview)
 
-    def get_networks(self, id: str, name: str, /) -> Sequence[schema.Network]:
+    def get_networks(self, id: str, name: str, /) -> Sequence[schema.Network]:  # noqa: A002
         try:
             return [
                 schema.Network(organizationName=name, **raw_network)

@@ -33,7 +33,8 @@ def _make_option(name: str, value: str | int | None) -> tuple[str, ...]:
 
 
 def _commands_check_sftp(
-    params: SFTPParameters, host_config: HostConfig
+    params: SFTPParameters,
+    host_config: HostConfig,  # noqa: ARG001
 ) -> Iterable[ActiveCheckCommand]:
     yield ActiveCheckCommand(
         service_description=params.description or f"SFTP {params.host}",

@@ -43,7 +43,9 @@ class FakeEC2Client:
         self._skip_entities: Mapping[str, Collection[str]] = skip_entities if skip_entities else {}
 
     def describe_instances(
-        self, InstanceIds: object = None, Filters: object = None
+        self,
+        InstanceIds: object = None,  # noqa: ARG002
+        Filters: object = None,  # noqa: ARG002
     ) -> Mapping[str, object]:
         instances = EC2DescribeInstancesIB.create_instances(
             amount=3, skip_entities=self._skip_entities.get("Instances")
@@ -83,7 +85,9 @@ class FakeEC2Client:
         }
 
     def describe_security_groups(
-        self, InstanceIds: object = None, Filters: object = None
+        self,
+        InstanceIds: object = None,  # noqa: ARG002
+        Filters: object = None,  # noqa: ARG002
     ) -> Mapping[str, object]:
         return {
             "SecurityGroups": EC2DescribeSecurityGroupsIB.create_instances(amount=3),
@@ -187,8 +191,8 @@ def test_agent_aws_ec2_limits(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_ec2: int,
-    found_ec2_with_labels: int,
+    found_ec2: int,  # noqa: ARG001
+    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
         names, tags
@@ -240,7 +244,7 @@ def test_agent_aws_ec2_summary(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,
-    found_ec2_with_labels: int,
+    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
@@ -266,7 +270,7 @@ def test_agent_aws_ec2_labels(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_ec2: int,
+    found_ec2: int,  # noqa: ARG001
     found_ec2_with_labels: int,
 ) -> None:
     ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
@@ -287,7 +291,7 @@ def test_agent_aws_ec2_security_groups(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,
-    found_ec2_with_labels: int,
+    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
@@ -310,7 +314,7 @@ def test_agent_aws_ec2(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,
-    found_ec2_with_labels: int,
+    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
@@ -408,8 +412,8 @@ def test_agent_aws_ec2_no_crash_when_keys_missing(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_ec2: int,
-    found_ec2_with_labels: int,
+    found_ec2: int,  # noqa: ARG001
+    found_ec2_with_labels: int,  # noqa: ARG001
     skip_entities: Mapping[str, Collection[str]],
 ) -> None:
     ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(

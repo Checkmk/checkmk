@@ -33,7 +33,7 @@ def parse_fireeye_mailq(string_table: StringTable) -> Section | None:
     return None
 
 
-def dicsover_fireeye_mailq(section: Section) -> DiscoveryResult:
+def dicsover_fireeye_mailq(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

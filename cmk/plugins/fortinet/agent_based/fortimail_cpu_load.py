@@ -28,7 +28,7 @@ def parse_fortimail_cpu_load(string_table: StringTable) -> Section | None:
     return {"cpu_load": float(string_table[0][0])} if string_table else None
 
 
-def discovery_fortimail_cpu_load(section: Section) -> DiscoveryResult:
+def discovery_fortimail_cpu_load(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

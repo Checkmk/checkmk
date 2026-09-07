@@ -47,7 +47,7 @@ def parse_innovaphone_licenses(string_table: StringTable) -> LicenseUsage | None
             return None
 
 
-def discover_innovaphone_licenses(section: LicenseUsage) -> DiscoveryResult:
+def discover_innovaphone_licenses(section: LicenseUsage) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -45,7 +45,7 @@ def parse(string_table: StringTable) -> Section:
 agent_section_splunk_system_msg = AgentSection(name="splunk_system_msg", parse_function=parse)
 
 
-def discovery(section: Section) -> DiscoveryResult:
+def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

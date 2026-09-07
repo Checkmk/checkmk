@@ -21,7 +21,7 @@ def parse_mcafee_emailgateway_agent(string_table: StringTable) -> StringTable | 
     return string_table or None
 
 
-def discover_mcafee_emailgateway_agent(section: StringTable) -> DiscoveryResult:
+def discover_mcafee_emailgateway_agent(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -121,7 +121,7 @@ def test_downtime_only_on_full_problem_coverage(
     children = [_make_child_result(s, d) for s, d in zip(child_states, child_downtimes)]
     options = _make_computation_options(downtime_only_on_full_problem_coverage=True)
 
-    result = rule._process_node_compute_result(children, options)
+    result = rule._process_node_compute_result(children, options)  # noqa: SLF001
 
     assert result.in_downtime is expected_in_downtime
 

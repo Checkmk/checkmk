@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 from pathlib import Path
 
@@ -73,7 +75,8 @@ def test_force_continues_despite_local_modifications(
 
 
 def test_abort_cleanup_hook_generated_livesatus_config(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     site_root = _build_site_root(tmp_path)
     (site_root / "etc/mk-livestatus/xinetd.conf").write_text("changes made")

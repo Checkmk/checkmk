@@ -55,7 +55,7 @@ def parse_ddn_s2a_statsdelay(string_table: StringTable) -> Section:
     )
 
 
-def discover_ddn_s2a_statsdelay(section: Section) -> DiscoveryResult:
+def discover_ddn_s2a_statsdelay(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Disk")
     yield Service(item="Host")
 

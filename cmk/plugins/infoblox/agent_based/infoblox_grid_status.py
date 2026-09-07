@@ -35,7 +35,7 @@ snmp_section_infoblox_grid_status = SimpleSNMPSection(
 )
 
 
-def discover_infoblox_grid_status(section: StringTable) -> DiscoveryResult:
+def discover_infoblox_grid_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

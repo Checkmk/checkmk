@@ -61,7 +61,7 @@ def parse_bazel_cache(string_table: StringTable) -> Section:
     }
 
 
-def discover_bazel_cache(section: Section) -> DiscoveryResult:
+def discover_bazel_cache(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

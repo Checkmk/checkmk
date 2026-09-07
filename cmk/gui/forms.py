@@ -202,7 +202,7 @@ def end() -> None:
 
 def remove_unused_vars(
     form_prefix: str,
-    is_var_to_delete: Callable[[str, str, str], bool] = lambda prefix, varname, value: True,
+    is_var_to_delete: Callable[[str, str, str], bool] = lambda prefix, varname, value: True,  # noqa: ARG005
 ) -> None:
     """Delete all variables for a form with prefix "form_prefix" that are not
     activated by a "varname_USE" entry.

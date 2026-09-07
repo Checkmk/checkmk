@@ -32,7 +32,7 @@ from tests.testlib.unit.gui.filter_table_test_helper import (
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
+def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):  # noqa: ARG001
     live = mock_livestatus
     live.add_table(
         "hostgroups",
@@ -112,7 +112,9 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", filter_registry.keys())
 def test_filters_filter_with_empty_request(
-    filter_ident: str, live: MockLiveStatusConnection, request_context: None
+    filter_ident: str,
+    live: MockLiveStatusConnection,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
@@ -606,7 +608,7 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context: None) -> None:
+def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context: None) -> None:  # noqa: ARG001
     with (
         set_config(
             wato_host_attrs=[
@@ -623,7 +625,8 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context
 
 
 def test_custom_attribute_filter_without_the_value_variable(
-    set_config: SetConfig, request_context: None
+    set_config: SetConfig,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     # A stored context that carries only the attribute name and no value key at all,
     # as opposed to a value key holding an empty string. Both mean "any value".
@@ -638,7 +641,9 @@ def test_custom_attribute_filter_without_the_value_variable(
 
 @pytest.mark.parametrize("test", filter_table_tests)
 def test_filters_filter_table(  # type: ignore[misc]
-    test: FilterTableTest, monkeypatch: pytest.MonkeyPatch, request_context: None
+    test: FilterTableTest,
+    monkeypatch: pytest.MonkeyPatch,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     # Skip deployment_has_agent in community edition - needs bakery
     if test.ident == "deployment_has_agent":
@@ -663,7 +668,9 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:  # type: ignor
 
 # Filter form is not really checked. Only checking that no exception occurs
 def test_filters_display_with_empty_request(
-    live: MockLiveStatusConnection, request_context: None, patch_theme: None
+    live: MockLiveStatusConnection,
+    request_context: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> None:
     with live:
         for filt in filter_registry.values():

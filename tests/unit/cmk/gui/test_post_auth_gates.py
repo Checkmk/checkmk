@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.gui.config import Config
@@ -32,7 +34,7 @@ def _gate(
     return PostAuthGate(
         ident=ident,
         allowed_page_names=allowed_page_names,
-        redirect_url=lambda config: url,
+        redirect_url=lambda config: url,  # noqa: ARG005
     )
 
 

@@ -108,7 +108,9 @@ def _distributed_sites(set_config: SetConfig) -> Iterator[None]:
 
 class TestCreateAgentDownloadToken:
     def test_no_site_id_creates_locally(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token()
         resp.assert_status_code(201)
@@ -117,7 +119,9 @@ class TestCreateAgentDownloadToken:
         assert isinstance(stored.details, AgentDownloadToken)
 
     def test_local_site_id_creates_locally(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(body={"site_id": "NO_SITE"})
         resp.assert_status_code(201)
@@ -128,7 +132,7 @@ class TestCreateAgentDownloadToken:
     def test_remote_site_id_forwards(
         self,
         clients: ClientRegistry,
-        distributed_sites: None,
+        distributed_sites: None,  # noqa: ARG002
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         captured: dict[str, object] = {}
@@ -139,7 +143,7 @@ class TestCreateAgentDownloadToken:
             automation_config: RemoteAutomationConfig,
             command: str,
             vars_: list[tuple[str, str]],
-            debug: bool,
+            debug: bool,  # noqa: ARG001
         ) -> dict[str, str | None]:
             captured["site_id"] = automation_config.site_id
             captured["command"] = command
@@ -168,7 +172,9 @@ class TestCreateAgentDownloadToken:
             get_token_store().verify(f"0:{resp.json['id']}", now=dt.datetime.now(dt.UTC))
 
     def test_unknown_site_id_returns_400(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(
             body={"site_id": "does_not_exist"}, expect_ok=False
@@ -177,7 +183,9 @@ class TestCreateAgentDownloadToken:
         assert "does_not_exist" in resp.json["detail"]
 
     def test_remote_without_login_returns_502(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(
             body={"site_id": UNCONNECTED_SITE}, expect_ok=False
@@ -194,7 +202,9 @@ class TestCreateAgentDownloadToken:
 class TestCreateAgentRegistrationToken:
     @pytest.mark.usefixtures("with_host")
     def test_no_site_id_creates_locally(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_registration_token(
             body={"host": "heute", "comment": "from test"}
@@ -210,7 +220,7 @@ class TestCreateAgentRegistrationToken:
     def test_remote_site_id_forwards(
         self,
         clients: ClientRegistry,
-        distributed_sites: None,
+        distributed_sites: None,  # noqa: ARG002
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         captured: dict[str, object] = {}
@@ -220,7 +230,7 @@ class TestCreateAgentRegistrationToken:
             automation_config: RemoteAutomationConfig,
             command: str,
             vars_: list[tuple[str, str]],
-            debug: bool,
+            debug: bool,  # noqa: ARG001
         ) -> dict[str, str | None]:
             captured["site_id"] = automation_config.site_id
             captured["command"] = command
@@ -252,7 +262,9 @@ class TestCreateAgentRegistrationToken:
 
     @pytest.mark.usefixtures("with_host")
     def test_unknown_site_id_returns_400(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_registration_token(
             body={"host": "heute", "comment": "x", "site_id": "does_not_exist"},

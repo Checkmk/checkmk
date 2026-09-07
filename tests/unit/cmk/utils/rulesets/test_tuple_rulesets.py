@@ -30,7 +30,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk_version, "omd_version", lambda *args, **kw: "1.4.0i1.cee")
+    monkeypatch.setattr(cmk_version, "omd_version", lambda *args, **kw: "1.4.0i1.cee")  # noqa: ARG005
 
 
 @pytest.fixture()
@@ -420,32 +420,32 @@ def test_get_service_bool_value(  # type: ignore[misc]
 def test_all_matching_hosts(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     label_manager = ts.config_cache.label_manager
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
         with_foreign_hosts=False,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host1", "host2"}
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("criticality"): TagID("test")}},
         with_foreign_hosts=False,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host1"}
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}},
         with_foreign_hosts=False,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host2"}
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}},
         with_foreign_hosts=True,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host2", "host3"}
 
     assert (
-        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": []},
             with_foreign_hosts=True,
             labels_of_host=label_manager.labels_of_host,
@@ -453,14 +453,14 @@ def test_all_matching_hosts(ts: Scenario) -> None:
         == set()
     )
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": ["host1"]},
         with_foreign_hosts=True,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host1"}
 
     assert (
-        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
             {
                 "host_tags": {TagGroupID("agent"): {"$ne": TagID("no-agent")}},
                 "host_name": ["host1"],
@@ -471,26 +471,26 @@ def test_all_matching_hosts(ts: Scenario) -> None:
         == set()
     )
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "h"}]},
         with_foreign_hosts=False,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host1", "host2"}
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2"}]},
         with_foreign_hosts=False,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host2"}
 
-    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2$"}]},
         with_foreign_hosts=False,
         labels_of_host=label_manager.labels_of_host,
     ) == {"host2"}
 
     assert (
-        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(  # noqa: SLF001
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "2"}]},
             with_foreign_hosts=False,
             labels_of_host=label_manager.labels_of_host,

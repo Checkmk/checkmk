@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -38,7 +40,9 @@ class FakeCrashReportsRowFetcher:
         self._row = row
 
     def get_crash_report_rows(
-        self, only_sites: OnlySites, filter_headers: str
+        self,
+        only_sites: OnlySites,  # noqa: ARG002
+        filter_headers: str,  # noqa: ARG002
     ) -> Iterator[dict[str, str]]:
         if self._row is not None:
             yield self._row
@@ -119,7 +123,9 @@ def test_automatic_upload_hint_hidden_without_global_settings_permission(
     ],
 )
 def test_automatic_upload_hint_on_view(
-    view_name: str, expect_banner: bool, with_admin_login: UserId
+    view_name: str,
+    expect_banner: bool,
+    with_admin_login: UserId,
 ) -> None:
     with output_funnel.plugged():
         show_automatic_upload_hint_on_view(view_name)

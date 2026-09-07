@@ -165,7 +165,7 @@ def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
         urllib.request.HTTPSHandler(
             debuglevel=0,
             context=(
-                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305 # TODO & FIXME: Do *NOT* use private functions of ssl module!
+                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305 # TODO & FIXME: Do *NOT* use private functions of ssl module!  # noqa: SLF001
             ),
         ),
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),

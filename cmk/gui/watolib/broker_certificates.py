@@ -198,7 +198,9 @@ def broker_certs_created(site_id: SiteId) -> bool:
 
 
 def create_remote_broker_certs(
-    signing_ca_bundle: PersistedCertificateWithPrivateKey, site_id: SiteId, site: SiteConfiguration
+    signing_ca_bundle: PersistedCertificateWithPrivateKey,
+    site_id: SiteId,
+    site: SiteConfiguration,  # noqa: ARG001
 ) -> messaging.BrokerCertificates:
     """
     Create a new certificate with private key for the broker of a remote site.

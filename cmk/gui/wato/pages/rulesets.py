@@ -1389,7 +1389,7 @@ class ModeEditRuleset(WatoMode):
         )
 
     @staticmethod
-    def _css_for_rule(search_options: SearchOptions, rule: Rule) -> list[str]:
+    def _css_for_rule(search_options: SearchOptions, rule: Rule) -> list[str]:  # noqa: ARG004
         css = []
         if rule.is_disabled():
             css.append("disabled")
@@ -3930,7 +3930,7 @@ class ModeUnknownRulesets(WatoMode):
 
     def _delete_cp_rule(
         self,
-        rulesets: AllRulesets,
+        rulesets: AllRulesets,  # noqa: ARG002
         ruleset: Ruleset,
         rule: Rule,
         *,
@@ -4007,7 +4007,12 @@ class ModeUnknownRulesets(WatoMode):
         return None
 
     def _delete_selected_rule(
-        self, selected_ruleset_name: str, selected_rule_id: str, *, pprint_value: bool, debug: bool
+        self,
+        selected_ruleset_name: str,  # noqa: ARG002
+        selected_rule_id: str,
+        *,
+        pprint_value: bool,
+        debug: bool,
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets(folder_tree())
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():

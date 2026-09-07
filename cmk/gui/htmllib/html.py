@@ -1466,7 +1466,7 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec | None = None,
         # Temporary measure for not having to change all call-sites at once.
         # The first step was to only change call sites from painters.
-        theme: Theme = theme,
+        theme: Theme = theme,  # noqa: ARG004
         download: str | None = None,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]

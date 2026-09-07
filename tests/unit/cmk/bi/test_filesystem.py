@@ -54,13 +54,13 @@ def test_cache_is_not_site_path(fs: BIFileSystem) -> None:
 
 def test_cache_compilation_lock_path(fs: BIFileSystem) -> None:
     value = fs.cache.compilation_lock
-    expected = fs.cache._root / "compilation.LOCK"
+    expected = fs.cache._root / "compilation.LOCK"  # noqa: SLF001
     assert value == expected
 
 
 def test_cache_last_compilation_path(fs: BIFileSystem) -> None:
     value = fs.cache.last_compilation
-    expected = fs.cache._root / "last_compilation"
+    expected = fs.cache._root / "last_compilation"  # noqa: SLF001
     assert value == expected
 
 
@@ -69,7 +69,7 @@ def test_var_generate_config_filesystem(fs: BIFileSystem) -> None:
 
 
 def test_etc_bi_config(fs: BIFileSystem) -> None:
-    assert fs.etc.config == fs.etc._root / "multisite.d/wato/bi_config.bi"
+    assert fs.etc.config == fs.etc._root / "multisite.d/wato/bi_config.bi"  # noqa: SLF001
 
 
 def test_etc_multisite_config_exists(fs: BIFileSystem) -> None:

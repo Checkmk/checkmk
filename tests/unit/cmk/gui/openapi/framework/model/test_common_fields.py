@@ -235,7 +235,7 @@ def test_parse_columns_validates_against_call_time_table() -> None:
 
 class TestFolderValidation:
     @pytest.fixture
-    def subfolder(self, with_admin_login: UserId) -> Iterator[Folder]:
+    def subfolder(self, with_admin_login: UserId) -> Iterator[Folder]:  # noqa: ARG002
         # The name "abc" is a valid hex string, which makes it ambiguous with a folder id.
         pending_changes = PendingChanges(
             activation_sites=SiteConfigurations({}),
@@ -256,10 +256,10 @@ class TestFolderValidation:
         yield folder
         root.delete_subfolder("abc", pending_changes=pending_changes, acting_user=logged_in_user)
 
-    def test_root_via_slash(self, load_config: Config) -> None:
+    def test_root_via_slash(self, load_config: Config) -> None:  # noqa: ARG002
         assert _FolderValidation.validate("/") == folder_tree().root_folder()
 
-    def test_root_via_empty_string(self, load_config: Config) -> None:
+    def test_root_via_empty_string(self, load_config: Config) -> None:  # noqa: ARG002
         assert _FolderValidation.validate("") == folder_tree().root_folder()
 
     @pytest.mark.parametrize(
@@ -280,17 +280,17 @@ class TestFolderValidation:
     ) -> None:
         assert _FolderValidation.validate(value) == subfolder
 
-    def test_bare_hex_name_is_treated_as_id_not_path(self, subfolder: Folder) -> None:
+    def test_bare_hex_name_is_treated_as_id_not_path(self, subfolder: Folder) -> None:  # noqa: ARG002
         with pytest.raises(ValueError):
             _FolderValidation.validate("abc")
 
     def test_hex_id_resolved_by_id(self, subfolder: Folder) -> None:
         assert _FolderValidation.validate(subfolder.id()) == subfolder
 
-    def test_invalid_hex_id_raises_value_error(self, load_config: Config) -> None:
+    def test_invalid_hex_id_raises_value_error(self, load_config: Config) -> None:  # noqa: ARG002
         with pytest.raises(ValueError):
             _FolderValidation.validate("deadbeef")
 
-    def test_unknown_path_raises_value_error(self, load_config: Config) -> None:
+    def test_unknown_path_raises_value_error(self, load_config: Config) -> None:  # noqa: ARG002
         with pytest.raises(ValueError):
             _FolderValidation.validate("~does~not~exist")

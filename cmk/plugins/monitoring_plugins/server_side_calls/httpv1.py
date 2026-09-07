@@ -208,7 +208,7 @@ class ProxyHost:
     def port(self) -> int | None:
         return self.proxy.port
 
-    def virtual_host(self, mode: Mode) -> str:
+    def virtual_host(self, mode: Mode) -> str:  # noqa: ARG002
         vhost = (
             self.settings.virtual
             if isinstance(self.settings.virtual, str)

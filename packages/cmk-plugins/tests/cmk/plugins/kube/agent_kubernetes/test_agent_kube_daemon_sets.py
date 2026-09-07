@@ -14,7 +14,7 @@ class TestAPIDaemonSets:
     def test_parse_metadata(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         daemon_sets_metadata = {
             "metadata": {
@@ -49,7 +49,7 @@ class TestAPIDaemonSets:
     def test_parse_metadata_missing_annotations_and_labels(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         daemon_sets_metadata = {
             "metadata": {
@@ -73,7 +73,7 @@ class TestAPIDaemonSets:
     def test_parse_status_failed_creation(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         daemon_sets_data = {
             "status": {
@@ -99,7 +99,7 @@ class TestAPIDaemonSets:
     def test_parse_status_no_matching_node(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         """
 

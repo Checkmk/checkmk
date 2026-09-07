@@ -30,7 +30,7 @@ def parse_prism_info(string_table: StringTable) -> Section:
     return load_json(string_table)
 
 
-def host_label_prism_info(section: Section) -> HostLabelGenerator:
+def host_label_prism_info(section: Section) -> HostLabelGenerator:  # noqa: ARG001
     """Host label function
 
     Labels:

@@ -162,7 +162,9 @@ class Command:
         )
 
     def user_confirm_options(
-        self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
+        self,
+        len_rows: int,  # noqa: ARG002
+        cmdtag: Literal["HOST", "SVC"],  # noqa: ARG002
     ) -> list[tuple[str, str]]:
         return [(_("Confirm"), "_do_confirm")]
 

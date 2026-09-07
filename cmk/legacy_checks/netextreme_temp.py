@@ -17,11 +17,11 @@ check_info = {}
 # Just an assumption
 
 
-def discover_netextreme_temp(info):
+def discover_netextreme_temp(info):  # noqa: ARG001
     return [("System", {})]
 
 
-def check_netextreme_temp(item, params, info):
+def check_netextreme_temp(item, params, info):  # noqa: ARG001
     return check_temperature(float(info[0][0]), params, "netextreme_temp_System")
 
 

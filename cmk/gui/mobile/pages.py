@@ -119,7 +119,7 @@ def jqm_page_header(
     html.open_div(**{"data-role": "content"})
 
 
-def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None:
+def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None:  # noqa: ARG001
     html.close_div()  # close content
     html.open_div(
         **{
@@ -155,7 +155,7 @@ def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None
     html.close_div()  # close page-div
 
 
-def jqm_page_index(title: str, items: Items) -> None:
+def jqm_page_index(title: str, items: Items) -> None:  # noqa: ARG001
     manual_sort = [_("Overview"), _("Problems"), _("History"), _("Event Console")]
 
     items.sort(key=lambda x: (x[0], x[2]))
@@ -185,7 +185,7 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
     html.close_ul()
 
 
-def _page_login(config: Config) -> None:
+def _page_login(config: Config) -> None:  # noqa: ARG001
     title = _("Checkmk mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
@@ -513,7 +513,7 @@ def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> Non
     )
 
 
-def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
+def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:  # noqa: ARG001
     what = datasource.infos[0]
     html.javascript(
         """

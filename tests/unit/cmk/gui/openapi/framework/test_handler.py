@@ -673,7 +673,7 @@ def test_handle_endpoint_with_fields_filter(permission_validator: PermissionVali
 
     def _handler(
         body: _Schema,
-        fields: FieldsFilterType,
+        fields: FieldsFilterType,  # noqa: ARG001
     ) -> _Schema:
         return body
 

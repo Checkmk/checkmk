@@ -24,14 +24,14 @@ class FakeSiteMgmt:
 
     def save_sites(
         self,
-        folder_tree: object,
+        folder_tree: object,  # noqa: ARG002
         configured_sites: dict[SiteId, dict[str, object]],
         *,
         activate: bool,
-        pprint_value: bool,
-        liveproxyd_enabled: bool,
-        use_git: bool,
-        acting_user_id: object,
+        pprint_value: bool,  # noqa: ARG002
+        liveproxyd_enabled: bool,  # noqa: ARG002
+        use_git: bool,  # noqa: ARG002
+        acting_user_id: object,  # noqa: ARG002
     ) -> None:
         assert activate is False  # migration must not auto-activate
         self.saved = configured_sites

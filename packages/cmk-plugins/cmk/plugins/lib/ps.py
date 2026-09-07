@@ -532,10 +532,10 @@ def process_capture(
 def discover_ps(
     params: Sequence[Mapping[str, Any]],
     section_ps: Section | None,
-    section_mem: memory.SectionMem | None,
-    section_mem_used: dict[str, memory.SectionMem] | None,
-    section_mem_total: memory.SectionMemTotal | None,
-    section_cpu: cpu.Section | None,
+    section_mem: memory.SectionMem | None,  # noqa: ARG001
+    section_mem_used: dict[str, memory.SectionMem] | None,  # noqa: ARG001
+    section_mem_total: memory.SectionMemTotal | None,  # noqa: ARG001
+    section_cpu: cpu.Section | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_ps:
         return
@@ -601,7 +601,7 @@ def unused_value_remover(  # type: ignore[misc]
 def check_ps_common(
     *,
     label: str,
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     process_lines: Iterable[ProcessLine],
     cpu_cores: int,

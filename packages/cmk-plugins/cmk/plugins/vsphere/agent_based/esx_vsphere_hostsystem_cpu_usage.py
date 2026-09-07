@@ -100,7 +100,7 @@ def _check_esx_vsphere_hostsystem_cpu_usage_common(
 def check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
     section_esx_vsphere_hostsystem: Section | None,
-    section_winperf_processor: list | None,
+    section_winperf_processor: list | None,  # noqa: ARG001
 ) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return
@@ -130,7 +130,7 @@ def _applicable_thresholds(
 def cluster_check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
     section_esx_vsphere_hostsystem: Mapping[str, Section | None],
-    section_winperf_processor: Mapping[str, list | None],
+    section_winperf_processor: Mapping[str, list | None],  # noqa: ARG001
 ) -> CheckResult:
     aggregated_section = None
     total_mhz = 0.0

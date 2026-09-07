@@ -29,7 +29,7 @@ def parse_viprinet_power(string_table: StringTable) -> PowerStatus | None:
             return None
 
 
-def discover_viprinet_power(section: PowerStatus) -> DiscoveryResult:
+def discover_viprinet_power(section: PowerStatus) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

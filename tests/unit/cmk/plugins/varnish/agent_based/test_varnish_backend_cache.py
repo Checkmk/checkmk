@@ -404,7 +404,9 @@ class TestVarnishBackendMonitoring:
     )
     @pytest.mark.usefixtures("empty_value_store")
     def test_backend_metrics_variations(
-        self, backend_values: dict[str, int], expected_metrics: list[str]
+        self,
+        backend_values: dict[str, int],
+        expected_metrics: list[str],  # noqa: ARG002
     ) -> None:
         """Test backend check with different metric combinations."""
         # Backend check - using direct function calls
@@ -495,7 +497,7 @@ class TestVarnishCacheMonitoring:
         ],
     )
     @pytest.mark.usefixtures("empty_value_store")
-    def test_cache_hit_patterns(self, cache_values: dict[str, int], description: str) -> None:
+    def test_cache_hit_patterns(self, cache_values: dict[str, int], description: str) -> None:  # noqa: ARG002
         """Test cache check with different hit/miss patterns."""
         # Cache check - using direct function calls
         parsed = _create_parsed_varnish(backend_values={}, cache_values=cache_values)

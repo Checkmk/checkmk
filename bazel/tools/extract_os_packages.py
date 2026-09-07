@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #!/usr/bin/env python3
+
+# ruff: noqa: T201
+
 """
 This tool extracts the OS dependencies form our *.mk distros files and writes them into a file
 readable by deb / rpm packaging tools.

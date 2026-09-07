@@ -44,7 +44,7 @@ SECTION = {
     ],
 )
 def test_backup_timestamp(backup_time: str, tz_info: timezone, expected: datetime | None) -> None:
-    assert sap_hana_backup._backup_timestamp(backup_time, tz_info) == expected
+    assert sap_hana_backup._backup_timestamp(backup_time, tz_info) == expected  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

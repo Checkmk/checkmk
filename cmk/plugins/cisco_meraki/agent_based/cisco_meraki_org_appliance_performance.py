@@ -37,7 +37,7 @@ agent_section_meraki_org_appliance_performance = AgentSection(
 )
 
 
-def discover_appliance_performance(section: Section) -> DiscoveryResult:
+def discover_appliance_performance(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

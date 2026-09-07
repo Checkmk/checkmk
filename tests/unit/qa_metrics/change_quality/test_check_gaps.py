@@ -69,7 +69,7 @@ def _wire(
     monkeypatch.setattr(
         walk,
         "walk_werk_adds",
-        lambda _r, since=None, until=None: iter(
+        lambda _r, since=None, until=None: iter(  # noqa: ARG005
             [SimpleNamespace(werk_id=wid) for wid, _cls in git_werks]
         ),
     )
@@ -153,7 +153,7 @@ def test_main_exit_2_on_git_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """A git failure (e.g. --repo is not a git repo) exits 2, not 1."""
     monkeypatch.setattr(check_gaps, "read_branch_version", lambda _p: "3.0.0")
 
-    def _raise(_r: object, since: object = None, until: object = None) -> object:
+    def _raise(_r: object, since: object = None, until: object = None) -> object:  # noqa: ARG001
         raise subprocess.CalledProcessError(128, ["git", "log"])
 
     monkeypatch.setattr(walk, "walk_werk_adds", _raise)

@@ -62,7 +62,7 @@ def _main() -> int:
     if config.server_config.num_workers == 1:
         # In single-worker mode, uvicorn re-raises captured signals after shutting down the server.
         # We need to catch the re-raised SIGTERM signal to exit cleanly.
-        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))  # noqa: ARG005
 
     log_manager = LoggingManager()
     with (

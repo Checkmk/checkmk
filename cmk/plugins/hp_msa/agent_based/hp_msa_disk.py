@@ -165,11 +165,11 @@ check_plugin_hp_msa_disk = CheckPlugin(
 )
 
 
-def discovery_hp_msa_disk_temp(section: Section) -> DiscoveryResult:
+def discovery_hp_msa_disk_temp(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Disks")
 
 
-def check_hp_msa_disk_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
+def check_hp_msa_disk_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:  # noqa: ARG001
     temp_and_ids = ((k, float(v["temperature-numeric"])) for k, v in section.items())
     yield from aggregate_temperature_results(
         [

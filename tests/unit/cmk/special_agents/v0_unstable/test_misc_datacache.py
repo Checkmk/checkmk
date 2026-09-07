@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-call"
 
 from pathlib import Path
@@ -38,19 +40,19 @@ def test_datacache_timestamp() -> None:
 
     assert tcache.cache_timestamp is None  # file doesn't exist yet
 
-    tcache._write_to_cache("")
+    tcache._write_to_cache("")  # noqa: SLF001
     assert isinstance(tcache.cache_timestamp, float)
 
 
 def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
-    tcache._write_to_cache("cached data")
+    tcache._write_to_cache("cached data")  # noqa: SLF001
     assert tcache.cache_timestamp is not None
 
     valid_time = tcache.cache_timestamp + tcache.cache_interval - 1
     monkeypatch.setattr("time.time", lambda: valid_time)
 
-    assert tcache._cache_is_valid()
+    assert tcache._cache_is_valid()  # noqa: SLF001
     # regular case
     assert tcache.get_data(True) == "cached data"
     # force live data
@@ -63,11 +65,11 @@ def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 
 def test_datacache_validity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
-    tcache._write_to_cache("cached data")
+    tcache._write_to_cache("cached data")  # noqa: SLF001
     assert tcache.cache_timestamp is not None
 
     invalid_time = tcache.cache_timestamp + tcache.cache_interval + 1
     monkeypatch.setattr("time.time", lambda: invalid_time)
 
-    assert not tcache._cache_is_valid()
+    assert not tcache._cache_is_valid()  # noqa: SLF001
     assert tcache.get_data(True) == "live data"

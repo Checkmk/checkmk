@@ -12,7 +12,7 @@ import pytest
 
 from cmk.utils import msi_engine
 
-EXPECTED_P_WITH_HASH: Final = msi_engine._Parameters(
+EXPECTED_P_WITH_HASH: Final = msi_engine._Parameters(  # noqa: SLF001
     msi=Path("msi"),
     src_dir=Path("dir"),
     revision="rev",
@@ -20,7 +20,7 @@ EXPECTED_P_WITH_HASH: Final = msi_engine._Parameters(
     package_code_hash="hash",
 )
 
-EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
+EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(  # noqa: SLF001
     msi=Path("msi"),
     src_dir=Path("dir"),
     revision="rev",
@@ -30,9 +30,9 @@ EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
 
 
 def test_extract_major_version() -> None:
-    assert msi_engine._extract_major_version("2015.04.12") == "2015.04"
-    assert msi_engine._extract_major_version("2.2.0p15") == "2.2"
-    assert msi_engine._extract_major_version("ups") == "2.3"
+    assert msi_engine._extract_major_version("2015.04.12") == "2015.04"  # noqa: SLF001
+    assert msi_engine._extract_major_version("2.2.0p15") == "2.2"  # noqa: SLF001
+    assert msi_engine._extract_major_version("ups") == "2.3"  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -94,7 +94,7 @@ def test_generate_product_versions(version: str, expected: str) -> None:
 def test__make_windows_version_string(version: str, expected: str) -> None:
     """Testing private function is intended, we want to prevent non-discoverable errors when
     building MSI, integration tests don't check MSI"""
-    assert msi_engine._make_windows_version_string(version) == expected
+    assert msi_engine._make_windows_version_string(version) == expected  # noqa: SLF001
 
 
 _PRODUCT_CODE: Final = "SomeCode"
@@ -114,7 +114,7 @@ def test__patch_line_conditionally(line: str, expected: str) -> None:
     """Testing private function is intended, we want to prevent non-discoverable errors when
     building MSI, integration tests don't check MSI"""
     assert (
-        msi_engine._patch_line_conditionally(
+        msi_engine._patch_line_conditionally(  # noqa: SLF001
             line, version_string=_PRODUCT_VERSION, product_code=_PRODUCT_CODE
         )
         == expected

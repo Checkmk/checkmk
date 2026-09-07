@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator, Sequence
 
 import pytest
@@ -53,7 +55,8 @@ def _row(perf_data: str, check_command: str = "check_mk-kube_memory") -> Row:
     ],
 )
 def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
-    sort_values: Sequence[float | None], request_context: None
+    sort_values: Sequence[float | None],
+    request_context: None,
 ) -> None:
     data = [
         _row(

@@ -106,7 +106,7 @@ agent_section_kube_pod_info_v1 = AgentSection(
 )
 
 
-def discovery_kube_pod_info(section: PodInfo) -> DiscoveryResult:
+def discovery_kube_pod_info(section: PodInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

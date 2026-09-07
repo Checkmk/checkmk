@@ -623,17 +623,17 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
     handoff in _walk_form_spec once the last config variable is ported to
     FormSpec (CMK-24409): only _walk_form_spec is needed then."""
     if isinstance(vs, valuespec.Transform | valuespec.Foldable):
-        _walk_legacy_valuespec(vs._valuespec, path, revealed)
+        _walk_legacy_valuespec(vs._valuespec, path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.Dictionary):
-        for key, element_vs in vs._get_elements():
+        for key, element_vs in vs._get_elements():  # noqa: SLF001
             element_path = _join_key(path, key)
-            if vs._optional_keys and key not in vs._required_keys:
+            if vs._optional_keys and key not in vs._required_keys:  # noqa: SLF001
                 revealed[element_path] = _legacy_revealed_default(element_vs)
             _walk_legacy_valuespec(element_vs, element_path, revealed)
     elif isinstance(vs, valuespec.ListOf | valuespec.ListOfStrings):
         template_path = f"{path}[add]"
-        revealed[template_path] = _legacy_revealed_default(vs._valuespec)
-        _walk_legacy_valuespec(vs._valuespec, template_path, revealed)
+        revealed[template_path] = _legacy_revealed_default(vs._valuespec)  # noqa: SLF001
+        _walk_legacy_valuespec(vs._valuespec, template_path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.CascadingDropdown):
         for ident, _title, sub_vs in vs.choices():
             if sub_vs is None:
@@ -643,8 +643,8 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
             _walk_legacy_valuespec(sub_vs, element_path, revealed)
     elif isinstance(vs, valuespec.Optional):
         parameter_path = f"{path}[enable]"
-        revealed[parameter_path] = _legacy_revealed_default(vs._valuespec)
-        _walk_legacy_valuespec(vs._valuespec, parameter_path, revealed)
+        revealed[parameter_path] = _legacy_revealed_default(vs._valuespec)  # noqa: SLF001
+        _walk_legacy_valuespec(vs._valuespec, parameter_path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.Alternative):
         # An Alternative renders the alternative its own default value matches
         # with that value, and every other one with the alternative's own
@@ -654,9 +654,9 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
         matching_vs = (
             None
             if isinstance(alternative_default, NoSaveableDefault)
-            else vs._matching_alternative(alternative_default)
+            else vs._matching_alternative(alternative_default)  # noqa: SLF001
         )
-        for index, element_vs in enumerate(vs._elements):
+        for index, element_vs in enumerate(vs._elements):  # noqa: SLF001
             element_path = _join_key(path, f"[choice {index}]")
             revealed[element_path] = (
                 alternative_default
@@ -665,7 +665,7 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
             )
             _walk_legacy_valuespec(element_vs, element_path, revealed)
     elif isinstance(vs, valuespec.Tuple):
-        for index, element_vs in enumerate(vs._elements):
+        for index, element_vs in enumerate(vs._elements):  # noqa: SLF001
             _walk_legacy_valuespec(element_vs, _join_key(path, str(index)), revealed)
 
 

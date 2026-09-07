@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import re
 import time
@@ -45,7 +47,7 @@ def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         activate_changes,
         "get_status_for_site",
-        lambda a, b: (
+        lambda a, b: (  # noqa: ARG005
             {
                 "state": "online",
                 "livestatus_version": "1.2.3",
@@ -224,12 +226,12 @@ def test_synchronize_site(
         body="True",
     )
 
-    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: test_edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: test_edition)  # noqa: ARG005
 
     file_filter_func = None
     site_id = SiteId("unit_remote_1")
     with get_activation_manager(monkeypatch, SiteId("unit_remote_1")) as activation_manager:
-        assert activation_manager._activation_id is not None
+        assert activation_manager._activation_id is not None  # noqa: SLF001
         with create_sync_snapshot(
             activation_manager,
             monkeypatch,
@@ -255,11 +257,11 @@ def _synchronize_site(
     file_filter_func: Callable[[str], bool] | None,
     automation_config: RemoteAutomationConfig,
 ) -> None:
-    assert activation_manager._activation_id is not None
-    site_activation_state = activate_changes._initialize_site_activation_state(
+    assert activation_manager._activation_id is not None  # noqa: SLF001
+    site_activation_state = activate_changes._initialize_site_activation_state(  # noqa: SLF001
         site_id,
         snapshot_settings.site_config,
-        activation_manager._activation_id,
+        activation_manager._activation_id,  # noqa: SLF001
         activation_manager.changes,
         time.time(),
         "GUI",

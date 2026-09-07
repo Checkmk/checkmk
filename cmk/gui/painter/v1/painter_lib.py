@@ -77,7 +77,7 @@ class Painter[T]:
     short_title: str | LazyString
     columns: Sequence[ColumnName] = field(default_factory=list)
     list_title: str | LazyString | None = None
-    group_key: Callable[[T, PainterConfiguration], Any] = lambda x, y: None
+    group_key: Callable[[T, PainterConfiguration], Any] = lambda x, y: None  # noqa: ARG005
     painter_options: list[str] | None = None
     title_classes: list[str] | None = None
     # dynamic_columns/derive will be reviewed later on

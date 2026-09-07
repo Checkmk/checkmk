@@ -295,7 +295,7 @@ class ABCModeDownloadAgents(WatoMode):
                 return True
         return False
 
-    def _title_for_root(self, root: str, relpath: str) -> str:
+    def _title_for_root(self, root: str, relpath: str) -> str:  # noqa: ARG002
         """Section title for the files found directly below ``root``."""
         return self._TITLES.get(relpath, relpath)
 

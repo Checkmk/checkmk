@@ -88,7 +88,7 @@ def table_element(
     omit_headers: bool = False,
     omit_update_header: bool = False,
     empty_text: str | None = None,
-    help: str | None = None,
+    help: str | None = None,  # noqa: A002
     css: str | None = None,
     isopen: bool = True,
     *,
@@ -119,8 +119,8 @@ def table_element(
         try:
             yield table
         finally:
-            table._finish_previous()
-            table._end()
+            table._finish_previous()  # noqa: SLF001
+            table._end()  # noqa: SLF001
 
 
 # .
@@ -156,7 +156,7 @@ class Table:
         omit_headers: bool = False,
         omit_update_header: bool = False,
         empty_text: str | None = None,
-        help: str | None = None,
+        help: str | None = None,  # noqa: A002
         css: str | None = None,
         isopen: bool = True,
         *,
@@ -566,7 +566,7 @@ class Table:
 
         html.close_table()
 
-    def _get_num_cols(self, rows: TableRows) -> int:
+    def _get_num_cols(self, rows: TableRows) -> int:  # noqa: ARG002
         if self.headers:
             return len(self.headers)
         if self.rows:

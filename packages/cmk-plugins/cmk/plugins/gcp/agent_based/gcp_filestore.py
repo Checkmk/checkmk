@@ -36,7 +36,7 @@ ASSET_TYPE = gcp.AssetType("file.googleapis.com/Instance")
 
 
 def discover(
-    section_gcp_service_filestore: gcp.Section | None,
+    section_gcp_service_filestore: gcp.Section | None,  # noqa: ARG001
     section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "filestore")

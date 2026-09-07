@@ -62,7 +62,7 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(
+        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", p.name): p
@@ -79,8 +79,8 @@ def test_vs_diagnostics_builds_from_discovered_plugins() -> None:
         Edition.COMMUNITY, PageContext(config=Config(), request=request)
     )
 
-    valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())
-    elements = dict(valuespec._get_elements())
+    valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())  # noqa: SLF001
+    elements = dict(valuespec._get_elements())  # noqa: SLF001
 
     # one threshold dropdown per discovered topic, sorted by unlocalized title
     topic_keys = [key for key in elements if key.startswith("topic_")]
@@ -102,7 +102,7 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(
+        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", "a_low"): _make_plugin(
@@ -116,7 +116,7 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
         Edition.COMMUNITY, PageContext(config=Config(), request=request)
     )
 
-    elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())
+    elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())  # noqa: SLF001
 
     assert "checkmk_server_host" in elements  # the host field is always offered
     assert "always" not in elements  # no always plugins discovered
@@ -133,7 +133,7 @@ def test_form_submission_resolves_topic_thresholds() -> None:
     mode = diagnostics_page.ModeDiagnostics(
         Edition.COMMUNITY, PageContext(config=Config(), request=request)
     )
-    params = mode._diagnostics_parameters
+    params = mode._diagnostics_parameters  # noqa: SLF001
 
     assert params is not None
     assert params.site == "NO_SITE"

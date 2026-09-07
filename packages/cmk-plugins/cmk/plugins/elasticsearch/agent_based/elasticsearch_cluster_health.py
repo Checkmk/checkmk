@@ -100,7 +100,7 @@ def parse_elasticsearch_cluster_health(string_table: StringTable) -> dict[str, A
     return parsed
 
 
-def discover_elasticsearch_cluster_health(section: dict[str, Any]) -> DiscoveryResult:
+def discover_elasticsearch_cluster_health(section: dict[str, Any]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

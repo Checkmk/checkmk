@@ -195,12 +195,12 @@ class SNMPTrapParser:
 
     def _handle_snmptrap(
         self,
-        snmp_engine: pysnmp.entity.engine.SnmpEngine,
-        state_reference: str,
+        snmp_engine: pysnmp.entity.engine.SnmpEngine,  # noqa: ARG002
+        state_reference: str,  # noqa: ARG002
         context_engine_id: pysnmp.smi.rfc1902.ObjectIdentity,
         context_name: pysnmp.proto.rfc1902.ObjectName,
         var_binds: VarBinds,
-        cb_ctx: None,
+        cb_ctx: None,  # noqa: ARG002
     ) -> None:
         # sender_address contains a (host: str, port: int) tuple
         ipaddress: str = self.snmp_engine.get_user_context("sender_address")[0]  # type: ignore[index]
@@ -237,10 +237,10 @@ class SNMPTrapParser:
 
     def _handle_unauthenticated_snmptrap(
         self,
-        snmp_engine: pysnmp.entity.engine.SnmpEngine,
-        execpoint: str,
+        snmp_engine: pysnmp.entity.engine.SnmpEngine,  # noqa: ARG002
+        execpoint: str,  # noqa: ARG002
         variables: Mapping[str, Any],
-        cb_ctx: None,
+        cb_ctx: None,  # noqa: ARG002
     ) -> None:
         if (
             variables["securityLevel"] in {1, 2}
@@ -345,7 +345,7 @@ class SNMPTrapTranslator:
             )
             return None
 
-    def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:
+    def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:  # noqa: ARG002
         return [self._translate_binding_simple(oid, value) for oid, value in var_bind_list]
 
     @staticmethod

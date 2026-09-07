@@ -44,7 +44,7 @@ def parse_f5_bigip_cluster_status(
     return int(string_table[0][0][0]) if string_table[0] else None
 
 
-def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:
+def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

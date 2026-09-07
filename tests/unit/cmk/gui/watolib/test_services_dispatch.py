@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """Tier 2 -- side effects and local/remote dispatch.
 
 Specified in ``packages/cmk-check-engine/docs/SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md`` §7.
@@ -218,7 +221,7 @@ class Transport:
         automation_config: RemoteAutomationConfig,
         command: str,
         vars_: Sequence[tuple[str, str]],
-        debug: bool = False,
+        debug: bool = False,  # noqa: ARG002
         **_kw: object,
     ) -> object:
         self.remote_jobs.append(
@@ -226,7 +229,7 @@ class Transport:
         )
         return self.remote_check_table.serialize(_THIS_VERSION)
 
-    def sync(self, site_id: SiteId, debug: bool) -> None:
+    def sync(self, site_id: SiteId, debug: bool) -> None:  # noqa: ARG002
         self.synced_sites.append(site_id)
 
 
@@ -364,7 +367,7 @@ def _host_in_the_root_folder(attributes: HostAttributes) -> Iterator[Host]:
     finally:
         root_folder.delete_hosts(
             [HOST_NAME],
-            automation=lambda *args, **kwargs: DeleteHostsResult(),
+            automation=lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
             pprint_value=False,
             debug=False,
             pending_changes=RecordingPendingChanges(),

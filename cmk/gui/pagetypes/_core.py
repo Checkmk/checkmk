@@ -272,7 +272,9 @@ class Base[T_BaseConfig: BaseConfig](abc.ABC):
 
     @classmethod
     def parameters(
-        cls, mode: PageMode, user_permissions: UserPermissions
+        cls,
+        mode: PageMode,  # noqa: ARG003
+        user_permissions: UserPermissions,  # noqa: ARG003
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         """Defines the parameter to be configurable by the user when editing this object
 
@@ -612,7 +614,9 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return self.is_mine() and user.may("general.edit_" + self.type_name())
 
     def render_title(
-        self, instances: OverridableInstances[Self], user_permissions: UserPermissions
+        self,
+        instances: OverridableInstances[Self],  # noqa: ARG002
+        user_permissions: UserPermissions,  # noqa: ARG002
     ) -> str | HTML:
         return _u(self.title())
 
@@ -1682,7 +1686,7 @@ def _page_menu_entries_save(
     sub_pages: SubPagesSpec,
     dropdown_name: str,
     type_title: str,
-    type_title_plural: str,
+    type_title_plural: str,  # noqa: ARG001
     form_name: str,
 ) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
@@ -1865,10 +1869,10 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
     def add_element_via_popup(
         cls,
         page_name: str,
-        element_type: str,
+        element_type: str,  # noqa: ARG003
         create_info: ElementSpec,
         user_permissions: UserPermissions,
-        config: Config,
+        config: Config,  # noqa: ARG003
     ) -> tuple[str | None, bool]:
         cls.need_overriding_permission("edit")
 
@@ -2503,7 +2507,7 @@ def _no_bi_aggregate_active() -> bool:
 # .
 
 
-def _customize_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:
+def _customize_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:  # noqa: ARG001
     general_entries: list[NavItemTopicEntry] = []
     monitoring_entries: list[NavItemTopicEntry] = []
     graph_entries: list[NavItemTopicEntry] = []
@@ -2635,10 +2639,10 @@ class CustomizePermissionsHandler:
     def build(cls, ctx: PageContext) -> Self:
         return cls(UserPermissions.from_config(ctx.config, permission_registry))
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return not hide_customize_menu()
 
-    def get_visibility_check(self, category: str) -> Callable[[str], bool]:
+    def get_visibility_check(self, category: str) -> Callable[[str], bool]:  # noqa: ARG002
         visible_urls = {
             main_menu_item.url
             for main_menu_topic in _customize_menu_topics(self._user_permissions)

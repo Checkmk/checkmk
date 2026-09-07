@@ -42,7 +42,7 @@ from cmk.livestatus_client import LivestatusTestingError
 from cmk.web.utils.html import HTML
 
 
-def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:
+def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:  # noqa: A002
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos: SingleInfos) -> Iterator[tuple[str, str]]:
@@ -71,7 +71,7 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         name: str,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[FilterHTTPVariables] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FilterHTTPVariables] | None = None,
     ):
@@ -167,7 +167,7 @@ class VisualFilterList(ListOfMultiple):
     ) -> Sequence[tuple[str, VisualFilter]]:
         return sorted(
             cls._get_filter_specs(info, ignored_context_choices),
-            key=lambda x: (x[1]._filter.sort_index, x[1].title()),
+            key=lambda x: (x[1]._filter.sort_index, x[1].title()),  # noqa: SLF001
         )
 
     @classmethod

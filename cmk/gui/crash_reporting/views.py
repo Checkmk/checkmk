@@ -381,9 +381,9 @@ def _sort_crash_time(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_number("crash_time", r1, r2)
 
@@ -408,7 +408,8 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 
 
 def command_delete_crash_report_affected(
-    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    len_action_rows: int,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
 ) -> HTML:
     return HTML.without_escaping(
         _("Affected %(object_type)s: %(count)s")
@@ -423,7 +424,7 @@ def command_delete_crash_report_affected(
     )
 
 
-def command_delete_crash_report_render(what: str) -> None:
+def command_delete_crash_report_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
@@ -433,9 +434,9 @@ def command_delete_crash_report_render(what: str) -> None:
 def command_delete_crash_report_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: dict,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.has_var("_delete_crash_reports"):
@@ -583,9 +584,9 @@ def _sort_crash_host(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_host", r1, r2)
 
@@ -602,9 +603,9 @@ def _sort_crash_item(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_item", r1, r2)
 
@@ -621,9 +622,9 @@ def _sort_crash_check_type(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_check_type", r1, r2)
 
@@ -640,9 +641,9 @@ def _sort_crash_service_name(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_service_name", r1, r2)
 
@@ -665,9 +666,9 @@ def _sort_crash_exception(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string_columns(["crash_exception", "crash_exc_value"], r1, r2)
 
@@ -684,9 +685,9 @@ def _sort_crash_ident(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_id", r1, r2)
 
@@ -709,9 +710,9 @@ def _sort_crash_source(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_crash_source("crash_exc_traceback", r1, r2)
 
@@ -728,9 +729,9 @@ def _sort_crash_type(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_type", r1, r2)
 
@@ -747,9 +748,9 @@ def _sort_crash_version(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_version", r1, r2)
 
@@ -838,7 +839,7 @@ FilterCrashSource = FilterOption(
             ("extension", _("Extension")),
             ("ignore", _("(ignore)")),
         ],
-        filter_code=lambda x: "",
+        filter_code=lambda x: "",  # noqa: ARG005
         filter_row=check_crash_source,
     ),
 )

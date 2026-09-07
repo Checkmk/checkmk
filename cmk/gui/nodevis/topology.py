@@ -140,12 +140,12 @@ def register(
 
 
 def _render_network_topology_icon(
-    what: Literal["host", "service"],
+    what: Literal["host", "service"],  # noqa: ARG001
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
@@ -578,7 +578,7 @@ class ABCTopologyNodeDataGenerator:
             self._current_mesh_depth += 1
         return previous_border_nodes
 
-    def _grow_continue_nodes(self, border_nodes: set[str]) -> None:
+    def _grow_continue_nodes(self, border_nodes: set[str]) -> None:  # noqa: ARG002
         growth_continue_nodes = set(self._topology_configuration.frontend.growth_continue_nodes)
         while growth_continue_nodes:
             adjacent_nodes = set()
@@ -1679,7 +1679,7 @@ def _register_builtin_views() -> None:
     )
 
 
-def cleanup_topology_layouts(config: Config) -> None:
+def cleanup_topology_layouts(config: Config) -> None:  # noqa: ARG001
     """Topology layouts are currently restricted to a maximum number of 10000"""
     topology_configs_dir.mkdir(parents=True, exist_ok=True)
 

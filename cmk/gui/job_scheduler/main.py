@@ -76,7 +76,7 @@ def main(crash_report_callback: Callable[[Exception], str] = default_crash_repor
         _setup_console_logging()
 
         # This is only an intermediate handler until gunicorn run_server sets its own handler
-        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))  # noqa: ARG005
 
         daemonize()
 

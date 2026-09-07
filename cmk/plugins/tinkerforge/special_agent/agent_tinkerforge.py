@@ -249,12 +249,12 @@ def enumerate_callback(
     device_handlers: dict[int, Callable[[IPConnection, Mapping[str, Any], str], None]],
     settings: Mapping[str, Any],
     uid: str,
-    connected_uid: str,
-    position: str,
-    hardware_version: tuple[int, int, int],
-    firmware_version: tuple[int, int, int],
+    connected_uid: str,  # noqa: ARG001
+    position: str,  # noqa: ARG001
+    hardware_version: tuple[int, int, int],  # noqa: ARG001
+    firmware_version: tuple[int, int, int],  # noqa: ARG001
     device_identifier: int,
-    enumeration_type: int,
+    enumeration_type: int,  # noqa: ARG001
 ) -> None:
     if device_identifier == 237:
         global segment_display

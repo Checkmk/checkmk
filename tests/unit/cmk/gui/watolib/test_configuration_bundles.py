@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 from collections.abc import Iterable
 
@@ -208,7 +210,7 @@ def mock_delete_host_automation(monkeypatch: pytest.MonkeyPatch) -> Iterable[Non
     monkeypatch.setattr(
         cmk.gui.watolib.check_mk_automations,
         cmk.gui.watolib.check_mk_automations.delete_hosts.__name__,
-        lambda *args, **kwargs: DeleteHostsResult(),
+        lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
     )
     yield
 

@@ -311,13 +311,13 @@ def generate_results(plugin: Plugin) -> CheckResult:
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_results_as_specified(plugin: Plugin, empty_value_store: None) -> None:
+def test_yield_results_as_specified(plugin: Plugin, empty_value_store: None) -> None:  # noqa: ARG001
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
     assert results == set(plugin.results)
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_metrics_as_specified(plugin: Plugin, empty_value_store: None) -> None:
+def test_yield_metrics_as_specified(plugin: Plugin, empty_value_store: None) -> None:  # noqa: ARG001
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == plugin.expected_metrics()
 

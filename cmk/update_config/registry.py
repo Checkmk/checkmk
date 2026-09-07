@@ -21,7 +21,7 @@ class UpdateAction(ABC):
         name: str,
         title: str,
         sort_index: int,
-        expiry_version: ExpiryVersion,
+        expiry_version: ExpiryVersion,  # noqa: ARG002
         continue_on_failure: bool = True,
     ) -> None:
         """
@@ -56,7 +56,12 @@ class PreUpdateAction(ABC):
     """Base class for all pre-update actions"""
 
     def __init__(
-        self, *, name: str, title: str, sort_index: int, expiry_version: ExpiryVersion
+        self,
+        *,
+        name: str,
+        title: str,
+        sort_index: int,
+        expiry_version: ExpiryVersion,  # noqa: ARG002
     ) -> None:
         """
         :param name: the internal name of the pre-update action, has to be unique

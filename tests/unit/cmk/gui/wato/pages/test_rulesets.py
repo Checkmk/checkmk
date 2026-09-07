@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable
@@ -85,7 +87,9 @@ def fixture_tag_config():
 
 @pytest.fixture(autouse=True)
 def patch_tag_config(
-    request_context: None, monkeypatch: MonkeyPatch, tag_config: TagConfig
+    request_context: None,
+    monkeypatch: MonkeyPatch,
+    tag_config: TagConfig,
 ) -> Iterable[None]:
     with monkeypatch.context() as m:
         m.setattr(active_config, "tags", tag_config)
@@ -154,7 +158,7 @@ class TestRuleConditionRenderer:
         rendered_condition: HTML,
     ) -> None:
         assert (
-            RuleConditionRenderer()._single_tag_condition(
+            RuleConditionRenderer()._single_tag_condition(  # noqa: SLF001
                 taggroup_id,
                 tag_spec,
             )
@@ -163,7 +167,7 @@ class TestRuleConditionRenderer:
 
     def test_tag_condition(self) -> None:
         assert list(
-            RuleConditionRenderer()._tag_conditions(
+            RuleConditionRenderer()._tag_conditions(  # noqa: SLF001
                 {
                     TagGroupID("tag_grp_1"): {
                         "$or": [
@@ -277,7 +281,7 @@ class TestRuleConditionRenderer:
     def test_render_host_condition_text(
         self, conditions: HostOrServiceConditions, expected: str
     ) -> None:
-        assert RuleConditionRenderer()._render_host_condition_text(
+        assert RuleConditionRenderer()._render_host_condition_text(  # noqa: SLF001
             conditions
         ) == HTML.without_escaping(expected)
 
@@ -306,13 +310,13 @@ class TestRuleConditionRenderer:
         self, conditions: HostOrServiceConditions, exception: type[Exception]
     ) -> None:
         with pytest.raises(exception):
-            assert RuleConditionRenderer()._render_host_condition_text(conditions)
+            assert RuleConditionRenderer()._render_host_condition_text(conditions)  # noqa: SLF001
 
     @pytest.mark.usefixtures("folder_lookup")
     def test_render_host_condition_text_wildcard_host_spec(self) -> None:
         # Host specs in rule conditions can contain wildcards (e.g. "AP-SEDE-TCOTILLAS*"),
         # but HostName() rejects them. Ensure this is rendered gracefully instead of crashing.
-        result = RuleConditionRenderer()._render_host_condition_text(["AP-SEDE-TCOTILLAS*"])
+        result = RuleConditionRenderer()._render_host_condition_text(["AP-SEDE-TCOTILLAS*"])  # noqa: SLF001
         assert result == HTML.without_escaping("Host name is <b>AP-SEDE-TCOTILLAS*</b>")
 
     @pytest.mark.parametrize(
@@ -480,7 +484,7 @@ class TestRuleConditionRenderer:
         expected: list[HTML],
     ) -> None:
         assert (
-            list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
+            list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))  # noqa: SLF001
             == expected
         )
 
@@ -499,7 +503,7 @@ class TestRuleConditionRenderer:
         ],
     )
     def test_has_regex_end_anchor(self, pattern: str, expected: bool) -> None:
-        assert RuleConditionRenderer._has_regex_end_anchor(pattern) == expected
+        assert RuleConditionRenderer._has_regex_end_anchor(pattern) == expected  # noqa: SLF001
 
     @pytest.mark.parametrize(
         "pattern, expected",
@@ -516,4 +520,4 @@ class TestRuleConditionRenderer:
         ],
     )
     def test_strip_regex_end_anchor(self, pattern: str, expected: str) -> None:
-        assert RuleConditionRenderer._strip_regex_end_anchor(pattern) == expected
+        assert RuleConditionRenderer._strip_regex_end_anchor(pattern) == expected  # noqa: SLF001

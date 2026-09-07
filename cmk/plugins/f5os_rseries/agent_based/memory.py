@@ -69,7 +69,7 @@ snmp_section_f5os_rseries_memory = SimpleSNMPSection(
 )
 
 
-def discover_f5os_rseries_memory(section: F5OSMemorySection) -> DiscoveryResult:
+def discover_f5os_rseries_memory(section: F5OSMemorySection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 import logging
 import subprocess
@@ -58,7 +60,7 @@ def unreachable_enabled_fixture(
             },
         )
 
-        if unreachable_enabled:
+        if unreachable_enabled:  # noqa: SIM108
             notification_options = "d,u,r,f,s"
         else:
             notification_options = "d,r,f,s"

@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: SIM117  # Parenthesized context managers are a Python 3.10 feature
+# ruff: noqa: UP035   # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+# ruff: noqa: UP045   # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+
 from pathlib import Path
 from typing import Mapping, Optional
 from unittest.mock import MagicMock, patch

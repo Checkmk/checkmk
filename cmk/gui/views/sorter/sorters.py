@@ -281,9 +281,9 @@ def _sort_service_state(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) < cmp_state_equiv(r2))
 
@@ -300,9 +300,9 @@ def _sort_host_state(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (
         cmp_host_state_equiv(r1) < cmp_host_state_equiv(r2)
@@ -321,9 +321,9 @@ def _sort_site_host(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
         "host_name", r1, r2
@@ -342,9 +342,9 @@ def _sort_host_name(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return cmp_num_split("host_name", r1, r2)
 
@@ -361,9 +361,9 @@ def _sort_site_alias(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,
-    request: Request,
+    request: Request,  # noqa: ARG001
 ) -> int:
     return (config.sites[r1["site"]]["alias"] > config.sites[r2["site"]]["alias"]) - (
         config.sites[r1["site"]]["alias"] < config.sites[r2["site"]]["alias"]
@@ -382,9 +382,9 @@ def _sort_tags(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
     object_type: str,
 ) -> int:
     tag_groups_1 = sorted(get_tag_groups(r1, object_type).items())
@@ -411,9 +411,9 @@ def _sort_labels(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
     object_type: str,
 ) -> int:
     labels_1 = sorted(get_labels(r1, object_type).items())
@@ -447,9 +447,9 @@ def _sort_service_perf_val(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
     num: int,
 ) -> int:
     v1 = savefloat(get_perfdata_nth_value(r1, num - 1, True))
@@ -535,8 +535,8 @@ def _sort_host_custom_variable(
     r2: Row,
     *,
     parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     assert parameters is not None
     variable_name = str(parameters["ident"]).upper()
@@ -552,7 +552,8 @@ def _sort_host_custom_variable(
 
 
 def _sort_host_custom_variable_parameter_valuespec(
-    config: Config, painters: Sequence[ColumnSpec]
+    config: Config,
+    painters: Sequence[ColumnSpec],  # noqa: ARG001
 ) -> Dictionary:
     choices: list[tuple[str, str]] = []
     for attr_spec in config.wato_host_attrs:
@@ -587,9 +588,9 @@ def _sort_host_ip_addresses(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     def get_address(row: Row, ipv: Literal["ipv4", "ipv6"]) -> str:
         custom_vars = dict(
@@ -633,9 +634,9 @@ def _sort_num_problems(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
 ) -> int:
     return (
         r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"]
@@ -695,7 +696,7 @@ def _get_docker_nodes(row: Row) -> str:
     return output.split()[-1]
 
 
-def cmp_docker_nodes(column: str, r1: Row, r2: Row) -> int:
+def cmp_docker_nodes(column: str, r1: Row, r2: Row) -> int:  # noqa: ARG001
     return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
 
 
@@ -703,9 +704,9 @@ def _sort_docker_nodes_(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config | None,
-    request: Request | None,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config | None,  # noqa: ARG001
+    request: Request | None,  # noqa: ARG001
 ) -> int:
     val1 = _get_docker_nodes(row=r1)
     val2 = _get_docker_nodes(row=r2)

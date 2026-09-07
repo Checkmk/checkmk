@@ -57,9 +57,9 @@ def register_command_group(ident: str, title: str, sort_index: int) -> None:
             "_ident": ident,
             "_title": title,
             "_sort_index": sort_index,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-            "sort_index": property(lambda s: s._sort_index),
+            "ident": property(lambda s: s._ident),  # noqa: SLF001
+            "title": property(lambda s: s._title),  # noqa: SLF001
+            "sort_index": property(lambda s: s._sort_index),  # noqa: SLF001
         },
     )
     command_group_registry.register(cls)

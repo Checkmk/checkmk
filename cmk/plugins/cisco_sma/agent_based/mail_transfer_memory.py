@@ -52,7 +52,7 @@ def _check_mail_transfer_memory(params: Params, section: MailTransferMemoryStatu
             assert_never(section)
 
 
-def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> DiscoveryResult:
+def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

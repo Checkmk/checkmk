@@ -62,7 +62,7 @@ from .views import (
 )
 
 
-def _cleanup_crashes_job(config: Config) -> None:
+def _cleanup_crashes_job(config: Config) -> None:  # noqa: ARG001
     cleanup_crash_reports(make_crash_report_base_path(cmk.utils.paths.omd_root))
 
 
@@ -72,7 +72,7 @@ def register(
     painter_registry: PainterRegistry,
     sorter_registry: SorterRegistry,
     command_registry: CommandRegistry,
-    config_variable_group_registry: ConfigVariableGroupRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,  # noqa: ARG001
     config_variable_registry: ConfigVariableRegistry,
     filter_registry: FilterRegistry,
     cron_job_registry: CronJobRegistry,

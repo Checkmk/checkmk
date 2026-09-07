@@ -2,12 +2,17 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
 
 def test_list(
-    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection, mock_wato_folders: None
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    mock_wato_folders: None,
 ) -> None:
     # just to make sure all filters can be returned
     live: MockLiveStatusConnection = mock_livestatus

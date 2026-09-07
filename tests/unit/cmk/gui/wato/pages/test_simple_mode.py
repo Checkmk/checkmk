@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 from collections.abc import Sequence
 from os import devnull
@@ -131,11 +133,11 @@ def test_page_form_render_entry_valuespec(
     mode = SomeEditMode(
         test_edition, PageContext(config=Config(), request=request), mode_type, store
     )
-    mode._entry = store._value
-    mode._new = new
-    mode._clone = clone
-    mode._page_form_render_entry_valuespec()
+    mode._entry = store._value  # noqa: SLF001
+    mode._new = new  # noqa: SLF001
+    mode._clone = clone  # noqa: SLF001
+    mode._page_form_render_entry_valuespec()  # noqa: SLF001
 
     vs_mock = mode.valuespec()
     assert vs_mock.render_input.call_count == 1  # type: ignore[attr-defined]
-    assert vs_mock.render_input.call_args[0][1] == (store._value if expected_form else {})  # type: ignore[attr-defined,typeddict-item]
+    assert vs_mock.render_input.call_args[0][1] == (store._value if expected_form else {})  # type: ignore[attr-defined,typeddict-item]  # noqa: SLF001

@@ -45,7 +45,7 @@ agent_section_mcafee_av_client = AgentSection(
 )
 
 
-def discover_mcafee_av_client(section: float) -> DiscoveryResult:
+def discover_mcafee_av_client(section: float) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

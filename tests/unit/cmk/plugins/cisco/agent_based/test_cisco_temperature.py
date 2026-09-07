@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import typing
@@ -907,7 +909,7 @@ def test_defect_sensor() -> None:
 
     assert list(ct.discover_cisco_temperature(section))
 
-    (defect_result,) = ct._check_cisco_temperature({}, "Chassis 1", {}, section)
+    (defect_result,) = ct._check_cisco_temperature({}, "Chassis 1", {}, section)  # noqa: SLF001
     assert isinstance(defect_result, Result)
     assert defect_result.state is not State.OK
 
@@ -1230,5 +1232,5 @@ def test_ensure_invalid_data_is_ignored() -> None:
     parsed_section = ct.snmp_section_cisco_temperature.parse_function(TABLE_INVALID)
     assert parsed_section is not None
     value_store: dict = {}
-    _ = list(ct._check_cisco_temperature(value_store, "38487", {}, parsed_section))
+    _ = list(ct._check_cisco_temperature(value_store, "38487", {}, parsed_section))  # noqa: SLF001
     assert not value_store

@@ -147,9 +147,9 @@ def check_ups_out_voltage(
 
 
 def discover_ups_capacity(
-    section_ups_battery_capacity: Battery | None,
-    section_ups_on_battery: Battery | None,
-    section_ups_seconds_on_battery: Battery | None,
+    section_ups_battery_capacity: Battery | None,  # noqa: ARG001
+    section_ups_on_battery: Battery | None,  # noqa: ARG001
+    section_ups_seconds_on_battery: Battery | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 
@@ -249,9 +249,9 @@ def _output_seconds_on_battery(seconds_on_bat: int | None) -> CheckResult:
 
 
 def discover_ups_battery_state(
-    section_ups_battery_warnings: Battery | None,
-    section_ups_on_battery: Battery | None,
-    section_ups_seconds_on_battery: Battery | None,
+    section_ups_battery_warnings: Battery | None,  # noqa: ARG001
+    section_ups_on_battery: Battery | None,  # noqa: ARG001
+    section_ups_seconds_on_battery: Battery | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

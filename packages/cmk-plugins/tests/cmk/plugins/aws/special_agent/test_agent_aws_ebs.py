@@ -35,7 +35,9 @@ from .agent_aws_fake_clients import (
 
 class FakeEC2Client:
     def describe_instances(
-        self, Filters: object = None, InstanceIds: object = None
+        self,
+        Filters: object = None,  # noqa: ARG002
+        InstanceIds: object = None,  # noqa: ARG002
     ) -> Mapping[str, object]:
         return {
             "Reservations": [
@@ -52,14 +54,16 @@ class FakeEC2Client:
             "NextToken": "string",
         }
 
-    def describe_snapshots(self, OwnerIds: object = None) -> Mapping[str, object]:
+    def describe_snapshots(self, OwnerIds: object = None) -> Mapping[str, object]:  # noqa: ARG002
         return {
             "Snapshots": EC2DescribeSnapshotsIB.create_instances(amount=3),
             "NextToken": "string",
         }
 
     def describe_volumes(
-        self, VolumeIds: object = None, Filters: object = None
+        self,
+        VolumeIds: object = None,  # noqa: ARG002
+        Filters: object = None,  # noqa: ARG002
     ) -> Mapping[str, object]:
         return {
             "Volumes": EC2DescribeVolumesIB.create_instances(amount=3),
@@ -67,7 +71,9 @@ class FakeEC2Client:
         }
 
     def describe_volume_status(
-        self, VolumeIds: object = None, Filters: object = None
+        self,
+        VolumeIds: object = None,  # noqa: ARG002
+        Filters: object = None,  # noqa: ARG002
     ) -> Mapping[str, object]:
         return {
             "VolumeStatuses": EC2DescribeVolumeStatusIB.create_instances(amount=3),
@@ -141,7 +147,7 @@ def test_agent_aws_ebs_limits(
     get_ebs_sections: EBSSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_ebs: int,
+    found_ebs: int,  # noqa: ARG001
 ) -> None:
     ec2_summary, ebs_limits, _ebs_summary, _ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results

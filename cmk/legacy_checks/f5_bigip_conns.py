@@ -21,7 +21,7 @@ def discover_f5_bigip_conns(info):
     return []
 
 
-def check_f5_bigip_conns(item, params, info):
+def check_f5_bigip_conns(item, params, info):  # noqa: ARG001
     # Connection rate
     now = time.time()
     value_store = get_value_store()

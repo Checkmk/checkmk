@@ -2,6 +2,9 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 
 import pytest
@@ -12,7 +15,8 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 @pytest.fixture(scope="function", name="etags_off")
 def etags_off_fixture(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, set_config: SetConfig
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    set_config: SetConfig,
 ) -> Iterator[None]:
     with set_config(rest_api_etag_locking=False):
         yield

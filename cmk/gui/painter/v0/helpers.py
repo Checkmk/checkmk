@@ -26,7 +26,7 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
 
-def render_cache_info(what: str, row: Row) -> str:
+def render_cache_info(what: str, row: Row) -> str:  # noqa: ARG001
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]
     cache_age = time.time() - cached_at

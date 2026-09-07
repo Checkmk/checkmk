@@ -622,13 +622,13 @@ class HostsSteps(AnonymizeStep):
         logger.warning("Process hosts")
 
         for folder_rel_path, folder in make_folder_tree(active_config).all_folders().items():
-            folder._save_hosts_file(
+            folder._save_hosts_file(  # noqa: SLF001
                 storage_list=[AnonHostsStorage(anon_interface)],
                 pprint_value=False,
                 # The anonymizer runs without a logged-in user.
                 acting_user_id=None,
             )
-            folder._save_folder_attributes(
+            folder._save_folder_attributes(  # noqa: SLF001
                 storage_list=[AnonFolderAttributesStorage(anon_interface)]
             )
 

@@ -29,7 +29,7 @@ pytestmark = pytest.mark.checks
 )
 def test_mysql_parse_per_item(info: StringTable, expected_items: tuple[str, str]) -> None:
     @mysql_parse_per_item
-    def dummy_parse(info):  # type: ignore[misc]
+    def dummy_parse(info):  # type: ignore[misc]  # noqa: ARG001
         return "Whoop"
 
     parsed = dummy_parse(info)

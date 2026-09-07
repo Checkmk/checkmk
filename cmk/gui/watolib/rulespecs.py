@@ -911,7 +911,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
-        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,  # noqa: ARG002
         create_manual_check: bool = True,
         form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
@@ -989,7 +989,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         match_type: MatchType | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
-        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,  # noqa: ARG002
         create_manual_check: bool = True,
         form_spec_definition: FormSpecDefinition | None = None,
     ):
@@ -1151,7 +1151,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             )
 
         if parameter_vs.title() is None:
-            parameter_vs._title = _("Parameters")
+            parameter_vs._title = _("Parameters")  # noqa: SLF001
 
         return Tuple(
             title=parameter_vs.title(),
@@ -1244,7 +1244,7 @@ def _get_check_type_group_choice(
 def _registration_should_be_skipped(instance: object) -> bool:
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
-    caller_file = str(sys._getframe(2).f_globals["__file__"])
+    caller_file = str(sys._getframe(2).f_globals["__file__"])  # noqa: SLF001
     if not caller_file.startswith(_LOCAL_ROOT):
         return False
 
@@ -1324,7 +1324,7 @@ class CheckTypeGroupSelection(ElementSelection):
         empty_text: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):

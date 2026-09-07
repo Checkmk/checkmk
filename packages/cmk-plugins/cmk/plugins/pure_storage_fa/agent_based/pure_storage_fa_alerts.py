@@ -55,7 +55,7 @@ agent_section_pure_storage_fa_alerts = AgentSection(
 )
 
 
-def discover_internal_alerts(section: InternalAlerts) -> DiscoveryResult:
+def discover_internal_alerts(section: InternalAlerts) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

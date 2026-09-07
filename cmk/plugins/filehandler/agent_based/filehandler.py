@@ -37,7 +37,7 @@ def parse_filehandler(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_filehandler(section: StringTable) -> DiscoveryResult:
+def discover_filehandler(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

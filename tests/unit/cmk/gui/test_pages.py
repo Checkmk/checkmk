@@ -207,12 +207,12 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
 
 
 def test_page_registry_register_page_handler(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
-    def page(ctx: PageContext) -> None:
+    def page(ctx: PageContext) -> None:  # noqa: ARG001
         sys.stdout.write("234")
 
     page_registry.register(PageEndpoint("234handler", page))

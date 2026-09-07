@@ -107,7 +107,7 @@ ConfigVariableSiteAutostart = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_autostart",
-    form_spec=lambda context: BooleanChoice(
+    form_spec=lambda context: BooleanChoice(  # noqa: ARG005
         title=Title("Start during system boot"),
         help_text=Help(
             "Whether or not this site should be started during startup of the Checkmk server."
@@ -195,7 +195,7 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainDiskspace,
     ident="diskspace_cleanup",
-    form_spec=lambda context: DictionaryExtended(
+    form_spec=lambda context: DictionaryExtended(  # noqa: ARG005
         default_checked=["cleanup_abandoned_host_files"],
         title=Title("Automatic disk space cleanup"),
         help_text=Help(
@@ -382,7 +382,7 @@ ConfigVariableSiteApacheProcessTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainApache,
     ident="apache_process_tuning",
-    form_spec=lambda context: Dictionary(
+    form_spec=lambda context: Dictionary(  # noqa: ARG005
         title=Title("Apache process tuning"),
         elements={
             "number_of_processes": DictElement(
@@ -509,7 +509,7 @@ ConfigVariableSiteRRDCachedTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainRRDCached,
     ident="rrdcached_tuning",
-    form_spec=lambda context: Dictionary(
+    form_spec=lambda context: Dictionary(  # noqa: ARG005
         title=Title("RRDCached tuning"),
         elements={
             "TIMEOUT": DictElement(

@@ -3024,8 +3024,8 @@ class FakeCloudwatchClient:
     def get_metric_data(
         self,
         MetricDataQueries: Iterable[Mapping[str, Any]],
-        StartTime: str = "START",
-        EndTime: str = "END",
+        StartTime: str = "START",  # noqa: ARG002
+        EndTime: str = "END",  # noqa: ARG002
     ) -> Mapping[str, Any]:
         results = []
         for query in MetricDataQueries:
@@ -3133,7 +3133,7 @@ class FakeCloudwatchClientLogsClientExceptions:
 
 
 class FakeCloudwatchClientLogsDescribeLogGroupsPaginator:
-    def paginate(self, *args: Any, **kwargs: Any) -> Sequence[Mapping[str, Any]]:
+    def paginate(self, *args: Any, **kwargs: Any) -> Sequence[Mapping[str, Any]]:  # noqa: ARG002
         return FAKE_LOGWATCH_CLIENT_DESCRIBE_LOG_GROUPS_PAGINATOR_RESPONSE
 
 
@@ -3141,11 +3141,15 @@ class FakeCloudwatchClientLogsClient:
     exceptions = FakeCloudwatchClientLogsClientExceptions()
 
     def start_query(
-        self, logGroupNames: list[str], startTime: int, endTime: int, queryString: str
+        self,
+        logGroupNames: list[str],  # noqa: ARG002
+        startTime: int,  # noqa: ARG002
+        endTime: int,  # noqa: ARG002
+        queryString: str,  # noqa: ARG002
     ) -> QueryId:
         return {"queryId": "MY_QUERY_ID"}
 
-    def get_query_results(self, queryId: str) -> QueryResults:
+    def get_query_results(self, queryId: str) -> QueryResults:  # noqa: ARG002
         return FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE
 
     def stop_query(self, queryId: str) -> None:

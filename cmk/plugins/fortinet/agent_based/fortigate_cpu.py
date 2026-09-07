@@ -33,7 +33,7 @@ def parse_fortigate_cpu(string_table: StringTable) -> Section | None:
     return string_table or None
 
 
-def discover_fortigate_cpu(section: Section) -> DiscoveryResult:
+def discover_fortigate_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

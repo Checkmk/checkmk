@@ -44,7 +44,7 @@ snmp_section_arbor_pravail_host_fault = SimpleSNMPSection(
 )
 
 
-def discover_arbor_host_fault(section: str) -> DiscoveryResult:
+def discover_arbor_host_fault(section: str) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

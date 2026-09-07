@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 """This script stores a given Docker image in our internal registry and creates a textual
 docker image alias (in form of a Dockerfile file containing the provided data and a new SHA
 based image name) referencing the remotly stored image via unique ID

@@ -46,7 +46,7 @@ agent_section_systemtime = AgentSection(
 )
 
 
-def discover_systemtime(section: Section) -> DiscoveryResult:
+def discover_systemtime(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

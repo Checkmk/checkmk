@@ -63,7 +63,7 @@ def parse_proxmox_ve_node_info(string_table: StringTable) -> SectionNodeInfo:
     )
 
 
-def discover_single(section: SectionNodeInfo) -> DiscoveryResult:
+def discover_single(section: SectionNodeInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

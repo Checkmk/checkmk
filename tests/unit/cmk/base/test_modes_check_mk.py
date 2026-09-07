@@ -54,7 +54,7 @@ class TestModeDumpAgent:
         return HostAddress("1.2.3.4")
 
     @pytest.fixture
-    def raw_data(self, hostname: HostName) -> bytes:
+    def raw_data(self, hostname: HostName) -> bytes:  # noqa: ARG002
         return b"<<<check_mk>>>\nraw data"
 
     @pytest.fixture
@@ -82,7 +82,7 @@ class TestModeDumpAgent:
         monkeypatch.setattr(
             config,
             config.load.__name__,
-            lambda *a, **kw: config.LoadingResult(
+            lambda *a, **kw: config.LoadingResult(  # noqa: ARG005
                 loaded_config=loaded_config,
                 hosts_config=config.make_hosts_config(loaded_config),
                 host_tags=config.make_host_tags(
@@ -116,7 +116,7 @@ class TestModeDumpAgent:
     ) -> None:
         app = replace(
             make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
         )
 
         fn = check_mk.mode_dump_agent.handler_function
@@ -165,7 +165,7 @@ class TestModeDumpAgentUseWalk:
         monkeypatch.setattr(
             config,
             config.load.__name__,
-            lambda *a, **kw: config.LoadingResult(
+            lambda *a, **kw: config.LoadingResult(  # noqa: ARG005
                 loaded_config=loaded_config,
                 hosts_config=config.make_hosts_config(loaded_config),
                 host_tags=config.make_host_tags(
@@ -232,7 +232,7 @@ class TestModeDumpAgentUseWalk:
 
         app = replace(
             make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),  # noqa: ARG005
         )
         fn = check_mk.mode_dump_agent.handler_function
         assert fn is not None

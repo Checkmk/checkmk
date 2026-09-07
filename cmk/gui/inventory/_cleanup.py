@@ -164,7 +164,7 @@ ConfigVariableInventoryCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="inventory_cleanup",
-    form_spec=lambda context: Dictionary(
+    form_spec=lambda context: Dictionary(  # noqa: ARG005
         title=Title("HW/SW inventory cleanup"),
         elements={
             "for_hosts": DictElement(
@@ -288,11 +288,13 @@ class _ParamsFileAge:
 class _ParamsNumberHistoryEntries:
     number_of_history_entries: int
 
-    def file_is_too_old(self, now: int, timestamp: int) -> bool:
+    def file_is_too_old(self, now: int, timestamp: int) -> bool:  # noqa: ARG002
         return False
 
     def compute_removable_bundles(
-        self, now: int, bundles: Sequence[_File | _ArchiveBundle]
+        self,
+        now: int,  # noqa: ARG002
+        bundles: Sequence[_File | _ArchiveBundle],
     ) -> Sequence[_File | _ArchiveBundle]:
         return sorted(bundles, key=lambda b: b.timestamp, reverse=True)[
             self.number_of_history_entries :

@@ -57,10 +57,10 @@ from cmk.shared_typing.unified_search import ProviderName
 class _FakePermissionsHandler:
     """Always-permit stand-in for the real, GUI-coupled `PermissionsHandler`."""
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return True
 
-    def get_visibility_check(self, category: str) -> VisibilityCheck:
+    def get_visibility_check(self, category: str) -> VisibilityCheck:  # noqa: ARG002
         return lambda _url: True
 
 
@@ -69,7 +69,7 @@ def fake_omd_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainOMD,
         "default_globals",
-        lambda s: {
+        lambda s: {  # noqa: ARG005
             "site_admin_mail": "",
             "site_apache_mode": "own",
             "site_apache_tcp_addr": "127.0.0.1",
@@ -99,7 +99,7 @@ def fake_diskspace_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainDiskspace,
         "default_globals",
-        lambda s: {
+        lambda s: {  # noqa: ARG005
             "diskspace_cleanup": {"cleanup_abandoned_host_files": 2592000},
         },
     )
@@ -110,7 +110,7 @@ def fake_apache_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainApache,
         "default_globals",
-        lambda s: {"apache_process_tuning": {"number_of_processes": 64}},
+        lambda s: {"apache_process_tuning": {"number_of_processes": 64}},  # noqa: ARG005
     )
 
 
@@ -119,7 +119,7 @@ def fake_rrdcached_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainRRDCached,
         "default_globals",
-        lambda s: {
+        lambda s: {  # noqa: ARG005
             "rrdcached_tuning": {
                 "TIMEOUT": 3600,
                 "RANDOM_DELAY": 1800,
@@ -188,7 +188,7 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
 @pytest.fixture(name="get_languages", scope="function", autouse=True)
 def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        cmk.gui.search._engines._redis,
+        cmk.gui.search._engines._redis,  # noqa: SLF001
         "get_languages",
         lambda: [
             ("en", "English"),
@@ -268,12 +268,12 @@ class TestIndexBuilder:
             localize(lang)
 
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis,
+            cmk.gui.search._engines._redis,  # noqa: SLF001
             "localize",
             localize_with_memory,
         )
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis,
+            cmk.gui.search._engines._redis,  # noqa: SLF001
             "get_current_language",
             lambda: current_lang,
         )
@@ -303,7 +303,7 @@ class TestIndexBuilderAndSearcher:
         index_builder: IndexBuilder,
         index_searcher: IndexSearcher,
     ) -> None:
-        index_builder._mark_index_as_built()
+        index_builder._mark_index_as_built()  # noqa: SLF001
         index_builder.build_changed_sub_indices(["something"], UserPermissions({}, {}, {}, []))
         assert not self._evaluate_search_results_by_topic(index_searcher.search("**"))
 
@@ -313,7 +313,7 @@ class TestIndexBuilderAndSearcher:
         index_builder: IndexBuilder,
         index_searcher: IndexSearcher,
     ) -> None:
-        index_builder._mark_index_as_built()
+        index_builder._mark_index_as_built()  # noqa: SLF001
         index_builder.build_changed_sub_indices(
             ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, [])
         )
@@ -333,7 +333,7 @@ class TestIndexBuilderAndSearcher:
         Test if things can also be deleted from the index during an update
         """
 
-        def empty_match_item_gen(user_permissions: UserPermissions) -> Iterator[MatchItem]:
+        def empty_match_item_gen(user_permissions: UserPermissions) -> Iterator[MatchItem]:  # noqa: ARG001
             yield from ()
 
         index_builder.build_full_index(UserPermissions({}, {}, {}, []))
@@ -385,7 +385,7 @@ class TestIndexSearcher:
             return True
 
         assert list(
-            IndexSearcher._sort_search_results(
+            IndexSearcher._sort_search_results(  # noqa: SLF001
                 {
                     "Hosts": [
                         _SearchResultWithVisibilityCheck(
@@ -474,7 +474,7 @@ class TestRealisticSearch:
     def suppress_get_configuration_automation_call(monkeypatch: MonkeyPatch) -> Iterator[None]:
         monkeypatch.setattr(
             "cmk.gui.watolib.config_domains.get_configuration",
-            lambda *args, **kwargs: GetConfigurationResult({}),
+            lambda *args, **kwargs: GetConfigurationResult({}),  # noqa: ARG005
         )
         _core_config_default_globals.cache_clear()
         yield
@@ -560,7 +560,7 @@ class TestRealisticSearch:
             yield
 
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis,
+            cmk.gui.search._engines._redis,  # noqa: SLF001
             "SuperUserContext",
             SuperUserContext,
         )
@@ -574,10 +574,10 @@ class TestRealisticSearch:
 class _DenyAllPermissionsHandler:
     """Stand-in for a user who may not see any search category."""
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return False
 
-    def get_visibility_check(self, category: str) -> VisibilityCheck:
+    def get_visibility_check(self, category: str) -> VisibilityCheck:  # noqa: ARG002
         return lambda _url: True
 
 
@@ -618,7 +618,7 @@ def fixture_patched_registry(
 ) -> MatchItemGeneratorRegistry:
     """The module level functions and RedisSearchEngine read the global registry."""
     monkeypatch.setattr(
-        cmk.gui.search._engines._redis,
+        cmk.gui.search._engines._redis,  # noqa: SLF001
         "match_item_generator_registry",
         match_item_generator_registry,
     )
@@ -630,7 +630,9 @@ class TestIndexSearcherConstruction:
         self, config: Config, clean_redis_client: Redis, monkeypatch: MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis, "redis_server_reachable", lambda _client: False
+            cmk.gui.search._engines._redis,  # noqa: SLF001
+            "redis_server_reachable",
+            lambda _client: False,
         )
 
         with pytest.raises(RuntimeError, match="not reachable"):

@@ -267,7 +267,7 @@ def _request_data(
     query: dict[str, list[str]] | None = None,
     headers: dict[str, str] | None = None,
 ) -> RawRequestData:
-    if body:
+    if body:  # noqa: SIM108
         body_bytes = json.dumps(body).encode("utf-8")
     else:
         body_bytes = None
@@ -314,7 +314,7 @@ def _api_context() -> ApiContext:
 )
 def test_input_model_validate_parameters(func: Callable, request_data: RawRequestData) -> None:  # type: ignore[misc]
     model = EndpointModel.build(func)
-    model._validate_request_parameters(
+    model._validate_request_parameters(  # noqa: SLF001
         request_data=request_data,
         content_type="application/json" if request_data["body"] else None,
         api_context=_api_context(),
@@ -325,7 +325,7 @@ def test_input_model_extra_body() -> None:
     """Test that specifying a body when none is expected raises an error."""
     model = EndpointModel.build(_empty_endpoint_handler)
     with pytest.raises(ValidationError, match="type=none_required"):
-        model._validate_request_parameters(
+        model._validate_request_parameters(  # noqa: SLF001
             request_data=_request_data(body={"extra_body_field": "test"}),
             content_type=None,
             api_context=_api_context(),
@@ -342,7 +342,7 @@ def test_input_model_undecodable_body() -> None:
         "headers": Headers(),
     }
     with pytest.raises(RestAPIRequestDataValidationException) as exc_info:
-        model._validate_request_parameters(
+        model._validate_request_parameters(  # noqa: SLF001
             request_data=request_data,
             content_type="application/json",
             api_context=_api_context(),
@@ -389,7 +389,7 @@ def test_input_model_extra_fields(func: Callable, request_data: RawRequestData) 
     model = EndpointModel.build(func)
     # type=unexpected_keyword_argument happens only because we use dataclasses (with extra=forbid)
     with pytest.raises(ValidationError, match="type=unexpected_keyword_argument"):
-        model._validate_request_parameters(
+        model._validate_request_parameters(  # noqa: SLF001
             request_data=request_data,
             content_type="application/json" if request_data["body"] else None,
             api_context=_api_context(),
@@ -425,7 +425,7 @@ def test_input_model_extra_fields(func: Callable, request_data: RawRequestData) 
 def test_input_model_missing_fields(request_data: RawRequestData) -> None:
     model = EndpointModel.build(_all_endpoint_handler)
     with pytest.raises(ValidationError, match="type=missing"):
-        model._validate_request_parameters(request_data, "application/json", _api_context())
+        model._validate_request_parameters(request_data, "application/json", _api_context())  # noqa: SLF001
 
 
 class TestAnnotatedValidators:
@@ -442,7 +442,7 @@ class TestAnnotatedValidators:
         return value
 
     @staticmethod
-    def change_value(value: str) -> None:
+    def change_value(value: str) -> None:  # noqa: ARG004
         return None
 
     def test_multiple_annotated_validators(self) -> None:
@@ -454,17 +454,17 @@ class TestAnnotatedValidators:
                 AfterValidator(TestAnnotatedValidators.validate_two),
             ]
 
-        def handler(body: Body) -> None:
+        def handler(body: Body) -> None:  # noqa: ARG001
             return None
 
         model = EndpointModel.build(handler)
         with pytest.raises(ValidationError, match="Value must be 'two'"):
-            model._validate_request_parameters(
+            model._validate_request_parameters(  # noqa: SLF001
                 _request_data(body={"field": "one"}), "application/json", _api_context()
             )
 
         with pytest.raises(ValidationError, match="Value must be 'one'"):
-            model._validate_request_parameters(
+            model._validate_request_parameters(  # noqa: SLF001
                 _request_data(body={"field": "three"}),
                 "application/json",
                 _api_context(),
@@ -475,12 +475,12 @@ class TestAnnotatedValidators:
         class Body:
             field: Annotated[str, AfterValidator(TestAnnotatedValidators.change_value)]
 
-        def handler(body: Body) -> None:
+        def handler(body: Body) -> None:  # noqa: ARG001
             return None
 
         model = EndpointModel.build(handler)
         request_data = _request_data(body={"field": "one"})
-        bound = model._validate_request_parameters(request_data, "application/json", _api_context())
+        bound = model._validate_request_parameters(request_data, "application/json", _api_context())  # noqa: SLF001
         assert bound.arguments["body"].field is None
 
     def test_annotated_validator_with_different_return_values(self) -> None:
@@ -492,12 +492,12 @@ class TestAnnotatedValidators:
                 AfterValidator(TestAnnotatedValidators.change_value),
             ]
 
-        def handler(body: Body) -> None:
+        def handler(body: Body) -> None:  # noqa: ARG001
             return None
 
         model = EndpointModel.build(handler)
         request_data = _request_data(body={"field": "one"})
-        bound = model._validate_request_parameters(request_data, "application/json", _api_context())
+        bound = model._validate_request_parameters(request_data, "application/json", _api_context())  # noqa: SLF001
         assert bound.arguments["body"].field is None
 
     def test_annotated_validator_with_changing_value_first(self) -> None:
@@ -509,13 +509,13 @@ class TestAnnotatedValidators:
                 AfterValidator(TestAnnotatedValidators.validate_one),
             ]
 
-        def handler(body: Body) -> None:
+        def handler(body: Body) -> None:  # noqa: ARG001
             return None
 
         model = EndpointModel.build(handler)
         request_data = _request_data(body={"field": "one"})
         with pytest.raises(ValidationError, match="Value must be 'one'"):
-            model._validate_request_parameters(request_data, "application/json", _api_context())
+            model._validate_request_parameters(request_data, "application/json", _api_context())  # noqa: SLF001
 
     def test_annotated_validator_ignores_other_union_types(self) -> None:
         def handler(
@@ -529,11 +529,11 @@ class TestAnnotatedValidators:
         model = EndpointModel.build(handler)
 
         request_data = _request_data(query={"_arg": ["one"]})
-        bound = model._validate_request_parameters(request_data, None, _api_context())
+        bound = model._validate_request_parameters(request_data, None, _api_context())  # noqa: SLF001
         assert bound.arguments["_arg"] == "one"
 
         request_data = _request_data()
-        bound = model._validate_request_parameters(request_data, None, _api_context())
+        bound = model._validate_request_parameters(request_data, None, _api_context())  # noqa: SLF001
         assert isinstance(bound.arguments["_arg"], ApiOmitted)
 
 
@@ -544,7 +544,7 @@ def test_query_parameter_list() -> None:
             "query_param": ["test1", "test2"],
         }
     )
-    bound = model._validate_request_parameters(request_data, None, _api_context())
+    bound = model._validate_request_parameters(request_data, None, _api_context())  # noqa: SLF001
     assert bound.arguments["query_param"] == ["test1", "test2"]
 
 
@@ -557,7 +557,7 @@ def test_query_parameter_single() -> None:
     )
     # TODO: check if we can improve the error message here without exiting validation early
     with pytest.raises(ValidationError, match="type=string_type"):
-        model._validate_request_parameters(request_data, None, _api_context())
+        model._validate_request_parameters(request_data, None, _api_context())  # noqa: SLF001
 
 
 def test_header_parameter_case() -> None:
@@ -568,7 +568,7 @@ def test_header_parameter_case() -> None:
 
     model = EndpointModel.build(_header_case_test)
     request_data = _request_data(headers={"header": "test"})
-    bound = model._validate_request_parameters(request_data, None, _api_context())
+    bound = model._validate_request_parameters(request_data, None, _api_context())  # noqa: SLF001
     assert bound.arguments["Header"] == "test"
 
 
@@ -582,7 +582,7 @@ def test_typed_response() -> None:
 
 def test_query_parameter_optional_list_with_values() -> None:
     model = EndpointModel.build(_optional_list_query_handler)
-    bound = model._validate_request_parameters(
+    bound = model._validate_request_parameters(  # noqa: SLF001
         _request_data(query={"items": ["a", "b"]}), None, _api_context()
     )
     assert bound.arguments["items"] == ["A", "B"]
@@ -591,5 +591,5 @@ def test_query_parameter_optional_list_with_values() -> None:
 def test_query_parameter_optional_list_default() -> None:
     """Verify that the None default is preserved and the list validator is not invoked."""
     model = EndpointModel.build(_optional_list_query_handler)
-    bound = model._validate_request_parameters(_request_data(), None, _api_context())
+    bound = model._validate_request_parameters(_request_data(), None, _api_context())  # noqa: SLF001
     assert bound.arguments["items"] is None

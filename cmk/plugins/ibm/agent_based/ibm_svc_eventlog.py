@@ -37,7 +37,7 @@ class EventLogEntry:
 Section = Sequence[EventLogEntry]
 
 
-def discover_ibm_svc_eventlog(section: Section) -> DiscoveryResult:
+def discover_ibm_svc_eventlog(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

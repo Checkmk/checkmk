@@ -51,7 +51,7 @@ snmp_section_blade_bx_load = SimpleSNMPSection(
 )
 
 
-def discover_blade_bx_load(section: Section) -> DiscoveryResult:
+def discover_blade_bx_load(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

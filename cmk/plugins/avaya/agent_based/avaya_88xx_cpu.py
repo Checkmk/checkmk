@@ -27,7 +27,7 @@ def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_avaya_88xx_cpu(section: StringTable) -> DiscoveryResult:
+def discover_avaya_88xx_cpu(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

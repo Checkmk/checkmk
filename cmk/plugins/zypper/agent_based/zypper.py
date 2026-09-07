@@ -65,7 +65,7 @@ def parse_zypper(string_table: StringTable) -> Section:
     return ZypperUpdates(patch_types=patch_types, locks=locks)
 
 
-def discover_zypper(section: Section) -> DiscoveryResult:
+def discover_zypper(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

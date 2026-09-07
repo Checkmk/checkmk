@@ -337,8 +337,8 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
             _("No search"),
             Transform(
                 valuespec=cls.valuespec(),
-                to_valuespec=lambda x: "",
-                from_valuespec=lambda x: {"type": cls.kind()},
+                to_valuespec=lambda x: "",  # noqa: ARG005
+                from_valuespec=lambda x: {"type": cls.kind()},  # noqa: ARG005
             ),
         )
 

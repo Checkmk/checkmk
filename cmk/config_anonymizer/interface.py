@@ -134,7 +134,7 @@ class AnonInterface:
     def get_item(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.ITEM)
 
-    def get_rule_comment(self, original: str) -> str:
+    def get_rule_comment(self, original: str) -> str:  # noqa: ARG002
         return "Rule has been anonymized and uses an example value"
 
     def get_generic_mapping(self, original: str, namespace: CustomAnon) -> str:

@@ -71,11 +71,11 @@ def test_default_rule_values_are_valid(
     check_info = _build_check_info(agent_based_plugins)
     section_info = _build_section_info(agent_based_plugins)
     for _mod in (_rulespecs_module, _check_plugin_selection_module, _autocompleters_module):
-        monkeypatch.setattr(_mod, "get_check_information_cached", lambda *, debug: check_info)
+        monkeypatch.setattr(_mod, "get_check_information_cached", lambda *, debug: check_info)  # noqa: ARG005
     monkeypatch.setattr(
         _check_mk_configuration_module,
         "get_section_information_cached",
-        lambda *, debug: section_info,
+        lambda *, debug: section_info,  # noqa: ARG005
     )
 
     loaded_config = store.load_mk_file(
@@ -90,7 +90,7 @@ def test_default_rule_values_are_valid(
     )
 
     folder = _DummyFolder()
-    rulesets = RulesetCollection(RulesetCollection._initialize_rulesets())
+    rulesets = RulesetCollection(RulesetCollection._initialize_rulesets())  # noqa: SLF001
     rulesets.replace_folder_config(folder, loaded_config)  # type: ignore[arg-type]
 
     # These rulesets require site-specific data (groups, attributes, icons) to be

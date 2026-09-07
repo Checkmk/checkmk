@@ -80,7 +80,7 @@ agent_section_mongodb_replica = AgentSection(
 )
 
 
-def discover_mongodb_replica(section: ReplicaSet) -> DiscoveryResult:
+def discover_mongodb_replica(section: ReplicaSet) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

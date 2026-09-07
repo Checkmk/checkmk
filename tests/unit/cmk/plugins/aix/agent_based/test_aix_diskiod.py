@@ -34,9 +34,9 @@ def test_check_disk() -> None:
     now = 1647029464.27418
 
     with pytest.raises(IgnoreResultsError):
-        list(diskstat_io._check_disk({}, DISK, value_store, now))
+        list(diskstat_io._check_disk({}, DISK, value_store, now))  # noqa: SLF001
 
-    assert list(diskstat_io._check_disk({}, DISK, value_store, now + 60)) == [
+    assert list(diskstat_io._check_disk({}, DISK, value_store, now + 60)) == [  # noqa: SLF001
         Result(state=State.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),
         Result(state=State.OK, summary="Write: 0.00 B/s"),
@@ -90,7 +90,7 @@ def test_check_aix_diskiod(item: str) -> None:
         {
             item: DISK,
         },
-        diskstat_io._check_diskstat_io,
+        diskstat_io._check_diskstat_io,  # noqa: SLF001
     )
 
 
@@ -117,5 +117,5 @@ def test_cluster_check_aix_diskiod(item: str) -> None:
                 item: DISK,
             },
         },
-        diskstat_io._cluster_check_diskstat_io,
+        diskstat_io._cluster_check_diskstat_io,  # noqa: SLF001
     )

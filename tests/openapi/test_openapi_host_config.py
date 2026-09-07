@@ -206,7 +206,7 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
     assert api_attributes["locked_attributes"] == ["alias"]
 
     # Ensure that the attributes were stored as expected
-    hosts_config = folder_tree().root_folder()._load_hosts_file()
+    hosts_config = folder_tree().root_folder()._load_hosts_file()  # noqa: SLF001
     assert hosts_config is not None
     assert hosts_config["host_attributes"]["foobar"]["locked_attributes"] == ["alias"]
     assert hosts_config["host_attributes"]["foobar"]["locked_by"] == (
@@ -407,7 +407,7 @@ def test_openapi_hosts(
 
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.delete_host.delete_hosts",
-        lambda *args, **kwargs: DeleteHostsResult(),
+        lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
     )
     clients.HostConfig.follow_link(resp.json, ".../delete").assert_status_code(204)
 
@@ -467,7 +467,7 @@ def test_openapi_bulk_hosts(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.bulk_delete_host.delete_hosts",
-        lambda *args, **kwargs: DeleteHostsResult(),
+        lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
     )
 
     resp = clients.HostConfig.bulk_create(
@@ -534,16 +534,16 @@ def test_openapi_bulk_simple(clients: ClientRegistry) -> None:
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_bulk_with_failed(
     clients: ClientRegistry,
-    base: str,
+    base: str,  # noqa: ARG001
     monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,  # noqa: ARG001
 ) -> None:
     def _raise(
         _self: Folder,
         _host_name: HostName,
         _attributes: HostAttributes,
         *,
-        acting_user: LoggedInUser,
+        acting_user: LoggedInUser,  # noqa: ARG001
     ) -> HostAttributes:
         if _host_name == "foobar":
             raise MKUserError(None, "fail")
@@ -740,7 +740,7 @@ def test_openapi_host_rename(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
     automation = mocker.patch("cmk.gui.watolib.host_rename.rename_hosts")
 
@@ -790,7 +790,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
 
     clients.HostConfig.create(
@@ -813,7 +813,7 @@ def test_openapi_host_rename_on_invalid_hostname(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
 
     clients.HostConfig.create(
@@ -836,7 +836,7 @@ def test_openapi_host_rename_locked_by_quick_setup(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
 
     bundle_id, program_id = quick_setup_config_bundle
@@ -862,7 +862,7 @@ def test_openapi_host_rename_locked_by_quick_setup(
 def test_openapi_host_delete_locked_by_quick_setup(
     clients: ClientRegistry,
     quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -886,7 +886,7 @@ def test_openapi_host_delete_locked_by_quick_setup(
 def test_openapi_host_update_locked_by_quick_setup(
     clients: ClientRegistry,
     quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -1047,7 +1047,7 @@ def test_openapi_create_host_with_contact_group(clients: ClientRegistry) -> None
 
 def test_openapi_host_with_custom_attributes(
     clients: ClientRegistry,
-    custom_host_attribute_basic_topic: None,
+    custom_host_attribute_basic_topic: None,  # noqa: ARG001
 ) -> None:
     resp = clients.HostConfig.create(
         host_name="example.com",
@@ -1172,7 +1172,7 @@ def test_openapi_host_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_host(self: FolderTree, _hostname: HostName) -> Host:
+    def mock_host(self: FolderTree, _hostname: HostName) -> Host:  # noqa: ARG001
         return Host(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),
@@ -2058,7 +2058,9 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 @time_machine.travel(datetime.datetime.fromisoformat("2022-11-05T00:00:00+00:00"), tick=False)
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
-    clients: ClientRegistry, with_admin: tuple[str, str], test_edition: version.Edition
+    clients: ClientRegistry,
+    with_admin: tuple[str, str],
+    test_edition: version.Edition,  # noqa: ARG001
 ) -> None:
     username, password = with_admin
     clients.HostConfig.set_credentials(username, password)

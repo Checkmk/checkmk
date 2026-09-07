@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
 
 
-def discover_palo_alto_sessions(section: StringTable) -> DiscoveryResult:
+def discover_palo_alto_sessions(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

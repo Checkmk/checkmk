@@ -31,7 +31,7 @@ def parse_ddn_s2a_uptime(string_table: StringTable) -> Section:
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
 
 
-def discover_ddn_s2a_uptime(section: Section) -> DiscoveryResult:
+def discover_ddn_s2a_uptime(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

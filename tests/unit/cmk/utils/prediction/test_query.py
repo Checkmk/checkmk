@@ -15,7 +15,9 @@ from cmk.utils.servicename import ServiceName
 
 class TestPredictionQuerier:
     def test_query_available_predictions(
-        self, patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
+        self,
+        patch_omd_site: None,  # noqa: ARG002
+        mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         metric = "metric"
         querier = self._prediction_querier()
@@ -66,7 +68,9 @@ class TestPredictionQuerier:
         assert list(querier.query_available_predictions(metric)) == [expected_prediction_info]
 
     def test_query_prediction_data(
-        self, patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
+        self,
+        patch_omd_site: None,  # noqa: ARG002
+        mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         metric = "metric"
         querier = self._prediction_querier()

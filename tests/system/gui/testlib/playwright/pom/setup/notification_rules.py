@@ -117,7 +117,7 @@ class BaseNotificationPage(QuickSetupPage):
         """
         return self._hosts_row.get_by_role("combobox").nth(index)
 
-    def select_host_from_dropdown_list(self, name: str, index: int = 0) -> Locator:
+    def select_host_from_dropdown_list(self, name: str, index: int = 0) -> Locator:  # noqa: ARG002
         """Return locator corresponding to a name present within the dropdown list of host names.
 
         There can be multiple dropdown lists present.

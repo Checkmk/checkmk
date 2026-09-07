@@ -76,7 +76,7 @@ agent_section_postgres_version = AgentSection(
 
 def discover_postgres_instances(
     section_postgres_instances: Section | None,
-    section_postgres_version: VersionSection | None,
+    section_postgres_version: VersionSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_postgres_instances is None:
         return
@@ -123,7 +123,7 @@ check_plugin_postgres_instances = CheckPlugin(
 )
 
 
-def discover_postgres_processes(section: Section) -> DiscoveryResult:
+def discover_postgres_processes(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

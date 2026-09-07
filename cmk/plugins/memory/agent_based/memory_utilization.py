@@ -29,7 +29,7 @@ def _check_memory_utilization(params: Params, section: float) -> CheckResult:
     )
 
 
-def _discover_memory_utilization(section: float) -> DiscoveryResult:
+def _discover_memory_utilization(section: float) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

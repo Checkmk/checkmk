@@ -603,8 +603,8 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     def _display_page_controls(
         self,
-        start_time: int,
-        end_time: int,
+        start_time: int,  # noqa: ARG002
+        end_time: int,  # noqa: ARG002
         previous_log_time: int | None,
         next_log_time: int | None,
     ) -> None:

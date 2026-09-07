@@ -231,7 +231,7 @@ def test_relevant_annotation_times(
 ) -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1572253746, tz=ZoneInfo("CET"))):
         assert (
-            cmk.gui.availability.annotations._annotation_affects_time_range(
+            cmk.gui.availability.annotations._annotation_affects_time_range(  # noqa: SLF001
                 annotation_from, annotation_until, 30, 60
             )
             == result

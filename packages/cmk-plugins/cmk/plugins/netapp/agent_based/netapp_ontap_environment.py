@@ -63,7 +63,9 @@ def discover_netapp_ontap_environment(
 
 
 def check_netapp_ontap_environment_discrete(
-    item: str, params: None, section: DiscreteSection
+    item: str,
+    params: None,  # noqa: ARG001
+    section: DiscreteSection,
 ) -> CheckResult:
     if not (data := section.get(item)):
         return

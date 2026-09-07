@@ -377,7 +377,7 @@ def _cascading_dropdown_level_extractor(
     return None
 
 
-def _dummy_percentile_level_extractor(params: Mapping[str, Any], metric_name: str) -> None:
+def _dummy_percentile_level_extractor(params: Mapping[str, Any], metric_name: str) -> None:  # noqa: ARG001
     return None
 
 

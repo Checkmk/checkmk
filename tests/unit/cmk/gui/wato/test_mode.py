@@ -91,8 +91,8 @@ def fixture_main_module_registry(monkeypatch):
 class TestWatoMode:
     def test_breadcrumb_without_additions(
         self,
-        request_context,
-        main_module_registry,
+        request_context,  # noqa: ARG002
+        main_module_registry,  # noqa: ARG002
         test_edition: Edition,
     ):
         assert list(
@@ -109,8 +109,8 @@ class TestWatoMode:
     def test_breadcrumb_with_additions(
         self,
         monkeypatch,
-        request_context,
-        main_module_registry,
+        request_context,  # noqa: ARG002
+        main_module_registry,  # noqa: ARG002
         test_edition: Edition,
     ):
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:

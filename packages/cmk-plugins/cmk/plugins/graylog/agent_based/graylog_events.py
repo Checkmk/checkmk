@@ -70,7 +70,7 @@ agent_section_graylog_events = AgentSection(
 )
 
 
-def discover_graylog_events(section: EventsInfo) -> DiscoveryResult:
+def discover_graylog_events(section: EventsInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item=None)
 
 

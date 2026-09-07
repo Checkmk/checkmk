@@ -18,7 +18,7 @@ from cmk.utils.paths import var_dir
 def logger_capture_exception() -> mock.Mock:
     """Mock to catch whenever we log an exception"""
 
-    def capture_exception(msg: str, *args: object, **kwargs: object) -> None:
+    def capture_exception(msg: str, *args: object, **kwargs: object) -> None:  # noqa: ARG001
         if (exc := sys.exc_info()[1]) is not None:
             raise AssertionError("exception logged") from exc
 

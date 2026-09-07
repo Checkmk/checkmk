@@ -111,7 +111,9 @@ def mock_item_state(mock_state):
     getter = (  #
         mock_state.get
         if isinstance(mock_state, dict)
-        else (mock_state if callable(mock_state) else lambda key, default: mock_state)  #
+        else (
+            mock_state if callable(mock_state) else lambda key, default: mock_state  # noqa: ARG005
+        )  #
     )
 
     return mock.patch(target, _MockVSManager(_MockValueStore(getter)))

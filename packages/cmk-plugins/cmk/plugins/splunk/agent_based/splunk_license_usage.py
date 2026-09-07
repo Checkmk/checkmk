@@ -68,7 +68,7 @@ def parse_splunk_license_usage(string_table: StringTable) -> LicenseUsage:
     raise SplunkLicenseUsageParsingError(f"Invalid input: {string_table}") from validation_error
 
 
-def discover_splunk_license_usage(section: LicenseUsage) -> DiscoveryResult:
+def discover_splunk_license_usage(section: LicenseUsage) -> DiscoveryResult:  # noqa: ARG001
     """Runs empty discovery since there is only a single service."""
     yield Service()
 

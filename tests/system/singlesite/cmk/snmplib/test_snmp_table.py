@@ -44,7 +44,7 @@ INFO_TREE = BackendSNMPTree(
 def test_get_data_types(
     site: Site,
     backend_type_dockerized: SNMPBackendEnum,
-    type_name: str,
+    type_name: str,  # noqa: ARG001
     oid: str,
     expected_response: str,
 ) -> None:

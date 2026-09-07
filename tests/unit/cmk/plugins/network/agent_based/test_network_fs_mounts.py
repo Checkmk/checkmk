@@ -257,7 +257,7 @@ def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(
     """This check emits growth/trend (recorded in MB/day) directly rather than via a translation,
     so it must rescale them to bytes/day by MEGA, like fs_size. See SUP-29835."""
     captured_factors: dict[str, float] = {}
-    original_scaled_metric = network_fs_mounts._scaled_metric
+    original_scaled_metric = network_fs_mounts._scaled_metric  # noqa: SLF001
 
     def _capture(new_name: str, metric: Metric, factor: float) -> Metric:
         captured_factors[new_name] = factor

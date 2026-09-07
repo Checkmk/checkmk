@@ -113,7 +113,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         host_name: HostName,
         site_id: str,
         service_description: ServiceName | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         super().__init__()
         self.site_id = SiteId(site_id)
@@ -309,7 +309,7 @@ class BISiteHostPairSchema(Schema):
     host_name = ReqString(description="Host name.")
 
     @pre_dump
-    def pre_dumper(self, obj: tuple, many: bool = False) -> dict:  # type: ignore[misc]
+    def pre_dumper(self, obj: tuple, many: bool = False) -> dict:  # type: ignore[misc]  # noqa: ARG002
         # Convert aggregations and rules to list
         return {"site_id": obj[0], "host_name": obj[1]}
 

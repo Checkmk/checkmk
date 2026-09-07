@@ -246,7 +246,7 @@ def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def _validate_reclassify_of_states(value: dict[str, object], varprefix: str) -> None:
+def _validate_reclassify_of_states(value: dict[str, object], varprefix: str) -> None:  # noqa: ARG001
     host_state = value.get("host_state")
     if host_state is not None and not value.get("host"):
         raise MKUserError(

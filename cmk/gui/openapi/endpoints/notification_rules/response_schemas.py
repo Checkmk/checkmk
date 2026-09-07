@@ -97,7 +97,10 @@ class EventConsoleAlertsResponse(CheckboxOutput):
 
     @post_dump
     def _post_dump(  # type: ignore[misc]
-        self, data: dict[str, Any], many: bool, **kwargs: Any
+        self,
+        data: dict[str, Any],
+        many: bool,  # noqa: ARG002
+        **kwargs: Any,  # noqa: ARG002
     ) -> dict[str, Any]:
         if data.get("values") == {}:
             del data["values"]

@@ -345,7 +345,7 @@ agent_section_ceph_df = AgentSection(
 )
 
 
-def dont_discover(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
+def dont_discover(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:  # noqa: ARG001
     """The plugin was replaced with the new Ceph integration in 2.4.0"""
     yield from ()
 

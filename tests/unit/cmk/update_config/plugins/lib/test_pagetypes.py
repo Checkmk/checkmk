@@ -52,7 +52,7 @@ class _FakePageType:
         return _FakePage(str(page_dict["name"]))
 
     @classmethod
-    def save_user_instances(cls, instances: object, permissions: object, owner: UserId) -> None:
+    def save_user_instances(cls, instances: object, permissions: object, owner: UserId) -> None:  # noqa: ARG003
         cls.saved_owners.append(owner)
 
 
@@ -72,12 +72,12 @@ def fixture_fake_pages(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, dict[
     monkeypatch.setattr(
         pagetypes_update,
         "save_user_file",
-        lambda name, data, user_id: parked.append((name, dict(data))),
+        lambda name, data, user_id: parked.append((name, dict(data))),  # noqa: ARG005
     )
     monkeypatch.setattr(
         UserPermissions,
         "from_config",
-        classmethod(lambda cls, *_args: UserPermissions({}, {}, {}, [])),
+        classmethod(lambda cls, *_args: UserPermissions({}, {}, {}, [])),  # noqa: ARG005
     )
     _FakePageType.saved_owners = []
     return parked

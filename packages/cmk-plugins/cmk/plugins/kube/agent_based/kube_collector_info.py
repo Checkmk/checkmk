@@ -86,7 +86,7 @@ agent_section_kube_collector_daemons_v1 = AgentSection(
 
 def discover(
     section_kube_collector_metadata: CollectorComponentsMetadata | None,
-    section_kube_collector_processing_logs: CollectorProcessingLogs | None,
+    section_kube_collector_processing_logs: CollectorProcessingLogs | None,  # noqa: ARG001
     section_kube_collector_daemons: CollectorDaemons | None,
 ) -> DiscoveryResult:
     if section_kube_collector_metadata is not None and section_kube_collector_daemons is not None:

@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.bluecat.lib import DETECT_BLUECAT
 
 
-def discover_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:
+def discover_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

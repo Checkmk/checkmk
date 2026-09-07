@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 from unittest.mock import MagicMock
 
@@ -66,7 +68,8 @@ def stub_requests(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, MagicMo
 
 
 def test_happy_path_emits_both_sections(
-    stub_requests: dict[str, MagicMock], capsys: pytest.CaptureFixture[str]
+    stub_requests: dict[str, MagicMock],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     rc = agent_elasticsearch_main(
         parse_arguments(["--cluster-health", "--nodes", "-P", "https", "myhost"])
@@ -140,7 +143,8 @@ def test_validation_error_in_nodes_is_isolated(
 
 
 def test_section_order_is_deterministic(
-    stub_requests: dict[str, MagicMock], capsys: pytest.CaptureFixture[str]
+    stub_requests: dict[str, MagicMock],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     """cluster_health must appear before nodes regardless of which one fails,
     so a later failure cannot retroactively suppress an earlier section's

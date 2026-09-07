@@ -9,7 +9,7 @@ from collections.abc import Awaitable
 from typing import Final, Self
 
 import redis
-from redis.exceptions import ConnectionError
+from redis.exceptions import ConnectionError  # noqa: A004
 
 LAST_DETECTED_CHANGE_TOPIC: Final = "last_change_detected"
 LOGGER = logging.getLogger(__name__)

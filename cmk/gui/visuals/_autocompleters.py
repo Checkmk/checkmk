@@ -69,7 +69,7 @@ def _build_regex_pattern(value: str, *, literal_search: bool) -> str:
     return value
 
 
-def monitored_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def monitored_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
@@ -85,7 +85,9 @@ def monitored_hostname_autocompleter(config: Config, value: str, params: dict) -
 
 
 def monitored_service_description_autocompleter(
-    config: Config, value: str, params: dict
+    config: Config,  # noqa: ARG001
+    value: str,
+    params: dict,
 ) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
@@ -109,7 +111,7 @@ def monitored_service_description_autocompleter(
     return _sorted_unique_lq(query, 200, value, params)
 
 
-def check_command_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def check_command_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
@@ -123,7 +125,7 @@ def check_command_autocompleter(config: Config, value: str, params: dict) -> Cho
     return empty_choices + choices
 
 
-def label_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def label_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return all known labels to support tagify label input dropdown completion"""
     from cmk.ccc.regex import regex
     from cmk.gui.utils.labels import LABEL_REGEX
@@ -148,7 +150,7 @@ def label_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
-def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     filter_id = params["group_type"]
     object_type = filter_id.removeprefix("kubernetes_")
     label_name = f"cmk/kubernetes/{object_type}"

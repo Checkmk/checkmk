@@ -99,7 +99,7 @@ class JobTarget[Args](BaseModel, frozen=True):
         return func
 
     @field_serializer("callable")
-    def serialize_callable(self, value: Callable) -> tuple[str, str]:  # type: ignore[misc]
+    def serialize_callable(self, value: Callable) -> tuple[str, str]:  # type: ignore[misc]  # noqa: ARG002
         return self.callable.__module__, self.callable.__name__
 
 
@@ -107,7 +107,7 @@ class NoArgs(BaseModel, frozen=True): ...
 
 
 def simple_job_target(
-    callable: Callable[[BackgroundProcessInterface, NoArgs], None],
+    callable: Callable[[BackgroundProcessInterface, NoArgs], None],  # noqa: A002
 ) -> JobTarget[NoArgs]:
     return JobTarget(callable=callable, args=NoArgs())
 

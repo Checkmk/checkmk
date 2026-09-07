@@ -140,15 +140,15 @@ def test_complete_raw_context_skips_local_field_for_host_notification() -> None:
 
 def test_add_to_event_context_param_overrides_context() -> None:
     context = {"FOO": "bar", "BAZ": "old"}
-    add_to_event_context(context, "BAZ", "new", lambda *args, **kw: HTTP_PROXY)
+    add_to_event_context(context, "BAZ", "new", lambda *args, **kw: HTTP_PROXY)  # noqa: ARG005
     assert context == {"FOO": "bar", "BAZ": "new"}
 
 
 def test_add_to_event_context_prefix_is_prepended() -> None:
     context: EventContext = {}
-    add_to_event_context(context, "FOO", "bar", lambda *args, **kw: HTTP_PROXY)
-    add_to_event_context(context, "BAZ", "boo", lambda *args, **kw: HTTP_PROXY)
-    add_to_event_context(context, "AAA", {"BBB": "CCC"}, lambda *args, **kw: HTTP_PROXY)
+    add_to_event_context(context, "FOO", "bar", lambda *args, **kw: HTTP_PROXY)  # noqa: ARG005
+    add_to_event_context(context, "BAZ", "boo", lambda *args, **kw: HTTP_PROXY)  # noqa: ARG005
+    add_to_event_context(context, "AAA", {"BBB": "CCC"}, lambda *args, **kw: HTTP_PROXY)  # noqa: ARG005
     assert context == {"FOO": "bar", "BAZ": "boo", "AAA_BBB": "CCC"}
 
 
@@ -421,7 +421,7 @@ def test_update_enriched_context_from_host_file(
     monkeypatch.setattr(
         cmk.base.events,
         "read_notify_host_file",
-        lambda *args, **kw: config,
+        lambda *args, **kw: config,  # noqa: ARG005
     )
     _update_enriched_context_from_notify_host_file(enriched_context)
     assert enriched_context == expected
@@ -538,7 +538,7 @@ def test_match_host_tags(
     monkeypatch.setattr(
         cmk.base.events,
         "read_notify_host_file",
-        lambda *args, **kw: host_config,
+        lambda *args, **kw: host_config,  # noqa: ARG005
     )
     assert (
         event_match_hosttags(
@@ -633,7 +633,7 @@ def test_apply_matchers_returns_none_on_empty_matchers(basic_event_rule: EventRu
 def test_apply_matchers_returns_none_when_all_pass(basic_event_rule: EventRule) -> None:
     assert (
         apply_matchers(
-            [lambda *args, **kw: None, lambda *args, **kw: None],
+            [lambda *args, **kw: None, lambda *args, **kw: None],  # noqa: ARG005
             basic_event_rule,
             context={},
             analyse=False,
@@ -646,9 +646,9 @@ def test_apply_matchers_returns_none_when_all_pass(basic_event_rule: EventRule) 
 def test_apply_matchers_returns_first_non_none_result(basic_event_rule: EventRule) -> None:
     result = apply_matchers(
         [
-            lambda *args, **kw: None,
-            lambda *args, **kw: "reason one",
-            lambda *args, **kw: "reason two",
+            lambda *args, **kw: None,  # noqa: ARG005
+            lambda *args, **kw: "reason one",  # noqa: ARG005
+            lambda *args, **kw: "reason two",  # noqa: ARG005
         ],
         basic_event_rule,
         context={},
@@ -662,13 +662,19 @@ def test_apply_matchers_stops_at_first_failure(basic_event_rule: EventRule) -> N
     called: list[str] = []
 
     def first_matcher(
-        rule: EventRule, context: EventContext, analyse: bool, all_timeperiods: object
+        rule: EventRule,  # noqa: ARG001
+        context: EventContext,  # noqa: ARG001
+        analyse: bool,  # noqa: ARG001
+        all_timeperiods: object,  # noqa: ARG001
     ) -> str:
         called.append("first")
         return "failed"
 
     def second_matcher(
-        rule: EventRule, context: EventContext, analyse: bool, all_timeperiods: object
+        rule: EventRule,  # noqa: ARG001
+        context: EventContext,  # noqa: ARG001
+        analyse: bool,  # noqa: ARG001
+        all_timeperiods: object,  # noqa: ARG001
     ) -> None:
         called.append("second")
 
@@ -708,7 +714,7 @@ def test_apply_matchers_catches_errors(basic_event_rule: EventRule) -> None:
 
     why_not = apply_matchers(
         [
-            lambda *args, **kw: raise_error(),
+            lambda *args, **kw: raise_error(),  # noqa: ARG005
         ],
         basic_event_rule,
         context={},

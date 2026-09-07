@@ -38,7 +38,7 @@ map_luntype = {
 }
 
 
-def discover_cisco_ucs_lun(section: StringTable) -> DiscoveryResult:
+def discover_cisco_ucs_lun(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

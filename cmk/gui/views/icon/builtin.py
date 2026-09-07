@@ -46,10 +46,10 @@ from .base import Icon, IconConfig
 def _render_action_menu_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -108,10 +108,10 @@ ActionMenuIcon = Icon(
 def _render_icon_image_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> HTML | None:
     img = row[what + "_icon_image"]
     if not img:
@@ -147,10 +147,10 @@ IconImageIcon = Icon(
 def _render_reschedule_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     tuple[StaticIcon | DynamicIcon, str]
     | tuple[StaticIcon | DynamicIcon, str, tuple[str, str]]
@@ -221,9 +221,9 @@ RescheduleIcon = Icon(
 def _render_rule_editor_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
     icon_config: IconConfig,
 ) -> (
     None
@@ -286,9 +286,9 @@ RuleEditorIcon = Icon(
 def _render_manpage_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
     icon_config: IconConfig,
 ) -> (
     None
@@ -349,10 +349,10 @@ ManpageIcon = Icon(
 def _render_acknowledge_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -391,10 +391,10 @@ AcknowledgeIcon = Icon(
 def _render_perfgraph_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -468,10 +468,10 @@ def _graph_icon_link(row: Row, what: str) -> str:
 def _render_prediction_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -528,10 +528,10 @@ PredictionIcon = Icon(
 def _render_custom_action_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -573,10 +573,10 @@ CustomActionIcon = Icon(
 def _render_logwatch_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -624,10 +624,10 @@ LogwatchIcon = Icon(
 def _render_notes_url_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, tuple[str, str]] | None:
     # Adds the url_prefix of the services site to the notes url configured in this site.
     # It also adds the master_url which will be used to link back to the source site
@@ -663,10 +663,10 @@ NotesIcon = Icon(
 def _render_downtimes_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
     user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str | None] | None:
     def detail_txt(
         downtimes_with_extra_info: Sequence[
@@ -764,10 +764,10 @@ DowntimesIcon = Icon(
 def _render_comments_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
     user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str | None] | None:
     comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
@@ -826,10 +826,10 @@ CommentsIcon = Icon(
 def _render_notifications_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -879,10 +879,10 @@ NotificationsIcon = Icon(
 def _render_flapping_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> None | tuple[StaticIcon | DynamicIcon, str]:
     if row[what + "_is_flapping"]:
         title = _("This host is flapping") if what == "host" else _("This service is flapping")
@@ -913,9 +913,9 @@ FlappingIcon = Icon(
 def _render_staleness_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
     icon_config: IconConfig,
 ) -> (
     None
@@ -962,10 +962,10 @@ StalenessIcon = Icon(
 def _render_active_checks_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -1011,10 +1011,10 @@ ActiveChecksIcon = Icon(
 def _render_passive_checks_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -1058,10 +1058,10 @@ PassiveChecksIcon = Icon(
 def _render_notification_period_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -1097,10 +1097,10 @@ NotificationPeriodIcon = Icon(
 def _render_service_period_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -1137,10 +1137,10 @@ ServicePeriodIcon = Icon(
 def _render_stars(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> (
     None
     | StaticIcon
@@ -1190,10 +1190,10 @@ StarsIcon = Icon(ident="stars", title=_l("Stars"), render=_render_stars)
 def _render_crashed_check_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> None | tuple[DynamicIcon | StaticIcon, str] | tuple[DynamicIcon | StaticIcon, str, str]:
     # TODO: is this really a good idea to allow emblem icons here? will this really never be saved to disk? if no, why allow dynamic icons?
     if (
@@ -1260,10 +1260,10 @@ CrashdumpsIcon = Icon(
 def _render_check_period_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> None | tuple[StaticIcon | DynamicIcon, str]:
     if what == "service":
         if row["%s_in_passive_check_period" % what] == 0 or row["%s_in_check_period" % what] == 0:

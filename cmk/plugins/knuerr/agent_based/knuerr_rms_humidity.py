@@ -17,7 +17,7 @@ from cmk.plugins.knuerr.lib import DETECT_KNUERR
 from cmk.plugins.lib.humidity import check_humidity, CheckParams
 
 
-def discover_knuerr_rms_humidity(section: StringTable) -> DiscoveryResult:
+def discover_knuerr_rms_humidity(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

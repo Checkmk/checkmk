@@ -174,7 +174,7 @@ def test_agent_aws_rds_limits(
     get_rds_sections: RDSSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_instances: Sequence[str],
+    found_instances: Sequence[str],  # noqa: ARG001
 ) -> None:
     rds_limits, _rds_summary, _rds = get_rds_sections(names, tags)
     rds_limits_results = rds_limits.run().results

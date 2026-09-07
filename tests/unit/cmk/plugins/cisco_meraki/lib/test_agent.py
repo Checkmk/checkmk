@@ -157,13 +157,13 @@ class TestMerakiOrganizationPiggybackDevice:
         return MerakiOrganisation(config=config, client=client, organisation=org)
 
     def test_device_not_found(self, meraki_org: MerakiOrganisation) -> None:
-        assert meraki_org._get_device_piggyback(serial="xyz", devices_by_serial={}) is None
+        assert meraki_org._get_device_piggyback(serial="xyz", devices_by_serial={}) is None  # noqa: SLF001
 
     def test_device_name_available(self, meraki_org: MerakiOrganisation) -> None:
         devices_by_serial = {"xyz": DeviceFactory.build(name="dev1")}
-        assert meraki_org._get_device_piggyback("xyz", devices_by_serial) == "dev1"
+        assert meraki_org._get_device_piggyback("xyz", devices_by_serial) == "dev1"  # noqa: SLF001
 
-        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)  # noqa: SLF001
         expected = "dev1"
 
         assert value == expected
@@ -171,20 +171,20 @@ class TestMerakiOrganizationPiggybackDevice:
     def test_fallback_mechanism(self, meraki_org: MerakiOrganisation) -> None:
         devices_by_serial = {"xyz": DeviceFactory.build(name="", productType="switch")}
 
-        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)  # noqa: SLF001
         expected = "xyz-switch"
 
         assert value == expected
 
     def test_fallback_mechanism_no_product_type(self, meraki_org: MerakiOrganisation) -> None:
         devices_by_serial = {"xyz": DeviceFactory.build(name="", productType="")}
-        assert meraki_org._get_device_piggyback("xyz", devices_by_serial) is None
+        assert meraki_org._get_device_piggyback("xyz", devices_by_serial) is None  # noqa: SLF001
 
     def test_with_org_id_prefix_configured(self, meraki_org: MerakiOrganisation) -> None:
         meraki_org = self._enable_org_id_as_prefix(meraki_org)
         devices_by_serial = {"xyz": DeviceFactory.build(organization_id="123", name="dev1")}
 
-        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)  # noqa: SLF001
         expected = "123-dev1"
 
         assert value == expected
@@ -193,7 +193,7 @@ class TestMerakiOrganizationPiggybackDevice:
         meraki_org = self._enable_net_id_as_prefix(meraki_org)
         devices_by_serial = {"xyz": DeviceFactory.build(networkId="net1", name="dev1")}
 
-        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)  # noqa: SLF001
         expected = "net1-dev1"
 
         assert value == expected
@@ -205,7 +205,7 @@ class TestMerakiOrganizationPiggybackDevice:
             "xyz": DeviceFactory.build(organization_id="123", networkId="net1", name="dev1")
         }
 
-        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)  # noqa: SLF001
         expected = "123-net1-dev1"
 
         assert value == expected
@@ -219,7 +219,7 @@ class TestMerakiOrganizationPiggybackDevice:
             "xyz": DeviceFactory.build(organization_id="123", networkId="", name="dev1")
         }
 
-        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)  # noqa: SLF001
         expected = "123-dev1"
 
         assert value == expected
@@ -242,7 +242,7 @@ class TestMerakiOrganizationUsageBySerial:
         return MerakiOrganisation(config=config, client=client, organisation=org)
 
     def test_usage_is_grouped_by_serial(self, meraki_org: MerakiOrganisation) -> None:
-        usage_by_serial = meraki_org._get_usage_by_serial()
+        usage_by_serial = meraki_org._get_usage_by_serial()  # noqa: SLF001
 
         # Two devices sharing the same interface name ("wan1") must not overwrite each other.
         assert usage_by_serial["S123-1"] == {

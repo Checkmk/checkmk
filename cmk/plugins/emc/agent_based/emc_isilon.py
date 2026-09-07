@@ -44,7 +44,7 @@ snmp_section_emc_isilon = SNMPSection(
 #   .--ClusterHealth------------------------------------------------------.
 
 
-def discover_emc_isilon_clusterhealth(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_emc_isilon_clusterhealth(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -73,7 +73,7 @@ check_plugin_emc_isilon_clusterhealth = CheckPlugin(
 #   .--NodeHealth------------------------------------------------------.
 
 
-def discover_emc_isilon_nodehealth(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_emc_isilon_nodehealth(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -105,7 +105,7 @@ check_plugin_emc_isilon_nodehealth = CheckPlugin(
 #   .--Nodes------------------------------------------------------.
 
 
-def discover_emc_isilon_nodes(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_emc_isilon_nodes(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -129,7 +129,7 @@ check_plugin_emc_isilon_nodes = CheckPlugin(
 #   .--Cluster- and Node Name-------------------------------------------.
 
 
-def discover_emc_isilon_names(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_emc_isilon_names(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

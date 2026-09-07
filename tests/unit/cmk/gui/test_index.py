@@ -21,14 +21,14 @@ RequestContextFixture = Iterator[None]
 
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_default() -> None:
-    assert cmk.gui.main._get_start_url(Request(create_environ()), Config()) == "dashboard.py"
+    assert cmk.gui.main._get_start_url(Request(create_environ()), Config()) == "dashboard.py"  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_default_config() -> None:
     config = Config()
     config.start_url = "bla.py"
-    assert cmk.gui.main._get_start_url(Request(create_environ()), config) == "bla.py"
+    assert cmk.gui.main._get_start_url(Request(create_environ()), config) == "bla.py"  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
@@ -47,7 +47,7 @@ def test_get_start_url_user_config() -> None:
     config = Config()
     config.start_url = "wrong_url.py"
     session.user = MockUser()  # type: ignore[assignment]
-    assert cmk.gui.main._get_start_url(Request(create_environ()), config) == "correct_url.py"
+    assert cmk.gui.main._get_start_url(Request(create_environ()), config) == "correct_url.py"  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
@@ -55,7 +55,7 @@ def test_get_start_url() -> None:
     start_url = "dashboard.py?name=mein_dashboard"
     request = Request(create_environ(query_string=f"start_url={start_url}"))
 
-    assert cmk.gui.main._get_start_url(request, Config()) == start_url
+    assert cmk.gui.main._get_start_url(request, Config()) == start_url  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -71,14 +71,14 @@ def test_get_start_url() -> None:
 def test_get_start_url_invalid(invalid_url: str) -> None:
     request = Request(create_environ(query_string=f"start_url={invalid_url}"))
 
-    assert cmk.gui.main._get_start_url(request, Config()) == "dashboard.py"
+    assert cmk.gui.main._get_start_url(request, Config()) == "dashboard.py"  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_invalid_config(monkeypatch: MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "attributes", {"start_url": "http://asdasd/"})
-        assert cmk.gui.main._get_start_url(Request(create_environ()), Config()) == "dashboard.py"
+        assert cmk.gui.main._get_start_url(Request(create_environ()), Config()) == "dashboard.py"  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -115,4 +115,4 @@ def test_get_start_url_invalid_config(monkeypatch: MonkeyPatch) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_kiosk(query_string: str, kiosk: bool, expected: str) -> None:
     request = Request(create_environ(query_string=query_string))
-    assert cmk.gui.main._get_start_url(request, Config(), kiosk=kiosk) == expected
+    assert cmk.gui.main._get_start_url(request, Config(), kiosk=kiosk) == expected  # noqa: SLF001

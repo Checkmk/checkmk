@@ -275,7 +275,7 @@ def get_free_message(format_html: bool = False) -> str:
     return "{}\n{}{}".format(subject, body, "https://checkmk.com/contact")
 
 
-def register(replication_path_registry_: ReplicationPathRegistry) -> None:
+def register(replication_path_registry_: ReplicationPathRegistry) -> None:  # noqa: ARG001
     for repl_path in [
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
@@ -591,7 +591,7 @@ def _lock_activation(site_activation_state: SiteActivationState) -> bool:
 def _unlock_activation(
     site_id: SiteId,
     activation_id: ActivationId,
-    source: ActivationSource,
+    source: ActivationSource,  # noqa: ARG001
 ) -> None:
     _update_replication_status(
         site_id,
@@ -1323,7 +1323,7 @@ class ActivateChanges:
         """Returns the list of sites that have changes (including offline sites)"""
         return [s for s in sites.items() if self.changes_of_site(s[0])]
 
-    def site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
+    def site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:  # noqa: ARG002
         return site_is_local(site) or "secret" in site
 
     def site_is_online(self, status: str) -> bool:
@@ -1335,7 +1335,7 @@ class ActivateChanges:
 
     def _is_sync_needed_specific_changes(
         self,
-        site_id: SiteId,
+        site_id: SiteId,  # noqa: ARG002
         site_config: SiteConfiguration,
         changes_to_check: Sequence[ChangeSpec],
     ) -> bool:
@@ -2416,7 +2416,7 @@ class ActivationCleanupJob:
         return ids
 
 
-def execute_activation_cleanup_job(config: Config) -> None:
+def execute_activation_cleanup_job(config: Config) -> None:  # noqa: ARG001
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""

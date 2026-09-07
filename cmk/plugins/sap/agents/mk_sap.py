@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
+
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -53,7 +56,7 @@ except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):  # noqa: UP036
-    RecursionError = RuntimeError
+    RecursionError = RuntimeError  # noqa: A001
 
 # #############################################################################
 
@@ -366,7 +369,7 @@ def alert_details(conn, cfg_entry, alert):
     return state, msg
 
 
-def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):
+def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):  # noqa: ARG001
     global state_file_changed
 
     sid = node["MTSYSID"].strip() or "Other"

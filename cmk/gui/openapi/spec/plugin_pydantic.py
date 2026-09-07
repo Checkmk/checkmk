@@ -365,7 +365,7 @@ class CheckmkPydanticResolver:
     def resolve_operations(
         self,
         operations: dict[str, object] | None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         """Resolves an operations dictionary into an OpenAPI operations object.
 

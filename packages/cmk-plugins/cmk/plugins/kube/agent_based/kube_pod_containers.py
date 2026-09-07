@@ -72,7 +72,9 @@ def _check(now: float, item: str, params: Mapping[str, int], section: PodContain
 
 
 def check_running(
-    now: float, params: Mapping[str, int], state: ContainerRunningState
+    now: float,
+    params: Mapping[str, int],  # noqa: ARG001
+    state: ContainerRunningState,
 ) -> CheckResult:
     start_time_timestamp = state.start_time
     time_delta = now - start_time_timestamp
@@ -80,7 +82,7 @@ def check_running(
     yield Result(state=State.OK, summary=summary)
 
 
-def check_waiting(params: Mapping[str, int], state: ContainerWaitingState) -> CheckResult:
+def check_waiting(params: Mapping[str, int], state: ContainerWaitingState) -> CheckResult:  # noqa: ARG001
     detail_for_summary = (state.detail or "None").replace("\n", "; ")
     summary = f"Status: Waiting ({state.reason}: {detail_for_summary})"
     yield Result(state=State.OK, summary=summary)

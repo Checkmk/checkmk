@@ -97,9 +97,9 @@ class MockDatadogAPI:
 
     def get_request(
         self,
-        api_endpoint: str,
+        api_endpoint: str,  # noqa: ARG002
         params: Mapping[str, str | int],
-        version: str = "v1",
+        version: str = "v1",  # noqa: ARG002
     ) -> requests.Response:
         if (resp := self.page_to_data.get(params["page"])) is None:
             raise RuntimeError
@@ -107,9 +107,9 @@ class MockDatadogAPI:
 
     def post_request(
         self,
-        api_endpoint: str,
+        api_endpoint: str,  # noqa: ARG002
         body: Mapping[str, object],
-        version: str = "v1",
+        version: str = "v1",  # noqa: ARG002
     ) -> requests.Response:
         page = body["page"]
         assert isinstance(page, dict)
@@ -125,7 +125,7 @@ class MockDatadogAPI:
         response = requests.Response()
         response.status_code = int(status_code)
         if json_data is not None:
-            response._content = json.dumps(json_data).encode()
+            response._content = json.dumps(json_data).encode()  # noqa: SLF001
         return response
 
 
@@ -219,7 +219,7 @@ class TestEventsQuerier:
     ) -> None:
         now = 1601310544
         monkeypatch.setattr(time, "time", lambda: now)
-        assert events_querier._events_query_time_range() == (
+        assert events_querier._events_query_time_range() == (  # noqa: SLF001
             now - events_querier.max_age,
             now,
         )
@@ -365,7 +365,7 @@ class TestLogsQuerier:
     ) -> None:
         now = 1601310544
         with time_machine.travel(datetime.datetime.fromtimestamp(now, tz=ZoneInfo("UTC"))):
-            start, end = logs_querier._query_time_range()
+            start, end = logs_querier._query_time_range()  # noqa: SLF001
             assert start.timestamp() == now - logs_querier.max_age
             assert end.timestamp() == now
 

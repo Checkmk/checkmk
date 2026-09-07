@@ -80,7 +80,7 @@ def discover_storeonce_clusterinfo(section: Section) -> DiscoveryResult:
 
 
 # this seems to be a HaSI plugin
-def check_storeonce_clusterinfo(item: str, section: Section) -> CheckResult:
+def check_storeonce_clusterinfo(item: str, section: Section) -> CheckResult:  # noqa: ARG001
     yield Result(state=State.OK, summary=f"Name: {section['Appliance Name']}")
     yield Result(state=State.OK, summary=f"Serial Number: {section['Serial Number']}")
     yield Result(state=State.OK, summary=f"Version: {section['Software Version']}")
@@ -146,7 +146,7 @@ check_plugin_storeonce_clusterinfo_cluster = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_storeonce_clusterinfo_space(section: Section) -> DiscoveryResult:
+def discover_storeonce_clusterinfo_space(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Total Capacity")
 
 
@@ -173,7 +173,7 @@ check_plugin_storeonce_clusterinfo_space = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_storeonce_clusterinfo_uptime(section: Section) -> DiscoveryResult:
+def discover_storeonce_clusterinfo_uptime(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

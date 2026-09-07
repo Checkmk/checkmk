@@ -37,7 +37,7 @@ def parse_fortisandbox_cpu_util(string_table: StringTable) -> Section | None:
         return None
 
 
-def discover_fortisandbox_cpu_util(section: Section) -> DiscoveryResult:
+def discover_fortisandbox_cpu_util(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

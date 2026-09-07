@@ -22,7 +22,7 @@ def parse_alcatel_cpu(string_table: StringTable) -> float | None:
     return int(string_table[0][0]) if string_table else None
 
 
-def discover_alcatel_cpu(section: float) -> DiscoveryResult:
+def discover_alcatel_cpu(section: float) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

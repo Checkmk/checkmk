@@ -66,7 +66,8 @@ def register(
     page_registry.register(PageEndpoint("ajax_initial_view_filters", AjaxInitialViewFilters()))
     page_registry.register(
         PageEndpoint(
-            "view", partial(page_show_view, page_menu_dropdowns_callback=lambda x, y, z: None)
+            "view",
+            partial(page_show_view, page_menu_dropdowns_callback=lambda x, y, z: None),  # noqa: ARG005
         )
     )
     page_registry.register(PageEndpoint("create_view", page_select_datasource))

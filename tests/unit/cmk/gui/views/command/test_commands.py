@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from typing import Literal
 
 import pytest
@@ -141,8 +144,8 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
 
     def test_service_row_without_the_downtimes_column(
         self,
-        request_context: None,
-        with_admin_login: UserId,
+        request_context: None,  # noqa: ARG002
+        with_admin_login: UserId,  # noqa: ARG002
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         queried_for: list[tuple[str | None, str, str | None]] = []
@@ -155,7 +158,7 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
 
         monkeypatch.setattr(commands, "_query_downtime_ids_for_leaf", _fake_query)
 
-        result = commands._rm_downtime_from_hst_or_svc_datasource(
+        result = commands._rm_downtime_from_hst_or_svc_datasource(  # noqa: SLF001
             commands.CommandRemoveDowntimesHostServicesTable,
             "SVC",
             {"site": "heute", "host_name": "heute", "service_description": "CPU"},
@@ -169,8 +172,8 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
 
     def test_service_row_with_the_downtimes_column_does_not_query(
         self,
-        request_context: None,
-        with_admin_login: UserId,
+        request_context: None,  # noqa: ARG002
+        with_admin_login: UserId,  # noqa: ARG002
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         def _must_not_query(*_args: object) -> list[int]:
@@ -178,7 +181,7 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
 
         monkeypatch.setattr(commands, "_query_downtime_ids_for_leaf", _must_not_query)
 
-        result = commands._rm_downtime_from_hst_or_svc_datasource(
+        result = commands._rm_downtime_from_hst_or_svc_datasource(  # noqa: SLF001
             commands.CommandRemoveDowntimesHostServicesTable,
             "SVC",
             {"host_name": "heute", "service_description": "CPU", "service_downtimes": ["7", ""]},
@@ -229,29 +232,29 @@ class TestDowntimeDurationPresets:
 
     def test_renders_a_button_for_a_usable_preset(
         self,
-        request_context: None,
+        request_context: None,  # noqa: ARG002
         set_config: SetConfig,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         form = self._form(monkeypatch)
 
         with set_config(user_downtime_timeranges=[{"title": "2 hours", "end": 7200}]):
-            assert "_downrange__7200" in str(form._get_duration_options())
+            assert "_downrange__7200" in str(form._get_duration_options())  # noqa: SLF001
 
     def test_skips_a_preset_whose_end_is_not_representable(
         self,
-        request_context: None,
+        request_context: None,  # noqa: ARG002
         set_config: SetConfig,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         form = self._form(monkeypatch)
 
         with set_config(user_downtime_timeranges=[{"title": "far future", "end": 10**18}]):
-            assert form._get_duration_options() == HTML.empty()
+            assert form._get_duration_options() == HTML.empty()  # noqa: SLF001
 
     def test_activates_the_first_preset_it_can_render(
         self,
-        request_context: None,
+        request_context: None,  # noqa: ARG002
         set_config: SetConfig,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -268,7 +271,7 @@ class TestDowntimeDurationPresets:
                 {"title": "2 hours", "end": 7200},
             ]
         ):
-            duration_options = str(form._get_duration_options())
+            duration_options = str(form._get_duration_options())  # noqa: SLF001
 
         assert 'id="_downrange__7200"' in duration_options
         assert 'class="button duration active"' in duration_options
@@ -289,10 +292,12 @@ class TestDowntimeSpecsForHosts:
     def _specs(action_rows: list[dict[str, str]]) -> tuple[str, list[str], list[dict[str, str]]]:
         form = CommandScheduleDowntimesForm(NoRecurringDowntimes())
         request.set_var("_down_host", "1")
-        return form._downtime_specs("SVC", {"site": "heute"}, action_rows, "myhost;CPU")
+        return form._downtime_specs("SVC", {"site": "heute"}, action_rows, "myhost;CPU")  # noqa: SLF001
 
     def test_counts_one_row_per_affected_host(
-        self, request_context: None, with_admin_login: UserId
+        self,
+        request_context: None,  # noqa: ARG002
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         cmdtag, specs, action_rows = self._specs(
             [
@@ -307,7 +312,9 @@ class TestDowntimeSpecsForHosts:
         assert [r["host_name"] for r in action_rows] == ["myhost", "otherhost"]
 
     def test_tolerates_rows_without_the_host_name_column(
-        self, request_context: None, with_admin_login: UserId
+        self,
+        request_context: None,  # noqa: ARG002
+        with_admin_login: UserId,  # noqa: ARG002
     ) -> None:
         cmdtag, specs, action_rows = self._specs([{"site": "heute"}, {"site": "heute"}])
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -147,9 +149,9 @@ class YamlWriter:
 def local_test(
     expected_output_from_agent,
     actual_output_from_agent,
-    current_test,
-    test_name=None,
-    test_class=None,
+    current_test,  # noqa: ARG001
+    test_name=None,  # noqa: ARG001
+    test_class=None,  # noqa: ARG001
 ):
     comparison_data = list(zip(expected_output_from_agent, actual_output_from_agent))
     for expected, actual in comparison_data:

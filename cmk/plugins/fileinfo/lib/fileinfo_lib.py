@@ -527,7 +527,7 @@ def _fileinfo_check_conjunctions(
 
 
 def check_fileinfo_groups_data(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     section: Fileinfo,
     reftime: int,

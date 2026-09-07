@@ -286,11 +286,11 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     def _before_method_handler(self, ctx: PageContext) -> None:
         """Override this to implement any pre-method logic"""
 
-    def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:
+    def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement any post-method logic"""
         return result
 
-    def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
+    def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement custom exception handling logic"""
         if isinstance(exception, WidgetRenderError):
             content = html.render_error(str(exception))
@@ -299,12 +299,15 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
         html.write_html(content)
         return None
 
-    def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> PageResult:
+    def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement GET method logic"""
         raise MKMethodNotAllowed("Method not supported")
 
     def _post(
-        self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
+        self,
+        token: AuthToken,  # noqa: ARG002
+        token_details: DashboardToken,  # noqa: ARG002
+        ctx: PageContext,  # noqa: ARG002
     ) -> PageResult:
         """Override this to implement POST method logic"""
         raise MKMethodNotAllowed("Method not supported")

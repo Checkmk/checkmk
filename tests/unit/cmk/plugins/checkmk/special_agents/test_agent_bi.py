@@ -62,9 +62,9 @@ class TestAggregationRawdataGeneratorLocal:
         monkeypatch.setenv("OMD_SITE", "NO_SITE")
         agg_gen = AggregationRawdataGenerator(config)
 
-        assert "InternalToken" in agg_gen._get_authentication_token()
-        assert agg_gen._config == config
-        assert agg_gen._site_url == expected_site_url
+        assert "InternalToken" in agg_gen._get_authentication_token()  # noqa: SLF001
+        assert agg_gen._config == config  # noqa: SLF001
+        assert agg_gen._site_url == expected_site_url  # noqa: SLF001
 
 
 def _create_automation_user_secret(username: UserId) -> None:
@@ -132,10 +132,10 @@ class TestAggregationRawdataGenerator:
 
         agg_gen = AggregationRawdataGenerator(config)
         assert (
-            agg_gen._get_authentication_token() == f"Bearer {expected_username} {expected_password}"
+            agg_gen._get_authentication_token() == f"Bearer {expected_username} {expected_password}"  # noqa: SLF001
         )
-        assert agg_gen._config == config
-        assert agg_gen._site_url == expected_site_url
+        assert agg_gen._config == config  # noqa: SLF001
+        assert agg_gen._site_url == expected_site_url  # noqa: SLF001
 
 
 def test_merge_config() -> None:

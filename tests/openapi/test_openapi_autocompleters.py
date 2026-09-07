@@ -127,7 +127,7 @@ def test_extra_parameters_are_forwarded_to_autocompleter(clients: ClientRegistry
     """
     received: dict[str, object] = {}
 
-    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:  # noqa: ARG001
         received.update(params)
         return []
 

@@ -56,7 +56,7 @@ def parse_fireeye_content(string_table: StringTable) -> SecurityContent | None:
     return SecurityContent(version, update_status, update_time_str, update_time_seconds)
 
 
-def discover_fireeye_content(section: SecurityContent) -> DiscoveryResult:
+def discover_fireeye_content(section: SecurityContent) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

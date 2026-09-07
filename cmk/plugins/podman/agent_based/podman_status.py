@@ -44,7 +44,7 @@ agent_section_podman_status: AgentSection = AgentSection(
 )
 
 
-def discover_podman_status(section: Section) -> DiscoveryResult:
+def discover_podman_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

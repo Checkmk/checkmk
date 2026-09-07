@@ -67,7 +67,7 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],
-        "paint": lambda what, row, tags, custom_vars, user_permissions, icon_config: "bla",
+        "paint": lambda what, row, tags, custom_vars, user_permissions, icon_config: "bla",  # noqa: ARG005
         "sort_index": 10,
         "toplevel": True,
     }
@@ -134,7 +134,7 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.MonkeyPatch) -> None:
-    def render(what, row, tags, custom_vars, user_permissions, icon_config):
+    def render(what, row, tags, custom_vars, user_permissions, icon_config):  # noqa: ARG001
         return "agents", "Title", "url"
 
     TestIcon = Icon(
@@ -180,7 +180,7 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
         icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
 
-    def render(what, row, tags, custom_vars, user_permissions, icon_config):
+    def render(what, row, tags, custom_vars, user_permissions, icon_config):  # noqa: ARG001
         return "agents", "Title", "url"
 
     TestIcon = Icon(ident="test_icon", title="Test icon", sort_index=50, render=render)

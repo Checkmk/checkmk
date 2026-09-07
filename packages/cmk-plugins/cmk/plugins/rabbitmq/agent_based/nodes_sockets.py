@@ -117,7 +117,7 @@ def check_rabbitmq_nodes_sockets(
     item: str,
     params: Params,
     section_rabbitmq_nodes: Section | None,
-    section_rabbitmq_cluster: Mapping[str, _ItemData] | None,
+    section_rabbitmq_cluster: Mapping[str, _ItemData] | None,  # noqa: ARG001
 ) -> CheckResult:
     if (
         section_rabbitmq_nodes is None

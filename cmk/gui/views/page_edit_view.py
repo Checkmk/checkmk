@@ -211,7 +211,8 @@ def _migrate_column_headers_repeat_to_pergroup(setting: str) -> str:
 
 
 def view_inventory_join_macros(
-    ds_name: str, all_column_display_hints: Sequence[OrderedColumnDisplayHintsOfView]
+    ds_name: str,  # noqa: ARG001
+    all_column_display_hints: Sequence[OrderedColumnDisplayHintsOfView],
 ) -> Dictionary:
     def _validate_macro_of_datasource(macro: str, varprefix: str) -> None:
         allowed_macros_chars = string.ascii_uppercase + string.digits + "_"
@@ -566,7 +567,7 @@ class _RawVSJoinInvColumnSpec(_RawVSColumnSpecOptional):
 def _view_editor_spec(
     *,
     ident: str,
-    ds_name: str,
+    ds_name: str,  # noqa: ARG001
     title: str,
     vs_column: ValueSpec,
     allow_empty: bool,
@@ -753,7 +754,10 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
 
 
 def view_editor_sorter_specs(
-    ident: str, ds_name: str, painters: Sequence[ColumnSpec], user_permissions: UserPermissions
+    ident: str,  # noqa: ARG001
+    ds_name: str,
+    painters: Sequence[ColumnSpec],
+    user_permissions: UserPermissions,
 ) -> Dictionary:
     def _sorter_choices(
         ds_name: str, painters: Sequence[ColumnSpec]

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import os
 import shutil
 from collections.abc import Iterator, Mapping, Sequence
@@ -62,7 +64,7 @@ class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
     """Mock the AllValueStoresStore class to avoid writing to disk"""
 
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)
+        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
         self.update_count = 0
 
     @override
@@ -82,17 +84,23 @@ class _LogwatchConfigMocker:
         self.debug = False
 
     def logwatch_rules_all(
-        self, *, host_name: str, plugin: CheckPlugin, logfile: str
+        self,
+        *,
+        host_name: str,  # noqa: ARG002
+        plugin: CheckPlugin,  # noqa: ARG002
+        logfile: str,  # noqa: ARG002
     ) -> Sequence[ParameterLogwatchRules]:
         return ()
 
-    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:
+    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:  # noqa: ARG002
         return ()
 
 
 @pytest.mark.parametrize("agent_data_filename", get_agent_data_filenames())
 def test_checks_executor(
-    agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
+    agent_data_filename: str,
+    request: pytest.FixtureRequest,
+    setup_dirs: Iterator[None],
 ) -> None:
     _SKIP_LIST = [
         "agent-2.2.0p14-proxmox",
@@ -178,10 +186,10 @@ def test_checks_executor(
             section_plugins=SectionPluginMapper(
                 {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
             ),
-            section_error_handling=lambda *a: "",
+            section_error_handling=lambda *a: "",  # noqa: ARG005
             check_plugins=check_plugins,
             inventory_plugins={},
-            inventory_parameters=lambda host, plugin: plugin.defaults,
+            inventory_parameters=lambda host, plugin: plugin.defaults,  # noqa: ARG005
             params=HWSWInventoryParameters.from_raw({}),
             services=discovered_services,
             run_plugin_names=EVERYTHING,

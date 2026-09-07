@@ -54,7 +54,7 @@ class ResultTest(ABCAutomationResult):
 
 class TestCheckmkAutomationBackgroundJob:
     @staticmethod
-    def _mock_save(_path: object, data: object, **kwargs: object) -> None:
+    def _mock_save(_path: object, data: object, **kwargs: object) -> None:  # noqa: ARG004
         global RESULT
         RESULT = data
 
@@ -113,7 +113,10 @@ class TestCheckmkAutomationBackgroundJob:
         "save_text_to_file",
     )
     def test_execute_automation(
-        self, version: str, expected_result: str, request_context: None
+        self,
+        version: str,
+        expected_result: str,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         """
         Test the most inner logic of the job
@@ -124,13 +127,13 @@ class TestCheckmkAutomationBackgroundJob:
         job = CheckmkAutomationBackgroundJob("job_id")
         os.makedirs(job.get_work_dir())
         with open(os.devnull, "w") as progress_update:
-            job._execute_automation(
+            job._execute_automation(  # noqa: SLF001
                 BackgroundProcessInterface(
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
                     threading.Event(),
-                    lambda x: nullcontext(),
+                    lambda x: nullcontext(),  # noqa: ARG005
                     progress_update,
                 ),
                 api_request,
@@ -183,7 +186,7 @@ class TestCheckmkAutomationBackgroundJob:
             )
             job = CheckmkAutomationBackgroundJob(job_id)
             job.wait_for_completion(10)
-            job_result = AutomationCheckmkAutomationGetStatus._load_result(
+            job_result = AutomationCheckmkAutomationGetStatus._load_result(  # noqa: SLF001
                 Path(job.get_work_dir()) / "result.mk"
             )
             assert job_result == result

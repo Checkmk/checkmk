@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP006  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+# ruff: noqa: UP035  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+# ruff: noqa: UP045  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -66,7 +71,7 @@ def test_get_file_iterator_pattern(
 ) -> None:
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
-    assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]
+    assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -84,7 +89,7 @@ def test_numeric_filter(
 ) -> None:
     num_filter = mk_filestats.AbstractNumericFilter("%s1024" % operator)
     for value, result in zip(values, results):
-        assert result == num_filter._matches_value(value)
+        assert result == num_filter._matches_value(value)  # noqa: SLF001
 
 
 @pytest.mark.parametrize("invalid_arg", ["<>1024", "<NaN"])
@@ -107,7 +112,7 @@ def test_numeric_filter_raises(invalid_arg: str) -> None:
 def test_path_filter(reg_pat: str, paths: Sequence[str], results: Sequence[bool]) -> None:
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
-        assert result == path_filter.matches(mk_filestats._sanitize_path(path))
+        assert result == path_filter.matches(mk_filestats._sanitize_path(path))  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

@@ -111,7 +111,7 @@ class Query:
             return QueryCOMMAND(raw_query, logger)
         raise MKClientError(f"Invalid method {method} (allowed are GET, REPLICATE, COMMAND)")
 
-    def __init__(self, raw_query: list[str], logger: Logger) -> None:
+    def __init__(self, raw_query: list[str], logger: Logger) -> None:  # noqa: ARG002
         self.output_format = "python"
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:

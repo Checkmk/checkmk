@@ -77,7 +77,7 @@ class TestAPINode:
 
     def test_parse_node_info(
         self,
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
     ) -> None:
         node_info = {
@@ -104,7 +104,7 @@ class TestAPINode:
     def test_parse_conditions(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         node_with_conditions = {
             "status": {
@@ -163,7 +163,7 @@ class TestAPINode:
     def test_parse_conditions_no_status(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         node_with_conditions: dict = {"status": {}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
@@ -173,7 +173,7 @@ class TestAPINode:
     def test_parse_conditions_no_conditions(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         node_with_conditions: dict = {"status": {"conditions": []}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")

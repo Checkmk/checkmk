@@ -63,7 +63,7 @@ _QUANTUM_DEVICE_STATE: Mapping[str, str] = {
 }
 
 
-def discover_quantum_storage_status(section: Section) -> DiscoveryResult:
+def discover_quantum_storage_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

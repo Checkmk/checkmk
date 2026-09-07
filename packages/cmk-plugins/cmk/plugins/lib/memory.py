@@ -27,7 +27,7 @@ class SectionMemUsed(TypedDict, total=False):
 class SectionMemTotal:
     memory_total: int
 
-    def get(self, key: Literal["MemTotal"]) -> int:
+    def get(self, key: Literal["MemTotal"]) -> int:  # noqa: ARG002
         # this is a compatibility layer with the mem and mem_used sections
         # which makes it a bit easier to work with this in the ps check
         # you should never call this method in another context!

@@ -128,7 +128,7 @@ def register(
     hooks.register_builtin(
         "snapshot-pushed", lambda: store.clear_pickled_files_cache(paths.tmp_dir)
     )
-    hooks.register_builtin("users-saved", lambda x: invalidate_all_caches())
+    hooks.register_builtin("users-saved", lambda x: invalidate_all_caches())  # noqa: ARG005
 
     api.register(
         endpoint_family_registry,

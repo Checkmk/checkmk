@@ -116,7 +116,7 @@ def build_tag_obj_from_family(family_name: str) -> OpenAPITag:
 
 def add_tag(spec: APISpec, tag: OpenAPITag, tag_group: TagGroup | None = None) -> None:
     name = tag["name"]
-    if name in [t["name"] for t in spec._tags]:
+    if name in [t["name"] for t in spec._tags]:  # noqa: SLF001
         return
 
     spec.tag(dict(tag))

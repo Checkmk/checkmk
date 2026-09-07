@@ -75,7 +75,7 @@ def register(
     snapin_registry: SnapinRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
-    endpoint_registry: EndpointRegistry,
+    endpoint_registry: EndpointRegistry,  # noqa: ARG001
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     replication_path_registry: ReplicationPathRegistry,

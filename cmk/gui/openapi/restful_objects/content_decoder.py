@@ -36,7 +36,7 @@ def binary_decoder(request: Request) -> bytes | None:
     return bytes(data) if data else None
 
 
-def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any:
+def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any:  # noqa: ARG001
     tgz = binary_decoder(request)
     try:
         assert isinstance(tgz, bytes)

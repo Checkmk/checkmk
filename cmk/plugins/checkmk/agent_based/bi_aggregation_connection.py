@@ -32,7 +32,7 @@ def parse_bi_aggregation_connection(string_table: StringTable) -> dict[str, set[
     return parsed
 
 
-def discover_bi_aggregation_connection(section: Any) -> DiscoveryResult:
+def discover_bi_aggregation_connection(section: Any) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

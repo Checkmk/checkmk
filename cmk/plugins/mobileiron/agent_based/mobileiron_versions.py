@@ -127,7 +127,7 @@ def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
         )
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

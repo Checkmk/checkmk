@@ -509,7 +509,7 @@ class ABCBICompiledNode(ABC):
         """Sets branch comparison result info"""
         self._frozen_marker = frozen_marker
 
-    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
+    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:  # noqa: ARG002
         return []
 
     @classmethod
@@ -567,7 +567,7 @@ class ABCBICompiledNode(ABC):
 
 
 class ABCBIAction(ABC):
-    def __init__(self, action_config: ActionSerialized) -> None:
+    def __init__(self, action_config: ActionSerialized) -> None:  # noqa: ARG002
         super().__init__()
 
     @classmethod
@@ -630,7 +630,7 @@ bi_action_registry = BIActionRegistry()
 
 
 class ABCBISearch(ABC):
-    def __init__(self, search_config: SearchSerialized) -> None:
+    def __init__(self, search_config: SearchSerialized) -> None:  # noqa: ARG002
         super().__init__()
 
     @classmethod
@@ -679,7 +679,7 @@ bi_search_registry = BISearchRegistry()
 
 
 class ABCBIAggregationFunction(ABC):
-    def __init__(self, aggr_function_config: AggregationFunctionSerialized) -> None:
+    def __init__(self, aggr_function_config: AggregationFunctionSerialized) -> None:  # noqa: ARG002
         super().__init__()
 
     @classmethod

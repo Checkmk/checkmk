@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
 
 
-def discover_stormshield_info(section: StringTable) -> DiscoveryResult:
+def discover_stormshield_info(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

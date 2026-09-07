@@ -71,8 +71,8 @@ agent_section_kube_cron_job_latest_job_v1 = AgentSection(
 
 
 def discovery_cron_job_status(
-    section_kube_cron_job_status: CronJobStatus | None,
-    section_kube_cron_job_latest_job: CronJobLatestJob | None,
+    section_kube_cron_job_status: CronJobStatus | None,  # noqa: ARG001
+    section_kube_cron_job_latest_job: CronJobLatestJob | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

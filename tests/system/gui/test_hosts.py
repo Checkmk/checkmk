@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import re
 from collections.abc import Iterator
@@ -329,7 +332,8 @@ def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None
 
 @pytest.mark.skip_if_not_edition("ultimate", "ultimatemt", "cloud")
 def test_ping_host_with_relay_attribute(
-    bypass_nslookup: None, dashboard_page: MainDashboard
+    bypass_nslookup: None,
+    dashboard_page: MainDashboard,
 ) -> None:
     """Validate the ping pre-test still runs when the relay host attribute is present.
 

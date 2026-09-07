@@ -22,7 +22,7 @@ def parse_mcafee_emailgateway_smtp(string_table: StringTable) -> StringTable | N
     return string_table or None
 
 
-def discover_mcafee_emailgateway_smtp(section: StringTable) -> DiscoveryResult:
+def discover_mcafee_emailgateway_smtp(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

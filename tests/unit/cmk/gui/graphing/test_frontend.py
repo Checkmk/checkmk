@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import json
 
 import pytest
@@ -257,7 +259,7 @@ class _UserStub:
     def __init__(self, attribute: object) -> None:
         self._attribute = attribute
 
-    def get_attribute(self, key: str, deflt: object = None) -> object:
+    def get_attribute(self, key: str, deflt: object = None) -> object:  # noqa: ARG002
         return self._attribute
 
 

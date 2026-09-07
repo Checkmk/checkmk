@@ -26,7 +26,7 @@ class ConfigHostname(AjaxDropdownChoice):
     ident = "config_hostname"
 
 
-def config_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def config_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """

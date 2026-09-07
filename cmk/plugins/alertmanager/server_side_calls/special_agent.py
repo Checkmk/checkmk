@@ -40,7 +40,7 @@ class Params(BaseModel, frozen=True):
 
 def _commands_function(
     params: Params,
-    host_config: HostConfig,
+    host_config: HostConfig,  # noqa: ARG001
 ) -> Iterable[SpecialAgentCommand]:
     args: list[str | Secret] = [
         "--config",

@@ -33,5 +33,5 @@ ConfigVariableSitePiggybackHub = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident=CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
-    form_spec=lambda context: piggyback_hub_config_form_spec(),
+    form_spec=lambda context: piggyback_hub_config_form_spec(),  # noqa: ARG005
 )

@@ -45,10 +45,10 @@ def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ())
             self,
             *,
             limit: int | None,
-            query: str,
-            sorters: Sequence[HostSort],
-            filters: HostFilter,
-            fields: Set[HostOptionalField] = frozenset(),
+            query: str,  # noqa: ARG002
+            sorters: Sequence[HostSort],  # noqa: ARG002
+            filters: HostFilter,  # noqa: ARG002
+            fields: Set[HostOptionalField] = frozenset(),  # noqa: ARG002
         ) -> Sequence[Host]:
             return self._hosts[:limit]
 
@@ -62,7 +62,11 @@ def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ())
             return len(self._hosts)
 
         def count_matched(
-            self, *, query: str, filters: HostFilter, fields: Set[HostOptionalField]
+            self,
+            *,
+            query: str,  # noqa: ARG002
+            filters: HostFilter,  # noqa: ARG002
+            fields: Set[HostOptionalField],  # noqa: ARG002
         ) -> int:
             # Not implementing this as we don't need to test a fake implementation of this.
             return self.count_total()
@@ -80,7 +84,7 @@ def get_fake_event_repository(events: Sequence[Event]) -> EventRepository:
         def fetch(
             self,
             *,
-            hostname: str,
+            hostname: str,  # noqa: ARG002
             service_name: str | None,
             since: UnixTimestamp,
             limit: int,

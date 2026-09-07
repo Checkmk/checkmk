@@ -289,7 +289,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(
+                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(  # noqa: ARG005
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],
@@ -305,8 +305,8 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    use_git: bool,  # noqa: ARG001
+    pprint_value: bool,  # noqa: ARG001
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:

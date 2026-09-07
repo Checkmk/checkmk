@@ -51,7 +51,7 @@ def load_unacknowledged_werks(acknowledged_werks: set[int], werks: Werks) -> Wer
     unacknowledged_werks = {
         **{w.id: w for w in werks.values() if w.compatible == Compatibility.NOT_COMPATIBLE},
     }
-    return {id: werk for id, werk in unacknowledged_werks.items() if id not in acknowledged_werks}
+    return {id: werk for id, werk in unacknowledged_werks.items() if id not in acknowledged_werks}  # noqa: A001
 
 
 class UnacknowledgedWerks(UpdateAction):

@@ -2476,7 +2476,7 @@ class CustomPlugin(BaseSchema):
     )
 
     @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         return {k: v for k, v in data.items() if k in self.fields}
 
     @post_load(pass_original=True)

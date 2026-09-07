@@ -33,7 +33,7 @@ def parse_sophos_memory(string_table: StringTable) -> int | None:
         return None
 
 
-def discover_sophos_memory(section: int) -> DiscoveryResult:
+def discover_sophos_memory(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -200,7 +200,12 @@ class ModeGroups(WatoMode, abc.ABC):
         pass
 
     def _show_row_cells(
-        self, nr: int, table: Table, name: GroupName, group: GroupSpec, config: Config
+        self,
+        nr: int,
+        table: Table,
+        name: GroupName,
+        group: GroupSpec,
+        config: Config,  # noqa: ARG002
     ) -> None:
         table.cell("#", css=["narrow nowrap"])
         html.write_text_permissive(nr)

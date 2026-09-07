@@ -55,7 +55,7 @@ class MonitorTimeout:
         )
         self._sigint_handler = signal.getsignal(signal.SIGINT)
 
-    def _default_timeout_handler(self, signum: int, frame: FrameType | None) -> None:
+    def _default_timeout_handler(self, signum: int, frame: FrameType | None) -> None:  # noqa: ARG002
         """Handle SIGINT / KeyboardInterrupt as TimeoutError / SessionTimeoutError.
 
         Handling of SIGINT as SessionTimeoutError is active ONLY within pytest run.

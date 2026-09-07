@@ -16,7 +16,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_set_rowselection", _ajax_set_rowselection))
 
 
-def _ajax_tree_openclose(ctx: PageContext) -> None:
+def _ajax_tree_openclose(ctx: PageContext) -> None:  # noqa: ARG001
     tree = request.get_str_input_mandatory("tree")
     name = request.get_str_input_mandatory("name")
 
@@ -42,7 +42,7 @@ def init_selection(selection_livetime: int) -> None:
     user.cleanup_old_selections(selection_livetime)
 
 
-def _ajax_set_rowselection(ctx: PageContext) -> None:
+def _ajax_set_rowselection(ctx: PageContext) -> None:  # noqa: ARG001
     ident = request.get_str_input_mandatory("id")
     action = request.get_str_input_mandatory("action", "set")
     if action not in ["add", "del", "set", "unset"]:

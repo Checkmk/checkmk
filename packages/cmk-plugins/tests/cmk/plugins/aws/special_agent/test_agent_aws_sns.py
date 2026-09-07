@@ -83,7 +83,7 @@ class PaginatorSubscriptions:
 
 
 class TaggingPaginator:
-    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
         yield TAGGING_PAGINATOR_RESULT
 
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import html as html_escaping
 import json
 import re
@@ -52,7 +54,8 @@ def _component_payload(output: str) -> dict[str, object]:
 
 
 def test_host_service_graph_popup_renders_the_new_engine_component(
-    load_config: Config, mock_livestatus: MockLiveStatusConnection
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     output = _render_popup(mock_livestatus)
 

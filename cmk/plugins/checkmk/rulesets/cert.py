@@ -445,7 +445,7 @@ def _form_active_checks_cert() -> Dictionary:
 def _signature_algorithm_choice() -> CascadingSingleChoice:
     def fmt(sa: ObjectIdentifier) -> Title:
         return Title("%(name)s (%(dotted_string)s)") % {
-            "name": sa._name,
+            "name": sa._name,  # noqa: SLF001
             "dotted_string": sa.dotted_string,
         }
 

@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import re
 from collections.abc import Iterator
@@ -49,7 +52,9 @@ def fixture_fake_gcp_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="gcp_qs_config_page")
 def fixture_gcp_qs_config_page(
-    fake_gcp_dump: None, dashboard_page: MainDashboard, test_site: Site
+    fake_gcp_dump: None,
+    dashboard_page: MainDashboard,
+    test_site: Site,
 ) -> Iterator[GCPAddNewConfiguration]:
     """Navigate to the GCP Quick setup page and add new configuration page"""
     configuration_name = "my_gcp_account"

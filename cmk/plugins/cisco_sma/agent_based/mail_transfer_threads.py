@@ -37,7 +37,7 @@ def _check_mail_transfer_threads(params: Params, section: int) -> CheckResult:
     )
 
 
-def _discover_mail_transfer_threads(section: int) -> DiscoveryResult:
+def _discover_mail_transfer_threads(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

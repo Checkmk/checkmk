@@ -113,7 +113,10 @@ def _handle_availability_option_reset() -> None:
 
 
 def _show_availability_options(
-    option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
+    option_type: str,
+    what: AVObjectType,  # noqa: ARG001
+    avoptions: AVOptions,
+    valuespecs: AVOptionValueSpecs,
 ) -> None:
     form_name = "avoptions_%s" % option_type
     with html.form_context(form_name):
@@ -493,7 +496,10 @@ def _render_avoptions_form(
 
 
 def _page_menu_entries_av_mode(
-    what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
+    what: AVObjectType,
+    av_mode: AVMode,
+    av_object: AVObjectSpec,
+    time_range: AVTimeRange,  # noqa: ARG001
 ) -> Iterator[PageMenuEntry]:
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(

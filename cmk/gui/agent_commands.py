@@ -86,7 +86,7 @@ sudo rpm -Uvh check-mk-agent_{version}-1.noarch.rpm"""
 
 def build_agent_install_cmds(
     version: str,
-    hostname: HostName,
+    hostname: HostName,  # noqa: ARG001
 ) -> AgentInstallCmds:
     return AgentInstallCmds(
         windows_download=WINDOWS_AGENT_DOWNLOAD_CMD.format(version=version),

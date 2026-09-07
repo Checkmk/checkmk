@@ -43,7 +43,7 @@ def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
     yield Result(state=State.OK, summary=f"Version {section.version}")
 
 
-def discover_kube_node_kubelet(section: KubeletInfo) -> DiscoveryResult:
+def discover_kube_node_kubelet(section: KubeletInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

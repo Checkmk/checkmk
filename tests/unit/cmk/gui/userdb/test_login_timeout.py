@@ -24,7 +24,7 @@ REMOTE_IP = "192.168.1.105"
 
 
 def _read_timeout_data() -> dict[str, dict[str, dict[str, object]]]:
-    return LoginTimeoutStore()._read().model_dump(mode="json")
+    return LoginTimeoutStore()._read().model_dump(mode="json")  # noqa: SLF001
 
 
 def _time_out_user_from_ip(user_id: UserId, remote_ip: str, now: datetime) -> None:

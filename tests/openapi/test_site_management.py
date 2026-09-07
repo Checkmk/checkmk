@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 
 from unittest.mock import MagicMock
 
@@ -74,15 +76,15 @@ def test_login_replication_enabled(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.distribute_license_to_remotes",
-        lambda logger, remote_automation_configs: None,
+        lambda logger, remote_automation_configs: None,  # noqa: ARG005
     )
 
     clients.SiteManagement.login(
@@ -137,15 +139,15 @@ def test_login_replication_disabled(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.distribute_license_to_remotes",
-        lambda logger, remote_automation_configs: None,
+        lambda logger, remote_automation_configs: None,  # noqa: ARG005
     )
 
     # TODO fix this.  We shouldn't return a 500 on login failure
@@ -174,7 +176,7 @@ def test_login_site_problem(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
 
     class MockLoginException:
-        def __init__(self, *args: object, **kwargs: object) -> None:
+        def __init__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise Exception("There was a problem logging in.")
 
     monkeypatch.setattr(
@@ -211,7 +213,7 @@ def test_delete_site_connection_problem(
     monkeypatch: MonkeyPatch,
 ) -> None:
     class MockDeleteException:
-        def __init__(self, *args: object, **kwargs: object) -> None:
+        def __init__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise MKUserError(varname=None, message="There was a problem deleting that site.")
 
     monkeypatch.setattr(
@@ -1185,11 +1187,11 @@ def test_remote_site_logged_in(clients: ClientRegistry, monkeypatch: MonkeyPatch
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)

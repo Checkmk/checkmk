@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
 """Test configuration for pytest-recording."""
@@ -18,7 +20,7 @@ collect_ignore_glob = ["sitecustomize.py"]
 
 
 @pytest.fixture(scope="module")
-def vcr_config(request: pytest.FixtureRequest) -> dict[str, Any]:  # noqa: ARG001
+def vcr_config(request: pytest.FixtureRequest) -> dict[str, Any]:
     """Configure VCR cassettes for pytest-recording."""
     return {
         "filter_headers": [

@@ -39,7 +39,7 @@ def response():
     ],
 )
 def test_http_cfg_versions(cfg: object) -> None:
-    assert apache_status._unpack(cfg) == (("http", None), "127.0.0.1", None, "", "server-status")
+    assert apache_status._unpack(cfg) == (("http", None), "127.0.0.1", None, "", "server-status")  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -56,7 +56,7 @@ def test_http_cfg_versions(cfg: object) -> None:
     ],
 )
 def test_https_cfg_versions(cfg: object) -> None:
-    assert apache_status._unpack(cfg) == (
+    assert apache_status._unpack(cfg) == (  # noqa: SLF001
         ("https", "/path/to/ca.pem"),
         "127.0.0.1",
         123,
@@ -78,7 +78,7 @@ def test_agent(  # type: ignore[misc]
     cfg: object, response: str, monkeypatch: MonkeyPatch, capsys: CaptureFixture
 ) -> None:
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})
-    monkeypatch.setattr(apache_status, "get_response_body", lambda *args: response)
+    monkeypatch.setattr(apache_status, "get_response_body", lambda *args: response)  # noqa: ARG005
     apache_status.main()
     captured_stdout = capsys.readouterr()[0]
     assert captured_stdout == (

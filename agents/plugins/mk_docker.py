@@ -402,7 +402,7 @@ def is_disabled_section(config, section_name):
 
 
 @time_it
-def section_node_info(client, config):
+def section_node_info(client, config):  # noqa: ARG001
     # type: (MKDockerClient, dict[str, str]) -> None
     LOGGER.debug(client.node_info)
     section = Section("docker_node_info")
@@ -489,7 +489,7 @@ def _robust_inspect(client, docker_object):
 
 
 @time_it
-def section_node_images(client, config):
+def section_node_images(client, config):  # noqa: ARG001
     # type: (MKDockerClient, dict[str, str]) -> None
     """in subsections list [[[images]]] and [[[containers]]]"""
     section = Section("docker_node_images")
@@ -512,7 +512,7 @@ def section_node_images(client, config):
 
 
 @time_it
-def section_node_network(client, config):
+def section_node_network(client, config):  # noqa: ARG001
     # type: (MKDockerClient, dict[str, str]) -> None
     networks = client.networks.list(filters={"driver": "bridge"})
     section = Section("docker_node_network")

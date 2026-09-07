@@ -107,7 +107,7 @@ def parse_splunk_health(string_table: StringTable) -> HealthSection:
     return list(registry.values())
 
 
-def discover_splunk_health(section: HealthSection) -> DiscoveryResult:
+def discover_splunk_health(section: HealthSection) -> DiscoveryResult:  # noqa: ARG001
     """Discovers splunk health services from parsed agent section."""
     yield Service()
 

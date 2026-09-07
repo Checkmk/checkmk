@@ -78,7 +78,7 @@ inventory_plugin_netapp_ontap_disk = InventoryPlugin(
 )
 
 
-def discovery_netapp_ontap_disk_summary(section: Section) -> DiscoveryResult:
+def discovery_netapp_ontap_disk_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

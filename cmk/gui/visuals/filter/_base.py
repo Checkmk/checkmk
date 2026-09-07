@@ -132,25 +132,25 @@ class Filter(abc.ABC):
         to provide the filter's API representation."""
         raise NotImplementedError
 
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:  # noqa: ARG002
         return ""
 
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:  # noqa: ARG002
         """Whether this filter needs to load host inventory data"""
         return False
 
-    def validate_value(self, value: FilterHTTPVariables) -> None:
+    def validate_value(self, value: FilterHTTPVariables) -> None:  # noqa: ARG002
         return
 
-    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:  # noqa: ARG002
         """Columns needed to perform post-Livestatus filtering"""
         return []
 
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:  # noqa: ARG002
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
-    def request_vars_from_row(self, row: Row) -> FilterHTTPVariables:
+    def request_vars_from_row(self, row: Row) -> FilterHTTPVariables:  # noqa: ARG002
         """return filter request variables built from the given row"""
         return {}
 
@@ -159,7 +159,7 @@ class Filter(abc.ABC):
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:  # noqa: ARG002
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 

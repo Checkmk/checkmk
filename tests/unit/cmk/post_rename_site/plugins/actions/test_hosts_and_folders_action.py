@@ -122,7 +122,7 @@ host_attributes.update(
     assert root_folder.load_host(HostName("ag")).attributes.get("site") == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
-    hosts_config = root_folder._load_hosts_file()
+    hosts_config = root_folder._load_hosts_file()  # noqa: SLF001
     assert hosts_config is not None
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
@@ -174,7 +174,9 @@ host_attributes.update(
     # action is executed.
     monkeypatch.setattr(cmk.gui.watolib.hosts_and_folders, "omd_site", lambda: "dingdong")
     monkeypatch.setattr(
-        HostAttributeSite, "effective_default_value", lambda self, sites: "dingdong"
+        HostAttributeSite,
+        "effective_default_value",
+        lambda self, sites: "dingdong",  # noqa: ARG005
     )
 
     update_hosts_and_folders(SiteId("NO_SITE"), SiteId("dingdong"), logger)
@@ -187,7 +189,7 @@ host_attributes.update(
     assert root_folder.load_host(HostName("ag")).tag_groups()[TagGroupID("site")] == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
-    hosts_config = root_folder._load_hosts_file()
+    hosts_config = root_folder._load_hosts_file()  # noqa: SLF001
     assert hosts_config is not None
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 

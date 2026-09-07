@@ -52,7 +52,7 @@ class ApiOmitted:
     ) -> NoReturn:
         raise PydanticOmit
 
-    def __new__(cls, *args: object, **kwargs: object) -> ApiOmitted:
+    def __new__(cls, *args: object, **kwargs: object) -> ApiOmitted:  # noqa: ARG004
         # Singleton pattern to ensure only one instance of ApiOmitted exists
         if cls._instance is None:
             cls._instance = super().__new__(cls)

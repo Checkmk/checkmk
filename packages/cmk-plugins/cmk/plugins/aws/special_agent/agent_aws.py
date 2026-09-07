@@ -5840,7 +5840,7 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
         client: BaseClient,
         region: str,
         config: AWSConfig,
-        distributor: ResultDistributor | None = None,
+        distributor: ResultDistributor | None = None,  # noqa: ARG002
     ) -> None:
         super().__init__(client, region, config, distributor=None)
 
@@ -7919,7 +7919,7 @@ def _setup_logging(opt_debug: bool, opt_verbose: bool) -> None:
 
 def _create_anonymous_session(
     region: str,
-    config: botocore.config.Config | None,
+    config: botocore.config.Config | None,  # noqa: ARG001
 ) -> boto3.session.Session:
     try:
         # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.

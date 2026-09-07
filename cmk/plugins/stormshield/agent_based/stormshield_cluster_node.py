@@ -60,7 +60,7 @@ def parse_stormshield_cluster_node(string_table: StringTable) -> Section:
             online,
             model,
             version,
-            license,
+            license,  # noqa: A001
             quality,
             priority,
             statusforced,

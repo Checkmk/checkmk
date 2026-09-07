@@ -135,18 +135,18 @@ def test_connect(mock_ldap: MagicMock) -> None:
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
         connector.connect()
 
-    assert connector._ldap_obj == mock_ldap.return_value, "Connector connects to mock"
-    assert connector._ldap_obj_config == cfg, "Connector sets config for mock"
+    assert connector._ldap_obj == mock_ldap.return_value, "Connector connects to mock"  # noqa: SLF001
+    assert connector._ldap_obj_config == cfg, "Connector sets config for mock"  # noqa: SLF001
 
     assert len(mock_ldap.call_args_list) == 2, "Connected to main and failover server"
     mock_ldap.assert_called_with("ldap://internet")  # most recent
 
     # assumes "ldap_golden_unknown_password" is not in the password store, hence the 'None'.
-    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[union-attr]
+    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[union-attr]  # noqa: SLF001
         cfg["bind"][0], None
     )
-    assert connector._ldap_obj.protocol_version == cfg["version"]  # type: ignore[union-attr]
-    assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]  # type: ignore[union-attr]
+    assert connector._ldap_obj.protocol_version == cfg["version"]  # type: ignore[union-attr]  # noqa: SLF001
+    assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]  # type: ignore[union-attr]  # noqa: SLF001
 
 
 def _mock_result3(
@@ -156,7 +156,7 @@ def _mock_result3(
 ) -> None:
     """Make 'connector._ldap_object' return 'ldap_result' (plus some values that aren't used)."""
     mocker.patch.object(
-        connector._ldap_obj,
+        connector._ldap_obj,  # noqa: SLF001
         "result3",
         return_value=(
             0,
@@ -175,7 +175,7 @@ def _mock_needed_attributes(mocker: MockerFixture, connector: LDAPUserConnector)
 
 def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> None:
     mocker.patch.object(
-        connector._ldap_obj,
+        connector._ldap_obj,  # noqa: SLF001
         "simple_bind_s",
         side_effect=[
             ldap.INVALID_CREDENTIALS(  # type: ignore[attr-defined,unused-ignore]
@@ -186,7 +186,7 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
     )
 
 
-def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
+def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:  # noqa: ARG001
     ldap_result = [
         ("user1", {"uid": [b"USER1_ID"]}),
         ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
@@ -207,14 +207,14 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(cfg)
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
         connector.connect()
-    assert connector._ldap_obj
+    assert connector._ldap_obj  # noqa: SLF001
 
     _mock_needed_attributes(mocker, connector)
     _mock_result3(mocker, connector, ldap_result)
     result = connector.get_users(get_user_attributes([]), add_filter=add_filter)
 
     assert expected_result == result
-    connector._ldap_obj.search_ext.assert_called_once_with(  # type: ignore[attr-defined,unused-ignore]
+    connector._ldap_obj.search_ext.assert_called_once_with(  # type: ignore[attr-defined,unused-ignore]  # noqa: SLF001
         cfg["user_dn"],
         ldap.SCOPE_SUBTREE,  # type: ignore[attr-defined,unused-ignore]
         expected_filter,
@@ -238,7 +238,7 @@ class AnyOrderMatcher:
         return f"AnyOrderMatcher({self.args})"
 
 
-def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
+def test_do_sync(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
     connector = LDAPUserConnector(_test_config)
     loaded_users: Users = {
         UserId("alice"): {"connector": "htpasswd"},
@@ -253,12 +253,12 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
 
     def assert_expected_users(
         users_to_save: Users,
-        user_attributes: Sequence[tuple[str, UserAttribute]],
-        user_connections: Sequence[UserConnectionConfig],
+        user_attributes: Sequence[tuple[str, UserAttribute]],  # noqa: ARG001
+        user_connections: Sequence[UserConnectionConfig],  # noqa: ARG001
         _now: datetime.datetime,
         _pprint_value: bool,
         _call_users_saved_hook: bool,
-        changed_users: list[UserId] | Literal["all"] = "all",
+        changed_users: list[UserId] | Literal["all"] = "all",  # noqa: ARG001
     ) -> None:
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
@@ -276,14 +276,14 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         add_to_changelog=True,
         only_username=None,
         user_attributes=get_user_attributes([]),
-        load_users_func=lambda lock=False: loaded_users,
+        load_users_func=lambda lock=False: loaded_users,  # noqa: ARG005
         save_users_func=assert_expected_users,
         default_user_profile={},
     )
 
 
 def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
-    request_context: None,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """The LDAP sync's stale-user removal leaves a user owned by
     another connector (here the SAML connector) untouched, and raises no error,
@@ -304,7 +304,7 @@ def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
     result = SyncUsersResult(fetched_users={}, sync_start_time=0.0)
 
     # The LDAP directory returns no entry for the SAML-owned user.
-    connector._quarantine_or_remove_users_no_longer_in_ldap(
+    connector._quarantine_or_remove_users_no_longer_in_ldap(  # noqa: SLF001
         users=users, ldap_users={}, sync_users_result=result
     )
 
@@ -317,13 +317,13 @@ def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
 
 def test_check_credentials_valid(
     mocker: MockerFixture,
-    mock_ldap: MagicMock,
-    request_context: None,
+    mock_ldap: MagicMock,  # noqa: ARG001
+    request_context: None,  # noqa: ARG001
 ) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
-        assert connector._ldap_obj
+        assert connector._ldap_obj  # noqa: SLF001
 
         _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
 
@@ -335,7 +335,7 @@ def test_check_credentials_valid(
             default_user_profile={},
         )
 
-        connector._ldap_obj.simple_bind_s.assert_any_call(  # type: ignore[attr-defined,unused-ignore]
+        connector._ldap_obj.simple_bind_s.assert_any_call(  # type: ignore[attr-defined,unused-ignore]  # noqa: SLF001
             "carol", "hunter2"
         )
         assert result == UserId("carol_id")
@@ -343,7 +343,7 @@ def test_check_credentials_valid(
 
 def test_login_of_an_unknown_ldap_user_syncs_it(
     mocker: MockerFixture,
-    mock_ldap: MagicMock,
+    mock_ldap: MagicMock,  # noqa: ARG001
     wsgi_app: WebTestAppForCMK,
 ) -> None:
     """Flask opens the session while pushing the request context, so the sync that runs
@@ -371,11 +371,11 @@ def test_login_of_an_unknown_ldap_user_syncs_it(
     assert UserId("carol") in load_users()
 
 
-def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
+def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:  # noqa: ARG001
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
-        assert connector._ldap_obj
+        assert connector._ldap_obj  # noqa: SLF001
 
         _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
         _mock_simple_bind_s(mocker, connector)
@@ -391,11 +391,11 @@ def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) 
         )
 
 
-def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
+def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:  # noqa: ARG001
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
         connector.connect()
-    assert connector._ldap_obj
+    assert connector._ldap_obj  # noqa: SLF001
 
     mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
     _mock_result3(mocker, connector, [])
@@ -479,7 +479,7 @@ def test_set_tls_options_overrides_global_crlcheck() -> None:
         # Precondition: new handle inherits the global setting for TLS_CRLCHECK
         assert conn.get_option(ldap.OPT_X_TLS_CRLCHECK) == ldap.OPT_X_TLS_CRL_ALL  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
 
-        LDAPUserConnector(
+        LDAPUserConnector(  # noqa: SLF001
             {
                 **_test_config,
                 "use_ssl": True,
@@ -499,7 +499,7 @@ def test_set_tls_options_gnutls_no_crlcheck_support() -> None:
         pytest.skip("CRLCHECK-unsupported path only meaningful on GnuTLS backend")
 
     conn = ldap.ldapobject.ReconnectLDAPObject("ldaps://foobar.test")  # type: ignore[no-untyped-call,unused-ignore]
-    LDAPUserConnector(
+    LDAPUserConnector(  # noqa: SLF001
         {
             **_test_config,
             "use_ssl": True,
@@ -609,7 +609,9 @@ sync_data: list[SyncLdapData] = [
 
 @pytest.mark.parametrize("sync_ldap_data", sync_data)
 def test_ldap_sync(
-    mocker: MockerFixture, sync_ldap_data: SyncLdapData, request_context: None
+    mocker: MockerFixture,
+    sync_ldap_data: SyncLdapData,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
     # The connector is treated as an authentication connection so the "user
@@ -684,8 +686,8 @@ _test_config_with_auth_expire = LDAPUserConnectionConfig(
 
 def test_check_credentials_with_auth_expire(
     mocker: MockerFixture,
-    mock_ldap: MagicMock,
-    request_context: None,
+    mock_ldap: MagicMock,  # noqa: ARG001
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """Login with auth_expire plugin enabled must request all needed LDAP attributes.
 
@@ -695,7 +697,7 @@ def test_check_credentials_with_auth_expire(
     connector = LDAPUserConnector(_test_config_with_auth_expire)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
-        assert connector._ldap_obj
+        assert connector._ldap_obj  # noqa: SLF001
 
         _mock_result3(
             mocker,
@@ -711,7 +713,7 @@ def test_check_credentials_with_auth_expire(
             default_user_profile={},
         )
 
-        search_ext_call = connector._ldap_obj.search_ext.call_args  # type: ignore[attr-defined,unused-ignore]
+        search_ext_call = connector._ldap_obj.search_ext.call_args  # type: ignore[attr-defined,unused-ignore]  # noqa: SLF001
         requested_attrs = search_ext_call[1].get("attrlist") or search_ext_call[0][3]
         assert "pwdchangedtime" in requested_attrs, (
             f"auth_expire needs 'pwdchangedtime' but _get_user() only requested: {requested_attrs}"
@@ -812,7 +814,7 @@ _test_config_no_suffix = LDAPUserConnectionConfig(
 )
 
 
-def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context: None) -> None:
+def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
     """A SAML-owned user with a matching LDAP entry is taken over by LDAP sync.
 
     Connector flips to the LDAP id and LDAP-managed attributes are written.
@@ -843,7 +845,8 @@ def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context:
 
 
 def test_takeover_drops_attributes_provided_by_saml(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """On takeover, attributes the SAML connector managed are dropped.
 
@@ -896,7 +899,7 @@ def test_takeover_drops_attributes_provided_by_saml(
     assert taken_over["temperature_unit"] == "celsius"
 
 
-def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:
+def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
     """A SAML-owned user with NO matching LDAP entry is left untouched.
 
     ``do_sync`` only iterates fetched LDAP users, so a SAML-only user is never reached by the takeover path.
@@ -918,7 +921,7 @@ def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_conte
         add_to_changelog=True,
         only_username=None,
         user_attributes=get_user_attributes([]),
-        load_users_func=lambda lock=False: loaded_users,
+        load_users_func=lambda lock=False: loaded_users,  # noqa: ARG005
         save_users_func=fail_if_save_called,
         default_user_profile={},
     )
@@ -928,7 +931,7 @@ def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_conte
     )
 
 
-def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:
+def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:  # noqa: ARG001
     """A regular LDAP-owned user still receives the standard modify event.
 
     The new takeover branch must not affect users that were already owned by the LDAP connector.
@@ -984,7 +987,8 @@ def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_conte
 
 
 def test_sync_does_not_take_over_htpasswd_user(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """Takeover is SAML-only — htpasswd-owned users fall through to today's
     name-conflict skip path.
@@ -1022,7 +1026,8 @@ def test_sync_does_not_take_over_htpasswd_user(
 
 
 def test_takeover_emits_security_event_and_change(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """Takeover records a 'user modified' security event AND a change entry
     that explicitly names the ownership transfer.
@@ -1065,7 +1070,8 @@ def test_takeover_emits_security_event_and_change(
 
 
 def test_takeover_with_suffix_keeps_bare_userid(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """Takeover reuses the bare UserId even when the LDAP connector has a
     suffix configured. Existing users are never renamed
@@ -1107,7 +1113,8 @@ def test_takeover_with_suffix_keeps_bare_userid(
 
 
 def test_sync_skips_creation_for_attr_only_connector(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """A connector absent from `authentication_connections` must not create a
     new user during the periodic background sync (`login_attempt=False`).
@@ -1138,7 +1145,8 @@ def test_sync_skips_creation_for_attr_only_connector(
 
 
 def test_sync_creates_user_for_authentication_connector(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """A connector listed in `authentication_connections` still creates new
     users during the periodic sync — the gate does not change this path.
@@ -1172,7 +1180,8 @@ def test_sync_creates_user_for_authentication_connector(
 
 
 def test_sync_updates_existing_user_for_attr_only_connector(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """An attribute-sync-only connector still updates an existing user it owns.
     The creation gate sits on the new-user branch only.
@@ -1217,7 +1226,8 @@ def test_sync_updates_existing_user_for_attr_only_connector(
 
 
 def test_sync_takeover_still_works_for_attr_only_connector(
-    mocker: MockerFixture, request_context: None
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
 ) -> None:
     """The CMK-33824 SAML->LDAP takeover still applies for a connector that is
     only in `user_attribute_sync_connections`: takeover acts on an
@@ -1250,7 +1260,9 @@ def test_sync_takeover_still_works_for_attr_only_connector(
 
 
 def test_sync_attr_only_connector_deletes_owned_user_gone_from_ldap(
-    mocker: MockerFixture, request_context: None, set_config: SetConfig
+    mocker: MockerFixture,
+    request_context: None,  # noqa: ARG001
+    set_config: SetConfig,
 ) -> None:
     """Deletion follows ownership, not auth membership: an attribute-sync-only
     connector still removes a user it owns once that user leaves the LDAP
@@ -1267,7 +1279,7 @@ def test_sync_attr_only_connector_deletes_owned_user_gone_from_ldap(
     sync_user_result = SyncUsersResult(sync_start_time=time(), fetched_users={})
 
     with set_config(ldap_quarantine_period=None):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(
+        connector._quarantine_or_remove_users_no_longer_in_ldap(  # noqa: SLF001
             users=users,
             ldap_users={},
             sync_users_result=sync_user_result,
@@ -1507,7 +1519,9 @@ def test_fetch_needed_groups_for_groups_to_roles_multiple_groups_in_one_role(
     connection = LDAPUserConnector(_test_config)
 
     def _memberships(
-        names: list[str], filt_attr: str | None = None, nested: bool = False
+        names: list[str],
+        filt_attr: str | None = None,  # noqa: ARG001
+        nested: bool = False,  # noqa: ARG001
     ) -> dict[str, dict[str, object]]:
         return {name: {"cn": name, "members": ["alice"]} for name in names}
 

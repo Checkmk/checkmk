@@ -236,11 +236,11 @@ def test_compute_rates_single_disk_without_frequency() -> None:
     value_store: dict[str, object] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
-        winperf_phydisk._compute_rates_single_disk(
+        winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
             DISK_WO_FREQUENCY,
             value_store,
         )
-    disk_with_rates = winperf_phydisk._compute_rates_single_disk(
+    disk_with_rates = winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
         _advance_time(DISK_WO_FREQUENCY, 60),
         value_store,
     )
@@ -254,11 +254,11 @@ def test_compute_rates_single_disk_with_frequency() -> None:
     value_store: dict[str, object] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
-        winperf_phydisk._compute_rates_single_disk(
+        winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
             DISK,
             value_store,
         )
-    disk_with_rates = winperf_phydisk._compute_rates_single_disk(
+    disk_with_rates = winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
         _advance_time(DISK, 60),
         value_store,
     )
@@ -321,7 +321,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
+def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:  # noqa: ARG001
     section_1: diskstat.Section = {
         item: DISK_HALF,
     }
@@ -340,7 +340,7 @@ def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
+def test_cluster_check_winperf_phydisk(item: str, empty_value_store: None) -> None:  # noqa: ARG001
     section_1: diskstat.Section = {
         item: DISK_HALF,
     }
@@ -362,21 +362,21 @@ def test_cluster_check_winperf_phydisk(item: str, empty_value_store: None) -> No
 
 
 def test_denom_ok() -> None:
-    ok = winperf_phydisk._Denom(2, False)
+    ok = winperf_phydisk._Denom(2, False)  # noqa: SLF001
     assert ok.calc_smart(1.0) == 0.5
 
 
 def test_denom_null() -> None:
-    null = winperf_phydisk._Denom(0, False)
+    null = winperf_phydisk._Denom(0, False)  # noqa: SLF001
     assert null.calc_smart(0.0) == 0.0
     with pytest.raises(IgnoreResultsError):
         null.calc_smart(1.0)
 
 
 def test_denom_bad() -> None:
-    none = winperf_phydisk._Denom(None, False)
+    none = winperf_phydisk._Denom(None, False)  # noqa: SLF001
     with pytest.raises(IgnoreResultsError):
         none.calc_smart(0.0)
-    exc = winperf_phydisk._Denom(1, True)
+    exc = winperf_phydisk._Denom(1, True)  # noqa: SLF001
     with pytest.raises(IgnoreResultsError):
         exc.calc_smart(0.0)

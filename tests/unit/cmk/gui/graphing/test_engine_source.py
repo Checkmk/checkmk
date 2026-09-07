@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
@@ -53,7 +55,8 @@ _SERVICE_ROW = {
 
 
 def test_fetch_metric_names_of_a_host_reads_the_hosts_table(
-    load_config: Config, mock_livestatus: MockLiveStatusConnection
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     # Host metrics are addressed by the pseudo-service "_HOST_" and live on the hosts table, where
     # they are filtered by host name alone - the table switch livestatus_lql makes for the legacy
@@ -77,7 +80,8 @@ def test_fetch_metric_names_of_a_host_reads_the_hosts_table(
 
 
 def test_fetch_metric_names_of_a_service_reads_the_services_table(
-    load_config: Config, mock_livestatus: MockLiveStatusConnection
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table("services", [_SERVICE_ROW])
@@ -99,7 +103,8 @@ def test_fetch_metric_names_of_a_service_reads_the_services_table(
 
 
 def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
-    load_config: Config, mock_livestatus: MockLiveStatusConnection
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     # The sibling fetcher only reports the canonical names, which cannot say which raw perf-data
     # column each came from. This one carries the pairing out of livestatus intact.
@@ -141,7 +146,8 @@ def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
 
 
 def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
-    load_config: Config, mock_livestatus: MockLiveStatusConnection
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     # Both fetch stages of a host metric - the performance data and the RRD series - go to the hosts
     # table as well.
@@ -202,7 +208,10 @@ class _FakeRRDFetchPerformanceData:
     perf_data: str
 
     def __call__(
-        self, services: Sequence[Service], *, only_site: SiteID | None
+        self,
+        services: Sequence[Service],
+        *,
+        only_site: SiteID | None,  # noqa: ARG002
     ) -> Sequence[PerformanceDataRow]:
         return [
             PerformanceDataRow(
@@ -226,9 +235,9 @@ class _FakeRRDFetchTimeSeries:
         self,
         rrd_metrics: Sequence[RRDMetric],
         *,
-        consolidation_function: ConsolidationFunction,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,
-        only_site: SiteID | None,
+        only_site: SiteID | None,  # noqa: ARG002
     ) -> Mapping[RRDMetric, TimeSeries]:
         self.requested += [str(metric.metric_name) for metric in rrd_metrics]
         return {

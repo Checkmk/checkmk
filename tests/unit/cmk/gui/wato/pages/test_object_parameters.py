@@ -38,10 +38,10 @@ def test_handle_auto_origin_no_keyerror_for_unknown_checkgroup() -> None:
     )
 
     mock_self = MagicMock(spec=ModeObjectParameters)
-    mock_self._service = "Test Service"
-    mock_self._hostname = HostName("testhost")
+    mock_self._service = "Test Service"  # noqa: SLF001
+    mock_self._hostname = HostName("testhost")  # noqa: SLF001
 
-    ModeObjectParameters._handle_auto_origin(
+    ModeObjectParameters._handle_auto_origin(  # noqa: SLF001
         mock_self,
         serviceinfo,
         MagicMock(),  # all_rulesets
@@ -51,4 +51,4 @@ def test_handle_auto_origin_no_keyerror_for_unknown_checkgroup() -> None:
         debug=False,
     )
 
-    mock_self._render_rule_reason.assert_called_once()
+    mock_self._render_rule_reason.assert_called_once()  # noqa: SLF001

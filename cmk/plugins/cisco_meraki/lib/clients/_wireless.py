@@ -33,7 +33,7 @@ class WirelessClient:
             )
             return None
 
-    def get_ethernet_statuses(self, id: str, /) -> Sequence[schema.RawWirelessEthernetStatus]:
+    def get_ethernet_statuses(self, id: str, /) -> Sequence[schema.RawWirelessEthernetStatus]:  # noqa: A002
         try:
             return self._sdk.getOrganizationWirelessDevicesEthernetStatuses(id, total_pages="all")
         except APIError as e:

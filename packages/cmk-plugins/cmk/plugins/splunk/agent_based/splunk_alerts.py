@@ -32,7 +32,7 @@ def parse_splunk_alerts(string_table: StringTable) -> AlertCount | None:
     return AlertCount(count)
 
 
-def discover_splunk_alerts(section: AlertCount | None) -> DiscoveryResult:
+def discover_splunk_alerts(section: AlertCount | None) -> DiscoveryResult:  # noqa: ARG001
     """Runs empty discovery since there is only a single service."""
     yield Service()
 

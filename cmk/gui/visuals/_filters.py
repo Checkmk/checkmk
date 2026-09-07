@@ -1334,7 +1334,7 @@ class FilterLogContactName(InputTextFilter):
         if current_value := value.get(self.htmlvars[0]):
             new_value = dict(value.items())
             new_value[self.htmlvars[0]] = "(,|^)" + current_value.replace(".", "\\.") + "(,|$)"
-            return self.query_filter._filter(new_value)
+            return self.query_filter._filter(new_value)  # noqa: SLF001
         return ""
 
 

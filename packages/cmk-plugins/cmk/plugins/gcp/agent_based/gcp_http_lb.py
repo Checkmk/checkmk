@@ -33,7 +33,7 @@ ASSET_TYPE = gcp.AssetType("compute.googleapis.com/UrlMap")
 
 
 def discover(
-    section_gcp_service_http_lb: gcp.Section | None,
+    section_gcp_service_http_lb: gcp.Section | None,  # noqa: ARG001
     section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "http_lb")

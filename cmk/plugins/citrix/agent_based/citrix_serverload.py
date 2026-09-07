@@ -30,7 +30,7 @@ def parse_citrix_serverload(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_citrix_serverload(section: StringTable) -> DiscoveryResult:
+def discover_citrix_serverload(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

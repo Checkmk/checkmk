@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
@@ -228,7 +230,9 @@ def test_io_bytes_results(value_store_patch: None) -> None:
     ],
 )
 def test_check_netapp_ontap_fcp(
-    item_name: str, expected_last_result: Result, value_store_patch: None
+    item_name: str,
+    expected_last_result: Result,
+    value_store_patch: None,
 ) -> None:
     _ports_models = [
         FcPortModelFactory.build(

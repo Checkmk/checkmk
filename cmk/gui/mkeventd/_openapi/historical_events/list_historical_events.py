@@ -69,7 +69,7 @@ class HistoricalEventsCollectionModel(DomainObjectCollectionModel):
 
 
 def list_historical_events_unstable(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     site_id: Annotated[
         SiteId | ApiOmitted,
         QueryParam(

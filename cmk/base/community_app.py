@@ -16,5 +16,5 @@ def make_app() -> CheckmkBaseApp:
         edition=Edition.COMMUNITY,
         create_core=create_core,
         licensing_handler_factory=CommunityLicensingHandler.make,
-        make_fetcher_trigger=lambda *a, **kw: PlainFetcherTrigger(omd_root=omd_root),
+        make_fetcher_trigger=lambda *a, **kw: PlainFetcherTrigger(omd_root=omd_root),  # noqa: ARG005
     )

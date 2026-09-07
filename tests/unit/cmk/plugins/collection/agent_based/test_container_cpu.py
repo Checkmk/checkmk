@@ -256,7 +256,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 )
 def test_container_cpu_cgroupv1(
     section_name: str,
-    plugin_name: str,
+    plugin_name: str,  # noqa: ARG001
     string_table_0: StringTable,
     string_table_10: StringTable,
     util: float,

@@ -29,7 +29,7 @@ class Params(TypedDict):
 
 
 def discover_podman_container_restarts(
-    section: SectionPodmanContainerInspect,
+    section: SectionPodmanContainerInspect,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

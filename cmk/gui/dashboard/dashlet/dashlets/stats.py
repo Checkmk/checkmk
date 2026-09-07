@@ -331,7 +331,7 @@ class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.AB
     @classmethod
     def _get_stats(
         cls,
-        dashlet_spec: StatsDashletConfig,
+        dashlet_spec: StatsDashletConfig,  # noqa: ARG003
         context: VisualContext,
         infos: SingleInfos,
     ) -> S:

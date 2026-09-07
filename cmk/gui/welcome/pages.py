@@ -67,7 +67,7 @@ def _make_url_or_callback_from_registry(
     )
 
 
-def _ajax_mark_step_as_complete(ctx: PageContext) -> None:
+def _ajax_mark_step_as_complete(ctx: PageContext) -> None:  # noqa: ARG001
     # Handle step completion if completed-step parameter is provided
     if (
         completed_step_name := request.get_ascii_input("_completed_step")

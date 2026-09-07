@@ -67,7 +67,7 @@ cloudwatch_params: list[tuple[list[str] | None, int]] = [
 def test_agent_aws_cloudwatch_alarms_limits(
     get_cloudwatch_alarms_sections: CreateCloudwatchAlarmSections,
     alarm_names: list[str] | None,
-    amount_alarms: int,
+    amount_alarms: int,  # noqa: ARG001
 ) -> None:
     cloudwatch_alarms_limits, _cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results

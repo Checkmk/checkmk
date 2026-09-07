@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 from werkzeug.datastructures import ETags
 
@@ -57,7 +59,8 @@ def test_super_user_is_preserved(request_context: None) -> None:
     [LoggedInRemoteSite(site_name="remote"), LoggedInNobody()],
 )
 def test_other_user_id_less_users_are_not_promoted_to_super_user(
-    pseudo_user: LoggedInUser, request_context: None
+    pseudo_user: LoggedInUser,
+    request_context: None,
 ) -> None:
     """Other identities also have no user id but must NOT be treated as a super
     user - that is exactly the bug of rebuilding the user from a None user id."""

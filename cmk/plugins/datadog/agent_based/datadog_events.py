@@ -40,7 +40,7 @@ agent_section_datadog_events = AgentSection(
 )
 
 
-def discover_datadog_events(section: Section) -> DiscoveryResult:
+def discover_datadog_events(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

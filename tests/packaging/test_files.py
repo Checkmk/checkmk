@@ -632,7 +632,7 @@ def test_python3_cab_integrity(package_path: str) -> None:
     missing = []
     found = []
     for name, version in packages.items():
-        if version:
+        if version:  # noqa: SIM108
             pattern = f"{name}-{version}.dist-info"
         else:
             pattern = f"{name}-"

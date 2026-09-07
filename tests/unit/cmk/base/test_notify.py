@@ -97,7 +97,7 @@ def test_create_plugin_context(
         notify.create_plugin_context(
             enriched_context,
             params,
-            lambda *args, **kw: HTTP_PROXY,
+            lambda *args, **kw: HTTP_PROXY,  # noqa: ARG005
         )
         == expected
     )
@@ -915,7 +915,7 @@ def test_rbn_match_timeperiod(
     expected: str | None,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(notify, "is_timeperiod_active", lambda **kwargs: is_active)
+    monkeypatch.setattr(notify, "is_timeperiod_active", lambda **kwargs: is_active)  # noqa: ARG005
     assert notify.rbn_match_timeperiod(rule, context, analyse, {}) == expected
 
 
@@ -954,7 +954,7 @@ def test__rbn_match_contact_macros(
     contact: Contact,
     expected: str | None,
 ) -> None:
-    assert notify._rbn_match_contact_macros(rule, contactname, contact) == expected
+    assert notify._rbn_match_contact_macros(rule, contactname, contact) == expected  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -992,12 +992,12 @@ def test__rbn_match_contact_groups(
     contact: Contact,
     expected: str | None,
 ) -> None:
-    assert notify._rbn_match_contact_groups(rule, contactname, contact) == expected
+    assert notify._rbn_match_contact_groups(rule, contactname, contact) == expected  # noqa: SLF001
 
 
 def test__rbn_match_rule_disabled_rule() -> None:
     assert (
-        notify._rbn_match_rule(
+        notify._rbn_match_rule(  # noqa: SLF001
             _make_rule() | {"disabled": True},
             EnrichedEventContext({}),
             {},
@@ -1014,7 +1014,7 @@ def test__rbn_match_rule_passes_minimal() -> None:
     # - context["WHAT"] via _event_match_servicegroups (unconditionally)
     # - context["HOSTNAME"] via event_match_exclude_hosts (unconditionally)
     assert (
-        notify._rbn_match_rule(
+        notify._rbn_match_rule(  # noqa: SLF001
             _make_rule(),
             EnrichedEventContext({"WHAT": "HOST", "HOSTNAME": HostName("testhost")}),
             {},
@@ -1028,7 +1028,7 @@ def test__rbn_match_rule_passes_minimal() -> None:
 
 def test__rbn_match_rule_do_not_match_ec_alerts_passes_host_notification() -> None:
     assert (
-        notify._rbn_match_rule(
+        notify._rbn_match_rule(  # noqa: SLF001
             _make_rule() | {"match_ec": False},
             EnrichedEventContext({"WHAT": "HOST", "HOSTNAME": HostName("testhost")}),
             {},
@@ -1042,7 +1042,7 @@ def test__rbn_match_rule_do_not_match_ec_alerts_passes_host_notification() -> No
 
 def test__rbn_match_rule_do_not_match_ec_alerts_blocks_ec_alert() -> None:
     assert (
-        notify._rbn_match_rule(
+        notify._rbn_match_rule(  # noqa: SLF001
             _make_rule() | {"match_ec": False},
             EnrichedEventContext({"WHAT": "HOST", "HOSTNAME": HostName("testhost"), "EC_ID": "42"}),
             {},
@@ -1066,7 +1066,7 @@ def test_create_notifications_custom_script_with_call_parameters() -> None:
     config_contacts = {
         ContactName("testuser"): Contact({"email": "test@example.com"}),
     }
-    notifications, _rule_info = notify._create_notifications(
+    notifications, _rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"}),
         rule=rule,
         parameters={},
@@ -1142,7 +1142,7 @@ def test_cancellation_removes_contacts() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX", "userY"]),
         parameters=_TEST_PARAMETERS,
@@ -1156,7 +1156,7 @@ def test_cancellation_removes_contacts() -> None:
     )
     assert len(notifications) == 1
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_cancel_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1181,7 +1181,7 @@ def test_cancellation_of_all_contacts_removes_entry() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1195,7 +1195,7 @@ def test_cancellation_of_all_contacts_removes_entry() -> None:
     )
     assert len(notifications) == 1
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_cancel_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1218,7 +1218,7 @@ def test_locked_notification_cannot_be_cancelled_by_user_rule() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1232,7 +1232,7 @@ def test_locked_notification_cannot_be_cancelled_by_user_rule() -> None:
     )
     assert len(notifications) == 1
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_cancel_rule(contact="userX", contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1262,7 +1262,7 @@ def test_different_plugins_create_separate_entries() -> None:
         plugin_b: {_TEST_PARAM_ID: {"general": _TEST_GENERAL, "parameter_properties": {}}},
     }
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], plugin=plugin_a),
         parameters=parameters,
@@ -1274,7 +1274,7 @@ def test_different_plugins_create_separate_entries() -> None:
         rule_nr=0,
         timeperiods_active={},
     )
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], plugin=plugin_b),
         parameters=parameters,
@@ -1300,7 +1300,7 @@ def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX", "userY"]),
         parameters=_TEST_PARAMETERS,
@@ -1312,7 +1312,7 @@ def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
         rule_nr=0,
         timeperiods_active={},
     )
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX", "userZ"]),
         parameters=_TEST_PARAMETERS,
@@ -1351,7 +1351,7 @@ def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
         }
     }
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], param_id=param_alpha),
         parameters=parameters,
@@ -1363,7 +1363,7 @@ def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
         rule_nr=0,
         timeperiods_active={},
     )
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], param_id=param_beta),
         parameters=parameters,
@@ -1392,7 +1392,7 @@ def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
     bulk_params = AlwaysBulkParameters(interval=60, count=10, groupby=[])
     bulk_rule = _make_add_rule(contact_users=["userX", "userY"])
     bulk_rule["bulk"] = ("always", bulk_params)
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=bulk_rule,
         parameters=_TEST_PARAMETERS,
@@ -1407,7 +1407,7 @@ def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
 
     bulk_rule2 = _make_add_rule(contact_users=["userX", "userZ"])
     bulk_rule2["bulk"] = ("always", bulk_params)
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=bulk_rule2,
         parameters=_TEST_PARAMETERS,
@@ -1431,7 +1431,7 @@ def test_identical_rules_merge_contacts() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1443,7 +1443,7 @@ def test_identical_rules_merge_contacts() -> None:
         rule_nr=0,
         timeperiods_active={},
     )
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userY"]),
         parameters=_TEST_PARAMETERS,
@@ -1468,7 +1468,7 @@ def test_identical_rules_same_contact_no_duplicate() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1480,7 +1480,7 @@ def test_identical_rules_same_contact_no_duplicate() -> None:
         rule_nr=0,
         timeperiods_active={},
     )
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1519,7 +1519,7 @@ def test_cancellation_removes_contact_from_all_matching_entries() -> None:
         }
     }
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], param_id=param_alpha),
         parameters=parameters,
@@ -1531,7 +1531,7 @@ def test_cancellation_removes_contact_from_all_matching_entries() -> None:
         rule_nr=0,
         timeperiods_active={},
     )
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], param_id=param_beta),
         parameters=parameters,
@@ -1545,7 +1545,7 @@ def test_cancellation_removes_contact_from_all_matching_entries() -> None:
     )
     assert len(notifications) == 2
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_cancel_rule(contact_users=["userX"]),
         parameters=parameters,
@@ -1570,7 +1570,7 @@ def test_user_rule_creates_separate_entry_when_locked_entry_exists() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1584,7 +1584,7 @@ def test_user_rule_creates_separate_entry_when_locked_entry_exists() -> None:
     )
     assert len(notifications) == 1
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         # User rule (allow_disable=True → locked=False) targets userY
         rule=_make_add_rule(allow_disable=True, contact="userY", contact_users=["userY"]),
@@ -1612,7 +1612,7 @@ def test_user_rule_for_same_contact_as_locked_entry_is_suppressed() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1626,7 +1626,7 @@ def test_user_rule_for_same_contact_as_locked_entry_is_suppressed() -> None:
     )
 
     # User rule (allow_disable=True → locked=False) targets same contact
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(allow_disable=True, contact="userX", contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1653,7 +1653,7 @@ def test_user_rule_partial_overlap_with_locked_entry() -> None:
     }
     enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
@@ -1666,7 +1666,7 @@ def test_user_rule_partial_overlap_with_locked_entry() -> None:
         timeperiods_active={},
     )
 
-    notifications, rule_info = notify._create_notifications(
+    notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
         # User rule (allow_disable=True → locked=False) targets both userX and userY
         rule=_make_add_rule(allow_disable=True, contact="userY", contact_users=["userX", "userY"]),
@@ -1687,7 +1687,7 @@ def test_user_rule_partial_overlap_with_locked_entry() -> None:
 
 def test__rbn_match_rule_escalation_blocked() -> None:
     assert (
-        notify._rbn_match_rule(
+        notify._rbn_match_rule(  # noqa: SLF001
             _make_rule() | {"match_escalation": (1, 5)},
             EnrichedEventContext(
                 {"WHAT": "HOST", "HOSTNAME": HostName("testhost"), "HOSTNOTIFICATIONNUMBER": "10"}

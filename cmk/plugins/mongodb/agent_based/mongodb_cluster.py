@@ -44,7 +44,9 @@ def discover_mongodb_cluster_databases(section: Section) -> DiscoveryResult:
 
 
 def check_mongodb_cluster_databases(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    section: Section,
 ) -> CheckResult:
     """
     checks:

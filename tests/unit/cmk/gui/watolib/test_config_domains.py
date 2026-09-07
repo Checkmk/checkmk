@@ -231,14 +231,14 @@ class TestConfigDomainCACertificates:
     def test_remote_sites_cas(self) -> None:
         longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=UTC)
 
-        remote_cas = ConfigDomainCACertificates()._remote_sites_cas(
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas(  # noqa: SLF001
             [remote1_newer, remote1_older, remote2]
         )
         assert list(remote_cas) == [SiteId("heute_remote_1"), SiteId("heute_remote_2")]
 
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
         # also test changed order:
-        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])  # noqa: SLF001
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
 
     def test_remote_root_ca_in_remote_site_cas(
@@ -253,7 +253,7 @@ class TestConfigDomainCACertificates:
         monkeypatch.setattr(
             omdlib.finalize,
             "cert_dir",
-            lambda x: ca_path,
+            lambda x: ca_path,  # noqa: ARG005
         )
 
         assert not site_pem.exists()
@@ -261,7 +261,7 @@ class TestConfigDomainCACertificates:
             SiteContext(site_id), site_key_size=1024, root_key_size=1024
         )
 
-        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])  # noqa: SLF001
         assert SiteId(site_id) in remote_cas
 
 
@@ -279,7 +279,7 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
     )
 
     assert not list(
-        config_domains.ConfigDomainCACertificates()._load_certs(
+        config_domains.ConfigDomainCACertificates()._load_certs(  # noqa: SLF001
             [negative_serial, negative_serial_self_generated]
         )
     )

@@ -715,7 +715,10 @@ def _get_ack_msg(host_name: HostName | None, file_name: str | None) -> str:
 
 
 def acknowledge_logfile(
-    site: SiteId, host_name: HostName, int_filename: str, display_name: str
+    site: SiteId,
+    host_name: HostName,
+    int_filename: str,
+    display_name: str,  # noqa: ARG001
 ) -> None:
     if not may_see(site, host_name):
         raise MKAuthException(_("Permission denied."))

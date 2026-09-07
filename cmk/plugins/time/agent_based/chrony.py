@@ -95,7 +95,7 @@ def discover_chrony(
 def check_chrony(
     params: Mapping[str, Any],
     section_chrony: dict[str, Any] | None,
-    section_ntp: object | None,
+    section_ntp: object | None,  # noqa: ARG001
 ) -> CheckResult:
     """
     check if agent returned error message

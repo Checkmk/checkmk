@@ -305,7 +305,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     dump_path_to_host_name_dict = defaultdict(list)
 
     for dump_path in data_source_dump_path.iterdir():
-        if "linux" in dump_path.name:
+        if "linux" in dump_path.name:  # noqa: SIM108
             hosts_count = 3
         else:
             hosts_count = 1

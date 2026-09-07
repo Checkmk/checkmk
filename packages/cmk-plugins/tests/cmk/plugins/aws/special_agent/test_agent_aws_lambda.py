@@ -46,7 +46,7 @@ class PaginatorListFunctions:
 
 class PaginatorProvisionedConcurrencyConfigs:
     # "FunctionName" must occur in the function signature, but is not used in the current implementation => disable warning
-    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:
+    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:  # noqa: ARG002
         yield {
             "ProvisionedConcurrencyConfigs": LambdaListProvisionedConcurrencyConfigsIB.create_instances(
                 2

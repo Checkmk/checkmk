@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 
 import pytest
@@ -89,7 +91,8 @@ def test_openapi_get_empty_broker_connections(clients: ClientRegistry) -> None:
 
 
 def test_openapi_get_broker_connections(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.get_all()
     res.assert_status_code(200)
@@ -98,7 +101,8 @@ def test_openapi_get_broker_connections(
 
 
 def test_openapi_get_broker_connection(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.get(TEST_CONNECTION_ID)
     res.assert_status_code(200)
@@ -107,7 +111,8 @@ def test_openapi_get_broker_connection(
 
 
 def test_openapi_get_non_existent_broker_connection(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.get("non existent id", expect_ok=False)
     res.assert_status_code(404)
@@ -151,7 +156,8 @@ def test_openapi_create_broker_connection(
 
 
 def test_openapi_create_existent_broker_connection(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.create(
         {
@@ -164,7 +170,8 @@ def test_openapi_create_existent_broker_connection(
 
 
 def test_openapi_create_broker_connection_invalid_connection_id(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.create(
         {
@@ -177,7 +184,8 @@ def test_openapi_create_broker_connection_invalid_connection_id(
 
 
 def test_openapi_create_broker_connection_sites_already_connected(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.create(
         {
@@ -286,6 +294,6 @@ def test_openapi_delete_non_existent_broker_connection(
 def test_openapi_list_broker_connections_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)  # noqa: ARG005
     res = clients.BrokerConnection.get_all(expect_ok=False)
     res.assert_status_code(403)

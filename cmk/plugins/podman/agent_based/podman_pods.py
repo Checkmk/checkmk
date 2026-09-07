@@ -73,7 +73,7 @@ agent_section_podman_pods: AgentSection = AgentSection(
 )
 
 
-def discover_podman_pods(section: PodsStateCounts) -> DiscoveryResult:
+def discover_podman_pods(section: PodsStateCounts) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -102,7 +102,7 @@ def test_agent_aws_glacier_limits(
     get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    amount_vaults: int,
+    amount_vaults: int,  # noqa: ARG001
 ) -> None:
     glacier_limits, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results

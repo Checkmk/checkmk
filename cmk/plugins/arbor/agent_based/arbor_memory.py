@@ -70,7 +70,7 @@ snmp_section_arbor_memory_peakflow_pravail = SimpleSNMPSection(
 )
 
 
-def discover_arbor_memory(section: Section) -> DiscoveryResult:
+def discover_arbor_memory(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

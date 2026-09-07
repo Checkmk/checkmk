@@ -45,7 +45,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
-def test_registered_painter_options(request_context: None) -> None:
+def test_registered_painter_options(request_context: None) -> None:  # noqa: ARG001
     expected = [
         "aggr_expand",
         "aggr_onlydiff",
@@ -328,7 +328,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert cmd.permission == cmk.gui.default_permissions.PermissionGeneralUse
 
 
-def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:  # noqa: ARG001
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
     painters: list[Painter] = [
@@ -357,17 +357,17 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
     dummy_ident: str = "einszwo"
     for painter, cell in painters_and_cells:
-        cell._painter_params = {"ident": dummy_ident}
+        cell._painter_params = {"ident": dummy_ident}  # noqa: SLF001
         expected_title: str = painter.ident
         if painter.ident in ["host_custom_variable", "service_custom_variable"]:
             expected_title += "_%s" % dummy_ident
         assert painter.export_title(cell) == expected_title
 
 
-def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:  # noqa: ARG001
     monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
-    def rendr(row):
+    def rendr(row):  # noqa: ARG001
         return ("abc", "xyz")
 
     register_painter(

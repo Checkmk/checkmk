@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import logging
@@ -408,7 +410,10 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
 @pytest.mark.skip(reason="CMK-33230")
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 def test_ec_global_settings(  # type: ignore[misc]
-    site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
+    site: Site,
+    setup_ec: Iterator,
+    enable_receivers: None,
+    enable_snmp_trap_translation: None,
 ) -> None:
     """Assert that global settings of the EC are applied to the EC
 

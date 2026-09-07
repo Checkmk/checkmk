@@ -33,7 +33,7 @@ ConfigVariableSiteTraceSend = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainOMD,
     ident="site_trace_send",
-    form_spec=lambda context: enable_deprecated_cascading_elements(
+    form_spec=lambda context: enable_deprecated_cascading_elements(  # noqa: ARG005
         fs.CascadingSingleChoice(
             title=Title("Send traces from Checkmk"),
             help_text=Help(
@@ -99,7 +99,7 @@ ConfigVariableSiteTraceReceive = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainOMD,
     ident="site_trace_receive",
-    form_spec=lambda context: OptionalChoice(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         title=Title("Receive traces"),
         parameter_form=fs.Dictionary(
             elements={

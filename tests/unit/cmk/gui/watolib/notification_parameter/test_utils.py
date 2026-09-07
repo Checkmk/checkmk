@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Generator
 
 import pytest
@@ -189,7 +192,8 @@ def test_get_list_of_notification_parameter(registry: NotificationParameterRegis
 
 @pytest.mark.usefixtures("request_context")
 def test_get_notification_parameter(
-    registry: NotificationParameterRegistry, with_admin_login: UserId
+    registry: NotificationParameterRegistry,
+    with_admin_login: UserId,
 ) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(

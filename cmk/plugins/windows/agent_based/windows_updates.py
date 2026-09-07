@@ -86,7 +86,7 @@ agent_section_windows_updates = AgentSection(
 
 
 # NOTE: section can't be renamed to _section due to creative logic
-def discover(section: Section) -> DiscoveryResult:
+def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

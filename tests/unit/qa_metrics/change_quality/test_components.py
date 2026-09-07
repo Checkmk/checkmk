@@ -44,7 +44,7 @@ def test_lookup_components_parses_json_output(
     )
     captured_args: list[str] = []
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         captured_args[:] = list(args)
         return subprocess.CompletedProcess(
             args=list(args),
@@ -86,7 +86,7 @@ def test_lookup_components_skips_paths_not_on_disk(
     _touch(tmp_path, "cmk/gui/main.py")  # only this one exists
     captured_args: list[str] = []
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         if args[0] == "git":
             return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
         captured_args[:] = list(args)
@@ -122,7 +122,7 @@ def test_lookup_components_skips_non_utf8_files(
     (tmp_path / "cmk" / "script.ps1").write_bytes(b"echo `\xb4hello`\n")
     captured_args: list[str] = []
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         captured_args[:] = list(args)
         return subprocess.CompletedProcess(
             args=list(args),
@@ -149,7 +149,7 @@ def test_lookup_components_aborts_on_nonzero_rc(
     """A failing cmk-components invocation must raise, not silently NULL-fill."""
     _touch(tmp_path, "cmk/ok.py")
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=1,
@@ -169,7 +169,7 @@ def test_lookup_components_raises_on_non_json_output(
     contract) must fail loudly, not be parsed as 'no answers'."""
     _touch(tmp_path, "cmk/ok.py")
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
@@ -192,7 +192,7 @@ def test_lookup_components_raises_on_partial_output(
     defends against."""
     _touch(tmp_path, "cmk/a.py", "cmk/b.py")
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         if args[0] == "git":
             return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
         # Drop cmk/b.py silently -- emit only a.py's answer.
@@ -219,7 +219,7 @@ def test_lookup_components_drops_path_absent_on_gerrit_master(
     _touch(tmp_path, "cmk/ok.py", "cmk/moved.py")
     calls: list[list[str]] = []
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         calls.append(list(args))
         positional = list(args[4:])
         if "cmk/moved.py" in positional:
@@ -259,7 +259,7 @@ def test_lookup_components_raises_after_retry_budget(
     _touch(tmp_path, *reject_sequence)
     state = {"call": 0}
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         bad = reject_sequence[state["call"]]
         state["call"] += 1
         return subprocess.CompletedProcess(
@@ -284,7 +284,7 @@ def test_lookup_components_nonzero_rc_without_invalid_path_is_not_retried(
     _touch(tmp_path, "cmk/ok.py")
     calls: list[list[str]] = []
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         calls.append(list(args))
         return subprocess.CompletedProcess(
             args=list(args),
@@ -317,7 +317,7 @@ def test_lookup_components_batches_to_avoid_arg_max(
     _touch(tmp_path, *paths)
     calls: list[list[str]] = []
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         calls.append(list(args))
         positional = _cmk_component_paths(args)
         stdout = json.dumps(dict.fromkeys(positional, "stub"))
@@ -344,7 +344,7 @@ def test_lookup_components_follows_renames(monkeypatch: pytest.MonkeyPatch, tmp_
     _touch(tmp_path, "cmk/new/subdir/thing.py")
     captured: dict[str, list[str]] = {}
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         if args[0] == "git":
             return subprocess.CompletedProcess(
                 args=list(args),
@@ -377,7 +377,7 @@ def test_lookup_components_collapses_rename_chains(
     The rename map walks chains forward to their HEAD endpoint."""
     _touch(tmp_path, "cmk/final.py")
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         if args[0] == "git":
             return subprocess.CompletedProcess(
                 args=list(args),
@@ -406,7 +406,7 @@ def test_lookup_components_returns_none_for_deleted_without_rename(
     """A stale path with no rename to a still-existing HEAD path must
     classify as None. The rename map can't recover deletions."""
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         if args[0] == "git":
             return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
         raise AssertionError(f"unexpected cmk-components call: {args}")
@@ -426,7 +426,7 @@ def test_lookup_components_skips_rename_lookup_when_all_paths_on_head(
     in the incremental path."""
     _touch(tmp_path, "cmk/gui/main.py", "cmk/base/config.py")
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         if args[0] == "git":
             raise AssertionError(f"git invoked but all paths are on HEAD: {args}")
         positional = _cmk_component_paths(args)
@@ -461,7 +461,7 @@ def test_lookup_components_classifies_utf8_once_per_path(
     _touch(tmp_path, "cmk/a.py", "cmk/b.py", "cmk/c.py")
 
     calls: Counter[Path] = Counter()
-    real = comp_module._is_utf8_decodable
+    real = comp_module._is_utf8_decodable  # noqa: SLF001
 
     def tracking(path: Path) -> bool:
         calls[path] += 1
@@ -469,7 +469,7 @@ def test_lookup_components_classifies_utf8_once_per_path(
 
     monkeypatch.setattr(comp_module, "_is_utf8_decodable", tracking)
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         positional = _cmk_component_paths(args)
         stdout = json.dumps(dict.fromkeys(positional, "stub"))
         return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")

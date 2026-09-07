@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 """Scope an lcov tracefile to a list of source files.
 
 Both halves of one denominator, so one step: records for listed files are kept

@@ -107,7 +107,7 @@ class Painter(abc.ABC):
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
 
-        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:
+        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:  # noqa: ARG001
             return rows
 
         # Needed because of old calling conventions. Doesn't have any effect.
@@ -149,7 +149,7 @@ class Painter(abc.ABC):
         )
 
     @staticmethod
-    def uuid_col(cell: Cell) -> str:
+    def uuid_col(cell: Cell) -> str:  # noqa: ARG004
         # This method is only overwritten in two subclasses and does not even
         # use `self`.  This is all very fishy.
         return ""
@@ -175,7 +175,7 @@ class Painter(abc.ABC):
         """Livestatus columns needed for this painter"""
         raise NotImplementedError
 
-    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
+    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:  # noqa: ARG002
         """Return list of dynamically generated column as specified by Cell
 
         Some columns for the Livestatus query need to be generated at
@@ -183,7 +183,7 @@ class Painter(abc.ABC):
         generated the required column names."""
         return []
 
-    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:
+    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:  # noqa: ARG002
         """Post process query according to cell
 
         This function processes data immediately after it is handled back
@@ -213,7 +213,7 @@ class Painter(abc.ABC):
         Falls back to the full title if no tooltip title is given"""
         return self.title(cell)
 
-    def export_title(self, cell: Cell) -> str:
+    def export_title(self, cell: Cell) -> str:  # noqa: ARG002
         """Used for exporting views in JSON/CSV/python format"""
         return self.ident
 
@@ -224,8 +224,8 @@ class Painter(abc.ABC):
 
     def group_by(
         self,
-        row: Row,
-        cell: Cell,
+        row: Row,  # noqa: ARG002
+        cell: Cell,  # noqa: ARG002
     ) -> None | str | tuple[str, ...] | tuple[tuple[str, str], ...]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
@@ -582,7 +582,10 @@ class Cell:
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
     def render_for_pdf(
-        self, row: Row, time_range: tuple[int, int], user: LoggedInUser
+        self,
+        row: Row,
+        time_range: tuple[int, int],  # noqa: ARG002
+        user: LoggedInUser,
     ) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename: str) -> str | None:

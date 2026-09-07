@@ -12,7 +12,7 @@ from .defines import syslog_facilities
 from .helpers import service_levels
 
 
-def service_levels_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def service_levels_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
@@ -21,7 +21,7 @@ def service_levels_autocompleter(config: Config, value: str, params: dict) -> Ch
     return empty_choices + _filter_choices(value, choices)
 
 
-def syslog_facilities_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def syslog_facilities_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """

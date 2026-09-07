@@ -2,6 +2,9 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import base64
 import hashlib
 
@@ -23,7 +26,7 @@ class TestValueSpecPassword:
         assert vs.Password().value_to_html("elon") == "******"
         assert vs.Password().value_to_html(None) == "none"
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
         with request_var(p="smth"):
             assert vs.Password(encrypt_value=False).from_html_vars("p") == "smth"
 

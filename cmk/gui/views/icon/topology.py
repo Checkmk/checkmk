@@ -17,12 +17,12 @@ from .base import Icon, IconConfig
 
 
 def _render_parent_child_topology_icon(
-    what: Literal["host", "service"],
+    what: Literal["host", "service"],  # noqa: ARG001
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[DynamicIconName, str, str]:
     url = makeuri_contextless(
         request,

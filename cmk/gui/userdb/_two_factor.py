@@ -40,7 +40,8 @@ def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFacto
 
 
 def make_two_factor_backup_codes(
-    *, rounds: int | None = None
+    *,
+    rounds: int | None = None,  # noqa: ARG001
 ) -> list[tuple[Password, password_hashing.PasswordHash]]:
     """Creates a set of new two factor backup codes
 

@@ -29,7 +29,7 @@ def setup_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         activate_changes,
         "get_status_for_site",
-        lambda a, b: (
+        lambda a, b: (  # noqa: ARG005
             {
                 "state": "online",
                 "livestatus_version": "1.2.3",
@@ -120,7 +120,7 @@ def create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
             m.setattr(
                 cmk.gui.watolib.password_store.PasswordStore,
                 "load_for_reading",
-                lambda x: dummy_password,
+                lambda x: dummy_password,  # noqa: ARG005
             )
         yield
 
@@ -234,9 +234,9 @@ def get_activation_manager(
         )
 
         activation_manager = activate_changes.ActivateChangesManager()
-        activation_manager._sites = [remote_site]
-        activation_manager.changes._changes_by_site = {remote_site: []}
-        activation_manager._activation_id = "123"
+        activation_manager._sites = [remote_site]  # noqa: SLF001
+        activation_manager.changes._changes_by_site = {remote_site: []}  # noqa: SLF001
+        activation_manager._activation_id = "123"  # noqa: SLF001
         yield activation_manager
 
 
@@ -253,10 +253,10 @@ def generate_sync_snapshot(
         else "CRESnapshotDataCollector"
     )
 
-    assert activation_manager._activation_id is not None
-    site_snapshot_settings = activation_manager._get_site_snapshot_settings(
-        activation_manager._activation_id,
-        {site_id: active_config.sites[site_id] for site_id in activation_manager._sites},
+    assert activation_manager._activation_id is not None  # noqa: SLF001
+    site_snapshot_settings = activation_manager._get_site_snapshot_settings(  # noqa: SLF001
+        activation_manager._activation_id,  # noqa: SLF001
+        {site_id: active_config.sites[site_id] for site_id in activation_manager._sites},  # noqa: SLF001
         {remote_site: rabbitmq.Definitions()},
     )
     snapshot_settings = site_snapshot_settings[remote_site]
@@ -269,7 +269,7 @@ def generate_sync_snapshot(
     snapshot_manager = activate_changes.activation_features_registry[
         str(edition)
     ].snapshot_manager_factory(str(work_dir), site_snapshot_settings)
-    assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
+    assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class  # noqa: SLF001
 
     snapshot_manager.generate_snapshots()
 

@@ -28,7 +28,7 @@ def test_page_renders_registered_client_details(
     # table_element() persists table options (sort/search state) to the acting
     # user's profile. The anonymous test session is LoggedInNobody, which
     # refuses to save a profile -- same workaround as test_table.py.
-    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)  # noqa: ARG005
     with get_client_store() as store:
         registered = store.register(
             ["https://client.example/callback", "https://client.example/other"],

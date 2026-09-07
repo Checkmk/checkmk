@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201
+
 
 import socket
 import tarfile
@@ -28,7 +30,7 @@ def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 
     tar_path = tmp_path / "backup.tar"
     with tarfile.open(tar_path, mode="w:") as tar:
-        omdlib.backup._backup_site_to_tarfile(
+        omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
             site_name, str(site_home), True, tar, BackupExclusions.from_options({}), verbose=False
         )
 
@@ -50,7 +52,7 @@ def test_backup_site_to_tarfile_broken_link(tmp_path: Path) -> None:
 
     tar_path = tmp_path / "backup.tar"
     with tarfile.open(tar_path, mode="w:") as tar:
-        omdlib.backup._backup_site_to_tarfile(
+        omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
             site_name, str(site_home), True, tar, BackupExclusions.from_options({}), verbose=False
         )
 
@@ -85,7 +87,7 @@ def test_backup_site_to_tarfile_vanishing_files(
 
     tar_path = tmp_path / "backup.tar"
     with tarfile.open(tar_path, mode="w:") as tar:
-        omdlib.backup._backup_site_to_tarfile(
+        omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
             site_name, str(site_home), True, tar, BackupExclusions.from_options({}), verbose=False
         )
 
@@ -155,7 +157,7 @@ def test_backup_site_to_tarfile_socket_fail(tmp_path: Path) -> None:
         pytest.raises(tarfile.TarError, match="Failed to get tarinfo for file '.*test_file.*'"),
         tarfile.open(tar_path, mode="w:") as tar,
     ):
-        omdlib.backup._backup_site_to_tarfile(
+        omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
             site_name,
             str(site_home),
             True,

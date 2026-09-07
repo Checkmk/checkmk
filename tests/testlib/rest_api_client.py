@@ -799,7 +799,7 @@ class HostConfigClient(RestApiClient):
         expect_ok: bool = True,
         api_version: APIVersion | None = None,
     ) -> Response:
-        if bake_agent is not None:
+        if bake_agent is not None:  # noqa: SIM108
             query_params = {"bake_agent": "1" if bake_agent else "0"}
         else:
             query_params = {}
@@ -842,7 +842,7 @@ class HostConfigClient(RestApiClient):
         bake_agent: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        if bake_agent is not None:
+        if bake_agent is not None:  # noqa: SIM108
             query_params = {"bake_agent": "1" if bake_agent else "0"}
         else:
             query_params = {}
@@ -3827,7 +3827,7 @@ class ParentScanClient(RestApiClient):
         gateway_hosts: Any,
         performance_settings: dict[str, object] | None = None,
         force_explicit_parents: bool | None = None,
-        expect_ok: bool = True,
+        expect_ok: bool = True,  # noqa: ARG002
     ) -> Response:
         body = {
             "host_names": host_names,

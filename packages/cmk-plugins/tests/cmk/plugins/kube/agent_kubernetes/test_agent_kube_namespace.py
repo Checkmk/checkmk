@@ -15,7 +15,7 @@ class TestAPINamespace:
     def test_parse_metadata(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         namespace_metadata = {
             "metadata": {
@@ -46,7 +46,7 @@ class TestAPINamespace:
     def test_parse_metadata_missing_annotations_and_labels(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,
+        dummy_host: str,  # noqa: ARG002
     ) -> None:
         namespace_metadata = {
             "metadata": {

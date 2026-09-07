@@ -606,7 +606,7 @@ def write_contacts_and_users_file(
                     False,
                 ),
             )
-            for (id, user) in updated_profiles.items()
+            for (id, user) in updated_profiles.items()  # noqa: A001
         ]
     )
 

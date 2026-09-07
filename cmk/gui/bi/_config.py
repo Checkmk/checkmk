@@ -1745,10 +1745,10 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     def __init__(
         self,
         *,
-        type: str | None = "hierarchy",
+        type: str | None = "hierarchy",  # noqa: A002
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
         validate: ValueSpecValidateFunc[dict[str, Any]] | None = None,
     ):

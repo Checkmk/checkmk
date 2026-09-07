@@ -29,7 +29,7 @@ def parse_fortimail_disk_usage(string_table: StringTable) -> Section | None:
     return {"disk_usage": float(string_table[0][0])} if string_table else None
 
 
-def discover_fortimail_disk_usage(section: Section) -> DiscoveryResult:
+def discover_fortimail_disk_usage(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

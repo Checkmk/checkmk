@@ -416,7 +416,7 @@ def discover_local(section: LocalSection) -> DiscoveryResult:
         yield Service(item=key)
 
 
-def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
+def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:  # noqa: ARG001
     if (local_error := section.errors.get(item)) is not None:
         # Do *not* raise an exception here. Users will send us crash reports if we do.
         yield Result(

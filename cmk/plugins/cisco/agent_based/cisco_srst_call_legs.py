@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_cisco_srst_call_legs(section: StringTable) -> DiscoveryResult:
+def discover_cisco_srst_call_legs(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

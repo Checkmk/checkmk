@@ -100,7 +100,7 @@ def test_action_migrates_persisted_records() -> None:
             assert "force_apache_reload" in record
     finally:
         store.clear()
-        store._path.unlink(missing_ok=True)
+        store._path.unlink(missing_ok=True)  # noqa: SLF001
 
 
 def test_action_no_op_when_directory_missing(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:

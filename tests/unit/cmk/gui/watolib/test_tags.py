@@ -91,7 +91,7 @@ def test_tag_config_load(test_cfg: tags.TagConfig) -> None:
 
 @pytest.mark.usefixtures("test_cfg")
 def test_tag_config_save(mocker: MockerFixture) -> None:
-    export_mock = mocker.patch.object(cmk.gui.nagvis._hosttags, "_export_hosttags_to_php")
+    export_mock = mocker.patch.object(cmk.gui.nagvis._hosttags, "_export_hosttags_to_php")  # noqa: SLF001
 
     config_file = TagConfigFile()
     base_config_mock = mocker.patch.object(config_file, "_save_base_config")

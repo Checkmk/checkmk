@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """The global time picker on the service detail page.
 
 E2E rather than Vitest throughout: one interaction has to reach every graph on a real page,

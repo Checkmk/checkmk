@@ -134,10 +134,10 @@ def _register_views(
     search_view_name = table.name + "_search"
     multisite_builtin_views[search_view_name] = {
         # General options
-        "title": _l("Search %(title)s") % {"title": table.long_title.lower()},
+        "title": _l("Search %(title)s") % {"title": table.long_title},
         "description": (
             _l("A view for searching in the inventory data for %(title)s")
-            % {"title": table.long_title.lower()}
+            % {"title": table.long_title}
         ),
         "hidden": False,
         "hidebutton": False,

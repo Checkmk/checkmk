@@ -1,5 +1,5 @@
 load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@@//bazel/rules:xcomp/foreign_cc.bzl", "configure_make")
 
 dependency_info(
     name = "dependency_info",
@@ -62,6 +62,7 @@ configure_make(
         "lib",
     ],
     out_headers_only = True,
+    platform = "@@//bazel/platforms:x86_64-linux-gcc-hermetic",
     postfix_script = """
         mkdir -p $$INSTALLDIR/doc/pnp4nagios
         install -m 644 $$BUILD_TMPDIR/README  $$INSTALLDIR/doc/pnp4nagios

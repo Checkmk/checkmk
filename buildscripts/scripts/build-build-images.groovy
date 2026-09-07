@@ -215,12 +215,7 @@ def main() {
             raiseOnError: true,
         ) {
             /// also check the default way to use a container
-            inside_container(
-                // START OF to be removed in a follow up commit
-                image: docker.image("${docker_registry_no_http}/testing-ubuntu-22.04-checkmk-${safe_branch_name}:latest-with-docker"),
-                pull: true,
-                // END OF to be removed in a follow up commit
-            ) {
+            inside_container() {
                 sh("""
                     echo Hello from reference image
                     cat /etc/os-release

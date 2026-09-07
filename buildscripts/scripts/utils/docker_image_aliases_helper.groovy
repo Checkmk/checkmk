@@ -15,12 +15,16 @@ docker_image_from_alias = { alias_name ->
 }
 
 docker_reference_image = { ->
-    dir("${checkout_dir}") {
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            return docker.image(
-                cmd_output("VERBOSE=1 PULL_BASE_IMAGE=1 ${checkout_dir}/defines/dev-images/reference-image-id")
-            );
-        }
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name();
+
+    def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+
+    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+        def image = docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker");
+        image.pull();
+        return image;
     }
 }
 

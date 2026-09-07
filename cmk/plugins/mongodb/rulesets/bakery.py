@@ -51,14 +51,17 @@ def migrate_auth(value: object) -> Mapping[str, object]:
 
 def migrate(value: object) -> Mapping[str, object]:
     match value:
-        case None:
-            return {"deployment": ("do_not_deploy", None)}
-        case True:
-            return {"deployment": ("sync", None)}
+        # already migrated / new
         case dict() if "deployment" in value:
             return value
+        # In all other cases: We're switching from match type "first" to "merge", so
+        # only return fully filled rules to preserve behavior.
+        case None:
+            return {"deployment": ("do_not_deploy", None), "auth": ("no_auth", None)}
+        case True:
+            return {"deployment": ("sync", None), "auth": ("no_auth", None)}
         case dict():
-            return {"deployment": ("sync", None), "auth": value}
+            return {"deployment": ("sync", None), "auth": ("auth", value)}
         case _:
             raise ValueError(f"Unexpected value: {value!r}")
 
@@ -218,7 +221,22 @@ def _valuespec_agent_config_mk_mongodb() -> Dictionary:
                 ),
             ),
             "auth": DictElement(
-                parameter_form=_auth_form(),
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Authentication"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="no_auth",
+                            title=Title("No authentication"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="auth",
+                            title=Title("Authenticate"),
+                            parameter_form=_auth_form(),
+                        ),
+                    ),
+                    prefill=DefaultValue("no_auth"),
+                ),
             ),
         },
         migrate=migrate,

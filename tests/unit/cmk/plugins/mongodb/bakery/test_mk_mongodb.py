@@ -18,17 +18,20 @@ _PASSWORD = Secret("mdbpwd", "explicit_password", "uuid-1")
 
 mk_mongodb_conf_uploaded_cert_file = {
     "deployment": ("sync", None),
-    "auth": {
-        "host": "some_host",
-        "auth_mechanism": "MONGODB-X509",
-        "tls": {
-            "insecure": False,
-            "cert_key_file": ("uploaded_cert_file", "some_cert_file_content"),
+    "auth": (
+        "auth",
+        {
+            "host": "some_host",
+            "auth_mechanism": "MONGODB-X509",
+            "tls": {
+                "insecure": False,
+                "cert_key_file": ("uploaded_cert_file", "some_cert_file_content"),
+            },
+            "auth_source": "admin",
+            "username": "mongodb_username",
+            "password": _PASSWORD,
         },
-        "auth_source": "admin",
-        "username": "mongodb_username",
-        "password": _PASSWORD,
-    },
+    ),
 }
 
 mk_mongodb_lines_uploaded_cert_file = [
@@ -203,7 +206,7 @@ def test_make_config_parser(auth: _AuthConfig | None, expected_result: list[str]
             ],
         ),
         (
-            {"deployment": ("sync", None)},
+            {"deployment": ("sync", None), "auth": ("no_auth", None)},
             [
                 Plugin(base_os=OS.LINUX, source=Path("mk_mongodb.py"), interval=None),
                 PluginConfig(
@@ -215,7 +218,7 @@ def test_make_config_parser(auth: _AuthConfig | None, expected_result: list[str]
             ],
         ),
         (
-            {"deployment": ("do_not_deploy", None)},
+            {"deployment": ("do_not_deploy", None), "auth": ("no_auth", None)},
             [],
         ),
     ],

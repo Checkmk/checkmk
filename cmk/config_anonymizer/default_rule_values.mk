@@ -609,7 +609,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_mongodb', [])
 
 agent_config['mk_mongodb'] = [
-{'id': '84a130f8-807a-4cb4-bbf4-bbcf04cb7239', 'value': True, 'condition': {}, 'options': {'disabled': False}},
+{'id': '84a130f8-807a-4cb4-bbf4-bbcf04cb7239', 'value': {'deployment': ('sync', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_mongodb']
 
 

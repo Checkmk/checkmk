@@ -48,6 +48,7 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Size',
     options: listOptions<SlideInVariants['size']>({
+      large: 'Large',
       medium: 'Medium',
       small: 'Small'
     }),

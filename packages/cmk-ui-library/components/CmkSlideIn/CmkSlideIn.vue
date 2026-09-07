@@ -16,6 +16,7 @@ import { useSlideInStack } from './useSlideInStack'
 const slideInVariants = cva('', {
   variants: {
     size: {
+      large: 'cmk-slide-in--size-large',
       medium: 'cmk-slide-in--size-medium',
       small: 'cmk-slide-in--size-small'
     },
@@ -116,6 +117,7 @@ onBeforeUnmount(() => {
   bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
+  box-sizing: border-box;
 
   &:focus,
   &:focus-visible {
@@ -125,6 +127,11 @@ onBeforeUnmount(() => {
 
   &.cmk-slide-in--size-small {
     max-width: 768px;
+  }
+
+  &.cmk-slide-in--size-large {
+    width: calc(100% - var(--dimension-6));
+    max-width: calc(100% - var(--dimension-6));
   }
 
   &.cmk-slide-in--border-green {
@@ -144,7 +151,15 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
+/* Any non-default (non-medium) size needs the container class selector in front to be specific
+   enough to override the above width/max-width stylings.
+   Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
+@media screen and (width >= 1440px) {
+  .cmk-slide-in__container.cmk-slide-in--size-large {
+    max-width: calc(1440px - var(--dimension-6));
+  }
+}
+
 @media screen and (width <= 1024px) {
   .cmk-slide-in--size-medium {
     width: 100%;
@@ -153,7 +168,7 @@ onBeforeUnmount(() => {
 }
 
 @media screen and (width <= 768px) {
-  .cmk-slide-in--size-small {
+  .cmk-slide-in__container.cmk-slide-in--size-small {
     width: 100%;
     max-width: 100%;
   }

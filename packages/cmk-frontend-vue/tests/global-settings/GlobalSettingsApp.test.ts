@@ -178,6 +178,12 @@ async function openEditor() {
   await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET']))
 }
 
+function settingRow() {
+  return screen
+    .getByRole('button', { name: 'Edit Lock user accounts after N login failures' })
+    .closest('.global-settings-variable-row')
+}
+
 const secondTopic: GlobalSettingsTopic = {
   icon: 'sites',
   headline: 'Site management',
@@ -239,6 +245,52 @@ describe('GlobalSettingsApp', () => {
     await waitFor(() => expect(screen.getByRole('spinbutton')).toHaveValue(15))
   })
 
+  test('saving an untouched editor stores the loaded effective value, not the rendered one', async () => {
+    await openEditor()
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
+    expect(requests[1]).toMatchObject({ ifMatch: '"v1"', body: { value: 15 } })
+  })
+
+  test('the editor shows the factory value and the overriding sites alongside the current one', async () => {
+    const overriddenTopic: GlobalSettingsTopic = {
+      ...data.topics[0]!,
+      variables: [
+        {
+          ...data.topics[0]!.variables[0]!,
+          site_overrides: [
+            {
+              site_id: 'remote_1',
+              title: 'Remote site 1',
+              url: '/remote_1/check_mk/wato.py?mode=edit_site_globals&site=remote_1'
+            }
+          ]
+        }
+      ]
+    }
+    render(GlobalSettingsApp, { props: { ...data, topics: [overriddenTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item User management' })
+    )
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Edit Lock user accounts after N login failures' })
+    )
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET']))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('Factory setting')).toBeInTheDocument()
+    expect(within(dialog).getByText('10')).toBeInTheDocument()
+    expect(within(dialog).getByText('This variable has been modified.')).toBeInTheDocument()
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Toggle Site overrides' }))
+    expect(within(dialog).getByText('Remote site 1')).toBeVisible()
+    expect(within(dialog).getByRole('link', { name: 'Open site settings' })).toHaveAttribute(
+      'href',
+      '/remote_1/check_mk/wato.py?mode=edit_site_globals&site=remote_1'
+    )
+  })
+
   test('saving sends the edited value guarded by the loaded etag', async () => {
     await openEditor()
     await fireEvent.update(await screen.findByRole('spinbutton'), '20')
@@ -250,17 +302,23 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getByText('20')).toBeInTheDocument()
   })
 
-  test('resetting deletes the explicit value and shows the effective one afterwards', async () => {
+  test('resetting deletes the explicit value and shows the factory default afterwards', async () => {
     await openEditor()
+    await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /Remove modification/ }))
-    await userEvent.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' })
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'The configured value will be discarded and the factory default will be used instead.'
     )
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove' }))
 
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE', 'GET']))
     expect(requests[1]!.ifMatch).toBe('"v1"')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+    const row = settingRow()
+    expect(row).not.toHaveTextContent('15')
+    expect(row).toHaveTextContent('10')
   })
 
   test('saving a value equal to the factory default still marks the row as explicitly set', async () => {
@@ -409,6 +467,48 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  test('a value the server rejects as invalid is reported in the editor and not stored', async () => {
+    server.use(
+      http.put(SETTING_URL, async ({ request }) => {
+        requests.push({
+          method: 'PUT',
+          ifMatch: request.headers.get('If-Match'),
+          body: await request.json()
+        })
+        return HttpResponse.json(
+          { title: 'Problem in field ', detail: 'The value must be at least 1.' },
+          { status: 400 }
+        )
+      })
+    )
+    await openEditor()
+    await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
+    await fireEvent.update(await screen.findByRole('spinbutton'), '0')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText(/The value must be at least 1\./)).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
+    const row = settingRow()
+    expect(row).toHaveTextContent('15')
+    expect(row).not.toHaveTextContent('0')
+  })
+
+  test('cancelling the editor discards the edit without saving', async () => {
+    await openEditor()
+    await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
+    await fireEvent.update(await screen.findByRole('spinbutton'), '20')
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' })
+    )
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(requests.map((r) => r.method)).toEqual(['GET'])
+    const row = settingRow()
+    expect(row).toHaveTextContent('15')
+    expect(row).not.toHaveTextContent('20')
+  })
+
   test('a failed load shows a loading error and keeps saving disabled', async () => {
     server.use(
       http.get(SETTING_URL, () =>
@@ -466,6 +566,74 @@ describe('GlobalSettingsApp', () => {
 
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
     expect(requests[1]).toMatchObject({ ifMatch: '"s1"', body: { value: 20 } })
+  })
+
+  test("resetting a topic on a site page removes only that site's explicit values", async () => {
+    const siteUrl = (varname: string) =>
+      `${location.protocol}//${location.host}/api/internal/objects/site_connection/remote_1/global_setting/${varname}`
+    const siteRequests: Recorded[] = []
+    let siteLock = { value: 10, is_default: false }
+    let siteHub = { value: true, is_default: false }
+    server.use(
+      http.get(siteUrl('lock_on_logon_failures'), () => {
+        siteRequests.push({ method: 'GET', ifMatch: null, body: null })
+        return HttpResponse.json(
+          { varname: 'lock_on_logon_failures', ...siteLock },
+          { headers: { ETag: '"s1"' } }
+        )
+      }),
+      http.delete(siteUrl('lock_on_logon_failures'), ({ request }) => {
+        siteRequests.push({
+          method: 'DELETE',
+          ifMatch: request.headers.get('If-Match'),
+          body: null
+        })
+        siteLock = { value: 10, is_default: true }
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.get(siteUrl('site_piggyback_hub'), () => {
+        siteRequests.push({ method: 'GET', ifMatch: null, body: null })
+        return HttpResponse.json(
+          { varname: 'site_piggyback_hub', ...siteHub },
+          { headers: { ETag: '"sb1"' } }
+        )
+      }),
+      http.delete(siteUrl('site_piggyback_hub'), ({ request }) => {
+        siteRequests.push({
+          method: 'DELETE',
+          ifMatch: request.headers.get('If-Match'),
+          body: null
+        })
+        siteHub = { value: false, is_default: true }
+        return new HttpResponse(null, { status: 204 })
+      })
+    )
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [resettableTopic] }
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
+    )
+    expect(screen.getAllByText('(modified)')).toHaveLength(2)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Remove' }))
+
+    await waitFor(() =>
+      expect(siteRequests.map((r) => r.method)).toEqual([
+        'GET',
+        'DELETE',
+        'GET',
+        'GET',
+        'DELETE',
+        'GET'
+      ])
+    )
+    expect(siteRequests[1]!.ifMatch).toBe('"s1"')
+    expect(siteRequests[4]!.ifMatch).toBe('"sb1"')
+    expect(requests).toEqual([])
+    await waitFor(() => expect(screen.queryByText('(modified)')).not.toBeInTheDocument())
+    expect(screen.getByText('0 modified')).toBeInTheDocument()
   })
 
   test('a load response arriving after its editor was closed does not leak into the next editor', async () => {

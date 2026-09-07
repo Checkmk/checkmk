@@ -47,7 +47,7 @@ def test_init_scripts(site: Site) -> None:
         or site.edition.is_ultimate_edition()
         or site.edition.is_ultimatemt_edition()
     ):
-        scripts |= {"metric-backend"}
+        scripts |= {"data-backend"}
     if not site.edition.is_cloud_edition():
         scripts |= {"jaeger"}
 

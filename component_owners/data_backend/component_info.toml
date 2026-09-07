@@ -1,0 +1,12 @@
+type = "Component"
+display_name = "Data backend"
+previous_name = "Metric Backend"
+has_support_component = true
+members_required = 2
+tier = 2
+product_managers = ["niklas.pulina@checkmk.com"]
+description = """
+The data backend: the site-local ClickHouse server that stores Checkmk's telemetry data, together
+with its configuration, schema management, self-monitoring and support diagnostics. Until the move
+into the Telemetry component it also owns the telemetry metrics features built on top of it.
+"""

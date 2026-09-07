@@ -17,6 +17,7 @@ py_library(
             "**/nonfree/**",
         ],
     ) + [
+        "//cmk/plugins/ceph/agents",
         "//cmk/plugins/collection/agents",
         "//cmk/plugins/files/agents",
         "//cmk/plugins/jolokia/agents",

@@ -8,6 +8,7 @@ agents/plugins/mk_inotify.py
 agents/plugins/mk_logwatch.py
 agents/plugins/mk_podman.py
 agents/plugins/mk_tinkerforge.py
+cmk/plugins/ceph/agents/mk_ceph.py
 cmk/plugins/collection/agents/apache_status.py
 cmk/plugins/collection/agents/isc_dhcpd.py
 cmk/plugins/files/agents/mk_filestats.py
@@ -27,6 +28,7 @@ tests/agent-plugin-unit/test_mk_inotify.py
 tests/agent-plugin-unit/test_mk_logwatch.py
 tests/agent-plugin-unit/test_mk_podman.py
 tests/agent-plugin-unit/test_mk_tinkerforge.py
+tests/unit/cmk/plugins/ceph/agents/test_mk_ceph.py
 tests/unit/cmk/plugins/collection/agents/test_apache_status.py
 tests/unit/cmk/plugins/collection/agents/test_isc_dhcpd.py
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/subdir/testfile2.html

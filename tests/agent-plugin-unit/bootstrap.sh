@@ -70,6 +70,12 @@ populate_folders() {
     case "${PYTHON_VERSION_MAJ_MIN?}" in
         3.4 | 3.5 | 3.6 | 3.7) rm "${podman_test}" ;;
     esac
+
+    # FIXME: mk_ceph requires Python 3.7+ (postponed evaluation of annotations)
+    ceph_test="${STAGE_DIR?}/tests/unit/cmk/plugins/ceph/agents/test_mk_ceph.py"
+    case "${PYTHON_VERSION_MAJ_MIN?}" in
+        3.4 | 3.5 | 3.6) rm "${ceph_test}" ;;
+    esac
 }
 
 run_test() {

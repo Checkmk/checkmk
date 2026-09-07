@@ -23,13 +23,31 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
 def migrate(value: object) -> Mapping[str, object]:
+    # The instances settings are an explicit choice now, so that a rule without settings
+    # ("first matching rule wins" before, merged with other rules now) keeps its meaning.
     match value:
+        # already migrated / new
         case dict() if "deployment" in value:
             return value
+        # In all other cases: We're switching from match type "first" to "merge", so
+        # only return fully filled rules to preserve behavior.
+        case None:
+            return {
+                "deployment": ("do_not_deploy", None),
+                "instances_settings": ("no_config", None),
+            }
+        case {"instances_settings": settings}:
+            return {
+                "deployment": ("sync", None),
+                "instances_settings": ("settings", settings),
+            }
         case dict():
-            return {"deployment": ("sync", None), **value}
+            return {
+                "deployment": ("sync", None),
+                "instances_settings": ("no_config", None),
+            }
         case _:
-            return {"deployment": ("do_not_deploy", None)}
+            raise ValueError(f"Unexpected value: {value!r}")
 
 
 def _instance_settings() -> Dictionary:
@@ -147,7 +165,23 @@ def _valuespec_agent_config_mk_postgres() -> Dictionary:
                 ),
             ),
             "instances_settings": DictElement(
-                parameter_form=_instances_settings(),
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Instances settings"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="no_config",
+                            title=Title("Deploy the plug-in without a configuration file"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="settings",
+                            title=Title("Configure instances"),
+                            parameter_form=_instances_settings(),
+                        ),
+                    ),
+                    prefill=DefaultValue("settings"),
+                ),
             ),
         },
         migrate=migrate,

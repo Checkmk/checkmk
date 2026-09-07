@@ -32,7 +32,7 @@ _INSTANCES_SETTINGS_WITH_PG_BINARY_PATH = {
 }
 CONFIG = {
     "deployment": ("sync", None),
-    "instances_settings": _INSTANCES_SETTINGS,
+    "instances_settings": ("settings", _INSTANCES_SETTINGS),
 }
 
 CONFIG_LINES_LINUX = [
@@ -51,7 +51,9 @@ CONFIG_LINES_WINDOWS = [
 
 
 def test_no_deploy() -> None:
-    conf = bakery_plugin_mk_postgres.parameter_parser({"deployment": ("do_not_deploy", None)})
+    conf = bakery_plugin_mk_postgres.parameter_parser(
+        {"deployment": ("do_not_deploy", None), "instances_settings": ("no_config", None)}
+    )
     assert not list(bakery_plugin_mk_postgres.files_function(conf))
 
 
@@ -77,7 +79,9 @@ def test_deploy_sync() -> None:
 
 
 def test_deploy_cached() -> None:
-    conf = bakery_plugin_mk_postgres.parameter_parser({"deployment": ("cached", 300.0)})
+    conf = bakery_plugin_mk_postgres.parameter_parser(
+        {"deployment": ("cached", 300.0), "instances_settings": ("no_config", None)}
+    )
     result = list(bakery_plugin_mk_postgres.files_function(conf))
     assert result == [
         Plugin(base_os=OS.LINUX, source=Path("mk_postgres.py"), interval=300),
@@ -89,7 +93,7 @@ def test_deploy_with_pg_binary_path() -> None:
     conf = bakery_plugin_mk_postgres.parameter_parser(
         {
             "deployment": ("sync", None),
-            "instances_settings": _INSTANCES_SETTINGS_WITH_PG_BINARY_PATH,
+            "instances_settings": ("settings", _INSTANCES_SETTINGS_WITH_PG_BINARY_PATH),
         }
     )
     result = list(bakery_plugin_mk_postgres.files_function(conf))

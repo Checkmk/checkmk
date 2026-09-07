@@ -38,23 +38,9 @@ from cmk.web.utils.html import HTML
 # 52  brown 1
 # 53  brown 2
 #
-# For a new metric_info you have to choose a color. No more hex-codes are needed!
-# Instead you can choose a number of the above color ring and a letter 'a' or 'b
-# where 'a' represents the basic color and 'b' is a nuance/shading of the basic color.
-# Both number and letter must be declared!
-#
-# Example:
-# "color" : "23/a" (basic color yellow)
-# "color" : "23/b" (nuance of color yellow)
-#
-# As an alternative you can call indexed_color with a color index and the maximum
-# number of colors you will need to generate a color. This function tries to return
-# high contrast colors for "close" indices, so the colors of idx 1 and idx 2 may
-# have stronger contrast than the colors at idx 3 and idx 10.
+# A color of this ring is its number plus 'a' for the basic color or 'b' for a
+# nuance of it, e.g. "23/a" is yellow and "23/b" a nuance of yellow.
 
-# retrieve an indexed color.
-# param idx: the color index
-# param total: the total number of colors needed in one graph.
 _COLOR_WHEEL_SIZE = 48
 
 

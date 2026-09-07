@@ -3,16 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Frequently used variable names:
-# perf_data_string:   Raw performance data as sent by the core, e.g "foo=17M;1;2;4;5"
-# perf_data:          Split performance data, e.g. [("foo", "17", "M", "1", "2", "4", "5")]
-# translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
-# color:              RGB color representation ala HTML, e.g. "#ffbbc3" or "#FFBBC3", len() is always 7!
-# color_rgb:          RGB color split into triple (r, g, b), where r,b,g in (0.0 .. 1.0)
-# unit_name:          The ID of a unit, e.g. "%"
-# unit:               The definition-dict of a unit like in unit_info
-# graph_template:     Template for a graph. Essentially a dict with the key "metrics"
-
 from typing import override
 
 import cmk.ccc.debug
@@ -40,17 +30,6 @@ from cmk.gui.graphing import (
 from cmk.gui.log import logger
 from cmk.gui.pages import PageContext, PageResult
 from cmk.utils.servicename import ServiceName
-
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   +----------------------------------------------------------------------+
-#   |  Typical code for loading Multisite plug-ins of this module           |
-#   '----------------------------------------------------------------------'
 
 
 def _load_graphing_plugins() -> DiscoveredPlugins[

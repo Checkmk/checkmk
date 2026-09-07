@@ -15,8 +15,8 @@ from cmk.gui.openapi.framework.model.base_models import (
 @api_model
 class CustomHostAttrExtensions:
     topic: str = api_field(
-        description="The internal ID of the section this attribute appears in when editing a host.",
-        example="custom_attributes",
+        description="The section this attribute appears in when editing a host.",
+        example="Custom attributes",
     )
     help: str = api_field(
         description="A help text shown next to the attribute in the UI.",

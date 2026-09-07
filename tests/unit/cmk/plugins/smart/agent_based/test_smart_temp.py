@@ -12,9 +12,9 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.smart import _check_smart_temp, discover_smart_temp
 from cmk.plugins.lib.temperature import TempParamType
 from cmk.plugins.smart.agent_based.smart import parse_raw_values, Section
+from cmk.plugins.smart.agent_based.smart_temp import _check_smart_temp, discover_smart_temp
 
 DELTA_KEY = "temp.smart_/dev/sda.delta"
 TREND_KEY = "temp.smart_/dev/sda.trend"

@@ -1,6 +1,6 @@
 module(
     name = "gcc_toolchain",
-    version = "gcc14.4.0.glibc2.28.cmk.3",
+    version = "gcc14.4.0.glibc2.28.cmk.4",
     compatibility_level = 1,
 )
 

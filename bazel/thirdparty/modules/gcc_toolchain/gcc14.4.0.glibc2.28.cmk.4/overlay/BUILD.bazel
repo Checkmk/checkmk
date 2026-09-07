@@ -43,23 +43,23 @@ filegroup(
 
 filegroup(
     name = "linker_builtins",
-    # CT_STATIC_TOOLCHAIN ships bfd-plugins as .a, not .so — no *.so*
-    # under lib/ anymore.
+    # CT_STATIC_TOOLCHAIN ships bfd-plugins as .a, not .so.
     data = glob(
         [
             "bin/*ld*",
             "lib/**/*.a",
-            "lib/**/*.so*",
             "lib/**/*.o",
         ],
-        allow_empty = True,
     ),
 )
 
 filegroup(
-    name = "linker_buildroot",
+    name = "binutils_buildroot",
+    # gcc/g++ resolve as/ar/nm/ranlib/objcopy/... relative to their own
+    # install path, not $PATH; anything missing here falls back silently
+    # to the host's copy, which may not exist or may be incompatible.
     srcs = glob([
-        "x86_64-checkmk-linux-gnu/bin/ld*",
+        "x86_64-checkmk-linux-gnu/bin/*",
     ]),
 )
 

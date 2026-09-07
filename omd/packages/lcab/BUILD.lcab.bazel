@@ -1,4 +1,4 @@
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@@//bazel/rules:xcomp/foreign_cc.bzl", "configure_make")
 
 filegroup(
     name = "all_srcs",
@@ -28,6 +28,7 @@ configure_make(
     ],
     out_shared_libs = [
     ],
+    platform = "@@//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//visibility:public"],
 )
 

@@ -95,7 +95,6 @@ from ._unit import (
     DecimalNotation,
     get_temperature_unit,
     user_specific_unit,
-    UserSpecificUnit,
 )
 from ._valuespecs import (
     id_from_unit_spec,
@@ -137,7 +136,6 @@ __all__ = [
     "PerfometerFromAPI",
     "RegisteredMetric",
     "TemplateGraphSpecification",
-    "UserSpecificUnit",
     "default_time_range_seconds",
     "global_time_picker_props",
     "global_time_picker_refresh",

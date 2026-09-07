@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-02 13:38+0000\n"
+"PO-Revision-Date: 2026-09-07 12:54+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -874,13 +874,14 @@ msgstr "%s：サービスディスカバリー：許可拒否"
 msgid "%s: uses SSL"
 msgstr "%s: SSLを使用"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
 "in version %s and must not be relied on for permanent configuration."
 msgstr ""
-"%s<br><br>これは一時的なリリースフラグです。バージョン%sで削除される予定であ"
-"り、恒久的な設定として依存してはなりません。"
+"%s<br><br>これは一時的な実験的なフラグです。バージョン%sでの削除の"
+"スケジュールが立てられており、恒久的な設定として依存しないようにしてください"
+"。"
 
 msgid "&lt;None&gt;"
 msgstr "&lt;なし&gt;"
@@ -1423,11 +1424,11 @@ msgstr ""
 "接頭辞として付けるためにこれを使用します。そうしないと、複数のDockerノードに"
 "同じ名前のコンテナが存在する場合、名前衝突が発生する可能性があります。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "<b>%(client_name)s</b> is requesting access to this Checkmk site."
 msgstr ""
-"アプリケーション「%(client_id)s」が、このCheckmkサイトへのアクセスを要求して"
-"います。"
+"<b>%(client_name)s</b> は、このCheckmkサイトへのアクセスをリクエストしていま"
+"す。"
 
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
@@ -7340,7 +7341,6 @@ msgstr "アレイ(コントローラー)"
 msgid "Articles in the User Guide"
 msgstr "ユーザーガイドの記事"
 
-#, fuzzy
 msgid "Artificial slowdown of log file parsing (for testing!)"
 msgstr "ログファイル解析の人為的な速度低下(テスト用！)"
 
@@ -7364,20 +7364,19 @@ msgstr "ユーザー設定で構成されているとおり。先頭に下線を
 msgid "As server"
 msgstr "サーバーとして"
 
-#, fuzzy
 msgid ""
 "As soon as you add your Checkmk server to the monitoring, a graph showing "
 "the history of your host problems will appear here.\n"
 " Please also be aware that this message might appear as a result of a "
 "filtered dashboard. This widget currently only supports filtering for sites."
 msgstr ""
-"Checkmkサーバーを監視に追加するとすぐに、ホストの問題の履歴を示すグラフがここ"
-"に表示されます。\n"
-"また、フィルタリングされたダッシュボードの結果として、このメッセージが表示さ"
-"れる場合がありますのでご注意ください。このダッシュレットは現在、サイトのフィ"
-"ルタリングのみをサポートしています。"
+"Checkmkサーバーを監視対象に追加すると、すぐにホストの問題履歴を示すグラフがこ"
+"こに表示されます。\n"
+" なお、のメッセージはダッシュボードのフィルタリング設定の結果として表示される"
+"場合がある点にご注意ください。このウィジェットは現在、サイトのフィルタリング"
+"のみに対応しています。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
 "the history of your host problems will appear here. Currently, the following "
@@ -7385,9 +7384,11 @@ msgid ""
 " Please also be aware that this message might appear as a result of a "
 "filtered dashboard. This widget currently only supports filtering for sites."
 msgstr ""
-"Checkmkサーバーを監視に追加するとすぐに、ホストの問題の履歴を示すグラフがここ"
-"に表示されます。現在、次のCheckmkサイトは監視されていません: %s。\n"
-"このダッシュレットは現在、サイトのフィルタリングのみをサポートしています。"
+"Checkmkサーバーを監視対象に追加するとすぐに、ホストの問題の履歴を示すグラフが"
+"ここに表示されます。現在、次のCheckmkサイトは監視対象外となっています：%s\n"
+"このダッシュレットのフィルタリング設定により、このメッセージが表示される場合"
+"がありますのでご注意ください。このウィジェットは現在、サイトのフィルタリング"
+"のみに対応しています。"
 
 msgid ""
 "As soon as you configure expected strings in the response the check will "
@@ -7427,13 +7428,12 @@ msgstr "SLA定義をサービスに割り当てます"
 msgid "Assign SLA to service"
 msgstr "SLAをサービスに割り当てる"
 
-#, fuzzy
 msgid ""
 "Assign created issues to defined user. This is the username of the user (not "
 "email)."
 msgstr ""
-"作成されたissueを定義されたユーザに割り当てます。これはユーザーのユーザ名です"
-"（電子メールではありません）。"
+"作成された課題を指定したユーザーに割り当てます。これはユーザーのユーザー名で"
+"す（Eメールではありません）。"
 
 msgid "Assign plan/test result to piggyback host"
 msgstr "プラン/テスト結果をピギーバックホストに割り当てる"
@@ -7454,7 +7454,6 @@ msgstr ""
 msgid "Assign services to the following cluster:"
 msgstr "次のクラスターにサービスを割り当てます。"
 
-#, fuzzy
 msgid ""
 "Assign the built-in role \"Reader\" to the app in the access control (IAM). "
 "Additionally add the application permissions \"Directory.Read.All\" and "
@@ -7462,11 +7461,11 @@ msgid ""
 "will be monitored. These resources include \"Users in Entra ID\", \"Entra "
 "Connect Sync\", \"App Registrations\"."
 msgstr ""
-"アクセスコントロール(IAM)でアプリにビルトインロール \"Reader \"を割り当てま"
-"す。さらに、Graph API を通じて利用可能なリソースを監視する場合は、アプリにア"
-"プリケーション権限\"Directory.Read.All\"と\"User.Read.All\"を追加します。これ"
-"らのリソースには、\"Users in Entra ID\"、\"Entra Connect Sync\"、\"App "
-"Registrations\"が含まれます。"
+"アクセスコントロール(IAM)でアプリにビルトインロール 「Reader 」を割り当てます"
+"。さらに、Graph API を通じて利用可能なリソースを監視する場合は、アプリに"
+"アプリケーション権限「Directory.Read.All」と「User.Read.All」を追加してくださ"
+"い。これらのリソースには、「Users in Entra ID」、「Entra Connect Sync」「App "
+"Registrations」が含まれます。"
 
 msgid "Assign this object to a specific customer."
 msgstr "このオブジェクトを特定の顧客に割り当てます。"
@@ -7483,16 +7482,14 @@ msgstr "クエリを実行しているホストに割り当てます"
 msgid "Assign via regular expressions"
 msgstr "正規表現で割り当てる"
 
-#, fuzzy
 msgid "Assigned to host"
-msgstr "グループに割り当てる"
+msgstr "ホストに割り当てる"
 
 msgid "Assignee"
 msgstr "受任者"
 
-#, fuzzy
 msgid "Assignment mode"
-msgstr "受任者"
+msgstr "割り当てモード"
 
 msgid "Assignment of hosts to contact groups"
 msgstr "連絡先グループへのホストの割り当て"
@@ -7536,7 +7533,6 @@ msgstr "想定されるリンク速度"
 msgid "Assumed output speed"
 msgstr "想定出力速度"
 
-#, fuzzy
 msgid "Assumed state"
 msgstr "想定される状態"
 
@@ -7581,9 +7577,8 @@ msgstr ""
 msgid "At least one custom query is required."
 msgstr "少なくとも1つのカスタムクエリが必要です。"
 
-#, fuzzy
 msgid "At least one host event must be selected."
-msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
+msgstr "少なくとも1つのホストイベントを選択する必要があります。"
 
 msgid ""
 "At least one of these strings is expected in the first (status) line of the "
@@ -7594,20 +7589,18 @@ msgstr ""
 "いる必要があります(デフォルト: <tt>HTTP/1.</tt>)。指定した場合、他のすべての"
 "ステータスラインロジックをスキップします(例: 3xx、4xx、5xx 処理)"
 
-#, fuzzy
 msgid "At least one service event must be selected."
-msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
+msgstr "少なくとも1つのサービスイベントを選択する必要があります。"
 
 msgid "At least one triggering event must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
 
-#, fuzzy
 msgid ""
 "At most that many notifications are kept back to build bulks. A value of 1 "
 "essentially turns off the bulk notification."
 msgstr ""
-"バルキングのために保持される通知は、最大でその設定値だけです。値１は、基本的"
-"に通知のバルキングをオフにします。"
+"最大でその数の通知を保留し、一括通知を構築します。値が1の場合、実質的に一括通"
+"知は無効になります。"
 
 msgid ""
 "At start, the CMC creates a fixed number of worker processes that are used "
@@ -7671,20 +7664,17 @@ msgstr "Atto Fibrebridge FCポート"
 msgid "Attribute"
 msgstr "属性"
 
-#, fuzzy
 msgid "Attribute filters"
-msgstr "属性"
+msgstr "属性フィルター"
 
-#, fuzzy
 msgid "Attribute key"
-msgstr "属性"
+msgstr "属性キー"
 
 msgid "Attribute match value"
 msgstr "属性一致する値"
 
-#, fuzzy
 msgid "Attribute name"
-msgstr "属性"
+msgstr "属性名"
 
 msgid "Attribute sync plug-ins"
 msgstr "属性同期プラグイン"
@@ -7695,13 +7685,11 @@ msgstr "検索する属性"
 msgid "Attribute to set"
 msgstr "設定する属性"
 
-#, fuzzy
 msgid "Attribute type"
-msgstr "設定する属性"
+msgstr "属性タイプ"
 
-#, fuzzy
 msgid "Attribute value"
-msgstr "属性一致する値"
+msgstr "属性値"
 
 #, python-brace-format
 msgid "Attribute {diff_path} with value {val_t1} removed."
@@ -7720,9 +7708,8 @@ msgstr "ホストから削除する属性"
 msgid "AudioCodes SBC Calls"
 msgstr "AudioCodes SBC コール"
 
-#, fuzzy
 msgid "AudioCodes system events"
-msgstr "APC Inrowシステムイベント"
+msgstr "AudioCodesシステムイベント"
 
 msgid "Audit log"
 msgstr "監査ログ"
@@ -7750,7 +7737,6 @@ msgstr "認証"
 msgid "Authentication (defaults)"
 msgstr "認証(デフォルト)"
 
-#, fuzzy
 msgid "Authentication (instance-specific)"
 msgstr "認証(インスタンス固有)"
 
@@ -7770,7 +7756,6 @@ msgstr ""
 msgid "Authentication error"
 msgstr "認証エラー"
 
-#, fuzzy
 msgid "Authentication expiration"
 msgstr "認証の有効期限"
 
@@ -7789,9 +7774,8 @@ msgstr "認証失敗（直近5分間）"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "過去5分以内の認証失敗数"
 
-#, fuzzy
 msgid "Authentication for proxy required"
-msgstr "認証エラー"
+msgstr "プロキシ認証が必要です"
 
 msgid "Authentication mechanism"
 msgstr "認証方法"
@@ -7854,7 +7838,6 @@ msgstr "権限"
 msgid "Authorization"
 msgstr "承認"
 
-#, fuzzy
 msgid "Authorization header"
 msgstr "認証ヘッダー"
 
@@ -7864,44 +7847,39 @@ msgstr "承認設定"
 msgid "Authorizations per DB security group"
 msgstr "DBセキュリティグループごとの承認"
 
-#, fuzzy
 msgid "Authorize application"
-msgstr "承認"
+msgstr "アプリケーションの認証"
 
 msgid "Authorized user"
 msgstr "認証ユーザー"
 
-#, fuzzy
 msgid "Auto (default)"
-msgstr "認証(デフォルト)"
+msgstr "自動（デフォルト）"
 
-#, fuzzy
 msgid "Auto-close off"
 msgstr "自動クローズオフ"
 
-#, fuzzy
 msgid "Auto-close on"
 msgstr "自動クローズオン"
 
-#, fuzzy
 msgid ""
 "Auto-completion is only available on sites with a configured metrics "
 "backend. The metrics backend can be enabled in the global settings."
 msgstr ""
-"オートコンプリートは、設定済のメトリックバックエンドを持つサイトでのみ利用可"
-"能です。メトリックバックエンドはグローバル設定で有効化できます。"
+"オートコンプリート機能は、メトリックバックエンドが設定されているサイトでのみ"
+"利用可能です。メトリックバックエンドは、グローバル設定で有効にすることができ"
+"ます。"
 
-#, fuzzy
 msgid "Auto-detect (default)"
-msgstr "認証(デフォルト)"
+msgstr "自動検出(デフォルト)"
 
-#, fuzzy
 msgid "Auto-detect instances"
 msgstr "インスタンスの自動検出"
 
-#, fuzzy
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
-msgstr "インスタンスを自動検出します。次のポートでHTTPSが必要です。"
+msgstr ""
+"インスタンスの自動検出では、以下のポートでHTTPSが使用されていることを想定して"
+"います："
 
 msgid "Auto-detect proxy settings for this network"
 msgstr "このネットワークのプロキシ設定を自動検出します"
@@ -7909,52 +7887,41 @@ msgstr "このネットワークのプロキシ設定を自動検出します"
 msgid "Auto-disconnect time"
 msgstr "自動切断時間"
 
-#, fuzzy
 msgid "Auto-discovery"
 msgstr "オートディスカバリー"
 
-#, fuzzy
 msgid "Auto-extend is expected to be OFF"
 msgstr "自動拡張はオフになると予想されます"
 
-#, fuzzy
 msgid "Auto-extend is expected to be ON"
 msgstr "自動拡張はオンになると予想されます"
 
-#, fuzzy
 msgid "Auto-extend will be ignored"
 msgstr "自動拡張は無視されます"
 
-#, fuzzy
 msgid "Auto-extensible"
-msgstr "自動拡張可能"
+msgstr "自動拡張機能"
 
-#, fuzzy
 msgid "Auto-restart on crash"
-msgstr "クラッシュ時に自動再起動"
+msgstr "クラッシュ時の自動再起動"
 
-#, fuzzy
 msgid "Auto-shrink off"
 msgstr "自動シュリンクオフ"
 
-#, fuzzy
 msgid "Auto-shrink on"
 msgstr "自動縮小オン"
 
-#, fuzzy
 msgid "Auto-start"
 msgstr "自動起動"
 
-#, fuzzy
 msgid "Auto-start services"
 msgstr "自動開始サービス"
 
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "インスタンスを自動検出します。次のポートでHTTPを予期します。"
 
-#, fuzzy
 msgid "Automated environment setup"
-msgstr "自動環境セットアップ（RCC経由）"
+msgstr "自動環境セットアップ"
 
 msgid "Automatic"
 msgstr "自動"
@@ -7971,13 +7938,12 @@ msgstr "自動アクティベーション"
 msgid "Automatic agent updates"
 msgstr "エージェントの自動更新"
 
-#, fuzzy
 msgid "Automatic deletion"
 msgstr "自動削除"
 
 #, fuzzy
 msgid "Automatic detection"
-msgstr "自動削除"
+msgstr "自動検出"
 
 msgid "Automatic detection (Python 3 > Python 2)"
 msgstr "自動検出(Python 3 > Python 2)"
@@ -7988,7 +7954,6 @@ msgstr "自動ディスクスペースクリーンアップ"
 msgid "Automatic fallback"
 msgstr "自動フォールバック"
 
-#, fuzzy
 msgid "Automatic generation of host labels"
 msgstr "インポートした注釈をポストラベルとして設定する"
 
@@ -8018,11 +7983,10 @@ msgstr "自動テイクオーバー"
 msgid "Automatic updates"
 msgstr "自動的にアップデート"
 
-#, fuzzy
 msgid "Automatic: use existing user, if available. Otherwise create new user."
 msgstr ""
-"自動： 利用可能な場合は既存のユーザーを使用します。そうでない場合は新しいユー"
-"ザーを作成します。"
+"自動： 利用可能な場合は既存のユーザーを使用します。そうでない場合は新しい"
+"ユーザーを作成します。"
 
 msgid "Automatically activate changes"
 msgstr "変更を自動的にアクティブ化する"
@@ -8030,9 +7994,8 @@ msgstr "変更を自動的にアクティブ化する"
 msgid "Automatically create monitoring agents"
 msgstr "監視エージェントを自動的に作成する"
 
-#, fuzzy
 msgid "Automatically delete hosts with no recent OpenTelemetry data"
-msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
+msgstr "最近のOpenTelemetryデータがないホストを自動的に削除する"
 
 msgid "Automatically delete hosts without piggyback data"
 msgstr "ピギーバックデータなしでホストを自動的に削除します"
@@ -8065,9 +8028,8 @@ msgid ""
 "changes"
 msgstr "サービス構成の変更後、サービス検出チェックを自動的にスケジュールします"
 
-#, fuzzy
 msgid "Automatically select best type of backend"
-msgstr "自動的に　最適なバックエンドのタイプを選択"
+msgstr "最適なバックエンドの種類を自動選択"
 
 msgid "Automatically stores the host key with no manual input requirement"
 msgstr "手動入力の必要なく、自動的にホストキーを保存"
@@ -8075,10 +8037,8 @@ msgstr "手動入力の必要なく、自動的にホストキーを保存"
 msgid "Automatically track downtimes of aggregation"
 msgstr "アグリゲーションのダウンタイムを自動でトラッキング"
 
-#, fuzzy
 msgid "Automatically update agents at <i>Activate changes</i>, if necessary"
-msgstr ""
-"必要に応じて、<i>変更のアクティブ化</i>でエージェントを自動的に更新します"
+msgstr "必要に応じて、<i>変更のアクティブ化</i>でエージェントを自動的に更新します"
 
 msgid "Automatically update service configuration"
 msgstr "サービス構成を自動的に更新します"
@@ -8108,16 +8068,14 @@ msgstr ""
 msgid "Automation user authentication via HTTP parameters"
 msgstr "HTTPパラメータによるユーザー認証の自動化"
 
-#, fuzzy
 msgid "Automation user for connection to central site"
-msgstr "セントラルサイトへの接続用オートメーションユーザー（非推奨）"
+msgstr "中央サイトに接続するためのオートメーションユーザー"
 
 msgid "Automation user rejected"
 msgstr "自動化ユーザーが拒否されました"
 
-#, fuzzy
 msgid "Automation username"
-msgstr "オートメーションユーザー名"
+msgstr "自動化ユーザー名"
 
 #, python-format
 msgid "Aux tag '%s' does not exist"
@@ -8159,11 +8117,9 @@ msgstr "可用性レベル:"
 msgid "Availability of"
 msgstr "可用性"
 
-#, fuzzy
 msgid "Availability of host $RANGE_TITLE$"
 msgstr "ホストの可用性 $RANGE_TITLE$"
 
-#, fuzzy
 msgid "Availability of the services"
 msgstr "サービスの可用性"
 
@@ -8173,7 +8129,6 @@ msgstr "可用性オプション"
 msgid "Availability table"
 msgstr "可用性テーブル"
 
-#, fuzzy
 msgid "Availability timeline"
 msgstr "可用性のタイムライン"
 
@@ -8192,7 +8147,6 @@ msgstr "利用可能な容量"
 msgid "Available macros and search result(s)"
 msgstr "利用可能なマクロと検索結果"
 
-#, fuzzy
 msgid "Available memory"
 msgstr "利用可能なメモリ"
 
@@ -8220,18 +8174,15 @@ msgstr "まで利用可能"
 msgid "Average"
 msgstr "平均"
 
-#, fuzzy
 msgid "Average CPU Value over"
-msgstr "平均値"
+msgstr "CPUの平均値"
 
-#, fuzzy
 msgid "Average Latency"
 msgstr "平均待ち時間"
 
 msgid "Average active check latency"
 msgstr "平均アクティブチェック待ち時間"
 
-#, fuzzy
 msgid "Average call duration"
 msgstr "平均消費量"
 
@@ -8277,13 +8228,12 @@ msgstr ""
 "ストレージサービスに対して行われた成功したリクエストのエンドツーエンド平均レ"
 "イテンシ"
 
-#, fuzzy
 msgid ""
 "Average end-to-end latency of successful requests made to a storage service "
 "in milliseconds"
 msgstr ""
-"ストレージサービスに対して行われた成功したリクエストのエンドツーエンド平均レ"
-"イテンシ"
+"ストレージサービスへのリクエストが成功した場合のエンド・ツー・エンドの平均待"
+"ち時間ミリ秒単位"
 
 msgid "Average fetcher latency"
 msgstr "フェッチャーの平均レイテンシ"
@@ -8306,9 +8256,8 @@ msgstr "平均間隔"
 msgid "Average latency"
 msgstr "平均待ち時間"
 
-#, fuzzy
 msgid "Average latency (ms)"
-msgstr "平均待ち時間"
+msgstr "平均レイテンシ(ミリ秒)"
 
 msgid "Average latency for RPC requests"
 msgstr "RPCリクエストの平均遅延"
@@ -8330,25 +8279,23 @@ msgstr "成功したクエリーリクエストの平均待ち時間"
 
 #, fuzzy
 msgid "Average latency over last 5 minutes"
-msgstr "ストアリクエストの平均レイテンシ"
+msgstr "過去5分間の平均レイテンシー"
 
-#, fuzzy
 msgid "Average latency over last day"
-msgstr "ストアリクエストの平均レイテンシ"
+msgstr "過去24時間の平均レイテンシ"
 
-#, fuzzy
 msgid "Average latency over last hour"
-msgstr "ストアリクエストの平均レイテンシ"
+msgstr "過去1時間の平均レイテンシ"
 
-#, fuzzy
 msgid ""
 "Average latency used by Azure Storage to process a successful request in "
 "milliseconds"
-msgstr "成功したリクエストを処理するためにAzureStorageが使用する平均レイテンシ"
+msgstr ""
+"Azure Storageが成功したリクエストを処理するために使用する平均待ち時間ミリ秒単"
+"位"
 
-#, fuzzy
 msgid "Average latency used by Azure storage to process a successful request"
-msgstr "成功したリクエストを処理するためにAzureStorageが使用する平均レイテンシ"
+msgstr "リクエスト処理正常完了にAzureStorageが使用した平均レイテンシ"
 
 msgid "Average message count lower levels"
 msgstr "平均メッセージ数の下位レベル"
@@ -8362,9 +8309,8 @@ msgstr "一定期間におけるメトリックの平均値"
 msgid "Average number of messages"
 msgstr "メッセージの平均数"
 
-#, fuzzy
 msgid "Average outgoing queue delay"
-msgstr "SIP - 平均発信キュー遅延"
+msgstr "平均発信キュー遅延"
 
 msgid "Average over..."
 msgstr "平均値を算出…"
@@ -8403,7 +8349,6 @@ msgstr "平均応答時間"
 msgid "Average round trip response time to this node"
 msgstr "このノードへの平均往復応答時間"
 
-#, fuzzy
 msgid "Average round trip time in ms"
 msgstr "ミリ秒単位の平均ラウンドトリップ時間"
 
@@ -8879,127 +8824,103 @@ msgstr "情報待ち"
 msgid "Azure"
 msgstr "Azure"
 
-#, fuzzy
 msgid "Azure (deprecated)"
-msgstr "非推奨"
+msgstr "Azure（非推奨）"
 
 msgid "Azure AD Connect"
 msgstr "Azure AD 接続"
 
 #, fuzzy
 msgid "Azure AD Connect (deprecated)"
-msgstr "Azure AD 接続"
+msgstr "Azure AD 接続（非推奨）"
 
-#, fuzzy
 msgid "Azure App Registration"
-msgstr "App登録"
+msgstr "Azure App登録"
 
 msgid "Azure Application Gateway"
 msgstr "Azureアプリケーションゲートウェイ"
 
-#, fuzzy
 msgid "Azure Application Gateway (deprecated)"
-msgstr "Azureアプリケーションゲートウェイ"
+msgstr "Azureアプリケーションゲートウェイ（非推奨）"
 
 msgid "Azure Blob Storage"
 msgstr "Azure Blobストレージ"
 
-#, fuzzy
 msgid "Azure Cosmos DB Availability"
-msgstr "BI の可用性"
+msgstr "Azure Cosmos DB の可用性"
 
 msgid "Azure Cosmos DB Database Container Requests"
 msgstr "Azure Cosmos DBデータベースコンテナリクエスト"
 
-#, fuzzy
 msgid "Azure Cosmos DB Database Container Throughput"
-msgstr "Azure SQLデータベーススループット"
+msgstr "Azure Cosmos DB データベース コンテナ スループット"
 
-#, fuzzy
 msgid "Azure Cosmos DB Database Requests"
-msgstr "Azureデータベース"
+msgstr "Azure Cosmos DB データベース リクエスト"
 
-#, fuzzy
 msgid "Azure Cosmos DB Database Throughput"
-msgstr "Azure SQLデータベーススループット"
+msgstr "Azure Cosmos DB データベース スループット"
 
-#, fuzzy
 msgid "Azure Cosmos DB Requests"
-msgstr "Web ACLリクエスト"
+msgstr "Azure Cosmos DB リクエスト"
 
-#, fuzzy
 msgid "Azure Cosmos DB Storage"
-msgstr "Azure DB ストレージ"
+msgstr "Azure Cosmos DB ストレージ"
 
-#, fuzzy
 msgid "Azure Cosmos DB Throughput"
-msgstr "Azure SQLデータベーススループット"
+msgstr "Azure Cosmos DB スループット"
 
 msgid "Azure DB Storage"
 msgstr "Azure DB ストレージ"
 
-#, fuzzy
 msgid "Azure DB storage"
 msgstr "Azure DB ストレージ"
 
-#, fuzzy
 msgid "Azure DB storage (deprecated)"
-msgstr "Azure DB ストレージ"
+msgstr "Azure DB ストレージ（非推奨）"
 
-#, fuzzy
 msgid "Azure Firewall Health"
-msgstr "Load Balancerの健全性"
+msgstr "Azure Firewall の健全性"
 
-#, fuzzy
 msgid "Azure Firewall Latency"
-msgstr "全体的な遅延"
+msgstr "Azure Firewall レイテンシ"
 
-#, fuzzy
 msgid "Azure Firewall SNAT Utilization"
-msgstr "全体的な使用率"
+msgstr "Azure Firewall SNAT 使用率"
 
-#, fuzzy
 msgid "Azure Firewall Throughput"
-msgstr "SANの読み取りスループット"
+msgstr "Azure Firewallスループット"
 
 #, fuzzy
 msgid "Azure Firewalls"
-msgstr "Zorpファイアウォール"
+msgstr "Azure Firewall"
 
-#, fuzzy
 msgid "Azure Load Balancer Byte Count"
-msgstr "Load Balancerの健全性"
+msgstr "Azure Load Balancer バイト カウント"
 
 msgid "Azure Load Balancer Health"
 msgstr "Load Balancerの健全性"
 
-#, fuzzy
 msgid "Azure Load Balancer SNAT Consumption"
-msgstr "Load Balancerの健全性"
+msgstr "Load Balancer SNAT消費量"
 
-#, fuzzy
 msgid "Azure Load Balancer health (deprecated)"
-msgstr "Load Balancerの健全性"
+msgstr "Azureロードバランサーヘルス（非推奨）"
 
-#, fuzzy
 msgid "Azure NAT Gateways Connections"
-msgstr "Azure データベース接続"
+msgstr "Azure NAT ゲートウェイ接続"
 
-#, fuzzy
 msgid "Azure NAT Gateways Packets"
-msgstr "AzureVNetゲートウェイ"
+msgstr "Azure NATゲートウェイ パケット"
 
-#, fuzzy
 msgid "Azure NAT Gateways Throughput"
-msgstr "Azure SQLデータベーススループット"
+msgstr "Azure NATゲートウェイスループット"
 
-#, fuzzy
 msgid "Azure NAT Gateways datapath availability"
-msgstr "サービスの可用性を見る"
+msgstr "Azure NAT ゲートウェイのデータパス可用性"
 
-#, fuzzy
 msgid "Azure Network IO"
-msgstr "ネットワークIO"
+msgstr "Azure ネットワークIO"
 
 msgid "Azure Redis CPU utilization"
 msgstr "Azure Redis CPU 利用率"
@@ -9007,102 +8928,84 @@ msgstr "Azure Redis CPU 利用率"
 msgid "Azure Redis Cache effectiveness"
 msgstr "Azure Redisキャッシュ有効性"
 
-#, fuzzy
 msgid "Azure Redis Connections"
-msgstr "Azure データベース接続"
+msgstr "Azure Redis 接続"
 
-#, fuzzy
 msgid "Azure Redis Latency"
-msgstr "平均ディスク遅延"
+msgstr "Azure Redis レイテンシ"
 
-#, fuzzy
 msgid "Azure Redis Memory"
-msgstr "絶対使用メモリ"
+msgstr "Azure Redis メモリ"
 
-#, fuzzy
 msgid "Azure Redis Replication"
-msgstr "現在、レプリケーションを無効にします"
+msgstr "Azure Redis レプリケーション"
 
-#, fuzzy
 msgid "Azure Redis Server load"
-msgstr "Citrixサーバーの負荷"
+msgstr "Azure Redis サーバー負荷"
 
-#, fuzzy
 msgid "Azure Redis Throughput"
-msgstr "Azure SQLデータベーススループット"
+msgstr "Azure Redis スループット"
 
 msgid "Azure SQL database CPU usage"
 msgstr "AzureSQLデータベースCPU使用量"
 
-#, fuzzy
 msgid "Azure SQL database CPU usage (deprecated)"
-msgstr "AzureSQLデータベースCPU使用量"
+msgstr "AzureSQLデータベースCPU使用量（非推奨）"
 
-#, fuzzy
 msgid "Azure SQL database connections"
-msgstr "Azure データベース接続"
+msgstr "Azure SQLデータベース接続"
 
 msgid "Azure SQL database deadlocks"
 msgstr "AzureSQLデータベースデッドロック"
 
-#, fuzzy
 msgid "Azure SQL database deadlocks (deprecated)"
-msgstr "AzureSQLデータベースデッドロック"
+msgstr "AzureSQLデータベースデッドロック（非推奨）"
 
 msgid "Azure SQL database storage"
 msgstr "Azure SQLデータベースストレージ"
 
-#, fuzzy
 msgid "Azure SQL database storage (deprecated)"
-msgstr "Azure SQLデータベースストレージ"
+msgstr "Azure SQLデータベースストレージ（非推奨）"
 
 msgid "Azure SQL database throughput"
 msgstr "Azure SQLデータベーススループット"
 
-#, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
-msgstr "Azure SQLデータベーススループット"
+msgstr "Azure SQLデータベーススループット（非推奨）"
 
 #, fuzzy
 msgid "Azure Status"
-msgstr "Apacheステータス"
+msgstr "Azure ステータス"
 
-#, fuzzy
 msgid "Azure Storage Data Flow"
-msgstr "Azureストレージ"
+msgstr "Azureストレージ データフロー"
 
 msgid "Azure Storage Data Flow (deprecated)"
 msgstr "Azureストレージ データフロー（非推奨）"
 
-#, fuzzy
 msgid "Azure Storage Performance"
-msgstr "Azureストレージ"
+msgstr "Azureストレージ パフォーマンス"
 
 msgid "Azure Storage Performance (deprecated)"
 msgstr "Azureストレージ パフォーマンス（非推奨）"
 
-#, fuzzy
 msgid "Azure Storage Usage"
-msgstr "Azureストレージ"
+msgstr "Azure ストレージの使用量"
 
-#, fuzzy
 msgid "Azure Storage Usage (deprecated)"
-msgstr "使用可能なプロトコル(非推奨)"
+msgstr "Azureストレージ使用量（非推奨）"
 
 msgid "Azure Traffic Manager Probe State"
 msgstr "Azure Traffic Managerプローブの状態"
 
-#, fuzzy
 msgid "Azure Traffic Manager QPS"
-msgstr "AzureトラフィックマネージャーQps"
+msgstr "AzureトラフィックマネージャーQPS"
 
-#, fuzzy
 msgid "Azure Traffic Manager QPS (deprecated)"
-msgstr "Azure Traffic Managerプローブの状態"
+msgstr "AzureトラフィックマネージャーQPS（非推奨）"
 
-#, fuzzy
 msgid "Azure Traffic Manager probe state (deprecated)"
-msgstr "Azure Traffic Managerプローブの状態"
+msgstr "Azure Traffic Managerプローブの状態（非推奨）"
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Azureの使用量の詳細(コスト)"
@@ -9110,63 +9013,50 @@ msgstr "Azureの使用量の詳細(コスト)"
 msgid "Azure VM Disk"
 msgstr "Azure VMディスク"
 
-#, fuzzy
 msgid "Azure VM burst CPU credits"
 msgstr "Azure VM バーストCPUクレジット"
 
-#, fuzzy
 msgid "Azure VM burst CPU credits (deprecated)"
-msgstr "Azure VM バーストCPUクレジット"
+msgstr "Azure VM バーストCPUクレジット（非推奨）"
 
-#, fuzzy
 msgid "Azure VM disk (deprecated)"
-msgstr "Azure VMディスク"
+msgstr "Azure VMディスク（非推奨）"
 
 msgid "Azure VM instances"
 msgstr "Azure VMインスタンス"
 
-#, fuzzy
 msgid "Azure VM instances (deprecated)"
-msgstr "Azure VMインスタンス"
+msgstr "Azure VMインスタンス（非推奨）"
 
-#, fuzzy
 msgid "Azure VNet gateway"
-msgstr "AzureVNetゲートウェイ"
+msgstr "Azure VNet ゲートウェイ"
 
-#, fuzzy
 msgid "Azure VNet gateway (deprecated)"
-msgstr "AzureVNetゲートウェイ"
+msgstr "Azure VNetゲートウェイ（非推奨）"
 
-#, fuzzy
 msgid "Azure agent info"
 msgstr "Azureエージェント情報"
 
-#, fuzzy
 msgid "Azure agent info (deprecated)"
-msgstr "GUI拡張機能（非推奨）"
+msgstr "Azureエージェント情報（非推奨）"
 
 msgid "Azure database connections"
 msgstr "Azure データベース接続"
 
-#, fuzzy
 msgid "Azure database connections (deprecated)"
-msgstr "Azure データベース接続"
+msgstr "Azure データベース接続（非推奨）"
 
-#, fuzzy
 msgid "Azure databases"
 msgstr "Azureデータベース"
 
-#, fuzzy
 msgid "Azure overview"
-msgstr "アラートの概要"
+msgstr "Azureの概要"
 
-#, fuzzy
 msgid "Azure recovery services vault backup"
-msgstr "Recovery Services Vault"
+msgstr "Azure Recovery Services Vault バックアップ"
 
-#, fuzzy
 msgid "Azure resource group"
-msgstr "リソースグループを追加する"
+msgstr "Azure リソースグループ"
 
 msgid "Azure services found!"
 msgstr "Azureサービスを発見しました！"
@@ -9174,58 +9064,47 @@ msgstr "Azureサービスを発見しました！"
 msgid "Azure services to monitor"
 msgstr "監視するAzureサービス"
 
-#, fuzzy
 msgid "Azure storage"
 msgstr "Azureストレージ"
 
 msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
 
-#, fuzzy
 msgid "Azure storage accounts (deprecated)"
-msgstr "Azureストレージアカウント"
+msgstr "Azureストレージアカウント（非推奨）"
 
-#, fuzzy
 msgid "Azure subscription"
-msgstr "現在のサブスクリプション状況"
+msgstr "Azure サブスクリプション"
 
-#, fuzzy
 msgid "Azure subscription ID"
-msgstr "現在のサブスクリプション状況"
+msgstr "Azure サブスクリプション ID"
 
-#, fuzzy
 msgid "Azure subscription info"
-msgstr "現在のサブスクリプション状況"
+msgstr "Azure サブスクリプション情報"
 
-#, fuzzy
 msgid "Azure subscription name"
-msgstr "現在のサブスクリプション状況"
+msgstr "Azure サブスクリプション名"
 
-#, fuzzy
 msgid "Azure usage details (costs) (deprecated)"
-msgstr "Azureの使用量の詳細(コスト)"
+msgstr "Azureの使用状況（コスト）（非推奨）"
 
 msgid "Azure virtual machines"
 msgstr "Azure 仮想マシン"
 
-#, fuzzy
 msgid "Azure virtual machines (deprecated)"
-msgstr "Azure 仮想マシン"
+msgstr "Azure仮想マシン（非推奨）"
 
-#, fuzzy
 msgid "Azure virtual machines summary (deprecated)"
-msgstr "Azure仮想マシンの概要"
+msgstr "Azure仮想マシンの概要（非推奨）"
 
 msgid "Azure web servers (IIS)"
 msgstr "Azure Webサーバー(IIS)"
 
-#, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
-msgstr "Azure Webサーバー(IIS)"
+msgstr "Azure Webサーバー(IIS)（非推奨）"
 
-#, fuzzy
 msgid "Azure/Cosmos DB Database Container"
-msgstr "Azure データベース接続"
+msgstr "Azure/Cosmos DB Dデータベースコンテナ"
 
 msgid "B"
 msgstr "B"
@@ -9257,7 +9136,6 @@ msgstr "BAR1 メモリ使用率"
 msgid "BBcredit zero"
 msgstr "BBcreditゼロ"
 
-#, fuzzy
 msgid "BGP peer state mapping"
 msgstr "BGPピア 状態マッピング"
 
@@ -9267,11 +9145,9 @@ msgstr "BI"
 msgid "BI - Checkmk Business Intelligence"
 msgstr "BI-Checkmkビジネスインテリジェンス"
 
-#, fuzzy
 msgid "BI aggregation"
-msgstr "BI集計"
+msgstr "BIアグリゲーション"
 
-#, fuzzy
 msgid "BI aggregation group"
 msgstr "BIアグリゲーショングループ"
 
@@ -9281,15 +9157,13 @@ msgstr "BIアグリゲーショングループ"
 msgid "BI aggregation groups tree"
 msgstr "BI集約グループツリー"
 
-#, fuzzy
 msgid "BI aggregations"
 msgstr "BI集計"
 
-#, fuzzy
 msgid "BI aggregations affected by one host"
 msgstr "1つのホストの影響を受けるBIアグリゲーション"
 
-#, fuzzy, python-format
+#, python-format
 msgid "BI aggregations containing this %s"
 msgstr "この %s を含むBIアグリゲーション"
 
@@ -9308,7 +9182,6 @@ msgstr "BIコンパイル"
 msgid "BI configuration"
 msgstr "BI設定"
 
-#, fuzzy
 msgid "BI configuration packs"
 msgstr "BI Configurationパック"
 
@@ -9324,7 +9197,6 @@ msgstr "BIパック"
 msgid "BI pack ID"
 msgstr "BIパックID"
 
-#, fuzzy
 msgid "BI pack properties"
 msgstr "BIパックのプロパティ"
 
@@ -9368,63 +9240,48 @@ msgstr "表示に戻る"
 msgid "Back to view with checkboxes reset"
 msgstr "チェックボックスをリセットした画面に戻る"
 
-#, fuzzy
 msgid "Backend IP config"
 msgstr "バックエンドIP設定"
 
-#, fuzzy
 msgid "Backend conn. failures"
 msgstr "バックエンド接続の不具合"
 
-#, fuzzy
 msgid "Backend conn. not attempted"
 msgstr "バックエンド接続は未試行"
 
-#, fuzzy
 msgid "Backend conn. recycles"
 msgstr "バックエンド接続のリサイクル"
 
-#, fuzzy
 msgid "Backend conn. requests"
 msgstr "バックエンド接続のリクエスト"
 
-#, fuzzy
 msgid "Backend conn. retry"
 msgstr "バックエンド接続のリトライ"
 
-#, fuzzy
 msgid "Backend conn. reuses"
 msgstr "バックエンド接続のリユース"
 
-#, fuzzy
 msgid "Backend conn. success"
 msgstr "バックエンド接続の成功"
 
-#, fuzzy
 msgid "Backend conn. too many"
 msgstr "バックエンド接続が多すぎます"
 
-#, fuzzy
 msgid "Backend conn. was closed"
 msgstr "バックエンド接続 がクローズ"
 
-#, fuzzy
 msgid "Backend connection errors"
 msgstr "バックエンド接続エラー"
 
-#, fuzzy
 msgid "Backend pool"
 msgstr "バックエンドプール"
 
-#, fuzzy
 msgid "Backend pools"
 msgstr "バックエンドプール"
 
-#, fuzzy
 msgid "Backend port"
 msgstr "バックエンドポート"
 
-#, fuzzy
 msgid "Backends"
 msgstr "バックエンド"
 
@@ -9514,9 +9371,8 @@ msgstr "バックアップID"
 msgid "Backups"
 msgstr "バックアップ"
 
-#, fuzzy
 msgid "Backups CRITICAL"
-msgstr "重要なチェックを行う"
+msgstr "バックアップ CRITICAL"
 
 #, fuzzy
 msgid "Bad requests received"

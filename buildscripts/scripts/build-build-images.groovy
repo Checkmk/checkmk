@@ -147,7 +147,7 @@ def main() {
     /// build and use reference image in order to check if it's working at all
     /// and to fill caches. Also do some tests in order to check if permissions
     /// are fine and everything gets cleaned up
-    stage("Use reference image") {
+    stage("Use reference image as run-in-docker.sh") {
         dir("${checkout_dir}") {
             /// First check the bash script, since it yields more useful log output
             /// in erroneous cases
@@ -178,6 +178,75 @@ def main() {
             sh("""
                 ${checkout_dir}/scripts/run-in-docker.sh cat /etc/os-release
             """);
+        }
+    }
+
+    /// build and use reference image in order to check if it's working at all
+    /// and to fill caches. Also do some tests in order to check if permissions
+    /// are fine and everything gets cleaned up
+    dir("${checkout_dir}") {
+        def reference_image = false;
+        def reference_image_tag = "latest-with-docker";
+
+        smart_stage(
+            name: "Build reference image",
+            raiseOnError: true,
+        ) {
+            def reference_distro = "ubuntu-22.04";
+            def base_build_image = "${reference_distro}:${safe_branch_name}-latest";
+            def image_name = "testing-${reference_distro}-checkmk-${safe_branch_name}";
+            def docker_build_args = (""
+                + " --build-arg BASE_BUILD_IMAGE='${docker_registry_no_http}/${base_build_image}'"
+                + " -f 'defines/dev-images/reference/Dockerfile'"
+                + " temp-build-context"
+            );
+
+            if (params.BUILD_IMAGE_WITHOUT_CACHE) {
+                docker_build_args = "--no-cache " + docker_build_args;
+            }
+            dir("${checkout_dir}") {
+                // specify tag during build to avoid "<none>:<none>" images
+                reference_image = docker.build("${image_name}:${reference_image_tag}", docker_build_args);
+            }
+        }
+
+        smart_stage(
+            name: "Test reference image",
+            raiseOnError: true,
+        ) {
+            /// also check the default way to use a container
+            inside_container(
+                // START OF to be removed in a follow up commit
+                image: docker.image("${docker_registry_no_http}/testing-ubuntu-22.04-checkmk-${safe_branch_name}:latest-with-docker"),
+                pull: true,
+                // END OF to be removed in a follow up commit
+            ) {
+                sh("""
+                    echo Hello from reference image
+                    cat /etc/os-release
+                    echo \$USER
+                    echo \$HOME
+                    ls -alF \$HOME
+                    ls -alF \$HOME/.cache
+                    echo fcache > \$HOME/.cache/fcache
+                    ls -alF ${checkout_dir}/shared_cargo_folder
+                    echo fcargo > ${checkout_dir}/shared_cargo_folder/fcargo
+                """);
+                sh("git status");
+            }
+        }
+
+        smart_stage(
+            name: "Upload reference image",
+            condition: publish_images,
+            raiseOnError: true,
+        ) {
+            docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+                reference_image.push();
+                if ((safe_branch_name ==~ /master|\d\.\d\.\d/) && ("${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}" == "")) {
+                    reference_image.push(reference_image_tag);
+                }
+            }
         }
     }
 }

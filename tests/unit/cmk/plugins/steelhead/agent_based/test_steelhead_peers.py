@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.steelhead_peers import (
+from cmk.plugins.steelhead.agent_based.steelhead_peers import (
     check_steelhead_peers,
     discover_steelhead_peers,
     parse_steelhead_peers,

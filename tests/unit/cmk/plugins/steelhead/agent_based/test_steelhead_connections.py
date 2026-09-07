@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.steelhead_connections import (
+from cmk.plugins.steelhead.agent_based.steelhead_connections import (
     check_steelhead_connections,
     discover_steelhead_connections,
     parse_steelhead_connections,

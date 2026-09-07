@@ -199,7 +199,7 @@ class _DictKeys(Generic[_T]):
 
 
 def _format_update_result_attrs(*, title: str, message: str) -> str:
-    return f"[Attributes] {title}: message"
+    return f"[Attributes] {title}: {message}"
 
 
 @dataclass(kw_only=True)
@@ -284,7 +284,7 @@ class _MutableAttributes:
 
 
 def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:
-    return f"[Table] '{', '.join(map(str, ident))}': {title}: message"
+    return f"[Table] '{', '.join(map(str, ident))}': {title}: {message}"
 
 
 @dataclass(kw_only=True)

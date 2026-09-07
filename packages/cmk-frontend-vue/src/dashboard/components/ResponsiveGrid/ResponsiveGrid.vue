@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { GridLayout } from 'grid-layout-plus'
 import { computed, ref, watch } from 'vue'
@@ -81,6 +82,7 @@ defineEmits<{
   'widget:edit': [widgetId: string]
   'widget:delete': [widgetId: string]
   'widget:clone': [widgetId: string, newLayout: ResponsiveGridWidgetLayouts]
+  'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
 }>()
 
 const gridMargin = 10
@@ -239,6 +241,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
                 $emit('widget:clone', oldWidgetId, newLayout)
               }
             "
+            @update-time-range="$emit('widget:updateTimeRange', <string>item.i, $event)"
           />
         </template>
       </GridLayout>

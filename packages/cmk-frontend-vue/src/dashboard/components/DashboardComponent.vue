@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { computed } from 'vue'
 
 import type {
@@ -44,6 +45,7 @@ defineEmits<{
   'widget:edit': [widgetId: string]
   'widget:delete': [widgetId: string]
   'widget:clone': [oldWidgetId: string, newLayout: WidgetLayout]
+  'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
 }>()
 
 const widgetContentProps = computed<ContentPropsRecord>(() => {
@@ -89,6 +91,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+      @widget:update-time-range="
+        (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
+      "
     />
     <RelativeGrid
       v-else-if="dashboard.content.layout.type === 'relative_grid'"
@@ -99,6 +104,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+      @widget:update-time-range="
+        (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
+      "
     />
   </CmkErrorBoundary>
 </template>

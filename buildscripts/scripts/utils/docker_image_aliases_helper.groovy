@@ -26,7 +26,9 @@ docker_reference_image = { ->
     def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
 
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-        return docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker")
+        def image = docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker");
+        image.pull();
+        return image;
     }
 }
 

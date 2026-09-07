@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.storeonce4x_alerts import (
+from cmk.plugins.storeonce.agent_based.storeonce4x_alerts import (
     check_storeonce4x_alerts,
     discover_storeonce4x_alerts,
     parse_storeonce4x_alerts,

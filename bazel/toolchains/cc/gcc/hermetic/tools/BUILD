@@ -18,7 +18,7 @@ cc_tool_map(
     visibility = ["//visibility:public"],
 )
 
-# --sysroot comes from //bazel/toolchains/cc/gcc/bootlin/args:linux_sysroot.
+# --sysroot comes from //bazel/toolchains/cc/gcc/hermetic/args:linux_sysroot.
 # rules_foreign_cc folds the compiler into a single $CC word, which breaks
 # if --sysroot is appended separately, but no rules_foreign_cc target uses
 # this toolchain yet.
@@ -26,9 +26,8 @@ cc_tool(
     name = "gcc",
     src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-gcc",
     data = [
-        "@gcc_toolchain//:assembler_buildroot",
+        "@gcc_toolchain//:binutils_buildroot",
         "@gcc_toolchain//:builtin_headers",
-        "@gcc_toolchain//:linker_buildroot",
         "@gcc_toolchain//:multicall_support_files",
         "@gcc_toolchain//:sysroot",
     ],
@@ -39,7 +38,7 @@ cc_tool(
     name = "g++",
     src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-g++",
     data = [
-        "@gcc_toolchain//:assembler_buildroot",
+        "@gcc_toolchain//:binutils_buildroot",
         "@gcc_toolchain//:builtin_headers",
         "@gcc_toolchain//:multicall_support_files",
         "@gcc_toolchain//:sysroot",

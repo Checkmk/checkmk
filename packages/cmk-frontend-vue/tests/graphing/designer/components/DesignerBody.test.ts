@@ -755,6 +755,20 @@ test('a multi-selection query is one row to configure and one line per matching 
   await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))
 })
 
+test('hovering a source row in the metrics tab highlights the lines it resolved to', async () => {
+  renderBody('edit')
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  expect(screen.getByTestId('highlighted').textContent).toBe('')
+
+  const rowA = screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  await fireEvent.mouseEnter(rowA)
+  expect(screen.getByTestId('highlighted')).toHaveTextContent('metric-a')
+
+  await fireEvent.mouseLeave(rowA)
+  expect(screen.getByTestId('highlighted').textContent).toBe('')
+})
+
 test('switching mode drops a highlight the unmounted legend left behind', async () => {
   const { setMode } = renderBody('view')
 

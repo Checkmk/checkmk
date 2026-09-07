@@ -338,6 +338,7 @@ const yAxis = computed<YAxis | null>(() => {
               :store="store"
               :metrics-by-source="data.metricsBySource.value"
               :resolved-titles="data.resolvedTitles.value"
+              @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>
           <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
@@ -350,7 +351,9 @@ const yAxis = computed<YAxis | null>(() => {
               :title-macros="titleMacros"
               :issues-by-row="issuesByRow"
               :resolved-titles="data.resolvedTitles.value"
+              :metrics-by-source="data.metricsBySource.value"
               @add-calculation="slideoutOpen = true"
+              @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>
         </template>

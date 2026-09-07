@@ -9,6 +9,7 @@ import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { type MockInstance, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
+import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import MetricsTable from '@/graphing/designer/components/MetricsTable.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { useValidationMessages } from '@/graphing/designer/composables/useValidationMessages'
@@ -73,8 +74,13 @@ function renderTable(
   seed: DesignerItem[] = [],
   telemetryMetricsAvailable = true,
   createServicesAvailable = true,
-  { issuesByRow = new Map<ItemId, RowIssue[]>(), resolvedTitles = new Map<ItemId, string>() } = {}
+  {
+    issuesByRow = new Map<ItemId, RowIssue[]>(),
+    resolvedTitles = new Map<ItemId, string>(),
+    metricsBySource = new Map<ItemId, Metric[]>()
+  } = {}
 ) {
+  const hoverMetrics = vi.fn()
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
   const harness = defineComponent({
@@ -89,12 +95,14 @@ function renderTable(
           telemetryMetricsDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
           titleMacros: TITLE_MACROS,
           issuesByRow,
-          resolvedTitles
+          resolvedTitles,
+          metricsBySource,
+          onHoverMetrics: hoverMetrics
         })
     }
   })
   const utils = render(harness)
-  return { store, ...utils }
+  return { store, hoverMetrics, ...utils }
 }
 
 test('a table without sources is header and footer only', () => {
@@ -444,4 +452,107 @@ test('three metrics are three rows, and deleting one drops only that row', async
 
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C'])
   expect(screen.getAllByLabelText('Select row')).toHaveLength(2)
+})
+
+function previewMetric(name: string): Metric {
+  return {
+    metadata: {
+      name,
+      title: name,
+      unit: {
+        notation: 'decimal',
+        symbol: '',
+        precision: { type: 'auto', digits: 2 },
+        convertible: false
+      },
+      color: '#28a2f3',
+      attributes: []
+    },
+    render: { stack: null, inverse: false, hidden: false },
+    data_points: [1]
+  }
+}
+
+test('an expanded metric_backend row previews the series its query resolved to', async () => {
+  renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+
+  expect(await screen.findByText('Metrics preview')).toBeInTheDocument()
+  expect(screen.getByText('first')).toBeInTheDocument()
+  expect(screen.getByText('second')).toBeInTheDocument()
+})
+
+test('a metric_backend row whose query resolved to nothing shows no preview', async () => {
+  renderTable([telemetryMetricsItem('A')])
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+
+  expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
+  expect(screen.queryByText('Metrics preview')).not.toBeInTheDocument()
+})
+
+test('an rrd row keeps its form free of a metrics preview', async () => {
+  renderTable([rrdMetricItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first')]]])
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+
+  expect(screen.queryByText('Metrics preview')).not.toBeInTheDocument()
+})
+
+test('hovering a source row highlights every series it resolved to', async () => {
+  const { hoverMetrics } = renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
+  })
+
+  await fireEvent.mouseEnter(
+    screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  )
+
+  expect(hoverMetrics).toHaveBeenCalledWith(['first', 'second'])
+})
+
+test('leaving a source row clears the highlight', async () => {
+  const { hoverMetrics } = renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first')]]])
+  })
+
+  await fireEvent.mouseLeave(
+    screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  )
+
+  expect(hoverMetrics).toHaveBeenCalledWith([])
+})
+
+test('hovering a hidden source row highlights nothing, since its lines are not drawn', async () => {
+  const { hoverMetrics } = renderTable(
+    [telemetryMetricsItem('A', { visible: false })],
+    true,
+    true,
+    {
+      metricsBySource: new Map([['A', [previewMetric('first')]]])
+    }
+  )
+
+  await fireEvent.mouseEnter(
+    screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  )
+
+  expect(hoverMetrics).toHaveBeenCalledWith([])
+})
+
+test('hovering a previewed series highlights that line alone', async () => {
+  const { hoverMetrics } = renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
+  })
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+  await screen.findByText('Metrics preview')
+
+  await fireEvent.mouseEnter(screen.getByText('second').closest('tr')!)
+
+  expect(hoverMetrics).toHaveBeenLastCalledWith(['second'])
 })

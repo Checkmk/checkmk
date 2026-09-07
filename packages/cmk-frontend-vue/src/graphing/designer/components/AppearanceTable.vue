@@ -37,6 +37,11 @@ const { store, metricsBySource, resolvedTitles } = defineProps<{
   resolvedTitles: ReadonlyMap<ItemId, string>
 }>()
 
+const emit = defineEmits<{
+  /** The series the hovered element stands for. */
+  hoverMetrics: [names: string[]]
+}>()
+
 const { _t } = usei18n()
 const { sourceTypeLabel, lineStyleSuggestions, lineStyleLabel } = useRowLabels()
 
@@ -109,6 +114,22 @@ const linesBySource = computed(() => {
   return out
 })
 
+/** A hidden row is fetched but not drawn, so highlighting it would dim the plot for nothing. */
+function onRowHover(row: DesignerItem | null): void {
+  if (row === null || !row.visible) {
+    emit('hoverMetrics', [])
+    return
+  }
+  emit(
+    'hoverMetrics',
+    (linesBySource.value.get(row.id) ?? []).map((entry) => entry.metric.metadata.name)
+  )
+}
+
+function onSeriesHover(row: DesignerItem, metric: Metric | null): void {
+  emit('hoverMetrics', metric === null || !row.visible ? [] : [metric.metadata.name])
+}
+
 function onLineStyleChange(row: DesignerItem, value: string | null): void {
   const lineType = parseLineType(value)
   if (lineType !== undefined) {
@@ -130,6 +151,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
       :get-row-key="(row: DesignerItem) => row.id"
       :is-row-expanded="isExpanded"
       @reorder="(from: number, to: number) => store.move(from, to)"
+      @row-hover="onRowHover"
     >
       <template #row="{ row }">
         <DragHandleCell column-id="drag" vertical-align="middle" />
@@ -184,7 +206,11 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           v-for="entry in linesBySource.get(row.id) ?? []"
           :key="entry.metric.metadata.name"
         >
-          <tr class="graphing-appearance-table__expanded-row">
+          <tr
+            class="graphing-appearance-table__expanded-row"
+            @mouseenter="onSeriesHover(row, entry.metric)"
+            @mouseleave="onSeriesHover(row, null)"
+          >
             <td :colspan="colorColumnIndex" />
             <BaseCell column-id="color" vertical-align="middle">
               <span
@@ -211,7 +237,11 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
             <td :colspan="2" />
             <StatsCells :stats="entry.stats" />
           </tr>
-          <tr v-if="showsAttributes(row.id, entry.metric)">
+          <tr
+            v-if="showsAttributes(row.id, entry.metric)"
+            @mouseenter="onSeriesHover(row, entry.metric)"
+            @mouseleave="onSeriesHover(row, null)"
+          >
             <td :colspan="columns.length" class="graphing-appearance-table__attributes">
               <MetricAttributesTable :attributes="attributesOf(entry.metric)" />
             </td>

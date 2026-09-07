@@ -29,6 +29,7 @@ import DropdownCell from '@/monitoring/shared/components/cell/DropdownCell.vue'
 import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
+import type { Metric } from '../../components/TimeSeriesGraph'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useItemValidation } from '../composables/useItemValidation'
@@ -60,7 +61,8 @@ const {
   telemetryMetricsDefaultTitle,
   titleMacros,
   issuesByRow,
-  resolvedTitles
+  resolvedTitles,
+  metricsBySource
 } = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
@@ -71,10 +73,14 @@ const {
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
   resolvedTitles: ReadonlyMap<ItemId, string>
+  /** Fetched series per data-source row, for the per-row metrics preview. */
+  metricsBySource: Map<ItemId, Metric[]>
 }>()
 
 const emit = defineEmits<{
   'add-calculation': []
+  /** The series the hovered element stands for. */
+  hoverMetrics: [names: string[]]
 }>()
 
 const { _t } = usei18n()
@@ -224,6 +230,22 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
   }
 }
 
+/** A hidden row is fetched but not drawn, so highlighting it would dim the plot for nothing. */
+function onRowHover(row: DesignerItem | null): void {
+  if (row === null || !row.visible) {
+    emit('hoverMetrics', [])
+    return
+  }
+  emit(
+    'hoverMetrics',
+    (metricsBySource.get(row.id) ?? []).map((metric) => metric.metadata.name)
+  )
+}
+
+function onPreviewHover(row: DesignerItem, names: string[]): void {
+  emit('hoverMetrics', row.visible ? names : [])
+}
+
 function onBulkClone(): void {
   const [firstCreated] = store.clone(selectedIds.value)
   rowSelection.value = {}
@@ -302,6 +324,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
         :get-row-variant="rowVariant"
         :is-row-expanded="isExpanded"
         @reorder="(from: number, to: number) => store.move(from, to)"
+        @row-hover="onRowHover"
       >
         <template #row="{ row, tableRow }">
           <DragHandleCell column-id="drag" vertical-align="middle" />
@@ -390,6 +413,8 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
                 :store="store"
                 :thresholds="thresholds"
                 :issues="issuesOf(row)"
+                :metrics="metricsBySource.get(row.id) ?? []"
+                @hover-metrics="onPreviewHover(row, $event)"
               />
             </td>
           </tr>

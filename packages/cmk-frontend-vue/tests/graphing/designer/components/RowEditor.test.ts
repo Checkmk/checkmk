@@ -57,7 +57,7 @@ function renderEditor(seed: DesignerItem) {
         const row = store.items.value.find((candidate) => candidate.id === seed.id)
         return row === undefined
           ? null
-          : h(RowEditor, { row, store, thresholds: THRESHOLDS, issues: [] })
+          : h(RowEditor, { row, store, thresholds: THRESHOLDS, issues: [], metrics: [] })
       }
     }
   })

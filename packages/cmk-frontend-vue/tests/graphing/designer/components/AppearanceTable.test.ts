@@ -271,3 +271,65 @@ test('per-row colour and visibility changes leave the other row untouched', asyn
   expect(store.items.value[0]).toMatchObject({ color: '#ff0000', visible: true })
   expect(store.items.value[1]).toMatchObject({ color: '#222222', visible: false })
 })
+
+test('hovering a resolved series highlights that line alone', async () => {
+  const { emitted } = renderTable(
+    [rrdQueryItem('B', { title: 'Fanned' })],
+    new Map([['B', [metric('b1', [1]), metric('b2', [2])]]])
+  )
+
+  await fireEvent.mouseEnter(rowOf('b1'))
+
+  expect(emitted()['hoverMetrics']).toEqual([[['b1']]])
+})
+
+test('hovering a source row highlights every line it resolved to', async () => {
+  const { emitted } = renderTable(
+    [rrdQueryItem('B', { title: 'Fanned' })],
+    new Map([['B', [metric('b1', [1]), metric('b2', [2])]]])
+  )
+
+  await fireEvent.mouseEnter(rowOf('Fanned'))
+
+  const highlighted = (emitted()['hoverMetrics'] as [string[]][]).map(([names]) =>
+    [...names].sort()
+  )
+  expect(highlighted).toEqual([['b1', 'b2']])
+})
+
+test('leaving a row clears the highlight', async () => {
+  const { emitted } = renderTable(
+    [rrdMetricItem('A', { title: 'Single' })],
+    new Map([['A', [metric('a', [1])]]])
+  )
+
+  await fireEvent.mouseEnter(rowOf('Single'))
+  await fireEvent.mouseLeave(rowOf('Single'))
+
+  expect(emitted()['hoverMetrics']).toEqual([[['a']], [[]]])
+})
+
+test('hovering a hidden row highlights nothing, since its lines are not drawn', async () => {
+  const { emitted } = renderTable(
+    [rrdMetricItem('A', { title: 'Single', visible: false })],
+    new Map([['A', [metric('a', [1])]]])
+  )
+
+  await fireEvent.mouseEnter(rowOf('Single'))
+
+  expect(emitted()['hoverMetrics']).toEqual([[[]]])
+})
+
+test('hovering the attribute table keeps its own series highlighted', async () => {
+  const { emitted } = renderTable(
+    [telemetryMetricsItem('B', { title: 'Latency' })],
+    new Map([['B', [backendMetric('line one')]]])
+  )
+  // [0] is the source row, open from the start; [1] is its series.
+  await fireEvent.click(toggles()[1]!)
+
+  const attributesRow = screen.getByText('Attribute name').closest('table')!.closest('tr')!
+  await fireEvent.mouseEnter(attributesRow)
+
+  expect(emitted()['hoverMetrics']).toEqual([[['line one']]])
+})

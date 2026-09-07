@@ -38,6 +38,10 @@ const BOOLEAN_SETTING_URL = `${location.protocol}//${location.host}/api/internal
 
 const data: GlobalSettingsAppData = {
   title: 'Global settings',
+  breadcrumb: [
+    { title: 'Setup', link: null },
+    { title: 'Global settings', link: null }
+  ],
   domain: 'global_settings',
   scope: { type: 'global' },
   topics: [
@@ -184,6 +188,18 @@ function settingRow() {
     .closest('.global-settings-variable-row')
 }
 
+// Scoped to the topic, because the permanent work-in-progress notice is an alert as well.
+function topic(headline: string): HTMLElement {
+  const element = screen
+    .getByRole('button', { name: `Toggle accordion item ${headline}` })
+    .closest<HTMLElement>('.cmk-accordion-item')
+  if (element === null) {
+    throw new Error(`No accordion item found for the topic "${headline}"`)
+  }
+  return element
+}
+
+// Named, because the permanent work-in-progress notice is an alert as well.
 function resetConfirmation(): HTMLElement {
   return screen.getByRole('alert', { name: /Remove all modifications in/ })
 }
@@ -209,6 +225,23 @@ const warnedTopic: GlobalSettingsTopic = {
   subline: 'Settings for developing Checkmk',
   warning: 'These settings are internal and unsupported.'
 }
+
+describe('GlobalSettingsApp page header', () => {
+  test('renders the breadcrumb of the page', () => {
+    render(GlobalSettingsApp, { props: data })
+
+    expect(screen.getByText('Setup')).toBeInTheDocument()
+    expect(screen.getByText('Global settings')).toBeInTheDocument()
+  })
+
+  test('renders the work in progress notice', () => {
+    render(GlobalSettingsApp, { props: data })
+
+    expect(
+      screen.getByText('This page is work in progress. It shows a subset of the global settings.')
+    ).toBeInTheDocument()
+  })
+})
 
 describe('GlobalSettingsApp accordion', () => {
   test('all topics start collapsed and the toggle expands and collapses them all', async () => {
@@ -735,7 +768,7 @@ describe('GlobalSettingsApp overview presentation', () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [warnedTopic] } })
     await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
+    expect(within(topic(warnedTopic.headline)).getByRole('alert')).toHaveTextContent(
       'These settings are internal and unsupported.'
     )
   })
@@ -744,6 +777,6 @@ describe('GlobalSettingsApp overview presentation', () => {
     render(GlobalSettingsApp, { props: data })
     await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
 
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(within(topic(data.topics[0]!.headline)).queryByRole('alert')).not.toBeInTheDocument()
   })
 })

@@ -11,6 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject, provide, ref, toRaw } from 'vue'
@@ -96,12 +97,16 @@ async function resetTopic(): Promise<void> {
 
 <template>
   <div class="global-settings-app">
+    <CmkBreadcrumb :items="breadcrumb" />
     <div class="global-settings-app__toolbar">
       <ExpandCollapseButtons
         @expand-all="openedItems = [...allTopicIds]"
         @collapse-all="openedItems = []"
       />
     </div>
+    <CmkAlertBox variant="warning">
+      {{ _t('This page is work in progress. It shows a subset of the global settings.') }}
+    </CmkAlertBox>
     <CmkAlertBox v-if="resetError !== null" variant="error" :heading="_t('Resetting failed')">
       {{ resetError }}
     </CmkAlertBox>
@@ -138,6 +143,7 @@ async function resetTopic(): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: var(--dimension-4) var(--dimension-4) 0;
 }
 
 .global-settings-app__toolbar {

@@ -4,6 +4,10 @@
   "title": "global_settings_app",
   "properties": {
     "title": { "type": "string" },
+    "breadcrumb": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/global_settings_breadcrumb_item" }
+    },
     "domain": {
       "description": "event console or global settings?",
       "$ref": "#/$defs/global_settings_domain"
@@ -20,8 +24,17 @@
       "items": { "$ref": "#/$defs/global_settings_topic" }
     }
   },
-  "required": ["title", "domain", "scope", "topics"],
+  "required": ["title", "breadcrumb", "domain", "scope", "topics"],
   "$defs": {
+    "global_settings_breadcrumb_item": {
+      "title": "GlobalSettingsBreadcrumbItem",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "link": { "type": ["string", "null"] }
+      },
+      "required": ["title", "link"]
+    },
     "global_settings_domain": {
       "type": "string",
       "enum": ["global_settings", "event_console"]

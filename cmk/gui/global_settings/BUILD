@@ -10,7 +10,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",

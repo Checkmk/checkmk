@@ -7,6 +7,10 @@ import type { GlobalSettingsApp } from 'cmk-shared-typing/typescript/global_sett
 
 export const globalSettingsPagePayload = {
   title: 'Global settings',
+  breadcrumb: [
+    { title: 'Setup', link: null },
+    { title: 'Global settings', link: null }
+  ],
   domain: 'global_settings',
   scope: {
     type: 'global'

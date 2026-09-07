@@ -61,7 +61,7 @@ from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_rename import (
     rename_hosts_job_entry_point,
     RenameHostBackgroundJob,
@@ -244,7 +244,7 @@ class ModeBulkRenameHost(WatoMode):
             except ValueError:
                 invalid_names.add(new_name)
 
-            if (host := folder.host(old_name)) and is_locked_by_quick_setup(host.locked_by()):
+            if (host := folder.host(old_name)) and is_locked_by_config_bundle(host.locked_by()):
                 locked_by_quick_setup.add(old_name)
 
         warning = ""
@@ -548,7 +548,7 @@ class ModeRenameHost(WatoMode):
                 )
                 % {"renamed_host_site": renamed_host_site},
             )
-        if is_locked_by_quick_setup(self._host.locked_by()):
+        if is_locked_by_config_bundle(self._host.locked_by()):
             raise MKUserError(
                 "host",
                 _('You cannot rename host "%(host_name)s", because it is managed by Quick Setup.')

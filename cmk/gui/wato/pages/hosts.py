@@ -93,7 +93,7 @@ from cmk.gui.watolib.check_mk_automations import (
     update_dns_cache,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
     collect_attributes,
@@ -549,7 +549,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _page_form_quick_setup_warning(self) -> None:
         if (
             (locked_by := self._host.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_config_bundle(locked_by)
             and request.get_ascii_input("mode") != "edit_configuration_bundle"
         ):
             quick_setup_locked_warning(locked_by, "host")
@@ -896,7 +896,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     yield from _host_page_menu_hook(host.name())
 
     if mode_name == "edit_host" and not host.locked():
-        locked_by_quick_setup = is_locked_by_quick_setup(host.locked_by())
+        locked_by_quick_setup = is_locked_by_config_bundle(host.locked_by())
         if user.may("wato.rename_hosts") and not locked_by_quick_setup:
             yield PageMenuEntry(
                 title=_("Rename"),
@@ -1019,7 +1019,7 @@ class CreateHostMode(ABCHostMode):
         )
 
         # remove the quick setup lock from the clone
-        if is_locked_by_quick_setup(host.locked_by()):
+        if is_locked_by_config_bundle(host.locked_by()):
             host.attributes.pop("locked_by", None)
             host.attributes.pop("locked_attributes", None)
 
@@ -1105,7 +1105,7 @@ class CreateHostMode(ABCHostMode):
         if (
             self._clone_source
             and (locked_by := self._clone_source.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_config_bundle(locked_by)
         ):
             quick_setup_duplication_warning(locked_by, "host")
 

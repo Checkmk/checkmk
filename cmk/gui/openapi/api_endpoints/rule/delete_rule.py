@@ -19,7 +19,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, visible_rulesets
 
@@ -44,7 +44,7 @@ def delete_rule_v1(
     for ruleset in visible_rulesets(all_rulesets.get_rulesets()).values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:
-                if is_locked_by_quick_setup(rule.locked_by):
+                if is_locked_by_config_bundle(rule.locked_by):
                     raise ProblemException(
                         status=400,
                         title="Rule is managed by Quick setup",

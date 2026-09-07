@@ -21,7 +21,7 @@ from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.pending_changes import (
@@ -191,7 +191,7 @@ def host_etag(host: Host) -> ETag:
 
 
 def validate_host_attributes_for_quick_setup(host: Host, body: UpdateHost) -> bool:
-    if not is_locked_by_quick_setup(host.locked_by()):
+    if not is_locked_by_config_bundle(host.locked_by()):
         return True
 
     locked_attributes: Sequence[str] = host.attributes.get("locked_attributes", [])

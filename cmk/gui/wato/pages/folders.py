@@ -83,7 +83,7 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
@@ -1414,7 +1414,7 @@ class ModeFolder(WatoMode):
     def _show_host_actions_menu(self, host: Host) -> None:
         action_menu_show_flags: list[str] = []
         if not host.locked() and user.may("wato.manage_hosts"):
-            if not is_locked_by_quick_setup(host.locked_by()):
+            if not is_locked_by_config_bundle(host.locked_by()):
                 action_menu_show_flags.append("show_delete_link")
 
             if user.may("wato.clone_hosts"):

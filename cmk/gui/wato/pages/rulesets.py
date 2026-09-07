@@ -123,7 +123,7 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -1236,7 +1236,7 @@ class ModeEditRuleset(WatoMode):
 
         action = request.get_ascii_input_mandatory("_action")
         if action == "delete":
-            if is_locked_by_quick_setup(rule.locked_by):
+            if is_locked_by_config_bundle(rule.locked_by):
                 raise MKUserError(None, _("Cannot delete rules that are managed by Quick Setup."))
             ruleset.delete_rule(
                 rule,
@@ -1465,7 +1465,7 @@ class ModeEditRuleset(WatoMode):
             export_url, _("Export this rule for API"), StaticIcon(IconNames.export_rule)
         )
 
-        if is_locked_by_quick_setup(rule.locked_by):
+        if is_locked_by_config_bundle(rule.locked_by):
             html.icon_button(
                 url="",
                 title=_("Rule cannot be moved, because it is managed by Quick Setup"),
@@ -2153,7 +2153,7 @@ class ABCEditRuleMode(WatoMode):
                 render_link=quick_setup_render_link(self._rule.locked_by),
                 message=_("Cannot change rule conditions for rules managed by Quick Setup."),
             )
-            if is_locked_by_quick_setup(self._rule.locked_by)
+            if is_locked_by_config_bundle(self._rule.locked_by)
             else None
         )
         self._form_type = self._init_form_type()
@@ -2552,7 +2552,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _page_form_quick_setup_warning(self) -> None:
         if (
-            is_locked_by_quick_setup(self._rule.locked_by)
+            is_locked_by_config_bundle(self._rule.locked_by)
             and request.get_ascii_input("mode") != "edit_configuration_bundle"
         ):
             quick_setup_locked_warning(self._rule.locked_by, "rule")
@@ -3418,7 +3418,7 @@ class ModeCloneRule(ABCEditRuleMode):
 
     @override
     def _page_form_quick_setup_warning(self) -> None:
-        if is_locked_by_quick_setup(self._orig_rule.locked_by):
+        if is_locked_by_config_bundle(self._orig_rule.locked_by):
             quick_setup_duplication_warning(self._orig_rule.locked_by, "rule")
 
 
@@ -3936,7 +3936,7 @@ class ModeUnknownRulesets(WatoMode):
         *,
         pending_changes: PendingChanges,
     ) -> None:
-        if is_locked_by_quick_setup(rule.locked_by):
+        if is_locked_by_config_bundle(rule.locked_by):
             raise MKUserError(None, _("Cannot delete rules that are managed by Quick Setup."))
         ruleset.delete_rule(rule, create_change=True, pending_changes=pending_changes)
 

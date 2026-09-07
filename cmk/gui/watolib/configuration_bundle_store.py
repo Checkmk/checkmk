@@ -13,7 +13,7 @@ from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_IDS_LOCKED_BY_CONF_
 BundleId = NewType("BundleId", str)
 
 
-def is_locked_by_quick_setup(
+def is_locked_by_config_bundle(
     ident: GlobalIdent | None, *, check_reference_exists: bool = True
 ) -> TypeGuard[GlobalIdent]:
     """Check if the given ident of a config object is locked by a configuration bundle.

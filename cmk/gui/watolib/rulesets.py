@@ -68,7 +68,7 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.config_domain_name import CORE
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -790,24 +790,24 @@ class Ruleset:
         except KeyError:
             return []
 
-    def _num_quick_setup_rules(self, folder: Folder) -> int:
-        # the assertion is that all quick setup rules are at the top
+    def _num_bundle_locked_rules(self, folder: Folder) -> int:
+        # the assertion is that all bundle-locked rules are at the top
         folder_rules = self.get_folder_rules(folder)
         for idx, rule in enumerate(folder_rules):
-            if not is_locked_by_quick_setup(rule.locked_by):
+            if not is_locked_by_config_bundle(rule.locked_by):
                 return idx
-        # if we get here either there are no rules or all of them are managed by qs
+        # if we get here either there are no rules or all of them are bundle-locked
         return len(folder_rules)
 
     def get_index_for_move(self, folder: Folder, rule: Rule, target: int) -> int:
-        num_qs_rules = self._num_quick_setup_rules(folder)
-        if is_locked_by_quick_setup(rule.locked_by):
+        num_locked_rules = self._num_bundle_locked_rules(folder)
+        if is_locked_by_config_bundle(rule.locked_by):
             if rule in self.get_folder_rules(folder):
-                return min(num_qs_rules - 1, target)
+                return min(num_locked_rules - 1, target)
 
-            return min(num_qs_rules, target)
+            return min(num_locked_rules, target)
 
-        return max(num_qs_rules, target)
+        return max(num_locked_rules, target)
 
     def prepend_rule(self, folder: Folder, rule: Rule) -> None:
         rules = self._rules.setdefault(folder.path(), [])
@@ -894,8 +894,8 @@ class Ruleset:
 
     def append_rule(self, folder: Folder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
-        if is_locked_by_quick_setup(rule.locked_by):
-            index = self._num_quick_setup_rules(folder)
+        if is_locked_by_config_bundle(rule.locked_by):
+            index = self._num_bundle_locked_rules(folder)
             rules.insert(index, rule)
         else:
             index = len(rules)

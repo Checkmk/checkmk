@@ -90,7 +90,7 @@ from cmk.gui.watolib.config_domain_name import (
     DomainSettings,
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     all_host_attributes,
@@ -3035,7 +3035,7 @@ class Folder:
         return [
             host_name
             for host_name in host_names
-            if is_locked_by_quick_setup(self.tree.load_host(host_name).locked_by())
+            if is_locked_by_config_bundle(self.tree.load_host(host_name).locked_by())
         ]
 
     @staticmethod
@@ -3162,7 +3162,7 @@ class Folder:
         host = self.hosts()[oldname]
         host.permissions.need_permission("write", acting_user)
 
-        if is_locked_by_quick_setup(host.locked_by()):
+        if is_locked_by_config_bundle(host.locked_by()):
             raise MKUserError(
                 "rename-host",
                 _('You cannot rename host "%(oldname)s", because it is managed by Quick Setup.')

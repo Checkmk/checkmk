@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import RULE_FAMILY
@@ -67,7 +67,7 @@ def edit_rule_v1(
     )
 
     if (
-        is_locked_by_quick_setup(rule_entry.rule.locked_by)
+        is_locked_by_config_bundle(rule_entry.rule.locked_by)
         and rule_entry.rule.conditions != new_rule.conditions
     ):
         raise ProblemException(

@@ -50,7 +50,7 @@ from cmk.gui.watolib.config_domain_name import (
     PasswordChange,
     SerializedSettings,
 )
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
@@ -118,7 +118,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
 
     @override
     def _validate_deletion(self, ident: str, entry: PasswordConfig, *, debug: bool) -> None:
-        if is_locked_by_quick_setup(entry.get("locked_by")):
+        if is_locked_by_config_bundle(entry.get("locked_by")):
             raise MKUserError(
                 "_delete",
                 _("Cannot delete %(name_singular)s because it is managed by Quick Setup.")
@@ -148,7 +148,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
 
     @override
     def _show_delete_action(self, nr: int, ident: str, entry: PasswordConfig) -> None:
-        if is_locked_by_quick_setup(entry.get("locked_by")):
+        if is_locked_by_config_bundle(entry.get("locked_by")):
             html.icon_button(
                 url="",
                 title=_("%(name_singular)s can only be deleted via Quick Setup")
@@ -289,7 +289,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
         elements = super()._vs_mandatory_elements()
         locked_by = None if self._new else self._entry.get("locked_by")
-        if is_locked_by_quick_setup(locked_by, check_reference_exists=False):
+        if is_locked_by_config_bundle(locked_by, check_reference_exists=False):
             elements.append(
                 (
                     "source",
@@ -391,7 +391,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
     def _page_form_quick_setup_warning(self) -> None:
         locked_by = None if self._new else self._entry.get("locked_by")
         if (
-            is_locked_by_quick_setup(locked_by)
+            is_locked_by_config_bundle(locked_by)
             and request.get_ascii_input("mode") != "edit_configuration_bundle"
         ):
             quick_setup_locked_warning(locked_by, self._mode_type.name_singular())

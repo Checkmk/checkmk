@@ -20,7 +20,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.html import quick_setup_render_link
 from cmk.gui.valuespec import FixedValue, ValueSpec
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     ABCHostAttributeFormSpec,
@@ -385,7 +385,7 @@ def configure_attributes(
             topic_id == "basic"
             and single_edit_host
             and (locked_by := single_edit_host.locked_by())
-            and is_locked_by_quick_setup(locked_by, check_reference_exists=False)
+            and is_locked_by_config_bundle(locked_by, check_reference_exists=False)
         ):
             vs = FixedValue(
                 value=locked_by["instance_id"],

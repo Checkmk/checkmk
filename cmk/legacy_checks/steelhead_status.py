@@ -3,32 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.steelhead.lib import DETECT_STEELHEAD
-
-check_info = {}
-
-
-def discover_steelhead_status(info):
-    if len(info) == 1:
-        yield None, {}
-
-
-def check_steelhead_status(item, params, info):  # noqa: ARG001
-    health, status = info[0]
-    if health == "Healthy" and status == "running":
-        return (0, "Healthy and running")
-    return (2, f"Status is {health} and {status}")
 
 
 def parse_steelhead_status(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["steelhead_status"] = LegacyCheckDefinition(
+snmp_section_steelhead_status = SimpleSNMPSection(
     name="steelhead_status",
     parse_function=parse_steelhead_status,
     detect=DETECT_STEELHEAD,
@@ -36,6 +29,24 @@ check_info["steelhead_status"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.17163.1.1.2",
         oids=["2", "3"],
     ),
+)
+
+
+def discover_steelhead_status(section: StringTable) -> DiscoveryResult:
+    if len(section) == 1:
+        yield Service()
+
+
+def check_steelhead_status(section: StringTable) -> CheckResult:
+    health, status = section[0]
+    if health == "Healthy" and status == "running":
+        yield Result(state=State.OK, summary="Healthy and running")
+        return
+    yield Result(state=State.CRIT, summary=f"Status is {health} and {status}")
+
+
+check_plugin_steelhead_status = CheckPlugin(
+    name="steelhead_status",
     service_name="Status",
     discovery_function=discover_steelhead_status,
     check_function=check_steelhead_status,

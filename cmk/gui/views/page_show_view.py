@@ -260,6 +260,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             breadcrumb=breadcrumb,
             request_cache=view.request_cache,
             filterheaders=filterheaders,
+            active_filters=all_active_filters,
         )
 
     else:

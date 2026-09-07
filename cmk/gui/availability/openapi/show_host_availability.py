@@ -88,6 +88,8 @@ def show_host_availability_v1(
         include_output=False,
         include_long_output=False,
         avoptions=avoptions,
+        # This endpoint filters by host/service, not by a visual context
+        active_filters=(),
     )
     av_data = compute_availability("host", raw_data, avoptions, load_annotations())
 

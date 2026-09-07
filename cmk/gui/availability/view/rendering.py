@@ -80,6 +80,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
+from cmk.gui.visuals.filter import Filter
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
@@ -198,6 +199,7 @@ def show_availability_page(
     breadcrumb: Breadcrumb,
     request_cache: RequestCache[RequestCacheConfig],
     filterheaders: FilterHeader,
+    active_filters: Sequence[Filter],
     debug: bool,
     table_row_limit: int,
 ) -> None:
@@ -303,6 +305,7 @@ def show_availability_page(
             include_long_output=include_long_output,
             avoptions=avoptions,
             view_process_tracking=process_tracking,
+            active_filters=active_filters,
         )
         av_data = compute_availability(what, av_rawdata, avoptions, annotations)
 

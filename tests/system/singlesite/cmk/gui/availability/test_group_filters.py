@@ -197,13 +197,9 @@ def _service_aliases(*keys: str) -> set[str]:
                 "neg_optservice_group": "on",
             },
             _service_aliases("a"),
-            # This is the case of CMK-35309: the selection above is dropped entirely
-            # because of the negated filter, so group C shows up as well
+            # This is the case of CMK-35309: the selection above was dropped entirely
+            # because of the negated filter, so group C showed up as well
             id="several service groups with negated single group",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="CMK-35309: a negated group filter drops the positive selection",
-            ),
         ),
         pytest.param(
             {
@@ -230,16 +226,7 @@ def test_availability_grouped_by_service_groups(
 @pytest.mark.parametrize(
     "filters, expected",
     [
-        pytest.param(
-            {},
-            _host_aliases(*_KEYS),
-            id="no group filter",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="CMK-35309: an empty host group filter of the view context "
-                "removes every host group",
-            ),
-        ),
+        pytest.param({}, _host_aliases(*_KEYS), id="no group filter"),
         pytest.param(
             {"hostgroups": _host_group("a")}, _host_aliases("a"), id="several host groups"
         ),
@@ -256,10 +243,6 @@ def test_availability_grouped_by_service_groups(
             },
             _host_aliases("a"),
             id="several host groups with negated single group",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="CMK-35309: a negated group filter drops the positive selection",
-            ),
         ),
         pytest.param(
             {"servicegroups": _service_group("a")},
@@ -267,11 +250,6 @@ def test_availability_grouped_by_service_groups(
             # the two hosts of service group A are in the host groups A, B and C.
             _host_aliases("a", "b", "c"),
             id="service group filter does not restrict host groups",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="CMK-35309: an empty host group filter of the view context "
-                "removes every host group",
-            ),
         ),
     ],
 )

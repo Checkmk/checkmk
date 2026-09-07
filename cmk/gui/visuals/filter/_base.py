@@ -572,6 +572,10 @@ class DualListFilter(Filter):
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
+
 
 class RegexFilter(InputTextFilter):
     @override

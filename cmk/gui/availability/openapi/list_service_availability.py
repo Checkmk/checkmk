@@ -86,6 +86,8 @@ def list_service_availability_v1(
         include_output=False,
         include_long_output=False,
         avoptions=avoptions,
+        # This endpoint filters by host/service, not by a visual context
+        active_filters=(),
     )
     av_data = compute_availability("service", raw_data, avoptions, load_annotations())
 

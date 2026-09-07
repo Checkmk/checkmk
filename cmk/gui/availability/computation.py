@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -12,8 +13,15 @@ from cmk.gui.data_source import query_livestatus
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.num_split import key_num_split
-from cmk.gui.type_defs import FilterHeader, ViewProcessTracking, VisualContext
+from cmk.gui.type_defs import (
+    ColumnName,
+    FilterHeader,
+    Rows,
+    ViewProcessTracking,
+    VisualContext,
+)
 from cmk.gui.view_utils import cmp_service_name_equiv
+from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.groups_io import all_groups
 from cmk.livestatus_client import (
     lqencode,
@@ -63,11 +71,16 @@ def get_host_service_availability_rawdata(
     include_output: bool,
     include_long_output: bool,
     avoptions: AVOptions,
+    active_filters: Sequence[Filter],
     view_process_tracking: ViewProcessTracking | None = None,
 ) -> tuple[AVRawData, bool]:
     # 'view_process_tracking=None': this function is also called from the grafana module
     # which has not the task to track the processed rows/cpu time but the views module does
     # track these steps.
+    # 'active_filters' are the filters that built 'filterheaders'. They are needed on top of
+    # them because grouping by host or service groups has to know which groups were asked
+    # for, see filter_groups_of_entries(). Pass an empty sequence when the caller filters
+    # without a context (then there is nothing to restrict the groups by).
     time_range: AVTimeRange = avoptions["range"][0]
 
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
@@ -141,8 +154,8 @@ def get_host_service_availability_rawdata(
 
     # When a group filter is set, only care about these groups in the group fields
     with CPUTracker(logger.debug) as filter_rows_tracker:
-        if avoptions["grouping"] not in [None, "host"]:
-            filter_groups_of_entries(context, avoptions, spans)
+        if grouping in ("host_groups", "service_groups"):
+            filter_groups_of_entries(context, active_filters, grouping, spans)
 
     # Now we find out if the log row limit was exceeded. The livestatus "Limit:"
     # header is applied to each site individually, so we must check the per-site
@@ -167,74 +180,42 @@ def get_host_service_availability_rawdata(
 
 
 def filter_groups_of_entries(
-    context: VisualContext, avoptions: AVOptions, spans: list[AVSpan]
+    context: VisualContext,
+    active_filters: Sequence[Filter],
+    grouping: Literal["host_groups", "service_groups"],
+    spans: list[AVSpan],
 ) -> None:
-    group_by = avoptions["grouping"]
+    """Drop the groups the active filters did not ask for from the group fields
 
-    only_groups = set()
-    # TODO: This is a dirty hack. The logic of the filters needs to be moved to the filters.
-    # They need to be able to filter the list of all groups.
-    # TODO: Negated filters are not handled here. :(
-    if group_by == "service_groups":
-        servicegroups = context.get("servicegroups", {})
-        optservicegroup = context.get("optservicegroup", {})
-        if not any(iter(servicegroups.values())) and not any(iter(optservicegroup.values())):
-            return
+    Livestatus selected the matching spans, but a matching span also carries the groups
+    the user did not select, and those would show up as extra groups of the availability
+    table. So hand the filters the list of all groups of the spans - one row per group -
+    and let them filter it the same way they filter any other table.
+    """
+    group_filters = [f for f in active_filters if _filters_column(f, grouping)]
+    if not group_filters:
+        return
 
-        # Extract from context:
-        # 'servicegroups': {'servicegroups': 'cpu|disk', 'neg_servicegroups': 'off'},
-        # 'optservicegroup': {'optservice_group': '', 'neg_optservice_group': 'off'},
-        sg_filter = context.get("servicegroups", {})
-        assert isinstance(sg_filter, dict)
-        negated = sg_filter.get("neg_servicegroups") == "on"
-        if negated:
-            return
+    groups_of_spans = {group for span in spans for group in span[grouping]}
+    group_rows: Rows = [{grouping: [group]} for group in groups_of_spans]
+    for group_filter in group_filters:
+        group_rows = group_filter.filter_table(context, group_rows)
 
-        only_groups.update([e for e in sg_filter.get("servicegroups", "").split("|") if e])
+    if len(group_rows) == len(groups_of_spans):
+        return
 
-        opt_sg_filter = context.get("optservicegroup", {})
-        assert isinstance(opt_sg_filter, dict)
-        negated = opt_sg_filter.get("neg_optservice_group") == "on"
-        if negated:
-            return
-
-        group_name = opt_sg_filter.get("optservice_group")
-        if group_name and not negated:
-            only_groups.add(group_name)
-
-    elif group_by == "host_groups":
-        if "hostgroups" not in context and "opthostgroup" not in context:
-            return
-
-        hg_filter = context.get("hostgroups", {})
-        assert isinstance(hg_filter, dict)
-        negated = hg_filter.get("neg_hostgroups") == "on"
-        if negated:
-            return
-
-        only_groups.update([e for e in hg_filter.get("hostgroups", "").split("|") if e])
-
-        opt_hg_filter = context.get("opthostgroup", {})
-        assert isinstance(opt_hg_filter, dict)
-        negated = opt_hg_filter.get("neg_opthost_group") == "on"
-        if negated:
-            return
-
-        group_name = opt_hg_filter.get("opthost_group")
-        if group_name and not negated:
-            only_groups.add(group_name)
-
-    else:
-        raise NotImplementedError
-
+    selected = {row[grouping][0] for row in group_rows}
     for span in spans:
-        match group_by:
-            case "service_groups":
-                span["service_groups"] = list(set(span["service_groups"]).intersection(only_groups))
-            case "host_groups":
-                span["host_groups"] = list(set(span["host_groups"]).intersection(only_groups))
-            case _:
-                raise TypeError(group_by)
+        span[grouping] = [group for group in span[grouping] if group in selected]
+
+
+def _filters_column(filter_: Filter, column: ColumnName) -> bool:
+    """Whether the filter judges `column`, and can therefore filter a list of its values
+
+    A filter of another column would be handed rows it cannot read.
+    """
+    query_filter = getattr(filter_, "query_filter", None)
+    return getattr(query_filter, "column", None) == column
 
 
 # Sort the raw spans into a tree of dicts, so that we

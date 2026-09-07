@@ -23,6 +23,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
+        "//cmk/gui/visuals",
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils",
         "//packages/cmk-ccc:cpu-tracking",

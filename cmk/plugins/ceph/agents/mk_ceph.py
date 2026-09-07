@@ -10,12 +10,18 @@ import os
 import os.path
 import socket
 import sys
-from collections.abc import Mapping
-from typing import Any, TYPE_CHECKING
 
-_ = Mapping, Any  # only used in type comments; make ruff happy
+try:
+    from collections.abc import Mapping
+    from typing import Any
 
-if TYPE_CHECKING:
+    _ = Mapping, Any  # only used in type comments; make ruff happy
+except ImportError:
+    # We need typing only for testing
+    pass
+
+MYPY = False  # mypy treats this like typing.TYPE_CHECKING, but it works without typing
+if MYPY:
     from rados import Rados  # type: ignore[import-not-found]  # noqa: F401
 
 __version__ = "3.0.0b1"
@@ -116,7 +122,8 @@ def _make_bluefs_section(raw, hostname, fqdn, fsid):
                     chunks[0] = chunks[0][4:]
                 except Exception:
                     chunks = [b'{"bluefs": {}}']
-                out[osd["id"]] = {"bluefs": json.loads(b"".join(chunks))["bluefs"]}
+                # decode explicitly: json.loads() only accepts bytes since Python 3.6
+                out[osd["id"]] = {"bluefs": json.loads(b"".join(chunks).decode("utf-8"))["bluefs"]}
     return out, localosds
 
 

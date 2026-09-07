@@ -214,6 +214,22 @@ function reset() {
 </template>
 
 <style scoped>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
+
+/* `.code` and `.register-heading-row` used to be declared in AgentSlideOut's
+   scoped style, where they never matched this component's elements. */
+.code {
+  margin: var(--dimension-5) 0 var(--dimension-7);
+  width: 100%;
+}
+
+.register-heading-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--dimension-4);
+}
+
 .mh-register-agent__panel {
   max-width: 650px;
 }

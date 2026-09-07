@@ -69,6 +69,7 @@ void main() {
             "minimal-alpine-bash-git",
             "minimal-alpine-python-checkmk",
             "minimal-ubuntu-checkmk",
+            "reference-image",
         ];
     }
 

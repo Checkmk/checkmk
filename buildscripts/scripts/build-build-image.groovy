@@ -159,6 +159,21 @@ void main() {
                     + " --destination ${docker_registry_no_http}/${image_name}"
                     + " --destination ${docker_registry_no_http}/${details.tag_name}:latest${tag_suffix}"
                 );
+            } else if (distro == "reference-image") {
+                // use the a few moments earlier built image
+                def reference_distro = "ubuntu-22.04";
+                def tag_name = "testing-${reference_distro}-checkmk-${safe_branch_name}:latest-with-docker${tag_suffix}";
+                image_name = "${reference_distro}:${safe_branch_name}-latest";
+                distro_base_image_id = "${docker_registry_no_http}/${image_name}";
+
+                docker_build_args = (""
+                    + " --build-arg BASE_BUILD_IMAGE='${distro_base_image_id}'"
+
+                    + " --dockerfile 'defines/dev-images/reference/Dockerfile'"
+                    + " --context temp-build-context"
+
+                    + " --destination ${docker_registry_no_http}/${tag_name}"
+                );
             } else if (distro == "testing-image") {
                 // use the a few moments earlier built image
                 def testing_distro = "ubuntu-22.04";

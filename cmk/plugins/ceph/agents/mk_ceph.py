@@ -13,7 +13,7 @@ import sys
 from collections.abc import Mapping
 from typing import Any, TYPE_CHECKING
 
-_ = Mapping  # only used in type comments; make ruff happy
+_ = Mapping, Any  # only used in type comments; make ruff happy
 
 if TYPE_CHECKING:
     from rados import Rados  # type: ignore[import-not-found]  # noqa: F401
@@ -35,7 +35,7 @@ def _bail_out_missing_dependency():
 
 def _output_json_section(name, data):
     # type: (str, Any) -> None
-    sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
+    sys.stdout.write("<<<%s:sep(0)>>>\n%s\n" % (name, json.dumps(data)))
 
 
 class RadosCMD:
@@ -94,8 +94,8 @@ def _load_plugin_config(mk_confdir):
 
 def _make_bluefs_section(raw, hostname, fqdn, fsid):
     # type: (str, str, str, str) -> tuple[dict[str, Any], list[int]]
-    localosds: list[int] = []
-    out: dict[str, Any] = {"end": {}}
+    localosds = []  # type: list[int]
+    out = {"end": {}}  # type: dict[str, Any]
     for osd in json.loads(raw):
         if osd.get("hostname") in [hostname, fqdn]:
             localosds.append(osd["id"])
@@ -104,7 +104,7 @@ def _make_bluefs_section(raw, hostname, fqdn, fsid):
             else:
                 adminsocket = "/run/ceph/ceph-osd.%d.asok" % osd["id"]
             if os.path.exists(adminsocket):
-                chunks: list[bytes] = []
+                chunks = []  # type: list[bytes]
                 try:
                     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                     sock.connect(adminsocket)

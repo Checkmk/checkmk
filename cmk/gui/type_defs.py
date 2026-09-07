@@ -433,11 +433,17 @@ ViewName = str
 ColumnName = str
 
 
+type MetricHistoryAggregation = Literal["min", "max", "avg"] | tuple[Literal["percentile"], float]
+type MetricForecastAggregation = tuple[
+    Literal["linear", "prophettrend"], Literal["day", "week", "month"]
+]
+
+
 class PainterParameters(TypedDict, total=False):
     # TODO Improve:
     # First step was: make painter's param a typed dict with all obvious keys
     # but some possible keys are still missing
-    aggregation: Literal["min", "max", "avg"] | tuple[str, str]
+    aggregation: MetricHistoryAggregation | MetricForecastAggregation
     color_choices: list[str]
     column_title: str
     ident: str

@@ -233,7 +233,12 @@ class AllHostsExperimental(CmkPage):
 
     @property
     def results_count(self) -> Locator:
-        """The "Rows matching your criteria" count, shown only while narrowed."""
+        """The "Rows matching your criteria" count.
+
+        Always present: it is an ``aria-live`` region, so it stays in the DOM and
+        carries the empty string while the table is unnarrowed, rather than being
+        added and removed. Assert the *text*, not the element's existence.
+        """
         return self.main_area.locator("p.monitoring-results-count")
 
     # --- host detail slide-in -------------------------------------------
@@ -349,6 +354,20 @@ class AllHostsExperimental(CmkPage):
     def catalog_panel(self, title: str) -> Locator:
         """A collapsible section of an action form, e.g. Duration or Advanced options."""
         return self.main_area.locator().get_by_role("button", name=title)
+
+    def form_option(self, label: str) -> Locator:
+        """A labelled control inside the open action form."""
+        return self.main_area.locator().get_by_text(label, exact=True)
+
+    def select_duration(self, label: str) -> None:
+        """Pick one of the downtime form's duration chips by its label.
+
+        The form renders a second, ``aria-hidden`` copy of every chip to measure
+        which of them fit; that copy is out of the accessibility tree, so the
+        role lookup reaches the live chip only.
+        """
+        logger.info("Select downtime duration '%s'", label)
+        self.main_area.locator().get_by_role("button", name=label, exact=True).click()
 
     # -- Row limit ------------------------------------------------------------
 

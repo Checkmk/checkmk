@@ -528,14 +528,18 @@ mod tests {
     const REGISTRY_KEY_WOW64: &str = r"SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server";
 
     #[test]
-    fn test_registry_instances_queries() {
-        let normal = get_win_registry_instances_query();
-        assert_eq!(normal, query::WINDOWS_REGISTRY_INSTANCES_BASE);
-        assert!(normal.contains(REGISTRY_KEY_NORMAL));
+    fn test_win_registry_instances_query() {
+        let query = get_win_registry_instances_query();
+        assert_eq!(query, query::WINDOWS_REGISTRY_INSTANCES_BASE);
+        assert!(query.contains(REGISTRY_KEY_NORMAL));
+    }
 
-        let wow64 = get_wow64_32_registry_instances_query();
-        assert!(wow64.contains(REGISTRY_KEY_WOW64));
-        assert!(!wow64.contains(REGISTRY_KEY_NORMAL));
+    #[test]
+    fn test_wow64_32_registry_instances_query() {
+        // Every registry key of the base query must be redirected to the 32 bit hive.
+        let query = get_wow64_32_registry_instances_query();
+        assert!(query.contains(REGISTRY_KEY_WOW64));
+        assert!(!query.contains(REGISTRY_KEY_NORMAL));
     }
 
     #[test]
@@ -548,7 +552,7 @@ mod tests {
             find_known_query(Id::Mirroring, &Edition::Normal).unwrap(),
             query::MIRRORING_NORMAL
         );
-        // Anything that is not Azure uses the normal query.
+        // Anything that is not Azure falls back to the normal query.
         assert_eq!(
             find_known_query(Id::Mirroring, &Edition::Undefined).unwrap(),
             query::MIRRORING_NORMAL

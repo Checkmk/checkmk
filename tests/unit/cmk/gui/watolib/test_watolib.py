@@ -31,7 +31,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
         "site-certificate",
         "product_usage_analytics",
-        "experimental_flags",
+        "release_flags",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
@@ -350,7 +350,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
         "Developer tools",
         "Product usage analytics",
-        "Experimental flags",
+        "Release flags",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:

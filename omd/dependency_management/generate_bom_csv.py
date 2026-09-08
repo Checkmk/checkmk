@@ -38,6 +38,7 @@ LINKS = {
     "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
     "CDDL-1.0": "https://opensource.org/licenses/cddl1",
     "CDLA-Permissive-2.0": "https://spdx.org/licenses/CDLA-Permissive-2.0.html",
+    "CNRI-Python": "https://spdx.org/licenses/CNRI-Python.html",
     "CNRI-Python-GPL-Compatible": "http://www.python.org/download/releases/1.6.1/download_win/",
     "Caldera": "http://www.lemis.com/grog/UNIX/ancient-source-all.pdf",
     "EPL-2.0": "https://www.eclipse.org/legal/epl-2.0",

@@ -90,7 +90,7 @@ _TOPICS: list[tuple[ConfigVariableGroup | str, IconNames, str]] = [
     ),
     (
         ConfigVariableGroupCheckExecution,
-        IconNames.check,
+        IconNames.reminders,
         "Configures how checks technically run against hosts",
     ),
     (
@@ -115,12 +115,12 @@ _TOPICS: list[tuple[ConfigVariableGroup | str, IconNames, str]] = [
     ),
     (
         "Alert handlers",
-        IconNames.alert_handlers,
+        IconNames.alert_notify,
         "Configures how alert handlers are executed",
     ),
     (
         ConfigVariableGroupUserInterface,
-        IconNames.topic_user_interface,
+        IconNames.ui_component_library,
         "Configures broad GUI look, behavior, and performance",
     ),
     (
@@ -170,12 +170,12 @@ _TOPICS: list[tuple[ConfigVariableGroup | str, IconNames, str]] = [
     ),
     (
         ConfigVariableGroupProductUsageAnalytics,
-        IconNames.pie_chart,
+        IconNames.custom_graph,
         "Configures consent and config for anonymized usage",
     ),
     (
         ConfigVariableGroupExperimentalFlags,
-        IconNames.release_deploy,
+        IconNames.experiment,
         "Configures temporary auto-generated flags tied to features",
     ),
 ]

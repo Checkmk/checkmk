@@ -220,6 +220,7 @@ import lightIconEventConsoleStatusSvg from '~cmk-frontend/themes/facelift/images
 import lightIconEventSvg from '~cmk-frontend/themes/facelift/images/icon_event.svg?url&no-inline'
 import lightIconEventConsoleSvg from '~cmk-frontend/themes/facelift/images/icon_event_console.svg?url&no-inline'
 import lightIconExpandPng from '~cmk-frontend/themes/facelift/images/icon_expand.png?url&no-inline'
+import lightIconExperimentSvg from '~cmk-frontend/themes/facelift/images/icon_experiment.svg?url&no-inline'
 import lightIconExportPng from '~cmk-frontend/themes/facelift/images/icon_export.png?url&no-inline'
 import lightIconExportLinkSvg from '~cmk-frontend/themes/facelift/images/icon_export_link.svg?url&no-inline'
 import lightIconExportRuleSvg from '~cmk-frontend/themes/facelift/images/icon_export_rule.svg?url&no-inline'
@@ -591,6 +592,7 @@ import lightIconTopicVisualizationPng from '~cmk-frontend/themes/facelift/images
 import lightIconTransSvg from '~cmk-frontend/themes/facelift/images/icon_trans.svg?url&no-inline'
 import lightIconTreeClosedSvg from '~cmk-frontend/themes/facelift/images/icon_tree_closed.svg?url&no-inline'
 import lightIconTrustPng from '~cmk-frontend/themes/facelift/images/icon_trust.png?url&no-inline'
+import lightIconUiComponentLibrarySvg from '~cmk-frontend/themes/facelift/images/icon_ui_component_library.svg?url&no-inline'
 import lightIconUnacknowledgeTestPng from '~cmk-frontend/themes/facelift/images/icon_unacknowledge_test.png?url&no-inline'
 import lightIconUnavailableSvg from '~cmk-frontend/themes/facelift/images/icon_unavailable.svg?url&no-inline'
 import lightIconUndecidedServiceSvg from '~cmk-frontend/themes/facelift/images/icon_undecided_service.svg?url&no-inline'
@@ -1040,6 +1042,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   event: lightIconEventSvg,
   'event-console': lightIconEventConsoleSvg,
   expand: lightIconExpandPng,
+  experiment: lightIconExperimentSvg,
   export: lightIconExportPng,
   'export-rule': lightIconExportRuleSvg,
   factoryreset: lightIconFactoryresetPng,
@@ -1376,6 +1379,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   trust: lightIconTrustPng,
   twofa: lightIcon2faSvg,
   'twofa-backup-codes': lightIcon2faBackupCodesSvg,
+  'ui-component-library': lightIconUiComponentLibrarySvg,
   'unacknowledge-test': lightIconUnacknowledgeTestPng,
   'undecided-service': lightIconUndecidedServiceSvg,
   undo: lightIconUndoSvg,

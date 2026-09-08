@@ -9,7 +9,7 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import { describe, expect, test } from 'vitest'
 
-import { buildSearchIndex, matchTopics } from '@/global-settings/lib/search'
+import { buildSearchIndex, matchTopics, splitOnQuery } from '@/global-settings/lib/search'
 
 function variable(name: string, title: string, help: string = ''): GlobalSettingsVariable {
   return {
@@ -106,5 +106,39 @@ describe('matchTopics', () => {
     const before = structuredClone(topics)
     match('site setting')
     expect(topics).toEqual(before)
+  })
+})
+
+describe('splitOnQuery', () => {
+  test('splits on a hit at the start', () => {
+    expect(splitOnQuery('Site setting', 'site')).toEqual({
+      before: '',
+      match: 'Site',
+      after: ' setting'
+    })
+  })
+
+  test('splits on a hit in the middle', () => {
+    expect(splitOnQuery('Site setting', 'e s')).toEqual({
+      before: 'Sit',
+      match: 'e s',
+      after: 'etting'
+    })
+  })
+
+  test('splits on a hit at the end', () => {
+    expect(splitOnQuery('Site setting', 'TING')).toEqual({
+      before: 'Site set',
+      match: 'ting',
+      after: ''
+    })
+  })
+
+  test('returns null without a hit', () => {
+    expect(splitOnQuery('Site setting', 'host')).toBeNull()
+  })
+
+  test('returns null for an empty query', () => {
+    expect(splitOnQuery('Site setting', '  ')).toBeNull()
   })
 })

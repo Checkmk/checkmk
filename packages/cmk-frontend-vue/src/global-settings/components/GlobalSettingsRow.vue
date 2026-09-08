@@ -16,7 +16,9 @@ defineProps<{
 <template>
   <div class="global-settings-row">
     <div class="global-settings-row__label">
-      <CmkLabel :help="help" dots grow>{{ label }}</CmkLabel>
+      <CmkLabel :help="help" dots grow>
+        <slot name="label">{{ label }}</slot>
+      </CmkLabel>
     </div>
     <div class="global-settings-row__value">
       <slot />

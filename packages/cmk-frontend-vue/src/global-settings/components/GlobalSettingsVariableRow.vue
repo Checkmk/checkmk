@@ -11,12 +11,13 @@ import { computed } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
+import GlobalSettingsHighlightedText from './GlobalSettingsHighlightedText.vue'
 import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<{ variable: GlobalSettingsVariable }>()
+const props = defineProps<{ variable: GlobalSettingsVariable; query: string }>()
 
 const emit = defineEmits<{ edit: [] }>()
 
@@ -29,18 +30,23 @@ const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_cho
       :label="untranslated(variable.spec.title)"
       class="global-settings-variable-row__row"
     >
-      <div class="global-settings-variable-row__value">
-        <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
-        <FormReadonly
-          v-else
-          :spec="variable.spec"
-          :data="variable.value"
-          :backend-validation="[]"
-        />
-        <span v-if="variable.modified" class="global-settings-variable-row__modified">
-          {{ _t('(modified)') }}
-        </span>
-      </div>
+      <template #label>
+        <GlobalSettingsHighlightedText :text="variable.spec.title" :query="query" />
+      </template>
+      <template #default>
+        <div class="global-settings-variable-row__value">
+          <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
+          <FormReadonly
+            v-else
+            :spec="variable.spec"
+            :data="variable.value"
+            :backend-validation="[]"
+          />
+          <span v-if="variable.modified" class="global-settings-variable-row__modified">
+            {{ _t('(modified)') }}
+          </span>
+        </div>
+      </template>
     </GlobalSettingsRow>
     <CmkIconButton
       name="edit"

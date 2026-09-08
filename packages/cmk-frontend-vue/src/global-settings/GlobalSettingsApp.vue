@@ -175,6 +175,7 @@ async function resetTopic(): Promise<void> {
         :topic="topic"
         :value="topic.headline"
         :match="shownVariablesOf(topic.headline)"
+        :query="debouncedQuery"
         :resetting="resettingTopic === topic.headline"
         @edit="openEditor"
         @reset="requestTopicReset(topic)"

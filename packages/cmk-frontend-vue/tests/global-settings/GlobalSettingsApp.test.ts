@@ -820,7 +820,7 @@ describe('GlobalSettingsApp search', () => {
     await vi.advanceTimersByTimeAsync(200)
   }
 
-  // The rendered label wraps the title, so match on the full text of the wrapper.
+  // Highlighting splits the text around a <mark>, which getByText does not see.
   const label = (text: string) => (_content: string, element: Element | null) =>
     element?.tagName === 'SPAN' && element.textContent?.trim() === text
 
@@ -891,6 +891,15 @@ describe('GlobalSettingsApp search', () => {
     await vi.advanceTimersByTimeAsync(200)
     expect(screen.queryByText('No matching settings found.')).not.toBeInTheDocument()
     expect(screen.getByRole('searchbox')).toHaveValue('')
+  })
+
+  test('the matched substring is marked in a variable title', async () => {
+    const user = setup()
+    await search(user, 'idle timeout')
+
+    expect(
+      screen.getByText(label('Login session idle timeout')).querySelector('mark')
+    ).toHaveTextContent('idle timeout')
   })
 
   test('the expand/collapse toggle keeps working while a search is active', async () => {

@@ -25,6 +25,7 @@ const props = defineProps<{
   resetting: boolean
   /** The variables to show, or null while no search narrows them. */
   match: ReadonlySet<string> | null
+  query: string
 }>()
 
 const emit = defineEmits<{
@@ -92,6 +93,7 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         v-for="variable in shownVariables"
         :key="variable.name"
         :variable="variable"
+        :query="query"
         @edit="emit('edit', variable)"
       />
     </template>

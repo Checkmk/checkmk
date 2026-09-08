@@ -767,7 +767,7 @@ describe('ConfigureCollector', () => {
   })
 
   describe('password creation permission', () => {
-    test('Create button is enabled and no hint is shown when password creation is allowed', async () => {
+    test('Create button is enabled and the quick setup hint is shown when password creation is allowed', async () => {
       mockPasswordsResponse()
       // noAuthAllowed=false makes basicauth the default, so the Create button is rendered
       renderComponent(false, true, true, true, 4317, 4318, true, false, true)
@@ -775,17 +775,23 @@ describe('ConfigureCollector', () => {
       const createButton = await screen.findByRole('button', { name: 'Create' })
       expect(createButton).toBeEnabled()
       expect(
+        screen.getByLabelText('How are passwords created by the quick setup?')
+      ).toBeInTheDocument()
+      expect(
         screen.queryByLabelText('Why is creating a password unavailable?')
       ).not.toBeInTheDocument()
     })
 
-    test('Create button is disabled and a hint is shown when password creation is not allowed', async () => {
+    test('Create button is disabled and the permission hint is shown when password creation is not allowed', async () => {
       mockPasswordsResponse()
       renderComponent(false, true, true, true, 4317, 4318, true, false, false)
 
       const createButton = await screen.findByRole('button', { name: 'Create' })
       expect(createButton).toBeDisabled()
       expect(screen.getByLabelText('Why is creating a password unavailable?')).toBeInTheDocument()
+      expect(
+        screen.queryByLabelText('How are passwords created by the quick setup?')
+      ).not.toBeInTheDocument()
     })
   })
 

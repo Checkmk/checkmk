@@ -443,7 +443,6 @@ py_library(
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
-        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",

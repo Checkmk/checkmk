@@ -15,7 +15,13 @@ from ._engine_perfometer_bars import (
     perfometer_sort_value,
 )
 from ._engine_perfometers import evaluated_perfometer
-from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
+from ._engine_plugins import (
+    graphing_plugins,
+    GraphingPlugins,
+    registered_graphs,
+    registered_metrics,
+    registered_translations,
+)
 from ._engine_rrd_columns import merge_rrd_columns, rrd_column_names
 from ._engine_series import timestamps
 from ._engine_source import RRDFetchMetricNames
@@ -155,6 +161,8 @@ __all__ = [
     "GraphChoices",
     "graph_choices",
     "discover_template_graphs",
+    "graphing_plugins",
+    "GraphingPlugins",
     "registered_graphs",
     "reverse_translated_names",
     "registered_metrics",

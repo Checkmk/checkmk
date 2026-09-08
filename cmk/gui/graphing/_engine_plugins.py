@@ -7,6 +7,7 @@
 import functools
 from collections.abc import Mapping, Sequence
 
+import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
 from cmk.graphing.v1 import graphs as graphs_v1
@@ -29,22 +30,25 @@ _GRAPH_TYPES = (
 )
 
 
-@functools.cache
-def _graphing_plugins() -> DiscoveredPlugins[
+type GraphingPlugins = DiscoveredPlugins[
     metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
-]:
+]
+
+
+@functools.cache
+def graphing_plugins() -> GraphingPlugins:
     return discover_all_plugins(
         PluginGroup.GRAPHING,
         dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
         skip_wrong_types=False,
-        raise_errors=False,
+        raise_errors=cmk.ccc.debug.enabled(),
     )
 
 
 def registered_metrics() -> Mapping[str, metrics_v1.Metric]:
     return {
         plugin.name: plugin
-        for plugin in _graphing_plugins().plugins.values()
+        for plugin in graphing_plugins().plugins.values()
         if isinstance(plugin, metrics_v1.Metric)
     }
 
@@ -54,7 +58,7 @@ def registered_graphs() -> Sequence[GraphFromAPI]:
     # GRAPHS_ORDER, with any graph not listed there kept ahead of the ordered ones.
     registered = {
         plugin.name: plugin
-        for plugin in _graphing_plugins().plugins.values()
+        for plugin in graphing_plugins().plugins.values()
         if isinstance(plugin, _GRAPH_TYPES)
     }
     return [plugin for _name, plugin in sort_registered_graph_plugins(registered)]
@@ -63,6 +67,6 @@ def registered_graphs() -> Sequence[GraphFromAPI]:
 def registered_translations() -> Sequence[translations_v1.Translation]:
     return [
         plugin
-        for plugin in _graphing_plugins().plugins.values()
+        for plugin in graphing_plugins().plugins.values()
         if isinstance(plugin, translations_v1.Translation)
     ]

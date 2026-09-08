@@ -5,26 +5,21 @@
 
 from typing import override
 
-import cmk.ccc.debug
 import cmk.gui.pages
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
-from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing.v2_unstable import entry_point_prefixes as entry_point_prefixes_v2_unstable
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.graphing import (
-    GraphFromAPI,
+    graphing_plugins,
+    GraphingPlugins,
     graphs_from_api,
     host_service_graph_popup_cmk,
     metrics_from_api,
     parse_metric_from_api,
-    PerfometerFromAPI,
     perfometers_from_api,
 )
 from cmk.gui.log import logger
@@ -32,27 +27,7 @@ from cmk.gui.pages import PageContext, PageResult
 from cmk.utils.servicename import ServiceName
 
 
-def _load_graphing_plugins() -> DiscoveredPlugins[
-    metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
-]:
-    discovered_plugins: DiscoveredPlugins[
-        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
-    ] = discover_all_plugins(
-        PluginGroup.GRAPHING,
-        dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
-        skip_wrong_types=False,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-    for exc in discovered_plugins.errors:
-        logger.error(exc)
-    return discovered_plugins
-
-
-def _add_graphing_plugins(
-    plugins: DiscoveredPlugins[
-        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
-    ],
-) -> None:
+def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metrics_v1.Metric):
             metrics_from_api.register(parse_metric_from_api(plugin))
@@ -79,7 +54,10 @@ def _add_graphing_plugins(
 
 
 def register() -> None:
-    _add_graphing_plugins(_load_graphing_plugins())
+    plugins = graphing_plugins()
+    for exc in plugins.errors:
+        logger.error(exc)
+    _add_graphing_plugins(plugins)
 
 
 class PageHostServiceGraphPopup(cmk.gui.pages.Page):

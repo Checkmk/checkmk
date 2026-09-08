@@ -7,15 +7,12 @@
 # mypy: disable-error-code="type-arg"
 
 import time
-from collections.abc import Generator, Mapping, Sequence
-from typing import Any, AnyStr, NotRequired, TypedDict
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
-from cmk.plugins.lib.temperature import _migrate_params, TempParamDict
-from cmk.plugins.lib.temperature import (
-    fahrenheit_to_celsius as fahrenheit_to_celsius,  # ruff: ignore[unused-import]
-)
+from cmk.plugins.lib.temperature import _migrate_params
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
@@ -27,28 +24,12 @@ Number = int | float
 
 type OptFloat = float | None
 
-# ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
-PerfDataEntryType = tuple[AnyStr, Number] | tuple[AnyStr, Number, Number | None]
-PerfDataType = list[PerfDataEntryType]
-
-# Generic Check Type. Can be used elsewhere too.
-CheckType = tuple[StatusType, AnyStr, PerfDataType]
-
-
-class CheckTempKwargs(TypedDict):
-    dev_unit: NotRequired[str]
-    dev_levels: NotRequired[TwoLevelsType | None]
-    dev_levels_lower: NotRequired[TwoLevelsType | None]
-    dev_status: NotRequired[StatusType | None]
-    dev_status_name: NotRequired[str]
-
-
 #################################################################################################
 #
 #                                 NOTE
 #                           !! PLEASE READ !!
 #
-#       check_temperature_trend, check_temperature  and check_temperature_list have been
+#       check_temperature_trend and check_temperature have been
 #       migrated to the new check API.
 #       The functions below must be decomissioned (i.e. deleted) once all checks using
 #       the check_temperature function have been migrated.
@@ -439,53 +420,3 @@ def check_temperature(
             infotext += ", " + trend_infotext
 
     return status, infotext, perfdata
-
-
-# Wraps around check_temperature to check a list of sensors.
-# sensorlist is a list of tuples:
-# (subitem, temp, kwargs) or (subitem, temp)
-# where subitem is a string (sensor-id)
-# temp is a string, float or int temperature value
-# and kwargs a dict of keyword arguments for check_temperature
-
-
-def check_temperature_list(
-    sensorlist: Sequence[tuple[str, Number, CheckTempKwargs]],
-    params: TempParamDict,
-) -> Generator[tuple[int, str, list[tuple[str, Number]]]]:
-    output_unit = params.get("output_unit", "c")
-
-    if not sensorlist:
-        return
-
-    sensor_count = len(sensorlist)
-    yield 0, f"Sensors: {sensor_count}", []
-
-    unitsym = temp_unitsym[output_unit]
-    tempmax = max(temp for _item, temp, _kwargs in sensorlist)
-    yield 0, f"Highest: {render_temp(tempmax, output_unit)} {unitsym}", [("temp", tempmax)]
-    tempavg = sum(temp for _item, temp, _kwargs in sensorlist) / float(sensor_count)
-    yield 0, f"Average: {render_temp(tempavg, output_unit)} {unitsym}", []
-    tempmin = min(temp for _item, temp, _kwargs in sensorlist)
-    yield 0, f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}", []
-
-    for sub_item, temp, kwargs in sensorlist:
-        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
-        if sub_status != 0:
-            yield sub_status, f"{sub_item}: {sub_infotext}", []
-
-    if "trend_compute" in params and "period" in params["trend_compute"]:
-        usr_warn, usr_crit = params.get("levels") or (None, None)
-        usr_warn_lower, usr_crit_lower = params.get("levels_lower") or (None, None)
-
-        # no support for dev_unit or dev_levels in check_temperature_list so
-        # this ignores the device level handling set in params
-        _warn, crit, _warn_lower, crit_lower = check_temperature_determine_levels(
-            "usr", usr_warn, usr_crit, usr_warn_lower, usr_crit_lower, None, None, None, None
-        )
-
-        trend_status, trend_infotext = check_temperature_trend(
-            tempavg, params["trend_compute"], output_unit, crit, crit_lower, ""
-        )
-        if trend_infotext:
-            yield trend_status, trend_infotext, []

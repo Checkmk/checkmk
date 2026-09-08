@@ -10,12 +10,6 @@ from cmk.agent_based.v2 import render
 from cmk.plugins.lib.memory import compute_state
 from cmk.plugins.lib.memory import normalize_levels as normalize_mem_levels
 
-memused_default_levels = (150.0, 200.0)
-
-MEMORY_DEFAULT_LEVELS = {
-    "levels": memused_default_levels,
-}
-
 
 def _compute_state(value: float, warn: float | None, crit: float | None) -> int:
     return int(compute_state(value, warn, crit))

@@ -39,7 +39,6 @@ from cmk.plugins.lib import cpu_util
 #                                                                                        #
 
 cpu_util_core_name = cpu_util.core_name
-CPUInfo = cpu_util.CPUInfo
 
 #                                                                                        #
 ##########################################################################################

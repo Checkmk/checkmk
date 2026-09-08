@@ -16,7 +16,6 @@ from typing import Final
 
 import pytest
 import pytest_check
-from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped,unused-ignore]
 
 from tests.testlib.common.repo import (
@@ -48,8 +47,6 @@ from tests.testlib.pytest_helpers.timeouts import (
 )
 
 logger = logging.getLogger(__name__)
-
-pytest_plugins = ("tests.system.gui.testlib.playwright.plugin",)
 
 # This allows exceptions to be handled by IDEs (rather than just printing the results)
 # when pytest based tests are being run from inside the IDE
@@ -142,7 +139,7 @@ def pytest_exception_interact(
         # Prevents execution of the next test and exits the pytest-run, and
         # leads to clean termination of the affected test run.
         node.session.shouldstop = True
-    elif excinfo.type in (TimeoutError, PWTimeoutError):
+    elif excinfo.type is TimeoutError:
         add_process_snapshot(excp_, sudo=sudo_run_in_container)
     elif isinstance(excp_, subprocess.CalledProcessError):
         excp_.add_note(verbose_called_process_error(excp_))

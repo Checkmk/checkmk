@@ -20,6 +20,7 @@ from playwright.sync_api import BrowserContext, Page
 
 from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import HostDetails
+from tests.system.gui.testlib.playwright import plugin as playwright_plugin
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
@@ -55,6 +56,7 @@ from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.pytest_helpers.registration import register_pytest_plugins
 from tests.testlib.system.emails import EmailManager
 from tests.testlib.system.notifications import (
     create_host,
@@ -251,7 +253,10 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     )
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    # The playwright fixtures and options are only wanted for the GUI tests, so they are
+    # registered here instead of via `pytest_plugins` in the root conftest.
+    register_pytest_plugins(pluginmanager, playwright_plugin)
     parser.addoption(
         "--update-rules",
         action="store_true",

@@ -18,7 +18,6 @@ py_library(
     srcs = ["conftest.py"],
     deps = [
         "//tests/testlib/common",
-        requirement("playwright"),
         requirement("pytest"),
         requirement("pytest-check"),
         requirement("pytest-metadata"),

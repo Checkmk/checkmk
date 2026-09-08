@@ -19,9 +19,12 @@ from collections.abc import Callable, Iterator
 import pytest
 from playwright._impl._api_structures import StorageState
 from playwright.sync_api import BrowserContext, expect, Page
+from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_playwright import CreateContextCallback
 
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES
+from tests.testlib.common.utils2 import is_containerized
+from tests.testlib.pytest_helpers.diagnostics import add_process_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -178,3 +181,15 @@ def pytest_sessionstart(session: pytest.Session) -> None:
                 _DEST_TRACING,
                 "retain-on-failure",
             )
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo[object],
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
+    """Show what kept the host busy when playwright ran into a timeout."""
+    if (excinfo := call.excinfo) and excinfo.type is PWTimeoutError:
+        add_process_snapshot(excinfo.value, sudo=is_containerized())
+        report.longrepr = node.repr_failure(excinfo)

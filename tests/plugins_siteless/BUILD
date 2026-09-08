@@ -8,6 +8,7 @@ py_library(
     imports = ["../.."],
     deps = [
         "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
         "//tests/testlib/unit",
         requirement("pytest"),
     ],

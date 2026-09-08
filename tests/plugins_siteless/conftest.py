@@ -9,8 +9,11 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.pytest_helpers import registration, timeouts
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, timeouts)
     parser.addoption(
         "--store",
         action="store_true",

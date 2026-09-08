@@ -9,6 +9,7 @@ py_library(
     visibility = ["//tests:__subpackages__"],
     deps = [
         "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
         requirement("pytest"),
     ],
 )

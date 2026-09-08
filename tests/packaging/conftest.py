@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.pytest_helpers import registration, timeouts
+
 
 def _resolve_packages(config: pytest.Config) -> list[Path]:
     """Return the list of packages to test, in priority order:
@@ -25,7 +27,8 @@ def _resolve_packages(config: pytest.Config) -> list[Path]:
     )
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, timeouts)
     group = parser.getgroup("package-sanity", "Package sanity test options")
     group.addoption(
         "--packages",

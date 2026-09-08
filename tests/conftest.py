@@ -32,7 +32,6 @@ from tests.testlib.common.version import (
     TypeCMKEdition,
 )
 from tests.testlib.pytest_helpers.diagnostics import (
-    add_process_snapshot,
     render_command_output,
 )
 from tests.testlib.pytest_helpers.sharding import (
@@ -40,10 +39,6 @@ from tests.testlib.pytest_helpers.sharding import (
     fetch_durations,
     plan,
     select_for_shard,
-)
-from tests.testlib.pytest_helpers.timeouts import (
-    MonitorTimeout,
-    SessionTimeoutError,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,18 +67,6 @@ def get_test_type(test_path: Path) -> str:
     testdir_path = Path(__file__).parent.resolve()
     test_path_relative = test_path.resolve().relative_to(testdir_path)
     return test_path_relative.parts[0]
-
-
-@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    session_timeout_cli = "--session-timeout"
-    timeout_duration = (
-        _session_timeout_option
-        if isinstance(_session_timeout_option := pytestconfig.getoption(session_timeout_cli), int)
-        else 0
-    )
-    with MonitorTimeout(timeout=timeout_duration):
-        yield
 
 
 @pytest.fixture(scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -135,13 +118,7 @@ def pytest_exception_interact(
                 )
             )
 
-    if excinfo.type == SessionTimeoutError:
-        # Prevents execution of the next test and exits the pytest-run, and
-        # leads to clean termination of the affected test run.
-        node.session.shouldstop = True
-    elif excinfo.type is TimeoutError:
-        add_process_snapshot(excp_, sudo=sudo_run_in_container)
-    elif isinstance(excp_, subprocess.CalledProcessError):
+    if isinstance(excp_, subprocess.CalledProcessError):
         excp_.add_note(verbose_called_process_error(excp_))
         # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
         # determine this statically.
@@ -251,14 +228,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
             "the SHARD_BUILD_BASED_ON environment variable, which is how the job "
             "parameter of that name reaches pytest."
         ),
-    )
-    parser.addoption(
-        "--session-timeout",
-        action="store",
-        metavar="TIMEOUT",
-        default=0,
-        type=int,
-        help="Terminate testsuite run cleanly after TIMEOUT seconds. By default, 0 (disabled).",
     )
     parser.addoption(
         "--dry-run",

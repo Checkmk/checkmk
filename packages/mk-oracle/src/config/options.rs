@@ -135,40 +135,40 @@ impl Options {
         &self.permissions_safe_entries
     }
 
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+    /// Parse the `options` block, reading every parameter by its `options/<key>` path.
+    ///
+    /// The block is optional: a missing block is just a `BadValue` node whose keys are
+    /// falls back to the matching value of `default`. `default` carries defaults
+    pub fn from_yaml(yaml: &Yaml, default: &Options) -> Result<Self> {
         let options = yaml.get(keys::OPTIONS);
-        if options.is_badvalue() {
-            return Ok(None);
-        }
 
-        Ok(Some(Self {
+        Ok(Self {
             max_connections: options
                 .get_int::<u32>(keys::MAX_CONNECTIONS)
-                .unwrap_or_else(|| {
-                    log::debug!("no max_connections specified, using default");
-                    defaults::MAX_CONNECTIONS
-                })
-                .into(),
-            max_queries: defaults::MAX_QUERIES.into(),
-            // An absent or empty `use_host_client` means "auto"
+                .map(Into::into)
+                .unwrap_or_else(|| default.max_connections()),
+            // Not exposed in the `options` block; carried over from the default.
+            max_queries: default.max_queries(),
+            // An absent or empty `use_host_client` means "not configured" -> inherit.
             use_host_client: options
                 .get_string(keys::USE_HOST_CLIENT)
                 .filter(|s| !s.trim().is_empty())
                 .and_then(|s| UseHostClient::from_str(&s))
-                .unwrap_or_default(),
-            params: vec![(
-                keys::IGNORE_DB_NAME.to_string(),
-                options
-                    .get_int::<u8>(keys::IGNORE_DB_NAME)
-                    .unwrap_or_default(),
-            )],
+                .unwrap_or_else(|| default.use_host_client().clone()),
+            params: match options.get_int::<u8>(keys::IGNORE_DB_NAME) {
+                Some(ignore_db_name) => vec![(keys::IGNORE_DB_NAME.to_string(), ignore_db_name)],
+                None => default.params().to_vec(),
+            },
             threads: options
                 .get_int::<usize>(keys::THREADS)
-                .unwrap_or(defaults::THREADS),
-            permissions_check: options.get_bool(keys::PERMISSIONS_CHECK, true),
+                .unwrap_or_else(|| default.threads()),
+            permissions_check: options
+                .get_optional_bool(keys::PERMISSIONS_CHECK)
+                .unwrap_or_else(|| default.permissions_check()),
             permissions_safe_entries: options
-                .get_string_vector(keys::PERMISSIONS_SAFE_ENTRIES, &[]),
-        }))
+                .get_optional_string_vector(keys::PERMISSIONS_SAFE_ENTRIES)
+                .unwrap_or_else(|| default.permissions_safe_entries().to_vec()),
+        })
     }
 }
 
@@ -187,7 +187,7 @@ options:
     threads: 4
     ";
         let yaml = create_yaml(OPTIONS_YAML);
-        let options = Options::from_yaml(&yaml).unwrap().unwrap();
+        let options = Options::from_yaml(&yaml, &Options::default()).unwrap();
         assert_eq!(options.max_connections(), MaxConnections(100));
         assert_eq!(options.use_host_client(), &UseHostClient::Always);
         assert_eq!(options.max_queries(), defaults::MAX_QUERIES.into());
@@ -206,7 +206,7 @@ options:
 options:
     max_connections: 1
     ";
-        let options = Options::from_yaml(&create_yaml(YAML)).unwrap().unwrap();
+        let options = Options::from_yaml(&create_yaml(YAML), &Options::default()).unwrap();
         assert_eq!(options.use_host_client(), &UseHostClient::Auto);
     }
 
@@ -217,7 +217,7 @@ options:
 options:
     use_host_client: ""
     "#;
-        let options = Options::from_yaml(&create_yaml(YAML)).unwrap().unwrap();
+        let options = Options::from_yaml(&create_yaml(YAML), &Options::default()).unwrap();
         assert_eq!(options.use_host_client(), &UseHostClient::Auto);
     }
 
@@ -243,9 +243,8 @@ options:
     permissions_check: no
     permissions_safe_entries: ["DOMAIN\\DbInstaller", "MYPC\\SpecialUser"]
 "#;
-        let options = Options::from_yaml(&create_yaml(PERMISSION_YAML))
-            .unwrap()
-            .unwrap();
+        let options =
+            Options::from_yaml(&create_yaml(PERMISSION_YAML), &Options::default()).unwrap();
         assert!(!options.permissions_check());
         assert_eq!(
             options.permissions_safe_entries(),
@@ -256,12 +255,61 @@ options:
         );
 
         // keys absent: check enabled, no safe entries
-        let options = Options::from_yaml(&create_yaml("options:\n    threads: 1"))
-            .unwrap()
-            .unwrap();
+        let options = Options::from_yaml(
+            &create_yaml("options:\n    threads: 1"),
+            &Options::default(),
+        )
+        .unwrap();
         assert!(options.permissions_check());
         assert!(options.permissions_safe_entries().is_empty());
     }
+
+    #[test]
+    fn test_options_from_yaml_absent_block_uses_default() {
+        // No `options` block at all: every parameter falls back to `default`, with
+        // no special-casing of the missing block.
+        let yaml = create_yaml("connection:\n    hostname: localhost");
+        let options = Options::from_yaml(&yaml, &Options::default()).unwrap();
+        assert_eq!(options, Options::default());
+    }
+
+    #[test]
+    fn test_options_from_yaml_inherits_from_default_per_key() {
+        // A present block overrides only the keys it sets; the rest inherit `default`
+        // (this is how a `configs:` sub-entry inherits from the main config).
+        let parent = Options::from_yaml(
+            &create_yaml("options:\n    max_connections: 42\n    threads: 7"),
+            &Options::default(),
+        )
+        .unwrap();
+        let child = Options::from_yaml(&create_yaml("options:\n    threads: 9"), &parent).unwrap();
+        assert_eq!(child.threads(), 9); // overridden by the child block
+        assert_eq!(child.max_connections(), MaxConnections(42)); // inherited from parent
+    }
+
+    #[test]
+    fn test_options_safe_entries_absent_inherits_but_explicit_empty_overrides() {
+        let parent = Options::from_yaml(
+            &create_yaml("options:\n    permissions_safe_entries: [\"A\", \"B\"]"),
+            &Options::default(),
+        )
+        .unwrap();
+        // Absent in the child -> inherit the parent's entries.
+        let inherited =
+            Options::from_yaml(&create_yaml("options:\n    threads: 1"), &parent).unwrap();
+        assert_eq!(
+            inherited.permissions_safe_entries(),
+            ["A".to_string(), "B".to_string()]
+        );
+        // Explicit empty list in the child -> override to empty, do not inherit.
+        let overridden = Options::from_yaml(
+            &create_yaml("options:\n    permissions_safe_entries: []"),
+            &parent,
+        )
+        .unwrap();
+        assert!(overridden.permissions_safe_entries().is_empty());
+    }
+
     #[test]
     fn test_default_use_host_client() {
         assert_eq!(UseHostClient::default(), UseHostClient::Auto);

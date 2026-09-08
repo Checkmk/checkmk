@@ -109,7 +109,7 @@ impl Config {
 
         let auth = Authentication::from_yaml(main)?.unwrap_or_else(|| default.auth.clone());
         let conn = Connection::from_yaml(main)?.unwrap_or_else(|| default.conn().clone());
-        let options = Options::from_yaml(main)?.unwrap_or_else(|| default.options().clone());
+        let options = Options::from_yaml(main, default.options())?;
         let discovery = Discovery::from_yaml(main)?.unwrap_or_else(|| default.discovery().clone());
         let section_info = Sections::from_yaml(main, &default.sections)?;
         let excluded_sections =

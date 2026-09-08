@@ -24,8 +24,10 @@ futures.workspace = true
 lazy_static.workspace = true
 log.workspace = true
 tiberius = { workspace = true, features = [
+  "tds73",
   "winauth",
   "sql-browser-tokio",
+  "rustls",
   # "integrated-auth-gssapi",
 ] } # MS SQL
 tokio = { workspace = true, features = [

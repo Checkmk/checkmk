@@ -20,8 +20,7 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._engine_template_graphs import discover_template_graphs
-from .._graph_templates import TemplateGraphSpecification
+from .._graph_templates import discover_template_graphs, TemplateGraphSpecification
 from ._family import GRAPH_FAMILY
 from .models import GraphsDiscoverResponse
 

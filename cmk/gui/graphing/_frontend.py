@@ -42,12 +42,11 @@ from cmk.shared_typing.global_time_picker import (
 from cmk.web.utils.html import HTML
 
 from . import _plugins as engine_plugins
-from ._engine_template_graphs import build_template_graphs
 from ._graph_choices import BuiltGraph
 from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
-from ._graph_templates import TemplateGraphSpecification
+from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
 from ._unit_format import unit_to_unit_format
 

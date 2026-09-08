@@ -4,11 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
-from ._engine_template_graphs import (
-    build_template_graphs,
-    discover_template_graphs,
-    resolve_graph_id_from_index,
-)
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -55,12 +50,15 @@ from ._graph_specification import (
     parse_graph_specification,
 )
 from ._graph_templates import (
+    build_template_graphs,
+    discover_template_graphs,
     get_graph_plugin_choices,
     get_template_graph_specification,
-    sort_registered_graph_plugins,
+    resolve_graph_id_from_index,
     TemplateGraphSpecification,
 )
 from ._graph_title import render_plain_graph_title
+from ._graphs_order import sort_registered_graph_plugins
 from ._html_render import (
     GraphDestinations,
     GraphExportRequest,

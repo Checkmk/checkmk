@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+from ._from_api import GraphFromAPI
+
 # Graph order from 2.2 but slightly adapted
 GRAPHS_ORDER = [
     "apache_status",
@@ -421,3 +425,15 @@ GRAPHS_ORDER = [
     "azure_redis_evicted_keys",
     "azure_redis_expired_keys",
 ]
+
+
+def sort_registered_graph_plugins(
+    registered_graphs: Mapping[str, GraphFromAPI],
+) -> list[tuple[str, GraphFromAPI]]:
+    def _by_index(graph_name: str) -> int:
+        try:
+            return GRAPHS_ORDER.index(graph_name)
+        except ValueError:
+            return -1
+
+    return sorted(registered_graphs.items(), key=lambda t: _by_index(t[0]))

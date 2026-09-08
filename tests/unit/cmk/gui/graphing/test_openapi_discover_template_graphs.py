@@ -14,7 +14,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing import _engine_template_graphs as template_graphs_module
+from cmk.gui.graphing import _graph_templates as template_graphs_module
 from cmk.gui.graphing._graph_choices import BuiltGraph
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._source import RRDFetchMetricNames

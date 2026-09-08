@@ -19,7 +19,7 @@ from cmk.graphing.v2_unstable import (
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._from_api import GraphFromAPI, PerfometerFromAPI
-from ._graph_templates import sort_registered_graph_plugins
+from ._graphs_order import sort_registered_graph_plugins
 
 # The graph types the engine accepts; used to pick graph plugins out of the discovered set.
 _GRAPH_TYPES = (

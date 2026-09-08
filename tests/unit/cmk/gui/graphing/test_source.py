@@ -24,12 +24,12 @@ from cmk.graphing_engine import (
     TimeSeries,
 )
 from cmk.gui.config import Config
-from cmk.gui.graphing._engine_template_graphs import (
+from cmk.gui.graphing._graph_dispatch import CommonGraphOptions
+from cmk.gui.graphing._graph_templates import (
     _EvaluateTemplateGraphs,
     build_template_graphs,
+    TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graph_dispatch import CommonGraphOptions
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._source import (
     HOST_PSEUDO_SERVICE,
     PerformanceDataRow,

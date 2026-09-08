@@ -24,7 +24,6 @@ const { _t } = usei18n()
 
 const props = defineProps<{
   session: EditorSession
-  title: string
 }>()
 
 const emit = defineEmits<{
@@ -115,7 +114,7 @@ const currentStateText = computed<TranslatedString>(() =>
   <CmkSlideInDialog
     open
     size="small"
-    :header="{ title: title, closeButton: true }"
+    :header="{ title: _t('Edit global setting'), closeButton: true }"
     @close="emit('close')"
   >
     <div class="global-settings-edit-slide-in">

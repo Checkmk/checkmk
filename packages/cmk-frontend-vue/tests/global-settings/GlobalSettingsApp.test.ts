@@ -238,6 +238,11 @@ describe('GlobalSettingsApp accordion', () => {
 })
 
 describe('GlobalSettingsApp', () => {
+  test('the editor is titled as editing a global setting', async () => {
+    await openEditor()
+    expect(screen.getByRole('dialog', { name: /^Edit global setting/ })).toBeInTheDocument()
+  })
+
   test('opening the editor loads the server value and refreshes the row', async () => {
     await openEditor()
     expect(screen.getByRole('dialog')).toBeInTheDocument()

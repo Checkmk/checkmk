@@ -131,12 +131,7 @@ async function resetTopic(): Promise<void> {
         @reset="requestTopicReset(topic)"
       />
     </CmkAccordion>
-    <GlobalSettingsEditSlideIn
-      v-if="session !== null"
-      :session="session"
-      :title="title"
-      @close="closeEditor"
-    />
+    <GlobalSettingsEditSlideIn v-if="session !== null" :session="session" @close="closeEditor" />
   </div>
 </template>
 

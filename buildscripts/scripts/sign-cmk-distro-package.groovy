@@ -70,17 +70,6 @@ void main() {
                 versioning.configure_checkout_folder(edition, cmk_version);
             }
 
-            stage("Install signing tools") {
-                // Install "dpkg-sig" manually, not part of default Ubuntu 22.04 image, see CMK-24094
-                // TODO: create an image that provides signing tools to only have to build this once.
-                //       The image has then to be referenced in the pod template.
-                sh("""
-                    apt-get update
-                    apt-get install -y dpkg-sig msitools
-                """);
-                println("Installed dpkg-sig manually, not part of default Ubuntu 22.04 image");
-            }
-
             stage("Download built package") {
                 single_tests.fetch_package(
                     bisect_comment: params.CIPARAM_BISECT_COMMENT,

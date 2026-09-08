@@ -26,7 +26,7 @@ import type { PasswordConfig } from './password_store_password.types.ts'
 import { isValidIpOrHostname, isValidPasswordIdForEnvVar, isValidPort } from './validation.ts'
 
 const { _t } = usei18n()
-const createdSuffix = _t(' | created')
+const createdSuffix = _t(' | new')
 
 const props = defineProps<{
   noAuthAllowed: boolean

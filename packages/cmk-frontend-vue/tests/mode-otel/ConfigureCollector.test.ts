@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/vue'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import * as cmkFetch from '@/lib/cmkFetch'
@@ -769,7 +769,7 @@ describe('ConfigureCollector', () => {
   })
 
   describe('password creation permission', () => {
-    test('Create button is enabled and no hint is shown when password creation is allowed', async () => {
+    test('Create button is enabled and the quick setup hint is shown when password creation is allowed', async () => {
       mockPasswordsResponse()
       // noAuthAllowed=false makes basicauth the default, so the Create button is rendered
       renderComponent(false, true, true, true, 4317, 4318, true, false, true)
@@ -777,18 +777,22 @@ describe('ConfigureCollector', () => {
       const createButton = await screen.findByRole('button', { name: 'Create' })
       expect(createButton).toBeEnabled()
       const passwordRow = createButton.closest('.mode-otel-collector-auth-config__password-row')!
-      expect(within(passwordRow as HTMLElement).queryByRole('button', { name: '?' })).toBeNull()
+      await fireEvent.click(within(passwordRow as HTMLElement).getByRole('button', { name: '?' }))
+      expect(
+        await screen.findByText(/only the selected password will be created upon saving/)
+      ).toBeInTheDocument()
     })
 
-    test('Create button is disabled and a hint is shown when password creation is not allowed', async () => {
+    test('Create button is disabled and the permission hint is shown when password creation is not allowed', async () => {
       mockPasswordsResponse()
       renderComponent(false, true, true, true, 4317, 4318, true, false, false)
 
       const createButton = await screen.findByRole('button', { name: 'Create' })
       expect(createButton).toBeDisabled()
       const passwordRow = createButton.closest('.mode-otel-collector-auth-config__password-row')!
+      await fireEvent.click(within(passwordRow as HTMLElement).getByRole('button', { name: '?' }))
       expect(
-        within(passwordRow as HTMLElement).getByRole('button', { name: '?' })
+        await screen.findByText(/Creating a new password is not available for your account/)
       ).toBeInTheDocument()
     })
   })

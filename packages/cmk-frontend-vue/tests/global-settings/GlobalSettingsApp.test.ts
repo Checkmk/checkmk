@@ -225,6 +225,11 @@ const warnedTopic: GlobalSettingsTopic = {
   subline: 'Settings for developing Checkmk',
   warning: 'These settings are internal and unsupported.'
 }
+//
+// The app reads and writes `?search=`, shared by every test in this file.
+beforeEach(() => {
+  window.history.replaceState({}, '', '/')
+})
 
 describe('GlobalSettingsApp page header', () => {
   test('renders the breadcrumb of the page', () => {
@@ -931,5 +936,13 @@ describe('GlobalSettingsApp search', () => {
       'aria-checked',
       'true'
     )
+  })
+
+  test('a search query in the URL pre-filters on mount', () => {
+    window.history.replaceState({}, '', '/?search=Site+setting')
+    setup()
+
+    expect(screen.getByText(label('Site setting'))).toBeInTheDocument()
+    expect(screen.queryByText(label('User management'))).not.toBeInTheDocument()
   })
 })

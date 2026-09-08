@@ -32,13 +32,15 @@ const props = defineProps<GlobalSettingsApp>()
 
 const service = inject(GLOBAL_SETTINGS_SERVICE, globalSettingsService)
 
+const SEARCH_URL_PARAM = 'search'
+
 const editableTopics = ref(structuredClone(toRaw(props.topics)))
 const { session, openEditor, closeEditor } = useGlobalSettingsEditor(service, props.scope)
 const resetConfirmTopic = ref<GlobalSettingsTopicData | null>(null)
 const resettingTopic = ref<string | null>(null)
 const resetError = ref<TranslatedString | null>(null)
 
-const query = ref('')
+const query = ref(new URLSearchParams(window.location.search).get(SEARCH_URL_PARAM) ?? '')
 const debouncedQuery = useDebounceRef(query, 100)
 const searchActive = computed(() => debouncedQuery.value.trim() !== '')
 
@@ -62,8 +64,16 @@ function openedItemsForQuery(): string[] {
 
 const openedItems = ref<string[]>(openedItemsForQuery())
 
-watch(debouncedQuery, () => {
+watch(debouncedQuery, (value) => {
   openedItems.value = openedItemsForQuery()
+
+  const url = new URL(window.location.href)
+  if (value.trim() === '') {
+    url.searchParams.delete(SEARCH_URL_PARAM)
+  } else {
+    url.searchParams.set(SEARCH_URL_PARAM, value)
+  }
+  window.history.replaceState({}, '', url)
 })
 
 const resetConfirmation = computed<{

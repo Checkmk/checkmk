@@ -27,6 +27,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     build_template_graphs,
     discover_template_graphs,
+    DiscoveredGraphs,
     evaluate_built_graphs,
     get_graph_plugin_choices,
     get_metric_spec,
@@ -46,7 +47,6 @@ from cmk.gui.graphing import (
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graph_choices import DiscoveredGraphs
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (

@@ -27,12 +27,12 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._graph_codec import GraphCodec
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName as GUIServiceName
 
 from ._from_api import GraphFromAPI
 from ._graph_choices import BuiltGraph, DiscoveredGraphs, GraphPluginChoice
+from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
     CommonGraphOptions,
     EvaluatedGraphs,

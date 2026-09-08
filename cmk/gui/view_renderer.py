@@ -22,10 +22,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import (
-    global_time_picker_refresh,
-    render_global_time_picker,
-)
+from cmk.gui.graphing import global_time_picker_refresh, render_global_time_picker
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

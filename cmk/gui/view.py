@@ -10,7 +10,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import (
+from cmk.gui.graphing import (
     default_time_range_seconds,
     ENGINE_GRAPH_PAINTER_IDENTS,
     renders_engine_graphs,

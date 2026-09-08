@@ -14,20 +14,18 @@ from typing import Literal, override
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
+    DEFAULT_INTERACTION,
+    default_time_range_seconds,
     EngineDisplayOptions,
     get_template_graph_specification,
     GraphDisplayConfigHTML,
     GraphRenderOptions,
     render_engine_graph_group,
     resolve_size,
-    TemplateGraphSpecification,
-    vs_graph_render_options,
-)
-from cmk.gui.graphing._frontend import (
-    DEFAULT_INTERACTION,
-    default_time_range_seconds,
     STATIC_INTERACTION,
     stored_time_range_seconds,
+    TemplateGraphSpecification,
+    vs_graph_render_options,
 )
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l

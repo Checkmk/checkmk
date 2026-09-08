@@ -25,12 +25,14 @@ from cmk.gui.graphing import (
     build_template_graphs,
     evaluate_built_graphs,
     evaluated_to_graph_spec,
+    get_graph_plugin_from_id,
     graphs_from_api,
+    MKGraphNotFound,
+    registered_metrics,
+    registered_translations,
     RRDFetchMetricNames,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id, MKGraphNotFound
-from cmk.gui.graphing._plugins import registered_metrics, registered_translations
 from cmk.gui.http import request, Response
 from cmk.gui.log import logger
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas

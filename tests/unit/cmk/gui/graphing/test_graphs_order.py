@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Mapping, Sequence
 
@@ -125,19 +123,19 @@ def _engine_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context", "load_plugins")
 def test_the_engine_discovers_a_services_graphs_in_a_pinned_order(
     metric_names: Sequence[str],
     registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
     expected: Sequence[str],
-    request_context: None,
-    load_plugins: None,
 ) -> None:
     registered_metrics = {name: _metric(name) for name in metric_names}
 
     assert _engine_ids(metric_names, registered_graphs, registered_metrics) == expected
 
 
-def test_the_engine_registered_graphs_keep_the_legacy_plugin_order(load_plugins: None) -> None:
+@pytest.mark.usefixtures("load_plugins")
+def test_the_engine_registered_graphs_keep_the_legacy_plugin_order() -> None:
     assert [plugin.name for plugin in engine_registered_graphs()] == [
         name for name, _plugin in sort_registered_graph_plugins(graphs_from_api)
     ]

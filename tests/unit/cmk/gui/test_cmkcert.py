@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
-
 from pathlib import Path
 from unittest.mock import patch
 
@@ -137,7 +134,8 @@ def test_init_cas(omd_root: Path, target_cert: CertificateType) -> None:
     _test_init(omd_root, target_cert)
 
 
-def test_init_site(site_ca: Path, omd_root: Path) -> None:
+@pytest.mark.usefixtures("site_ca")
+def test_init_site(omd_root: Path) -> None:
     _create_dummy(omd_root, "site-ca")
     _test_init(omd_root, "site")
 
@@ -164,7 +162,8 @@ def test_init_cert_does_not_replace_existing(
         )
 
 
-def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> None:
+@pytest.mark.usefixtures("site_ca")
+def test_rotate_site(mocker: MockerFixture, omd_root: Path) -> None:
     _mock_site_and_config(mocker)
     _create_dummy(omd_root, "site-ca")
     _create_dummy(omd_root, "site")
@@ -244,11 +243,8 @@ def _mock_site_and_config(mocker: MockerFixture) -> None:
     ]
 
 
-def test_rotate_site_ca(
-    mocker: MockerFixture,
-    omd_root: Path,
-    site_ca: Path,
-) -> None:
+@pytest.mark.usefixtures("site_ca")
+def test_rotate_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
     _mock_site_and_config(mocker)
 
     with (

@@ -71,10 +71,8 @@ def test_update_livecycle() -> None:
     assert set(unacknowledged_werks.keys()) == {40, 50, 60}
 
 
-def test_version_of_werk_keeps_first_incompatible_version(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_version_of_werk_keeps_first_incompatible_version(tmp_path: Path) -> None:
     unacknowledged_werks_file = Path(tmp_path, "ut_unacked")
     acknowledge_werks_file = Path(tmp_path, "ut_acked")
     compiled_werks_dir = Path(tmp_path, "ut_compiled")

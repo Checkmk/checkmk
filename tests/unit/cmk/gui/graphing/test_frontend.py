@@ -226,9 +226,8 @@ def test_global_time_picker_props_without_preferences() -> None:
     assert props.first_day_of_week is None
 
 
-def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained() -> None:
     refresh = global_time_picker_refresh()
 
     assert refresh.starts_live is False

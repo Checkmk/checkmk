@@ -191,7 +191,8 @@ def test_check_humidity() -> None:
     }
 
 
-def test_check_temp(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_temp() -> None:
     section = etherbox.etherbox_convert(
         [
             [["0"]],

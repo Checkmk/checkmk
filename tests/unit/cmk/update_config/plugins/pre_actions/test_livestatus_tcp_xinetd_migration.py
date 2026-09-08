@@ -72,10 +72,8 @@ def test_force_continues_despite_local_modifications(
     assert "This update changes how the livestatus xinetd config is deployed" in caplog.text
 
 
-def test_abort_cleanup_hook_generated_livesatus_config(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("caplog")
+def test_abort_cleanup_hook_generated_livesatus_config(tmp_path: Path) -> None:
     site_root = _build_site_root(tmp_path)
     (site_root / "etc/mk-livestatus/xinetd.conf").write_text("changes made")
     with pytest.raises(MKUserError):

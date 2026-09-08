@@ -82,6 +82,7 @@ def expected_output_engine():
     return chain([re.escape(r"<<<ps:sep(9)>>>")], repeat(re_str))
 
 
-def test_section_ps(request, full_path_config, expected_output, actual_output, testfile) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("full_path_config")
+def test_section_ps(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

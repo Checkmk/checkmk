@@ -9,7 +9,8 @@ from cmk.ccc.user import UserId
 from cmk.utils.local_secrets import AutomationUserSecret
 
 
-def test_automation_user_secret(patch_omd_site: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("patch_omd_site")
+def test_automation_user_secret() -> None:
     aus = AutomationUserSecret(UserId("crypto_secrets_new_user"))
 
     assert not aus.exists()

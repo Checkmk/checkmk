@@ -37,7 +37,8 @@ from tests.testlib.common.utils import wait_until
 tracer = get_tracer()
 
 
-def test_registered_background_jobs(load_plugins: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("load_plugins")
+def test_registered_background_jobs() -> None:
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",

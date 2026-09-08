@@ -6,7 +6,6 @@
 
 import logging
 from collections.abc import Iterator
-from pathlib import Path
 from typing import override
 
 import pytest
@@ -47,11 +46,8 @@ def test_parse_arguments_debug() -> None:
     assert main._parse_arguments(["--debug"]).debug is True  # noqa: SLF001
 
 
-def test_main_calls_config_updater(
-    monkeypatch: pytest.MonkeyPatch,
-    mocker: MockerFixture,
-    tmp_path: Path,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_main_calls_config_updater(monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
     packages_dir = cmk.utils.paths.var_dir / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)

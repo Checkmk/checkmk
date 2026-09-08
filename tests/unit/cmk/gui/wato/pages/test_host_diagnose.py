@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Regression tests for the legacy 'Test connection to host' AJAX handler.
 
 The SNMPv3 credentials typed into the form were being ignored because the
@@ -61,7 +59,8 @@ def _set_vars(vars_: dict[str, str]) -> None:
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_vs_host_prefers_typed_snmpv3_password_over_orig(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vs_host_prefers_typed_snmpv3_password_over_orig() -> None:
     """Typed password must win over the stored _orig."""
     stored_encrypted = base64.b64encode(Encrypter.encrypt("stored-pw")).decode("ascii")
     _set_vars(_auth_no_priv_vars(typed_password="typed-pw", orig_password=stored_encrypted))
@@ -74,7 +73,8 @@ def test_vs_host_prefers_typed_snmpv3_password_over_orig(request_context: None) 
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_vs_host_decrypts_snmpv3_orig_when_typed_is_empty(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vs_host_decrypts_snmpv3_orig_when_typed_is_empty() -> None:
     """When the user does not re-enter the password, the stored _orig is used."""
     stored_encrypted = base64.b64encode(Encrypter.encrypt("stored-pw")).decode("ascii")
     _set_vars(_auth_no_priv_vars(typed_password="", orig_password=stored_encrypted))
@@ -84,9 +84,8 @@ def test_vs_host_decrypts_snmpv3_orig_when_typed_is_empty(request_context: None)
     assert result["snmp_v3_credentials"] == ("authNoPriv", "md5", "user1", "stored-pw")
 
 
-def test_vs_host_returns_empty_password_when_no_typed_and_no_orig(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vs_host_returns_empty_password_when_no_typed_and_no_orig() -> None:
     """No typed password and no _orig must not raise a decrypt error.
 
     This reproduces the scenario where all tests failed with
@@ -99,7 +98,8 @@ def test_vs_host_returns_empty_password_when_no_typed_and_no_orig(
     assert result["snmp_v3_credentials"] == ("authNoPriv", "md5", "user1", "")
 
 
-def test_vs_host_parses_snmpv1_community(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vs_host_parses_snmpv1_community() -> None:
     _set_vars(
         {
             "vs_host_p_snmp_community_USE": "on",
@@ -132,7 +132,8 @@ def _auth_priv_vars(
     }
 
 
-def test_vs_host_parses_snmpv3_auth_priv_credentials(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vs_host_parses_snmpv3_auth_priv_credentials() -> None:
     """authPriv: parse all 6 tuple fields (covers the 6-tuple match arm)."""
     _set_vars(_auth_priv_vars(typed_auth_pw="auth-pw", typed_priv_pw="priv-pw"))
 
@@ -148,7 +149,8 @@ def test_vs_host_parses_snmpv3_auth_priv_credentials(request_context: None) -> N
     )
 
 
-def test_vs_rules_parses_rule_vars(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vs_rules_parses_rule_vars() -> None:
     _set_vars(
         {
             "vs_rules_p_agent_port": "6557",
@@ -193,9 +195,8 @@ def _input_by_name(soup: BeautifulSoup, name: str) -> dict[str, str]:
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_render_emits_snmpv3_password_with_visible_and_orig_inputs(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_render_emits_snmpv3_password_with_visible_and_orig_inputs() -> None:
     """The rendered form must emit BOTH the visible password input and the
     hidden _orig companion -- otherwise host_diagnose.ts cannot forward them
     and Password.from_html_vars cannot fall back to the stored value.
@@ -216,7 +217,8 @@ def test_render_emits_snmpv3_password_with_visible_and_orig_inputs(
     assert Encrypter.decrypt(base64.b64decode(orig["value"].encode("ascii"))) == "stored-pw"
 
 
-def test_render_emits_field_names_with_vs_host_prefix(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_render_emits_field_names_with_vs_host_prefix() -> None:
     """host_diagnose.ts filters form fields by the 'vs_host_' / 'vs_rules_'
     prefix. Verify the renderer emits the prefix our filter expects.
     """

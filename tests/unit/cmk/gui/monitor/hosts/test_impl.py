@@ -157,12 +157,9 @@ def test_build_query_filter_leaves_out_a_hidden_field() -> None:
         pytest.param(2.0, 3.5, False, id="staleness below the threshold is not stale"),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_fetch_derives_stale_from_the_staleness_threshold(
-    staleness: float,
-    threshold: float,
-    expected_stale: bool,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    set_config: SetConfig,
+    staleness: float, threshold: float, expected_stale: bool, set_config: SetConfig
 ) -> None:
     row = {
         "name": "some-host",

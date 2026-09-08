@@ -79,10 +79,8 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
     )
 
 
-def test_remove_hosts_no_rules_early_return(
-    activate_changes_mock: MagicMock,
-    patch_omd_site: None,
-) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_remove_hosts_no_rules_early_return(activate_changes_mock: MagicMock) -> None:
     automatic_host_removal.execute_host_removal_job(Config())
     activate_changes_mock.assert_not_called()
 

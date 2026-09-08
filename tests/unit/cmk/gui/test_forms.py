@@ -226,11 +226,8 @@ def test_end_closes_table_when_header_open() -> None:
         ),
     ],
 )
-def test_vars_to_delete(
-    request_vars: list[tuple[str, str]],
-    expected_removed: list[str],
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_vars_to_delete(request_vars: list[tuple[str, str]], expected_removed: list[str]) -> None:
     form_prefix: str = "search_p_rule"
     for var, val in request_vars:
         request.set_var(var, val)

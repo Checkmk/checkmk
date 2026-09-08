@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 from werkzeug.datastructures import ETags
 
@@ -32,7 +30,8 @@ def _api_context(user: LoggedInUser) -> ApiContext:
     )
 
 
-def test_user_is_the_authenticated_user(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_is_the_authenticated_user() -> None:
     """ApiContext.user must be the user the request actually authenticated as,
     not a user rebuilt from the (possibly None) user id (CMK-35778)."""
     user = LoggedInUser(
@@ -43,7 +42,8 @@ def test_user_is_the_authenticated_user(request_context: None) -> None:
     assert _api_context(user).user is user
 
 
-def test_super_user_is_preserved(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_super_user_is_preserved() -> None:
     """The site-internal secret (InternalToken, e.g. the DCD daemon) authenticates
     as a super user with no user id. ApiContext.user must keep the super user so
     the folder/host write-permission checks accept it."""
@@ -58,10 +58,8 @@ def test_super_user_is_preserved(request_context: None) -> None:
     "pseudo_user",
     [LoggedInRemoteSite(site_name="remote"), LoggedInNobody()],
 )
-def test_other_user_id_less_users_are_not_promoted_to_super_user(
-    pseudo_user: LoggedInUser,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_other_user_id_less_users_are_not_promoted_to_super_user(pseudo_user: LoggedInUser) -> None:
     """Other identities also have no user id but must NOT be treated as a super
     user - that is exactly the bug of rebuilding the user from a None user id."""
     context = _api_context(pseudo_user)

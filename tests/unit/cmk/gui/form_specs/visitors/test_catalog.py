@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+import pytest
 
-from cmk.ccc.user import UserId
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable import Catalog, Topic, TopicElement
 from cmk.rulesets.v1 import Title
@@ -14,11 +13,8 @@ from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 
-def test_catalog_validation_simple(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
+def test_catalog_validation_simple() -> None:
     spec = Catalog(
         elements={
             "some_key": Topic(

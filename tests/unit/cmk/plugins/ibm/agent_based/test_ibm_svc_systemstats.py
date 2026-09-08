@@ -335,11 +335,11 @@ def test_discovery_ibm_svc_systemstats_cpu(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_ibm_svc_systemstats_cpu(
     section: IBMSystemStats,
     params: ibm_svc_systemstats.IbmSvcCpuUtilizationParams,
     expected_result: Sequence[CheckResult],
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert list(check_ibm_svc_systemstats_cpu(params=params, section=section)) == list(
         expected_result

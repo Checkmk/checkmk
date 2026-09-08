@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping, Sequence
@@ -131,10 +129,10 @@ def test_discovery_prism_host_stats(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_prism_host_stats(  # type: ignore[misc]
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,
 ) -> None:
     assert (
         list(
@@ -164,11 +162,11 @@ def test_check_prism_host_stats(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_prism_host_stats_cpu(  # type: ignore[misc]
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,
 ) -> None:
     assert (
         list(

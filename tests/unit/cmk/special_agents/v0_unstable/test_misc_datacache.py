@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
-
 from pathlib import Path
 from typing import override
 
@@ -43,7 +40,8 @@ def test_datacache_timestamp() -> None:
     assert isinstance(tcache.cache_timestamp, float)
 
 
-def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_datacache_valid(monkeypatch: pytest.MonkeyPatch) -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
     tcache._write_to_cache("cached data")  # noqa: SLF001
     assert tcache.cache_timestamp is not None
@@ -62,7 +60,8 @@ def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     assert tcache.get_data(True) == "live data"
 
 
-def test_datacache_validity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_datacache_validity(monkeypatch: pytest.MonkeyPatch) -> None:
     tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
     tcache._write_to_cache("cached data")  # noqa: SLF001
     assert tcache.cache_timestamp is not None

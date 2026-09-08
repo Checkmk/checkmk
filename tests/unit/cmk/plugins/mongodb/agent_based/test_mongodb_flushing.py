@@ -71,11 +71,8 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
-def test_check_function(
-    info: StringTable,
-    expected_results: Sequence[str],
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_function(info: StringTable, expected_results: Sequence[str]) -> None:
     """
     Test the MongoDB flushing check function with various input combinations.
     """

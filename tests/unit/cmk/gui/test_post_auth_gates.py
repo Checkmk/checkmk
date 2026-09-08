@@ -36,7 +36,8 @@ def _gate(
     )
 
 
-def test_no_registered_gate_yields_no_redirect(registry: PostAuthGateRegistry) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("registry")
+def test_no_registered_gate_yields_no_redirect() -> None:
     assert post_auth_gate_redirect_url(Config(), "index") is None
 
 

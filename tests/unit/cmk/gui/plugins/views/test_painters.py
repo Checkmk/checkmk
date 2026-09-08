@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -1401,13 +1399,13 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes(
     notes_type: Literal["host", "service"],
     notes_dir: Path,
     notes_file: Path,
     row: Row,
     notes: list[str],
-    request_context: None,
 ) -> None:
     notes_dir.mkdir(parents=True)
     with open(notes_file, "w") as f:
@@ -1633,13 +1631,13 @@ def test_paint_custom_notes(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes_file_inclusion_and_html_tags(
     object_type: Literal["host", "service"],
     host_name: str,
     service_name: str | None,
     notes_dirs: list[Path],
     notes: list[dict[str, object]],
-    request_context: None,
 ) -> None:
     expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)
 

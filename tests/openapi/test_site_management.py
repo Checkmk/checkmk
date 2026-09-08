@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from unittest.mock import MagicMock
 
@@ -708,10 +706,8 @@ def _saml_connection(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def test_site_connection_saml_authentication_connection_round_trip(
-    clients: ClientRegistry,
-    saml_connection: None,
-) -> None:
+@pytest.mark.usefixtures("saml_connection")
+def test_site_connection_saml_authentication_connection_round_trip(clients: ClientRegistry) -> None:
     config, site_id = _default_config_with_site_id()
     remote_site_url = config["configuration_connection"]["url_of_remote_site"]
     clients.SiteManagement.create(site_config=config)
@@ -755,9 +751,9 @@ def test_site_connection_saml_authentication_connection_round_trip(
     ]
 
 
+@pytest.mark.usefixtures("saml_connection")
 def test_update_site_connection_unknown_saml_authentication_connection_400(
     clients: ClientRegistry,
-    saml_connection: None,
 ) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
@@ -772,9 +768,9 @@ def test_update_site_connection_unknown_saml_authentication_connection_400(
     ).assert_status_code(400)
 
 
+@pytest.mark.usefixtures("saml_connection")
 def test_update_site_connection_saml_authentication_connection_needs_global_permission_403(
     clients: ClientRegistry,
-    saml_connection: None,
 ) -> None:
     """Holding "wato.sites" alone must not reveal which SAML connections exist."""
     config, site_id = _default_config_with_site_id()

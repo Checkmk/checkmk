@@ -1067,10 +1067,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_convert_to_legacy_valuespec(  # type: ignore[misc]
     new_valuespec: FormSpec,
     expected: legacy_valuespecs.ValueSpec,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     _compare_specs(
         convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected

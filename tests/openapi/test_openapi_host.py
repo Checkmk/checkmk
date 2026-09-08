@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="explicit-any"
 
 import ast
@@ -181,11 +179,9 @@ def _add_hosts_table(
     )
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
 def test_openapi_livestatus_host_list_all(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-    monkeypatch: pytest.MonkeyPatch,
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     test_note = "some host note"
     _add_hosts_table(mock_livestatus, {"notes": test_note})
@@ -232,11 +228,9 @@ def test_openapi_livestatus_host_list_all(
         assert resp.json["value"][0]["extensions"]["notes"] == test_note
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
 def test_openapi_livestatus_host_binary_data_as_base64(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-    monkeypatch: pytest.MonkeyPatch,
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     inventory_gz_bytes = b"abcdefghijklmnopjrstuvwxyz\01\02\03\04\05"
     _add_hosts_table(mock_livestatus, {"mk_inventory_gz": inventory_gz_bytes})

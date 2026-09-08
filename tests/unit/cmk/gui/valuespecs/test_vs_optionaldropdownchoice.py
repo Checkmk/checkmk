@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 import cmk.gui.valuespec as vs
 
 from .utils import expect_validate_failure, expect_validate_success, request_var
@@ -33,7 +35,8 @@ class TestOptionalDropdownChoice:
             "id_b",
         )
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         valuespec = vs.OptionalDropdownChoice[str](
             explicit=vs.TextInput(), choices=[("id_a", "title_a"), ("id_b", "title_b")]
         )

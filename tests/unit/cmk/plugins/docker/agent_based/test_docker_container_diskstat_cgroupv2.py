@@ -125,7 +125,7 @@ def _split(string: str) -> StringTable:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_docker_container_diskstat_cgroupv2(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+def test_docker_container_diskstat_cgroupv2() -> None:
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet
         _ = list(

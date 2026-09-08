@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from dataclasses import asdict
 
 import pytest
@@ -216,7 +214,8 @@ def test_feature_config_defaults_not_mutated_by_config_loading() -> None:
         cmk.gui.config._feature_config_defaults.pop("_test_mutable_var", None)  # noqa: SLF001
 
 
-def test_load_config(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_config() -> None:
     config_path = cmk.utils.paths.default_config_dir / "multisite.mk"
     config_path.unlink(missing_ok=True)
 
@@ -241,14 +240,14 @@ def local_config_plugin() -> None:
         f.write("ding = 'dong'\n")
 
 
-@pytest.mark.usefixtures("local_config_plugin")
-def test_load_config_respects_local_plugin(request_context: None) -> None:
+@pytest.mark.usefixtures("local_config_plugin", "request_context")
+def test_load_config_respects_local_plugin() -> None:
     config = cmk.gui.config.load_config()
     assert config.ding == "dong"  # type: ignore[attr-defined, unused-ignore]
 
 
-@pytest.mark.usefixtures("local_config_plugin")
-def test_load_config_allows_local_plugin_setting(request_context: None) -> None:
+@pytest.mark.usefixtures("local_config_plugin", "request_context")
+def test_load_config_allows_local_plugin_setting() -> None:
     with (cmk.utils.paths.default_config_dir / "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     config = cmk.gui.config.load_config()
@@ -302,7 +301,8 @@ def test_default_aux_tags(load_config: Config) -> None:
     )
 
 
-def test_config_initialize_updates_active_config(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_config_initialize_updates_active_config() -> None:
     config_path = cmk.utils.paths.default_config_dir / "multisite.mk"
 
     assert active_config.quicksearch_dropdown_limit == 80

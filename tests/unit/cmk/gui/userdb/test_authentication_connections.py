@@ -96,10 +96,9 @@ class TestEffectiveAuthenticationConnections:
     only the seeded self-default.
     """
 
+    @pytest.mark.usefixtures("request_context")
     def test_central_site_uses_its_own_value_not_the_propagated_global(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
+        self, set_config: SetConfig
     ) -> None:
         per_site = [_saml_entry("per_site_saml")]
         with set_config(authentication_connections=[_saml_entry("global_saml")]):
@@ -110,11 +109,9 @@ class TestEffectiveAuthenticationConnections:
                 == per_site
             )
 
+    @pytest.mark.usefixtures("request_context")
     def test_remote_site_uses_the_propagated_global(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
-        monkeypatch: pytest.MonkeyPatch,
+        self, set_config: SetConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
             "cmk.gui.userdb._connections.is_distributed_setup_remote_site",
@@ -129,11 +126,9 @@ class TestEffectiveAuthenticationConnections:
                 == propagated
             )
 
+    @pytest.mark.usefixtures("request_context")
     def test_remote_site_without_propagated_value_resolves_to_empty_list(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
-        monkeypatch: pytest.MonkeyPatch,
+        self, set_config: SetConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
             "cmk.gui.userdb._connections.is_distributed_setup_remote_site",
@@ -142,10 +137,9 @@ class TestEffectiveAuthenticationConnections:
         with set_config(authentication_connections=None):
             assert effective_authentication_connections(_site_config()) == []
 
+    @pytest.mark.usefixtures("request_context")
     def test_explicitly_disabled_site_authenticates_against_nothing(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
+        self, set_config: SetConfig
     ) -> None:
         with set_config(user_connections=[_ldap_connection("my_ldap")]):
             assert (
@@ -186,10 +180,9 @@ class TestResolvedAuthenticationConnections:
             == []
         )
 
+    @pytest.mark.usefixtures("request_context")
     def test_absent_key_falls_back_to_all_available_connections(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
+        self, set_config: SetConfig
     ) -> None:
         with set_config(user_connections=[_ldap_connection("my_ldap")]):
             assert resolved_authentication_connections(_site_config()) == [("ldap", "my_ldap")]
@@ -202,22 +195,16 @@ class TestGetSamlConnectionsForCurrentSite:
     def _on_central_site(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr("cmk.gui.userdb._connections.omd_site", lambda: _CENTRAL_SITE)
 
-    def test_empty_when_site_has_no_saml_entries(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_empty_when_site_has_no_saml_entries(self, set_config: SetConfig) -> None:
         with set_config(
             sites={_CENTRAL_SITE: _site_config(authentication_connections=[])},
             user_connections=[_saml_connection("my_saml")],
         ):
             assert get_saml_connections_for_current_site() == {}
 
-    def test_returns_referenced_enabled_saml_connection(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_returns_referenced_enabled_saml_connection(self, set_config: SetConfig) -> None:
         saml = _saml_connection("my_saml")
         with set_config(
             sites={
@@ -227,11 +214,8 @@ class TestGetSamlConnectionsForCurrentSite:
         ):
             assert get_saml_connections_for_current_site() == {"my_saml": saml}
 
-    def test_disabled_connection_is_not_returned(
-        self,
-        set_config: SetConfig,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_disabled_connection_is_not_returned(self, set_config: SetConfig) -> None:
         with set_config(
             sites={
                 _CENTRAL_SITE: _site_config(authentication_connections=[_saml_entry("my_saml")])
@@ -253,10 +237,8 @@ class TestLoginPageSsoButtonGating:
     def _on_central_site(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr("cmk.gui.userdb._connections.omd_site", lambda: _CENTRAL_SITE)
 
-    def test_login_page_renders_no_sso_button_when_no_connections(
-        self,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_login_page_renders_no_sso_button_when_no_connections(self) -> None:
         with output_funnel.plugged():
             show_saml2_login([], None, "index.py")
             rendered = "".join(output_funnel.drain())
@@ -264,10 +246,8 @@ class TestLoginPageSsoButtonGating:
         assert "_saml2_login_button" not in rendered
         assert "login_separator" not in rendered
 
-    def test_login_page_renders_sso_button_for_assigned_connection(
-        self,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_login_page_renders_sso_button_for_assigned_connection(self) -> None:
         saml = _saml_connection("my_saml")
 
         with output_funnel.plugged():

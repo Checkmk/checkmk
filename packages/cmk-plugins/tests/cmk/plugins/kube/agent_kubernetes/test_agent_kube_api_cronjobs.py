@@ -8,6 +8,7 @@
 
 import datetime
 
+import pytest
 from kubernetes import client
 
 from cmk.plugins.kube.schemata import api
@@ -30,9 +31,9 @@ class TestAPICronJob:
         assert metadata.name == "cronjob"
         assert metadata.namespace is not None
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_cron_job_spec(
         self,
-        dummy_host: str,  # noqa: ARG002
         batch_client: client.BatchV1Api,  # type: ignore[name-defined]
     ) -> None:
         cron_job_list_with_info = {
@@ -62,9 +63,9 @@ class TestAPICronJob:
         assert spec.schedule is not None
         assert spec.schedule == "*/5 * * * *"
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_cron_job_status(
         self,
-        dummy_host: str,  # noqa: ARG002
         batch_client: client.BatchV1Api,  # type: ignore[name-defined]
     ) -> None:
         cron_job_list_with_info = {

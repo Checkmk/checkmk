@@ -150,10 +150,9 @@ def use_testfiles():
             shutil.rmtree(d)
 
 
-@pytest.mark.usefixtures("use_testfiles")
+@pytest.mark.usefixtures("use_testfiles", "testconfig")
 def test_section_fileinfo(  # type: ignore[misc]
     request,
-    testconfig,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     expected_output: Sequence[str] | None,
     actual_output,
     testfile,

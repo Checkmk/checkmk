@@ -108,6 +108,7 @@ def manage_plugin(request):
             os.unlink(os.path.join(target_dir, Globals.cfgfile))
 
 
-def test_section_mrpe(request, testconfig, expected_output, actual_output, testfile) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("testconfig")
+def test_section_mrpe(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

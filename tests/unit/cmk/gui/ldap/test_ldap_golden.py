@@ -188,7 +188,8 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
     )
 
 
-def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_ldap")
+def test_get_users(mocker: MockerFixture) -> None:
     ldap_result = [
         ("user1", {"uid": [b"USER1_ID"]}),
         ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
@@ -240,7 +241,8 @@ class AnyOrderMatcher:
         return f"AnyOrderMatcher({self.args})"
 
 
-def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_do_sync(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     loaded_users: Users = {
         UserId("alice"): {"connector": "htpasswd"},
@@ -284,9 +286,8 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     )
 
 
-def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched() -> None:
     """The LDAP sync's stale-user removal leaves a user owned by
     another connector (here the SAML connector) untouched, and raises no error,
     when that user has no matching LDAP entry. Only users owned by *this* LDAP
@@ -317,11 +318,8 @@ def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
     assert result.changes == [], "no change should be recorded for an untouched user"
 
 
-def test_check_credentials_valid(
-    mocker: MockerFixture,
-    mock_ldap: MagicMock,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("mock_ldap", "request_context")
+def test_check_credentials_valid(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
@@ -343,10 +341,9 @@ def test_check_credentials_valid(
         assert result == UserId("carol_id")
 
 
+@pytest.mark.usefixtures("mock_ldap")
 def test_login_of_an_unknown_ldap_user_syncs_it(
-    mocker: MockerFixture,
-    mock_ldap: MagicMock,
-    wsgi_app: WebTestAppForCMK,
+    mocker: MockerFixture, wsgi_app: WebTestAppForCMK
 ) -> None:
     """Flask opens the session while pushing the request context, so the sync that runs
     while authenticating cannot consult it (CMK-19466)."""
@@ -373,7 +370,8 @@ def test_login_of_an_unknown_ldap_user_syncs_it(
     assert UserId("carol") in load_users()
 
 
-def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_ldap")
+def test_check_credentials_invalid(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
@@ -393,7 +391,8 @@ def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) 
         )
 
 
-def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_ldap")
+def test_check_credentials_not_found(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
         connector.connect()
@@ -610,11 +609,8 @@ sync_data: list[SyncLdapData] = [
 
 
 @pytest.mark.parametrize("sync_ldap_data", sync_data)
-def test_ldap_sync(
-    mocker: MockerFixture,
-    sync_ldap_data: SyncLdapData,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_ldap_sync(mocker: MockerFixture, sync_ldap_data: SyncLdapData) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
     # The connector is treated as an authentication connection so the "user
     # created" parametrization still creates users (creation is gated on
@@ -686,11 +682,8 @@ _test_config_with_auth_expire = LDAPUserConnectionConfig(
 )
 
 
-def test_check_credentials_with_auth_expire(
-    mocker: MockerFixture,
-    mock_ldap: MagicMock,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("mock_ldap", "request_context")
+def test_check_credentials_with_auth_expire(mocker: MockerFixture) -> None:
     """Login with auth_expire plugin enabled must request all needed LDAP attributes.
 
     Regression test: _get_user() used to fetch only the user-id attribute, so
@@ -816,7 +809,8 @@ _test_config_no_suffix = LDAPUserConnectionConfig(
 )
 
 
-def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_takes_over_saml_owned_user(mocker: MockerFixture) -> None:
     """A SAML-owned user with a matching LDAP entry is taken over by LDAP sync.
 
     Connector flips to the LDAP id and LDAP-managed attributes are written.
@@ -846,10 +840,8 @@ def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context:
     assert taken_over["temperature_unit"] == "celsius", "LDAP attribute synced"
 
 
-def test_takeover_drops_attributes_provided_by_saml(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_takeover_drops_attributes_provided_by_saml(mocker: MockerFixture) -> None:
     """On takeover, attributes the SAML connector managed are dropped.
 
     CMK-33824: stale SAML values must not linger when the LDAP connection does
@@ -901,7 +893,8 @@ def test_takeover_drops_attributes_provided_by_saml(
     assert taken_over["temperature_unit"] == "celsius"
 
 
-def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture) -> None:
     """A SAML-owned user with NO matching LDAP entry is left untouched.
 
     ``do_sync`` only iterates fetched LDAP users, so a SAML-only user is never reached by the takeover path.
@@ -933,7 +926,8 @@ def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_conte
     )
 
 
-def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture) -> None:
     """A regular LDAP-owned user still receives the standard modify event.
 
     The new takeover branch must not affect users that were already owned by the LDAP connector.
@@ -988,10 +982,8 @@ def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_conte
     )
 
 
-def test_sync_does_not_take_over_htpasswd_user(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_does_not_take_over_htpasswd_user(mocker: MockerFixture) -> None:
     """Takeover is SAML-only — htpasswd-owned users fall through to today's
     name-conflict skip path.
     """
@@ -1027,10 +1019,8 @@ def test_sync_does_not_take_over_htpasswd_user(
     assert sync_user_result.security_events == [], "no audit event for skipped user"
 
 
-def test_takeover_emits_security_event_and_change(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_takeover_emits_security_event_and_change(mocker: MockerFixture) -> None:
     """Takeover records a 'user modified' security event AND a change entry
     that explicitly names the ownership transfer.
     """
@@ -1071,10 +1061,8 @@ def test_takeover_emits_security_event_and_change(
     ]
 
 
-def test_takeover_with_suffix_keeps_bare_userid(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_takeover_with_suffix_keeps_bare_userid(mocker: MockerFixture) -> None:
     """Takeover reuses the bare UserId even when the LDAP connector has a
     suffix configured. Existing users are never renamed
     (see cmk/gui/ldap_integration/ldap_suffix_flow.md).
@@ -1114,10 +1102,8 @@ def test_takeover_with_suffix_keeps_bare_userid(
 # '----------------------------------------------------------------------'
 
 
-def test_sync_skips_creation_for_attr_only_connector(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_skips_creation_for_attr_only_connector(mocker: MockerFixture) -> None:
     """A connector absent from `authentication_connections` must not create a
     new user during the periodic background sync (`login_attempt=False`).
     """
@@ -1146,10 +1132,8 @@ def test_sync_skips_creation_for_attr_only_connector(
     assert sync_user_result.security_events == [], "no 'user created' event emitted"
 
 
-def test_sync_creates_user_for_authentication_connector(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_creates_user_for_authentication_connector(mocker: MockerFixture) -> None:
     """A connector listed in `authentication_connections` still creates new
     users during the periodic sync — the gate does not change this path.
     """
@@ -1181,10 +1165,8 @@ def test_sync_creates_user_for_authentication_connector(
     assert any(event.summary == "user created" for event in sync_user_result.security_events)
 
 
-def test_sync_updates_existing_user_for_attr_only_connector(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_updates_existing_user_for_attr_only_connector(mocker: MockerFixture) -> None:
     """An attribute-sync-only connector still updates an existing user it owns.
     The creation gate sits on the new-user branch only.
     """
@@ -1227,10 +1209,8 @@ def test_sync_updates_existing_user_for_attr_only_connector(
     assert updated["temperature_unit"] == "celsius"
 
 
-def test_sync_takeover_still_works_for_attr_only_connector(
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sync_takeover_still_works_for_attr_only_connector(mocker: MockerFixture) -> None:
     """The CMK-33824 SAML->LDAP takeover still applies for a connector that is
     only in `user_attribute_sync_connections`: takeover acts on an
     already-existing user, so the creation gate does not affect it.
@@ -1261,10 +1241,9 @@ def test_sync_takeover_still_works_for_attr_only_connector(
     assert taken_over["start_url"] == "mr_bojangles.py", "LDAP attributes still synced"
 
 
+@pytest.mark.usefixtures("request_context")
 def test_sync_attr_only_connector_deletes_owned_user_gone_from_ldap(
-    mocker: MockerFixture,
-    request_context: None,
-    set_config: SetConfig,
+    mocker: MockerFixture, set_config: SetConfig
 ) -> None:
     """Deletion follows ownership, not auth membership: an attribute-sync-only
     connector still removes a user it owns once that user leaves the LDAP

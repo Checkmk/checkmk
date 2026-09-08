@@ -88,12 +88,8 @@ def fixture_main_module_registry(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestWatoMode:
-    def test_breadcrumb_without_additions(
-        self,
-        request_context: None,  # noqa: ARG002
-        main_module_registry: None,  # noqa: ARG002
-        test_edition: Edition,
-    ) -> None:
+    @pytest.mark.usefixtures("request_context", "main_module_registry")
+    def test_breadcrumb_without_additions(self, test_edition: Edition) -> None:
         assert list(
             SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
         ) == [
@@ -105,12 +101,9 @@ class TestWatoMode:
             ),
         ]
 
+    @pytest.mark.usefixtures("request_context", "main_module_registry")
     def test_breadcrumb_with_additions(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-        request_context: None,  # noqa: ARG002
-        main_module_registry: None,  # noqa: ARG002
-        test_edition: Edition,
+        self, monkeypatch: pytest.MonkeyPatch, test_edition: Edition
     ) -> None:
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:
             yield BreadcrumbItem(

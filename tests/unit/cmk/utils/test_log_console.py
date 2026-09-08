@@ -6,6 +6,7 @@
 import logging
 import sys
 
+import pytest
 from pytest import CaptureFixture, LogCaptureFixture
 
 from cmk.utils.log import console
@@ -59,7 +60,8 @@ def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> Non
     assert capsys.readouterr() == ("", "")
 
 
-def test_warning(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("caplog")
+def test_warning(capsys: CaptureFixture[str]) -> None:
     console.warning("  hello  ", file=sys.stderr)
     assert capsys.readouterr() == ("", "  hello  \n")
 

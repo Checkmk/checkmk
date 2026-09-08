@@ -29,5 +29,6 @@ def expected_output_engine():
     return [r"<<<systemtime>>>", r"\d+"]
 
 
-def test_section_systemtime(testconfig, expected_output, actual_output, testfile) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("testconfig")
+def test_section_systemtime(expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     local_test(expected_output, actual_output, testfile)

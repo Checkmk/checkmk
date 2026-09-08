@@ -29,7 +29,8 @@ def test_parse_arguments_debug() -> None:
     assert main.parse_arguments(["--debug", "old"]).debug is True
 
 
-def test_parse_argument_site_id(capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("capsys")
+def test_parse_argument_site_id() -> None:
     with pytest.raises(SystemExit, match="2"):
         main.parse_arguments([])
     assert main.parse_arguments(["hurz"]).old_site_id == "hurz"

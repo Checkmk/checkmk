@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="explicit-any"
 
 """Tests for the ``authentication_connections`` and
@@ -181,9 +179,8 @@ def _choice_names(form_spec: object) -> list[str]:
     return [element.name for element in inner.elements]
 
 
-def test_authentication_connections_form_spec_choices(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_authentication_connections_form_spec_choices() -> None:
     """The choices are the same for every site — there is no
     "inherit from the central site" option."""
     assert _choice_names(SiteManagement.authentication_connections_form_spec()) == [
@@ -302,9 +299,8 @@ def test_user_attribute_sync_to_disk(form_value: tuple[str, object], disk_value:
     assert _user_attribute_sync_to_disk(form_value) == disk_value
 
 
-def test_user_attribute_sync_form_spec_choices(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_attribute_sync_form_spec_choices() -> None:
     """The choices are the same for every site — there is no
     "inherit from the central site" option."""
     assert _choice_names(SiteManagement.user_attribute_sync_connections_form_spec()) == [
@@ -321,10 +317,8 @@ def _ldap_connection(connection_id: str) -> LDAPUserConnectionConfig:
     )
 
 
-def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(
-    set_config: SetConfig,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(set_config: SetConfig) -> None:
     """A dashed LDAP connection id can be offered for attribute sync.
 
     Element names in the public form-spec API must be Python identifiers, so
@@ -418,7 +412,8 @@ def test_editable_connections_form_spec_omits_saml_when_not_supported() -> None:
     assert [element.name for element in elements] == ["ldap"]
 
 
-def test_editable_connections_form_spec_rejects_empty_list(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_editable_connections_form_spec_rejects_empty_list() -> None:
     """Choosing "Use the following" requires at least one connection entry —
     an empty list would be semantically "disabled" behind a misleading label."""
     visitor = get_visitor(

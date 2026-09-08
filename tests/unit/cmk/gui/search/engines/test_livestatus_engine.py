@@ -563,10 +563,9 @@ class TestExecuteLivestatusCommand:
             {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=row_limit
         )
 
+    @pytest.mark.usefixtures("load_config")
     def test_rows_are_labelled_with_the_site_they_came_from(
-        self,
-        load_config: Config,  # noqa: ARG002
-        mock_livestatus: MockLiveStatusConnection,
+        self, mock_livestatus: MockLiveStatusConnection
     ) -> None:
         mock_livestatus.set_sites(["NO_SITE"])
         mock_livestatus.add_table(
@@ -586,10 +585,9 @@ class TestExecuteLivestatusCommand:
         assert conductor._rows[0]["name"] == "myhost"  # noqa: SLF001
         assert conductor.row_limit_exceeded() is False
 
+    @pytest.mark.usefixtures("load_config")
     def test_exceeding_the_row_limit_drops_the_probe_row(
-        self,
-        load_config: Config,  # noqa: ARG002
-        mock_livestatus: MockLiveStatusConnection,
+        self, mock_livestatus: MockLiveStatusConnection
     ) -> None:
         mock_livestatus.set_sites(["NO_SITE"])
         mock_livestatus.add_table(
@@ -609,10 +607,9 @@ class TestExecuteLivestatusCommand:
         assert conductor.num_rows() == 2
         assert conductor.row_limit_exceeded() is True
 
+    @pytest.mark.usefixtures("load_config")
     def test_an_empty_livestatus_response_yields_no_rows(
-        self,
-        load_config: Config,  # noqa: ARG002
-        mock_livestatus: MockLiveStatusConnection,
+        self, mock_livestatus: MockLiveStatusConnection
     ) -> None:
         mock_livestatus.set_sites(["NO_SITE"])
         mock_livestatus.add_table("hosts", [], site="NO_SITE")

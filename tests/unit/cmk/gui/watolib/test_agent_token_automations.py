@@ -33,7 +33,8 @@ def isolated_token_store(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Pat
 
 
 class TestAutomationAgentDownloadTokenCreate:
-    def test_issues_token_in_local_store(self, isolated_token_store: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("isolated_token_store")
+    def test_issues_token_in_local_store(self) -> None:
         expires_at = dt.datetime(2030, 1, 1, tzinfo=dt.UTC)
         api_request = AgentDownloadTokenCreateRequest(issuer=UserId("admin"), expires_at=expires_at)
 
@@ -47,7 +48,8 @@ class TestAutomationAgentDownloadTokenCreate:
         assert stored.valid_until == expires_at
         assert result.expires_at == expires_at
 
-    def test_no_expiration_yields_token_without_expiry(self, isolated_token_store: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("isolated_token_store")
+    def test_no_expiration_yields_token_without_expiry(self) -> None:
         api_request = AgentDownloadTokenCreateRequest(issuer=UserId("admin"), expires_at=None)
 
         result = TokenCreateResponse.model_validate(
@@ -60,7 +62,8 @@ class TestAutomationAgentDownloadTokenCreate:
 
 
 class TestAutomationAgentRegistrationTokenCreate:
-    def test_issues_token_with_host_name_and_comment(self, isolated_token_store: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("isolated_token_store")
+    def test_issues_token_with_host_name_and_comment(self) -> None:
         expires_at = dt.datetime(2030, 1, 1, tzinfo=dt.UTC)
         api_request = AgentRegistrationTokenCreateRequest(
             issuer=UserId("admin"),
@@ -82,7 +85,8 @@ class TestAutomationAgentRegistrationTokenCreate:
         assert stored.issuer == UserId("admin")
         assert stored.valid_until == expires_at
 
-    def test_push_mode_is_persisted_in_token(self, isolated_token_store: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("isolated_token_store")
+    def test_push_mode_is_persisted_in_token(self) -> None:
         api_request = AgentRegistrationTokenCreateRequest(
             issuer=UserId("admin"),
             host_name=HostName("push-host"),

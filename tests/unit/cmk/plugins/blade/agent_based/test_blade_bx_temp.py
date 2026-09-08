@@ -215,8 +215,8 @@ def test_discover_blade_bx_temp(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_blade_bx_temp(
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     string_table: StringTable,
     params: None | TempParamType,
     expected_results: Mapping[str, CheckResult],

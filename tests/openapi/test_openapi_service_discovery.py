@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 from typing import get_args, get_type_hints
@@ -1903,11 +1901,9 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     )
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "base")
 def test_openapi_bulk_discovery_with_default_options(
-    base: str,
-    clients: ClientRegistry,
-    mocker: MockerFixture,
+    clients: ClientRegistry, mocker: MockerFixture
 ) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(
@@ -1933,20 +1929,14 @@ def test_openapi_bulk_discovery_with_default_options(
     assert resp.status_code == 303
 
 
-def test_openapi_bulk_discovery_with_invalid_hostname(
-    base: str,
-    clients: ClientRegistry,
-) -> None:
+@pytest.mark.usefixtures("base")
+def test_openapi_bulk_discovery_with_invalid_hostname(clients: ClientRegistry) -> None:
     resp = clients.ServiceDiscovery.bulk_discovery(hostnames=["wrong_hostname"], expect_ok=False)
     resp.assert_status_code(400)
 
 
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_refresh_job_status(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("with_host", "inline_background_jobs", "mock_discovery_preview")
+def test_openapi_refresh_job_status(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     host_name = "example.com"
 
     aut_user_auth_wsgi_app.call_method(
@@ -1985,11 +1975,8 @@ def test_openapi_refresh_job_status(
     assert "progress" in resp.json["extensions"]["logs"]
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
-def test_openapi_service_discovery_accessible_to_folder_contact(
-    clients: ClientRegistry,
-    mock_discovery_preview: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("inline_background_jobs", "mock_discovery_preview")
+def test_openapi_service_discovery_accessible_to_folder_contact(clients: ClientRegistry) -> None:
     """Regression test for SUP-29084.
 
     A user who can see a host only through their contact group's folder permissions (not
@@ -2059,10 +2046,9 @@ def test_openapi_service_discovery_inaccessible_to_non_folder_contact(
     ).assert_status_code(404)
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "mock_discovery_preview")
 def test_openapi_service_discovery_accessible_to_admin_not_in_folder_contact_group(
     clients: ClientRegistry,
-    mock_discovery_preview: MagicMock,
 ) -> None:
     """Regression test for SUP-29084.
 

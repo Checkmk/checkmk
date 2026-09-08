@@ -14,7 +14,6 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.config import Config
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.openapi.framework.model.common_fields import (
     _FolderValidation,
@@ -256,10 +255,12 @@ class TestFolderValidation:
         yield folder
         root.delete_subfolder("abc", pending_changes=pending_changes, acting_user=logged_in_user)
 
-    def test_root_via_slash(self, load_config: Config) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("load_config")
+    def test_root_via_slash(self) -> None:
         assert _FolderValidation.validate("/") == folder_tree().root_folder()
 
-    def test_root_via_empty_string(self, load_config: Config) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("load_config")
+    def test_root_via_empty_string(self) -> None:
         assert _FolderValidation.validate("") == folder_tree().root_folder()
 
     @pytest.mark.parametrize(
@@ -280,17 +281,20 @@ class TestFolderValidation:
     ) -> None:
         assert _FolderValidation.validate(value) == subfolder
 
-    def test_bare_hex_name_is_treated_as_id_not_path(self, subfolder: Folder) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("subfolder")
+    def test_bare_hex_name_is_treated_as_id_not_path(self) -> None:
         with pytest.raises(ValueError):
             _FolderValidation.validate("abc")
 
     def test_hex_id_resolved_by_id(self, subfolder: Folder) -> None:
         assert _FolderValidation.validate(subfolder.id()) == subfolder
 
-    def test_invalid_hex_id_raises_value_error(self, load_config: Config) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("load_config")
+    def test_invalid_hex_id_raises_value_error(self) -> None:
         with pytest.raises(ValueError):
             _FolderValidation.validate("deadbeef")
 
-    def test_unknown_path_raises_value_error(self, load_config: Config) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("load_config")
+    def test_unknown_path_raises_value_error(self) -> None:
         with pytest.raises(ValueError):
             _FolderValidation.validate("~does~not~exist")

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 from pytest import MonkeyPatch
 
@@ -27,7 +25,8 @@ def patch_rate_and_average(monkeypatch: MonkeyPatch, negative: bool = False) -> 
     monkeypatch.setattr(size_trend, "get_average", lambda *_args: growth)
 
 
-def test_size_trend_growing(monkeypatch: MonkeyPatch, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_size_trend_growing(monkeypatch: MonkeyPatch) -> None:
     patch_rate_and_average(monkeypatch, False)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",
@@ -61,7 +60,8 @@ def test_size_trend_growing(monkeypatch: MonkeyPatch, empty_value_store: None) -
     ]
 
 
-def test_size_trend_shrinking(monkeypatch: MonkeyPatch, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_size_trend_shrinking(monkeypatch: MonkeyPatch) -> None:
     patch_rate_and_average(monkeypatch, True)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",
@@ -94,7 +94,8 @@ def test_size_trend_shrinking(monkeypatch: MonkeyPatch, empty_value_store: None)
     ]
 
 
-def test_size_trend_negative_free_space(monkeypatch: MonkeyPatch, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_size_trend_negative_free_space(monkeypatch: MonkeyPatch) -> None:
     patch_rate_and_average(monkeypatch, False)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",

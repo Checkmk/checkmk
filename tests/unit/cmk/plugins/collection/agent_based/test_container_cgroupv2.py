@@ -63,7 +63,8 @@ def test_parse_cpu_cgroupv2() -> None:
     )
 
 
-def test_check_cpu_cgroupv2(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_cpu_cgroupv2() -> None:
     with pytest.raises(GetRateError):
         # no rate metrics yet
         _ = list(check_cpu_utilization_os({}, parse_cpu(AGENT_OUTPUT_0)))

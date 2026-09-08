@@ -53,7 +53,8 @@ def test_list_currently_running_activations(clients: ClientRegistry) -> None:
     clients.ActivateChanges.get_running_activations()
 
 
-def test_activate_changes_unknown_site(clients: ClientRegistry, is_licensed: bool) -> None:
+@pytest.mark.usefixtures("is_licensed")
+def test_activate_changes_unknown_site(clients: ClientRegistry) -> None:
     resp = clients.ActivateChanges.activate_changes(sites=["asdf"], expect_ok=False)
     resp.assert_status_code(400)
     assert "Unknown site" in repr(resp.json), resp.json

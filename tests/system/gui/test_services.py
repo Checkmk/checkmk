@@ -130,10 +130,8 @@ def test_filtered_services_combined_graphs(
         combined_graphs_service_search_page.check_graph(graph_title)
 
 
-def test_no_errors_on_combined_graphs_page(
-    dashboard_page: MainDashboard,
-    linux_hosts: list[str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("linux_hosts")
+def test_no_errors_on_combined_graphs_page(dashboard_page: MainDashboard) -> None:
     """Test that there are no errors on the 'Combined graphs - Service search' page."""
     service_search_page = ServiceSearchPage(dashboard_page.page)
     service_search_page.filter_sidebar.apply_last_service_state_change_filter(

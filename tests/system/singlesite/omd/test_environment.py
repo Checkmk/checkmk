@@ -16,7 +16,8 @@ from tests.testlib.version import edition_from_env
     edition_from_env().is_cloud_edition(),
     reason="mkbackup is not shipped in the cloud edition",
 )
-def test_backup_dir(site: Site) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("site")
+def test_backup_dir() -> None:
     # Typically, applications create these directories by using RuntimeDirectory in systemd.
     # However, since we don't ask users to use systemd on Debian-based distros (on RPM distros we
     # require systemd as a dependency), we create this directory every time `omd` runs as root.

@@ -44,9 +44,9 @@ def fixture_result_file(site: Site) -> Iterator[None]:
             site.delete_file("tmp/dashboard_test")
 
 
-@pytest.mark.usefixtures("plugin_path", "result_file")
+@pytest.mark.usefixtures("plugin_path", "result_file", "request")
 @pytest.mark.skip_if_edition("cloud")
-def test_load_dashboard_plugin_omd_restart(request: pytest.FixtureRequest, site: Site) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+def test_load_dashboard_plugin_omd_restart(site: Site) -> None:
     # Restart apache so new WSGI workers pick up the plugin.
     # A reload is not sufficient because old workers may still serve requests
     # without loading the new plugin.

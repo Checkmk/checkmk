@@ -269,10 +269,7 @@ def test_discover_fjdarye_ca_ports(
     ],
 )
 def test_check_fjdarye_ca_ports(
-    item: str,
-    section: Mapping[str, Mapping[str, float | str]],
-    check_result_showing_mode: Result,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    item: str, section: Mapping[str, Mapping[str, float | str]], check_result_showing_mode: Result
 ) -> None:
     check_result = list(check_fjdarye_ca_ports(item=item, params={}, section=section))
     assert check_result[0] == check_result_showing_mode

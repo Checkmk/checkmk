@@ -86,10 +86,7 @@ def test_discover_vsp_switches_cpu_util(
     ],
 )
 def test_check_vsp_switches_cpu_util(
-    string_table: StringTable,
-    params: Mapping[str, object],
-    expected_check_result: Sequence[Result],
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    string_table: StringTable, params: Mapping[str, object], expected_check_result: Sequence[Result]
 ) -> None:
     with time_machine.travel(datetime.datetime(2023, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):
         assert (

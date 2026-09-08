@@ -104,13 +104,8 @@ def expected_output_engine():
     )
 
 
-def test_section_wmi_webservices(
-    request,
-    testconfig,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    expected_output,
-    actual_output,
-    testfile,
-) -> None:
+@pytest.mark.usefixtures("testconfig")
+def test_section_wmi_webservices(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # special case wmi may timeout
     required_lines = 3
     name = "webservices"

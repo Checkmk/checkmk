@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Sequence
 
 import pytest
@@ -424,7 +422,8 @@ def test_discover_emka_modules_sensor_temp_unconditional() -> None:
     assert list(discover_emka_modules_sensor_temp(section)) == [Service(item="T1")]
 
 
-def test_check_emka_modules_sensor_temp(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_emka_modules_sensor_temp() -> None:
     section = EmkaSection(
         sensors_temp={
             "T1": SensorReading(
@@ -448,9 +447,8 @@ def test_check_emka_modules_sensor_temp(empty_value_store: None) -> None:
     ]
 
 
-def test_check_emka_modules_sensor_temp_unknown_item_yields_nothing(
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_emka_modules_sensor_temp_unknown_item_yields_nothing() -> None:
     assert list(check_emka_modules_sensor_temp("does not exist", {}, EmkaSection())) == []
 
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -122,11 +120,11 @@ def test_redirected_to_desired_page(
 
 
 @pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")
+@pytest.mark.usefixtures("ldap_connection")
 def test_ldap_user_login_success(
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,
     valid_ldap_credentials: CmkCredentials,
-    ldap_connection: None,
 ) -> None:
     """Test login with valid LDAP user credentials.
 
@@ -141,11 +139,11 @@ def test_ldap_user_login_success(
 
 
 @pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")
+@pytest.mark.usefixtures("ldap_connection")
 def test_ldap_user_login_failed(
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,
     invalid_ldap_credentials: CmkCredentials,
-    ldap_connection: None,
 ) -> None:
     """Test login with invalid LDAP user credentials.
 

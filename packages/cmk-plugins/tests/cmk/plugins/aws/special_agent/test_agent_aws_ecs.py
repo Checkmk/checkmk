@@ -296,9 +296,8 @@ def test_agent_aws_ecs_limits(
     assert result.content == LIMITS
 
 
-def test_agent_aws_ecs_limits_without_quota_client(
-    get_ecs_sections: ECSSections,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("get_ecs_sections")
+def test_agent_aws_ecs_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)

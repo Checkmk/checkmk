@@ -4,13 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import parse_metadata
 from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIStatefulSets:
-    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type: ignore[no-untyped-def]  # noqa: ARG002
+    @pytest.mark.usefixtures("dummy_host")
+    def test_parse_metadata(self, apps_client) -> None:  # type: ignore[no-untyped-def, misc]
         statefulsets_metadata = {
             "metadata": {
                 "name": "web",
@@ -34,10 +37,10 @@ class TestAPIStatefulSets:
         assert metadata.labels
         assert metadata.annotations == {"foo": "bar"}
 
-    def test_parse_metadata_missing_annotations_and_labels(  # type: ignore[no-untyped-def]
+    @pytest.mark.usefixtures("dummy_host")
+    def test_parse_metadata_missing_annotations_and_labels(  # type: ignore[no-untyped-def, misc]
         self,
         apps_client,
-        dummy_host,  # noqa: ARG002
     ) -> None:
         statefulsets_metadata = {
             "metadata": {

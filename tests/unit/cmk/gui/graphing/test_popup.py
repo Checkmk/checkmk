@@ -7,8 +7,9 @@ import html as html_escaping
 import json
 import re
 
+import pytest
+
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.config import Config
 from cmk.gui.graphing._popup import host_service_graph_popup_cmk
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -51,8 +52,8 @@ def _component_payload(output: str) -> dict[str, object]:
     return payload
 
 
+@pytest.mark.usefixtures("load_config")
 def test_host_service_graph_popup_renders_the_new_engine_component(
-    load_config: Config,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     output = _render_popup(mock_livestatus)

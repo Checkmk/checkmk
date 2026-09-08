@@ -236,11 +236,9 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "mock_discovery_preview")
 def test_perform_discovery_tabula_rasa_removes_vanished_services(
-    sample_host: Host,
-    mock_discovery_preview: MagicMock,
-    mock_discovery: MagicMock,
+    sample_host: Host, mock_discovery: MagicMock
 ) -> None:
     """TABULA_RASA must call local_discovery with remove_vanished_services=True so that
     vanished services (including those matched by a 'Disabled services' rule, which since
@@ -446,12 +444,9 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "mock_set_autochecks")
 def test_perform_discovery_fix_all_removes_vanished_service(
-    mocker: MockerFixture,
-    sample_host_name: HostName,
-    sample_host: Host,
-    mock_set_autochecks: MagicMock,
+    mocker: MockerFixture, sample_host_name: HostName, sample_host: Host
 ) -> None:
     """Vanished services must be dropped from the result after fix_all, not re-introduced as new."""
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
@@ -991,12 +986,9 @@ def test_perform_discovery_single_update(
     ] == [f"Saved check configuration of host '{sample_host_name}' with 2 services"]
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "mock_set_autochecks")
 def test_perform_discovery_single_update__ignore(
-    mocker: MockerFixture,
-    sample_host_name: HostName,
-    sample_host: Host,
-    mock_set_autochecks: MagicMock,
+    mocker: MockerFixture, sample_host_name: HostName, sample_host: Host
 ) -> None:
     mock_save_function = mocker.patch(
         "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
@@ -1170,11 +1162,9 @@ def test_perform_discovery_single_update__ignore(
     assert add_disabled_rule == {"MSSQL S2DT Instance"}
 
 
+@pytest.mark.usefixtures("mock_set_autochecks")
 def test_perform_discovery_single_update__ignore_does_not_re_add_existing_disabled_services(
-    mocker: MockerFixture,
-    sample_host_name: HostName,
-    sample_host: Host,
-    mock_set_autochecks: MagicMock,
+    mocker: MockerFixture, sample_host_name: HostName, sample_host: Host
 ) -> None:
     """Disabling a single service must not funnel all already-disabled services of the host into
     add_disabled_rule again.

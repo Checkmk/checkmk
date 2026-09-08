@@ -24,7 +24,6 @@ from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult, make_host_tags
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
@@ -260,9 +259,8 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
+@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation", "with_admin_login")
 def test_matches_search_with_rules(  # type: ignore[misc]
-    with_admin_login: UserId,
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,
     folder_name: str,
@@ -305,10 +303,8 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     )
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
-    with_admin_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
+def test_matches_search_with_rules_negate_is_ineffective_finds_matching() -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
@@ -328,8 +324,8 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
     assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
+def test_matches_search_with_rules_is_ineffective_finds_matching() -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
@@ -349,10 +345,8 @@ def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_logi
     assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is False
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
-def test_matches_search_with_rules_is_ineffective_finds_not_matching(
-    with_admin_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
+def test_matches_search_with_rules_is_ineffective_finds_not_matching() -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.gui.data_source.datasources import DataSourceComments
 from cmk.gui.data_source.registry import DataSourceRegistry, row_id
 from tests.testlib.rest_api_client import ClientRegistry
 
 
-def test_comment_row_id_is_unique_per_site(load_plugins: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("load_plugins")
+def test_comment_row_id_is_unique_per_site() -> None:
     # GIVEN
     registry = DataSourceRegistry()
     registry.register(DataSourceComments)

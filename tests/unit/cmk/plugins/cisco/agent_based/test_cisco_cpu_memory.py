@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import typing
 
 import pytest
@@ -56,7 +54,8 @@ def test_discovery(section: Section) -> None:
     ]
 
 
-def test_check_no_levels(section: Section, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_no_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem("Switch2 Supervisor 1 (virtual slot 11)", {}, section)
     ) == [
@@ -65,7 +64,8 @@ def test_check_no_levels(section: Section, empty_value_store: None) -> None:
     ]
 
 
-def test_check_used_levels(section: Section, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_used_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
             "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (50.0, 90.0)}, section
@@ -79,7 +79,8 @@ def test_check_used_levels(section: Section, empty_value_store: None) -> None:
     ]
 
 
-def test_check_free_levels(section: Section, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_free_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
             "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (-20.0, -10.0)}, section

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Vue component embedding (R1.2 Area 1). Skipped skeletons (CMK-35973).
 
 Backend-only: assert on the rendered page HTML, so enablable as soon as the backend embeds the
@@ -21,11 +19,11 @@ separate fetch_data call - neither needs a site. See
 import pytest
 
 from tests.testlib.graphing import SKIP_PENDING_GRAPH_BACKEND
-from tests.testlib.site import Site
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)
-def test_service_page_embeds_cmk_graph(site: Site) -> None:
+@pytest.mark.usefixtures("site")
+def test_service_page_embeds_cmk_graph() -> None:
     """CE-01 (R1.2 Area 1): the page embeds <cmk-graph>.
 
     Do: create a host with a known check (e.g. PING), discover+check; fetch the page HTML.
@@ -35,7 +33,8 @@ def test_service_page_embeds_cmk_graph(site: Site) -> None:
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)
-def test_service_without_perfdata_embeds_no_cmk_graph(site: Site) -> None:
+@pytest.mark.usefixtures("site")
+def test_service_without_perfdata_embeds_no_cmk_graph() -> None:
     """CE-03 (R1.2 Area 1): a perfdata-less service embeds no <cmk-graph>.
 
     Do: fetch the page HTML for a service with no perfdata.

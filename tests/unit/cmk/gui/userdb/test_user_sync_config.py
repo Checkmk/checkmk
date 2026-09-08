@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Tests for the ``user_attribute_sync_connections`` resolution."""
 
 from typing import Literal, TYPE_CHECKING
@@ -27,11 +25,11 @@ if TYPE_CHECKING:
         (["ldap_a", "ldap_b"], ("list", ["ldap_a", "ldap_b"])),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_user_sync_config_per_site_value_wins(
     per_site_value: Literal["all", "disabled"] | list[str],
     expected: UserSyncConfig,
     set_config: SetConfig,
-    request_context: None,
 ) -> None:
     site_id = omd_site()
     sites = {
@@ -53,11 +51,11 @@ def test_user_sync_config_per_site_value_wins(
         (["ldap_a"], ("list", ["ldap_a"])),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_user_sync_config_absent_key_falls_through_to_global(
     global_value: Literal["all", "disabled"] | list[str],
     expected: UserSyncConfig,
     set_config: SetConfig,
-    request_context: None,
 ) -> None:
     site_id = omd_site()
     site_config = dict(active_config.sites[site_id])
@@ -75,12 +73,11 @@ def test_user_sync_config_absent_key_falls_through_to_global(
         (["ldap_a"], ("list", ["ldap_a"])),
     ],
 )
+@pytest.mark.usefixtures("request_context", "remote_site")
 def test_user_sync_config_on_remote_uses_propagated_global(
     propagated_global: Literal["all", "disabled"] | list[str],
     expected: UserSyncConfig,
     set_config: SetConfig,
-    request_context: None,
-    remote_site: None,
 ) -> None:
     """The seeded local self-default ("all") must not shadow the value the
     central site resolved and propagated via ``get_site_globals()``."""

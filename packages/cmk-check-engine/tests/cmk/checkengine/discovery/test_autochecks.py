@@ -88,10 +88,9 @@ class TestAutochecksStore:
         ),
     ],
 )
+@pytest.mark.usefixtures("monkeypatch")
 def test_memoizer_get_autochecks_of(
-    autochecks_content: str,
-    expected_result: Sequence[AutocheckEntry],
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    autochecks_content: str, expected_result: Sequence[AutocheckEntry]
 ) -> None:
     with (cmk.utils.paths.autochecks_dir / "host.mk").open("w", encoding="utf-8") as f:
         f.write(autochecks_content)

@@ -312,10 +312,8 @@ def test_show_falls_back_to_the_bookmark_list_icon(
     assert "Without icon" in rendered
 
 
-def test_add_bookmark_creates_the_personal_list_on_demand(
-    with_user_login: UserId,
-    load_config: Config,
-) -> None:
+@pytest.mark.usefixtures("load_config")
+def test_add_bookmark_creates_the_personal_list_on_demand(with_user_login: UserId) -> None:
     Bookmarks()._add_bookmark("All hosts", "view.py?view_name=allhosts", USER_PERMISSIONS)  # noqa: SLF001
 
     instances = BookmarkList.load(USER_PERMISSIONS)
@@ -323,10 +321,8 @@ def test_add_bookmark_creates_the_personal_list_on_demand(
     assert [b["title"] for b in stored.config.bookmarks] == ["All hosts"]
 
 
-def test_add_bookmark_appends_to_an_existing_personal_list(
-    with_user_login: UserId,
-    load_config: Config,
-) -> None:
+@pytest.mark.usefixtures("load_config")
+def test_add_bookmark_appends_to_an_existing_personal_list(with_user_login: UserId) -> None:
     _write_user_bookmark_lists(
         with_user_login,
         {

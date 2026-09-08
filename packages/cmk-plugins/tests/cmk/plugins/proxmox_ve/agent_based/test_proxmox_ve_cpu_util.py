@@ -62,11 +62,9 @@ VM_DATA = pvcu.parse_proxmox_ve_cpu_util(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_proxmox_ve_vm_info(
-    params: Mapping[str, object],
-    section: pvcu.Section,
-    expected_results: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    params: Mapping[str, object], section: pvcu.Section, expected_results: CheckResult
 ) -> None:
     results = tuple(pvcu.check_proxmox_ve_cpu_util(params, section))
     assert results == expected_results

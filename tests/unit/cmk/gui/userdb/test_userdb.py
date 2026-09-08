@@ -359,7 +359,8 @@ def test_update_unknown_session(single_auth_request: SingleRequest) -> None:
     assert not is_valid_user_session(user_id, load_session_infos(user_id), "xyz")
 
 
-def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: SetConfig) -> None:
+@pytest.mark.usefixtures("set_config")
+def test_logout_on_idle_timeout(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session.initialize(
         user_id,
@@ -859,7 +860,8 @@ def test_disable_web_authentication(user_id: UserId) -> None:
     assert not userdb.is_two_factor_login_enabled(user_id)
 
 
-def test_make_two_factor_backup_codes(user_id: UserId) -> None:
+@pytest.mark.usefixtures("user_id")
+def test_make_two_factor_backup_codes() -> None:
     codes = userdb.make_two_factor_backup_codes()
     assert len(codes) == 10
     for password, pwhashed in codes:

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.gui import sites, user_sites
@@ -133,7 +135,8 @@ def test_site_config_for_livestatus_tcp_tls() -> None:
     assert site_config["proxy"] is None
 
 
-def test_sorted_sites(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context")
+def test_sorted_sites() -> None:
     expected = [
         ("site1", "Site 1"),
         ("site12", "Site 12"),

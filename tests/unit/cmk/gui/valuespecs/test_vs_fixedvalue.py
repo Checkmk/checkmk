@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 import cmk.gui.valuespec as vs
 
 from .utils import expect_validate_failure, expect_validate_success
@@ -21,7 +23,8 @@ class TestValueSpecFixedValue:
         assert vs.FixedValue(value="zwei").value_to_html("zwei") == "zwei"
         assert vs.FixedValue(value="zwei").value_to_html("drei") == "drei"
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         assert vs.FixedValue(value=Sentinel).from_html_vars("") is Sentinel
 
     def test_mask(self) -> None:

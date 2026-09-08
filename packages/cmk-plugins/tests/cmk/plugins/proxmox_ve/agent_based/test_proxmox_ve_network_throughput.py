@@ -80,12 +80,12 @@ VM_DATA_END = pvnt.parse_proxmox_ve_network_throughput(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_proxmox_ve_vm_info(
     params: Mapping[str, object],
     section_start: pvnt.Section,
     section_end: pvnt.Section,
     expected_results: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert tuple(pvnt.check_proxmox_ve_network_throughput(params, section_start)) == (
         IgnoreResults(

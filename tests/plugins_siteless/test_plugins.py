@@ -95,11 +95,8 @@ class _LogwatchConfigMocker:
 
 
 @pytest.mark.parametrize("agent_data_filename", get_agent_data_filenames())
-def test_checks_executor(
-    agent_data_filename: str,
-    request: pytest.FixtureRequest,
-    setup_dirs: Iterator[None],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("setup_dirs")
+def test_checks_executor(agent_data_filename: str, request: pytest.FixtureRequest) -> None:
     _SKIP_LIST = [
         "agent-2.2.0p14-proxmox",
         "agent-2.4.0-proxmox",

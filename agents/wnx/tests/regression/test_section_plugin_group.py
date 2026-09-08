@@ -194,13 +194,8 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-def test_section_plugin_group(
-    request,
-    testconfig,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    expected_output,
-    actual_output,
-    testfile,
-) -> None:
+@pytest.mark.usefixtures("testconfig")
+def test_section_plugin_group(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":
         pytest.skip("This test is not conform with latest changes on Monitoring Site")

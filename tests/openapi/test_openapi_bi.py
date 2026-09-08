@@ -610,10 +610,9 @@ def test_get_aggregation_state_filter_names_no_match(
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
+@pytest.mark.usefixtures("mock_livestatus")
 def test_post_bi_pack_creating_contact_groups_regression(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-    wato_enabled: bool,
+    clients: ClientRegistry, wato_enabled: bool
 ) -> None:
     contact_group = "i_should_never_exists"
 

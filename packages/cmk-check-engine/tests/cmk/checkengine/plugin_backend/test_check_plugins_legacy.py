@@ -11,7 +11,7 @@
 import inspect
 from dataclasses import replace
 
-from pytest import MonkeyPatch
+import pytest
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v1 import Metric, Result, Service, State
@@ -32,7 +32,8 @@ MINIMAL_CHECK_INFO = LegacyCheckDefinition(
 )
 
 
-def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_create_discovery_function() -> None:
     def insane_discovery(info):
         """Completely crazy discovery function:
 

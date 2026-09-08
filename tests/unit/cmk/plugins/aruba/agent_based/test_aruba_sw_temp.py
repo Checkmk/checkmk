@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import pytest
 
@@ -232,11 +230,8 @@ def test_discover_aruba_sw_temp_status(
         pytest.param("not_applicable", State.UNKNOWN, id="not_applicable"),
     ],
 )
-def test_aruba_sw_temp_handles_extra_mib_status(
-    status: str,
-    expected_state: State,
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_aruba_sw_temp_handles_extra_mib_status(status: str, expected_state: State) -> None:
     # The Aruba CX MIB returns sensor states beyond fault/normal/emergency/absent.
     # 'warning' is mapped to WARN; any other unmodeled state must not crash and is
     # reported as UNKNOWN with the raw vendor string.
@@ -643,12 +638,8 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
-def test_check_aruba_fan_status(
-    string_table: StringTable,
-    item: str,
-    result: CheckResult,
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_aruba_fan_status(string_table: StringTable, item: str, result: CheckResult) -> None:
     section = aruba_sw_temp.parse_aruba_sw_temp(string_table)
     assert (
         list(

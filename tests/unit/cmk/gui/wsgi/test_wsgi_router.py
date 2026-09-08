@@ -39,7 +39,8 @@ def search_up(search_path: str, start_path: str) -> str:
         current_path = new_path
 
 
-def test_wsgi_app(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context")
+def test_wsgi_app() -> None:
     app_file = search_up(
         "packages/cmk-wsgi/cmk/gui/wsgi/applications/index.wsgi", os.path.dirname(__file__)
     )

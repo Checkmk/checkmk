@@ -3,23 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import base64
 
 import pytest
 
-from cmk.ccc.user import UserId
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.rulesets.internal.form_specs import SimplePassword
 
 
-def test_simple_password_encrypts_disk_password(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
+def test_simple_password_encrypts_disk_password() -> None:
     password = RawDiskData("some_password")
     pw_visitor = get_visitor(
         SimplePassword(), VisitorOptions(migrate_values=True, mask_values=False)
@@ -58,12 +52,8 @@ def test_simple_password_masks_password(value: RawDiskData | RawFrontendData) ->
         ],
     ],
 )
-def test_simple_password_encrypts_frontend_password(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    password: tuple[str, bool],
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
+def test_simple_password_encrypts_frontend_password(password: tuple[str, bool]) -> None:
     password_value = list(password)
     if password[1]:
         password_value[0] = base64.b64encode(Encrypter.encrypt(password[0])).decode("ascii")

@@ -48,7 +48,8 @@ def test_get_sorted_generators() -> None:
     assert {g.ident() for g in sample_config_generator_registry.get_generators()} == set(expected)
 
 
-def test_init_wato_data_structures(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context")
+def test_init_wato_data_structures() -> None:
     init_wato_datastructures(folder_tree())
     assert Path(omd_root, "etc/check_mk/conf.d/wato/rules.mk").exists()
     assert Path(omd_root, "etc/check_mk/multisite.d/wato/tags.mk").exists()

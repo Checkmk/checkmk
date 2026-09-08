@@ -333,11 +333,8 @@ def test_vue_snapin_config_of_a_closed_snapin() -> None:
     assert config.open is False
 
 
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(
-    monkeypatch: pytest.MonkeyPatch,
-    load_config: Config,
-) -> None:
+@pytest.mark.usefixtures("patch_theme", "extra_snapins", "monkeypatch")
+def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(load_config: Config) -> None:
     """The sidebar polls the regularly refreshed snap-ins, re-renders the restart-dependent
     ones only after a core restart, and never touches the static ones."""
 
@@ -766,8 +763,8 @@ def test_renderer_without_content(monkeypatch: pytest.MonkeyPatch, load_config: 
             assert output_funnel.drain() == ""
 
 
-@pytest.mark.usefixtures("patch_theme")
-def test_body_start_marks_screenshot_mode(load_config: Config) -> None:
+@pytest.mark.usefixtures("patch_theme", "load_config")
+def test_body_start_marks_screenshot_mode() -> None:
     with output_funnel.plugged():
         SidebarRenderer()._show_body_start(  # noqa: SLF001
             screenshot_mode=True, sidebar_notify_interval=None, kiosk=False
@@ -778,8 +775,8 @@ def test_body_start_marks_screenshot_mode(load_config: Config) -> None:
     assert "side" in rendered
 
 
-@pytest.mark.usefixtures("patch_theme")
-def test_body_start_of_a_kiosk_page_has_no_sidebar_shell(load_config: Config) -> None:
+@pytest.mark.usefixtures("patch_theme", "load_config")
+def test_body_start_of_a_kiosk_page_has_no_sidebar_shell() -> None:
     """Kiosk pages (widget iframes) host no sidebar, so they must not get its body styling."""
     with output_funnel.plugged():
         SidebarRenderer()._show_body_start(  # noqa: SLF001

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -165,12 +163,9 @@ def test_discover_oracle_performance(
         ),
     ],
 )
+@pytest.mark.usefixtures("get_rate_zero", "empty_value_store")
 def test_check_oracle_performance(
-    get_rate_zero: None,
-    string_table: StringTable,
-    item: str,
-    expected_result: CheckResult,
-    empty_value_store: None,
+    string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
     section = parse_oracle_performance(string_table)
     assert (
@@ -221,10 +216,9 @@ def test_check_oracle_performance(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_inventorize_oracle_performance(
-    string_table: StringTable,
-    expected_result: InventoryResult,
-    empty_value_store: None,
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert (
         list(inventorize_oracle_performance(parse_oracle_performance(string_table)))
@@ -256,13 +250,12 @@ def test_inventorize_oracle_performance(
         )
     ],
 )
+@pytest.mark.usefixtures("get_rate_zero", "empty_value_store")
 def test_check_oracle_performance_dbtime(
-    get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result: CheckResult,
-    empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_dbtime(item, params, section)) == expected_result
 
@@ -342,13 +335,12 @@ def test_check_oracle_performance_memory(
         )
     ],
 )
+@pytest.mark.usefixtures("get_rate_zero", "empty_value_store")
 def test_check_oracle_performance_iostat_ios(
-    get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result: CheckResult,
-    empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_iostat_ios(item, params, section)) == expected_result
 
@@ -381,12 +373,11 @@ def test_check_oracle_performance_iostat_ios(
         )
     ],
 )
+@pytest.mark.usefixtures("get_rate_zero", "empty_value_store")
 def test_check_oracle_performance_waitclasses(
-    get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result: CheckResult,
-    empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result

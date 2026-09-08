@@ -154,13 +154,8 @@ def post_test():
     yield
 
 
-def test_agent_start_parameters(
-    request,
-    testconfig,
-    expected_output,
-    actual_output,
-    testfile,
-) -> None:
+@pytest.mark.usefixtures("testconfig")
+def test_agent_start_parameters(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     expected_work = expected_output
     if len(expected_work) < len(actual_output):

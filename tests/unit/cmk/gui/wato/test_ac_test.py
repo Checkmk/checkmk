@@ -35,10 +35,8 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import local_lib_dir, local_web_dir
 
 
-def test_local_connection_mocked(
-    mock_livestatus: MockLiveStatusConnection,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
     live.expect_query(

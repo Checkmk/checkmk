@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 """Performance test: Distributed site
 
@@ -43,11 +41,8 @@ def _perftest_dist(
     )
 
 
-def test_performance_hosts(
-    perftest_dist: PerformanceTest,
-    benchmark: BenchmarkFixture,
-    track_system_resources: None,
-) -> None:
+@pytest.mark.usefixtures("track_system_resources")
+def test_performance_hosts(perftest_dist: PerformanceTest, benchmark: BenchmarkFixture) -> None:
     """Bulk host creation"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest_dist.scenario_create_and_delete_hosts,
@@ -57,10 +52,9 @@ def test_performance_hosts(
     )
 
 
+@pytest.mark.usefixtures("track_system_resources")
 def test_performance_bulk_change_activation(
-    perftest_dist: PerformanceTest,
-    benchmark: BenchmarkFixture,
-    track_system_resources: None,
+    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture
 ) -> None:
     """Bulk host creation"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
@@ -84,11 +78,9 @@ def _distributed_piggyback(perftest_dist: PerformanceTest) -> Iterator[None]:
     version_from_env() < CMKVersion("2.4.0"),
     reason="Distributed piggyback is not supported on Checkmk versions below 2.4.0!",
 )
+@pytest.mark.usefixtures("distributed_piggyback", "track_system_resources")
 def test_performance_bulk_change_activation_distributed_piggyback(
-    perftest_dist: PerformanceTest,
-    distributed_piggyback: None,
-    benchmark: BenchmarkFixture,
-    track_system_resources: None,
+    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture
 ) -> None:
     """Bulk change activation with distributed piggyback enabled (CMK-35259)
 

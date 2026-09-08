@@ -92,11 +92,7 @@ SECTION_DOMINO_TASKS_DATA = (
         ),
     ],
 )
-def test_check_domino_tasks(
-    params: Parameters,
-    expected_result: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+def test_check_domino_tasks(params: Parameters, expected_result: CheckResult) -> None:
     result = check_domino_tasks("mock_item", params, SECTION_DOMINO_TASKS_DATA, None)
     assert list(result) == expected_result
 

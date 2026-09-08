@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -627,7 +625,7 @@ def _latin_1_encoding():
     ],
 )
 def test_non_ascii_line_processing(  # type: ignore[misc]
-    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result
+    tmpdir, use_specific_encoding, lines, expected_result
 ):
     # Write test logfile first
     log_path = os.path.join(str(tmpdir), "testlog")
@@ -913,14 +911,16 @@ def _get_file_info(tmp_path, file_name):
     return lw.get_file_info(os.path.join(str(tmp_path), "root", file_name))
 
 
-def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
+@pytest.mark.usefixtures("fake_filesystem")
+def test_get_uniq_id_one_file(tmpdir):  # type: ignore[misc]
     file_id, sz = _get_file_info(tmpdir, "file.log")
     assert file_id > 1
     assert sz == 0
     assert (file_id, sz) == _get_file_info(tmpdir, "file.log")
 
 
-def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
+@pytest.mark.usefixtures("fake_filesystem")
+def test_get_uniq_id_with_hard_link(tmpdir):  # type: ignore[misc]
     info = [
         _get_file_info(tmpdir, f)
         for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log")

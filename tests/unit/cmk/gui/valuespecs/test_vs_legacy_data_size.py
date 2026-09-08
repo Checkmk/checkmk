@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.gui.valuespec as vs
 
 from .utils import expect_validate_failure_untypeable, expect_validate_success, request_var
@@ -25,7 +27,8 @@ class TestValueSpecLegacyDataSize:
         assert vs.LegacyDataSize(default_value=99).canonical_value() == 0
         assert vs.LegacyDataSize(default_value=lambda: 77).canonical_value() == 0
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(integer_size="123", integer_unit=str(1024**3)):
             assert vs.LegacyDataSize().from_html_vars("integer") == 123 * 1024**3
 

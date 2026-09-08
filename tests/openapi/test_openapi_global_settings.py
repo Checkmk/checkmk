@@ -461,7 +461,8 @@ def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRe
     clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(404)
 
 
-def test_unknown_site_404(clients: ClientRegistry, remote_site: str) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("remote_site")
+def test_unknown_site_404(clients: ClientRegistry) -> None:
     clients.GlobalSetting.get_site("no_such_site", INT_VAR, expect_ok=False).assert_status_code(404)
 
 

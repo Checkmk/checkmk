@@ -26,7 +26,8 @@ from cmk.gui.dashboard.exceptions import WidgetRenderError
 class TestGraphWidgetErrorHandling:
     """Test that graph widget errors are properly transformed into user-friendly messages."""
 
-    def test_instantiation_does_not_resolve_the_graph(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_instantiation_does_not_resolve_the_graph(self) -> None:
         """Serving a dashboard instantiates every widget; resolving queries the core, so the
         specification must only be built once something asks for it."""
         mock_dashlet_spec: TemplateGraphDashletConfig = {
@@ -51,10 +52,8 @@ class TestGraphWidgetErrorHandling:
             dashlet.graph_specification()
             assert mock_graph_spec.call_count == 1
 
-    def test_a_widget_whose_graph_cannot_be_resolved_keeps_its_own_title(
-        self,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_a_widget_whose_graph_cannot_be_resolved_keeps_its_own_title(self) -> None:
         mock_dashlet_spec: TemplateGraphDashletConfig = {
             "type": "performance_graph",
             "graph_render_options": {},
@@ -71,10 +70,8 @@ class TestGraphWidgetErrorHandling:
 
             assert dashlet.default_display_title() == TemplateGraphDashlet.title()
 
-    def test_resolve_site_missing_host_provides_specific_message(
-        self,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_resolve_site_missing_host_provides_specific_message(self) -> None:
         missing_host = "ghost-host"
 
         with patch("cmk.gui.dashboard.dashlet.dashlets.graph.sites.live") as live_mock:

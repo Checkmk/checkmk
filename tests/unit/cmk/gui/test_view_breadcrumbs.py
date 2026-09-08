@@ -47,9 +47,9 @@ ALLHOSTS_VIEW_SPEC = cast(
 )
 
 
+@pytest.mark.usefixtures("request_context")
 def test_make_host_breadcrumb_without_permission_for_the_host_view(
     monkeypatch: pytest.MonkeyPatch,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     # The user may see the host list, but not the host home page view
     monkeypatch.setattr(

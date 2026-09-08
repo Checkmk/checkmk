@@ -333,7 +333,6 @@ def test_docker_container_diskstat(  # type: ignore[misc]
     write_bytes: float,
     read_ops: float,
     write_ops: float,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     section_0_seconds = section.parse_function(string_table_0)
     section_60_seconds = section.parse_function(string_table_10)

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
@@ -149,7 +147,8 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_huawei_wlc_aps_check_temp(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_huawei_wlc_aps_check_temp() -> None:
     results = list(check_huawei_wlc_aps_temp("huawei-test-ap-01", {"levels": (70.0, 75.0)}, PARSED))
     result_objs = [r for r in results if isinstance(r, Result)]
     assert len(result_objs) >= 1
@@ -157,7 +156,8 @@ def test_huawei_wlc_aps_check_temp(empty_value_store: None) -> None:
     assert "43" in result_objs[0].summary
 
 
-def test_huawei_wlc_aps_check_temp_invalid(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_huawei_wlc_aps_check_temp_invalid() -> None:
     results = list(check_huawei_wlc_aps_temp("to-simu", {"levels": (70.0, 75.0)}, PARSED))
     result_objs = [r for r in results if isinstance(r, Result)]
     assert len(result_objs) == 1

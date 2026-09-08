@@ -84,13 +84,8 @@ class TestAutomationDiagHost:
         ts.set_option("ipaddresses", {hostname: ipaddress})
         return ts.apply(monkeypatch).config_cache
 
-    def test_execute(
-        self,
-        hostname: str,
-        ipaddress: str,
-        raw_data: str,
-        scenario: ConfigCache,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("scenario")
+    def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         configured_tags = {
             HostName("testhost"): {

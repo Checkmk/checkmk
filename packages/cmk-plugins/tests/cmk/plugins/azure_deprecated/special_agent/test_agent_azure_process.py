@@ -877,7 +877,8 @@ def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str
     )
 
 
-def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.usefixtures("capsys")
+def test_process_resource_health_request_error_debug() -> None:
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )

@@ -46,7 +46,8 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
-def test_registered_painter_options(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_registered_painter_options() -> None:
     expected = [
         "aggr_expand",
         "aggr_onlydiff",
@@ -329,7 +330,8 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert cmd.permission == cmk.gui.default_permissions.PermissionGeneralUse
 
 
-def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+@pytest.mark.usefixtures("monkeypatch", "view")
+def test_painter_export_title() -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
     painters: list[Painter] = [
@@ -365,7 +367,8 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
         assert painter.export_title(cell) == expected_title
 
 
-def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+@pytest.mark.usefixtures("view")
+def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
     def rendr(row: Row) -> tuple[str, str]:

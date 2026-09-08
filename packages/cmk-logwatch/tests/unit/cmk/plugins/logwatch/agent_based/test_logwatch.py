@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
@@ -352,7 +350,8 @@ def test_logwatch_discover_single_restrict() -> None:
         ]
 
 
-def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_logwatch_discover_single_groups() -> None:
     params = [
         logwatch_.ParameterLogwatchGroups(
             grouping_patterns=[
@@ -368,7 +367,8 @@ def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> Non
         ]
 
 
-def test_logwatch_discover_groups(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_logwatch_discover_groups() -> None:
     params = [
         logwatch_.ParameterLogwatchGroups(
             grouping_patterns=[

@@ -55,7 +55,8 @@ def _section() -> Section:
     return parse(table)
 
 
-def test_gcp_multi_month(section: Section) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("section")
+def test_gcp_multi_month() -> None:
     assert sorted(discover(parse(TABLE_MULTI_MONTH))) == [
         Service(item="la"),
         Service(item="th"),

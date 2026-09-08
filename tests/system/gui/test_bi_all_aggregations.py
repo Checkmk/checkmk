@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import logging
 import os
 from collections.abc import Iterator
@@ -75,12 +73,8 @@ def fixture_test_host(test_site: Site) -> Iterator[HostDetails]:
         yield host_details
 
 
-def test_all_aggregations_sanity(
-    dashboard_page: MainDashboard,
-    test_host: HostDetails,
-    test_site: Site,
-    enable_bi: Iterator[None],
-) -> None:
+@pytest.mark.usefixtures("test_site", "enable_bi")
+def test_all_aggregations_sanity(dashboard_page: MainDashboard, test_host: HostDetails) -> None:
     """A sanity test of the elements on the `Monitor -> Business Intelligence -> All aggregations`
     page.
 

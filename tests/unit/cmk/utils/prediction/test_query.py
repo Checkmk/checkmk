@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from livestatus import LocalConnection
 
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
@@ -14,11 +16,8 @@ from cmk.utils.servicename import ServiceName
 
 
 class TestPredictionQuerier:
-    def test_query_available_predictions(
-        self,
-        patch_omd_site: None,  # noqa: ARG002
-        mock_livestatus: MockLiveStatusConnection,
-    ) -> None:
+    @pytest.mark.usefixtures("patch_omd_site")
+    def test_query_available_predictions(self, mock_livestatus: MockLiveStatusConnection) -> None:
         metric = "metric"
         querier = self._prediction_querier()
         expected_prediction_info = PredictionInfo(
@@ -67,11 +66,8 @@ class TestPredictionQuerier:
         )
         assert list(querier.query_available_predictions(metric)) == [expected_prediction_info]
 
-    def test_query_prediction_data(
-        self,
-        patch_omd_site: None,  # noqa: ARG002
-        mock_livestatus: MockLiveStatusConnection,
-    ) -> None:
+    @pytest.mark.usefixtures("patch_omd_site")
+    def test_query_prediction_data(self, mock_livestatus: MockLiveStatusConnection) -> None:
         metric = "metric"
         querier = self._prediction_querier()
         prediciton_info = PredictionInfo(

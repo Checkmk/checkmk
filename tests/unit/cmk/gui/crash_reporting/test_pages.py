@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -16,7 +14,6 @@ from werkzeug.test import create_environ
 
 from livestatus import OnlySites
 
-from cmk.ccc.user import UserId
 from cmk.crash import AggregatedCrashInfo
 from cmk.gui.crash_reporting.pages import (
     _show_automatic_upload_hint,
@@ -96,7 +93,8 @@ def _render_automatic_upload_hint(contact_email: str | None) -> str:
         return "".join(output_funnel.drain())
 
 
-def test_automatic_upload_hint_shown_when_upload_disabled(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_automatic_upload_hint_shown_when_upload_disabled() -> None:
     rendered = _render_automatic_upload_hint(None)
 
     assert "cmk-dialog" in rendered
@@ -104,13 +102,13 @@ def test_automatic_upload_hint_shown_when_upload_disabled(with_admin_login: User
     assert "varname=automatic_crash_report_upload" in rendered
 
 
-def test_automatic_upload_hint_hidden_when_upload_enabled(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_automatic_upload_hint_hidden_when_upload_enabled() -> None:
     assert _render_automatic_upload_hint("admin@example.com") == ""
 
 
-def test_automatic_upload_hint_hidden_without_global_settings_permission(
-    with_user_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("with_user_login")
+def test_automatic_upload_hint_hidden_without_global_settings_permission() -> None:
     # The button leads to the global settings, which a non-admin user may not open.
     assert _render_automatic_upload_hint(None) == ""
 
@@ -122,11 +120,8 @@ def test_automatic_upload_hint_hidden_without_global_settings_permission(
         pytest.param("hosts", False, id="unrelated view"),
     ],
 )
-def test_automatic_upload_hint_on_view(
-    view_name: str,
-    expect_banner: bool,
-    with_admin_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_automatic_upload_hint_on_view(view_name: str, expect_banner: bool) -> None:
     with output_funnel.plugged():
         show_automatic_upload_hint_on_view(view_name)
         rendered = "".join(output_funnel.drain())
@@ -134,7 +129,8 @@ def test_automatic_upload_hint_on_view(
     assert ("cmk-dialog" in rendered) is expect_banner
 
 
-def test_report_renderer_gui_show_details_without_request_details(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_gui_show_details_without_request_details() -> None:
     # A GUI crash raised outside of a request (e.g. in a background job) is stored
     # with an empty details dict, so none of the request fields are available.
     crash_info = CrashInfoFactory.build(crash_type="gui", details={})
@@ -146,7 +142,8 @@ def test_report_renderer_gui_show_details_without_request_details(request_contex
     assert rendered == ""
 
 
-def test_report_renderer_javascript_show_details(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_javascript_show_details() -> None:
     crash_info = CrashInfoFactory.build(
         crash_type="javascript",
         details={
@@ -170,7 +167,8 @@ def test_report_renderer_javascript_show_details(request_context: None) -> None:
     assert "/heute/check_mk/api/internal/foo" in rendered
 
 
-def test_report_renderer_javascript_show_details_without_details(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_javascript_show_details_without_details() -> None:
     crash_info = CrashInfoFactory.build(crash_type="javascript", details={})
 
     with output_funnel.plugged():

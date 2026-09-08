@@ -135,7 +135,8 @@ def with_key_fixture(
         SignatureKeysPage(dashboard_page.page).delete_key(key_name)
 
 
-def test_download_key(dashboard_page: MainDashboard, with_key: str) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("with_key")
+def test_download_key(dashboard_page: MainDashboard) -> None:
     """Test downloading a key.
 
     First a wrong password is provided, checking the error message;

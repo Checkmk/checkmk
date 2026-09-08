@@ -2659,9 +2659,8 @@ def test_host_config_add_discovery_check(
     assert config_cache.discovery_check_parameters(xyz_host).commandline_only is result
 
 
-def test_get_config_file_paths_with_confd(
-    folder_path_test_config: BaseConfig,
-) -> None:
+@pytest.mark.usefixtures("folder_path_test_config")
+def test_get_config_file_paths_with_confd() -> None:
     # NOTE: there are still some globals at play here, otherwise we would have to use
     # the folder_path_test_config somewhere.
     rel_paths = [
@@ -2895,7 +2894,8 @@ explicit_host_conf['{setting_name}'].update({values_})
         )
 
 
-def test_explicit_setting_loading(patch_omd_site: None) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_explicit_setting_loading() -> None:
     main_mk_file = cmk.utils.paths.main_config_file
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),

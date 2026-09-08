@@ -236,8 +236,8 @@ def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
     endpoint_registry.unregister(test)
 
 
+@pytest.mark.usefixtures("test_endpoint_raise_status_code")
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(
-    test_endpoint_raise_status_code: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """
@@ -405,8 +405,8 @@ def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[
     endpoint_registry.unregister(test)
 
 
+@pytest.mark.usefixtures("test_endpoint_raise_auth_exception")
 def test_openapi_endpoint_permission_denied_is_forbidden(
-    test_endpoint_raise_auth_exception: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """A failed permission check of an authenticated user must result in a 403, not a 401."""
@@ -444,8 +444,8 @@ def install_endpoint_raise_unauthenticated_exception(
     endpoint_registry.unregister(test)
 
 
+@pytest.mark.usefixtures("test_endpoint_raise_unauthenticated_exception")
 def test_openapi_endpoint_unauthenticated_stays_unauthorized(
-    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """Missing authentication must not be remapped to a 403."""
@@ -540,10 +540,8 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
 
 
 # ========= Accept parameter related Tests =========
-def test_invalid_content_type(
-    test_endpoint_accept_parameter: WrappedEndpoint,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+@pytest.mark.usefixtures("test_endpoint_accept_parameter")
+def test_invalid_content_type(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
@@ -566,11 +564,8 @@ def test_invalid_content_type(
         "I am not a .tar.gz file",
     ],
 )
-def test_invalid_payload(
-    test_endpoint_accept_parameter: WrappedEndpoint,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    payload: str,
-) -> None:
+@pytest.mark.usefixtures("test_endpoint_accept_parameter")
+def test_invalid_payload(aut_user_auth_wsgi_app: WebTestAppForCMK, payload: str) -> None:
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
@@ -583,10 +578,8 @@ def test_invalid_payload(
     assert response.json["detail"] == "Payload is not a valid .tar.gz file"
 
 
-def test_valid_gzip_file(
-    test_endpoint_accept_parameter: WrappedEndpoint,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+@pytest.mark.usefixtures("test_endpoint_accept_parameter")
+def test_valid_gzip_file(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     payload = base64.b64decode(TEST_TARGZ_FILE)
     aut_user_auth_wsgi_app.call_method(
         "post",
@@ -604,11 +597,9 @@ def test_valid_gzip_file(
         ("application/gzip", base64.b64decode(TEST_TARGZ_FILE)),
     ],
 )
+@pytest.mark.usefixtures("test_multiple_accept_endpoint")
 def test_endpoint_accept_multiple_types(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_multiple_accept_endpoint: WrappedEndpoint,
-    content_type: str,
-    payload: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK, content_type: str, payload: str
 ) -> None:
     res = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -622,9 +613,9 @@ def test_endpoint_accept_multiple_types(
 
 
 # ========= Authorization of reserved endpoint validation =========
+@pytest.mark.usefixtures("test_internal_endpoint")
 def test_reserved_endpoint_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_internal_endpoint: WrappedEndpoint,
     api_client: RestApiClient,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

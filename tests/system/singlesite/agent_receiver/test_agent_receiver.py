@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import ssl
 import uuid
 from http import HTTPStatus
@@ -239,7 +237,8 @@ def test_supported_tls_versions(
 
 
 @pytest.mark.skip_if_faked_artifacts
-def test_all_TLS_versions_tested(site: Site, agent_receiver_port: int, site_ca: Path) -> None:
+@pytest.mark.usefixtures("site", "agent_receiver_port", "site_ca")
+def test_all_TLS_versions_tested() -> None:
     """Ensure the above tests cover all TLS versions."""
     all_versions = {
         version

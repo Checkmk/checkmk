@@ -5,7 +5,8 @@
 
 import urllib.parse
 from collections.abc import Mapping
-from pathlib import Path
+
+import pytest
 
 import cmk.ccc.store
 import cmk.utils.paths
@@ -67,10 +68,9 @@ class _InventoryClient:
         )
 
 
+@pytest.mark.usefixtures("tmp_path")
 def test_openapi_get_inventory_trees(
-    tmp_path: Path,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    mock_livestatus: MockLiveStatusConnection,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])

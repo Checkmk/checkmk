@@ -39,12 +39,14 @@ def _local_page(allowed_dirs: Sequence[Path]) -> PageDownloadAgentPlugin:
     return PageDownloadAgentPlugin(allowed_dirs, require_permission=True)
 
 
-def test_download_href_static_file_uses_apache_alias(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_download_href_static_file_uses_apache_alias() -> None:
     path = str(cmk.utils.paths.agents_dir / "linux" / "check-mk-agent.rpm")
     assert download_href(path) == "agents/linux/check-mk-agent.rpm"
 
 
-def test_download_href_plugin_family_file_uses_gui_handler(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_download_href_plugin_family_file_uses_gui_handler() -> None:
     # A plugin family file lives outside share/check_mk/agents and must not be
     # served as a broken relative "agents/<absolute path>" URL.
     path = str(cmk.utils.paths.lib_dir / "python3/cmk/plugins/oracle/agents/mk-oracle")
@@ -54,9 +56,8 @@ def test_download_href_plugin_family_file_uses_gui_handler(request_context: None
     assert "agents//" not in href
 
 
-def test_download_href_local_plugin_family_file_uses_authenticated_handler(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_download_href_local_plugin_family_file_uses_authenticated_handler() -> None:
     local_dir = cmk.utils.paths.local_lib_dir / "python3/cmk/plugins/custom/agents"
 
     href = download_href(str(local_dir / "mk-custom"))
@@ -199,8 +200,8 @@ def fixture_uncached_plugin_family_agents() -> Iterator[None]:
         _pages._plugin_family_agents.cache_clear()  # noqa: SLF001
 
 
+@pytest.mark.usefixtures("uncached_plugin_family_agents")
 def test_plugin_family_agents_groups_shipped_and_local_dirs_of_one_family(
-    uncached_plugin_family_agents: None,
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(
@@ -226,11 +227,9 @@ def test_plugin_family_agents_groups_shipped_and_local_dirs_of_one_family(
     }
 
 
+@pytest.mark.usefixtures("request_context")
 def test_other_mode_shows_shipped_and_local_file_in_one_section(
-    request_context: None,
-    mocker: MockerFixture,
-    test_edition: cmk_version.Edition,
-    tmp_path: Path,
+    mocker: MockerFixture, test_edition: cmk_version.Edition, tmp_path: Path
 ) -> None:
     shipped_dir = tmp_path / "plugins" / "oracle" / "agents"
     shipped_dir.mkdir(parents=True)
@@ -276,10 +275,8 @@ def test_other_mode_shows_shipped_and_local_file_in_one_section(
     ]
 
 
-def test_other_mode_titles_share_tree_section_by_path(
-    request_context: None,
-    test_edition: cmk_version.Edition,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_other_mode_titles_share_tree_section_by_path(test_edition: cmk_version.Edition) -> None:
     # Files below the share tree keep their existing label.
     assert (
         ModeDownloadAgentsOther(  # noqa: SLF001

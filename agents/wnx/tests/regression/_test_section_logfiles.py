@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -233,10 +231,9 @@ def manage_logfiles(request):
             os.unlink(log)
 
 
-@pytest.mark.usefixtures("no_statefile")
+@pytest.mark.usefixtures("no_statefile", "testconfig_glob")
 def test_section_logfiles__new_file(  # type: ignore[misc]
     request,
-    testconfig_glob,
     expected_output_no_statefile,
     actual_output,
     testfile,
@@ -245,10 +242,9 @@ def test_section_logfiles__new_file(  # type: ignore[misc]
     local_test(expected_output_no_statefile, actual_output, testfile, request.node.name)
 
 
-@pytest.mark.usefixtures("with_statefile")
+@pytest.mark.usefixtures("with_statefile", "testconfig_glob")
 def test_section_logfiles__new_entries_in_log(  # type: ignore[misc]
     request,
-    testconfig_glob,
     expected_output_with_statefile,
     actual_output,
     testfile,

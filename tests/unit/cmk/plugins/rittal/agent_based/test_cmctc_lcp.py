@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, StringTable
@@ -107,7 +105,8 @@ def test_discover_cmctc_lcp_temp() -> None:
     assert services == [Service(item="Server in 1 - 3.1")]
 
 
-def test_check_cmctc_lcp_temp_produces_results(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_cmctc_lcp_temp_produces_results() -> None:
     # Regression test for Werk 16246 / SUP-18502:
     # check_cmctc_lcp_temp was missing value_store and unique_name arguments when calling
     # check_temperature, causing a ValueError at runtime.
@@ -116,13 +115,15 @@ def test_check_cmctc_lcp_temp_produces_results(empty_value_store: None) -> None:
     assert any(isinstance(r, (Result, Metric)) for r in results)
 
 
-def test_check_cmctc_lcp_temp_temperature_value(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_cmctc_lcp_temp_temperature_value() -> None:
     results = list(check_cmctc_lcp_temp("Server in 1 - 3.1", {}, TEMP_SECTION))
     metrics = [r for r in results if isinstance(r, Metric) and r.name == "temp"]
     assert metrics, "Expected a 'temp' metric"
     assert metrics[0].value == 21.0
 
 
-def test_check_cmctc_lcp_temp_missing_item_returns_empty(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_cmctc_lcp_temp_missing_item_returns_empty() -> None:
     results = list(check_cmctc_lcp_temp("nonexistent", {}, TEMP_SECTION))
     assert results == []

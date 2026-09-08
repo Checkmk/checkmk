@@ -48,7 +48,8 @@ NETWORK_SECTION = [
 ]
 
 
-def test_network_check(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("empty_value_store")
+def test_network_check() -> None:
     section = gcp.parse_piggyback(NETWORK_SECTION)
     params = CHECK_DEFAULT_PARAMETERS
     item = "nic0"

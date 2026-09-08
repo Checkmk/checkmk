@@ -7,7 +7,6 @@
 from collections.abc import Sequence
 
 import pytest
-import pytest_mock
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_node_info import check_kube_node_info
@@ -73,9 +72,8 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
         ),
     ],
 )
+@pytest.mark.usefixtures("mocker")
 def test_check_kube_node_info(
-    section: NodeInfo,
-    expected_check_result: Sequence[Result | Metric],
-    mocker: pytest_mock.MockerFixture,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    section: NodeInfo, expected_check_result: Sequence[Result | Metric]
 ) -> None:
     assert list(check_kube_node_info(1600000001.0, section)) == expected_check_result

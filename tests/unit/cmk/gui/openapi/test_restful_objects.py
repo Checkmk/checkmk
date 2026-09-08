@@ -5,7 +5,6 @@
 
 
 import json
-from collections.abc import Sequence
 from typing import get_args
 
 import pytest
@@ -13,7 +12,6 @@ from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 import cmk.gui.openapi.restful_objects.decorators
-from cmk.ccc.hostaddress import HostName
 from cmk.gui.openapi.restful_objects import response_schemas
 from cmk.gui.openapi.restful_objects.constructors import (
     absolute_url,
@@ -206,10 +204,10 @@ def test_status_codes_match() -> None:
     assert set(get_args(StatusCodeInt)) == {int(sc) for sc in get_args(StatusCode)}
 
 
+@pytest.mark.usefixtures("with_host")
 def test_no_config_generation_on_certain_posts(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
-    with_host: Sequence[HostName],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch: pytest.MonkeyPatch,
     mocker: MockerFixture,
 ) -> None:

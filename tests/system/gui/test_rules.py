@@ -156,11 +156,9 @@ def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
         yield
 
 
+@pytest.mark.usefixtures("restore_site_state")
 def test_create_rules(
-    test_site: Site,
-    dashboard_page: MainDashboard,
-    pytestconfig: pytest.Config,
-    restore_site_state: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    test_site: Site, dashboard_page: MainDashboard, pytestconfig: pytest.Config
 ) -> None:
     with (
         _write_rules_to_disk(test_site)

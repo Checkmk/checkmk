@@ -68,7 +68,8 @@ def test_bundled_exec_materialises_parent_dict_in_locals(tmp_path: Path) -> None
     }
 
 
-def test_bundled_accumulates_across_files_in_shared_context(tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("tmp_path")
+def test_bundled_accumulates_across_files_in_shared_context() -> None:
     """Two folders' rules.mk for the same bundled rulespec exec into the same
     globals/locals dict (the base-config load pattern). The second file must
     not clobber the first's contribution."""

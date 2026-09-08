@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 import cmk.gui.valuespec as vs
 
 from .utils import (
@@ -42,7 +44,8 @@ class TestValueSpecAge:
         assert vs.Age().value_to_html(7 * 60 * 60 * 24) == "7 days"
         assert vs.Age().value_to_html(7 * 60 * 60 * 24 + 10) == "7 days 10 seconds"
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(v_days="1", v_hours="2", v_minutes="3", v_seconds="4"):
             result = 1 * (24 * 60 * 60) + 2 * (60 * 60) + 3 * (60) + 4 * (1)
             assert vs.Age().from_html_vars("v") == result

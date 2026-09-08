@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 import livestatus
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
-def test_local_table_assoc(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("patch_omd_site")
+def test_local_table_assoc(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
     live.add_table(

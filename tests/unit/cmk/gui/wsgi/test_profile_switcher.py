@@ -42,12 +42,12 @@ from tests.testlib.gui.web_test_app import SetConfig
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_profile_switcher_under_various_settings(
     setting: dict[str, bool | str],
     url: str,
     profiling_enabled_expected: bool,
     set_config: SetConfig,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     with set_config(**setting):
         environ = werkzeug.test.create_environ(url, method="GET")

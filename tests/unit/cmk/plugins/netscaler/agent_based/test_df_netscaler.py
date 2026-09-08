@@ -34,7 +34,8 @@ def test_discovery(section: FSBlocks) -> None:
     ]
 
 
-def test_check_no_item(section: FSBlocks, empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_no_item(section: FSBlocks) -> None:
     assert not list(dfn.check_df_netscaler("knut", {}, section))
 
 

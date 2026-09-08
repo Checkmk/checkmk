@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator
@@ -283,11 +281,8 @@ def test_list_configuration_entities(
     assert resp.json["value"][0]["title"] == "foo"
 
 
-def test_list_configuration_entities_without_permissions(
-    clients: ClientRegistry,
-    registry: NotificationParameterRegistry,
-    with_admin_login: UserId,
-) -> None:
+@pytest.mark.usefixtures("registry", "with_admin_login")
+def test_list_configuration_entities_without_permissions(clients: ClientRegistry) -> None:
     # GIVEN
     clients.User.create(
         username="guest_user1",
@@ -310,11 +305,7 @@ def test_list_configuration_entities_without_permissions(
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_get_notif_param(
-    clients: ClientRegistry,
-    registry: NotificationParameterRegistry,
-    with_admin_login: UserId,
-) -> None:
+def test_get_notif_param(clients: ClientRegistry, registry: NotificationParameterRegistry) -> None:
     # GIVEN
     entity = save_notification_parameter(
         registry,
@@ -347,9 +338,7 @@ def test_get_notif_param(
 
 @pytest.mark.usefixtures("with_admin_login")
 def test_get_notif_param_without_permissions(
-    clients: ClientRegistry,
-    registry: NotificationParameterRegistry,
-    with_admin_login: UserId,
+    clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
     # GIVEN
     entity = save_notification_parameter(

@@ -76,7 +76,7 @@ def test_inventory_scaleio_volume(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_scaleio_volume(empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+def test_check_scaleio_volume() -> None:
     check_result = list(check_scaleio_volume(item=ITEM, params={}, section=SECTION))
     assert check_result[0] == Result(state=State.OK, summary="Name: CF1SIOVCD001, Size: 2.0 TB")
     assert len(check_result) == 9

@@ -8,6 +8,7 @@
 import datetime
 
 import pydantic
+import pytest
 from kubernetes import client
 from pydantic import ConfigDict
 
@@ -75,9 +76,9 @@ class TestAPINode:
         metadata = _metadata_no_namespace_from_json(node_raw_metadata)
         assert metadata.creation_timestamp == now.timestamp()
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_node_info(
         self,
-        dummy_host: str,  # noqa: ARG002
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
     ) -> None:
         node_info = {
@@ -101,10 +102,10 @@ class TestAPINode:
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_conditions(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         node_with_conditions = {
             "status": {
@@ -160,20 +161,20 @@ class TestAPINode:
         assert any(c.type_ == "DiskPressure" for c in conditions)
         assert [c.status for c in conditions if c.type_ == "Ready"] == [api.ConditionStatus.TRUE]
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_conditions_no_status(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         node_with_conditions: dict = {"status": {}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
         conditions = NodeConditions.model_validate(node.status.conditions).root
         assert conditions is None
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_conditions_no_conditions(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         node_with_conditions: dict = {"status": {"conditions": []}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")

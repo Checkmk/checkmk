@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import base64
 import hashlib
 
@@ -26,7 +24,8 @@ class TestValueSpecPassword:
         assert vs.Password().value_to_html("elon") == "******"
         assert vs.Password().value_to_html(None) == "none"
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(p="smth"):
             assert vs.Password(encrypt_value=False).from_html_vars("p") == "smth"
 
@@ -34,7 +33,8 @@ class TestValueSpecPassword:
             assert vs.Password().from_html_vars("p") == "smth"
 
 
-def test_password_from_html_vars_initial_pw(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_password_from_html_vars_initial_pw() -> None:
     request.set_var("pw_orig", "")
     request.set_var("pw", "abc")
     pw = vs.Password()
@@ -44,7 +44,8 @@ def test_password_from_html_vars_initial_pw(request_context: None) -> None:
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_password_from_html_vars_unchanged_pw(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_password_from_html_vars_unchanged_pw() -> None:
     request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     request.set_var("pw", "")
     pw = vs.Password()
@@ -54,7 +55,8 @@ def test_password_from_html_vars_unchanged_pw(request_context: None) -> None:
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-def test_password_from_html_vars_change_pw(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_password_from_html_vars_change_pw() -> None:
     request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     request.set_var("pw", "xyz")
     pw = vs.Password()

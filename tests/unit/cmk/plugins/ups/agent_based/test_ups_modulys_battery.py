@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Sequence
 
 import pytest
@@ -236,7 +234,8 @@ def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
     )
 
 
-def test_check_ups_modulys_battery_temp_ok_state(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_ups_modulys_battery_temp_ok_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
             item="test",
@@ -259,7 +258,8 @@ def test_check_ups_modulys_battery_temp_ok_state(empty_value_store: None) -> Non
     ]
 
 
-def test_check_ups_modulys_battery_temp_warn_state(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_ups_modulys_battery_temp_warn_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
             item="test",
@@ -282,7 +282,8 @@ def test_check_ups_modulys_battery_temp_warn_state(empty_value_store: None) -> N
     ]
 
 
-def test_check_ups_modulys_battery_temp_crit_state(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_ups_modulys_battery_temp_crit_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
             item="test",

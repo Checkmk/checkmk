@@ -91,7 +91,8 @@ def test_replace_action_url_macros(
         assert replace_action_url_macros(url, what, row) == result
 
 
-def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
+@pytest.mark.usefixtures("view_spec")
+def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
 
     def rendr(row: Row) -> tuple[str, str]:

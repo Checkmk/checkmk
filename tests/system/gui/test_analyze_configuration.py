@@ -75,10 +75,8 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
 
 
 @pytest.mark.skip(reason="CMK-27392; investigating root-cause.")
-def test_analyze_configuration_page(
-    dashboard_page: MainDashboard,
-    simulate_deprecations: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("simulate_deprecations")
+def test_analyze_configuration_page(dashboard_page: MainDashboard) -> None:
     """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
 
     1. Trigger 'Deprecations' file-based checks by adding fake files in the specified locations.

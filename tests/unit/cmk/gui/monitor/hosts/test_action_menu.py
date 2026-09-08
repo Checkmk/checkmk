@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.gui.monitor.hosts._api import _action_menu
@@ -39,7 +37,8 @@ def test_serialize_entry_skips_entries_without_url() -> None:
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> None:
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_skips_onclick_commands() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.reload),
@@ -49,7 +48,8 @@ def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> Non
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_maps_link() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.inventory),
@@ -64,7 +64,8 @@ def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
     assert isinstance(item.target, ApiOmitted)
 
 
-def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_keeps_target_frame() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.agents),

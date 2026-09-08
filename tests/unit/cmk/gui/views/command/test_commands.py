@@ -9,7 +9,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.views.command import commands
@@ -49,8 +48,8 @@ COMMENT_TABLE = [
         ("SVC", {"21", "22", "23"}, True),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_acknowledgement_needs_removal(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     mock_livestatus: MockLiveStatusConnection,
     cmdtag: Literal["HOST", "SVC"],
     comments_to_remove: set[str],
@@ -140,11 +139,9 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
     covered by TestQueryDowntimeIdsForLeaf.
     """
 
+    @pytest.mark.usefixtures("request_context", "with_admin_login")
     def test_service_row_without_the_downtimes_column(
-        self,
-        request_context: None,  # noqa: ARG002
-        with_admin_login: UserId,  # noqa: ARG002
-        monkeypatch: pytest.MonkeyPatch,
+        self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         queried_for: list[tuple[str | None, str, str | None]] = []
 
@@ -168,11 +165,9 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
         assert list(downtime_commands) == [DeleteServiceDowntime(7)]
         assert queried_for == [("heute", "heute", "CPU")]
 
+    @pytest.mark.usefixtures("request_context", "with_admin_login")
     def test_service_row_with_the_downtimes_column_does_not_query(
-        self,
-        request_context: None,  # noqa: ARG002
-        with_admin_login: UserId,  # noqa: ARG002
-        monkeypatch: pytest.MonkeyPatch,
+        self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         def _must_not_query(*_args: object) -> list[int]:
             raise AssertionError("the downtime ids are already in the row")
@@ -228,33 +223,27 @@ class TestDowntimeDurationPresets:
         monkeypatch.setattr(form, "_current_local_time", lambda: 0.0)
         return form
 
+    @pytest.mark.usefixtures("request_context")
     def test_renders_a_button_for_a_usable_preset(
-        self,
-        request_context: None,  # noqa: ARG002
-        set_config: SetConfig,
-        monkeypatch: pytest.MonkeyPatch,
+        self, set_config: SetConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         form = self._form(monkeypatch)
 
         with set_config(user_downtime_timeranges=[{"title": "2 hours", "end": 7200}]):
             assert "_downrange__7200" in str(form._get_duration_options())  # noqa: SLF001
 
+    @pytest.mark.usefixtures("request_context")
     def test_skips_a_preset_whose_end_is_not_representable(
-        self,
-        request_context: None,  # noqa: ARG002
-        set_config: SetConfig,
-        monkeypatch: pytest.MonkeyPatch,
+        self, set_config: SetConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         form = self._form(monkeypatch)
 
         with set_config(user_downtime_timeranges=[{"title": "far future", "end": 10**18}]):
             assert form._get_duration_options() == HTML.empty()  # noqa: SLF001
 
+    @pytest.mark.usefixtures("request_context")
     def test_activates_the_first_preset_it_can_render(
-        self,
-        request_context: None,  # noqa: ARG002
-        set_config: SetConfig,
-        monkeypatch: pytest.MonkeyPatch,
+        self, set_config: SetConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The active button is the one that pre-fills the form's date & time.
 
@@ -292,11 +281,8 @@ class TestDowntimeSpecsForHosts:
         request.set_var("_down_host", "1")
         return form._downtime_specs("SVC", {"site": "heute"}, action_rows, "myhost;CPU")  # noqa: SLF001
 
-    def test_counts_one_row_per_affected_host(
-        self,
-        request_context: None,  # noqa: ARG002
-        with_admin_login: UserId,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context", "with_admin_login")
+    def test_counts_one_row_per_affected_host(self) -> None:
         cmdtag, specs, action_rows = self._specs(
             [
                 {"site": "heute", "host_name": "myhost"},
@@ -309,11 +295,8 @@ class TestDowntimeSpecsForHosts:
         assert specs == ["myhost"]
         assert [r["host_name"] for r in action_rows] == ["myhost", "otherhost"]
 
-    def test_tolerates_rows_without_the_host_name_column(
-        self,
-        request_context: None,  # noqa: ARG002
-        with_admin_login: UserId,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("request_context", "with_admin_login")
+    def test_tolerates_rows_without_the_host_name_column(self) -> None:
         cmdtag, specs, action_rows = self._specs([{"site": "heute"}, {"site": "heute"}])
 
         assert cmdtag == "HOST"

@@ -96,13 +96,15 @@ def test_dashlet_starts_at_a_sidebar_shaped_size() -> None:
     assert constraints.initial_size.width > 0
 
 
-def test_dashlet_title_is_the_title_of_the_embedded_snapin(load_config: Config) -> None:
+@pytest.mark.usefixtures("load_config")
+def test_dashlet_title_is_the_title_of_the_embedded_snapin() -> None:
     dashlet = SnapinDashlet(_dashlet_spec("tactical_overview"))
 
     assert dashlet.default_display_title() == "Overview"
 
 
-def test_dashlet_title_of_an_unknown_snapin(load_config: Config) -> None:
+@pytest.mark.usefixtures("load_config")
+def test_dashlet_title_of_an_unknown_snapin() -> None:
     dashlet = SnapinDashlet(_dashlet_spec("no_such_snapin"))
 
     with pytest.raises(KeyError):

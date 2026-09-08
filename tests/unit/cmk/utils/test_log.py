@@ -8,8 +8,8 @@ import contextlib
 import logging
 import queue
 from collections.abc import Iterator, Mapping
-from pathlib import Path
 
+import pytest
 from pytest import CaptureFixture
 
 from cmk.utils import log
@@ -82,7 +82,8 @@ def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRe
         logger.removeHandler(queue_handler)
 
 
-def test_security_event(tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("tmp_path")
+def test_security_event() -> None:
     details: Mapping[str, JsonSerializable] = {"a": ["serialize", "me"], "b": {"b.1": 42.23}}
     event = SecurityEvent("test security event", details, SecurityEvent.Domain.auth)
 

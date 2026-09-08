@@ -114,9 +114,8 @@ def test_graph_render_options_can_drop_the_inline_title() -> None:
     assert _show_title_choice_ids(elements) == [False, True]
 
 
-def test_graph_title_without_the_inline_choice_tolerates_a_stored_inline_title(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_graph_title_without_the_inline_choice_tolerates_a_stored_inline_title() -> None:
     show_title = _vs_show_title(True, with_inline_title=False)
     request.set_var("title", "inline")
     assert show_title.from_html_vars("title") is True

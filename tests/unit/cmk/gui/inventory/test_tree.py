@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import os
 from pathlib import Path
 
@@ -321,12 +319,12 @@ def test__make_filter_choices_from_api_request_paths(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_load_tree(
     monkeypatch: MonkeyPatch,
     host_name: HostName | None,
     raw_status_data_tree: bytes,
     expected_tree: ImmutableTree,
-    request_context: None,
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory._tree,  # noqa: SLF001
@@ -348,7 +346,8 @@ def test_load_tree(
     )
 
 
-def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history_empty(tmp_path: Path) -> None:
     history, corrupted_history_files = get_history(
         HistoryStore(tmp_path),
         HostName("inv-host"),
@@ -357,7 +356,8 @@ def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
     assert len(corrupted_history_files) == 0
 
 
-def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history_archive_but_no_inv_tree(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -373,7 +373,8 @@ def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: No
     assert len(corrupted_history_files) == 0
 
 
-def test_get_history(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -441,7 +442,8 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
         assert delta_cache_filename == expected_delta_cache_filename
 
 
-def test_get_history_corrupted_files(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history_corrupted_files(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
     archive_dir = tmp_path / "var/check_mk/inventory_archive" / hostname
@@ -454,11 +456,8 @@ def test_get_history_corrupted_files(tmp_path: Path, request_context: None) -> N
 
 
 @pytest.mark.parametrize("search_timestamp", [0, 1, 2, 3])
-def test_load_delta_tree(
-    tmp_path: Path,
-    search_timestamp: int,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_delta_tree(tmp_path: Path, search_timestamp: int) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -494,7 +493,8 @@ def test_load_delta_tree(
     assert len(corrupted_history_files) == 0
 
 
-def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_delta_tree_no_such_timestamp(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -526,7 +526,8 @@ def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None
     assert str(e.value) == "Found no history entry at the time of '-1' for the host 'inv-host'"
 
 
-def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_latest_delta_tree(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -562,10 +563,8 @@ def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
     assert len(corrupted_history_files) == 0
 
 
-def test_load_latest_delta_tree_no_archive_and_inv_tree(
-    tmp_path: Path,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_latest_delta_tree_no_archive_and_inv_tree(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 

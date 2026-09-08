@@ -23,7 +23,6 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.utils.roles import UserPermissions
@@ -466,11 +465,9 @@ checkgroup_parameters['local'] = [
         ),
     ],
 )
+@pytest.mark.usefixtures("with_admin_login")
 def test_ruleset_to_config_sub_folder(
-    tree: FolderTree,
-    with_admin_login: UserId,
-    wato_use_git: bool,
-    expected_result: str,
+    tree: FolderTree, wato_use_git: bool, expected_result: str
 ) -> None:
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 

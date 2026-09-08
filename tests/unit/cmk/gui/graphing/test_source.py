@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+
+import pytest
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.graphing.v1 import translations
@@ -23,7 +23,6 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
 )
-from cmk.gui.config import Config
 from cmk.gui.graphing._graph_dispatch import CommonGraphOptions
 from cmk.gui.graphing._graph_templates import (
     _EvaluateTemplateGraphs,
@@ -54,8 +53,8 @@ _SERVICE_ROW = {
 }
 
 
+@pytest.mark.usefixtures("load_config")
 def test_fetch_metric_names_of_a_host_reads_the_hosts_table(
-    load_config: Config,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     # Host metrics are addressed by the pseudo-service "_HOST_" and live on the hosts table, where
@@ -79,8 +78,8 @@ def test_fetch_metric_names_of_a_host_reads_the_hosts_table(
     }
 
 
+@pytest.mark.usefixtures("load_config")
 def test_fetch_metric_names_of_a_service_reads_the_services_table(
-    load_config: Config,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
@@ -102,8 +101,8 @@ def test_fetch_metric_names_of_a_service_reads_the_services_table(
     }
 
 
+@pytest.mark.usefixtures("load_config")
 def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
-    load_config: Config,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     # The sibling fetcher only reports the canonical names, which cannot say which raw perf-data
@@ -145,8 +144,8 @@ def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
     }
 
 
+@pytest.mark.usefixtures("load_config")
 def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
-    load_config: Config,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     # Both fetch stages of a host metric - the performance data and the RRD series - go to the hosts

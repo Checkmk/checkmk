@@ -239,10 +239,8 @@ def test_mk_oracle_section_performance(
     _assert_rows_start_with_sid(rows, f"{oracle.SID}.")
 
 
-def test_mk_oracle_section_performance_categories(
-    oracle: OracleDatabase,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    mk_oracle_sections: dict[str, list[str]],
-) -> None:
+@pytest.mark.usefixtures("oracle")
+def test_mk_oracle_section_performance_categories(mk_oracle_sections: dict[str, list[str]]) -> None:
     """Each performance row must use a known category and the expected column count."""
     rows = mk_oracle_sections.get("oracle_performance", [])
     assert rows, "oracle_performance is empty"

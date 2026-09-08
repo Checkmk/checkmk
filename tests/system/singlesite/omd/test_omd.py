@@ -696,7 +696,8 @@ def test_run_omd_diff_empty_on_fresh_site() -> None:
 
 
 @pytest.mark.skip_if_not_containerized  # "Test might affect installed Checkmk packages"
-def test_run_omd_cleanup_no_orphaned_versions(site: Site, _orphan_version_guard: None) -> None:
+@pytest.mark.usefixtures("_orphan_version_guard")
+def test_run_omd_cleanup_no_orphaned_versions(site: Site) -> None:
     """Test 'omd cleanup' when all installed versions are in use.
 
     Verifies that cleanup completes successfully and does not remove the active version.
@@ -715,9 +716,8 @@ def test_run_omd_cleanup_no_orphaned_versions(site: Site, _orphan_version_guard:
 
 @pytest.mark.skip_if_not_containerized  # "Test might affect installed Checkmk packages"
 @pytest.mark.skipif(shutil.which("dpkg") is None, reason="DEB-only: requires dpkg and dpkg-deb")
-def test_run_omd_cleanup_removes_orphaned_version(
-    site: Site, _orphan_version_guard: None, tmp_path: Path
-) -> None:
+@pytest.mark.usefixtures("_orphan_version_guard")
+def test_run_omd_cleanup_removes_orphaned_version(site: Site, tmp_path: Path) -> None:
     """Test 'omd cleanup' removes a version that is installed but not used by any site.
 
     A minimal fake .deb package is built at test-time and installed so that the

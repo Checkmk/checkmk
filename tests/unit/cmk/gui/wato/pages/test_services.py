@@ -103,6 +103,8 @@ class TestDiscoveryPageRendererFolder:
         assert ("folder", "sub") in url_vars
         assert ("hostname", "sub_host") in url_vars
 
+    # A function-level `usefixtures` mark would order `sub_host` before the
+    # class-level `request_context`, which it needs, so keep it a parameter.
     def test_link_builders_point_to_the_hosts_folder(self, sub_host: Host) -> None:  # noqa: ARG002
         request.set_var("folder", "sub")
         request.set_var("host", "sub_host")

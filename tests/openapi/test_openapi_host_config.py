@@ -51,7 +51,6 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import BuiltinTagConfig
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
 from tests.testlib.rest_api_client import ClientRegistry, RestApiException
 
 EDITIONS_ULTIMATE_PLUS = {
@@ -533,13 +532,8 @@ def test_openapi_bulk_simple(clients: ClientRegistry) -> None:
     )
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_with_failed(
-    clients: ClientRegistry,
-    base: str,
-    monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "base", "aut_user_auth_wsgi_app")
+def test_openapi_bulk_with_failed(clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch) -> None:
     def _raise(
         _self: Folder,
         _host_name: HostName,
@@ -860,11 +854,9 @@ def test_openapi_host_rename_locked_by_quick_setup(
     ).assert_status_code(400)
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
 def test_openapi_host_delete_locked_by_quick_setup(
-    clients: ClientRegistry,
-    quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,
+    clients: ClientRegistry, quick_setup_config_bundle: tuple[BundleId, str]
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -884,11 +876,9 @@ def test_openapi_host_delete_locked_by_quick_setup(
     ).assert_status_code(400)
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
 def test_openapi_host_update_locked_by_quick_setup(
-    clients: ClientRegistry,
-    quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,
+    clients: ClientRegistry, quick_setup_config_bundle: tuple[BundleId, str]
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -1047,10 +1037,8 @@ def test_openapi_create_host_with_contact_group(clients: ClientRegistry) -> None
     )
 
 
-def test_openapi_host_with_custom_attributes(
-    clients: ClientRegistry,
-    custom_host_attribute_basic_topic: None,
-) -> None:
+@pytest.mark.usefixtures("custom_host_attribute_basic_topic")
+def test_openapi_host_with_custom_attributes(clients: ClientRegistry) -> None:
     resp = clients.HostConfig.create(
         host_name="example.com",
         attributes={
@@ -2059,10 +2047,9 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 
 @time_machine.travel(datetime.datetime.fromisoformat("2022-11-05T00:00:00+00:00"), tick=False)
+@pytest.mark.usefixtures("test_edition")
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
-    clients: ClientRegistry,
-    with_admin: tuple[str, str],
-    test_edition: version.Edition,
+    clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
     username, password = with_admin
     clients.HostConfig.set_credentials(username, password)

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Tests for the ``CACertificate`` form spec / visitor.
 
 The stored value is the PEM text of a CA certificate or certificate chain, so
@@ -44,7 +42,8 @@ def ca_certificate_spec() -> CACertificate:
     return CACertificate(title=Title("Certificate chain"))
 
 
-def test_valid_pem_passes_validation(spec: CACertificate, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_valid_pem_passes_validation(spec: CACertificate) -> None:
     assert (
         get_visitor(spec, VisitorOptions(migrate_values=False, mask_values=False)).validate(
             RawDiskData(CA_PEM)
@@ -53,7 +52,8 @@ def test_valid_pem_passes_validation(spec: CACertificate, request_context: None)
     )
 
 
-def test_garbage_fails_validation(spec: CACertificate, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_garbage_fails_validation(spec: CACertificate) -> None:
     messages = get_visitor(spec, VisitorOptions(migrate_values=False, mask_values=False)).validate(
         RawDiskData("this is not a certificate")
     )
@@ -61,7 +61,8 @@ def test_garbage_fails_validation(spec: CACertificate, request_context: None) ->
     assert "Invalid certificate" in messages[0].message
 
 
-def test_empty_value_fails_validation(spec: CACertificate, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_empty_value_fails_validation(spec: CACertificate) -> None:
     """An empty text area is not a certificate either - the element must not be
     stored empty, matching the ``allow_empty=False`` of the old valuespec."""
     messages = get_visitor(spec, VisitorOptions(migrate_values=False, mask_values=False)).validate(

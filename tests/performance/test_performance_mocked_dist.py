@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 """Performance test: Distributed setup with mocked remote sites (CMK-35259)
 
@@ -78,11 +76,9 @@ def _mocked_distributed_piggyback(
         yield
 
 
+@pytest.mark.usefixtures("mocked_remote_site_ids", "track_system_resources")
 def test_performance_bulk_change_activation_mocked_remotes(
-    perftest_mocked_dist: PerformanceTest,
-    mocked_remote_site_ids: list[str],
-    benchmark: BenchmarkFixture,
-    track_system_resources: None,
+    perftest_mocked_dist: PerformanceTest, benchmark: BenchmarkFixture
 ) -> None:
     """Bulk change activation against mocked remote sites, distributed piggyback disabled"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
@@ -95,12 +91,11 @@ def test_performance_bulk_change_activation_mocked_remotes(
     )
 
 
+@pytest.mark.usefixtures(
+    "mocked_remote_site_ids", "mocked_distributed_piggyback", "track_system_resources"
+)
 def test_performance_bulk_change_activation_mocked_remotes_distributed_piggyback(
-    perftest_mocked_dist: PerformanceTest,
-    mocked_remote_site_ids: list[str],
-    mocked_distributed_piggyback: None,
-    benchmark: BenchmarkFixture,
-    track_system_resources: None,
+    perftest_mocked_dist: PerformanceTest, benchmark: BenchmarkFixture
 ) -> None:
     """Bulk change activation against mocked remote sites, distributed piggyback enabled"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]

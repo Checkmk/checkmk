@@ -5,6 +5,7 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry
@@ -44,10 +45,8 @@ def _flatten(dropdowns: list[PageMenuDropdown]) -> list[str]:
     return titles
 
 
-def test_add_to_visual_topics_for_pnpgraph_with_community_edition(
-    mocker: MockerFixture,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_add_to_visual_topics_for_pnpgraph_with_community_edition(mocker: MockerFixture) -> None:
     mocker.patch(
         "cmk.gui.visuals._add_to_visual.visual_type_registry",
         {"dashboards": lambda: _fake_visual_type("dashboard", "My Dashboard")},

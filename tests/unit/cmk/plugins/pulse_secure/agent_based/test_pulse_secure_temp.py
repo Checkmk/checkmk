@@ -48,13 +48,13 @@ def test_discover_pulse_secure_temp(
         ("IVE", {"levels": (70.0, 75.0)}, [["27"]], State.OK, "27"),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_pulse_secure_temp(
     item: str,
     params: TempParamDict,
     string_table: StringTable,
     expected_state: State,
     expected_summary_substring: str,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     """Test check function for pulse_secure_temp check."""
     parsed = parse_pulse_secure_temp(string_table)

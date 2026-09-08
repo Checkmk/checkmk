@@ -393,7 +393,8 @@ class TestIPLookupCache:
     def test_repr(self) -> None:
         assert isinstance(repr(ip_lookup.IPLookupCache({})), str)
 
-    def test_load_invalid_syntax(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_load_invalid_syntax(self) -> None:
         with ip_lookup.IPLookupCache.PATH.open(mode="w", encoding="utf-8") as f:
             f.write("{...")
 
@@ -402,7 +403,8 @@ class TestIPLookupCache:
             cache.load_persisted()
         assert not cache
 
-    def test_update_empty_file(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_update_empty_file(self) -> None:
         cache_id: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache[cache_id] = HostAddress("127.0.0.1")
@@ -411,7 +413,8 @@ class TestIPLookupCache:
         new_cache_instance.load_persisted()
         assert new_cache_instance[cache_id] == HostAddress("127.0.0.1")
 
-    def test_update_existing_file(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_update_existing_file(self) -> None:
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
@@ -424,7 +427,8 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id1] == HostAddress("127.0.0.1")
         assert new_cache_instance[cache_id2] == HostAddress("127.0.0.2")
 
-    def test_update_existing_entry(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_update_existing_entry(self) -> None:
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
@@ -443,7 +447,8 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id1] == HostAddress("127.0.0.1")
         assert new_cache_instance[cache_id2] == HostAddress("2")
 
-    def test_update_without_persistence(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_update_without_persistence(self) -> None:
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
@@ -458,7 +463,8 @@ class TestIPLookupCache:
         new_cache_instance.load_persisted()
         assert new_cache_instance[cache_id1] == HostAddress("0.0.0.0")
 
-    def test_load_legacy(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_load_legacy(self) -> None:
         cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
@@ -471,7 +477,8 @@ class TestIPLookupCache:
         assert cache[cache_id1] == HostAddress("127.0.0.1")
         assert cache[cache_id2] == HostAddress("127.0.0.2")
 
-    def test_clear(self, tmp_path: Path) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tmp_path")
+    def test_clear(self) -> None:
         ip_lookup.IPLookupCache(
             {(HostName("host1"), socket.AddressFamily.AF_INET): HostAddress("127.0.0.1")}
         ).save_persisted()

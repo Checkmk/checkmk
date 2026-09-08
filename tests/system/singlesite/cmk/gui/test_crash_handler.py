@@ -53,7 +53,8 @@ def _get_crash_report(site: Site) -> tuple[Path, dict[str, object]] | None:
 
 
 @pytest.mark.skip_if_edition("cloud")
-def test_crash_report(site: Site, faulty_page: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("faulty_page")
+def test_crash_report(site: Site) -> None:
     web = CMKWebSession(site)
     web.login()
     web.get("foo.py?password=get_var_secret")

@@ -17,7 +17,6 @@ from cmk.gui.wato.pages.folders import (
     FolderMenuLocation,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, SearchFolder
-from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
@@ -66,14 +65,10 @@ def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     app.get(f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=404)
 
 
-@pytest.mark.usefixtures("patch_theme")
+@pytest.mark.usefixtures("patch_theme", "mock_livestatus")
 @pytest.mark.usefixtures("suppress_license_expiry_header")
 @pytest.mark.usefixtures("suppress_license_banner")
-def test_ajax_call_2(
-    wsgi_app: WebTestAppForCMK,
-    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    auth_request: Request,
-) -> None:
+def test_ajax_call_2(wsgi_app: WebTestAppForCMK, auth_request: Request) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
     wsgi_app.get(auth_request)  # to get the cookie
 

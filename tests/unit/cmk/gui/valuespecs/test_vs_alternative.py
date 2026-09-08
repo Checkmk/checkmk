@@ -92,7 +92,8 @@ class TestValuespecAlternative:
             "testing"
         ) == HTML.without_escaping("text<br />testing")
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(a_use="2", a_2_0="2", a_2_1="3"):
             assert get_alternative().from_html_vars("a") == (2, 3)
 
@@ -102,7 +103,8 @@ class TestValuespecAlternative:
         with pytest.raises(ValueError, match=r"^Invalid value: \('a', 'b'\)"):
             assert get_alternative().value_to_json(("a", "b"))
 
-    def test_render_input_type_mismatch_uses_default(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_render_input_type_mismatch_uses_default(self) -> None:
         """When the user switches alternatives, the old value may not match the new type.
 
         Regression test for CMK-31604: cloning an SNMP host and switching from SNMPv3

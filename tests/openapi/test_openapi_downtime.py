@@ -1262,11 +1262,8 @@ def test_openapi_service_description_for_single_downtime(
             assert "service_description" not in resp.json["extensions"]
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_modify_downtime_without_parameters(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_livestatus")
+def test_openapi_modify_downtime_without_parameters(clients: ClientRegistry) -> None:
     clients.Downtime.modify(
         modify_type="by_id",
         downtime_id="123",

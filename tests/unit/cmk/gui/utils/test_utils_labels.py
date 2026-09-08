@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.gui import sites
@@ -95,11 +93,11 @@ def fixture_livestatus_test_config(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_collect_labels_from_livestatus_rows(
     label_type: LabelType,
     expected_query: str,
     expected_labels: set[tuple[str, str]],
-    request_context: None,
     live: MockLiveStatusConnection,
 ) -> None:
     with live(expect_status_query=False):
@@ -235,11 +233,11 @@ def test_label_from_str(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_label_autocompleter_scopes_query_by_object_type(
     object_type: str | None,
     expected_query: str,
     expected_choices: set[str],
-    request_context: None,
     live: MockLiveStatusConnection,
 ) -> None:
     params = {"world": "core"}

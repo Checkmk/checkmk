@@ -24,11 +24,8 @@ def test_handle_client(status_server: StatusServer) -> None:
     assert "event_id" in response[0]
 
 
-def test_mkevent_check_query_perf(
-    config: ec.ConfigFromWATO,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    event_status: EventStatus,
-    status_server: StatusServer,
-) -> None:
+@pytest.mark.usefixtures("config")
+def test_mkevent_check_query_perf(event_status: EventStatus, status_server: StatusServer) -> None:
     for num in range(10000):
         event_status.new_event(
             new_event(

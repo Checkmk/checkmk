@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
 from cmk.gui.views.inventory._row_post_processor import _add_inventory_data
@@ -26,7 +28,8 @@ def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:
     assert not rows
 
 
-def test_add_inventory_data_attaches_immutable_tree_to_rows(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context")
+def test_add_inventory_data_attaches_immutable_tree_to_rows() -> None:
     """`_add_inventory_data` loads the inventory tree for each row and stores
     it under `host_inventory`. The tree itself comes from `load_tree`, which
     returns an empty `ImmutableTree` when the host has no on-disk inventory —

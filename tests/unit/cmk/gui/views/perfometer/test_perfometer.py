@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Iterator, Sequence
 
 import pytest
@@ -54,9 +52,9 @@ def _row(perf_data: str, check_command: str = "check_mk-kube_memory") -> Row:
         [1, None, 0, -1],
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     sort_values: Sequence[float | None],
-    request_context: None,
 ) -> None:
     data = [
         _row(
@@ -78,14 +76,16 @@ def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     ]
 
 
-def test_sort_value_groups_by_the_drawing_plugin(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_sort_value_groups_by_the_drawing_plugin() -> None:
     drawn = Perfometer(_row("kube_memory_usage=42;;;0;"), {}, _REGISTERED_PERFOMETERS)
     undrawn = Perfometer(_row("kube_memory_request=42;;;0;"), {}, _REGISTERED_PERFOMETERS)
     assert drawn.sort_value() == ("kube_memory_usage", 42.0)
     assert undrawn.sort_value() == ("", -float("inf"))
 
 
-def test_a_segment_takes_the_attributes_of_its_registered_metric(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_a_segment_takes_the_attributes_of_its_registered_metric() -> None:
     metrics = {
         "kube_memory_usage": metrics_v1.Metric(
             name="kube_memory_usage",

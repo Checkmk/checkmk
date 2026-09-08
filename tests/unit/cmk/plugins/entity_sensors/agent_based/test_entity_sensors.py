@@ -229,12 +229,9 @@ def test_discover_entity_sensors_power_presence(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_entity_sensors_temp(
-    item: str,
-    params: TempParamType,
-    section: EntitySensorSection,
-    expected_result: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    item: str, params: TempParamType, section: EntitySensorSection, expected_result: CheckResult
 ) -> None:
     assert list(check_entity_sensors_temp(item, params, section)) == expected_result
 

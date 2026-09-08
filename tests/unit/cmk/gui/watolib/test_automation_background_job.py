@@ -111,13 +111,9 @@ class TestCheckmkAutomationBackgroundJob:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "save_text_to_file",
+        "request_context",
     )
-    def test_execute_automation(
-        self,
-        version: str,
-        expected_result: str,
-        request_context: None,  # noqa: ARG002
-    ) -> None:
+    def test_execute_automation(self, version: str, expected_result: str) -> None:
         """
         Test the most inner logic of the job
 

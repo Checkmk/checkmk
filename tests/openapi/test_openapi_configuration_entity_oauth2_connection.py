@@ -237,11 +237,8 @@ def test_create_non_existing_oauth2_connection(
     assert resp.json["id"] == my_new_uuid, resp.json
 
 
-@pytest.mark.usefixtures("mock_update_passwords_merged_file")
-def test_create_non_existing_oauth2_connection_without_permissions(
-    clients: ClientRegistry,
-    with_admin: tuple[str, str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("mock_update_passwords_merged_file", "with_admin")
+def test_create_non_existing_oauth2_connection_without_permissions(clients: ClientRegistry) -> None:
     # GIVEN
     clients.User.create(
         username="guest_user1",

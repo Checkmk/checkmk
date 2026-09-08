@@ -82,7 +82,8 @@ class TestValueSpecDropdownChoice:
     def test_mask(self) -> None:
         assert get_dropdown_choice().mask("hunter2") == "hunter2"
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(value="a"):
             assert get_dropdown_choice(encode_value=False).from_html_vars("value") == "a"
 

@@ -165,8 +165,8 @@ def test_check_f5_bigip_vserver_division_regression_with_params(
     assert "Client connections: 0" in summary
 
 
-@pytest.mark.usefixtures("empty_value_store")
-def test_check_f5_bigip_vserver_division_regression_disabled(string_table: list[list[str]]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("empty_value_store", "string_table")
+def test_check_f5_bigip_vserver_division_regression_disabled() -> None:
     # Modify string table to have a disabled virtual server
     disabled_string_table = [
         [

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from pathlib import Path
 
 import pytest
 
@@ -15,8 +14,8 @@ from cmk.gui import key_mgmt
 from cmk.utils.keypair_store import Key
 
 
-@pytest.mark.usefixtures("request_context")
-def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context", "tmp_path")
+def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "time", lambda: 123)
 
     key = key_mgmt.generate_key(

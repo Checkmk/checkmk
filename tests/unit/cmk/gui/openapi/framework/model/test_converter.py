@@ -110,19 +110,23 @@ class TestTagConverterCriticality:
     def test_present_and_valid_value(self, tag_is_present: TagID) -> None:
         assert tag_is_present == TagConverter.tag_criticality_presence(tag_is_present)
 
-    def test_present_and_invalid_value(self, tag_is_present: TagID) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tag_is_present")
+    def test_present_and_invalid_value(self) -> None:
         with pytest.raises(ValueError, match="is not defined for criticality group"):
             TagConverter.tag_criticality_presence(TagID("invalid_tag"))
 
-    def test_present_and_omitted(self, tag_is_present: TagID) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tag_is_present")
+    def test_present_and_omitted(self) -> None:
         with pytest.raises(ValueError, match="tag_criticality must be specified"):
             TagConverter.tag_criticality_presence(ApiOmitted())
 
-    def test_not_present_and_value(self, tag_is_not_present: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tag_is_not_present")
+    def test_not_present_and_value(self) -> None:
         with pytest.raises(ValueError, match="tag_criticality must be omitted"):
             TagConverter.tag_criticality_presence(TagID("test_tag"))
 
-    def test_not_present_and_omitted(self, tag_is_not_present: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("tag_is_not_present")
+    def test_not_present_and_omitted(self) -> None:
         omitted = ApiOmitted()
         assert omitted == TagConverter.tag_criticality_presence(omitted)
 
@@ -142,7 +146,8 @@ class TestUserConverter:
     def test_present(self, user_is_present: str) -> None:
         assert user_is_present == UserConverter.active(user_is_present)
 
-    def test_not_present(self, user_is_not_present: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("user_is_not_present")
+    def test_not_present(self) -> None:
         with pytest.raises(ValueError, match="User .* does not exist"):
             UserConverter.active("non_existent_user")
 
@@ -173,12 +178,14 @@ class TestGroupConverter:
         assert group_is_present == GroupConverter(group_type).exists(group_is_present)
 
     @pytest.mark.parametrize("group_type", get_args(GroupType))
-    def test_exists_fails(self, group_type: GroupType, group_is_not_present: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("group_is_not_present")
+    def test_exists_fails(self, group_type: GroupType) -> None:
         with pytest.raises(ValueError, match="Group missing"):
             GroupConverter(group_type).exists("non_existent_group")
 
     @pytest.mark.parametrize("group_type", get_args(GroupType))
-    def test_not_exists(self, group_type: GroupType, group_is_not_present: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("group_is_not_present")
+    def test_not_exists(self, group_type: GroupType) -> None:
         group_name = "non_existent_group"
         assert group_name == GroupConverter(group_type).not_exists(group_name)
 
@@ -285,11 +292,8 @@ class TestHostConverter:
         return permission_types
 
     @pytest.mark.parametrize("permission_type", _permission_types())
-    def test_exists_fails_not_found(
-        self,
-        with_admin_login: UserId,  # noqa: ARG002
-        permission_type: HostConverter.PermissionType,
-    ) -> None:
+    @pytest.mark.usefixtures("with_admin_login")
+    def test_exists_fails_not_found(self, permission_type: HostConverter.PermissionType) -> None:
         with pytest.raises(ValueError, match="Host not found"):
             HostConverter(permission_type=permission_type).host_name("non_existent_host")
 

@@ -637,12 +637,14 @@ def _set_local2gmtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
 
 
-def test_fileinfo_process_date_both_macros_replaced(local2gmtime: None) -> None:
+@pytest.mark.usefixtures("local2gmtime")
+def test_fileinfo_process_date_both_macros_replaced() -> None:
     assert (
         fileinfo_process_date(r"\\hi\there\($DATE:%Y$|$YESTERDAY:%Y$).log", 0)
         == r"\\hi\there\(1970|1969).log"
     )
 
 
-def test_fileinfo_process_date_multiple_occurances_replaced(local2gmtime: None) -> None:
+@pytest.mark.usefixtures("local2gmtime")
+def test_fileinfo_process_date_multiple_occurances_replaced() -> None:
     assert fileinfo_process_date(r"$DATE:%w$.$DATE:%Y$", -17502393600) == "3.1415"

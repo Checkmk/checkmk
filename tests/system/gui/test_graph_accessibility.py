@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Accessibility skeletons for the graph surfaces (CMK-35973).
 
 Skeletons for the a11y aspects in tests/system/gui/docs/graph_accessibility.md that need the
@@ -14,15 +12,12 @@ Complete via GraphAccessor and the graph page-objects in pom/graphing/timeseries
 
 import pytest
 
-from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_canvas_has_accessible_name(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_canvas_has_accessible_name() -> None:
     """a11y aspect 1 (text alternative): the canvas exposes an accessible name.
 
     Do: open a service detail graph.
@@ -33,10 +28,8 @@ def test_canvas_has_accessible_name(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_controls_are_keyboard_operable(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_controls_are_keyboard_operable() -> None:
     """a11y aspect 3 (keyboard operability): controls work by keyboard, not mouse-only.
 
     Do: tab to the legend, consolidation-function, time-range and zoom/pin controls; operate
@@ -47,10 +40,8 @@ def test_controls_are_keyboard_operable(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_focus_managed_in_embedded_containers(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_focus_managed_in_embedded_containers() -> None:
     """a11y aspect 4 (focus management): focus enters and returns for embedded graphs.
 
     Do: open a graph in a popup / slide-in / designer preview; move focus in, then dismiss.
@@ -60,10 +51,8 @@ def test_focus_managed_in_embedded_containers(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_series_distinguishable_without_color(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_series_distinguishable_without_color() -> None:
     """a11y aspect 5 (contrast & non-color cues): series are distinguishable without color.
 
     Do: open a multi-series graph; inspect curve and legend styling.
@@ -74,10 +63,8 @@ def test_series_distinguishable_without_color(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_animations_respect_reduced_motion(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_animations_respect_reduced_motion() -> None:
     """a11y aspect 6 (reduced motion): animation honours prefers-reduced-motion.
 
     Do: with prefers-reduced-motion: reduce emulated, open a service detail graph.
@@ -87,10 +74,8 @@ def test_animations_respect_reduced_motion(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_states_are_announced_to_assistive_tech(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_states_are_announced_to_assistive_tech() -> None:
     """a11y aspect 7 (state announcement): loading/empty/error states are announced.
 
     Do: drive the graph into the loading and error states (page.route on the time-series
@@ -102,10 +87,8 @@ def test_states_are_announced_to_assistive_tech(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_embedded_graph_has_disambiguating_name(
-    dashboard_page: MainDashboard,
-    graph_hosts_with_varying_data: list[str],
-) -> None:
+@pytest.mark.usefixtures("dashboard_page", "graph_hosts_with_varying_data")
+def test_embedded_graph_has_disambiguating_name() -> None:
     """a11y aspect 8 (embedded labelling): a dashboard graph's name disambiguates siblings.
 
     Do: open a dashboard with more than one graph widget.

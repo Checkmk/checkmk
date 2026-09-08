@@ -103,10 +103,8 @@ def test_phase_reraises_when_debug(capsys: pytest.CaptureFixture[str]) -> None:
     assert "<<<redfish_memory:sep(0)>>>" in out
 
 
-def test_fetch_sections_continues_when_one_section_raises(
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+@pytest.mark.usefixtures("capsys")
+def test_fetch_sections_continues_when_one_section_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     redfishobj = _make_redfishobj()
 
     def fake_fetch_data(

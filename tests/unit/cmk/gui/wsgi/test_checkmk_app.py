@@ -44,10 +44,9 @@ def _oserror_pages() -> Iterator[None]:
         page_registry.unregister(OS_ERROR_WSGI_PAGE)
 
 
+@pytest.mark.usefixtures("oserror_pages")
 def test_oserror_wsgi_from_page_handler_returns_400(
-    wsgi_app: WebTestAppForCMK,
-    monkeypatch: pytest.MonkeyPatch,
-    oserror_pages: None,
+    wsgi_app: WebTestAppForCMK, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Touching request.values in a broken request body state raises OSError.
 
@@ -70,10 +69,9 @@ def test_oserror_wsgi_from_page_handler_returns_400(
     assert resp.status_code == 400
 
 
+@pytest.mark.usefixtures("oserror_pages")
 def test_non_wsgi_oserror_from_page_handler_propagates(
-    wsgi_app: WebTestAppForCMK,
-    monkeypatch: pytest.MonkeyPatch,
-    oserror_pages: None,
+    wsgi_app: WebTestAppForCMK, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Non-mod_wsgi OSErrors must not be swallowed as 400.
 
@@ -116,19 +114,15 @@ def _csp_pages() -> Iterator[None]:
         page_registry.unregister(CSP_STRICT_PAGE)
 
 
-def test_csp_default_legacy_policy_is_applied(
-    logged_in_wsgi_app: WebTestAppForCMK,
-    csp_pages: None,
-) -> None:
+@pytest.mark.usefixtures("csp_pages")
+def test_csp_default_legacy_policy_is_applied(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     """A page that sets no policy gets the legacy CSP from the central hook."""
     resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_PAGE}.py", status=200)
     assert resp.headers["Content-Security-Policy"] == LEGACY_CONTENT_SECURITY_POLICY.serialize()
 
 
-def test_csp_page_can_opt_into_strict_policy(
-    logged_in_wsgi_app: WebTestAppForCMK,
-    csp_pages: None,
-) -> None:
+@pytest.mark.usefixtures("csp_pages")
+def test_csp_page_can_opt_into_strict_policy(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     """A page that opts into the strict policy keeps it; the hook does not overwrite it."""
     resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_STRICT_PAGE}.py", status=200)
     assert resp.headers["Content-Security-Policy"] == STRICT_CONTENT_SECURITY_POLICY.serialize()

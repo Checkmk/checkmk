@@ -55,11 +55,9 @@ from cmk.web.utils.html import HTML
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_text_with_links_to_user_translated_html(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    elements: list[tuple[str, str | None]],
-    separator: HTML | None,
-    rendered_title: HTML,
+    elements: list[tuple[str, str | None]], separator: HTML | None, rendered_title: HTML
 ) -> None:
     assert (
         text_with_links_to_user_translated_html(

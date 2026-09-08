@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Callable, Mapping
 
 import pytest
@@ -323,7 +321,8 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_winperf_phydisk(item: str) -> None:
     section_1: diskstat.Section = {
         item: DISK_HALF,
     }
@@ -342,7 +341,8 @@ def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_cluster_check_winperf_phydisk(item: str) -> None:
     section_1: diskstat.Section = {
         item: DISK_HALF,
     }

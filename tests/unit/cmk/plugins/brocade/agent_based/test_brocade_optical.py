@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Mapping, Sequence
 
@@ -183,12 +181,9 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_brocade_optical(
-    item: str,
-    params: Mapping[str, object],
-    section: brocade_optical.Section,
-    expected: CheckResult,
-    empty_value_store: None,
+    item: str, params: Mapping[str, object], section: brocade_optical.Section, expected: CheckResult
 ) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 
@@ -947,11 +942,11 @@ def test_check_brocade_optical(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_regression(
     string_table: Sequence[StringTable],
     discovery_results: Sequence[Service],
     items_params_results: Sequence[tuple[str, Mapping[str, object], CheckResult]],
-    empty_value_store: None,
 ) -> None:
     section = brocade_optical.parse_brocade_optical(string_table)
 

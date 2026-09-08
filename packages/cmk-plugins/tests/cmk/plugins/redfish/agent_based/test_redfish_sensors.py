@@ -338,7 +338,8 @@ class TestCheckRedfishSensors:
         section = _section_with(_sensor("S1"))
         assert list(check_redfish_sensors("does_not_exist", {}, section)) == []
 
-    def test_no_reading_yields_placeholder_and_health(self, _patch_value_store: None) -> None:
+    @pytest.mark.usefixtures("_patch_value_store")
+    def test_no_reading_yields_placeholder_and_health(self) -> None:
         sensor = _sensor("S1")
         del sensor["Reading"]
         section = _section_with(sensor)
@@ -352,7 +353,8 @@ class TestCheckRedfishSensors:
             for r in results
         )
 
-    def test_temperature_branch_still_consumes_user_params(self, _patch_value_store: None) -> None:
+    @pytest.mark.usefixtures("_patch_value_store")
+    def test_temperature_branch_still_consumes_user_params(self) -> None:
         """The Temperature arm actually forwards `params` to check_temperature.
 
         Device levels alone (upper_caution=80, upper_critical=90) keep
@@ -374,7 +376,8 @@ class TestCheckRedfishSensors:
         assert any(m.name == "temp" and m.value == 55.0 for m in _metrics(results))
         assert any(r.state == State.CRIT for r in _results(results))
 
-    def test_non_temperature_branch_routes_through_helper(self, _patch_value_store: None) -> None:
+    @pytest.mark.usefixtures("_patch_value_store")
+    def test_non_temperature_branch_routes_through_helper(self) -> None:
         """Representative non-Temperature case — proves `_check_non_temperature`
         is actually reached and yields a metric."""
         section = _section_with(
@@ -383,7 +386,8 @@ class TestCheckRedfishSensors:
         results = list(check_redfish_sensors("VOLT1", {}, section))
         assert any(m.name == "voltage" and m.value == 12.1 for m in _metrics(results))
 
-    def test_unknown_reading_type_falls_back_to_text_result(self, _patch_value_store: None) -> None:
+    @pytest.mark.usefixtures("_patch_value_store")
+    def test_unknown_reading_type_falls_back_to_text_result(self) -> None:
         """`case other:` arm in `_check_non_temperature` still reachable."""
         section = _section_with(_sensor("MAGIC1", reading=7.0, reading_type="Enchantment"))
         results = list(check_redfish_sensors("MAGIC1", {}, section))
@@ -391,7 +395,8 @@ class TestCheckRedfishSensors:
             isinstance(r, Result) and "Enchantment reading: 7.0" in r.summary for r in results
         )
 
-    def test_health_state_translates_to_crit(self, _patch_value_store: None) -> None:
+    @pytest.mark.usefixtures("_patch_value_store")
+    def test_health_state_translates_to_crit(self) -> None:
         """Health-state trailer still maps device status to CheckMK State."""
         section = _section_with(
             _sensor("VOLT1", reading=12.1, reading_type="Voltage", health="Critical")

@@ -333,10 +333,8 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
         )
 
 
-def test_may_is_narrowed_by_the_request_authorization(
-    request_context: None,
-    monitoring_user: LoggedInUser,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_may_is_narrowed_by_the_request_authorization(monitoring_user: LoggedInUser) -> None:
     # Assuming "user" role
     assert monitoring_user.may("general.use")
     assert monitoring_user.may("general.act")
@@ -347,10 +345,8 @@ def test_may_is_narrowed_by_the_request_authorization(
     assert not monitoring_user.may("general.act")
 
 
-def test_scope_never_grants_what_roles_deny(
-    request_context: None,
-    monitoring_user: LoggedInUser,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_scope_never_grants_what_roles_deny(monitoring_user: LoggedInUser) -> None:
     """The scope's allow-list is not a grant -- roles still decide."""
     session.authorization = Authorization.from_scopes({ScopeId.READ})
 
@@ -370,7 +366,8 @@ def test_super_user_is_narrowed_by_the_request_authorization() -> None:
         assert not global_user.may("wato.activate")
 
 
-def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.id == "test"
     assert monitoring_user.alias == "Test user"
     assert monitoring_user.email == "test_user_test@checkmk.com"
@@ -414,10 +411,8 @@ def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -
     assert monitoring_user.acknowledged_notifications == timestamp
 
 
-def test_monitoring_user_read_broken_file(
-    request_context: None,
-    monitoring_user: LoggedInUser,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_monitoring_user_read_broken_file(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.confdir
     with Path(monitoring_user.confdir, "unittest.mk").open("w") as f:
         f.write("%#%#%")
@@ -425,11 +420,9 @@ def test_monitoring_user_read_broken_file(
     assert monitoring_user.load_file("unittest", deflt="xyz") == "xyz"
 
 
+@pytest.mark.usefixtures("request_context")
 def test_monitoring_user_permissions(
-    mocker: MockerFixture,
-    monkeypatch: MonkeyPatch,
-    request_context: None,
-    monitoring_user: LoggedInUser,
+    mocker: MockerFixture, monkeypatch: MonkeyPatch, monitoring_user: LoggedInUser
 ) -> None:
     mocker.patch.object(permissions, "permission_registry")
     with monkeypatch.context() as m:

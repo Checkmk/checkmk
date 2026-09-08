@@ -807,10 +807,8 @@ def test_parse_args_or_exec_other_omd_no_version_link_rm_warns(
     assert "WARNING: This site has an empty home directory" in capsys.readouterr().out
 
 
-def test_parse_args_or_exec_other_omd_use_site_version(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("capsys")
+def test_parse_args_or_exec_other_omd_use_site_version(tmp_path: Path) -> None:
     site_dir = tmp_path / "sites" / "v250"
     site_dir.mkdir(parents=True)
     (site_dir / "version").symlink_to("abc")

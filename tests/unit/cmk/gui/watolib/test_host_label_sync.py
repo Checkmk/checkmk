@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from pathlib import Path
 
 import pytest
@@ -26,7 +24,8 @@ def fixture_discovered_host_labels_dir(tmp_path: Path, monkeypatch: MonkeyPatch)
     return path
 
 
-def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
+@pytest.mark.usefixtures("discovered_host_labels_dir")
+def test_get_updated_host_label_files() -> None:
     time_1 = 1616655912.123
     time_2 = 1616655912.234
 
@@ -47,7 +46,8 @@ def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
     assert not get_updated_host_label_files(newer_than=time_2)
 
 
-def test_get_host_labels_entry_of_host(discovered_host_labels_dir: Path) -> None:
+@pytest.mark.usefixtures("discovered_host_labels_dir")
+def test_get_host_labels_entry_of_host() -> None:
     save_updated_host_label_files(
         [
             ("host1.mk", 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),

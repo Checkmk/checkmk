@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
@@ -82,7 +80,8 @@ class FcPortModelFactory(ModelFactory):
     __model__ = FcPortModel
 
 
-def test_latency_results_ok(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_latency_results_ok() -> None:
     fcp_if_counters = {
         "total_ops": 2000,
         "avg_read_latency": 300000,
@@ -102,7 +101,8 @@ def test_latency_results_ok(value_store_patch: None) -> None:
     assert result[3].name == "avg_write_latency_latency" and result[3].value == 0.4
 
 
-def test_latency_results_warn(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_latency_results_warn() -> None:
     fcp_if_counters = {
         "total_ops": 2000,
         "avg_read_latency": 300000,
@@ -124,7 +124,8 @@ def test_latency_results_warn(value_store_patch: None) -> None:
     assert result[3].name == "avg_write_latency_latency" and result[3].value == 0.4
 
 
-def test_io_ops_results(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_io_ops_results() -> None:
     fcp_if_counters = {
         "read_ops": 2000,
         "write_ops": 3000,
@@ -185,7 +186,8 @@ def test_speed_result(  # type: ignore[misc]
     assert result == expected_result
 
 
-def test_io_bytes_results(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_io_bytes_results() -> None:
     fcp_if_counters = {
         "read_bytes": 300000,
         "write_bytes": 200000,
@@ -229,11 +231,8 @@ def test_io_bytes_results(value_store_patch: None) -> None:
         ),
     ],
 )
-def test_check_netapp_ontap_fcp(
-    item_name: str,
-    expected_last_result: Result,
-    value_store_patch: None,
-) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_netapp_ontap_fcp(item_name: str, expected_last_result: Result) -> None:
     _ports_models = [
         FcPortModelFactory.build(
             name="11a",

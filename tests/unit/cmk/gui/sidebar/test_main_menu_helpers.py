@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.ccc.user import UserId
 from cmk.gui.sidebar._snapin._helpers import make_main_menu, VisualItem, VisualMenuItem
 from cmk.gui.type_defs import Visual
@@ -30,7 +32,8 @@ def _visual_without_search_terms() -> Visual:
     }
 
 
-def test_make_main_menu_visual_without_search_terms(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context")
+def test_make_main_menu_visual_without_search_terms() -> None:
     """A visual lacking main_menu_search_terms must not crash the main menu.
 
     Built-in visuals bypass the per-visual-type runtime transformer that defaults the

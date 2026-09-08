@@ -15,7 +15,7 @@ from cmk.gui.view_utils import determine_must_escape, format_plugin_output
 from cmk.web.utils.html import HTML
 
 
-@pytest.mark.usefixtures("patch_theme")
+@pytest.mark.usefixtures("patch_theme", "request_context")
 @pytest.mark.parametrize(
     "args, expected",
     [
@@ -77,7 +77,7 @@ from cmk.web.utils.html import HTML
         ),
     ],
 )
-def test_button_url(args: str, expected: HTML, request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+def test_button_url(args: str, expected: HTML) -> None:
     assert format_plugin_output(args, request=request, must_escape=False) == expected
 
 

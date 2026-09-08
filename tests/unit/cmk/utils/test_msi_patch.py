@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import os
 import shutil
@@ -89,12 +87,14 @@ def test_parse_command_line_invalid() -> None:
         msi_patch.parse_command_line(["/path/to/executable", "1033", "msi", "a", "b"])
 
 
-def test_critical_consts(conf_dir: Path) -> None:
+@pytest.mark.usefixtures("conf_dir")
+def test_critical_consts() -> None:
     assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
     assert msi_patch.MSI_PACKAGE_CODE_MARKER == "x64;1033"
 
 
-def test_low_level_api(conf_dir: Path, state_file: Path) -> None:
+@pytest.mark.usefixtures("conf_dir")
+def test_low_level_api(state_file: Path) -> None:
     assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
     assert len(msi_patch.generate_uuid()) == 38
     msi_patch.write_state_file(state_file, 12, "12")
@@ -112,13 +112,9 @@ def test_validate_content(work_content: bytes) -> None:
         ("trashy", False, -1),
     ],
 )
+@pytest.mark.usefixtures("work_content")
 def test_patch_package_code_with_state(
-    work_file: Path,
-    work_content: bytes,
-    state_file: Path,
-    old_code: str,
-    success: bool,
-    loc: int,
+    work_file: Path, state_file: Path, old_code: str, success: bool, loc: int
 ) -> None:
     uuid = msi_patch.generate_uuid()
     assert (

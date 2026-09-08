@@ -741,11 +741,11 @@ def test_check_memory_fails(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_memory(  # type: ignore[misc]
     params: Mapping,
     meminfo: memory.SectionMemUsed,
     expected: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     copy_info = meminfo.copy()
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -991,11 +989,7 @@ check_results = [
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
-def test_check_ps_common(
-    inv_item: Service,
-    reference: Sequence[Result | Metric],
-    empty_value_store: None,
-) -> None:
+def test_check_ps_common(inv_item: Service, reference: Sequence[Result | Metric]) -> None:
     parsed: list = []
 
     now = 1540375342
@@ -1118,7 +1112,7 @@ cpu_util_data = [
 
 @pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data: cpu_config, empty_value_store: None) -> None:
+def test_check_ps_common_cpu(data: cpu_config) -> None:
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(  # noqa: SLF001
             check_time, splitter(agent_info.format(cputime))
@@ -1188,9 +1182,7 @@ def test_check_ps_common_cpu(data: cpu_config, empty_value_store: None) -> None:
     ],
 )
 def test_check_ps_common_count(
-    levels: tuple[int, int, int, int],
-    reference: Sequence[Result | Metric],
-    empty_value_store: None,
+    levels: tuple[int, int, int, int], reference: Sequence[Result | Metric]
 ) -> None:
     _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(  # noqa: SLF001
         int(time.time()), splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
@@ -1219,7 +1211,7 @@ def test_check_ps_common_count(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_subset_patterns(empty_value_store: None) -> None:
+def test_subset_patterns() -> None:
     section_ps = ps_section._parse_ps(  # noqa: SLF001
         int(time.time()),
         splitter(
@@ -1297,7 +1289,7 @@ def test_subset_patterns(empty_value_store: None) -> None:
 
 @pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None) -> None:
+def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
@@ -1393,7 +1385,7 @@ def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None)
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_parse_ps_windows(mocker: MockerFixture, empty_value_store: None) -> None:
+def test_parse_ps_windows(mocker: MockerFixture) -> None:
     section_ps = ps_section._parse_ps(  # noqa: SLF001
         int(time.time()),
         splitter(
@@ -1506,7 +1498,7 @@ def test_discover_empty_command_line() -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_empty_command_line(empty_value_store: None) -> None:
+def test_check_empty_command_line() -> None:
     assert list(
         ps_check.check_ps(
             "my_proc",
@@ -1540,7 +1532,7 @@ def test_check_empty_command_line(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_ps_check_percent_memory_unknown(empty_value_store: None) -> None:
+def test_ps_check_percent_memory_unknown() -> None:
     assert Result(
         state=State.UNKNOWN, summary="Percentual RAM levels configured, but total RAM is unknown"
     ) in list(
@@ -1557,7 +1549,7 @@ def test_ps_check_percent_memory_unknown(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_ps_check_percent_memory_mem_total(empty_value_store: None) -> None:
+def test_ps_check_percent_memory_mem_total() -> None:
     assert Result(
         state=State.CRIT,
         summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",
@@ -1575,7 +1567,7 @@ def test_ps_check_percent_memory_mem_total(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_ps_check_percent_memory_mem_used(empty_value_store: None) -> None:
+def test_ps_check_percent_memory_mem_used() -> None:
     assert Result(
         state=State.CRIT,
         summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",

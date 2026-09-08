@@ -685,11 +685,10 @@ TRANSPORTS: Sequence[tuple[str, LocalAutomationConfig | RemoteAutomationConfig]]
 )
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 @pytest.mark.parametrize("host_fixture, automation_config", TRANSPORTS, ids=["local", "remote"])
 def test_tabula_rasa_records_its_change_centrally_on_both_transports(
     request: pytest.FixtureRequest,
-    transport: Transport,
     pending_changes: RecordingPendingChanges,
     host_fixture: str,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
@@ -752,12 +751,11 @@ def test_changes_are_synced_before_a_remote_automation_only(
 SCANNING_ACTIONS = frozenset({DiscoveryAction.REFRESH, DiscoveryAction.TABULA_RASA})
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 @pytest.mark.parametrize("job_running", [False, True], ids=["idle", "running"])
 @pytest.mark.parametrize("action", list(DiscoveryAction))
 def test_only_refresh_and_tabula_rasa_start_the_background_job(
     sample_host: Host,
-    transport: Transport,
     pending_changes: RecordingPendingChanges,
     mocker: MockerFixture,
     action: DiscoveryAction,
@@ -782,12 +780,11 @@ def test_only_refresh_and_tabula_rasa_start_the_background_job(
     assert start.call_count == (1 if action in SCANNING_ACTIONS and not job_running else 0)
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 @pytest.mark.parametrize("job_running", [False, True], ids=["idle", "running"])
 @pytest.mark.parametrize("action", list(DiscoveryAction))
 def test_only_stop_stops_a_running_background_job(
     sample_host: Host,
-    transport: Transport,
     pending_changes: RecordingPendingChanges,
     mocker: MockerFixture,
     action: DiscoveryAction,
@@ -936,7 +933,7 @@ def test_discovery_result_round_trips_for_peers_carrying_every_field(peer_versio
 # --------------------------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 @pytest.mark.parametrize(
     "source, target, force_sync",
     [
@@ -950,7 +947,6 @@ def test_discovery_result_round_trips_for_peers_carrying_every_field(peer_versio
 )
 def test_set_autochecks_change_carries_the_sync_requirement(
     sample_host: Host,
-    transport: Transport,
     pending_changes: RecordingPendingChanges,
     source: str,
     target: str,
@@ -980,11 +976,9 @@ def test_set_autochecks_change_carries_the_sync_requirement(
     assert scope == ChangeScope.sites([sample_host.site_id()])
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 def test_update_host_labels_change_is_recorded_for_the_labelled_host(
-    sample_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
+    sample_host: Host, pending_changes: RecordingPendingChanges
 ) -> None:
     """The change is scoped to the host the labels belong to, not to the acting site."""
     perform_host_label_discovery(
@@ -1011,12 +1005,9 @@ def test_update_host_labels_change_is_recorded_for_the_labelled_host(
 # --------------------------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 def test_service_discovery_context_demands_wato_services(
-    sample_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
-    demanded_permissions: list[str],
+    sample_host: Host, pending_changes: RecordingPendingChanges, demanded_permissions: list[str]
 ) -> None:
     """Entering the context is the only place ``wato.services`` is demanded on a GUI path."""
     accept_undecided(
@@ -1029,11 +1020,10 @@ def test_service_discovery_context_demands_wato_services(
     assert "wato.services" in demanded_permissions
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 @pytest.mark.parametrize("flagged", [True, False], ids=["flagged", "not-flagged"])
 def test_discovery_failed_flag_is_written_only_when_it_was_set(
     sample_host: Host,
-    transport: Transport,
     pending_changes: RecordingPendingChanges,
     mocker: MockerFixture,
     flagged: bool,
@@ -1090,12 +1080,9 @@ def test_discovery_failed_flag_is_left_alone_for_a_locked_host(
 # --------------------------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "transport")
 def test_discovery_alone_demands_no_wato_services(
-    sample_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
-    demanded_permissions: list[str],
+    sample_host: Host, pending_changes: RecordingPendingChanges, demanded_permissions: list[str]
 ) -> None:
     """``Discovery`` demands per-target permissions and nothing else.
 
@@ -1427,12 +1414,9 @@ def test_a_failing_flag_clear_leaves_no_half_finished_discovery(
 # --- T2.14 / §10.9(b): the endpoint never clears the flag -----------------------------------
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "pending_changes")
 def test_update_service_phase_leaves_the_discovery_failed_flag_set(
-    sample_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
-    update_ignored_phase: Callable[[Host], int],
+    sample_host: Host, transport: Transport, update_ignored_phase: Callable[[Host], int]
 ) -> None:
     """Today: a successful update leaves the host flagged as "discovery failed" forever."""
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
@@ -1450,12 +1434,9 @@ def test_update_service_phase_leaves_the_discovery_failed_flag_set(
     "never clears inventory_failed -- bulk discovery's 'only hosts that failed previously' set "
     "never converges for a client that only uses this endpoint",
 )
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "pending_changes")
 def test_update_service_phase_clears_the_discovery_failed_flag(
-    sample_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
-    update_ignored_phase: Callable[[Host], int],
+    sample_host: Host, transport: Transport, update_ignored_phase: Callable[[Host], int]
 ) -> None:
     # The table below is what makes this a *successful* update: with the default empty preview there
     # is no transition, nothing is written, and this tripwire stays silent after a correct fix.
@@ -1503,12 +1484,9 @@ def run_quick_setup_discovery(pending_changes: PendingChanges) -> None:
     )
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "remote_host")
 def test_quick_setup_reads_remotely_and_writes_locally(
-    remote_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
-    quick_setup_fix_all: MagicMock,
+    transport: Transport, pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
 ) -> None:
     """Today: the check table is fetched from the remote site, the apply runs on the central one."""
     run_quick_setup_discovery(pending_changes)
@@ -1524,12 +1502,9 @@ def test_quick_setup_reads_remotely_and_writes_locally(
     "read, and then passes LocalAutomationConfig() to perform_fix_all -- so a remote-site bundle's "
     "autochecks land in the central site's var/check_mk/autochecks/",
 )
-@pytest.mark.usefixtures("inline_background_jobs")
+@pytest.mark.usefixtures("inline_background_jobs", "remote_host", "transport")
 def test_quick_setup_writes_to_the_site_it_read_from(
-    remote_host: Host,
-    transport: Transport,
-    pending_changes: RecordingPendingChanges,
-    quick_setup_fix_all: MagicMock,
+    pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
 ) -> None:
     run_quick_setup_discovery(pending_changes)
 

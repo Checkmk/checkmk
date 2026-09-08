@@ -253,10 +253,9 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
     )
 
 
+@pytest.mark.usefixtures("with_host")
 def test_openapi_host_tag_with_only_one_option(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    clients: ClientRegistry,
-    with_host: list[str],  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    aut_user_auth_wsgi_app: WebTestAppForCMK, clients: ClientRegistry
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     wsgi_app = aut_user_auth_wsgi_app

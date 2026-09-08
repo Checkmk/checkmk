@@ -411,11 +411,9 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_azure_vm_network_io(
-    params: Mapping[str, tuple[float, float]],
-    section: Resource,
-    expected_result: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    params: Mapping[str, tuple[float, float]], section: Resource, expected_result: CheckResult
 ) -> None:
     assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
 

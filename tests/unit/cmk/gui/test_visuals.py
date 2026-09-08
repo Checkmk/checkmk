@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from collections.abc import Mapping, Sequence
 
@@ -151,11 +149,9 @@ def test_context_to_uri_vars(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_get_context_from_uri_vars(
-    request_context: None,
-    infos: SingleInfos,
-    uri_vars: Sequence[tuple[str, str]],
-    expected_context: VisualContext,
+    infos: SingleInfos, uri_vars: Sequence[tuple[str, str]], expected_context: VisualContext
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
@@ -207,12 +203,12 @@ def test_get_context_from_uri_vars(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_get_merged_context(
     uri_vars: Sequence[tuple[str, str]],
     infos: SingleInfos | None,
     context_vis: VisualContext,
     expected_context: VisualContext,
-    request_context: None,
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)

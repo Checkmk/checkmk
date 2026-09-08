@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 from unittest import mock
 
@@ -25,10 +23,9 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
+@pytest.mark.usefixtures("request_context")
 def test_oauth2_connection_setup_to_disk(
-    monkeypatch: pytest.MonkeyPatch,
-    request_context: None,
-    with_user: tuple[UserId, str],
+    monkeypatch: pytest.MonkeyPatch, with_user: tuple[UserId, str]
 ) -> None:
     monkeypatch.setattr(oauth2_modes, "get_configured_site_choices", list)
     user_id = with_user[0]
@@ -60,10 +57,8 @@ def test_oauth2_connection_setup_to_disk(
         }
 
 
-def test_oauth2_connection_setup_to_vue(
-    request_context: None,
-    with_user: tuple[UserId, str],
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_oauth2_connection_setup_to_vue(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     with UserContext(user_id, UserPermissions({}, {}, {}, [])):
         visitor = get_visitor(

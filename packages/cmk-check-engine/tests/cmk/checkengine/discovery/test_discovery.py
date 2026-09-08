@@ -245,11 +245,8 @@ def test__get_service_filter_func_no_lists(
         ([".*Descript$"], False),
     ],
 )
-def test__get_service_filter_func_same_lists(
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    whitelist: Sequence[str],
-    result: bool,
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test__get_service_filter_func_same_lists(whitelist: Sequence[str], result: bool) -> None:
     service_filters = filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
     assert service_filters.new is not None
     assert service_filters.new("Test Description") is result

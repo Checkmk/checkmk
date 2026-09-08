@@ -9,7 +9,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -87,11 +86,8 @@ def check_widget_create(
 
 
 class TestProblemGraphContent:
-    def test_create(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_create(self, clients: ClientRegistry) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
         check_widget_create(
@@ -105,11 +101,8 @@ class TestProblemGraphContent:
 
 
 class TestCombinedGraphContent:
-    def test_create(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_create(self, clients: ClientRegistry) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
         check_widget_create(
@@ -125,11 +118,8 @@ class TestCombinedGraphContent:
 
 
 class TestSingleTimeseriesContent:
-    def test_create(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,  # noqa: ARG002
-    ) -> None:
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_create(self, clients: ClientRegistry) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
         check_widget_create(

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 import copy
 from collections.abc import Mapping, Sequence
@@ -478,7 +476,7 @@ def _increment_timestamp_of_interface(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_lnx_if(empty_value_store: None) -> None:
+def test_check_lnx_if() -> None:
     list(
         lnx_if.check_lnx_if(
             INTERFACE.attributes.index,
@@ -509,7 +507,7 @@ def test_check_lnx_if(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_cluster_check_lnx_if(empty_value_store: None) -> None:
+def test_cluster_check_lnx_if() -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):

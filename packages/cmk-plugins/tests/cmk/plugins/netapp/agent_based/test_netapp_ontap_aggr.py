@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="type-arg"
 
 from datetime import datetime
@@ -45,9 +43,8 @@ def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ontap_aggr, "get_value_store", lambda: value_store_patched)
 
 
-def test_check_netapp_ontap_aggr_ok(
-    value_store_patch: None,
-) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_netapp_ontap_aggr_ok() -> None:
     aggregate_model = AggregateModelFactory.build(
         name="aggregate1",
         space=AggregateSpaceFactory.build(
@@ -69,9 +66,8 @@ def test_check_netapp_ontap_aggr_ok(
     assert result[3] == Result(state=State.OK, summary="Used: 50.00% - 4.66 GiB of 9.31 GiB")
 
 
-def test_check_netapp_ontap_aggr_warn(
-    value_store_patch: None,
-) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_netapp_ontap_aggr_warn() -> None:
     aggregate_model = AggregateModelFactory.build(
         name="aggregate1",
         space=AggregateSpaceFactory.build(
@@ -94,9 +90,8 @@ def test_check_netapp_ontap_aggr_warn(
     assert result[3].state == State.WARN and result[3].summary.startswith("Used: 50.00%")
 
 
-def test_check_netapp_ontap_aggr_not_present(
-    value_store_patch: None,
-) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_netapp_ontap_aggr_not_present() -> None:
     aggregate_model = AggregateModelFactory.build(name="aggregate1")
     section = {aggregate_model.name: aggregate_model}
 
@@ -108,9 +103,8 @@ def test_check_netapp_ontap_aggr_not_present(
     assert len(list(result)) == 0
 
 
-def test_check_netapp_ontap_aggr_without_data(
-    value_store_patch: None,
-) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_netapp_ontap_aggr_without_data() -> None:
     aggregate_model = AggregateModelFactory.build(
         name="aggregate1",
         space=AggregateSpaceFactory.build(

@@ -108,13 +108,9 @@ class SomeEditMode(SimpleEditMode[SomeSpec]):
         pytest.param(True, "clone", True, id="Clone"),
     ],
 )
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "monkeypatch")
 def test_page_form_render_entry_valuespec(
-    new: bool,
-    clone: str | None,
-    expected_form: bool,
-    monkeypatch: pytest.MonkeyPatch,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    test_edition: Edition,
+    new: bool, clone: str | None, expected_form: bool, test_edition: Edition
 ) -> None:
     mode_type = SomeModeType()
     store = SomeStore(

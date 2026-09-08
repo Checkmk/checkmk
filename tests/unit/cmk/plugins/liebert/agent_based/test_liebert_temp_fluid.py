@@ -90,12 +90,9 @@ def test_discover(section: Section) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check(
-    item: str,
-    params: TempParamDict,
-    section: Section,
-    expected_result: CheckResult,
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    item: str, params: TempParamDict, section: Section, expected_result: CheckResult
 ) -> None:
     assert (
         list(

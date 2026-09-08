@@ -98,7 +98,8 @@ def test_get_proxy_config(
     assert proxy_config == expected_proxy_config
 
 
-def test_read_config_file_with_missing_file(tmp_path: Path) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("tmp_path")
+def test_read_config_file_with_missing_file() -> None:
     with pytest.raises(ConfigError):
         read_config_file(Path("/non_existent_directory"))
 

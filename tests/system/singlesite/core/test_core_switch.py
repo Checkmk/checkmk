@@ -42,7 +42,8 @@ def _switch_core(site: Site) -> Iterator[None]:
 
 
 @pytest.mark.skip_if_not_edition("pro")
-def test_core_switch(site: Site, switch_core: Iterator[None]) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("switch_core")
+def test_core_switch(site: Site) -> None:
     """Test switching the core from cmc to nagios.
 
     Verify changes in the site can be activated after such core switch.

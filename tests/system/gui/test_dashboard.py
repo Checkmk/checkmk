@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import re
 
 import pytest
@@ -261,8 +259,8 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
         ),
     ],
 )
+@pytest.mark.usefixtures("linux_hosts")
 def test_top_list_widgets_settings(
-    linux_hosts: list[str],
     widget_title: str,
     expected_service_name: str,
     expected_metric: str,
@@ -655,10 +653,9 @@ def test_graph_widget_renders_through_the_engine(
 
 
 @pytest.mark.skip_if_edition("community")
+@pytest.mark.usefixtures("linux_hosts")
 def test_problem_percentage_widget_renders_through_the_engine(
-    javascript_errors: list[str],
-    cloned_linux_hosts_dashboard: CustomDashboard,
-    linux_hosts: list[str],
+    javascript_errors: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:
     """The alerts & notifications widget renders through the engine as a problem percentage.
 

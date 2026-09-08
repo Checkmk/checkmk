@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from typing import cast
+
+import pytest
 
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals._filter_context import (
@@ -31,16 +31,16 @@ def test_context_to_uri_vars_skips_scalar_filter_context() -> None:
     assert context_to_uri_vars(context) == [("service", "CPU")]
 
 
-def test_get_singlecontext_vars_skips_scalar_filter_context(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_singlecontext_vars_skips_scalar_filter_context() -> None:
     # The well formed entries must still reach the linked view; only the unusable one is dropped
     context = cast(VisualContext, {"host": "myhost", "service": {"service": "CPU"}})
 
     assert get_singlecontext_vars(context, ["host", "service"]) == {"host": "", "service": "CPU"}
 
 
-def test_configured_context_filters_asks_the_components_of_each_filter(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_configured_context_filters_asks_the_components_of_each_filter() -> None:
     context = cast(
         VisualContext,
         {"hostregex": {"host_regex": "web"}, "serviceregex": {"service_regex": ""}},
@@ -49,9 +49,11 @@ def test_configured_context_filters_asks_the_components_of_each_filter(
     assert configured_context_filters(context) == {"hostregex"}
 
 
-def test_configured_context_filters_skips_a_filter_no_registry_knows(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_configured_context_filters_skips_a_filter_no_registry_knows() -> None:
     assert configured_context_filters(cast(VisualContext, {"no_such_filter": {"x": "y"}})) == set()
 
 
-def test_configured_context_filters_skips_scalar_filter_context(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_configured_context_filters_skips_scalar_filter_context() -> None:
     assert configured_context_filters(SCALAR_CONTEXT) == set()

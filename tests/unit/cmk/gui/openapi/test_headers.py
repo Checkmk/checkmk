@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 from tests.testlib.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
@@ -30,10 +32,8 @@ def test_headers_exposed(
     assert resp.headers["x-checkmk-version"] == cmk_version.__version__
 
 
-def test_headers_not_exposed_for_unauthorized_users(
-    wsgi_app: WebTestAppForCMK,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_headers_not_exposed_for_unauthorized_users(wsgi_app: WebTestAppForCMK) -> None:
     resp = _get_version(
         wsgi_app,
         status=401,

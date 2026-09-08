@@ -42,7 +42,8 @@ class TestValueSpecTuple:
         expect_validate_failure_untypeable(get_tuple_vs(), (0, "", 0, ""))
         expect_validate_failure_untypeable(get_tuple_vs(), ["", 0, "", 1])
 
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(v_0="a", v_1="2", v_2="c", v_3="4"):
             assert get_tuple_vs().from_html_vars("v") == ("a", 2, "c", 4)
 

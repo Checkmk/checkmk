@@ -12,7 +12,6 @@ from typing import cast
 
 import pytest
 import responses
-from pytest_mock import MockerFixture
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.mkeventd.wato
@@ -180,12 +179,11 @@ def test_generate_snapshot(
 
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "mocker")
 def test_synchronize_site(
     mocked_responses: responses.RequestsMock,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    mocker: MockerFixture,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     test_edition: Edition,
 ) -> None:
     mocked_responses.add(

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
@@ -76,7 +74,8 @@ def fixture_password_store_files() -> Iterator[None]:
     password_store.password_store_path().unlink(missing_ok=True)
 
 
-def test_make_passwords_hasher_is_deterministic(password_store_files: None) -> None:
+@pytest.mark.usefixtures("password_store_files")
+def test_make_passwords_hasher_is_deterministic() -> None:
     password_store.save({"my_secret": "staged"}, password_store.pending_secrets_path_site())
     password_store.save({"my_secret": "configured"}, password_store.password_store_path())
     assert password_store.make_passwords_hasher()("my_secret") == (
@@ -84,7 +83,8 @@ def test_make_passwords_hasher_is_deterministic(password_store_files: None) -> N
     )
 
 
-def test_make_passwords_hasher_reflects_staged_change(password_store_files: None) -> None:
+@pytest.mark.usefixtures("password_store_files")
+def test_make_passwords_hasher_reflects_staged_change() -> None:
     password_store.save({"my_secret": "configured"}, password_store.password_store_path())
     password_store.save({"my_secret": "old"}, password_store.pending_secrets_path_site())
     before = password_store.make_passwords_hasher()("my_secret")
@@ -92,7 +92,8 @@ def test_make_passwords_hasher_reflects_staged_change(password_store_files: None
     assert password_store.make_passwords_hasher()("my_secret") != before
 
 
-def test_make_passwords_hasher_reflects_configured_change(password_store_files: None) -> None:
+@pytest.mark.usefixtures("password_store_files")
+def test_make_passwords_hasher_reflects_configured_change() -> None:
     password_store.save({"my_secret": "staged"}, password_store.pending_secrets_path_site())
     password_store.save({"my_secret": "old"}, password_store.password_store_path())
     before = password_store.make_passwords_hasher()("my_secret")
@@ -100,7 +101,8 @@ def test_make_passwords_hasher_reflects_configured_change(password_store_files: 
     assert password_store.make_passwords_hasher()("my_secret") != before
 
 
-def test_make_passwords_hasher_handles_unknown_id(password_store_files: None) -> None:
+@pytest.mark.usefixtures("password_store_files")
+def test_make_passwords_hasher_handles_unknown_id() -> None:
     password_store.save({"my_secret": "staged"}, password_store.pending_secrets_path_site())
     hasher = password_store.make_passwords_hasher()
     assert hasher("unknown_id") != hasher("my_secret")

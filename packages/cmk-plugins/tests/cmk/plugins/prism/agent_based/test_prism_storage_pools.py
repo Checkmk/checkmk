@@ -108,12 +108,12 @@ def test_discovery_prism_storage_pools(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_prism_storage_pools(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert (
         list(

@@ -8,14 +8,14 @@ import time
 
 import pytest
 
-from tests.system.singlesite.event_console import CMKEventConsole
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
-def test_command_reload(site: Site, ec: CMKEventConsole) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("ec")
+def test_command_reload(site: Site) -> None:
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")

@@ -194,10 +194,8 @@ def test_authorize_deny_redirects_with_access_denied(
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_authorize_returns_400_for_unknown_client_id(
-    mcp_enabled_site: Site,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    web: CMKWebSession,
-) -> None:
+@pytest.mark.usefixtures("mcp_enabled_site")
+def test_authorize_returns_400_for_unknown_client_id(web: CMKWebSession) -> None:
     """A client_id that was never dynamically registered must not reach the consent screen."""
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)

@@ -13,10 +13,9 @@ from cmk.gui.quick_setup._modes import ModeConfigurationBundle
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 
 
+@pytest.mark.usefixtures("request_context")
 def test_mode_configuration_bundle_action_crashes_when_bundle_missing(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    monkeypatch: pytest.MonkeyPatch,
-    test_edition: Edition,
+    monkeypatch: pytest.MonkeyPatch, test_edition: Edition
 ) -> None:
     # Reproduces the crash: if the bundle disappears between GET (form render) and
     # POST (save), _from_vars() sets self._existing_bundle=False and returns early

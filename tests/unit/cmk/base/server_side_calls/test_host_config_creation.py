@@ -110,7 +110,8 @@ def test_get_host_config_no_ip() -> None:
     )
 
 
-def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_host_config_ipv4() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
         ip_stack=ip_lookup.IPStackConfig.IPv4,
@@ -144,7 +145,8 @@ def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_host_config_ipv6() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("ignore.v4.ipv6")], [HostAddress("::42")]),
         ip_stack=ip_lookup.IPStackConfig.IPv6,
@@ -178,7 +180,8 @@ def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_host_config_dual() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("2.3.4.2")], [HostAddress("::42")]),
         ip_stack=ip_lookup.IPStackConfig.DUAL_STACK,

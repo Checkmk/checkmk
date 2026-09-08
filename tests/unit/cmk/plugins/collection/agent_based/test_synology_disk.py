@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
@@ -69,14 +67,16 @@ def make_section(
     "state, expected",
     [(1, State.OK), (2, State.OK), (3, State.WARN), (4, State.CRIT), (5, State.CRIT)],
 )
-def test_result_state(state: int, expected: State, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_result_state(state: int, expected: State) -> None:
     section = make_section(state=state)
     item = list(section.keys())[0]
     result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
-def test_temperature_metric(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_temperature_metric() -> None:
     temperature = 42.0
     section = make_section(temperature=temperature)
     item = list(section.keys())[0]
@@ -90,18 +90,16 @@ def test_temperature_metric(empty_value_store: None) -> None:
     "role, expected",
     [("hotspare", State.OK), ("ssd_cache", State.OK), ("none", State.WARN), ("data", State.WARN)],
 )
-def test_check_role_is_ok_even_if_not_initialized(
-    role: str,
-    expected: State,
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) -> None:
     section = make_section(role=role, state=3)
     item = list(section.keys())[0]
     result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
-def test_disk_health_status(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_disk_health_status() -> None:
     parsed = synology_disks.parse_synology(TABLE_DATA_0)
     assert list(synology_disks.check_synology_disks("Disk 3", {}, parsed)) == [
         Metric("temp", 26.0),
@@ -112,7 +110,8 @@ def test_disk_health_status(empty_value_store: None) -> None:
     ]
 
 
-def test_disk_health_status_missing(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_disk_health_status_missing() -> None:
     parsed = synology_disks.parse_synology(TABLE_DATA_1)
     assert list(synology_disks.check_synology_disks("Disk 1", {}, parsed)) == [
         Metric("temp", 27.0),
@@ -123,7 +122,8 @@ def test_disk_health_status_missing(empty_value_store: None) -> None:
     ]
 
 
-def test_hotspare(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_hotspare() -> None:
     parsed = synology_disks.parse_synology(TABLE_DATA_2)
     assert list(synology_disks.check_synology_disks("Disk 4", {}, parsed)) == [
         Metric("temp", 35.0),

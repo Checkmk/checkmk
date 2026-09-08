@@ -5,6 +5,8 @@
 
 from typing import cast
 
+import pytest
+
 from cmk.gui.type_defs import Visual
 from cmk.gui.visuals import visual_title
 
@@ -13,5 +15,6 @@ from cmk.gui.visuals import visual_title
 VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE = cast(Visual, {"title": "My view", "single_infos": []})
 
 
-def test_visual_title_without_add_context_to_title(request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("request_context")
+def test_visual_title_without_add_context_to_title() -> None:
     assert visual_title("view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}) == "My view"

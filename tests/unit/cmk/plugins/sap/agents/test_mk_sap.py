@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -52,7 +50,8 @@ class FakeConnectionTree:
         return getattr(self, x)
 
 
-def test_empty_tree(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_empty_tree() -> None:
     fake_connection_tree = FakeConnectionTree({})
     result = mk_sap.mon_tree(
         fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
@@ -60,7 +59,8 @@ def test_empty_tree(monkeypatch):
     assert result == {}
 
 
-def test_simple_tree(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_simple_tree() -> None:
     fake_connection_tree = FakeConnectionTree(
         [
             {"MTNAMESHRT": "root", "ALPARINTRE": 0},
@@ -79,7 +79,8 @@ def test_simple_tree(monkeypatch):
     ]
 
 
-def test_recursion_simple(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_recursion_simple() -> None:
     fake_connection_tree = FakeConnectionTree(
         [
             # this element says it is it's own parent.
@@ -91,7 +92,8 @@ def test_recursion_simple(monkeypatch):
         mk_sap.mon_tree(fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
 
 
-def test_recursion(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_recursion() -> None:
     fake_connection_tree = FakeConnectionTree(
         [
             # here the recursion is build over multiple elements:

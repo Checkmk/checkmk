@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 
 """Performance test: Single site
 
@@ -76,11 +74,8 @@ def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: Benchma
     version_from_env() < CMKVersion("2.4.0"),
     reason="Not supported on Checkmk versions below 2.4.0!",
 )
-def test_performance_services(
-    perftest: PerformanceTest,
-    benchmark: BenchmarkFixture,
-    track_system_resources: None,
-) -> None:
+@pytest.mark.usefixtures("track_system_resources")
+def test_performance_services(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:
     """Bulk service discovery"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_performance_services,
@@ -102,12 +97,8 @@ def _dcd_piggyback_env(perftest: PerformanceTest) -> Iterator[None]:
         perftest.teardown_dcd_piggyback_env()
 
 
-def test_performance_piggyback(
-    perftest: PerformanceTest,
-    benchmark: BenchmarkFixture,
-    dcd_piggyback_env: None,
-    track_system_resources: None,
-) -> None:
+@pytest.mark.usefixtures("dcd_piggyback_env", "track_system_resources")
+def test_performance_piggyback(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:
     """DCD piggyback host discovery
 
     Measure forced DCD cycle that creates and discovers pre-staged piggyback hosts.
@@ -139,10 +130,10 @@ def test_performance_piggyback(
     ],
     ids=lambda url: url.id,
 )
+@pytest.mark.usefixtures("track_system_resources")
 def test_performance_ui_response(
     perftest: PerformanceTest,
     benchmark: BenchmarkFixture,
-    track_system_resources: None,
     page_url: CmkPageUrl,
     context: BrowserContext,
 ) -> None:

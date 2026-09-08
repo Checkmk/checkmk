@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from kubernetes import client
 
 from cmk.plugins.kube.schemata import api
@@ -11,10 +12,10 @@ from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIDaemonSets:
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_metadata(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         daemon_sets_metadata = {
             "metadata": {
@@ -46,10 +47,10 @@ class TestAPIDaemonSets:
             "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
         }
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_metadata_missing_annotations_and_labels(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         daemon_sets_metadata = {
             "metadata": {
@@ -70,10 +71,10 @@ class TestAPIDaemonSets:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_status_failed_creation(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         daemon_sets_data = {
             "status": {
@@ -96,10 +97,10 @@ class TestAPIDaemonSets:
         assert status.desired_number_scheduled == 2
         assert status.updated_number_scheduled == 1
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_status_no_matching_node(
         self,
         apps_client: client.AppsV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         """
 

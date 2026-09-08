@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from time import time
 
 import pytest
@@ -45,11 +43,9 @@ def _synced_user(*, locked: bool = False) -> UserSpec:
     return UserSpec(connector=_CONNECTION_ID, locked=locked, roles=["user"])
 
 
+@pytest.mark.usefixtures("request_context")
 def test_vanished_user_is_quarantined(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     users = Users({UserId("bob"): _synced_user()})
 
@@ -62,11 +58,9 @@ def test_vanished_user_is_quarantined(
     assert any("Quarantined user bob" in change for change in sync_result.changes)
 
 
+@pytest.mark.usefixtures("request_context")
 def test_already_quarantined_user_is_left_untouched(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     user = _synced_user(locked=True)
     user["ldap_quarantine"] = QuarantineInfo(quarantined_on=123, connection_id=_CONNECTION_ID)
@@ -79,11 +73,9 @@ def test_already_quarantined_user_is_left_untouched(
     assert sync_result.changes == []
 
 
+@pytest.mark.usefixtures("request_context")
 def test_vanished_user_is_deleted_when_quarantine_disabled(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     users = Users({UserId("bob"): _synced_user()})
 
@@ -94,11 +86,9 @@ def test_vanished_user_is_deleted_when_quarantine_disabled(
     assert any("Removed user bob" in change for change in sync_result.changes)
 
 
+@pytest.mark.usefixtures("request_context")
 def test_present_user_is_not_quarantined(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     users = Users({UserId("bob"): _synced_user()})
 

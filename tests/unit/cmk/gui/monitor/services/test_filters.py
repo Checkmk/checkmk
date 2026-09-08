@@ -92,12 +92,8 @@ def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
         (False, "Filter: staleness < 3.5"),
     ],
 )
-def test_query_builder_stale_condition(
-    value: bool,
-    expected: str,
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    set_config: SetConfig,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_query_builder_stale_condition(value: bool, expected: str, set_config: SetConfig) -> None:
     condition = ServiceBooleanCondition(type="condition", field="stale", op="eq", value=value)
     with set_config(staleness_threshold=3.5):
         assert parse_as_livestatus_filter(condition) == expected

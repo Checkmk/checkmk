@@ -43,7 +43,8 @@ def test_discovery(section: df_zos.Section) -> None:
     assert sorted(df_zos.discover_df_zos([{"groups": []}], section)) == [Service(item="/ALF0")]
 
 
-def test_check_no_item(section: df_zos.Section, empty_value_store: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_no_item(section: df_zos.Section) -> None:
     assert not list(df_zos.check_df_zos("knut", {}, section))
 
 

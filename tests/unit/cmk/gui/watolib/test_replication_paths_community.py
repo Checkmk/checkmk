@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Generator
 
 import pytest
@@ -179,7 +177,8 @@ def _default_site_config() -> SiteConfiguration:
     )
 
 
-def test_get_replication_paths_defaults(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_replication_paths_defaults() -> None:
     expected = _expected_replication_paths()
     assert sorted(
         replication_path_registry.values(),
@@ -192,12 +191,8 @@ def test_get_replication_paths_defaults(request_context: None) -> None:
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
-def test_get_replication_components(
-    monkeypatch: pytest.MonkeyPatch,
-    replicate_ec: bool | None,
-    replicate_mkps: bool | None,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("monkeypatch", "request_context")
+def test_get_replication_components(replicate_ec: bool | None, replicate_mkps: bool | None) -> None:
     site_config = _default_site_config()
 
     if replicate_ec is not None:

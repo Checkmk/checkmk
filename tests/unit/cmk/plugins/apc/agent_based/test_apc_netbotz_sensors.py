@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Mapping, Sequence
 from typing import Final
 
@@ -69,11 +67,9 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param("nbAlinkEnc_0_3_DWPT", {}, [], id="dew reading"),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_apc_netbotz_sensors_temp(
-    item: str,
-    params: TempParamType,
-    expected_result: Sequence[Result | Metric],
-    empty_value_store: None,
+    item: str, params: TempParamType, expected_result: Sequence[Result | Metric]
 ) -> None:
     parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_temp(item=item, params=params, section=parsed))
@@ -128,10 +124,9 @@ def test_apc_netbotz_sensors_humidity(
         pytest.param("nbAlinkEnc_0_5_DWPT", [], id="dewpoint reading not present"),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_apc_netbotz_sensors_dewpoint(
-    item: str,
-    expected_result: Sequence[Result | Metric],
-    empty_value_store: None,
+    item: str, expected_result: Sequence[Result | Metric]
 ) -> None:
     parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_dewpoint(item=item, params={}, section=parsed))

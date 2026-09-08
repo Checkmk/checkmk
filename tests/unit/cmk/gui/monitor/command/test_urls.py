@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import dataclasses
 
-from cmk.ccc.user import UserId
+import pytest
+
 from cmk.gui.config import Config
 from cmk.gui.monitor.command import (
     acknowledge_presets_url,
@@ -27,7 +26,8 @@ def _without_setup(config: Config) -> Config:
     return disabled
 
 
-def test_all_links_offered_to_admin(with_admin_login: UserId, load_config: Config) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_all_links_offered_to_admin(load_config: Config) -> None:
     assert (
         acknowledge_presets_url(load_config)
         == "wato.py?mode=edit_configvar&varname=acknowledge_problems"
@@ -39,17 +39,16 @@ def test_all_links_offered_to_admin(with_admin_login: UserId, load_config: Confi
     )
 
 
-def test_no_links_without_the_setup_permissions(
-    with_user_login: UserId,
-    load_config: Config,
-) -> None:
+@pytest.mark.usefixtures("with_user_login")
+def test_no_links_without_the_setup_permissions(load_config: Config) -> None:
     """Offering a link into a mode the user may not open would only produce an error page."""
     assert acknowledge_presets_url(load_config) is None
     assert notification_rules_url(load_config) is None
     assert downtime_presets_url(load_config) is None
 
 
-def test_no_links_without_setup(with_admin_login: UserId, load_config: Config) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_no_links_without_setup(load_config: Config) -> None:
     """wato.py serves no mode at all where Setup is disabled."""
     config = _without_setup(load_config)
 

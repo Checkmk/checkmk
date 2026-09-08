@@ -43,7 +43,8 @@ def test_serialize_entry_skips_entries_without_url() -> None:
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> None:
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_skips_onclick_commands() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.reload),
@@ -53,7 +54,8 @@ def test_serialize_entry_skips_onclick_commands(passthrough_macros: None) -> Non
     assert _serialize_entry(entry, {}) is None
 
 
-def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_maps_link() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.logwatch),
@@ -68,7 +70,8 @@ def test_serialize_entry_maps_link(passthrough_macros: None) -> None:
     assert isinstance(item.target, ApiOmitted)
 
 
-def test_serialize_entry_keeps_target_frame(passthrough_macros: None) -> None:
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_keeps_target_frame() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.graph),

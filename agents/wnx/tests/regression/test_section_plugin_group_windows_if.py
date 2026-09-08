@@ -195,9 +195,9 @@ def manage_plugins_engine(request, plugin_dir):
 
 
 @pytest.mark.skip("This test is not conform with latest changes on Monitoring Site")
+@pytest.mark.usefixtures("testconfig")
 def test_section_plugin_windows_if(  # type: ignore[misc]
     request,
-    testconfig,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     expected_output,
     actual_output,
     testfile,

@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from typing import cast
 
 import pytest
 
-from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
@@ -48,11 +45,9 @@ class _RequestReturning:
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_page_reports_a_malformed_filter_request(
-    request_context: None,
-    load_config: Config,
-    with_admin_login: UserId,
-    api_request: dict[str, object],
+    load_config: Config, api_request: dict[str, object]
 ) -> None:
     # A well formed request for an existing view, but with no filter infos to render
     page_request = _RequestReturning(api_request)

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import json
 from pathlib import Path
 
@@ -16,11 +14,13 @@ from cmk.utils import paths
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
-def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=401)
 
 
-def test_json_file_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_json_file_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=401)
 
 

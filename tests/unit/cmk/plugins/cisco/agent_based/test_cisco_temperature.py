@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 # mypy: disable-error-code="type-arg"
 
 import typing
@@ -1145,7 +1143,8 @@ def test_discovery_temp(section_temp: ct.Section) -> None:
     )
 
 
-def test_check_temp(section_temp: ct.Section, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_temp(section_temp: ct.Section) -> None:
     assert list(
         ct.check_cisco_temperature(
             "Ethernet1/1 Lane 1 Transceiver Temperature Sensor", {}, section_temp
@@ -1174,11 +1173,9 @@ def test_check_temp(section_temp: ct.Section, empty_value_store: None) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_temp_not_ok_sensors(
-    item: str,
-    expected_result: CheckResult,
-    section_not_ok_sensors: ct.Section,
-    empty_value_store: None,
+    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
 ) -> None:
     assert list(ct.check_cisco_temperature(item, {}, section_not_ok_sensors)) == expected_result
 
@@ -1196,11 +1193,9 @@ def test_check_temp_not_ok_sensors(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_dom_not_ok_sensors(
-    item: str,
-    expected_result: CheckResult,
-    section_not_ok_sensors: ct.Section,
-    empty_value_store: None,
+    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
 ) -> None:
     assert list(ct.check_cisco_temperature_dom(item, {}, section_not_ok_sensors)) == expected_result
 

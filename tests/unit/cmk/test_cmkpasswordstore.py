@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from io import StringIO
-from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 from cmk.utils.password_store import pending_secrets_path_site, save
 from cmk.utils.password_store.cli import main
 
 
-def test_cmkpasswordstore_existing_password(tmp_path: Path) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_cmkpasswordstore_existing_password() -> None:
     password_id = "test_id"
     expected_password = "secret_password"
 
@@ -26,7 +26,8 @@ def test_cmkpasswordstore_existing_password(tmp_path: Path) -> None:
         assert mock_stdout.getvalue() == expected_password
 
 
-def test_cmkpasswordstore_missing_password(tmp_path: Path) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_cmkpasswordstore_missing_password() -> None:
     password_id = "test_id"
 
     with patch("sys.stdout", new_callable=StringIO) as mock_stdout:

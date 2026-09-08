@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
@@ -34,7 +32,8 @@ def test_discover_ups_bat_temp(string_table: StringTable, expected: list[Service
     assert list(discover_ups_bat_temp(parse_ups_bat_temp(string_table))) == expected
 
 
-def test_check_ups_bat_temp_ok(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_ups_bat_temp_ok() -> None:
     results = list(
         check_ups_bat_temp("Battery 1", {"levels": (40.0, 50.0)}, [["1", "25"], ["2", "27"]])
     )
@@ -42,17 +41,20 @@ def test_check_ups_bat_temp_ok(value_store_patch: None) -> None:
     assert [r.state for r in results if isinstance(r, Result)] == [State.OK, State.OK]
 
 
-def test_check_ups_bat_temp_crit(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_ups_bat_temp_crit() -> None:
     results = list(check_ups_bat_temp("Battery 1", {"levels": (40.0, 50.0)}, [["1", "60"]]))
     assert Metric("temp", 60.0, levels=(40.0, 50.0)) in results
     assert State.CRIT in {r.state for r in results if isinstance(r, Result)}
 
 
-def test_check_ups_bat_temp_item_not_found(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_ups_bat_temp_item_not_found() -> None:
     assert list(check_ups_bat_temp("Battery 9", {"levels": (40.0, 50.0)}, [["1", "25"]])) == []
 
 
-def test_check_ups_bat_temp_empty_temperature(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("value_store_patch")
+def test_check_ups_bat_temp_empty_temperature() -> None:
     assert (
         list(
             check_ups_bat_temp(

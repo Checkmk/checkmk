@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import json
 from collections.abc import Iterable
 from typing import override
@@ -51,11 +49,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-def test_match_item_generator_settings(
-    monkeypatch: MonkeyPatch,
-    request_context: None,
-    test_edition: Edition,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_match_item_generator_settings(monkeypatch: MonkeyPatch, test_edition: Edition) -> None:
     group = ConfigVariableGroup(
         title=_l("xyz"),
         sort_index=10,
@@ -98,10 +93,9 @@ def test_match_item_generator_settings(
     ]
 
 
+@pytest.mark.usefixtures("request_context")
 def test_match_item_generator_settings_looks_through_transform(
-    monkeypatch: MonkeyPatch,
-    request_context: None,
-    test_edition: Edition,
+    monkeypatch: MonkeyPatch, test_edition: Edition
 ) -> None:
     # TransformDataForLegacyFormatOrRecomposeFunction is a transparent wrapper without a
     # title of its own, so the title has to be taken from the wrapped form spec.

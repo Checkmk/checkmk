@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
@@ -93,8 +91,8 @@ def test_discover_huawei_switch_temp() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_huawei_switch_temp(
-    empty_value_store: None,
     item: str,
     params: TempParamType,
     expected_state: State,
@@ -112,7 +110,8 @@ def test_check_huawei_switch_temp(
     assert any(m.name == expected_metric_name for m in metric_objs)
 
 
-def test_check_huawei_switch_temp_item_not_found(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_huawei_switch_temp_item_not_found() -> None:
     """Test check function returns empty for non-existent item."""
     parsed = parse_huawei_switch_temp(STRING_TABLE)
     results = list(check_huawei_switch_temp("4", {"levels": (80.0, 90.0)}, parsed))

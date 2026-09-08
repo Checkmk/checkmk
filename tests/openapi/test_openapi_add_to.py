@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping
 
+import pytest
+
 from cmk.graphing_engine import (
     AutoPrecision,
     Curve,
@@ -19,7 +21,6 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
-from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
 _TEMPLATE_SPEC = {
@@ -91,10 +92,8 @@ _EMPTY_DASHBOARD = {
 }
 
 
-def test_add_to_visual_stores_the_graph_in_the_dashboard(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
+@pytest.mark.usefixtures("mock_livestatus")
+def test_add_to_visual_stores_the_graph_in_the_dashboard(clients: ClientRegistry) -> None:
     # mock_livestatus is required because graph widgets want the connected site PIDs; no queries
     # are actually executed.
     clients.DashboardClient.create_relative_grid_dashboard(payload=_EMPTY_DASHBOARD)

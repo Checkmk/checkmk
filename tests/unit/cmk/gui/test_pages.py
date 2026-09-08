@@ -208,10 +208,8 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
     assert capsys.readouterr()[0] == "234"
 
 
-def test_page_registry_register_page_handler(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_page_registry_register_page_handler(capsys: pytest.CaptureFixture[str]) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
     def page(ctx: PageContext) -> None:

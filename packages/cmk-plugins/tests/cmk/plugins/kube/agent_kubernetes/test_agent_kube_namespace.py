@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
 from kubernetes import client
 
 from cmk.plugins.kube.schemata import api
@@ -12,10 +13,10 @@ from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPINamespace:
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_metadata(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         namespace_metadata = {
             "metadata": {
@@ -43,10 +44,10 @@ class TestAPINamespace:
         }
         assert ns.metadata.annotations == {}
 
+    @pytest.mark.usefixtures("dummy_host")
     def test_parse_metadata_missing_annotations_and_labels(
         self,
         core_client: client.CoreV1Api,  # type: ignore[name-defined]
-        dummy_host: str,  # noqa: ARG002
     ) -> None:
         namespace_metadata = {
             "metadata": {

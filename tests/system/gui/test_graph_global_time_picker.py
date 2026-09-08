@@ -148,10 +148,9 @@ def test_page_carries_exactly_one_global_picker(
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
 
 
+@pytest.mark.usefixtures("preferred_default_range")
 def test_user_preference_preselects_its_own_range(
-    preferred_default_range: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    service_graphs: ServiceGraphs,
-    javascript_errors: list[str],
+    service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
     """The user's preferred default range is the one the picker opens on - the reported
     defect is this state reached without anyone asking for it.

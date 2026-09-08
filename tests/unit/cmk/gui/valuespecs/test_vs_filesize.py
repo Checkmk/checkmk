@@ -13,7 +13,8 @@ from .utils import request_var
 
 
 class TestFilesize:
-    def test_from_html_vars(self, request_context: None) -> None:  # noqa: ARG002
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(f_size="5", f_unit="2"):
             assert vs.Filesize().from_html_vars("f") == 5 * 1024 * 1024
         # TODO: either base it on Float instead of Integer, or do not allow the

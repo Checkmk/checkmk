@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import override
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.doc_references import werk_reference_url, WerkReference
 from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (
@@ -25,6 +24,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 from cmk.utils.paths import local_agent_based_plugins_dir
+from cmk.web.utils.doc_references import werk_reference_url, WerkReference
 
 
 class PreUpdateAgentBasedPlugins(PreUpdateAction):

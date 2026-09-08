@@ -84,6 +84,7 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-werks:site",
         "//packages/cmk-werks:tool",
         "//packages/cmk-wsgi",

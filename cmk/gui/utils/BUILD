@@ -27,7 +27,7 @@ py_library(
     name = "middle",
     srcs = [
         "dataclasses.py",
-        "doc_references.py",
+        "doc_reference_urls.py",
         "misc.py",
         "mobile.py",
         "output_funnel.py",

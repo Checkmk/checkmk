@@ -2,19 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""References into the Checkmk documentation, youtube channel and werk list.
-
-These need to know the running edition, so they stay out of the generic URL
-helpers in cmk.web.utils.urls.
-"""
+"""References into the Checkmk documentation, youtube channel and werk list."""
 
 from dataclasses import dataclass
 from enum import Enum
 from typing import Literal
-
-import cmk.utils.paths
-from cmk.ccc.version import __version__, Edition, edition, Version
-from cmk.web.utils.urls import urlencode_vars
 
 
 class DocReference(Enum):
@@ -104,46 +96,10 @@ class DocReference(Enum):
         return key in cls._member_names_
 
 
-def get_docs_base_url(language: str) -> str:
-    version = (
-        "saas"
-        if edition(cmk.utils.paths.omd_root) == Edition.CLOUD
-        else Version.from_str(__version__).version_base or "master"
-    )
-    lang = "de" if language == "de" else "en"
-    return f"https://docs.checkmk.com/{version}/{lang}"
-
-
 @dataclass(frozen=True, kw_only=True)
 class DocReferenceUtm:
     campaign: Literal["help_menu", "inline_help", "error_help", "setup_wizard", "dashboard"]
     content: str
-
-
-def doc_reference_url(
-    language: str,
-    utm: DocReferenceUtm,
-    doc_ref: DocReference | None = None,
-) -> str:
-    base = get_docs_base_url(language)
-    version = Version.from_str(__version__).version_without_rc or "master"
-    cmk_edition = edition(cmk.utils.paths.omd_root)
-    query = urlencode_vars(
-        [
-            ("utm_source", "checkmk"),
-            ("utm_medium", "app"),
-            ("utm_campaign", utm.campaign),
-            ("utm_content", utm.content),
-            ("utm_term", f"{version}_{cmk_edition.short}"),
-        ]
-    )
-
-    if doc_ref is None:
-        return f"{base}?{query}"
-    if "#" not in doc_ref.value:
-        return f"{base}/{doc_ref.value}.html?{query}"
-    page, anchor = doc_ref.value.split("#", 1)
-    return f"{base}/{page}.html?{query}#{anchor}"
 
 
 class YouTubeReference(Enum):

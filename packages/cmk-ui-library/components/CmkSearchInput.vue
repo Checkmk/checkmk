@@ -11,8 +11,9 @@ import { useTemplateRef } from 'vue'
 
 const { _t } = usei18n()
 
-defineProps<{
+const { placeholder, showSubmitButton = true } = defineProps<{
   placeholder: string
+  showSubmitButton?: boolean
 }>()
 
 const query = defineModel<string>({ default: '' })
@@ -64,6 +65,7 @@ function clear(): void {
       />
     </div>
     <button
+      v-if="showSubmitButton"
       type="button"
       class="cmk-search-input__submit"
       :aria-label="_t('Search')"

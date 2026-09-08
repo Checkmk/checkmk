@@ -38,6 +38,11 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'Placeholder',
     initialState: 'Search hosts…'
+  },
+  showSubmitButton: {
+    type: 'boolean' as const,
+    title: 'Submit button',
+    initialState: true
   }
 } satisfies PanelConfigFor<typeof CmkSearchInput>
 </script>
@@ -72,6 +77,7 @@ const lastSearch = ref('')
         <CmkSearchInput
           v-model="propState.modelValue"
           :placeholder="propState.placeholder"
+          :show-submit-button="propState.showSubmitButton"
           @search="lastSearch = $event"
         />
         <CmkParagraph>Last submitted query: {{ lastSearch || '—' }}</CmkParagraph>

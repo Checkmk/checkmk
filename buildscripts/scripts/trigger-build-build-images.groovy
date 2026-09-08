@@ -70,6 +70,7 @@ void main() {
             "minimal-alpine-python-checkmk",
             "minimal-ubuntu-checkmk",
             "reference-image",
+            "deb-package-signer",
         ];
     }
 

@@ -32,6 +32,7 @@ sh_library(
         # input to follow the "shellcheck source=" directive in it.
         "//agents/cfg_examples:agents_cfg_examples_sh",
     ],
+    visibility = ["//tests/unit-shell/agents:__pkg__"],
 )
 
 filegroup(

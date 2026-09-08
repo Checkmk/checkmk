@@ -14,6 +14,12 @@ load("//bazel/rules:shunit2.bzl", "shunit2_test")
 ]
 
 shunit2_test(
+    name = "test_mk_tsm",
+    src = "plugins/test_mk_tsm.sh",
+    deps = ["//packages/cmk-plugins/cmk/plugins/tsm:agents_sh"],
+)
+
+shunit2_test(
     name = "test_mk_redis",
     src = "plugins/test_mk_redis.sh",
     env = {

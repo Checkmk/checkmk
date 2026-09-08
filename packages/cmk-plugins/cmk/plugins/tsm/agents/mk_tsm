@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# The plug-in is baked for Linux, AIX and Solaris. On AIX '/usr/bin/ksh' is a ksh88,
+# which knows no bashisms, so let shellcheck hold the whole file to POSIX sh.
+# shellcheck shell=sh
+
 # Reason for this no-op: shellcheck disable=... before the first command disables the error for the
 # entire script.
 :
@@ -71,9 +75,14 @@ get_dsmserv_processes() {
 }
 
 export_extracted_env() {
+    # Feed the loop from a here-document, not a here-string ('<<<'): AIX' ksh88 does
+    # not know here-strings. A pipe is no alternative either, it would run the loop
+    # in a subshell and the exports would be lost.
     while read -r name value; do
         [ -n "$name" ] && export "${name}"="${value}"
-    done <<<"$(printf "%s\n" "${1}" | tr ' ' '\n' | sed -n '/^DSMSERV_/s/=/ /p')"
+    done <<HERE
+$(printf "%s\n" "${1}" | tr ' ' '\n' | sed -n '/^DSMSERV_/s/=/ /p')
+HERE
 }
 
 main() {
@@ -83,7 +92,9 @@ main() {
     while read -r line; do
         export_extracted_env "${line}"
         do_tsm_checks
-    done <<<"$(get_dsmserv_processes)"
+    done <<HERE
+$(get_dsmserv_processes)
+HERE
 }
 
 [ -z "${MK_SOURCE_ONLY}" ] && main "$@"

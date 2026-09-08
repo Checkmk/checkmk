@@ -61,6 +61,10 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
     # * the rule validation with the replaced ruleset will happen after the replacing anyway again
     # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
     *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
+    # Same situation, without a rename: the parameters are still a positional tuple until
+    # the migrate_wmic_process_params action rewrites them, and that runs after this
+    # pre-action. Validating them here can only ever fail.
+    RuleGroup.StaticChecks("wmic_process"),
 }
 
 

@@ -3,24 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import time
-from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
     get_rate,
     get_value_store,
     Metric,
+    NoLevelsT,
+    render,
     Result,
     State,
     StringTable,
 )
+
+# WMI reports CPU times in 100ns ticks, so a fully busy core accumulates 10^7 ticks
+# per second. Dividing the tick rate by a hundredth of that yields percent of one core;
+# the check divides by the core count afterwards to get percent of the whole host.
+_TICK_RATE_PER_PERCENT = 100000.0
+
+_BYTES_PER_MB = 1048576.0
+
+# The ruleset only offers fixed levels, so predictive levels cannot occur here.
+type _Levels = NoLevelsT | FixedLevelsT[float]
+
+
+class Params(TypedDict):
+    name: str
+    mem_levels: _Levels
+    page_levels: _Levels
+    cpu_levels: _Levels
 
 
 def parse_wmic_process(string_table: StringTable) -> StringTable:
@@ -32,31 +50,37 @@ def discover_wmic_process(section: StringTable) -> DiscoveryResult:  # noqa: ARG
     yield from ()
 
 
+def _fixed_levels(levels: _Levels) -> tuple[float, float] | None:
+    """Reduce the levels to the plain warn/crit pair `Metric` understands."""
+    match levels:
+        case ("fixed", (warn, crit)):
+            return warn, crit
+        case ("no_levels", None):
+            return None
+        case other:
+            # (sk): The type says this cannot happen, but the parameters come from disk.
+            raise TypeError(f"Unexpected level parameters: {other!r}")
+
+
+def _render_mb(value: float) -> str:
+    return f"{value:.1f} MB"
+
+
 def check_wmic_process(
     item: str,  # noqa: ARG001
-    params: Mapping[str, Any],
+    params: Params,
     section: StringTable,
 ) -> CheckResult:
+    if not (name := params["name"]):
+        yield Result(state=State.UNKNOWN, summary="No process name configured")
+        return
+
     if not section:
+        # Without a result the engine reports "Item not found in monitoring data", which
+        # blames the item instead of the agent plug-in that produced nothing.
+        yield Result(state=State.UNKNOWN, summary="No output from agent in section wmic_process")
         return
     legend, *lines = section
-
-    # The corresponding WATO ruleset still uses a positional tuple, but that does
-    # not work in the backend, so this whole function is unreachable.
-    # CMK-35057: decide on whether to fix the rule or remove the check entirely.
-    #
-    # **If** we decide to fix it, this is what the parameters should look like.
-    # adding this here to be able to migrate and keep all linters happy.
-    match params:
-        case {
-            "name": str(name),
-            "mem_levels": ("fixed", (float(memwarn), float(memcrit))),
-            "page_levels": ("fixed", (float(pagewarn), float(pagecrit))),
-            "cpu_levels": ("fixed", (float(cpuwarn), float(cpucrit))),
-        }:
-            pass
-        case _:
-            raise TypeError(params)
 
     count, mem, page, userc, kernelc = 0, 0, 0, 0, 0
     cpucores = 1
@@ -77,53 +101,47 @@ def check_wmic_process(
             userc += int(psinfo["UserModeTime"])
             kernelc += int(psinfo["KernelModeTime"])
 
-    mem_mb = mem / 1048576.0
-    page_mb = page / 1048576.0
+    mem_mb = mem / _BYTES_PER_MB
+    page_mb = page / _BYTES_PER_MB
+    # The counters are a sum over a set of processes that comes and goes, so the sum is
+    # not monotonic. Keying on the count, as the legacy check did, restarts the rate
+    # whenever the set changes instead of reporting the jump as a rate.
     user_per_sec = get_rate(
         value_store, f"wmic_process.user.{name}.{count}", now, userc, raise_overflow=True
     )
     kernel_per_sec = get_rate(
         value_store, f"wmic_process.kernel.{name}.{count}", now, kernelc, raise_overflow=True
     )
-    user_perc = (user_per_sec / 100000.0) / cpucores
-    kernel_perc = (kernel_per_sec / 100000.0) / cpucores
+    user_perc = (user_per_sec / _TICK_RATE_PER_PERCENT) / cpucores
+    kernel_perc = (kernel_per_sec / _TICK_RATE_PER_PERCENT) / cpucores
     cpu_perc = user_perc + kernel_perc
 
-    messages = [f"{count} processes"]
-    state = State.OK
+    yield Result(state=State.OK, summary=f"Processes: {count}")
 
-    msg = f"{user_perc:.0f}%/{kernel_perc:.0f}% User/Kernel"
-    if cpu_perc >= cpucrit:
-        state = State.CRIT
-        msg += f"(!!) (critical at {cpucrit:.0f}%)"
-    elif cpu_perc >= cpuwarn:
-        state = State.WARN
-        msg += f"(!) (warning at {cpuwarn:.0f}%)"
-    messages.append(msg)
+    yield from check_levels(
+        cpu_perc,
+        levels_upper=params["cpu_levels"],
+        render_func=render.percent,
+        label="CPU",
+    )
+    cpu_levels = _fixed_levels(params["cpu_levels"])
+    yield Metric("user", user_perc, levels=cpu_levels, boundaries=(0, 100))
+    yield Metric("kernel", kernel_perc, levels=cpu_levels, boundaries=(0, 100))
 
-    msg = f"{mem_mb:.1f}MB RAM"
-    if 0 < memcrit <= mem_mb:
-        state = State.CRIT
-        msg += f"(!!) (critical at {memcrit} MB)"
-    elif 0 < memwarn <= mem_mb:
-        state = State.worst(state, State.WARN)
-        msg += f"(!) (warning at {memwarn} MB)"
-    messages.append(msg)
-
-    msg = f"{page_mb:.0f}MB Page"
-    if page_mb >= pagecrit:
-        state = State.CRIT
-        msg += f"(!!) (critical at {pagecrit} MB)"
-    elif page_mb >= pagewarn:
-        state = State.worst(state, State.WARN)
-        msg += f"(!) (warning at {pagewarn} MB)"
-    messages.append(msg)
-
-    yield Result(state=state, summary=", ".join(messages))
-    yield Metric("mem", mem_mb, levels=(memwarn, memcrit))
-    yield Metric("page", page_mb, levels=(pagewarn, pagecrit))
-    yield Metric("user", user_perc, levels=(cpuwarn, cpucrit), boundaries=(0, 100))
-    yield Metric("kernel", kernel_perc, levels=(cpuwarn, cpucrit), boundaries=(0, 100))
+    yield from check_levels(
+        mem_mb,
+        levels_upper=params["mem_levels"],
+        metric_name="mem",
+        render_func=_render_mb,
+        label="RAM",
+    )
+    yield from check_levels(
+        page_mb,
+        levels_upper=params["page_levels"],
+        metric_name="page",
+        render_func=_render_mb,
+        label="Page file",
+    )
 
 
 agent_section_wmic_process = AgentSection(
@@ -138,10 +156,10 @@ check_plugin_wmic_process = CheckPlugin(
     discovery_function=discover_wmic_process,
     check_function=check_wmic_process,
     check_ruleset_name="wmic_process",
-    check_default_parameters={
-        "name": "",
-        "mem_levels": ("fixed", (0.0, 0.0)),
-        "page_levels": ("fixed", (0.0, 0.0)),
-        "cpu_levels": ("fixed", (0.0, 0.0)),
-    },
+    check_default_parameters=Params(
+        name="",
+        mem_levels=("no_levels", None),
+        page_levels=("no_levels", None),
+        cpu_levels=("no_levels", None),
+    ),
 )

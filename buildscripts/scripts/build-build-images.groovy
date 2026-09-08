@@ -153,11 +153,6 @@ void main() {
 
         // the following images are special ones required for k8s
         def special_image_details = [
-            "minimal-alpine-bash-git": [
-                "tag_name": "minimal-alpine-bash-git",
-                "image_alias_name": "IMAGE_ALPINE_3_22",
-                "docker_file_path": "buildscripts/infrastructure/build-nodes/bootstrap/Dockerfile",
-            ],
             "minimal-ubuntu-checkmk": [
                 "tag_name": "minimal-ubuntu-checkmk-${safe_branch_name}",
                 "image_alias_name": "IMAGE_UBUNTU_24_04",

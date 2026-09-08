@@ -66,7 +66,6 @@ void main() {
     }
     if (publish_special_images) {
         build_images += [
-            "minimal-alpine-bash-git",
             "minimal-alpine-python-checkmk",
             "minimal-ubuntu-checkmk",
             "reference-image",

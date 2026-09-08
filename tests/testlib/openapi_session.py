@@ -153,6 +153,7 @@ class CMKOpenApiSession(requests.Session):
         self.host_tag_groups = HostTagGroupsAPI(self)
         self.service_discovery = ServiceDiscoveryAPI(self)
         self.services = ServicesAPI(self)
+        self.inventory = InventoryAPI(self)
         self.agents = AgentsAPI(self)
         self.rules = RulesAPI(self)
         self.rulesets = RulesetsAPI(self)
@@ -1137,6 +1138,19 @@ class ServicesAPI(BaseAPI):
                 if _.get("extensions", {}).get("has_been_checked") == int(not pending)
             ]
         return value
+
+
+class InventoryAPI(BaseAPI):
+    def get_trees(self, host_names: Sequence[str]) -> dict[str, dict[str, Any]]:
+        """Hosts without an inventory tree are left out."""
+        response = self.session.get(
+            "/domain-types/inventory/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            params={"host_names": list(host_names)},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {entry["host_name"]: entry["inventory_tree"] for entry in response.json()["value"]}
 
 
 class AgentsAPI(BaseAPI):

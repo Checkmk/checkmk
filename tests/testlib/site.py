@@ -41,7 +41,7 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from cmk import trace
 from cmk.crypto.certificate import Certificate
@@ -103,28 +103,24 @@ class CMKCoreType(StrEnum):
 
 NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
 
-# The JSON of host_inv_api.py. The whole host tree is validated, so the values must cover
-# everything the inventory serialiser can emit, not only what a test reads.
+# The JSON of the REST API inventory endpoint. The whole host tree is validated, so the values
+# must cover everything the inventory serialiser can emit, not only what a test reads.
 _InventoryValue = int | float | str | bool | None
 
 
 class InventoryAttributes(BaseModel):
-    pairs: Mapping[str, _InventoryValue] | None = Field(default=None, alias="Pairs")
+    pairs: Mapping[str, _InventoryValue]
 
 
 class InventoryTable(BaseModel):
-    rows: Sequence[Mapping[str, _InventoryValue]] | None = Field(default=None, alias="Rows")
+    key_columns: Sequence[str]
+    rows: Sequence[Mapping[str, _InventoryValue]]
 
 
 class InventoryNode(BaseModel):
-    attributes: InventoryAttributes = Field(alias="Attributes")
-    table: InventoryTable = Field(alias="Table")
-    nodes: Mapping[str, InventoryNode] = Field(alias="Nodes")
-
-
-class _HostInvApiResponse(BaseModel):
-    result_code: Literal[0, 1]
-    result: str | Mapping[str, InventoryNode]
+    attributes: InventoryAttributes
+    table: InventoryTable
+    nodes: Mapping[str, InventoryNode]
 
 
 class Site:
@@ -713,18 +709,10 @@ class Site:
         )
         return state
 
-    def get_inventory_tree(self, web: CMKWebSession, host_name: str) -> InventoryNode:
-        """
-        Read a host's HW/SW inventory through the interface documented for external consumers.
-
-        See https://docs.checkmk.com/latest/en/inventory.html#external. There is no REST API
-        endpoint for HW/SW inventory data, so this page is the supported way in from outside.
-        """
-        response = _HostInvApiResponse.model_validate(
-            web.get("host_inv_api.py", params={"host": host_name, "output_format": "json"}).json()
-        )
-        assert not isinstance(response.result, str), f"host_inv_api.py failed: {response.result}"
-        return response.result[host_name]
+    def get_inventory_tree(self, host_name: str) -> InventoryNode:
+        trees = self.openapi.inventory.get_trees([host_name])
+        assert host_name in trees, f"{host_name!r} has no HW/SW inventory tree."
+        return InventoryNode.model_validate(trees[host_name])
 
     @staticmethod
     def _inventory_node(tree: InventoryNode, path: Sequence[str]) -> InventoryNode:
@@ -740,13 +728,11 @@ class Site:
     @staticmethod
     def get_inventory_attributes(tree: InventoryNode, path: Sequence[str]) -> Mapping[str, str]:
         pairs = Site._inventory_node(tree, path).attributes.pairs
-        assert pairs is not None, f"The {' > '.join(path)!r} node has no attributes."
         return {key: str(value) for key, value in pairs.items()}
 
     @staticmethod
     def get_inventory_rows(tree: InventoryNode, path: Sequence[str]) -> Sequence[Mapping[str, str]]:
         rows = Site._inventory_node(tree, path).table.rows
-        assert rows is not None, f"The {' > '.join(path)!r} node has no table."
         return [{key: str(value) for key, value in row.items()} for row in rows]
 
     def execute(

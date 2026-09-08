@@ -186,6 +186,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
+    # astrein: disable=logging-formatter
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 

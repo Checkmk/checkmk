@@ -85,7 +85,7 @@ def git_info() -> list[str]:
 
 
 def main() -> None:
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         level=logging.DEBUG if "-v" in sys.argv else logging.WARNING,
         format="%(name)s %(levelname)s: %(message)s",
     )

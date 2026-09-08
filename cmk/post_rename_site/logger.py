@@ -16,5 +16,5 @@ def setup_logging(*, verbose: int) -> None:
     log.logger.setLevel(log.verbosity_to_log_level(verbose))
     logger.setLevel(log.logger.level)
     handler = StreamHandler(sys.stdout)
-    handler.setFormatter(Formatter("%(message)s"))
+    handler.setFormatter(Formatter("%(message)s"))  # astrein: disable=logging-formatter
     getLogger().addHandler(handler)

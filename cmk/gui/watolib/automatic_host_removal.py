@@ -156,7 +156,10 @@ def execute_host_removal_job(config: Config) -> None:
 def _init_logging() -> None:
     handler = FileHandler(log_file := log_dir / "automatic-host-removal.log", encoding="utf-8")
     _LOGGER.info("Logging host removal to %(log_file)s", {"log_file": log_file})
-    handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
+    handler.setFormatter(
+        # astrein: disable=logging-formatter
+        Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    )
     del _LOGGER.handlers[:]  # Remove all previously existing handlers
     _LOGGER.addHandler(handler)
     _LOGGER.propagate = False

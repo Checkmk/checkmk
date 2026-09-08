@@ -62,7 +62,7 @@ def setup_logging(*, verbose: int, log_file: Path | None) -> None:
     handler: Handler
     if log_file is None:
         handler = StreamHandler(sys.stderr)
-        handler.setFormatter(Formatter("%(message)s"))
+        handler.setFormatter(Formatter("%(message)s"))  # astrein: disable=logging-formatter
     else:
         # Routine output goes here; stderr stays free for unhandled tracebacks.
         handler = RotatingFileHandler(
@@ -72,6 +72,7 @@ def setup_logging(*, verbose: int, log_file: Path | None) -> None:
             delay=True,  # the feature is off by default; such a site creates no log file
         )
         handler.setFormatter(
+            # astrein: disable=logging-formatter
             Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
         )
 

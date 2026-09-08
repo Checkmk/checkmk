@@ -54,7 +54,7 @@ class ContextInjectingFilter(logging.Filter):
         return True
 
 
-class ContextualFormatter(logging.Formatter):
+class ContextualFormatter(logging.Formatter):  # astrein: disable=logging-formatter
     """Formatter that uses context data from LogRecord attributes (set by filter)."""
 
     @override

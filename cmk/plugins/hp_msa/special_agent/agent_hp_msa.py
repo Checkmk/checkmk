@@ -58,7 +58,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     else:
         fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)
+    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
 
     return args
 

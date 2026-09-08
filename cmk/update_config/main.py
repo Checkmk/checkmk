@@ -175,7 +175,7 @@ def _setup_logging(verbose: int) -> logging.Logger:
     logger.setLevel(log.logger.level)
 
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(logging.Formatter("%(message)s"))  # astrein: disable=logging-formatter
     logging.getLogger().addHandler(handler)
 
     # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level

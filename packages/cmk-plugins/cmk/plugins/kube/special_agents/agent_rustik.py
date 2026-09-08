@@ -99,7 +99,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def setup_logging(debug: bool) -> None:
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         level=logging.DEBUG if debug else logging.WARNING,
         stream=sys.stderr,
         format="%(asctime)s %(levelname)s %(name)s %(message)s",

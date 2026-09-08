@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv
     logger = logging.getLogger("cmk-message-broker-certs")
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(logging.Formatter("%(message)s"))  # astrein: disable=logging-formatter
     logger.setLevel(logging.INFO)
 
     try:

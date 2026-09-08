@@ -427,7 +427,7 @@ async def run_locally(
 def main() -> None:
     """Generate and either process or write a static list of stages"""
     args = parse_args()
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         format="%(levelname)s %(name)s %(asctime)s: %(message)s",
         datefmt="%H:%M:%S",
         level=getattr(logging, {0: "WARNING", 1: "INFO", 2: "DEBUG"}.get(args.verbose, "WARNING")),

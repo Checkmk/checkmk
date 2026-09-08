@@ -51,7 +51,7 @@ def main(argv: Sequence[str]) -> int:
     args = parser.parse_args(argv)
 
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(logging.Formatter("%(message)s"))  # astrein: disable=logging-formatter
     logger.setLevel(logging.INFO)
     main_modules.register(edition(paths.omd_root))
 

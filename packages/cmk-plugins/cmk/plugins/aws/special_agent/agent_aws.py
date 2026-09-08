@@ -7914,7 +7914,7 @@ def _setup_logging(opt_debug: bool, opt_verbose: bool) -> None:
         lvl = logging.DEBUG
     elif opt_debug:
         logger.disabled = False
-    logging.basicConfig(level=lvl, format=fmt)
+    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
 
 
 def _create_anonymous_session(

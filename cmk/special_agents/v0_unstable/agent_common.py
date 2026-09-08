@@ -123,7 +123,7 @@ def _special_agent_main_core(
 ) -> int:
     """Main logic special agents"""
     args = parse_arguments(argv)
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         format="%(levelname)s %(asctime)s %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(

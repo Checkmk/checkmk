@@ -192,6 +192,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         fmt = "%(levelname)s: %(lineno)s: " + fmt
         if args.dbms == "mssql":
             os.environ["TDSDUMP"] = "stdout"
+    # astrein: disable=logging-formatter
     logging.basicConfig(level=max(30 - 10 * args.verbose, 0), format=fmt)
 
     # V-VERBOSE INFO

@@ -197,7 +197,7 @@ def set_up_logging(verbosity: int) -> None:
     else:
         lvl = logging.INFO if verbosity else logging.WARNING
 
-    logging.basicConfig(level=lvl, format=fmt)
+    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
 
 
 class CouchbaseClient:

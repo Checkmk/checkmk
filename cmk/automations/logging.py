@@ -48,7 +48,10 @@ class LoggingManager:
         """
         handler = logging.StreamHandler(stream=stream)
         handler.setLevel(log_level)
-        handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+        handler.setFormatter(
+            # astrein: disable=logging-formatter
+            logging.Formatter("[%(levelname)s] %(message)s")
+        )
         self._logger.addHandler(handler)
         yield
         self._logger.removeHandler(handler)

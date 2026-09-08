@@ -109,7 +109,10 @@ def _setup_logging(args: Arguments) -> logging.Logger:
         if args.foreground
         else WatchedFileHandler(Path(args.log_file))
     )
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s"))
+    handler.setFormatter(
+        # astrein: disable=logging-formatter
+        logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s")
+    )
     logger.addHandler(handler)
 
     logger.setLevel(args.log_level)

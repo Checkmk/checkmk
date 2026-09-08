@@ -46,7 +46,7 @@ args = parser.parse_args()
 # Send the application logs to stderr so they are captured by journald (view with
 # 'journalctl -u cmk-werk-ids.service'). gunicorn's forked workers inherit this; its
 # own access/error loggers keep their separate handlers.
-logging.basicConfig(
+logging.basicConfig(  # astrein: disable=logging-formatter
     level=logging.INFO,
     format="%(asctime)s [%(process)d] [%(levelname)s] %(name)s: %(message)s",
     datefmt="[%Y-%m-%d %H:%M:%S %z]",

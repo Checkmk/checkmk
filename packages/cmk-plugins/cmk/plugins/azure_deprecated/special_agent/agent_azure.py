@@ -406,7 +406,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     else:
         fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)
+    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
 
     # V-VERBOSE INFO
     for key, value in vars(args).items():

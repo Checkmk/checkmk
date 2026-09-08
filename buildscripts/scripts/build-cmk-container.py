@@ -153,7 +153,7 @@ def run_cmd(
     return completed_process
 
 
-logging.basicConfig(
+logging.basicConfig(  # astrein: disable=logging-formatter
     format="[%(asctime)s] [%(levelname)-8s] [%(funcName)-15s:%(lineno)4s] %(message)s",
     level=logging.WARNING,
 )

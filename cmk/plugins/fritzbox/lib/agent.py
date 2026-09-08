@@ -111,7 +111,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def setup_logging(verbose: bool) -> None:
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         level=logging.DEBUG if verbose else logging.ERROR,
         format="%(levelname)s: %(message)s",
     )

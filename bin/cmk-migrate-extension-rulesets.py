@@ -78,7 +78,7 @@ logger = logging.getLogger(__name__)
 
 def _initialize_logger(log_level: str) -> None:
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(logging.Formatter("%(message)s"))  # astrein: disable=logging-formatter
     logger.setLevel(logging.getLevelNamesMapping()[log_level])
 
 

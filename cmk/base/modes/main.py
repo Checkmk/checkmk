@@ -108,7 +108,10 @@ def main() -> int:
     root_logger = logging.getLogger("cmk")
     root_logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+    handler.setFormatter(
+        # astrein: disable=logging-formatter
+        logging.Formatter("[%(levelname)s] %(message)s")
+    )
     root_logger.addHandler(handler)
     logger = root_logger.getChild("base")
 
@@ -135,6 +138,7 @@ def main() -> int:
         _path.parent.mkdir(parents=True, exist_ok=True)
         handler = WatchedFileHandler(_path)
         handler.setFormatter(
+            # astrein: disable=logging-formatter
             logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s")
         )
         del root_logger.handlers[:]  # Remove the default stream handler.

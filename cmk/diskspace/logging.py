@@ -24,7 +24,7 @@ def verbose(message: str) -> None:
 
 
 def setup_logging(is_verbose: bool) -> None:
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         format="%(message)s", stream=sys.stdout, level=logging.DEBUG if is_verbose else logging.INFO
     )
 

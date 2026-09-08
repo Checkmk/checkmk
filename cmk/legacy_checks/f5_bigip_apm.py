@@ -3,38 +3,51 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.f5_bigip.lib import F5_BIGIP
 
-check_info = {}
+Section = int
 
 
-def discover_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
-    if section and section[0][0]:
-        yield Service()
+def parse_f5_bigip_apm(string_table: StringTable) -> Section | None:
+    if not string_table or not string_table[0][0]:
+        return None
+    return int(string_table[0][0])
 
 
-def check_f5_bigip_apm(item, _no_params, info):  # noqa: ARG001
-    count = info[0][0]
-    perfdata = [("connections_ssl_vpn", int(count), None, None, 0, None)]
-    return 0, "Connections: %s" % count, perfdata
+def discover_f5_bigip_apm(section: Section) -> DiscoveryResult:  # noqa: ARG001
+    yield Service()
 
 
-def parse_f5_bigip_apm(string_table: StringTable) -> StringTable:
-    return string_table
+def check_f5_bigip_apm(section: Section) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Connections: {section}")
+    yield Metric("connections_ssl_vpn", section, boundaries=(0, None))
 
 
-check_info["f5_bigip_apm"] = LegacyCheckDefinition(
+snmp_section_f5_bigip_apm = SimpleSNMPSection(
     name="f5_bigip_apm",
-    parse_function=parse_f5_bigip_apm,
     detect=F5_BIGIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.6.1.5.3",
         oids=["0"],
     ),
+    parse_function=parse_f5_bigip_apm,
+)
+
+
+check_plugin_f5_bigip_apm = CheckPlugin(
+    name="f5_bigip_apm",
     service_name="SSL/VPN Connections",
     discovery_function=discover_f5_bigip_apm,
     check_function=check_f5_bigip_apm,

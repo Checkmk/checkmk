@@ -96,6 +96,33 @@ def set_omd_config_piggyback_hub(site: Site, value: Literal["on", "off"]) -> Ite
         yield
 
 
+@contextmanager
+def piggyback_hub_log_level(site: Site, level: str) -> Iterator[None]:
+    """Run the piggyback hub daemon at an explicit log level.
+
+    The init script starts the daemon without `--log-level`, so its default (NOTSET)
+    leaves the config receive/save messages invisible. Restart it by hand to make them
+    show up in var/log/piggyback-hub.log (CMK-35803).
+    """
+    site.omd("stop", "piggyback-hub")
+    site.run(
+        [
+            f"{site.root}/bin/cmk-piggyback-hub",
+            f"--log-level={level}",
+            f"{site.root}/tmp/run/piggyback-hub.pid",
+            f"{site.root}/var/log/piggyback-hub.log",
+            str(site.root),
+            site.id,
+        ],
+        check=True,
+    )
+    try:
+        yield
+    finally:
+        site.omd("stop", "piggyback-hub")
+        site.omd("start", "piggyback-hub")
+
+
 class PBTimeoutError(TimeoutError):
     pass
 

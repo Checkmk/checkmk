@@ -76,6 +76,9 @@ function onFunctionUpdate(value: string | null): void {
   applyFunction(value as GroupByFunction)
 }
 
+// Preserve Histogram input requires a "And group by" function, so its grouping cannot be removed.
+const removalAllowed = computed(() => props.inputType !== 'histogram')
+
 function removeGrouping(): void {
   applyFunction('none')
 }
@@ -174,7 +177,7 @@ function canLeaveEdit(): boolean {
     <CmkInlineValidation :validation="validationMessages" />
     <InlineEditPill
       :editing="editing"
-      :removable="model.function !== 'none' && !editing"
+      :removable="removalAllowed && model.function !== 'none' && !editing"
       :can-leave="canLeaveEdit"
       :aria-label="ariaLabel ?? summary"
       :edit-aria-label="editAriaLabel"

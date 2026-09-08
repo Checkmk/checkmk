@@ -211,6 +211,20 @@ test('the remove button is hidden once the grouping is already "no grouping"', (
   expect(screen.queryByRole('button', { name: 'Remove grouping' })).toBeNull()
 })
 
+test('the remove button is hidden for a histogram input type', () => {
+  renderWidget({ function: 'percentile', keys: [] }, 'histogram')
+  expect(screen.queryByRole('button', { name: 'Remove grouping' })).toBeNull()
+})
+
+test('Delete on a histogram grouping does not reset it to "no grouping"', async () => {
+  const { model } = renderWidget({ function: 'percentile', keys: [] }, 'histogram')
+
+  screen.getByRole('button', { name: /Edit group by/ }).focus()
+  await userEvent.keyboard('{Delete}')
+
+  expect(model.value.function).toBe('percentile')
+})
+
 test('the remove button is hidden while the pill is being edited', async () => {
   renderWidget({ function: 'avg', keys: [] }, 'float')
   await openPill()

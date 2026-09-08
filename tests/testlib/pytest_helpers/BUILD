@@ -8,9 +8,7 @@ py_library(
     visibility = ["//tests:__subpackages__"],
     deps = [
         "//tests/testlib/common",
-        requirement("checkmk-dev-tools"),
         requirement("psutil"),
         requirement("pytest"),
-        requirement("requests"),
     ],
 )

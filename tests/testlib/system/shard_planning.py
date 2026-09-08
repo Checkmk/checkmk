@@ -12,13 +12,21 @@ order.
 
 Splitting happens per module, never inside one, because tests in a module share
 module scoped fixtures and the order in which they change the site.
+
+Keep this module importable without pytest. tests/scripts/resolve_shard_durations.py
+reads the durations from here in the "Resolve shard durations" CI stage, which runs
+in a container that has no pytest installed. The pytest plugin that applies a plan
+to a session lives in pytest_helpers/sharding.py.
 """
 
+import logging
 from collections.abc import Iterable, Sequence
 from typing import NamedTuple, Protocol, TypedDict
 
 import requests
 from cmk_dev.jenkins_utils import AugmentedJenkinsClient, extract_credentials
+
+logger = logging.getLogger(__name__)
 
 REPORT_TREE = "suites[cases[className,duration]]"
 FETCH_TIMEOUT_SECONDS = 120

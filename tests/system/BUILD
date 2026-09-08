@@ -18,6 +18,7 @@ py_library(
     deps = [
         ":pkg_marker",
         "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
         requirement("pytest"),
     ],
 )

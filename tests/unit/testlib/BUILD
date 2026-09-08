@@ -10,6 +10,7 @@ py_cmk_test(
     deps = [
         "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",
+        "//tests/testlib/system:shard_planning",
         requirement("docker"),
         requirement("pytest-random-order"),
         requirement("psutil"),

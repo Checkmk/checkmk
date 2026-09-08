@@ -6,7 +6,7 @@
 
 These can be loaded or registered, respectively, at runtime during a testsuite setup.
 
-Keep this module free of imports. tests/scripts/resolve_shard_durations.py reads
-the shard durations from `sharding` in a CI container that has no pytest
-installed, and importing any module of this package runs this one first.
+Every module here imports pytest, so nothing that has to run without it may import
+from this package. tests/scripts/resolve_shard_durations.py is such a caller; the
+planning it needs lives in tests/testlib/system/shard_planning.py.
 """

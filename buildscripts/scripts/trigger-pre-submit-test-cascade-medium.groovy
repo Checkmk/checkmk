@@ -377,7 +377,7 @@ void main() {
     /// Run the whole single site suite instead of only the tests carrying the
     /// medium_test_chain marker, split over this many pods. Each shard builds its
     /// own site, so the cost is N site setups against roughly 1/N of the runtime.
-    /// The split is computed in pytest, see tests/testlib/pytest_helpers/sharding.py.
+    /// The split is computed in pytest, see tests/testlib/system/shard_planning.py.
     ///
     /// A job parameter so the number can be tuned from checkmk_ci without a change
     /// here. The fallback keeps this working before that parameter is deployed.

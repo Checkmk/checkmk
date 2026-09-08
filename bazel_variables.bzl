@@ -52,6 +52,7 @@ edition_deps = {
             "//cmk:cmk_tar_pro",
             "//cmk:cmk_tar_community",
             "//non-free/packages/cmc-protocols:pkg_tar",
+            "//non-free/packages/cmk-agent-engine:omd_skel_tar",
             "//non-free/packages/cmk-agent-engine:pkg_tar",
             "//non-free/packages/cmk-core-helpers:pkg_tar",
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -88,6 +89,7 @@ edition_deps = {
             "//cmk:cmk_tar_pro",
             "//cmk:cmk_tar_community",
             "//non-free/packages/cmc-protocols:pkg_tar",
+            "//non-free/packages/cmk-agent-engine:omd_skel_tar",
             "//non-free/packages/cmk-agent-engine:pkg_tar",
             "//non-free/packages/cmk-core-helpers:pkg_tar",
             "//non-free/packages/cmk-mcp:omd_skel_tar",
@@ -114,6 +116,7 @@ edition_deps = {
             "//cmk:cmk_tar_pro",
             "//cmk:cmk_tar_community",
             "//non-free/packages/cmc-protocols:pkg_tar",
+            "//non-free/packages/cmk-agent-engine:omd_skel_tar",
             "//non-free/packages/cmk-agent-engine:pkg_tar",
             "//non-free/packages/cmk-core-helpers:pkg_tar",
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -149,6 +152,7 @@ edition_deps = {
             "//cmk:cmk_tar_pro",
             "//cmk:cmk_tar_community",
             "//non-free/packages/cmc-protocols:pkg_tar",
+            "//non-free/packages/cmk-agent-engine:omd_skel_tar",
             "//non-free/packages/cmk-agent-engine:pkg_tar",
             "//non-free/packages/cmk-core-helpers:pkg_tar",
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -183,6 +187,7 @@ edition_deps = {
 edition_skel_permissions = {
     "cloud": select({
         "@//:gpl+nonfree_repo": [
+            "//non-free/packages/cmk-agent-engine:skel.permissions",
             "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//omd/non-free/packages/cmc:skel.permissions",
@@ -226,6 +231,7 @@ edition_skel_permissions = {
     "pro": select({
         "@//:gpl+nonfree_repo": [
             "//omd/packages/apache-omd:skel.permissions",
+            "//non-free/packages/cmk-agent-engine:skel.permissions",
             "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//omd/non-free/packages/cmc:skel.permissions",
@@ -251,6 +257,7 @@ edition_skel_permissions = {
     "ultimate": select({
         "@//:gpl+nonfree_repo": [
             "//omd/packages/apache-omd:skel.permissions",
+            "//non-free/packages/cmk-agent-engine:skel.permissions",
             "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//non-free/packages/otel-collector:skel.permissions",
@@ -280,6 +287,7 @@ edition_skel_permissions = {
     "ultimatemt": select({
         "@//:gpl+nonfree_repo": [
             "//omd/packages/apache-omd:skel.permissions",
+            "//non-free/packages/cmk-agent-engine:skel.permissions",
             "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//non-free/packages/otel-collector:skel.permissions",

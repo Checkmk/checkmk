@@ -28,6 +28,7 @@ def test_init_scripts(site: Site) -> None:
 
     if not site.edition.is_community_edition():
         scripts |= {
+            "ai-agent-engine",
             "cmc",
             "dcd",
             "liveproxyd",

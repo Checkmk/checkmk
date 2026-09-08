@@ -3768,6 +3768,7 @@ uvicorn==0.38.0 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-agent-engine/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp

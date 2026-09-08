@@ -30,7 +30,6 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
 )
-from cmk.gui.graphing._engine_perfdata import RawPerformanceValue
 from cmk.gui.graphing._engine_template_graphs import (
     _EvaluateTemplateGraphs,
     build_template_graphs,
@@ -38,6 +37,7 @@ from cmk.gui.graphing._engine_template_graphs import (
 from cmk.gui.graphing._graph_choices import BuiltGraph
 from cmk.gui.graphing._graph_dispatch import CommonGraphOptions
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._metric_data import RawPerformanceValue
 from cmk.gui.graphing._source import FetchDiagnostics
 
 _SERVICE = Service(

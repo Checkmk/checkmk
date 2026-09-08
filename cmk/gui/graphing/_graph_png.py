@@ -95,7 +95,7 @@ def _curves_length(graph: EvaluatedGraph) -> int:
 
 
 def _timestamps(time_range: TimeRange, length: int) -> list[int]:
-    # Deliberately not cmk.gui.graphing._engine_series._timestamps: that one returns each
+    # Deliberately not cmk.gui.graphing._metric_data._timestamps: that one returns each
     # bucket's *end* (t + step) for resampling; plotting needs each bucket's *start* (t) to line
     # up with the curve's own time_series.values. Built from `length` (see _curves_length),
     # not range(time_range.start, time_range.end, time_range.step): the two agree whenever every

@@ -34,13 +34,17 @@ from cmk.graphing_engine import (
 )
 from cmk.gui import sites
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
-from cmk.livestatus_client.tables.services import Services
 
-from ._engine_perfdata import parse_performance_data, RawPerformanceData
-from ._engine_series import chop_last_empty_step, merge_series, resample, scaled_series
-from ._engine_translations import (
+from ._metric_data import (
+    chop_last_empty_step,
     map_metric_names,
+    merge_series,
+    parse_performance_data,
+    RawPerformanceData,
+    resample,
+    rrd_column_name,
     rrd_originals,
+    scaled_series,
     translate_performance_data,
 )
 
@@ -187,24 +191,6 @@ class _RRDFetchTimeSeriesProtocol(Protocol):
         time_range: TimeRange,
         only_site: EngineSiteID | None,
     ) -> Mapping[RRDMetric, TimeSeries]: ...
-
-
-def rrd_column_name(
-    metric_name: MetricName,
-    *,
-    consolidation_function: ConsolidationFunction,
-    time_range: TimeRange,
-    max_data_points: int | None = None,
-) -> str:
-    data_range_args: list[int] = [time_range.start, time_range.end, max(1, time_range.step)]
-    if max_data_points is not None:
-        data_range_args.append(max_data_points)
-    # `rrddata` is registered on both the hosts and the services table and the composed column name
-    # is the same on either, so building it via Services is fine even for the hosts query that
-    # _object_queries emits. `dynamic` validates all parts via LqSafe.
-    return Services.rrddata.dynamic(
-        metric_name, f"{metric_name}.{consolidation_function}", *data_range_args
-    ).name
 
 
 @dataclass(frozen=True)

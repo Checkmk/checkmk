@@ -17,9 +17,8 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.i18n import translate_to_current_language
 
-from ._engine_perfdata import parse_performance_data
-from ._engine_translations import translate_performance_data
 from ._from_api import PerfometerFromAPI
+from ._metric_data import parse_performance_data, translate_performance_data
 
 _SUPERSEDED_TO_SUPERSEDER: Final[Mapping[str, str]] = {
     "mem_used_perc": "mem_used_percent",

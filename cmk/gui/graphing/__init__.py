@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
-from ._engine_metrics import evaluated_metrics, EvaluatedMetric
-from ._engine_perfdata import parse_check_command
 from ._engine_perfometer_bars import (
     drawn_segments,
     DrawnSegment,
@@ -13,14 +11,11 @@ from ._engine_perfometer_bars import (
     perfometer_sort_value,
 )
 from ._engine_perfometers import evaluated_perfometer
-from ._engine_rrd_columns import merge_rrd_columns, rrd_column_names
-from ._engine_series import timestamps
 from ._engine_template_graphs import (
     build_template_graphs,
     discover_template_graphs,
     resolve_graph_id_from_index,
 )
-from ._engine_translations import reverse_translated_names
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -82,6 +77,15 @@ from ._metric_backend_registry import (
     FetchTimeSeriesProtocol,
     METRIC_BACKEND_KEY,
     metric_backend_registry,
+)
+from ._metric_data import (
+    evaluated_metrics,
+    EvaluatedMetric,
+    merge_rrd_columns,
+    parse_check_command,
+    reverse_translated_names,
+    rrd_column_names,
+    timestamps,
 )
 from ._metrics import (
     get_metric_spec,

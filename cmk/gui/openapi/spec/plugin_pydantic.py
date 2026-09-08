@@ -9,7 +9,7 @@
 
 import contextlib
 import warnings
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import is_dataclass
 from typing import Any, is_typeddict, Literal, override
 
@@ -18,7 +18,14 @@ import pydantic_core
 from apispec import APISpec
 from apispec.exceptions import DuplicateComponentNameError
 from pydantic import BaseModel, PydanticInvalidForJsonSchema, TypeAdapter
-from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue, PydanticJsonSchemaWarning
+from pydantic.json_schema import (
+    DefsRef,
+    GenerateJsonSchema,
+    JsonSchemaKeyT,
+    JsonSchemaMode,
+    JsonSchemaValue,
+    PydanticJsonSchemaWarning,
+)
 from pydantic_core import core_schema, PydanticOmit, PydanticSerializationError
 
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
@@ -35,6 +42,29 @@ type _CoreSchemaField = (
     | core_schema.ComputedField
 )
 type _CoreSchemaOrField = core_schema.CoreSchema | _CoreSchemaField
+
+_ROOT_SCHEMA_KEY = "root"
+
+
+def _reachable_definitions(
+    roots: Iterable[JsonSchemaValue], definitions: dict[DefsRef, JsonSchemaValue]
+) -> set[DefsRef]:
+    """Collect the definitions that the given schemas reference, directly or indirectly."""
+    reachable: set[DefsRef] = set()
+    pending: list[object] = list(roots)
+    while pending:
+        node = pending.pop()
+        if isinstance(node, dict):
+            if isinstance(reference := node.get("$ref"), str):
+                name = DefsRef(reference.rsplit("/", 1)[-1])
+                if name not in reachable and name in definitions:
+                    reachable.add(name)
+                    pending.append(definitions[name])
+            pending.extend(value for key, value in node.items() if key != "$ref")
+        elif isinstance(node, list):
+            pending.extend(node)
+
+    return reachable
 
 
 def _try_get_title(schema: core_schema.CoreSchema) -> str | None:
@@ -68,6 +98,7 @@ def _register_schema(spec: APISpec, name: str, schema: dict[str, object]) -> Non
 def _get_json_schema(
     spec: APISpec, adapter: TypeAdapter, direction: Direction
 ) -> dict[str, object]:
+    """Register every schema the adapter needs and return a reference to its root."""
     # There's a difference in pydantic between inbound and outbound schemas. Validators only affect
     # inbound schemas, and often the serialization won't even be supported by the custom types.
     # At the same time, we don't want to specify validators for outbound schemas (or vice versa).
@@ -76,13 +107,18 @@ def _get_json_schema(
     # when the schema is registered (in this function). Shared schemas should allow for round trip
     # serialization, so the inbound and outbound schemas should be the same. The most likely fix is
     # to either add a validator or `WithJsonSchema(..., mode="serialization")` to the field.
+    mode: JsonSchemaMode = "serialization" if direction == "outbound" else "validation"
     try:
         with warnings.catch_warnings(action="error", category=PydanticJsonSchemaWarning):
-            json_schema = adapter.json_schema(
+            # `json_schemas` keeps the root schema in the definitions, where it is named the same
+            # way as every other schema. `json_schema` would inline the root instead, leaving only
+            # its title as a name. A title is not unique: pydantic gives every parameterization of
+            # a generic model the title of its origin.
+            root_schemas, defs_wrapper = TypeAdapter.json_schemas(
+                [(_ROOT_SCHEMA_KEY, mode, adapter)],
                 by_alias=True,
                 ref_template="#/components/schemas/{model}",
                 schema_generator=CheckmkGenerateJsonSchema,
-                mode="serialization" if direction == "outbound" else "validation",
                 union_format="primitive_type_array",
             )
     except PydanticJsonSchemaWarning as e:
@@ -97,16 +133,12 @@ def _get_json_schema(
     # shouldn't be a problem from a spec perspective, but would mean we somehow need to know that
     # they came from the same type adapter.
 
-    if defs := json_schema.pop("$defs", None):
-        assert isinstance(defs, dict)
-        for k, v in defs.items():
-            _register_schema(spec, k, v)
+    definitions = defs_wrapper.get("$defs", {})
+    assert isinstance(definitions, dict)
+    for name, schema in definitions.items():
+        _register_schema(spec, name, schema)
 
-    name = json_schema.get("title")
-    if isinstance(name, str):
-        _register_schema(spec, name, json_schema)
-
-    return json_schema
+    return root_schemas[(_ROOT_SCHEMA_KEY, mode)]
 
 
 class CheckmkGenerateJsonSchema(GenerateJsonSchema):
@@ -305,6 +337,22 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
         with self._replace_path(schema):
             return super().dataclass_schema(schema)
 
+    @override
+    def generate_definitions(
+        self, inputs: Sequence[tuple[JsonSchemaKeyT, JsonSchemaMode, core_schema.CoreSchema]]
+    ) -> tuple[
+        dict[tuple[JsonSchemaKeyT, JsonSchemaMode], JsonSchemaValue], dict[DefsRef, JsonSchemaValue]
+    ]:
+        """Align `generate_definitions` with what `generate` returns for the same type.
+
+        `generate` sorts the whole schema and drops the definitions it does not reference.
+        `generate_definitions` does neither for the schemas it returns per input.
+        """
+        references, definitions = super().generate_definitions(inputs)
+        references = {key: self.sort(schema) for key, schema in references.items()}
+        reachable = _reachable_definitions(references.values(), definitions)
+        return references, {name: definitions[name] for name in reachable}
+
 
 class CheckmkPydanticResolver:
     """SchemaResolver is responsible for modifying a schema.
@@ -321,27 +369,12 @@ class CheckmkPydanticResolver:
         self, maybe_adapter: TypeAdapter | object, direction: Direction
     ) -> object:
         if isinstance(maybe_adapter, TypeAdapter):
-            _, json_schema = self.get_adapter_schema(maybe_adapter, direction)
-            if "title" in json_schema:
-                return {"$ref": f"#/components/schemas/{json_schema['title']}"}
-            # Titleless schemas (e.g. discriminated unions) are inlined rather than referenced
-            return json_schema
+            # A named schema resolves to a reference. Structural schemas (e.g. discriminated
+            # unions) have no definition of their own and are inlined.
+            return _get_json_schema(self.spec, maybe_adapter, direction)
 
         # do not touch other cases, as they should in most cases be Marshmallow schemas
         return maybe_adapter
-
-    def get_adapter_schema(
-        self, adapter: TypeAdapter, direction: Direction
-    ) -> tuple[str | None, dict[str, object]]:
-        json_schema = _get_json_schema(self.spec, adapter, direction)
-        if "title" in json_schema:
-            title = json_schema["title"]
-            assert isinstance(title, str)
-            return title, json_schema
-
-        # Structural schemas (e.g. discriminated unions) have no title and will be inlined
-        # by resolve_nested_schema, so no name is needed.
-        return None, json_schema
 
     def resolve_schema(self, data: dict[str, Any] | Any, direction: Direction) -> None:
         """Resolves a Pydantic model in an OpenAPI component or header.
@@ -436,7 +469,7 @@ class CheckmkPydanticResolver:
             if "schema" in parameter:
                 schema = parameter["schema"]
                 if isinstance(schema, TypeAdapter):
-                    _, parameter["schema"] = self.get_adapter_schema(schema, direction="inbound")
+                    parameter["schema"] = _get_json_schema(self.spec, schema, "inbound")
 
             # TODO: might need to do this, when we remove the marshmallow plugin
             #       but while we still have marshmallow this might break the plugin

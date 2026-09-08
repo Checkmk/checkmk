@@ -78,6 +78,25 @@ def test_remove_font_size_leaves_other_users_alone(tmp_path: Path) -> None:
     assert without_font_size.read_text() == untouched_content
 
 
+def test_the_count_is_dashboards_not_users(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """One user with two cleaned dashboards must not report as one."""
+    _write_dashboards(
+        tmp_path / "cmkadmin",
+        {
+            "first": {"widgets": {"w": {"graph_render_options": {"font_size": 8.0}}}},
+            "second": {"widgets": {"w": {"graph_render_options": {"font_size": 20.0}}}},
+            "untouched": {"widgets": {"w": {"graph_render_options": {"show_legend": True}}}},
+        },
+    )
+
+    with caplog.at_level(logging.INFO):
+        RemoveDashboardGraphFontSize.remove_font_size(tmp_path, LOGGER)
+
+    assert "2 dashboards" in caplog.text
+
+
 def test_a_user_without_dashboards_gets_no_file(tmp_path: Path) -> None:
     (tmp_path / "cmkadmin").mkdir()
 

@@ -23,7 +23,7 @@ class RemoveDashboardGraphFontSize(UpdateAction):
 
     @staticmethod
     def remove_font_size(profile_dir: Path, logger: Logger) -> None:
-        rewritten = 0
+        cleaned = 0
         for user_dir in user_directories(profile_dir):
             path = user_dir / "user_dashboards.mk"
             dashboards = store.load_object_from_file(path, default={})
@@ -32,12 +32,14 @@ class RemoveDashboardGraphFontSize(UpdateAction):
             except (TypeError, KeyError) as exc:
                 raise ValueError(f"Unexpected format in {path}: {exc}") from exc
 
-            if stripped != dashboards:
+            if changed := sum(1 for name, board in dashboards.items() if stripped[name] != board):
                 store.save_object_to_file(path, stripped)
-                rewritten += 1
+                cleaned += changed
 
-        if rewritten:
-            logger.info("Rewrote the dashboards of %(count)d users", {"count": rewritten})
+        if cleaned:
+            logger.info(
+                "Removed the font size setting from %(count)d dashboards", {"count": cleaned}
+            )
 
 
 def _without_font_size(dashboards: dict[str, object]) -> dict[str, object]:

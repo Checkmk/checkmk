@@ -421,6 +421,7 @@ import lightIconReloadSvg from '~cmk-frontend/themes/facelift/images/icon_reload
 import lightIconReloadCmkSvg from '~cmk-frontend/themes/facelift/images/icon_reload_cmk.svg?url&no-inline'
 import lightIconReloadsnapinPng from '~cmk-frontend/themes/facelift/images/icon_reloadsnapin.png?url&no-inline'
 import lightIconReloadsnapinLoAltPng from '~cmk-frontend/themes/facelift/images/icon_reloadsnapin_lo_alt.png?url&no-inline'
+import lightIconRemindersSvg from '~cmk-frontend/themes/facelift/images/icon_reminders.svg?url&no-inline'
 import lightIconRenameHostSvg from '~cmk-frontend/themes/facelift/images/icon_rename_host.svg?url&no-inline'
 import lightIconRepl25Png from '~cmk-frontend/themes/facelift/images/icon_repl_25.png?url&no-inline'
 import lightIconRepl50Png from '~cmk-frontend/themes/facelift/images/icon_repl_50.png?url&no-inline'
@@ -1225,6 +1226,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   reload: lightIconReloadSvg,
   reloadsnapin: lightIconReloadsnapinPng,
   'reloadsnapin-lo-alt': lightIconReloadsnapinLoAltPng,
+  reminders: lightIconRemindersSvg,
   'rename-host': lightIconRenameHostSvg,
   'repl-25': lightIconRepl25Png,
   'repl-50': lightIconRepl50Png,

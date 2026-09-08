@@ -465,6 +465,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'reload-cmk': ['refresh checkmk', 'circular arrow', 'sync'],
   reloadsnapin: ['refresh sidebar', 'circular arrow'],
   'reloadsnapin-lo-alt': ['refresh sidebar', 'circular arrow'],
+  reminders: ['todo', 'checklist', 'notes', 'tasks', 'bullet list'],
   'rename-host': ['rename server', 'pencil', 'change name'],
   'repl-25': ['replication 25 percent', 'sync progress'],
   'repl-50': ['replication half', 'sync progress'],

@@ -12,7 +12,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.lib.temperature import TempParamType
+from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.smart.agent_based.smart import parse_raw_values, Section
 from cmk.plugins.smart.agent_based.smart_temp import _check_smart_temp, discover_smart_temp
 
@@ -155,7 +155,7 @@ def test_smart_temp_discovery_no_temp() -> None:
 
 def test_smart_temp_check_ok() -> None:
     """Test check function for normal temperature."""
-    params: TempParamType = {"levels": (35.0, 40.0)}
+    params: TempParamDict = {"levels": (35.0, 40.0)}
 
     result = list(_check_smart_temp("/dev/sda", params, parsed(), {}, LAST_CHECK))
 
@@ -170,7 +170,7 @@ def test_smart_temp_check_ok() -> None:
 
 def test_smart_temp_check_warning() -> None:
     """Test check function with temperature warning."""
-    params: TempParamType = {"levels": (25.0, 40.0)}  # Lower warning threshold
+    params: TempParamDict = {"levels": (25.0, 40.0)}  # Lower warning threshold
 
     result = list(_check_smart_temp("/dev/sda", params, parsed(), {}, LAST_CHECK))
 
@@ -184,7 +184,7 @@ def test_smart_temp_check_warning() -> None:
 
 def test_smart_temp_check_nvme() -> None:
     """Test check function for NVMe temperature."""
-    params: TempParamType = {"levels": (35.0, 40.0)}
+    params: TempParamDict = {"levels": (35.0, 40.0)}
 
     result = list(_check_smart_temp("/dev/nvme0n1", params, parsed(), {}, LAST_CHECK))
 
@@ -198,7 +198,7 @@ def test_smart_temp_check_nvme() -> None:
 
 def test_smart_temp_check_missing_item() -> None:
     """Test check function with non-existent device."""
-    params: TempParamType = {"levels": (35.0, 40.0)}
+    params: TempParamDict = {"levels": (35.0, 40.0)}
 
     results = list(_check_smart_temp("/dev/missing", params, parsed(), {}, LAST_CHECK))
 
@@ -208,7 +208,7 @@ def test_smart_temp_check_missing_item() -> None:
 
 def test_smart_temp_check_no_temperature() -> None:
     """Test check function for device without temperature sensor."""
-    params: TempParamType = {"levels": (35.0, 40.0)}
+    params: TempParamDict = {"levels": (35.0, 40.0)}
     section = parsed_no_temp()
 
     results = list(_check_smart_temp("/dev/sdb", params, section, {}, LAST_CHECK))
@@ -330,7 +330,7 @@ def test_smart_temp_discovered_but_not_checkable() -> None:
         ),
     ],
 )
-def test_smart_temp_check_levels(params: TempParamType, expected: object) -> None:
+def test_smart_temp_check_levels(params: TempParamDict, expected: object) -> None:
     assert list(_check_smart_temp("/dev/sda", params, parsed(), {}, LAST_CHECK)) == expected
 
 
@@ -422,7 +422,7 @@ def test_smart_temp_check_levels(params: TempParamType, expected: object) -> Non
 )
 def test_smart_temp_check_trend(
     previous_reading: float,
-    params: TempParamType,
+    params: TempParamDict,
     expected: object,
 ) -> None:
     value_store: dict[str, object] = {
@@ -438,7 +438,7 @@ def test_smart_temp_check_trend(
 
 
 def test_smart_temp_check_trend_on_the_first_execution() -> None:
-    params: TempParamType = {"levels": (35.0, 40.0), "trend_compute": {"period": 5}}
+    params: TempParamDict = {"levels": (35.0, 40.0), "trend_compute": {"period": 5}}
     value_store: dict[str, object] = {}
 
     expected: object = [

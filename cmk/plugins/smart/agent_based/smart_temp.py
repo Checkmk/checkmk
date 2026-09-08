@@ -26,11 +26,10 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib.temperature import (
-    migrate_params,
     OptFloat,
     render_temp,
     temp_unitsym,
-    TempParamType,
+    TempParamDict,
     to_celsius,
     TrendComputeDict,
 )
@@ -152,13 +151,11 @@ def _check_trend(
 
 def _check_temperature(
     reading: float,
-    params: TempParamType,
+    params: TempParamDict,
     unique_name: str,
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> CheckResult:
-    params = migrate_params(params)
-
     # Convert reading into Celsius
     input_unit = params.get("input_unit", "c")
     output_unit = params.get("output_unit", "c")
@@ -205,7 +202,7 @@ def _check_temperature(
 
 def _check_smart_temp(
     item: str,
-    params: TempParamType,
+    params: TempParamDict,
     section: Mapping[str, Mapping[str, int]],
     value_store: MutableMapping[str, Any],
     now: float,
@@ -221,7 +218,7 @@ def _check_smart_temp(
 
 def check_smart_temp(
     item: str,
-    params: TempParamType,
+    params: TempParamDict,
     section: Mapping[str, Mapping[str, int]],
 ) -> CheckResult:
     yield from _check_smart_temp(item, params, section, get_value_store(), time.time())

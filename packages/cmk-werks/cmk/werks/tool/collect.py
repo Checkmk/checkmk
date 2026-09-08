@@ -208,4 +208,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             raise RuntimeError
         all_werks_by_id[str(werk_id)] = website_werk
 
+    if not all_werks_by_id:
+        raise RuntimeError("Expected to collect at least one Werk, but it's completely empty.")
+
     sys.stdout.write(AllWerks.dump_json(all_werks_by_id, by_alias=True).decode("utf-8") + "\n")

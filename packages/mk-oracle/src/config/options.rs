@@ -150,13 +150,12 @@ impl Options {
                 })
                 .into(),
             max_queries: defaults::MAX_QUERIES.into(),
-            use_host_client: UseHostClient::from_str(
-                options
-                    .get_string(keys::USE_HOST_CLIENT)
-                    .unwrap_or_default()
-                    .as_str(),
-            )
-            .unwrap_or_default(),
+            // An absent or empty `use_host_client` means "auto"
+            use_host_client: options
+                .get_string(keys::USE_HOST_CLIENT)
+                .filter(|s| !s.trim().is_empty())
+                .and_then(|s| UseHostClient::from_str(&s))
+                .unwrap_or_default(),
             params: vec![(
                 keys::IGNORE_DB_NAME.to_string(),
                 options
@@ -197,6 +196,29 @@ options:
             &vec![(keys::IGNORE_DB_NAME.to_string(), 1)]
         );
         assert_eq!(options.threads(), 4);
+    }
+
+    #[test]
+    fn test_options_from_yaml_without_use_host_client() {
+        // TODO(sk): We will rework options processing, for now we need
+        // options defined to process entries
+        const YAML: &str = r"
+options:
+    max_connections: 1
+    ";
+        let options = Options::from_yaml(&create_yaml(YAML)).unwrap().unwrap();
+        assert_eq!(options.use_host_client(), &UseHostClient::Auto);
+    }
+
+    #[test]
+    fn test_options_from_yaml_empty_use_host_client() {
+        // An explicitly empty value is treated the same as absent: default (Auto).
+        const YAML: &str = r#"
+options:
+    use_host_client: ""
+    "#;
+        let options = Options::from_yaml(&create_yaml(YAML)).unwrap().unwrap();
+        assert_eq!(options.use_host_client(), &UseHostClient::Auto);
     }
 
     #[test]

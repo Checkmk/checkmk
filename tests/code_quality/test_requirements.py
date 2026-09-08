@@ -398,6 +398,8 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 
 CEE_UNUSED_PACKAGES = [
+    "aiosqlite",
+    "pydantic-ai-slim",
     "setuptools-scm",
     "snmpsim",
     "python-multipart",  # needed by fastapi

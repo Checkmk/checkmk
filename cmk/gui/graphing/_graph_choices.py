@@ -16,8 +16,8 @@ from cmk.graphing_engine import FixedRange, Graph
 from cmk.gui.i18n import _
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
-from ._engine_dispatch import legacy_graph_id
 from ._from_api import GraphFromAPI
+from ._graph_dispatch import legacy_graph_id
 from ._graph_specification import GraphSpecification
 
 

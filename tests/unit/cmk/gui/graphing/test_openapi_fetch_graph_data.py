@@ -35,13 +35,13 @@ from cmk.graphing_engine import (
     TimeSeries,
     Unit,
 )
-from cmk.gui.graphing._engine_dispatch import (
+from cmk.gui.graphing._engine_template_graphs import _EvaluateTemplateGraphs
+from cmk.gui.graphing._graph_dispatch import (
     CommonGraphOptions,
     EvaluatedGraphs,
     serialize_graphs,
 )
-from cmk.gui.graphing._engine_source import FetchDiagnostics, QueryLimitReached
-from cmk.gui.graphing._engine_template_graphs import _EvaluateTemplateGraphs
+from cmk.gui.graphing._source import FetchDiagnostics, QueryLimitReached
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import (
     api_consolidation_to_engine,

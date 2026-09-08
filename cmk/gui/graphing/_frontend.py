@@ -41,15 +41,15 @@ from cmk.shared_typing.global_time_picker import (
 )
 from cmk.web.utils.html import HTML
 
-from . import _engine_plugins as engine_plugins
-from ._engine_discovery import BuiltGraph
-from ._engine_dispatch import serialize_graphs
-from ._engine_source import RRDFetchMetricNames
+from . import _plugins as engine_plugins
 from ._engine_template_graphs import build_template_graphs
-from ._engine_unit_format import unit_to_unit_format
+from ._graph_choices import BuiltGraph
+from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
 from ._graph_templates import TemplateGraphSpecification
+from ._source import RRDFetchMetricNames
+from ._unit_format import unit_to_unit_format
 
 # A view carrying one of these is driven by the global time picker rather than the
 # pnp_timerange painter option, and must not auto-reload.

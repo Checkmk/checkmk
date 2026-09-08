@@ -5,7 +5,7 @@
 
 from typing import Final, Protocol, runtime_checkable
 
-from cmk.gui.graphing._engine_discovery import DiscoveredGraphs
+from cmk.gui.graphing._graph_choices import DiscoveredGraphs
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
 

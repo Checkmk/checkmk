@@ -14,7 +14,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.gui.graphing._engine_unit_format import unit_to_unit_format
+from cmk.gui.graphing._unit_format import unit_to_unit_format
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
 

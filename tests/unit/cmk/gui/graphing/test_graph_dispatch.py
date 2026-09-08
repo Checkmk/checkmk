@@ -15,8 +15,8 @@ from cmk.graphing_engine import (
     Graph,
     TimeRange,
 )
-from cmk.gui.graphing._engine_codec import community_graph_codec
-from cmk.gui.graphing._engine_dispatch import (
+from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_dispatch import (
     CommonGraphOptions,
     evaluate_built_graphs,
     evaluate_graphs,
@@ -25,7 +25,7 @@ from cmk.gui.graphing._engine_dispatch import (
     GraphDispatcher,
     serialize_graphs,
 )
-from cmk.gui.graphing._engine_source import FetchDiagnostics, QueryLimitReached
+from cmk.gui.graphing._source import FetchDiagnostics, QueryLimitReached
 
 _KIND = "dispatch_test"
 

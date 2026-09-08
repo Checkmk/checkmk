@@ -41,7 +41,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.gui.graphing._engine_codec import (
+from cmk.gui.graphing._graph_codec import (
     community_graph_codec,
     COMMUNITY_QUANTITY_SPECS,
     graph_codec,

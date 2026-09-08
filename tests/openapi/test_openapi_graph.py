@@ -24,7 +24,7 @@ from cmk.graphing_engine import (
     Sum,
     Unit,
 )
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 

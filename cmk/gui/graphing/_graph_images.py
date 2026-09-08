@@ -28,11 +28,10 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
 
-from . import _engine_plugins as engine_plugins
-from ._engine_dispatch import evaluate_built_graphs
-from ._engine_source import RRDFetchMetricNames
+from . import _plugins as engine_plugins
 from ._engine_template_graphs import build_template_graphs
 from ._from_api import graphs_from_api, metrics_from_api
+from ._graph_dispatch import evaluate_built_graphs
 from ._graph_display_config import (
     get_mm_per_ex,
     GraphDisplayConfigImage,
@@ -48,6 +47,7 @@ from ._graph_specification import (
 from ._graph_templates import get_template_graph_specification
 from ._html_render import GraphDestinations
 from ._metric_backend_registry import METRIC_BACKEND_KEY, metric_backend_registry
+from ._source import RRDFetchMetricNames
 from ._unit import get_temperature_unit
 
 

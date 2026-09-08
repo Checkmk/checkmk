@@ -31,7 +31,7 @@ from cmk.graphing_engine import (
     Stack,
     Unit,
 )
-from cmk.gui.graphing._engine_codec import community_graph_codec
+from cmk.gui.graphing._graph_codec import community_graph_codec
 from tests.testlib.graphing import discovered_graphs
 from tests.testlib.site import Site
 

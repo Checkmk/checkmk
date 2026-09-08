@@ -18,8 +18,8 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName
 
-from ._engine_discovery import GraphPluginChoice
 from ._from_api import GraphFromAPI
+from ._graph_choices import GraphPluginChoice
 from ._graph_metric_expressions import (
     AnnotatedHostName,
 )

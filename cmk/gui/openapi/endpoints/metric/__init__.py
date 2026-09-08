@@ -29,8 +29,8 @@ from cmk.gui.graphing import (
     RRDFetchMetricNames,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._engine_plugins import registered_metrics, registered_translations
 from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id, MKGraphNotFound
+from cmk.gui.graphing._plugins import registered_metrics, registered_translations
 from cmk.gui.http import request, Response
 from cmk.gui.log import logger
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas

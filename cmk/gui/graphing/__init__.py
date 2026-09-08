@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._engine_discovery import graph_choices, GraphChoices, GraphPluginChoice
-from ._engine_dispatch import evaluate_built_graphs
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._engine_metrics import evaluated_metrics, EvaluatedMetric
 from ._engine_perfdata import parse_check_command
@@ -15,16 +13,8 @@ from ._engine_perfometer_bars import (
     perfometer_sort_value,
 )
 from ._engine_perfometers import evaluated_perfometer
-from ._engine_plugins import (
-    graphing_plugins,
-    GraphingPlugins,
-    registered_graphs,
-    registered_metrics,
-    registered_translations,
-)
 from ._engine_rrd_columns import merge_rrd_columns, rrd_column_names
 from ._engine_series import timestamps
-from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import (
     build_template_graphs,
     discover_template_graphs,
@@ -49,6 +39,8 @@ from ._frontend import (
     render_engine_graph_group,
     user_first_day_of_week,
 )
+from ._graph_choices import graph_choices, GraphChoices, GraphPluginChoice
+from ._graph_dispatch import evaluate_built_graphs
 from ._graph_display_config import (
     get_mm_per_ex,
     GraphDisplayConfigHTML,
@@ -96,6 +88,14 @@ from ._metrics import (
     MetricSpec,
     registered_metric_ids_and_titles,
 )
+from ._plugins import (
+    graphing_plugins,
+    GraphingPlugins,
+    registered_graphs,
+    registered_metrics,
+    registered_translations,
+)
+from ._source import RRDFetchMetricNames
 from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,

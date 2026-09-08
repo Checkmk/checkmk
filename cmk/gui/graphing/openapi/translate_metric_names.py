@@ -24,8 +24,8 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._engine_plugins import registered_translations
-from .._engine_source import RRDFetchMetricNameMapping
+from .._plugins import registered_translations
+from .._source import RRDFetchMetricNameMapping
 from ._family import GRAPH_FAMILY
 from .models import MetricNameMappingResponse
 

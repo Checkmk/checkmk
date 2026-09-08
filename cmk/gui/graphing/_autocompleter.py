@@ -7,9 +7,9 @@
 
 from cmk.gui.type_defs import Choices
 
-from ._engine_plugins import registered_metrics, registered_translations
 from ._from_api import metrics_from_api
 from ._metrics import registered_metric_ids_and_titles
+from ._plugins import registered_metrics, registered_translations
 from ._valuespecs import LivestatusQueryFunc, metrics_of_query
 
 

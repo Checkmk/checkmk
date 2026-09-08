@@ -11,10 +11,10 @@ from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import metrics_autocompleter
-from ._engine_codec import community_graph_codec, GraphCodec
-from ._engine_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._engine_template_graphs import template_graph_dispatcher
 from ._explicit_graphs import ExplicitGraphSpecification
+from ._graph_codec import community_graph_codec, GraphCodec
+from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_images import AjaxGraphImagesForNotifications
 from ._graph_metric_expressions import (
     graph_metric_expression_registry,

@@ -23,22 +23,22 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._engine_codec import GraphCodec
+from cmk.gui.graphing._graph_codec import GraphCodec
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName as GUIServiceName
 
-from ._engine_discovery import BuiltGraph, DiscoveredGraphs
-from ._engine_dispatch import (
+from ._from_api import GraphFromAPI
+from ._graph_choices import BuiltGraph, DiscoveredGraphs
+from ._graph_dispatch import (
     CommonGraphOptions,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
     GraphDispatcher,
     legacy_graph_id,
 )
-from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
-from ._engine_source import RRDFetchData, RRDFetchMetricNames
-from ._from_api import GraphFromAPI
+from ._plugins import registered_graphs, registered_metrics, registered_translations
+from ._source import RRDFetchData, RRDFetchMetricNames
 
 TEMPLATE_KIND: Final = "template"
 

@@ -49,7 +49,7 @@ from enum import StrEnum
 from typing import Final
 
 from cmk.graphing_engine import Graph
-from cmk.gui.graphing._engine_codec import community_graph_codec, ensure_type
+from cmk.gui.graphing._graph_codec import community_graph_codec, ensure_type
 from cmk.rrd import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from cmk.utils.misc import pnp_cleanup
 from tests.testlib.site import Site

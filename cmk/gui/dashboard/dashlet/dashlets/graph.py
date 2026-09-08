@@ -46,7 +46,7 @@ from cmk.gui.graphing import (
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._engine_discovery import DiscoveredGraphs
+from cmk.gui.graphing._graph_choices import DiscoveredGraphs
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (

@@ -19,8 +19,8 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._engine_perfdata import parse_performance_data
 from ._engine_translations import translate_performance_data
-from ._engine_unit_format import unit_to_unit_format
 from ._unit import user_specific_unit_from_unit_format
+from ._unit_format import unit_to_unit_format
 
 
 @dataclass(frozen=True, kw_only=True)

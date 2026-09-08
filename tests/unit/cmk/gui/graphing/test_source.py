@@ -24,19 +24,19 @@ from cmk.graphing_engine import (
     TimeSeries,
 )
 from cmk.gui.config import Config
-from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
-from cmk.gui.graphing._engine_source import (
+from cmk.gui.graphing._engine_template_graphs import (
+    _EvaluateTemplateGraphs,
+    build_template_graphs,
+)
+from cmk.gui.graphing._graph_dispatch import CommonGraphOptions
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._source import (
     HOST_PSEUDO_SERVICE,
     PerformanceDataRow,
     RRDFetchData,
     RRDFetchMetricNameMapping,
     RRDFetchMetricNames,
 )
-from cmk.gui.graphing._engine_template_graphs import (
-    _EvaluateTemplateGraphs,
-    build_template_graphs,
-)
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 _HOST_ROW = {

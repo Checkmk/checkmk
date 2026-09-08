@@ -24,10 +24,10 @@ from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._engine_series import merge_series, scaled_series
-from ._engine_source import rrd_column_name
 from ._engine_translations import reverse_translated_names, translated_names_and_scales
-from ._engine_unit_format import unit_to_unit_format
+from ._source import rrd_column_name
 from ._unit import user_specific_unit_from_unit_format
+from ._unit_format import unit_to_unit_format
 
 # The step the columns are requested with. RRD answers with the grid it actually holds, which is
 # what the merged series carries; asking for a finer one only changes which archive it picks.

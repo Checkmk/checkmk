@@ -17,7 +17,7 @@ from cmk.graphing_engine import (
     Stack,
     Unit,
 )
-from cmk.gui.graphing._engine_curves import drawn_curves, line_type_with_mirroring
+from cmk.gui.graphing._drawn_curves import drawn_curves, line_type_with_mirroring
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 

@@ -11,7 +11,7 @@ from typing import Final, TypedDict
 from cmk.graphing_engine import EvaluatedCurve, EvaluatedGraph, SeriesAttributes
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 
-from ._engine_curves import DrawnCurve, line_type_with_mirroring, serialize_drawn_curves
+from ._drawn_curves import DrawnCurve, line_type_with_mirroring, serialize_drawn_curves
 from ._graph_metric_expressions import AttributeGroup, LineType
 
 _ATTRIBUTE_GROUPS: Final[tuple[AttributeGroup, ...]] = ("resource", "scope", "data_point")

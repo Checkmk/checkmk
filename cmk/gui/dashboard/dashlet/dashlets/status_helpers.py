@@ -17,8 +17,8 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     user_specific_unit,
 )
-from cmk.gui.graphing._engine_unit_format import unit_to_unit_format
 from cmk.gui.graphing._unit import user_specific_unit_from_unit_format
+from cmk.gui.graphing._unit_format import unit_to_unit_format
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

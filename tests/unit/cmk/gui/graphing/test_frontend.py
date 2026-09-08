@@ -32,9 +32,6 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRange,
 )
-from cmk.gui.graphing._engine_codec import community_graph_codec
-from cmk.gui.graphing._engine_discovery import BuiltGraph
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
     derive_y_axis_unit,
     EngineDisplayOptions,
@@ -46,6 +43,9 @@ from cmk.gui.graphing._frontend import (
     user_first_day_of_week,
     value_axis_width_px,
 )
+from cmk.gui.graphing._graph_choices import BuiltGraph
+from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
 from cmk.gui.valuespec import DropdownChoice

@@ -13,8 +13,8 @@ from cmk.graphing_engine import (
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 
-from .._engine_curves import DrawnCurve, serialize_drawn_curves
-from .._engine_source import FetchDiagnostics
+from .._drawn_curves import DrawnCurve, serialize_drawn_curves
+from .._source import FetchDiagnostics
 from .models import (
     ApiConsolidation,
     ApiHorizontalLine,

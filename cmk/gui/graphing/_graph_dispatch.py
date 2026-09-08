@@ -17,14 +17,14 @@ from cmk.graphing_engine import (
     TimeRange,
 )
 
-from ._engine_codec import (
+from ._from_api import GraphFromAPI
+from ._graph_codec import (
     consolidation_function_of,
     ensure_type,
     GraphCodec,
     time_range_of,
 )
-from ._engine_source import FetchDiagnostics
-from ._from_api import GraphFromAPI
+from ._source import FetchDiagnostics
 
 
 def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:

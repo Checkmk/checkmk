@@ -23,12 +23,22 @@ const props = defineProps<{
   topic: GlobalSettingsTopic
   value: string
   resetting: boolean
+  /** The variables to show, or null while no search narrows them. */
+  match: ReadonlySet<string> | null
 }>()
 
 const emit = defineEmits<{
   edit: [variable: GlobalSettingsVariable]
   reset: []
 }>()
+
+// Only the variable array is filtered, so the header counts below stay totals.
+const shownVariables = computed(() => {
+  const match = props.match
+  return match === null
+    ? props.topic.variables
+    : props.topic.variables.filter((variable) => match.has(variable.name))
+})
 
 const modifiedCount = computed(
   () => props.topic.variables.filter((variable) => variable.modified).length
@@ -79,7 +89,7 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         {{ topic.warning }}
       </CmkAlertBox>
       <GlobalSettingsVariableRow
-        v-for="variable in topic.variables"
+        v-for="variable in shownVariables"
         :key="variable.name"
         :variable="variable"
         @edit="emit('edit', variable)"

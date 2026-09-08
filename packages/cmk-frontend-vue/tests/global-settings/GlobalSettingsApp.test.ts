@@ -11,7 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
@@ -778,5 +778,158 @@ describe('GlobalSettingsApp overview presentation', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
 
     expect(within(topic(data.topics[0]!.headline)).queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
+
+describe('GlobalSettingsApp search', () => {
+  const secondVariable = {
+    ...data.topics[0]!.variables[0]!,
+    name: 'user_idle_timeout',
+    spec: { ...data.topics[0]!.variables[0]!.spec, title: 'Login session idle timeout' }
+  }
+  const searchData: GlobalSettingsAppData = {
+    ...data,
+    topics: [
+      { ...data.topics[0]!, variables: [...data.topics[0]!.variables, secondVariable] },
+      secondTopic
+    ]
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function setup(props: GlobalSettingsAppData = searchData) {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    render(GlobalSettingsApp, { props })
+    return user
+  }
+
+  async function search(user: ReturnType<typeof setup>, query: string) {
+    await user.type(screen.getByRole('searchbox'), query)
+    // Past the filter debounce.
+    await vi.advanceTimersByTimeAsync(200)
+  }
+
+  // The rendered label wraps the title, so match on the full text of the wrapper.
+  const label = (text: string) => (_content: string, element: Element | null) =>
+    element?.tagName === 'SPAN' && element.textContent?.trim() === text
+
+  test('a query matching one variable hides the topics without a hit', async () => {
+    const user = setup()
+    await search(user, 'Site setting')
+
+    expect(screen.getByText(label('Site setting'))).toBeInTheDocument()
+    expect(screen.queryByText(label('User management'))).not.toBeInTheDocument()
+  })
+
+  test('a query matching only the topic headline finds nothing', async () => {
+    const user = setup()
+    await search(user, 'Site management')
+
+    expect(screen.getByText('No matching settings found.')).toBeInTheDocument()
+  })
+
+  test('a query matching one variable title hides its siblings in the same topic', async () => {
+    const user = setup()
+    await search(user, 'idle timeout')
+
+    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+    expect(
+      screen.queryByText(label('Lock user accounts after N login failures'))
+    ).not.toBeInTheDocument()
+  })
+
+  test('a matching section starts open and can be collapsed again', async () => {
+    const user = setup()
+    await search(user, 'idle')
+    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+
+    await user.click(screen.getByText(label('User management')))
+    expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
+  })
+
+  test('changing the query reopens the matching sections', async () => {
+    const user = setup()
+    await search(user, 'idle')
+    await user.click(screen.getByText(label('User management')))
+    expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
+
+    await search(user, ' timeout')
+    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+  })
+
+  test('ending the search collapses every section', async () => {
+    const user = setup()
+    await search(user, 'idle')
+    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Clear search' }))
+    await vi.advanceTimersByTimeAsync(200)
+    expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(label('Lock user accounts after N login failures'))
+    ).not.toBeInTheDocument()
+  })
+
+  test('a query without any match shows the empty state, whose reset button clears it', async () => {
+    const user = setup()
+    await search(user, 'no such setting')
+
+    expect(screen.getByText('No matching settings found.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reset search' }))
+    await vi.advanceTimersByTimeAsync(200)
+    expect(screen.queryByText('No matching settings found.')).not.toBeInTheDocument()
+    expect(screen.getByRole('searchbox')).toHaveValue('')
+  })
+
+  test('the expand/collapse toggle keeps working while a search is active', async () => {
+    const user = setup()
+    await search(user, 'idle')
+
+    await user.click(screen.getByRole('button', { name: 'Collapse all' }))
+    expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Expand all' }))
+    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+  })
+
+  test('the topic header counts stay totals while a search filters the rows', async () => {
+    const user = setup()
+    await search(user, 'idle timeout')
+
+    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+    expect(screen.getByText('2 variables')).toBeInTheDocument()
+  })
+
+  test('a value changed while a search is active persists after the query is cleared', async () => {
+    const user = setup({ ...data, topics: [data.topics[0]!, booleanTopic] })
+    await search(user, 'piggyback')
+
+    await user.click(screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' }))
+    await vi.advanceTimersByTimeAsync(200)
+    expect(screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Clear search' }))
+    await vi.advanceTimersByTimeAsync(200)
+    // The topic was only open because the search forced it open.
+    await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+    const row = screen
+      .getByText(label('Enable piggyback-hub'))
+      .closest('.global-settings-variable-row')
+    expect(row).toHaveTextContent('(modified)')
+    expect(screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    )
   })
 })

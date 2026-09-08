@@ -186,6 +186,21 @@ void main() {
                     + " --destination ${docker_registry_no_http}/${image_name}"
                     + " --destination ${docker_registry_no_http}/${tag_name}:latest${tag_suffix}"
                 );
+            } else if (distro == "deb-package-signer") {
+                // use the a few moments earlier built image
+                def signing_distro = "ubuntu-22.04";
+                def tag_name = "deb-package-signer-${safe_branch_name}";
+                image_name = "deb-package-signer-${safe_branch_name}:latest";
+                distro_base_image_id = "${docker_registry_no_http}/${signing_distro}:${safe_branch_name}-latest";
+
+                docker_build_args = (""
+                    + " --build-arg IMAGE_BASE='${distro_base_image_id}'"
+
+                    + " --dockerfile 'buildscripts/infrastructure/build-nodes/package-signing/Dockerfile'"
+                    + " --context temp-build-context"
+
+                    + " --destination ${docker_registry_no_http}/${tag_name}:latest${tag_suffix}"
+                );
             } else {
                 raise("Unknown distro: ${distro}");
             }

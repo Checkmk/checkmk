@@ -5,7 +5,6 @@
 
 # This file initializes the pytest environment
 
-import argparse
 import logging
 import os
 import subprocess
@@ -33,6 +32,9 @@ from tests.testlib.common.version import (
 )
 from tests.testlib.pytest_helpers.diagnostics import (
     render_command_output,
+)
+from tests.testlib.pytest_helpers.faked_artifacts import (
+    package_contains_faked_artifacts,
 )
 from tests.testlib.pytest_helpers.sharding import (
     Durations,
@@ -281,15 +283,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
             "variable 'CLEANUP' is used, if available. If neither is set, cleanup is enabled."
         ),
     )
-    parser.addoption(
-        "--package-contains-faked-artifacts",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help=(
-            "Set this if you used faked artifacts during the package build. "
-            "Some tests will then be skipped which rely on real built artifacts."
-        ),
-    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -338,10 +331,6 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
         "medium_test_chain: marks tests as part of the medium-test-chain CI job",
-    )
-    config.addinivalue_line(
-        "markers",
-        "skip_if_faked_artifacts: skip test when --package-contains-faked-artifacts is set",
     )
     config.addinivalue_line(
         "markers",
@@ -455,11 +444,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")
 
-    if item.get_closest_marker("skip_if_faked_artifacts") and item.config.getoption(
-        "--package-contains-faked-artifacts"
-    ):
-        pytest.skip(f"{item.nodeid}: Package contains faked artifacts!")
-
     if item.get_closest_marker("skip_if_medium_chain") and item.config.getoption("--medium-chain"):
         pytest.skip(f"{item.nodeid}: Not reachable in the gated medium chain!")
 
@@ -473,7 +457,7 @@ def pytest_runtest_teardown(item: pytest.Item) -> None:
         # Site class is not available during packaging tests for community edition
         return
 
-    faked_artifacts = bool(item.config.getoption("--package-contains-faked-artifacts"))
+    faked_artifacts = package_contains_faked_artifacts(item.config)
     for obj in getattr(item, "funcargs", {}).values():
         if isinstance(obj, Site):
             obj.report_crashes(ignore_bakery_crashes=faked_artifacts)

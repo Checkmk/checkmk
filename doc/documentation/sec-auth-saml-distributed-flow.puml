@@ -1,0 +1,25 @@
+@startuml
+!theme plain
+
+participant "Central site" as Central
+actor Browser
+participant "Remote site (SP)" as Remote
+participant IdP
+
+Central -> Remote : activate changes:\n   connection list, ACS URL, certificates
+
+Browser -> Remote : GET <REMOTE>/check_mk/login.py
+Remote --> Browser : login form with one button per\n   connection listed for this site
+
+Browser -> Remote : GET <REMOTE>/check_mk/saml_sso.py\n   RelayState="<saml_connection_id>,index.py"
+Remote -> Remote : connection listed for this site?\n   (and customer allowed?)
+Remote --> Browser : (form to be auto-submitted to IdP)\n   SAMLRequest signed with the\n   propagated key material
+
+Browser -> IdP : POST <SingleSignOnService Location>\n   RelayState,SAMLRequest
+IdP --> Browser : (form to be auto-submitted to SP)\n   SAMLResponse with\n   Recipient=<REMOTE ACS>
+
+Browser -> Remote : POST <REMOTE>/check_mk/saml_acs.py?acs\n   RelayState,SAMLResponse
+Remote -> Remote : validate SAMLResponse\n   Recipient == own ACS endpoint\n   create or update the user
+Remote --> Browser : 302 Redirect\n   Set-Cookie: auth_REMOTE="..."
+
+@enduml

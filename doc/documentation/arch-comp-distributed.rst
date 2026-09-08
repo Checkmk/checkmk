@@ -226,6 +226,8 @@ customized with the commercial editions using the
 See also
 ========
 
+- :doc:`sec-auth-saml-distributed` (which connections may authenticate users on
+  which site, and what the central site propagates to make that work)
 - :doc:`arch-comp-gui`
 - :doc:`arch-comp-livestatus`
 - :doc:`arch-comp-liveproxyd`

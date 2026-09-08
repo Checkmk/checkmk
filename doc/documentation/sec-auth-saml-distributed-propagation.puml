@@ -1,0 +1,31 @@
+@startuml
+!theme plain
+
+package "Central site" {
+  file "sites.mk" as sites
+  file "user_connections.mk" as connections
+  folder "etc/ssl/saml2" as certs
+  component "Snapshot creation" as snapshot
+}
+
+package "Remote site" {
+  file "sitespecific.mk" as sitespecific
+  folder "etc/ssl/saml2\n(subset)" as remotecerts
+  component "GUI runtime" as gui
+}
+
+sites --> snapshot : authentication_connections\nuser_attribute_sync_connections
+connections --> snapshot : configured LDAP and\nSAML connections
+certs --> snapshot : signature and\nencryption key material
+
+snapshot --> sitespecific : resolved connection list,\nper-site metadata and ACS URLs
+snapshot --> remotecerts : only the key material of the\nSAML connections of this site
+sitespecific --> gui : effective_authentication_connections()
+
+note right of snapshot
+  resolved_authentication_connections()
+  populate_saml_site_endpoint_urls()
+  create_saml2_cert_files()
+end note
+
+@enduml

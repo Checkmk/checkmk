@@ -9,6 +9,7 @@ Checkmk implements a variety of authentication methods, both for internal use an
 
    sec-auth-saml.rst
    arch-comp-oauth.rst
+   sec-auth-saml-distributed.rst
 
 .. TODO: Document the following as well:
 

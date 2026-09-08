@@ -7,8 +7,9 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime as dt
-from collections.abc import Iterable
-from typing import NamedTuple
+from collections.abc import Callable, Iterable
+from typing import NamedTuple, NoReturn
+from unittest import mock
 
 import pytest
 import time_machine
@@ -21,7 +22,26 @@ from cmk.legacy_includes.temperature import (
 )
 from cmk.plugins.lib.temperature import TempParamDict, TempParamType, TrendComputeDict
 
-from .checktestlib import mock_item_state
+
+class _MockValueStore:
+    def __init__(self, getter: Callable[[str], tuple[float, float] | None]) -> None:
+        self._getter = getter
+
+    def get(self, key, default=None):  # noqa: ARG002
+        return self._getter(key)
+
+    def __setitem__(self, key, value):
+        pass
+
+
+class _MockVSManager(NamedTuple):
+    active_service_interface: _MockValueStore
+
+
+def mock_item_state(getter: Callable[[str], tuple[float, float] | None]):
+    target = "cmk.agent_based.v1.value_store._active_host_value_store"
+
+    return mock.patch(target, _MockVSManager(_MockValueStore(getter)))
 
 
 @pytest.mark.parametrize(
@@ -294,7 +314,7 @@ def test_check_temperature_trend(test_case: Entry) -> None:
     state = {"temp.foo.delta": (unix_ts(time), test_case.reading), "temp.foo.trend": (0, 0)}
 
     with (
-        mock_item_state(state),
+        mock_item_state(state.get),
         time_machine.travel(time + dt.timedelta(seconds=test_case.seconds_elapsed)),
     ):
         result = check_temperature_trend(
@@ -319,7 +339,7 @@ def test_check_temperature_trend_exception() -> None:
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
-    def raises_exception(*args, **kwargs) -> None:  # noqa: ARG001
+    def raises_exception(_k: str) -> NoReturn:
         raise IgnoreResultsError("Value Store does not have any valid values")
 
     with (
@@ -355,7 +375,7 @@ def test_check_temperature_called(test_case: Entry) -> None:
     state = {"temp.foo.delta": (unix_ts(time), test_case.reading), "temp.foo.trend": (0, 0)}
 
     with (
-        mock_item_state(state),
+        mock_item_state(state.get),
         time_machine.travel(time + dt.timedelta(seconds=test_case.seconds_elapsed)),
     ):
         # Assuming atmospheric pressure...

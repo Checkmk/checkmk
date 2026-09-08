@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from .checktestlib import Check
+from cmk.legacy_checks.f5_bigip_vserver import parse_f5_bigip_vserver
 
 
 @pytest.mark.parametrize(
@@ -96,6 +96,6 @@ def test_f5_bigip_vserver_parsing(
     item: str,
     expected_item_data: Mapping[str, str | Sequence[float]],
 ) -> None:
-    parsed = Check("f5_bigip_vserver").run_parse(info)
+    parsed = parse_f5_bigip_vserver(info)  # type: ignore[no-untyped-call]
     assert isinstance(parsed, dict)
     assert sorted(parsed[item].items()) == sorted(expected_item_data.items())

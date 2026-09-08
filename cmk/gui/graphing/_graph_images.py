@@ -33,6 +33,7 @@ from ._from_api import graphs_from_api, metrics_from_api
 from ._graph_dispatch import evaluate_built_graphs
 from ._graph_display_config import (
     get_mm_per_ex,
+    GraphDestinations,
     GraphDisplayConfigImage,
     GraphRenderOptions,
     GraphTitleFormat,
@@ -44,7 +45,6 @@ from ._graph_specification import (
     GraphRanges,
 )
 from ._graph_templates import build_template_graphs, get_template_graph_specification
-from ._html_render import GraphDestinations
 from ._metric_backend_registry import METRIC_BACKEND_KEY, metric_backend_registry
 from ._source import RRDFetchMetricNames
 from ._unit import get_temperature_unit

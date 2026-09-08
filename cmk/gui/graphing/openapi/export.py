@@ -8,7 +8,7 @@ from typing import Final
 from urllib.parse import urlencode
 
 from cmk.gui.graphing._graph_metric_expressions import GraphConsolidationFunction
-from cmk.gui.graphing._html_render import GraphExportRequest
+from cmk.gui.graphing._graph_specification import GraphExportRequest
 from cmk.gui.graphing.openapi._add_to import parse_specification
 from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
 from cmk.gui.graphing.openapi.models import ApiConsolidation, ExportRequest, ExportResponse

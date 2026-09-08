@@ -28,6 +28,7 @@ from ._graph_choices import graph_choices, GraphChoices, GraphPluginChoice
 from ._graph_dispatch import evaluate_built_graphs
 from ._graph_display_config import (
     get_mm_per_ex,
+    GraphDestinations,
     GraphDisplayConfigHTML,
     GraphDisplayConfigImage,
     GraphRenderOptions,
@@ -45,6 +46,7 @@ from ._graph_png import compute_png_size_mm, mm_per_ex, render_png_ex
 from ._graph_specification import (
     compute_graph_ranges_for_width,
     GraphEnvironment,
+    GraphExportRequest,
     GraphMetric,
     GraphRanges,
     GraphSpecification,
@@ -61,11 +63,6 @@ from ._graph_templates import (
 )
 from ._graph_title import render_plain_graph_title
 from ._graphs_order import sort_registered_graph_plugins
-from ._html_render import (
-    GraphDestinations,
-    GraphExportRequest,
-    host_service_graph_popup_cmk,
-)
 from ._metric_backend_registry import (
     FetchTimeSeriesProtocol,
     METRIC_BACKEND_KEY,

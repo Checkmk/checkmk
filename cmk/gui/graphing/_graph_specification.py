@@ -13,6 +13,7 @@ from typing import Annotated, final, override
 from pydantic import (
     BaseModel,
     computed_field,
+    field_validator,
     PlainValidator,
     SerializeAsAny,
 )
@@ -25,6 +26,7 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import GraphFromAPI, RegisteredMetric
 from ._graph_metric_expressions import (
+    GraphConsolidationFunction,
     GraphMetricExpression,
     line_type_mirror,
     LineType,
@@ -131,3 +133,17 @@ def compute_graph_ranges_for_width(width: SizeMM, start_time: int, end_time: int
     number_of_steps = int(available_width / mm_per_step)
     step = int((end_time - start_time) / number_of_steps / 2)
     return GraphRanges(time_range=(start_time, end_time), step=step)
+
+
+class GraphExportRequest(BaseModel, frozen=True):
+    specification: SerializeAsAny[GraphSpecification]
+    consolidation_function: GraphConsolidationFunction = "max"
+    time_start: int | None = None
+    time_end: int | None = None
+
+    @field_validator("specification", mode="before")
+    @classmethod
+    def _parse_specification(cls, value: object) -> GraphSpecification:
+        if isinstance(value, GraphSpecification):
+            return value
+        return parse_graph_specification(value)

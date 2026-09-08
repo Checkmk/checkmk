@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import traceback
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import Final, TypedDict
 
 from tzlocal import get_localzone_name
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing_engine import (
     EvaluatedCurve,
     EvaluatedGraph,
@@ -443,3 +445,20 @@ def load_graph_pin(user: LoggedInUser) -> int | None:
 
 def save_graph_pin(user: LoggedInUser, pin_time: int | None) -> None:
     user.save_file(GRAPH_PIN_USER_FILE, pin_time)
+
+
+def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: bool) -> HTML:
+    if isinstance(msg_or_exc, MKGeneralException) and not debug:
+        msg = "%s" % msg_or_exc
+
+    elif isinstance(msg_or_exc, Exception):
+        if debug:
+            raise msg_or_exc
+        msg = traceback.format_exc()
+    else:
+        msg = msg_or_exc
+
+    return HTMLWriter.render_div(
+        HTMLWriter.render_div(title, class_="title") + HTMLWriter.render_pre(msg),
+        class_=["graph", "brokengraph"],
+    )

@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container
+from enum import StrEnum
 from typing import Literal, Self
 
 from pydantic import BaseModel
 
+from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     GraphRenderOptionsVS,
     GraphTitleFormatVS,
@@ -157,3 +159,19 @@ def resolve_size(options: GraphRenderOptions) -> tuple[float, float]:
     if options.size:
         return (float(options.size[0]), float(options.size[1]))
     return _DEFAULT_GRAPH_SIZE
+
+
+class GraphDestinations(StrEnum):
+    dashlet = "dashlet"
+    view = "view"
+    report = "report"
+    notification = "notification"
+
+    @classmethod
+    def choices(cls) -> list[tuple[str, str]]:
+        return [
+            (cls.dashlet, _("Dashboard element")),
+            (cls.view, _("View")),
+            (cls.report, _("Report")),
+            (cls.notification, _("Notification")),
+        ]

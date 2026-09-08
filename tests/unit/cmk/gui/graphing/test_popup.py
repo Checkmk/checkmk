@@ -9,7 +9,7 @@ import re
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
-from cmk.gui.graphing._html_render import host_service_graph_popup_cmk
+from cmk.gui.graphing._popup import host_service_graph_popup_cmk
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.servicename import ServiceName

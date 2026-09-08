@@ -9,7 +9,9 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Literal, override
 
-from cmk.werks.tool.collect import Config
+from git.objects.tree import Tree
+
+from cmk.werks.tool.collect import Config, FailReason
 from cmk.werks.tool.collect import main as collect_main
 
 logger = logging.getLogger(__name__)
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class CmaConfig(Config):
     branch_regex = r"^(master$|\d+\.\d+$)"
-    defines_make = "cma-defines"
+    _defines_make = "cma-defines"
 
 
 class CloudmkConfig(Config):
@@ -83,6 +85,19 @@ def _replace_compatible(werk_string: str, compatible: str) -> str:
 
 class KubeConfig(Config):
     branch_regex = r"^(main$|\d+\.\d+\.\d+)"
+
+    @override
+    def get_next_version(self, tree: Tree) -> str | FailReason:
+        # load the version that werks without version should have.
+        # this should return the version of the next release.
+        try:
+            config = tree[".werks/config"]
+        except KeyError:
+            return FailReason("Can not find werks config file in the git tree.")
+        first_line: str = next(config.data_stream.stream).decode("utf-8")
+        if not first_line.startswith('current_version = "'):
+            return FailReason("werks configs first line should state the current_version!")
+        return first_line.split("=", 1)[1].strip('" \n')
 
 
 def config_from_flavor(flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"]) -> Config:

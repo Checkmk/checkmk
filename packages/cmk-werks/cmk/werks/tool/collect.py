@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Literal, NamedTuple
 
 from git.objects.commit import Commit
+from git.objects.tree import Tree
 from git.repo import Repo
 
 from cmk.werks.tool import load_werk, parse_werk
@@ -21,6 +22,11 @@ from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 from .models import AllWerks, WebsiteWerkV2, WebsiteWerkV3
 
 logger = logging.getLogger(__name__)
+
+
+class FailReason:
+    def __init__(self, reason: str):
+        self.reason = reason
 
 
 class Config:
@@ -35,7 +41,20 @@ class Config:
     # only branches matching this regex will be considered for searching for
     # werk files.
     branch_regex: str
-    defines_make: str = "defines.make"
+    _defines_make: str = "defines.make"
+
+    def get_next_version(self, tree: Tree) -> str | FailReason:
+        # load the version that werks without version should have.
+        # this should return the version of the next release.
+        try:
+            defines_make = tree[self._defines_make]
+        except KeyError:
+            return FailReason(f"Can not find {self._defines_make} file in the git tree.")
+        if (
+            version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)
+        ) is not None:
+            return version
+        return FailReason(f"Could not read the version in {self._defines_make}.")
 
     def cleanup_branch_name(self, branch_name: str) -> str:
         # in previous releases of cmk there were branches called 1.2.7i3
@@ -106,24 +125,15 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
     for branch_name, ref in _get_branches(r, c, branches):
         tree = r.tree(ref)
 
-        try:
-            defines_make = tree[config.defines_make]
-        except KeyError:
+        version = config.get_next_version(tree)
+        if isinstance(version, FailReason):
             logger.warning(
-                "no %(defines_make)s file in branch %(branch)s",
-                {"branch": branch_name, "defines_make": config.defines_make},
+                "could not determine the next release version in branch %(branch)s. reason: %(reason)s",
+                {"branch": branch_name, "reason": version.reason},
             )
             continue
-        if (
-            version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)
-        ) is not None:
-            defines_make_version_by_branch[branch_name] = version
-        else:
-            logger.warning(
-                "getting version from defines.make failed in branch %(branch)s",
-                {"branch": branch_name},
-            )
-            continue
+
+        defines_make_version_by_branch[branch_name] = version
 
         try:
             werks = tree[".werks"]

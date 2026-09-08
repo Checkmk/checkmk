@@ -17,3 +17,9 @@ class RelativeGridDashboardDomainObject(DomainObjectModel):
     extensions: RelativeGridDashboardResponse = api_field(
         description="All the data about this dashboard."
     )
+
+
+@api_model
+class ComputedWidgetResponse[T]:
+    domainType: Literal["widget-compute"] = api_field(description="The domain type of the object.")
+    value: T = api_field(description="The computed widget data.")

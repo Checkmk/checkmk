@@ -6,14 +6,17 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
-export type ComputedWidgetSpecResponse = components['schemas']['ComputedWidgetSpecResponse']
-export type ComputedTopListResponse = components['schemas']['ComputedTopListResponse']
+export type ComputedWidgetSpecResponse =
+  components['schemas']['ComputedWidgetResponse_ComputedWidgetSpec_']
+export type ComputedTopListResponse = components['schemas']['ComputedWidgetResponse_TopList_']
 export type ComputedTopList = components['schemas']['TopList']
 export type TopListEntry = components['schemas']['TopListEntry']
 export type TopListError = components['schemas']['TopListError']
-export type ComputedSingleMetricResponse = components['schemas']['ComputedSingleMetricResponse']
+export type ComputedSingleMetricResponse =
+  components['schemas']['ComputedWidgetResponse_SingleMetric_']
 export type ComputedSingleMetric = components['schemas']['SingleMetric']
-export type ComputedTimelineCountResponse = components['schemas']['ComputedTimelineCountResponse']
+export type ComputedTimelineCountResponse =
+  components['schemas']['ComputedWidgetResponse_TimelineCount_']
 export type ComputedTimelineCount = components['schemas']['TimelineCount']
 
 export type WidgetContent = components['schemas']['WidgetContent']

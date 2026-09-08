@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Literal
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
@@ -18,6 +17,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 
 from ._family import DASHBOARD_FAMILY
 from ._utils import PERMISSIONS_DASHBOARD
+from .model.response_model import ComputedWidgetResponse
 from .model.type_defs import AnnotatedInfoName
 from .model.widget import determine_widget_filter_used_infos
 from .model.widget_content import WidgetContent
@@ -41,21 +41,17 @@ class ComputedWidgetSpec:
 
 
 @api_model
-class ComputedWidgetSpecResponse:
-    domainType: Literal["widget-compute"] = api_field(description="The domain type of the object.")
-    value: ComputedWidgetSpec = api_field(description="Computed widget specification attributes")
-
-
-@api_model
 class ComputedWidgetSpecRequest:
     content: WidgetContent = api_field(description="Widget content to compute attributes for.")
 
 
-def compute_widget_attributes_v1(body: ComputedWidgetSpecRequest) -> ComputedWidgetSpecResponse:
+def compute_widget_attributes_v1(
+    body: ComputedWidgetSpecRequest,
+) -> ComputedWidgetResponse[ComputedWidgetSpec]:
     """Compute widget specification attributes"""
     user.need_permission("general.edit_dashboards")
     widget_config = body.content.to_internal()
-    return ComputedWidgetSpecResponse(
+    return ComputedWidgetResponse(
         domainType="widget-compute",
         value=ComputedWidgetSpec(
             filter_context=ComputedFilterContext(

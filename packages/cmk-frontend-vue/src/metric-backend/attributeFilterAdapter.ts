@@ -182,26 +182,16 @@ export interface AutoCompleteContext {
   metric_name?: string
   attribute_key?: string
   static_resource_attribute_keys?: string[]
-  attribute_filter: AttributeFilter
 }
 
 export interface ContextOptions {
   metricName?: string | null
   staticResourceAttributeKeys?: string[] | null
   attributeKey?: string | null
-  excludeId?: string | undefined
 }
 
-export function buildAutocompleteContext(
-  model: AttributeFilterModel,
-  options: ContextOptions = {}
-): AutoCompleteContext {
-  // Drop the pill being edited so it does not constrain its own value suggestions.
-  const withoutEditedPill = model.map((group) => ({
-    ...group,
-    conditions: group.conditions.filter((condition) => condition.id !== options.excludeId)
-  }))
-  const context: AutoCompleteContext = { attribute_filter: toAttributeFilter(withoutEditedPill) }
+export function buildAutocompleteContext(options: ContextOptions = {}): AutoCompleteContext {
+  const context: AutoCompleteContext = {}
   if (options.metricName) {
     context.metric_name = options.metricName
   }

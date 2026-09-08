@@ -145,7 +145,7 @@ const dummyKeySections: TypedSection[] = [
 ]
 
 // The demo has no cross-condition filtering, so it ignores the edited condition.
-async function querySuggestions(_condition: AttributeCondition, query: string): Promise<Response> {
+async function querySuggestions(query: string): Promise<Response> {
   const needle = query.toLowerCase()
   const filtered = dummyKeySections
     .map((section) => ({

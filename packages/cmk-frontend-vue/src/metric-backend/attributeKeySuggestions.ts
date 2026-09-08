@@ -22,14 +22,10 @@ import type { AutoCompleteContext } from './attributeFilterAdapter'
 /**
  * Attribute-key autocomplete across the three attribute kinds, sectioned by kind.
  *
- * The caller supplies the REST context, which is what narrows the offered keys.
- * ``buildContext`` receives the id of the pill being edited so it can drop that
- * pill: a condition must not constrain the keys offered for its own key field.
+ * The caller supplies the REST context that scopes the offered keys.
  */
-export function useAttributeKeySuggestions(
-  buildContext: (excludeId?: string) => AutoCompleteContext
-): {
-  querySuggestions: (query: string, excludeId?: string) => Promise<Response>
+export function useAttributeKeySuggestions(buildContext: () => AutoCompleteContext): {
+  querySuggestions: (query: string) => Promise<Response>
   resolveAttributeKind: (key: string) => AttributeKind | null
   cachedSuggestions: (
     autocompleter: Autocompleter,
@@ -79,12 +75,12 @@ export function useAttributeKeySuggestions(
     }
   }
 
-  async function querySuggestions(query: string, excludeId?: string): Promise<Response> {
+  async function querySuggestions(query: string): Promise<Response> {
     const sections: Section[] = []
     ATTRIBUTE_KIND_ORDER.forEach((attributeKind) => {
       const autocompleter: Autocompleter = {
         fetch_method: 'rest_autocomplete',
-        data: { ident: KEY_IDENTS[attributeKind], params: { context: buildContext(excludeId) } }
+        data: { ident: KEY_IDENTS[attributeKind], params: { context: buildContext() } }
       }
       const response = cachedSuggestions(autocompleter, query)
       if (!response || response instanceof ErrorResponse) {

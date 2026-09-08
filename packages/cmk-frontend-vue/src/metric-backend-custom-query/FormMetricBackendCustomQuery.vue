@@ -217,7 +217,7 @@ const {
   querySuggestions: groupByQuerySuggestions,
   resolveAttributeKind: groupByResolveAttributeKind,
   suggestionRevision: groupBySuggestionRevision
-} = useAttributeKeySuggestions(() => buildAutocompleteContext([], { metricName: metricName.value }))
+} = useAttributeKeySuggestions(() => buildAutocompleteContext({ metricName: metricName.value }))
 </script>
 
 <template>

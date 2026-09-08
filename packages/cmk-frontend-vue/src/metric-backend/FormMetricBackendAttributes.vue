@@ -73,17 +73,12 @@ const {
   cachedSuggestions,
   suggestionRevision,
   clearCache: clearSuggestionCache
-} = useAttributeKeySuggestions((excludeId) =>
-  buildAutocompleteContext(filterModel.value, {
+} = useAttributeKeySuggestions(() =>
+  buildAutocompleteContext({
     metricName: props.metricName,
-    staticResourceAttributeKeys: props.staticResourceAttributeKeys,
-    excludeId
+    staticResourceAttributeKeys: props.staticResourceAttributeKeys
   })
 )
-
-function queryKeySuggestions(condition: Condition, query: string): Promise<Response> {
-  return querySuggestions(query, condition.id)
-}
 
 watch(
   filterModel,
@@ -128,20 +123,15 @@ async function queryValueSuggestions(condition: Condition, query: string): Promi
   if (condition.attributeKind === null || !condition.key) {
     return new Response(userEntry)
   }
-  // Scope suggestions to the edited pill's AND group; sibling OR disjuncts must not narrow them.
-  const editedGroup = filterModel.value.find((group) =>
-    group.conditions.some((candidate) => candidate.id === condition.id)
-  )
   const autocompleter: Autocompleter = {
     fetch_method: 'rest_autocomplete',
     data: {
       ident: VALUE_IDENTS[condition.attributeKind],
       params: {
-        context: buildAutocompleteContext(editedGroup ? [editedGroup] : [], {
+        context: buildAutocompleteContext({
           metricName: props.metricName,
           staticResourceAttributeKeys: props.staticResourceAttributeKeys,
-          attributeKey: condition.key,
-          excludeId: condition.id
+          attributeKey: condition.key
         })
       }
     }
@@ -190,7 +180,7 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
         v-model="filterModel"
         :allow-or="props.allowOr"
         :operators="props.operators"
-        :query-suggestions="queryKeySuggestions"
+        :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         :suggestion-revision="suggestionRevision"
         :resolve-attribute-kind="resolveAttributeKind"

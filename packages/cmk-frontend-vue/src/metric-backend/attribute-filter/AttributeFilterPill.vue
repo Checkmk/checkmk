@@ -28,7 +28,7 @@ const { _t } = usei18n()
 const props = withDefaults(
   defineProps<{
     condition: Condition
-    querySuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
+    querySuggestions: (query: string) => ReturnType<QuerySuggestionsFn>
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     suggestionRevision?: number
     operators?: Operator[] | undefined
@@ -67,7 +67,7 @@ const keyOptions = computed(() => {
   void props.suggestionRevision
   return {
     type: 'callback-filtered' as const,
-    querySuggestions: (query: string) => props.querySuggestions(props.condition, query)
+    querySuggestions: props.querySuggestions
   }
 })
 const valueOptions = computed(() => {

@@ -78,40 +78,17 @@ describe('fromModel', () => {
 })
 
 describe('buildAutocompleteContext', () => {
-  test('encodes the model as a recursive filter, dropping the excluded pill, plus the options', () => {
-    const model = group(
-      {
-        id: 'self',
-        attributeKind: 'data_point',
-        key: 'http.method',
-        operator: 'equals',
-        value: 'GET'
-      },
-      {
-        id: 'other',
-        attributeKind: 'data_point',
-        key: 'http.route',
-        operator: 'equals',
-        value: '/api'
-      }
-    )
-
+  test('encodes the scoping options', () => {
     expect(
-      buildAutocompleteContext(model, {
+      buildAutocompleteContext({
         metricName: 'http_requests',
         staticResourceAttributeKeys: ['service.name'],
-        attributeKey: 'http.method',
-        excludeId: 'self'
+        attributeKey: 'http.method'
       })
     ).toEqual({
       metric_name: 'http_requests',
       static_resource_attribute_keys: ['service.name'],
-      attribute_key: 'http.method',
-      attribute_filter: {
-        type: 'equals',
-        key: { kind: 'data_point', name: 'http.route' },
-        value: '/api'
-      }
+      attribute_key: 'http.method'
     })
   })
 })

@@ -16,7 +16,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject, provide, ref, toRaw } from 'vue'
 
 import { GLOBAL_SETTINGS_SERVICE, GLOBAL_SETTINGS_TOGGLE, globalSettingsService } from './api'
-import ExpandCollapseToggle from './components/ExpandCollapseToggle.vue'
+import ExpandCollapseButtons from './components/ExpandCollapseButtons.vue'
 import GlobalSettingsEditSlideIn from './components/GlobalSettingsEditSlideIn.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
 import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
@@ -97,9 +97,7 @@ async function resetTopic(): Promise<void> {
 <template>
   <div class="global-settings-app">
     <div class="global-settings-app__toolbar">
-      <ExpandCollapseToggle
-        :opened-count="openedItems.length"
-        :total-count="allTopicIds.length"
+      <ExpandCollapseButtons
         @expand-all="openedItems = [...allTopicIds]"
         @collapse-all="openedItems = []"
       />

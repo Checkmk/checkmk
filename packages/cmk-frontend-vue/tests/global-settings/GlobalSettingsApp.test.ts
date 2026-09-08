@@ -205,11 +205,11 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.queryByText('Site setting')).not.toBeInTheDocument()
     expect(screen.queryByText('Lock user accounts after N login failures')).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle Expand all' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
     expect(screen.getByText('Site setting')).toBeInTheDocument()
     expect(screen.getByText('Lock user accounts after N login failures')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle Collapse all' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse all' }))
     expect(screen.queryByText('Site setting')).not.toBeInTheDocument()
   })
 
@@ -229,7 +229,7 @@ describe('GlobalSettingsApp accordion', () => {
 
   test('only modified rows are marked', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle Expand all' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
     expect(screen.getAllByText('(modified)')).toHaveLength(1)
     expect(
       screen.getByText('Site setting').closest('.global-settings-variable-row')
@@ -671,7 +671,7 @@ describe('GlobalSettingsApp', () => {
       })
     )
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle Expand all' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
     await userEvent.click(
       screen.getByRole('button', { name: 'Edit Lock user accounts after N login failures' })
     )

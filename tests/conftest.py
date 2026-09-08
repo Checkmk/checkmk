@@ -175,36 +175,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Fail test run if any exception was logged.",
     )
     parser.addoption(
-        "--no-skip",
-        action="store_true",
-        default=False,
-        help="Disable any skip or skipif markers.",
-    )
-    parser.addoption(
-        "--limit",
-        action="store",
-        default=None,
-        type=int,
-        help="Select only the first N tests from the collection list.",
-    )
-    parser.addoption(
-        "--medium-chain",
-        action="store_true",
-        default=False,
-        help=(
-            "Mark this run as part of the gated medium chain, which skips tests "
-            "carrying skip_if_medium_chain. A plain option and not a '-m' filter "
-            "on purpose: the make targets in run_tests.sh set their own '-m' after "
-            "TEST_FILTER, and pytest lets the last '-m' win."
-        ),
-    )
-    parser.addoption(
-        "--dry-run",
-        action="store_true",
-        default=False,
-        help="Simulate test execution. XFail all tests that would be executed.",
-    )
-    parser.addoption(
         ARG_VERSION_CMK,
         action="store",
         type=str,
@@ -295,27 +265,6 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         f"{ContainerizedMarker.skip_if_not}: skips the tests for uncontainerized runs",
     )
-    config.addinivalue_line(
-        "markers",
-        "medium_test_chain: marks tests as part of the medium-test-chain CI job",
-    )
-    config.addinivalue_line(
-        "markers",
-        "skip_if_medium_chain: skip test when --medium-chain is set. For tests "
-        "that cannot work pre-submit, not for tests that merely fail",
-    )
-    config.addinivalue_line(
-        "markers",
-        "requires_non_root_user: Tests that require a non-root user to be executed.",
-    )
-
-
-def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
-    """Mark collected test types based on their location"""
-    items[:] = items[0 : config.getoption("--limit")]
-    for item in items:
-        if config.getoption("--no-skip"):
-            item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
 def _editions_from_markers(item: pytest.Item, marker_name: EditionMarker) -> list[TypeCMKEdition]:
@@ -344,12 +293,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     skip_not_containerized = next(item.iter_markers(name=ContainerizedMarker.skip_if_not), None)
     if skip_not_containerized and not is_containerized():
         pytest.skip(f"{item.nodeid}: Containerized run required!")
-
-    if item.config.getoption("--dry-run"):
-        pytest.xfail("*** DRY-RUN ***")
-
-    if item.get_closest_marker("skip_if_medium_chain") and item.config.getoption("--medium-chain"):
-        pytest.skip(f"{item.nodeid}: Not reachable in the gated medium chain!")
 
 
 @pytest.hookimpl

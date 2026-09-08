@@ -6,8 +6,10 @@
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { defineComponent, ref } from 'vue'
 
+import type { KeySection } from '@/telemetry-metrics/attribute-kind'
 import FormGroupBy from '@/telemetry-metrics/group-by/FormGroupBy.vue'
 import type {
   AttributeKind,
@@ -21,14 +23,14 @@ const KEY_ATTRIBUTE_KINDS: Record<string, AttributeKind> = {
 }
 
 function querySuggestions(query: string): Promise<Response> {
-  const matches = Object.keys(KEY_ATTRIBUTE_KINDS)
-    .filter((k) => k.includes(query))
-    .map((k) => ({ name: k, title: k }))
-  return Promise.resolve(new Response(matches))
-}
-
-function resolveAttributeKind(key: string): AttributeKind | null {
-  return KEY_ATTRIBUTE_KINDS[key] ?? null
+  const sections: KeySection[] = Object.entries(KEY_ATTRIBUTE_KINDS)
+    .filter(([key]) => key.includes(query))
+    .map(([key, kind]) => ({
+      title: untranslated(kind),
+      suggestions: [{ name: key, title: untranslated(key) }],
+      kind
+    }))
+  return Promise.resolve(new Response(sections))
 }
 
 function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInputType = 'float') {
@@ -37,7 +39,7 @@ function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInp
   const wrapper = defineComponent({
     components: { FormGroupBy },
     setup() {
-      return { model, type, querySuggestions, resolveAttributeKind }
+      return { model, type, querySuggestions }
     },
     template: `
       <div>
@@ -46,7 +48,6 @@ function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInp
           v-model="model"
           :input-type="type"
           :query-suggestions="querySuggestions"
-          :resolve-attribute-kind="resolveAttributeKind"
         />
       </div>
     `
@@ -251,7 +252,7 @@ async function selectKey(value: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: value }))
 }
 
-test('picking a key applies key and inferred attribute kind in one mutation (also for a second key)', async () => {
+test('picking a key applies key and its section kind in one mutation (also for a second key)', async () => {
   // Two emits (key then attribute kind) would race and drop the key; a second key regressed this (CMK-36579).
   const { model } = renderWidget(
     {

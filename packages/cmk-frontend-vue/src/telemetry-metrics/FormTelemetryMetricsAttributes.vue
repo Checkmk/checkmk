@@ -69,7 +69,6 @@ const validationMessages = ref<string[]>([])
 
 const {
   querySuggestions,
-  resolveAttributeKind,
   cachedSuggestions,
   suggestionRevision,
   clearCache: clearSuggestionCache
@@ -183,7 +182,6 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         :suggestion-revision="suggestionRevision"
-        :resolve-attribute-kind="resolveAttributeKind"
         :aria-label="props.label"
       />
     </component>

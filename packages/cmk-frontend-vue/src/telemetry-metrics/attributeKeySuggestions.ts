@@ -7,7 +7,6 @@ import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_co
 import {
   ErrorResponse,
   Response,
-  type Section,
   type Suggestion,
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
@@ -15,7 +14,7 @@ import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/au
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type Ref, ref } from 'vue'
 
-import { ATTRIBUTE_KIND_ORDER, type AttributeKind, attributeKindLabel } from './attribute-kind'
+import { ATTRIBUTE_KIND_ORDER, type KeySection, attributeKindLabel } from './attribute-kind'
 import { KEY_IDENTS } from './attributeFilterAdapter'
 import type { AutoCompleteContext } from './attributeFilterAdapter'
 
@@ -26,7 +25,6 @@ import type { AutoCompleteContext } from './attributeFilterAdapter'
  */
 export function useAttributeKeySuggestions(buildContext: () => AutoCompleteContext): {
   querySuggestions: (query: string) => Promise<Response>
-  resolveAttributeKind: (key: string) => AttributeKind | null
   cachedSuggestions: (
     autocompleter: Autocompleter,
     query: string
@@ -62,21 +60,8 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
     suggestionCache.clear()
   }
 
-  // A key may be offered under more than one attribute kind, so record the set of
-  // kinds each suggested key belongs to (see `resolveAttributeKind`).
-  const keyKindCache = new Map<string, Set<AttributeKind>>()
-
-  function cacheKeyKind(name: string, attributeKind: AttributeKind): void {
-    const kinds = keyKindCache.get(name)
-    if (kinds) {
-      kinds.add(attributeKind)
-    } else {
-      keyKindCache.set(name, new Set([attributeKind]))
-    }
-  }
-
   async function querySuggestions(query: string): Promise<Response> {
-    const sections: Section[] = []
+    const sections: KeySection[] = []
     ATTRIBUTE_KIND_ORDER.forEach((attributeKind) => {
       const autocompleter: Autocompleter = {
         fetch_method: 'rest_autocomplete',
@@ -88,36 +73,27 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
       }
       // The backend echoes the typed text as a leading (query, query) choice; a real
       // key equal to the query is indistinguishable from the echo and is dropped too,
-      // falling into the section-less user entry below (its type stays unresolved).
+      // falling into the kind-less user entry below.
       const suggestions = flattenSuggestions(response.choices).filter(
         (s: Suggestion) =>
           s.name !== query && (s.name === null || (s.name.length > 0 && s.title.length > 0))
       )
-      for (const suggestion of suggestions) {
-        if (suggestion.name) {
-          cacheKeyKind(suggestion.name, attributeKind)
-        }
-      }
       if (suggestions.length > 0) {
-        sections.push({ title: attributeKindLabel(attributeKind), suggestions })
+        sections.push({
+          title: attributeKindLabel(attributeKind),
+          suggestions,
+          kind: attributeKind
+        })
       }
     })
-    const userEntry: Section[] = query
+    const userEntry: KeySection[] = query
       ? [{ title: untranslated(''), suggestions: [{ name: query, title: untranslated(query) }] }]
       : []
     return new Response([...userEntry, ...sections])
   }
 
-  function resolveAttributeKind(key: string): AttributeKind | null {
-    // A key offered under more than one attribute kind is ambiguous: leave it
-    // unresolved so the attribute-kind dropdown opens for the user to choose.
-    const kinds = keyKindCache.get(key)
-    return kinds?.size === 1 ? [...kinds][0]! : null
-  }
-
   return {
     querySuggestions,
-    resolveAttributeKind,
     cachedSuggestions,
     suggestionRevision,
     clearCache

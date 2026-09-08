@@ -299,11 +299,8 @@ function storedGroupBy(): GroupByModel {
 watch([groupBy, thenSteps], () => storeCurrentWith({}))
 
 // The group-by pills pick from the same attribute keys as the where clause.
-const {
-  querySuggestions: groupByQuerySuggestions,
-  resolveAttributeKind: groupByResolveAttributeKind,
-  suggestionRevision: groupBySuggestionRevision
-} = useAttributeKeySuggestions(() => buildAutocompleteContext({ metricName: metricName.value }))
+const { querySuggestions: groupByQuerySuggestions, suggestionRevision: groupBySuggestionRevision } =
+  useAttributeKeySuggestions(() => buildAutocompleteContext({ metricName: metricName.value }))
 </script>
 
 <template>
@@ -370,7 +367,6 @@ const {
           :input-type="groupByInputType"
           :query-suggestions="groupByQuerySuggestions"
           :suggestion-revision="groupBySuggestionRevision"
-          :resolve-attribute-kind="groupByResolveAttributeKind"
           :aria-label="_t('And group by: grouping function and keys')"
         />
         <GroupByThenSteps v-if="thenStepsShown" v-model="thenSteps" :group-by-keys="groupBy.keys" />

@@ -27,14 +27,7 @@ import {
   functionsForInputType,
   isFunctionValidForInputType
 } from './types'
-import type {
-  AttributeKind,
-  GroupByFunction,
-  GroupByInputType,
-  GroupByModel,
-  GroupKey,
-  ParamKind
-} from './types'
+import type { GroupByFunction, GroupByInputType, GroupByModel, GroupKey, ParamKind } from './types'
 
 const { _t } = usei18n()
 
@@ -44,7 +37,6 @@ const props = withDefaults(
     inputType: GroupByInputType
     querySuggestions: QuerySuggestionsFn
     suggestionRevision?: number
-    resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
     ariaLabel?: string | undefined
   }>(),
   { suggestionRevision: 0 }
@@ -274,7 +266,6 @@ function canLeaveEdit(): boolean {
           v-model="keysModel"
           :query-suggestions="querySuggestions"
           :suggestion-revision="suggestionRevision"
-          :resolve-attribute-kind="resolveAttributeKind"
           testid="group-by-keys"
         />
       </template>

@@ -7,16 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
-import type { Section, Suggestions } from 'cmk-ui-library/components/CmkSuggestions/types'
+import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions/types'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
-import { ATTRIBUTE_KIND_ORDER, attributeKindLabel } from '../attribute-kind'
+import { ATTRIBUTE_KIND_ORDER, type KeySection, attributeKindLabel } from '../attribute-kind'
 import GroupByKeysArea from './GroupByKeysArea.vue'
 import { functionLabel, thenStepSummary } from './group-by-label'
 import { SCALAR_FUNCTIONS } from './types'
-import type { AggregationStep, AttributeKind, GroupKey, ScalarFunction } from './types'
+import type { AggregationStep, GroupKey, ScalarFunction } from './types'
 
 const { _t } = usei18n()
 
@@ -51,7 +51,7 @@ function onFunctionUpdate(value: string | null): void {
 
 function querySuggestions(query: string): Promise<Response> {
   const normalizedQuery = query.trim().toLowerCase()
-  const sections: Section[] = ATTRIBUTE_KIND_ORDER.flatMap((attributeKind) => {
+  const sections: KeySection[] = ATTRIBUTE_KIND_ORDER.flatMap((attributeKind) => {
     const keys = props.allowedKeys.filter(
       (key) =>
         key.attributeKind === attributeKind &&
@@ -65,17 +65,12 @@ function querySuggestions(query: string): Promise<Response> {
             suggestions: keys.map((key) => ({
               name: key.attributeKey,
               title: untranslated(key.attributeKey)
-            }))
+            })),
+            kind: attributeKind
           }
         ]
   })
   return Promise.resolve(new Response(sections))
-}
-
-function resolveAttributeKind(key: string): AttributeKind | null {
-  return (
-    props.allowedKeys.find((candidate) => candidate.attributeKey === key)?.attributeKind ?? null
-  )
 }
 
 const keysModel = computed<GroupKey[]>({
@@ -171,7 +166,6 @@ function canLeaveEdit(): boolean {
         v-model="keysModel"
         :query-suggestions="querySuggestions"
         :can-add="allowedKeys.length > 0"
-        :resolve-attribute-kind="resolveAttributeKind"
         hide-attribute-kind
         testid="then-step-keys"
       />

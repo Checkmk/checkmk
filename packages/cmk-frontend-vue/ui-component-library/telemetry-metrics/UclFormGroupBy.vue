@@ -61,7 +61,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof FormGroupBy,
-  'modelValue' | 'querySuggestions' | 'resolveAttributeKind' | 'ariaLabel' | 'suggestionRevision'
+  'modelValue' | 'querySuggestions' | 'ariaLabel' | 'suggestionRevision'
 > & {
   preset: ListPropDef<PresetName>
   inputType: ListPropDef<GroupByInputType>
@@ -78,14 +78,13 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
-import type { Section } from 'cmk-ui-library/components/CmkSuggestions/types'
 import { computed, ref, watch } from 'vue'
 
+import type { KeySection } from '@/telemetry-metrics/attribute-kind'
 import FormGroupBy from '@/telemetry-metrics/group-by/FormGroupBy.vue'
 import GroupByThenSteps from '@/telemetry-metrics/group-by/GroupByThenSteps.vue'
 import {
   type AggregationStep,
-  type AttributeKind,
   type GroupByModel,
   thenStepsAllowed
 } from '@/telemetry-metrics/group-by/types'
@@ -94,13 +93,9 @@ import { groupByPresets, presetInputType, presetThenSteps } from './groupByPrese
 
 defineProps<{ screenshotMode: boolean }>()
 
-interface TypedSection extends Section {
-  attributeKind: AttributeKind
-}
-
-const dummyKeySections: TypedSection[] = [
+const dummyKeySections: KeySection[] = [
   {
-    attributeKind: 'resource',
+    kind: 'resource',
     title: 'Resource',
     suggestions: [
       { name: 'service.name', title: 'service.name' },
@@ -110,7 +105,7 @@ const dummyKeySections: TypedSection[] = [
     ]
   },
   {
-    attributeKind: 'scope',
+    kind: 'scope',
     title: 'Scope',
     suggestions: [
       { name: 'otel.library.name', title: 'otel.library.name' },
@@ -118,7 +113,7 @@ const dummyKeySections: TypedSection[] = [
     ]
   },
   {
-    attributeKind: 'data_point',
+    kind: 'data_point',
     title: 'Data point',
     suggestions: [
       { name: 'http.method', title: 'http.method' },
@@ -132,7 +127,7 @@ async function querySuggestions(query: string): Promise<Response> {
   const needle = query.toLowerCase()
   const filtered = dummyKeySections
     .map((section) => ({
-      title: section.title,
+      ...section,
       suggestions: section.suggestions.filter((s) => s.title.toLowerCase().includes(needle))
     }))
     .filter((section) => section.suggestions.length > 0)
@@ -151,14 +146,9 @@ async function querySuggestions(query: string): Promise<Response> {
   ])
 }
 
-function resolveAttributeKind(key: string): AttributeKind | null {
-  const section = dummyKeySections.find((s) => s.suggestions.some((sug) => sug.name === key))
-  return section?.attributeKind ?? null
-}
-
 const propState = new PanelStateCreator<
   typeof FormGroupBy,
-  'modelValue' | 'querySuggestions' | 'resolveAttributeKind' | 'ariaLabel' | 'suggestionRevision'
+  'modelValue' | 'querySuggestions' | 'ariaLabel' | 'suggestionRevision'
 >().createRef(panelConfig)
 
 function clonePreset(name: PresetName): GroupByModel {
@@ -196,7 +186,6 @@ watch(
             v-model="model"
             :input-type="propState.inputType"
             :query-suggestions="querySuggestions"
-            :resolve-attribute-kind="resolveAttributeKind"
           />
         </div>
         <GroupByThenSteps v-if="thenStepsShown" v-model="thenSteps" :group-by-keys="model.keys" />

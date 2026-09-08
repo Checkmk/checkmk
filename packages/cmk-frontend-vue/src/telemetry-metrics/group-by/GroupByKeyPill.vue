@@ -11,7 +11,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
-import { ATTRIBUTE_KIND_ORDER, attributeKindLabel } from '../attribute-kind'
+import { ATTRIBUTE_KIND_ORDER, type KeySection, attributeKindLabel } from '../attribute-kind'
 import { keyPillLabel } from './group-by-label'
 import { isKeyValid } from './types'
 import type { AttributeKind, GroupKey } from './types'
@@ -42,7 +42,7 @@ const emit = defineEmits<{
   (e: 'edit'): void
   (e: 'done'): void
   (e: 'update:attributeKind', value: AttributeKind): void
-  (e: 'update:attributeKey', value: string): void
+  (e: 'update:attributeKey', value: string, attributeKind?: AttributeKind): void
 }>()
 
 const fullLabel = computed(() => keyPillLabel(props.condition))
@@ -87,9 +87,8 @@ watch(
   }
 )
 
-// Emit only the key; the parent infers the kind in one mutation (two emits would race and drop it).
-function onKeyUpdate(value: string | null): void {
-  emit('update:attributeKey', value ?? '')
+function onKeyUpdate(value: string | null, section?: KeySection): void {
+  emit('update:attributeKey', value ?? '', section?.kind)
 }
 
 const attributeKindInput = computed<string | null>({

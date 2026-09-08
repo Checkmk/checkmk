@@ -32,12 +32,11 @@ const props = withDefaults(
     querySuggestions: (query: string) => ReturnType<QuerySuggestionsFn>
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     suggestionRevision?: number
-    resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
     operators?: Operator[] | undefined
     allowOr?: boolean
     ariaLabel?: string | undefined
   }>(),
-  { suggestionRevision: 0, resolveAttributeKind: undefined, operators: undefined, allowOr: true }
+  { suggestionRevision: 0, operators: undefined, allowOr: true }
 )
 
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
@@ -97,14 +96,9 @@ function removeGroup(group: ConditionGroup): void {
   model.value = model.value.filter((g) => g.id !== group.id)
 }
 
-// Apply the inferred type in the same mutation as the key; only override when
-// the resolver hits, so a user-picked type survives an edit into free-text.
-function updateKey(target: Condition, value: string): void {
-  const inferred = props.resolveAttributeKind?.(value) ?? null
+function updateKey(target: Condition, value: string, attributeKind?: AttributeKind): void {
   mapConditions((c) =>
-    c.id === target.id
-      ? { ...c, key: value, ...(inferred !== null ? { attributeKind: inferred } : {}) }
-      : c
+    c.id === target.id ? { ...c, key: value, ...(attributeKind ? { attributeKind } : {}) } : c
   )
 }
 
@@ -396,7 +390,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
               @remove="removeCondition(condition)"
               @edit="startEditing(condition.id)"
               @done="onEditDone(condition.id)"
-              @update:key="(value) => updateKey(condition, value)"
+              @update:key="(value, kind) => updateKey(condition, value, kind)"
               @update:attribute-kind="(value) => updateAttributeKind(condition, value)"
               @update:operator="(value) => updateOperator(condition, value)"
               @update:value="(value) => updateValue(condition, value)"
@@ -438,7 +432,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
           @remove="removeCondition(group.conditions[0]!)"
           @edit="startEditing(group.conditions[0]!.id)"
           @done="onEditDone(group.conditions[0]!.id)"
-          @update:key="(value) => updateKey(group.conditions[0]!, value)"
+          @update:key="(value, kind) => updateKey(group.conditions[0]!, value, kind)"
           @update:attribute-kind="(value) => updateAttributeKind(group.conditions[0]!, value)"
           @update:operator="(value) => updateOperator(group.conditions[0]!, value)"
           @update:value="(value) => updateValue(group.conditions[0]!, value)"
@@ -474,7 +468,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
         @remove="removeCondition(condition)"
         @edit="startEditing(condition.id)"
         @done="onEditDone(condition.id)"
-        @update:key="(value) => updateKey(condition, value)"
+        @update:key="(value, kind) => updateKey(condition, value, kind)"
         @update:attribute-kind="(value) => updateAttributeKind(condition, value)"
         @update:operator="(value) => updateOperator(condition, value)"
         @update:value="(value) => updateValue(condition, value)"

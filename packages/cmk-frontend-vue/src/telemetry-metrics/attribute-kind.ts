@@ -4,11 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AttributeKind } from 'cmk-shared-typing/typescript/attribute_filter'
+import type { Section } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 // Wire type, re-exported so the whole OpenTelemetry metrics UI shares one name for it.
 export type { AttributeKind }
+
+// Only the free-text entry carries no kind.
+export type KeySection = Section & { kind?: AttributeKind }
 
 // Dropdown and suggestion-section order, shared by both OpenTelemetry metrics widgets.
 export const ATTRIBUTE_KIND_ORDER: AttributeKind[] = ['resource', 'scope', 'data_point']

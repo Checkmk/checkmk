@@ -6,22 +6,32 @@
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { defineComponent, ref } from 'vue'
 
 import FormAttributeFilter from '@/telemetry-metrics/attribute-filter/FormAttributeFilter.vue'
 import { pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
 import type {
   AttributeFilterModel,
-  AttributeKind,
   Condition,
   ConditionGroup,
   Operator
 } from '@/telemetry-metrics/attribute-filter/types'
+import type { KeySection } from '@/telemetry-metrics/attribute-kind'
 
-const KEY_SUGGESTIONS = [
-  { name: 'http.method', title: 'http.method' },
-  { name: 'service.name', title: 'service.name' },
-  { name: 'foo.bar', title: 'foo.bar' }
+// `foo.bar` mimics the kind-less free-text entry.
+const KEY_SECTIONS: KeySection[] = [
+  { title: untranslated(''), suggestions: [{ name: 'foo.bar', title: untranslated('foo.bar') }] },
+  {
+    title: untranslated('Data point'),
+    suggestions: [{ name: 'http.method', title: untranslated('http.method') }],
+    kind: 'data_point'
+  },
+  {
+    title: untranslated('Resource'),
+    suggestions: [{ name: 'service.name', title: untranslated('service.name') }],
+    kind: 'resource'
+  }
 ]
 
 function condition(id: string, overrides: Partial<Condition> = {}): Condition {
@@ -58,9 +68,11 @@ function singlePill(overrides: Partial<Condition> = {}): AttributeFilterModel {
 
 function querySuggestions(query: string): Promise<Response> {
   const lower = query.toLowerCase()
-  return Promise.resolve(
-    new Response(KEY_SUGGESTIONS.filter((s) => s.name.toLowerCase().includes(lower)))
-  )
+  const sections = KEY_SECTIONS.map((section) => ({
+    ...section,
+    suggestions: section.suggestions.filter((s) => s.name!.toLowerCase().includes(lower))
+  })).filter((section) => section.suggestions.length > 0)
+  return Promise.resolve(new Response(sections))
 }
 
 function echoQueryValueSuggestions(_: unknown, query: string): Promise<Response> {
@@ -69,7 +81,6 @@ function echoQueryValueSuggestions(_: unknown, query: string): Promise<Response>
 
 function renderForm(
   initial: AttributeFilterModel,
-  resolve?: (key: string) => AttributeKind | null,
   initialOperators?: Operator[],
   allowOr: boolean = true
 ): {
@@ -86,8 +97,7 @@ function renderForm(
         operators,
         allowOr,
         querySuggestions,
-        queryValueSuggestions: echoQueryValueSuggestions,
-        resolveAttributeKind: resolve
+        queryValueSuggestions: echoQueryValueSuggestions
       }
     },
     template: `
@@ -97,7 +107,6 @@ function renderForm(
         :operators="operators"
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
-        :resolve-attribute-kind="resolveAttributeKind"
       />
     `
   })
@@ -153,12 +162,10 @@ async function pickAttributeKind(pill: HTMLElement, label: string): Promise<void
   await userEvent.click(await screen.findByRole('option', { name: label }))
 }
 
-test('picking a known key applies key and inferred attributeKind in one mutation', async () => {
-  const { model } = renderForm(makeModel(), (key) => (key === 'http.method' ? 'data_point' : null))
-  // The pill emits only `update:key`; the parent owns the resolver and merges
-  // the inferred attributeKind into the same model mutation. A regression that
-  // re-splits this into two sequential emits would let the second write
-  // overwrite the first via `defineModel`'s deferred prop propagation.
+test('picking a sectioned key applies key and its kind in one mutation', async () => {
+  const { model } = renderForm(makeModel())
+  // Two sequential emits would let the second write overwrite the first via
+  // `defineModel`'s deferred prop propagation.
   await pickKey(pillsInOrder()[0]!, 'http.method')
 
   const conditions = conditionsOf(model.value!)
@@ -176,10 +183,7 @@ test('picking a known key applies key and inferred attributeKind in one mutation
   })
 })
 
-test('picking a key without a resolver hit preserves the existing attributeKind', async () => {
-  // Seed pill-a with a non-null attributeKind so the assertion exercises the
-  // "no inference → leave the type alone" path. A free-text key edit on a
-  // resolver-less form must not silently wipe a user-picked type.
+test('picking a free-text key preserves the existing attributeKind', async () => {
   const initial = makeModel()
   initial[0]!.conditions[0]!.attributeKind = 'resource'
   initial[0]!.conditions[0]!.key = 'service.name'
@@ -247,8 +251,8 @@ test('forcing onto a single existence operator clears the value of every pill', 
   expect(conditionsOf(model.value!).map((c) => c.value)).toEqual(['', ''])
 })
 
-test('picking a key with no resolver hit auto-opens the type dropdown', async () => {
-  renderForm(makeModel(), () => null)
+test('picking a free-text key auto-opens the kind dropdown', async () => {
+  renderForm(makeModel())
   const pillA = pillsInOrder()[0]!
   await pickKey(pillA, 'foo.bar')
 
@@ -258,8 +262,8 @@ test('picking a key with no resolver hit auto-opens the type dropdown', async ()
   })
 })
 
-test('picking a key with a resolver hit does not auto-open the type dropdown', async () => {
-  renderForm(makeModel(), (key) => (key === 'http.method' ? 'data_point' : null))
+test('picking a sectioned key does not auto-open the kind dropdown', async () => {
+  renderForm(makeModel())
   const pillA = pillsInOrder()[0]!
   await pickKey(pillA, 'http.method')
 
@@ -269,8 +273,8 @@ test('picking a key with a resolver hit does not auto-open the type dropdown', a
   expect(kindCombobox.getAttribute('aria-expanded')).toBe('false')
 })
 
-test('picking a key with a resolver hit auto-opens the value dropdown', async () => {
-  renderForm(makeModel(), (key) => (key === 'http.method' ? 'data_point' : null))
+test('picking a sectioned key auto-opens the value dropdown', async () => {
+  renderForm(makeModel())
   const pillA = pillsInOrder()[0]!
   await pickKey(pillA, 'http.method')
 
@@ -280,8 +284,8 @@ test('picking a key with a resolver hit auto-opens the value dropdown', async ()
   })
 })
 
-test('picking the type after a no-hit key auto-opens the value dropdown', async () => {
-  renderForm(makeModel(), () => null)
+test('picking the kind after a free-text key auto-opens the value dropdown', async () => {
+  renderForm(makeModel())
   const pillA = pillsInOrder()[0]!
   await pickKey(pillA, 'foo.bar')
   await pickAttributeKind(pillA, 'Resource')
@@ -463,11 +467,11 @@ describe('pill required-field validation', () => {
     }
   })
 
-  test('picking a key does not reveal validation on the still-empty type', async () => {
-    const { model } = renderForm(makeModel(), () => null)
-    await pickKey(pillsInOrder()[0]!, 'http.method')
+  test('picking a key does not reveal validation on the still-empty kind', async () => {
+    const { model } = renderForm(makeModel())
+    await pickKey(pillsInOrder()[0]!, 'foo.bar')
 
-    expect(conditionsOf(model.value!)[0]!.key).toBe('http.method')
+    expect(conditionsOf(model.value!)[0]!.key).toBe('foo.bar')
     const pill = pillsInOrder()[0]!
     for (const label of ['Attribute kind', 'Attribute key']) {
       expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
@@ -1209,7 +1213,7 @@ describe('AND-only mode (allowOr false)', () => {
   const TWO_PILL_AND = [conditionGroup('g', condition('pill-a'), condition('pill-b'))]
 
   test('renders flat pills with no group box and no connector toggles', () => {
-    renderForm(TWO_PILL_AND, undefined, undefined, false)
+    renderForm(TWO_PILL_AND, undefined, false)
 
     expect(screen.queryAllByTestId(GROUP_TESTID)).toHaveLength(0)
     expect(pillsInOrder()).toHaveLength(2)
@@ -1217,7 +1221,7 @@ describe('AND-only mode (allowOr false)', () => {
   })
 
   test('renders a static AND label between adjacent pills', () => {
-    renderForm(TWO_PILL_AND, undefined, undefined, false)
+    renderForm(TWO_PILL_AND, undefined, false)
 
     const outerGroup = screen.getByRole('group', { name: 'Attribute filter' })
     const connectors = within(outerGroup).getAllByText('AND')
@@ -1228,7 +1232,7 @@ describe('AND-only mode (allowOr false)', () => {
   })
 
   test('a single pill renders no connector label', () => {
-    renderForm([conditionGroup('g', condition('pill-a'))], undefined, undefined, false)
+    renderForm([conditionGroup('g', condition('pill-a'))], undefined, false)
 
     const outerGroup = screen.getByRole('group', { name: 'Attribute filter' })
     expect(within(outerGroup).queryByText('AND')).toBeNull()
@@ -1243,7 +1247,6 @@ describe('AND-only mode (allowOr false)', () => {
           condition('pill-b', { attributeKind: 'scope', key: 'otel.library.name' })
         )
       ],
-      undefined,
       undefined,
       false
     )

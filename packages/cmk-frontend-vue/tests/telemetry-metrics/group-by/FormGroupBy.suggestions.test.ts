@@ -44,9 +44,10 @@ function renderWidget(initial: Partial<GroupByModel> = {}) {
   const wrapper = defineComponent({
     components: { FormGroupBy },
     setup() {
-      const { querySuggestions, resolveAttributeKind, suggestionRevision } =
-        useAttributeKeySuggestions(() => buildAutocompleteContext({ metricName: 'demo' }))
-      return { model, querySuggestions, resolveAttributeKind, suggestionRevision }
+      const { querySuggestions, suggestionRevision } = useAttributeKeySuggestions(() =>
+        buildAutocompleteContext({ metricName: 'demo' })
+      )
+      return { model, querySuggestions, suggestionRevision }
     },
     template: `
       <FormGroupBy
@@ -54,7 +55,6 @@ function renderWidget(initial: Partial<GroupByModel> = {}) {
         input-type="float"
         :query-suggestions="querySuggestions"
         :suggestion-revision="suggestionRevision"
-        :resolve-attribute-kind="resolveAttributeKind"
       />
     `
   })

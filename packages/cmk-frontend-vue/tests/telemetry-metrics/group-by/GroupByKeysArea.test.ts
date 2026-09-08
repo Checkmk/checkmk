@@ -6,8 +6,10 @@
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { defineComponent, ref } from 'vue'
 
+import type { KeySection } from '@/telemetry-metrics/attribute-kind'
 import GroupByKeysArea from '@/telemetry-metrics/group-by/GroupByKeysArea.vue'
 import type { AttributeKind, GroupKey } from '@/telemetry-metrics/group-by/types'
 
@@ -17,29 +19,23 @@ const KEY_KINDS: Record<string, AttributeKind> = {
 }
 
 function querySuggestions(query: string): Promise<Response> {
-  const matches = Object.keys(KEY_KINDS)
-    .filter((key) => key.includes(query))
-    .map((key) => ({ name: key, title: key }))
-  return Promise.resolve(new Response(matches))
+  const sections: KeySection[] = Object.entries(KEY_KINDS)
+    .filter(([key]) => key.includes(query))
+    .map(([key, kind]) => ({
+      title: untranslated(kind),
+      suggestions: [{ name: key, title: untranslated(key) }],
+      kind
+    }))
+  return Promise.resolve(new Response(sections))
 }
 
-function resolveAttributeKind(key: string): AttributeKind | null {
-  return KEY_KINDS[key] ?? null
-}
-
-function renderArea(initial: GroupKey[] = []) {
+function renderArea(initial: GroupKey[] = [], query = querySuggestions) {
   const keys = ref<GroupKey[]>(initial)
   render(
     defineComponent({
       components: { GroupByKeysArea },
-      setup: () => ({ keys, querySuggestions, resolveAttributeKind }),
-      template: `
-        <GroupByKeysArea
-          v-model="keys"
-          :query-suggestions="querySuggestions"
-          :resolve-attribute-kind="resolveAttributeKind"
-        />
-      `
+      setup: () => ({ keys, querySuggestions: query }),
+      template: `<GroupByKeysArea v-model="keys" :query-suggestions="querySuggestions" />`
     })
   )
   return { keys }
@@ -58,7 +54,7 @@ async function selectKey(value: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: value }))
 }
 
-test('adding a key replaces the "combine all series" placeholder and infers the picked key\'s kind', async () => {
+test('adding a key replaces the "combine all series" placeholder and takes the picked key\'s kind', async () => {
   const { keys } = renderArea()
   expect(screen.getByText('nothing, combine all series into one')).toBeVisible()
 
@@ -70,6 +66,22 @@ test('adding a key replaces the "combine all series" placeholder and infers the 
 
   await waitFor(() => expect(keys.value[0]!.attributeKey).toBe('http.route'))
   expect(keys.value[0]!.attributeKind).toBe('data_point')
+})
+
+test('picking a key offered under several kinds takes the kind of the picked section', async () => {
+  const sections: KeySection[] = (['resource', 'data_point'] as const).map((kind) => ({
+    title: untranslated(kind),
+    suggestions: [{ name: 'service', title: untranslated('service') }],
+    kind
+  }))
+  const { keys } = renderArea([], () => Promise.resolve(new Response(sections)))
+  await userEvent.click(screen.getByRole('button', { name: 'Add group key' }))
+  const options = await screen.findAllByRole('option', { name: 'service' })
+  await userEvent.click(options[1]!)
+
+  await waitFor(() =>
+    expect(keys.value[0]).toMatchObject({ attributeKey: 'service', attributeKind: 'data_point' })
+  )
 })
 
 test('a committed key can be removed', async () => {

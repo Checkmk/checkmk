@@ -12,7 +12,7 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import DropdownClearButton from '../DropdownClearButton.vue'
 import InlineEditPill from '../InlineEditPill.vue'
-import { ATTRIBUTE_KIND_ORDER, attributeKindLabel } from '../attribute-kind'
+import { ATTRIBUTE_KIND_ORDER, type KeySection, attributeKindLabel } from '../attribute-kind'
 import { attributeKindPrefix, operatorPhrase, pillLabel } from './pill-label'
 import {
   EXISTENCE_OPERATORS,
@@ -53,7 +53,7 @@ const emit = defineEmits<{
   (e: 'remove'): void
   (e: 'edit'): void
   (e: 'done'): void
-  (e: 'update:key', value: string): void
+  (e: 'update:key', value: string, attributeKind?: AttributeKind): void
   (e: 'update:attributeKind', value: AttributeKind | null): void
   (e: 'update:operator', value: Operator): void
   (e: 'update:value', value: string): void
@@ -116,8 +116,8 @@ watch(
 const attributeKindText = computed(() => attributeKindPrefix(props.condition.attributeKind).trim())
 const operatorText = computed(() => operatorPhrase(props.condition.operator))
 
-function onKeyUpdate(value: string | null): void {
-  emit('update:key', value ?? '')
+function onKeyUpdate(value: string | null, section?: KeySection): void {
+  emit('update:key', value ?? '', section?.kind)
 }
 
 function onValueUpdate(value: string | null): void {

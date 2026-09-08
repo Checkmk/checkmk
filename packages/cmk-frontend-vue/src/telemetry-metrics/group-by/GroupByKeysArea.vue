@@ -17,11 +17,10 @@ import type { AttributeKind, GroupKey } from './types'
 
 const { _t } = usei18n()
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     querySuggestions: QuerySuggestionsFn
     suggestionRevision?: number
-    resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
     canAdd?: boolean
     hideAttributeKind?: boolean
     testid?: string | undefined
@@ -84,12 +83,10 @@ function updateAttributeKind(target: GroupKey, value: AttributeKind): void {
   mapKeys((key) => (key.id === target.id ? { ...key, attributeKind: value } : key))
 }
 
-// Override the kind only when the key resolves, so a user-picked kind survives free-text edits.
-function updateAttributeKey(target: GroupKey, value: string): void {
-  const inferred = value !== '' ? (props.resolveAttributeKind?.(value) ?? null) : null
+function updateAttributeKey(target: GroupKey, value: string, attributeKind?: AttributeKind): void {
   mapKeys((key) =>
     key.id === target.id
-      ? { ...key, attributeKey: value, ...(inferred !== null ? { attributeKind: inferred } : {}) }
+      ? { ...key, attributeKey: value, ...(attributeKind ? { attributeKind } : {}) }
       : key
   )
 }
@@ -129,7 +126,7 @@ defineExpose({ tryChangeFocus, focusKey })
       @edit="startEditing(key.id)"
       @done="onKeyEditDone(key.id)"
       @update:attribute-kind="(value) => updateAttributeKind(key, value)"
-      @update:attribute-key="(value) => updateAttributeKey(key, value)"
+      @update:attribute-key="(value, kind) => updateAttributeKey(key, value, kind)"
     />
     <CmkIconButton
       v-if="canAdd"

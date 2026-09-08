@@ -30,7 +30,11 @@ const emit = defineEmits<{
 <template>
   <div class="monitoring-slide-in-header">
     <slot name="state" />
-    <IconList v-if="modes.length" :icons="modes" />
+    <template v-if="modes.length">
+      <span class="monitoring-slide-in-header__divider" aria-hidden="true" />
+      <IconList :icons="modes" />
+      <span class="monitoring-slide-in-header__divider" aria-hidden="true" />
+    </template>
     <CmkHeading type="h2" class="monitoring-slide-in-header__title">
       {{ title }}
     </CmkHeading>
@@ -51,6 +55,13 @@ const emit = defineEmits<{
   flex-direction: row;
   align-items: center;
   gap: var(--spacing);
+}
+
+.monitoring-slide-in-header__divider {
+  flex: 0 0 auto;
+  width: var(--dimension-2);
+  height: var(--dimension-6);
+  background: var(--ux-theme-6);
 }
 
 .monitoring-slide-in-header__title {

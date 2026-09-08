@@ -48,4 +48,10 @@ defineProps<{
   flex: 0 0 auto;
   align-items: center;
 }
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.monitoring-icon-list__item :deep(.cmk-icon) {
+  width: var(--dimension-6);
+  height: var(--dimension-6);
+}
 </style>

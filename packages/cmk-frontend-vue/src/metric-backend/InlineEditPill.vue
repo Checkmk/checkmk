@@ -66,6 +66,12 @@ function onLeave(reason: InlineEditLeaveReason): void {
   emit('done', reason)
 }
 
+function onDelete(): void {
+  if (props.removable) {
+    emit('remove')
+  }
+}
+
 const { vClickOutside, onOutsideClick, onEscapeCapture, onEscape } = useInlineEdit({
   isOpen: () => props.editing,
   paneRef: editPaneRef,
@@ -128,7 +134,7 @@ defineExpose({
       :tabindex="tabFocusable ? 0 : -1"
       @keydown.enter.prevent="emit('edit')"
       @keydown.space.prevent="emit('edit')"
-      @keydown.delete.prevent="emit('remove')"
+      @keydown.delete.prevent="onDelete"
     >
       <button
         type="button"
@@ -138,7 +144,7 @@ defineExpose({
         :aria-label="editAriaLabel"
         @mousedown.prevent
         @click.stop="emit('edit')"
-        @keydown.delete.prevent="emit('remove')"
+        @keydown.delete.prevent="onDelete"
       >
         <slot name="read-only" />
       </button>

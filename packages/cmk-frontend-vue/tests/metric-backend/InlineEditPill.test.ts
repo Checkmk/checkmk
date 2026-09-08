@@ -67,8 +67,18 @@ test('the collapsed pill shows the read-only slot, carries the item marker, and 
   expect(emitted('edit')).toHaveLength(1)
 })
 
-test('Enter and Space open the pill, Delete removes it', async () => {
-  const { container, emitted } = renderCollapsed()
+test('Enter and Space open the pill, Delete removes only removable pills', async () => {
+  const nonRemovable = renderCollapsed()
+  const nonRemovableClosed = nonRemovable.container.querySelector<HTMLElement>(
+    '.metric-backend-inline-edit-pill__closed'
+  )!
+  nonRemovableClosed.focus()
+
+  await userEvent.keyboard('{Delete}')
+  expect(nonRemovable.emitted('remove')).toBeUndefined()
+
+  nonRemovable.unmount()
+  const { container, emitted } = renderCollapsed({ removable: true })
   const closed = container.querySelector<HTMLElement>('.metric-backend-inline-edit-pill__closed')!
   closed.focus()
 

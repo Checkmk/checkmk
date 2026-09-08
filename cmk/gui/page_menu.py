@@ -32,7 +32,13 @@ from cmk.gui.type_defs import (
     IconNames,
     StaticIcon,
 )
-from cmk.gui.utils.doc_reference_urls import doc_reference_url
+from cmk.gui.utils.doc_references import (
+    doc_reference_url,
+    DocReference,
+    DocReferenceUtm,
+    youtube_reference_url,
+    YouTubeReference,
+)
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
     LoadingTransition,
@@ -43,12 +49,6 @@ from cmk.gui.utils.selection_id import SelectionId
 from cmk.utils import paths
 from cmk.web.utils import escaping
 from cmk.web.utils.confirm_links import get_confirm_link_title
-from cmk.web.utils.doc_references import (
-    DocReference,
-    DocReferenceUtm,
-    youtube_reference_url,
-    YouTubeReference,
-)
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, requested_file_name, urlencode, urlencode_vars
 

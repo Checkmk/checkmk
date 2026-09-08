@@ -37,6 +37,7 @@ from cmk.gui.oauth2_connections.recomposer import recompose as recompose_oauth2_
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib import config_domains as legacy_config_domains
@@ -75,7 +76,6 @@ from cmk.web.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
-from cmk.web.utils.doc_references import DocReference
 
 
 @dataclass(frozen=True)

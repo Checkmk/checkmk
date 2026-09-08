@@ -59,6 +59,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
@@ -69,7 +70,6 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
-from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 

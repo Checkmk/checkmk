@@ -33,6 +33,7 @@ from cmk.gui.rule_specs.legacy_converter import (
     convert_to_legacy_valuespec,
 )
 from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
@@ -45,7 +46,6 @@ from cmk.rulesets.internal.form_specs import (
 )
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
-from cmk.web.utils.doc_references import DocReference
 
 
 def _v1_custom_text_validate(value: str) -> None:

@@ -51,6 +51,7 @@ py_library(
         "//cmk/gui/oauth2_connections",
         "//cmk/gui/oauth2_connections:watolib_store",
         "//cmk/gui/userdb",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
         "//cmk/utils",

@@ -12,6 +12,7 @@ import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -35,7 +36,6 @@ from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 from cmk.plugins.aws.lib import aws_region_to_monitor  # astrein: disable=cmk-module-layer-violation
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1.form_specs import migrate_to_password
-from cmk.web.utils.doc_references import DocReference
 
 ServicesValueSpec = list[tuple[str, ValueSpec]]
 

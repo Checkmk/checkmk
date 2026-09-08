@@ -64,6 +64,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
@@ -114,7 +115,6 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.web.utils import escaping
 from cmk.web.utils.confirm_links import make_confirm_delete_link
-from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import (
     makeactionuri,

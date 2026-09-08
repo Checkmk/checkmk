@@ -30,6 +30,7 @@ sh_binary(
 edition_deps = select({
     "@cmk//edition:cloud": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:omd_skel_tar",
         "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-agent-registration-extended:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
@@ -74,6 +75,7 @@ edition_deps = select({
     ],
     "@cmk//edition:pro": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:omd_skel_tar",
         "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
@@ -100,6 +102,7 @@ edition_deps = select({
     ],
     "@cmk//edition:ultimate": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:omd_skel_tar",
         "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-agent-registration-extended:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
@@ -142,6 +145,7 @@ edition_deps = select({
     ],
     "@cmk//edition:ultimatemt": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:omd_skel_tar",
         "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-agent-registration-extended:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
@@ -188,6 +192,7 @@ edition_deps = select({
 
 edition_skel_permissions = select({
     "@cmk//edition:cloud": [
+        "//non-free/packages/cmk-agent-engine:skel.permissions",
         "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
@@ -230,6 +235,7 @@ edition_skel_permissions = select({
     ],
     "@cmk//edition:pro": [
         "//omd/packages/apache-omd:skel.permissions",
+        "//non-free/packages/cmk-agent-engine:skel.permissions",
         "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
@@ -253,6 +259,7 @@ edition_skel_permissions = select({
     ],
     "@cmk//edition:ultimate": [
         "//omd/packages/apache-omd:skel.permissions",
+        "//non-free/packages/cmk-agent-engine:skel.permissions",
         "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//non-free/packages/otel-collector:skel.permissions",
@@ -281,6 +288,7 @@ edition_skel_permissions = select({
     ],
     "@cmk//edition:ultimatemt": [
         "//omd/packages/apache-omd:skel.permissions",
+        "//non-free/packages/cmk-agent-engine:skel.permissions",
         "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//non-free/packages/otel-collector:skel.permissions",

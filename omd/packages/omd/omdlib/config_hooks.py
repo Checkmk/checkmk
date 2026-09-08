@@ -13,6 +13,7 @@ from pathlib import Path
 
 from omdlib.admin_mail import ADMIN_MAIL
 from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
+from omdlib.ai_agent_engine import AI_AGENT_ENGINE
 from omdlib.automation_helper import AUTOMATION_HELPER
 from omdlib.autostart import AUTOSTART
 from omdlib.config_api import Config, Hook, PortHook
@@ -145,6 +146,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     ADMIN_MAIL,
     AGENT_RECEIVER,
     AGENT_RECEIVER_PORT,
+    AI_AGENT_ENGINE,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,

@@ -185,6 +185,7 @@ py_library(
     srcs = [
         "omdlib/admin_mail.py",
         "omdlib/agent_receiver.py",
+        "omdlib/ai_agent_engine.py",
         "omdlib/args_site_user.py",
         "omdlib/automation_helper.py",
         "omdlib/autostart.py",

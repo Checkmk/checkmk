@@ -82,6 +82,33 @@ def test_cmk_mcp_wheel_restarts_the_mcp_server_daemon() -> None:
     assert Service("mcp-server") is Service.MCP_SERVER
 
 
+def test_cmk_agent_engine_wheel_restarts_the_ai_agent_engine_daemon() -> None:
+    """Deploying the cmk-agent-engine wheel restarts the ai-agent-engine daemon.
+
+    The daemon imports cmk.agent_engine once at startup, so a reinstalled wheel
+    is only picked up after a restart.
+    """
+    repo_root = _workspace_root()
+    if repo_root is None:
+        pytest.skip("workspace root not accessible (sandbox run)")
+    if not (repo_root / "non-free").is_dir():
+        pytest.skip("cmk-agent-engine is a non-free package; not present in this checkout")
+
+    manual = _load_specs_from_toml(specs_path(), is_nonfree_checkout=True)
+    agent_engine = next(
+        (
+            s
+            for s in manual["service_specs"]
+            if s["package_target"] == "//non-free/packages/cmk-agent-engine:wheel"
+        ),
+        None,
+    )
+
+    assert agent_engine is not None, "no [[service]] entry for the cmk-agent-engine wheel"
+    assert agent_engine["services"] == ["ai-agent-engine:restart"]
+    assert Service("ai-agent-engine") is Service.AI_AGENT_ENGINE
+
+
 def test_frontend_vue_dist_reloads_apache() -> None:
     """Deploying the cmk-frontend-vue dist must reload apache.
 

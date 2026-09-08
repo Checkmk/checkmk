@@ -456,9 +456,6 @@ pub fn get_wow64_32_registry_instances_query() -> String {
         .to_string()
         .replace(r"SOFTWARE\Microsoft\", r"SOFTWARE\WOW6432Node\Microsoft\")
 }
-pub fn _get_blocking_sessions_query() -> String {
-    format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string()
-}
 
 #[derive(Debug, Clone, Copy)]
 struct QueryMap<'a> {
@@ -521,4 +518,59 @@ pub fn find_known_query<T: Borrow<Id>>(query_id: T, edition: &Edition) -> Result
             "Query for {:?} not found",
             query_id.borrow()
         ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const REGISTRY_KEY_NORMAL: &str = r"SOFTWARE\Microsoft\Microsoft SQL Server";
+    const REGISTRY_KEY_WOW64: &str = r"SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server";
+
+    #[test]
+    fn test_registry_instances_queries() {
+        let normal = get_win_registry_instances_query();
+        assert_eq!(normal, query::WINDOWS_REGISTRY_INSTANCES_BASE);
+        assert!(normal.contains(REGISTRY_KEY_NORMAL));
+
+        let wow64 = get_wow64_32_registry_instances_query();
+        assert!(wow64.contains(REGISTRY_KEY_WOW64));
+        assert!(!wow64.contains(REGISTRY_KEY_NORMAL));
+    }
+
+    #[test]
+    fn test_find_known_query_azure_override() {
+        assert_eq!(
+            find_known_query(Id::Mirroring, &Edition::Azure).unwrap(),
+            query::MIRRORING_AZURE
+        );
+        assert_eq!(
+            find_known_query(Id::Mirroring, &Edition::Normal).unwrap(),
+            query::MIRRORING_NORMAL
+        );
+        // Anything that is not Azure uses the normal query.
+        assert_eq!(
+            find_known_query(Id::Mirroring, &Edition::Undefined).unwrap(),
+            query::MIRRORING_NORMAL
+        );
+    }
+
+    #[test]
+    fn test_find_known_query_without_azure_override() {
+        for edition in [Edition::Azure, Edition::Normal, Edition::Undefined] {
+            assert_eq!(find_known_query(Id::Jobs, &edition).unwrap(), query::JOBS);
+        }
+    }
+
+    #[test]
+    fn test_find_known_query_composed() {
+        assert_eq!(
+            find_known_query(Id::BlockedSessions, &Edition::Normal).unwrap(),
+            format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS)
+        );
+        assert_eq!(
+            find_known_query(Id::Counters, &Edition::Azure).unwrap(),
+            format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES_AZURE)
+        );
+    }
 }

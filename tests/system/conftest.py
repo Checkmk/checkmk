@@ -12,10 +12,10 @@ report when it fails. Suite specific setup lives in the suites' own conftests.
 import pytest
 
 from tests.testlib.pytest_helpers import faked_artifacts, registration, timeouts
-from tests.testlib.system.pytest_helpers import selection, sharding
+from tests.testlib.system.pytest_helpers import cmk_package, selection, sharding
 
 
 def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
     registration.register_pytest_plugins(
-        pluginmanager, faked_artifacts, selection, sharding, timeouts
+        pluginmanager, faked_artifacts, selection, sharding, cmk_package, timeouts
     )

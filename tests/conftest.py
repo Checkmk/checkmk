@@ -9,32 +9,17 @@ import logging
 import os
 import subprocess
 from collections.abc import Generator, Iterator
-from enum import StrEnum
 from pathlib import Path
-from typing import Final
 
 import pytest
 import pytest_check
-from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped,unused-ignore]
 
-from tests.testlib.common.repo import (
-    current_base_branch_name,
-)
 from tests.testlib.common.utils2 import (
     is_containerized,
     verbose_called_process_error,
 )
-from tests.testlib.common.version import (
-    CMKEdition,
-    CMKVersion,
-    edition_from_env,
-    TypeCMKEdition,
-)
 from tests.testlib.pytest_helpers.diagnostics import (
     render_command_output,
-)
-from tests.testlib.pytest_helpers.faked_artifacts import (
-    package_contains_faked_artifacts,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,20 +28,6 @@ logger = logging.getLogger(__name__)
 # when pytest based tests are being run from inside the IDE
 # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
-ARG_EDITION_CMK: Final[str] = "--cmk-edition"
-ARG_VERSION_CMK: Final[str] = "--cmk-version"
-ARG_REUSE: Final[str] = "--reuse"
-ARG_NO_CLEANUP: Final[str] = "--no-cleanup"
-
-
-class EditionMarker(StrEnum):
-    skip_if = "skip_if_edition"
-    skip_if_not = "skip_if_not_edition"
-
-
-class ContainerizedMarker(StrEnum):
-    skip_if = "skip_if_containerized"
-    skip_if_not = "skip_if_not_containerized"
 
 
 def get_test_type(test_path: Path) -> str:
@@ -163,148 +134,8 @@ def pytest_internalerror(excinfo: pytest.ExceptionInfo[BaseException]) -> None:
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register options to pytest"""
     parser.addoption(
-        "--ignore-running-procs",
-        action="store_true",
-        default=False,
-        help="Ignore running processes after site shutdown.",
-    )
-    parser.addoption(
         "--fail-on-log-exception",
         action="store_true",
         default=False,
         help="Fail test run if any exception was logged.",
     )
-    parser.addoption(
-        ARG_VERSION_CMK,
-        action="store",
-        type=str,
-        metavar="2.X.0[pZ|-YYYY.MM.DD]",
-        help=(
-            "Select version of the Checkmk site under test. If not set, value of environment "
-            "variable 'VERSION' is used, if available. If neither is set, 'daily' is used."
-        ),
-        default=os.getenv("VERSION", CMKVersion.DAILY),
-    )
-    parser.addoption(
-        ARG_EDITION_CMK,
-        action="store",
-        choices=[
-            CMKEdition.ULTIMATE.long,
-            CMKEdition.PRO.long,
-            CMKEdition.ULTIMATEMT.long,
-            CMKEdition.COMMUNITY.long,
-            CMKEdition.CLOUD.long,
-        ],
-        type=str,
-        help=(
-            "Select edition of the Checkmk site under test. If not set, value of environment "
-            "variable 'EDITION' is used, if available. If neither is set, 'pro' is used."
-        ),
-        default=os.getenv("EDITION", CMKEdition.PRO.long),
-    )
-    parser.addoption(
-        ARG_REUSE,
-        action="store_true",
-        default=False,
-        help=(
-            "Reuse an existing site to perform the tests. If not set, value of environment "
-            "variable 'REUSE' is used, if available. If neither is set, reuse is disabled."
-        ),
-    )
-    parser.addoption(
-        ARG_NO_CLEANUP,
-        action="store_true",
-        default=False,
-        help=(
-            "Avoid cleanup the test-environment after a test-run. If not set, value of environment "
-            "variable 'CLEANUP' is used, if available. If neither is set, cleanup is enabled."
-        ),
-    )
-
-
-def pytest_configure(config: pytest.Config) -> None:
-    """Add important environment variables to the report and register custom pytest markers"""
-
-    if config.getoption(ARG_REUSE):
-        os.environ["REUSE"] = "1"
-
-    if config.getoption(ARG_NO_CLEANUP):
-        os.environ["CLEANUP"] = "0"
-
-    os.environ["EDITION"] = config.getoption(ARG_EDITION_CMK)
-    os.environ["VERSION"] = config.getoption(ARG_VERSION_CMK)
-
-    env_vars = {
-        "BRANCH": current_base_branch_name(),
-        "EDITION": "pro",
-        "VERSION": "daily",
-        "DISTRO": "",
-        "TZ": "UTC",
-        "REUSE": "0",
-        "CLEANUP": "1",
-    }
-    env_lines = [f"{key}={os.getenv(key, val)}" for key, val in env_vars.items() if val]
-    config.stash[metadata_key]["Variables"] = (
-        "<ul><li>\n" + ("</li><li>\n".join(env_lines)) + "</li></ul>"
-    )
-
-    config.addinivalue_line(
-        "markers",
-        f"{EditionMarker.skip_if}(edition): skips the tests for the given edition(s)",
-    )
-    config.addinivalue_line(
-        "markers",
-        f"{EditionMarker.skip_if_not}(edition): "
-        "skips the tests for anything but the given edition(s)",
-    )
-    config.addinivalue_line(
-        "markers",
-        f"{ContainerizedMarker.skip_if}: skips the tests for containerized runs",
-    )
-    config.addinivalue_line(
-        "markers",
-        f"{ContainerizedMarker.skip_if_not}: skips the tests for uncontainerized runs",
-    )
-
-
-def _editions_from_markers(item: pytest.Item, marker_name: EditionMarker) -> list[TypeCMKEdition]:
-    editions: list[TypeCMKEdition] = []
-    for mark in item.iter_markers(name=marker_name):
-        editions += [CMKEdition.edition_from_text(edition_arg) for edition_arg in mark.args]
-    return editions
-
-
-def pytest_runtest_setup(item: pytest.Item) -> None:
-    """Skip tests for specific editions or environments"""
-    current_edition = edition_from_env()
-
-    skip_editions = _editions_from_markers(item, EditionMarker.skip_if)
-    if skip_editions and current_edition in skip_editions:
-        pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped explicitly!')
-
-    unskip_editions = _editions_from_markers(item, EditionMarker.skip_if_not)
-    if unskip_editions and current_edition not in unskip_editions:
-        pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped implicitly!')
-
-    skip_containerized = next(item.iter_markers(name=ContainerizedMarker.skip_if), None)
-    if skip_containerized and is_containerized():
-        pytest.skip(f"{item.nodeid}: Containerized run excluded!")
-
-    skip_not_containerized = next(item.iter_markers(name=ContainerizedMarker.skip_if_not), None)
-    if skip_not_containerized and not is_containerized():
-        pytest.skip(f"{item.nodeid}: Containerized run required!")
-
-
-@pytest.hookimpl
-def pytest_runtest_teardown(item: pytest.Item) -> None:
-    """Teardown hook to report crashes after each test."""
-    try:
-        from tests.testlib.system.site import Site
-    except ImportError:
-        # Site class is not available during packaging tests for community edition
-        return
-
-    faked_artifacts = package_contains_faked_artifacts(item.config)
-    for obj in getattr(item, "funcargs", {}).values():
-        if isinstance(obj, Site):
-            obj.report_crashes(ignore_bakery_crashes=faked_artifacts)

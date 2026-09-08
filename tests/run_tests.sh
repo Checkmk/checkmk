@@ -9,7 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCRIPTS="$REPO_PATH/scripts"
 UVENV="$SCRIPTS/run-uvenv"
-EDITION="${EDITION:-pro}"
+# Exported: the tests read it, and not every suite has the --cmk-edition option to default it.
+export EDITION="${EDITION:-pro}"
 MAX_CHARS=1500000
 
 AGENT_PLUGIN_PYTHON_VERSIONS=$(grep -oP '^\s*AGENT_PLUGIN_PYTHON_VERSIONS\s*:=\s*\K.*' "${REPO_PATH}"/defines.make)

@@ -18,10 +18,8 @@ py_library(
     srcs = ["conftest.py"],
     deps = [
         "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
         requirement("pytest"),
         requirement("pytest-check"),
-        requirement("pytest-metadata"),
-        "//tests/testlib/pytest_helpers",
-        "//tests/testlib/system",
     ],
 )

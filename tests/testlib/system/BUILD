@@ -28,6 +28,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-relay-protocols",
         "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
         requirement("beautifulsoup4"),
         requirement("checkmk-dev-tools"),
         requirement("docker"),
@@ -37,6 +38,7 @@ py_library(
         requirement("pydantic"),
         requirement("pytest"),
         requirement("pytest-check"),
+        requirement("pytest-metadata"),
         requirement("requests"),
     ],
 )

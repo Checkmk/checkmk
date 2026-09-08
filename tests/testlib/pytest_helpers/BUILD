@@ -3,6 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "pytest_helpers",
+    testonly = True,
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = ["//tests:__subpackages__"],

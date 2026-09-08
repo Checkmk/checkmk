@@ -8,7 +8,6 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.f5_bigip.agent_based import f5_bigip_cpu_temp
 from cmk.plugins.f5_bigip.agent_based.f5_bigip_cpu_temp import (
     check_f5_bigip_cpu_temp,
     discover_f5_bigip_cpu_temp,
@@ -16,10 +15,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_cpu_temp import (
 )
 from cmk.plugins.lib.temperature import TempParamDict
 
-
-@pytest.fixture(autouse=True)
-def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(f5_bigip_cpu_temp, "get_value_store", dict)
+from ..conftest import value_store
 
 
 @pytest.mark.parametrize(
@@ -70,4 +66,5 @@ def test_check_f5_bigip_cpu_temp(
 ) -> None:
     """Test check function for f5_bigip_cpu_temp check."""
     section = parse_f5_bigip_cpu_temp(string_table)
-    assert list(check_f5_bigip_cpu_temp(item, params, section)) == expected_results
+    with value_store():
+        assert list(check_f5_bigip_cpu_temp(item, params, section)) == expected_results

@@ -18,7 +18,7 @@ to remove the `ApiOmitted` values from the response body.
 """
 
 import types
-from typing import cast, ClassVar, Literal, NoReturn, override, Self, TypeAliasType
+from typing import ClassVar, Literal, NoReturn, override, Self, TypeAliasType
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import CoreSchema, PydanticOmit
@@ -101,9 +101,7 @@ def json_dump_without_omitted(
           Other fields *must not* use defaults. This is checked for API models in a test.
     """
     # This will be called at most once per REST-API request
-    # cast: get_cached_type_adapter is generic (type[T] → TypeAdapter[T]) for concrete callers;
-    # type[object] is the safe upper bound for the broader inputs this function accepts.
-    adapter = get_cached_type_adapter(cast(type[object], instance_type))
+    adapter = get_cached_type_adapter(instance_type)
     # TODO: Rework how we deal with omitted values once pydantic supports either `PydanticOmit`
     #       in serializers or implements `exclude_if`
     # NOTE: keep in sync with CheckmkGenerateJsonSchema.encode_default for correct schemas

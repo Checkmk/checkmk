@@ -54,6 +54,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 .cmk-accordion-item {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   border: 1px solid transparent;
   background: var(--ux-theme-3);
   border-radius: 4px;

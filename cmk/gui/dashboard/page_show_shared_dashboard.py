@@ -24,7 +24,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
 from .dashlet.dashlets.status_helpers import make_mk_missing_data_error

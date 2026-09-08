@@ -39,7 +39,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
-from cmk.gui.utils.temperate_unit import temperature_unit_choices, TemperatureUnit
+from cmk.gui.utils.temperature_unit import temperature_unit_choices, TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
     Alternative,

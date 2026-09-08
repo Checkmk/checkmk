@@ -34,7 +34,7 @@ from cmk.graphing_engine import (
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._drawn_curves import drawn_curves

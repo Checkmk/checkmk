@@ -26,7 +26,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,

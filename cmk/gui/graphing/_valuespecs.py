@@ -27,7 +27,7 @@ from cmk.gui.unit_formatter import (
     StrictPrecision,
     TimeFormatter,
 )
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,

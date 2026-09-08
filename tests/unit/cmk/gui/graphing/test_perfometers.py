@@ -28,7 +28,7 @@ from cmk.gui.graphing import (
     perfometer_label,
     perfometer_sort_value,
 )
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 

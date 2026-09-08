@@ -15,7 +15,7 @@ from cmk.graphing_engine import (
 )
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from .._drawn_curves import DrawnCurve, serialize_drawn_curves
 from .._source import FetchDiagnostics

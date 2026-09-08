@@ -27,7 +27,7 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._from_api import PerfometerFromAPI
 from ._metric_data import parse_performance_data, translate_performance_data

@@ -16,7 +16,7 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import unit_to_unit_format
 from cmk.gui.graphing._unit_format import apply_temperature_unit
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
 

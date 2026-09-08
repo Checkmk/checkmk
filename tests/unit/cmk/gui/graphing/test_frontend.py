@@ -58,7 +58,7 @@ from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
     ExplicitRange,

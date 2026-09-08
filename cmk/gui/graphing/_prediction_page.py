@@ -26,7 +26,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Size
 from cmk.utils.servicename import ServiceName
 

@@ -47,7 +47,7 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,

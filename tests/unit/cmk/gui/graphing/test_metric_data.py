@@ -36,7 +36,7 @@ from cmk.gui.graphing._metric_data import (
     scaled_series,
     translate_performance_data,
 )
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 
 def test_parse_performance_data_merges_rrd_only_metrics() -> None:

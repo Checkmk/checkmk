@@ -76,7 +76,7 @@ py_library(
         "rendering.py",
         "request_context.py",
         "sort.py",
-        "temperate_unit.py",
+        "temperature_unit.py",
         "time.py",
     ],
     imports = ["../../.."],

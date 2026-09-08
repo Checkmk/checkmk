@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import _purge_unit_spec_for_js
 from cmk.gui.graphing import ConvertibleUnitSpecification, DecimalNotation, IECNotation
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(

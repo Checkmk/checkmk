@@ -56,7 +56,7 @@ from cmk.gui.graphing.openapi.models import ApiTimeRange, ApiUnitFormat, GraphFe
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(

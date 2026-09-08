@@ -13,7 +13,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
-from cmk.gui.utils.temperate_unit import temperature_unit_choices
+from cmk.gui.utils.temperature_unit import temperature_unit_choices
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,

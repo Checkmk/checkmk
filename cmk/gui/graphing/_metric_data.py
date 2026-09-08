@@ -30,7 +30,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.unit_formatter import NotationFormatter
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
 
 from ._unit import user_specific_unit_from_unit_format

@@ -24,7 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client import LivestatusResponse
 from cmk.web.utils.urls import makeuri_contextless
 

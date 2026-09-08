@@ -132,7 +132,7 @@ def user_default_refresh_time() -> int | None:
             return None
 
 
-_DEFAULT_INTERACTION = Interaction(
+DEFAULT_INTERACTION = Interaction(
     burger="enabled",
     zoom="enabled",
     panning="enabled",
@@ -201,7 +201,7 @@ def to_cmk_time_series_graph(
     built: BuiltGraph,
     *,
     size: Size,
-    interaction: Interaction = _DEFAULT_INTERACTION,
+    interaction: Interaction = DEFAULT_INTERACTION,
     font_size_pt: float = 8.0,
     show_graph_time: bool = True,
     x_axis: XAxis | None = None,
@@ -323,7 +323,7 @@ def render_engine_graph_group(
     show_graph_time: bool,
     debug: bool,
     display: EngineDisplayOptions = EngineDisplayOptions(),
-    interaction: Interaction = _DEFAULT_INTERACTION,
+    interaction: Interaction = DEFAULT_INTERACTION,
     multi_column: bool = False,
     full_width: bool = False,
 ) -> HTML:

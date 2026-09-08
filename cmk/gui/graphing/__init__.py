@@ -14,6 +14,7 @@ from ._from_api import (
     RegisteredMetric,
 )
 from ._frontend import (
+    DEFAULT_INTERACTION,
     default_time_range_seconds,
     empty_graph_spec,
     EngineDisplayOptions,
@@ -195,6 +196,7 @@ __all__ = [
     "compute_png_size_mm",
     "mm_per_ex",
     "render_png_ex",
+    "DEFAULT_INTERACTION",
     "EngineDisplayOptions",
     "render_engine_graph_group",
     "render_plain_graph_title",

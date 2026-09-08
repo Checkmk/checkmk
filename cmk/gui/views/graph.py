@@ -24,7 +24,7 @@ from cmk.gui.graphing import (
     vs_graph_render_options,
 )
 from cmk.gui.graphing._frontend import (
-    _DEFAULT_INTERACTION,
+    DEFAULT_INTERACTION,
     default_time_range_seconds,
     STATIC_INTERACTION,
     stored_time_range_seconds,
@@ -292,7 +292,7 @@ def _render_engine_graph_group(
             STATIC_INTERACTION
             if mobile
             else replace(
-                _DEFAULT_INTERACTION,
+                DEFAULT_INTERACTION,
                 burger="enabled" if display_config.show_controls else "disabled",
                 pin="enabled" if display_config.show_pin else "disabled",
             )

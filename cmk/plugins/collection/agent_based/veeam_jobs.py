@@ -12,6 +12,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    IgnoreResultsError,
     Result,
     Service,
     State,
@@ -35,8 +36,11 @@ def discovery_veeam_jobs(section: Mapping[str, Job | None]) -> DiscoveryResult:
 def monitoring_state(last_state: str, last_result: str, type_: str) -> State:
     if last_result == "None":
         if last_state in ["Starting", "Working", "Postprocessing"]:
-            return State.OK
+            # If result is absent and the job is still running, we cannot check the result yet.
+            # We try to get previous result from the last run.
+            raise IgnoreResultsError("Data not present at the moment")
         if last_state == "Idle" and type_ == "BackupSync":
+            # We assume that if the job is OK on idle and a backup sync job
             return State.OK
     if last_result == "Success":
         return State.OK

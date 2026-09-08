@@ -4,13 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
-from ._engine_perfometer_bars import (
-    drawn_segments,
-    DrawnSegment,
-    perfometer_label,
-    perfometer_sort_value,
-)
-from ._engine_perfometers import evaluated_perfometer
 from ._engine_template_graphs import (
     build_template_graphs,
     discover_template_graphs,
@@ -91,6 +84,13 @@ from ._metrics import (
     get_metric_spec,
     MetricSpec,
     registered_metric_ids_and_titles,
+)
+from ._perfometers import (
+    drawn_segments,
+    DrawnSegment,
+    evaluated_perfometer,
+    perfometer_label,
+    perfometer_sort_value,
 )
 from ._plugins import (
     graphing_plugins,

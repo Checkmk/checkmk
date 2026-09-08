@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Final, Self
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
+    evaluate_perfometer,
     EvaluatedBidirectional,
     EvaluatedFocusBound,
     EvaluatedPerfometer,
@@ -17,11 +20,17 @@ from cmk.graphing_engine import (
     EvaluatedSegment,
     EvaluatedStacked,
     FocusBoundKind,
+    HostName,
+    Service,
+    ServiceName,
     Unit,
 )
+from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
+from ._from_api import PerfometerFromAPI
+from ._metric_data import parse_performance_data, translate_performance_data
 from ._unit import user_specific_unit_from_unit_format
 from ._unit_format import unit_to_unit_format
 
@@ -312,3 +321,38 @@ def perfometer_sort_value(perfometer: EvaluatedPerfometerLayout) -> float:
             return perfometer_sort_value(perfometer.upper)
         case _:
             assert_never(perfometer)
+
+
+_SUPERSEDED_TO_SUPERSEDER: Final[Mapping[str, str]] = {
+    "mem_used_perc": "mem_used_percent",
+    "mem_used_with_dynamic_range": "mem_used_percent",
+    "mem_used": "mem_used_percent",
+}
+
+
+def evaluated_perfometer(
+    perf_data_string: str,
+    check_command: str,
+    *,
+    host_name: str,
+    service_name: str,
+    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
+    debug: bool,
+) -> EvaluatedPerfometerLayout | None:
+    if not (perf_data_string := perf_data_string.strip()):
+        return None
+    raw = parse_performance_data(perf_data_string, check_command, debug=debug)
+    if not raw.values:
+        return None
+    return evaluate_perfometer(
+        localizer=translate_to_current_language,
+        service=Service(host_name=HostName(host_name), service_name=ServiceName(service_name)),
+        performance_data=translate_performance_data(
+            raw.check_command, raw.values, registered_translations
+        ),
+        registered_perfometers=registered_perfometers,
+        registered_metrics=registered_metrics,
+        superseders=_SUPERSEDED_TO_SUPERSEDER,
+    )

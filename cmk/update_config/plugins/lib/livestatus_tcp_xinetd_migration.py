@@ -2,6 +2,10 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# NOTE: Traditionally our _DEFAULT_XINETD_CONF below contains two trailing spaces.
+# Therefore we need to keep them, otherwise our corresponding update action will
+# think that there are local modifications. :-/
 # ruff: noqa: W291
 
 from pathlib import Path

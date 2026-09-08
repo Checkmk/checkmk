@@ -17,11 +17,6 @@ ENTERPRISE = r"""# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterpr
 
 ENTERPRISE_HEADER = re.compile(rf"#!/usr/bin/env python3\n{ENTERPRISE}")
 ENTERPRISE_HEADER_NO_SHEBANG = re.compile(rf"{ENTERPRISE}")
-ENTERPRISE_HEADER_CODING = re.compile(
-    rf"""#!/usr/bin/env python3
-# -\*- coding: utf-8 -\*-
-{ENTERPRISE}"""
-)
 
 ENTERPRISE_HEADER_ALERT_HANDLERS = re.compile(
     rf"""#!/usr/bin/env python3
@@ -106,10 +101,7 @@ def get_file_header(path: str, length: int = 30) -> str:
 
 
 def check_for_license_header_violation(file_path: str) -> str | None:
-    if file_path.startswith("non-free/packages/cmk-update-agent/cmk_update_agent.py"):
-        if not ENTERPRISE_HEADER_CODING.match(get_file_header(file_path, length=5)):
-            return "enterprise header with coding not matching"
-    elif file_path.startswith("omd/non-free/packages/alert-handling/alert_handlers/"):
+    if file_path.startswith("omd/non-free/packages/alert-handling/alert_handlers/"):
         if not ENTERPRISE_HEADER_ALERT_HANDLERS.match(get_file_header(file_path, length=8)):
             return "enterprise header with alert handler not matching"
     elif is_notification_file(file_path) and needs_enterprise_license(file_path):

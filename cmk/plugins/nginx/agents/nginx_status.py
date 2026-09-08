@@ -36,37 +36,6 @@ import urllib  # noqa: E402
 
 urllib.getproxies = dict  # type: ignore[attr-defined]
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    text_type = str
-    binary_type = bytes
-else:
-    text_type = unicode  # noqa: F821
-    binary_type = str
-
-
-# Borrowed from six
-def ensure_str(s, encoding="utf-8", errors="strict"):
-    """Coerce *s* to `str`.
-
-    For Python 2:
-      - `unicode` -> encoded to `str`
-      - `str` -> `str`
-
-    For Python 3:
-      - `str` -> `str`
-      - `bytes` -> decoded to `str`
-    """
-    if not isinstance(s, (text_type, binary_type)):
-        raise TypeError("not expecting type '%s'" % type(s))
-    if PY2 and isinstance(s, text_type):
-        s = s.encode(encoding, errors)
-    elif PY3 and isinstance(s, binary_type):
-        s = s.decode(encoding, errors)
-    return s
-
 
 def extract_stats_from_iproute2(lines, ssl_ports):
     results = []
@@ -234,7 +203,7 @@ def main():
                 else:
                     raise
 
-            for line in ensure_str(fd.read()).split("\n"):
+            for line in fd.read().decode("utf-8").split("\n"):
                 if not line or line.isspace():
                     continue
                 if line.lstrip()[0] == "<":

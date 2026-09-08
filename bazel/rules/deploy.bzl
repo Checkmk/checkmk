@@ -236,6 +236,7 @@ COMMUNITY_WHEELS = [
 
 PRO_WHEELS = COMMUNITY_WHEELS + [
     "//non-free/packages/cmc-protocols:wheel",
+    "//non-free/packages/cmk-agent-engine:wheel",
     "//non-free/packages/cmk-bakery:wheel",
     "//non-free/packages/cmk-core-helpers:wheel",
     "//non-free/packages/cmk-dcd:wheel",

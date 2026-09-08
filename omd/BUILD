@@ -30,6 +30,7 @@ sh_binary(
 edition_deps = select({
     "@cmk//edition:cloud": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-agent-registration-extended:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-cloud:pkg_tar",
@@ -73,6 +74,7 @@ edition_deps = select({
     ],
     "@cmk//edition:pro": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-mcp:omd_skel_tar",
@@ -98,6 +100,7 @@ edition_deps = select({
     ],
     "@cmk//edition:ultimate": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-agent-registration-extended:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
@@ -139,6 +142,7 @@ edition_deps = select({
     ],
     "@cmk//edition:ultimatemt": [
         "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-agent-engine:pkg_tar",
         "//non-free/packages/cmk-agent-registration-extended:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",

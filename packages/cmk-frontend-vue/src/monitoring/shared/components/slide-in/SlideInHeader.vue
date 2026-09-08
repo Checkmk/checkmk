@@ -69,6 +69,10 @@ const emit = defineEmits<{
 }
 
 .monitoring-slide-in-header__actions {
+  --monitoring-action-buttons-gap: var(--dimension-4);
+  --monitoring-action-buttons-more-icon-width: var(--dimension-3);
+  --monitoring-action-buttons-more-icon-height: var(--dimension-5);
+
   margin-left: auto;
 }
 </style>

@@ -18,6 +18,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.http import Response
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework import APIVersion
+from cmk.gui.openapi.framework._utils import get_dataclass_origin, iter_model_fields
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.headers import (
@@ -84,23 +85,23 @@ class PydanticSchemaDefinitions:
         return get_cached_type_adapter(type_)
 
 
-def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
+def _extract_body_example(body_type: object) -> dict[str, object] | None:
     """Extract example values from a dataclass body type's field metadata.
 
     Returns a dict mapping each field's serialization alias (or name) to its
     example value, or None if body_type is None or no fields have examples.
+    A parameterized generic model is walked with its type arguments substituted.
     """
-    if body_type is None or not dataclasses.is_dataclass(body_type):
+    if body_type is None or get_dataclass_origin(body_type) is None:
         return None
+
     result: dict[str, object] = {}
-    for field in dataclasses.fields(body_type):
+    for field, field_type in iter_model_fields(body_type, path="body"):
         key = str(field.metadata.get("alias", field.name))
         if "examples" in field.metadata:
             result[key] = field.metadata["examples"][0]
-        elif dataclasses.is_dataclass(field.type) and isinstance(field.type, type):
-            nested = _extract_body_example(field.type)
-            if nested is not None:
-                result[key] = nested
+        elif (nested := _extract_body_example(field_type)) is not None:
+            result[key] = nested
     return result or None
 
 

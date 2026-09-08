@@ -24,7 +24,6 @@ from tests.testlib.common.repo import (
 )
 from tests.testlib.common.utils2 import (
     is_containerized,
-    run,
     verbose_called_process_error,
 )
 from tests.testlib.common.version import (
@@ -32,6 +31,10 @@ from tests.testlib.common.version import (
     CMKVersion,
     edition_from_env,
     TypeCMKEdition,
+)
+from tests.testlib.pytest_helpers.diagnostics import (
+    add_process_snapshot,
+    render_command_output,
 )
 from tests.testlib.pytest_helpers.sharding import (
     Durations,
@@ -114,7 +117,7 @@ def pytest_exception_interact(
     if get_test_type(node.path) in ("composition"):
         excp_.add_note("-" * 80)
         excp_.add_note(
-            _render_command_output(
+            render_command_output(
                 "ps -ef",
                 sudo=sudo_run_in_container,
             )
@@ -129,7 +132,7 @@ def pytest_exception_interact(
         else:
             excp_.add_note("-" * 80)
             excp_.add_note(
-                _render_command_output(
+                render_command_output(
                     "lslocks --output-all --notruncate",
                     sudo=False,
                 )
@@ -140,13 +143,7 @@ def pytest_exception_interact(
         # leads to clean termination of the affected test run.
         node.session.shouldstop = True
     elif excinfo.type in (TimeoutError, PWTimeoutError):
-        excp_.add_note("-" * 80)
-        excp_.add_note(
-            _render_command_output(
-                "top -b -n 1",
-                sudo=sudo_run_in_container,
-            )
-        )
+        add_process_snapshot(excp_, sudo=sudo_run_in_container)
     elif isinstance(excp_, subprocess.CalledProcessError):
         excp_.add_note(verbose_called_process_error(excp_))
         # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
@@ -158,25 +155,6 @@ def pytest_exception_interact(
         raise excp_
 
 
-def _render_command_output(cmd: str, sudo: bool, substitute_user: str | None = None) -> str:
-    """Render stdout and stderr from command as string or exception if raised.
-
-    Command execution can have non-zero exit-code.
-    """
-    try:
-        completed_process = run(
-            cmd.split(" "),
-            sudo=sudo,
-            check=False,
-            substitute_user=substitute_user,
-        )
-    except BaseException as excp:
-        return f"EXCEPTION '{cmd}':\n{excp}"
-    return (
-        f"STDOUT '{cmd}':\n{completed_process.stdout}\nSTDERR '{cmd}':\n{completed_process.stderr}"
-    )
-
-
 def _currently_existing_omd_site_names() -> Generator[str]:
     """Yield the names of all currently existing OMD sites"""
     yield from (site_path.name for site_path in Path("/omd/sites").iterdir())
@@ -184,22 +162,22 @@ def _currently_existing_omd_site_names() -> Generator[str]:
 
 def _rendered_command_outputs_for_site(site_name: str) -> Generator[str]:
     """Yield rendered output for OMD site command-by-command"""
-    yield _render_command_output(
+    yield render_command_output(
         "lslocks --output-all --notruncate",
         sudo=True,
         substitute_user=site_name,
     )
-    yield _render_command_output(
+    yield render_command_output(
         "cmk-ui-job-scheduler-health",
         sudo=True,
         substitute_user=site_name,
     )
-    yield _render_command_output(
+    yield render_command_output(
         "omd status",
         sudo=True,
         substitute_user=site_name,
     )
-    yield _render_command_output(
+    yield render_command_output(
         'lq "GET hosts\\nColumns: name"',
         sudo=True,
         substitute_user=site_name,

@@ -27,7 +27,7 @@ const serviceSegments = computed<StateSegment[]>(() => [
   { label: _t('WARN'), count: props.data.service_counts.warn, color: 'warning' },
   { label: _t('CRIT'), count: props.data.service_counts.crit, color: 'danger' },
   { label: _t('UNKNOWN'), count: props.data.service_counts.unknown, color: 'unknown' },
-  { label: _t('PENDING'), count: props.data.service_counts.pending, color: 'default' }
+  { label: _t('PENDING'), count: props.data.service_counts.pending, color: 'pending' }
 ])
 
 const tagChips = computed(() => toTagItems(props.data.tags))

@@ -16,7 +16,7 @@ const MIX: StateSegment[] = [
   seg('WARN', 2, 'warning'),
   seg('CRIT', 0, 'danger'),
   seg('UNKNOWN', 1, 'unknown'),
-  seg('PENDING', 0, 'default')
+  seg('PENDING', 0, 'pending')
 ]
 
 test('renders one bar segment per non-zero count, sized proportionally', () => {

@@ -12,7 +12,7 @@ import { computed } from 'vue'
 export interface StateSegment {
   label: TranslatedString
   count: number
-  color: Colors
+  color: Colors | 'pending'
 }
 
 const props = defineProps<{ segments: StateSegment[] }>()
@@ -77,8 +77,9 @@ const ariaLabel = computed<string>(() =>
 
 .cmk-state-count-bar__bar {
   display: flex;
+  gap: var(--dimension-2);
   width: 100%;
-  height: var(--dimension-7);
+  height: var(--dimension-6);
   overflow: hidden;
   border-radius: var(--border-radius);
 }
@@ -90,25 +91,29 @@ const ariaLabel = computed<string>(() =>
 
 .cmk-state-count-bar__segment--success,
 .cmk-state-count-bar__legend-swatch--success {
-  background-color: var(--success);
+  background-color: var(--color-corporate-green-80);
 }
 
 .cmk-state-count-bar__segment--warning,
 .cmk-state-count-bar__legend-swatch--warning {
-  background-color: var(--color-warning);
+  background-color: var(--color-yellow-60);
 }
 
 .cmk-state-count-bar__segment--danger,
 .cmk-state-count-bar__legend-swatch--danger {
-  background-color: var(--color-danger);
+  background-color: var(--color-dark-red-60);
 }
 
 .cmk-state-count-bar__segment--unknown,
 .cmk-state-count-bar__legend-swatch--unknown {
-  background-color: var(--color-unknown);
+  background-color: var(--color-orange-70);
 }
 
-/* PENDING and the empty track both use the neutral grey — there is no --color-pending. */
+.cmk-state-count-bar__segment--pending,
+.cmk-state-count-bar__legend-swatch--pending {
+  background-color: var(--color-mist-grey-80);
+}
+
 .cmk-state-count-bar__segment--default,
 .cmk-state-count-bar__segment--empty,
 .cmk-state-count-bar__legend-swatch--default {

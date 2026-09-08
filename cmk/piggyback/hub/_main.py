@@ -24,6 +24,7 @@ from cmk.ccc.hostaddress import HostNameValidationError
 from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
 from ._config import CONFIG_QUEUE, ConfigType, PiggybackHubConfig, save_config
+from ._paths import RELATIVE_CONFIG_PATH
 from ._payload import (
     PiggybackPayload,
     save_payload_on_message,
@@ -52,7 +53,7 @@ def handle_received_config(
         delivery_tag: DeliveryTag,
         received: PiggybackHubConfig,
     ) -> None:
-        logger.debug(
+        logger.info(
             "New configuration received (type: %(config_type)s)",
             {"config_type": received.type.name},
         )
@@ -62,6 +63,10 @@ def handle_received_config(
                 send_messages_oneshot(logger, omd_root, omd_site, received.locations)
             case ConfigType.PERSISTED:
                 save_config(omd_root, received)
+                logger.info(
+                    "Configuration saved (mtime_ns: %(mtime_ns)s)",
+                    {"mtime_ns": (omd_root / RELATIVE_CONFIG_PATH).stat().st_mtime_ns},
+                )
                 reload_config.set()
 
         channel.acknowledge(delivery_tag)

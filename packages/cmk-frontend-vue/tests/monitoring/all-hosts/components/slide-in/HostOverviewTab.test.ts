@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen, within } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
 
 import HostOverviewTab from '@/monitoring/all-hosts/components/slide-in/HostOverviewTab.vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
@@ -42,22 +42,42 @@ test('renders the service summary state-count bar from the host service counts',
 })
 
 test('legend lists every state with its count, including the zero one', async () => {
-  const { container } = render(HostOverviewTab, { props: { data: makeData() } })
+  render(HostOverviewTab, { props: { data: makeData() } })
 
   await screen.findByRole('img')
 
-  const legendItems = container.querySelectorAll<HTMLElement>('.cmk-state-count-bar__legend-item')
-  const expected: [string, string][] = [
-    ['OK', '9'],
-    ['WARN', '2'],
-    ['CRIT', '3'],
-    ['UNKNOWN', '1'],
-    ['PENDING', '0']
-  ]
-  expect(legendItems).toHaveLength(expected.length)
-  expected.forEach(([label, count], index) => {
-    const item = within(legendItems[index]!)
-    expect(item.getByText(label)).toBeInTheDocument()
-    expect(item.getByText(count)).toBeInTheDocument()
-  })
+  for (const entry of ['OK: 9', 'WARN: 2', 'CRIT: 3', 'UNKNOWN: 1', 'PENDING: 0']) {
+    expect(screen.getByText(entry)).toBeInTheDocument()
+  }
+})
+
+test('the summary leads with all services, linking to the unfiltered page', async () => {
+  render(HostOverviewTab, { props: { data: makeData() } })
+
+  await screen.findByRole('img')
+
+  const all = screen.getByRole('link', { name: 'All services: 15' })
+  expect(all).toHaveAttribute('target', '_top')
+  expect(all.getAttribute('href')).toContain('monitor_host_services.py')
+  expect(all.getAttribute('href')).not.toContain('CRIT')
+})
+
+test('a non-zero count opens the host services page filtered to that state', async () => {
+  render(HostOverviewTab, { props: { data: makeData() } })
+
+  await screen.findByRole('img')
+
+  const crit = screen.getByRole('link', { name: 'CRIT: 3' })
+  expect(crit).toHaveAttribute('target', '_top')
+  expect(crit.getAttribute('href')).toContain('monitor_host_services.py')
+  expect(crit.getAttribute('href')).toContain('CRIT')
+})
+
+test('a zero count is not linked', async () => {
+  render(HostOverviewTab, { props: { data: makeData() } })
+
+  await screen.findByRole('img')
+
+  expect(screen.getByText('PENDING: 0')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /PENDING/ })).not.toBeInTheDocument()
 })

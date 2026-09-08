@@ -3,12 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen, within } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
 import CmkStateCountBar, { type StateSegment } from 'cmk-ui-library/components/CmkStateCountBar.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-function seg(label: string, count: number, color: StateSegment['color']): StateSegment {
-  return { label: label as TranslatedString, count, color }
+function seg(
+  label: string,
+  count: number,
+  color: StateSegment['color'],
+  href?: string
+): StateSegment {
+  return { label: label as TranslatedString, count, color, href }
 }
 
 const MIX: StateSegment[] = [
@@ -45,21 +50,56 @@ test('zero-count state is absent from the bar but still listed in the legend', (
 })
 
 test('legend shows each state label with its count', () => {
+  render(CmkStateCountBar, { props: { segments: MIX } })
+
+  for (const entry of ['OK: 5', 'WARN: 2', 'CRIT: 0', 'UNKNOWN: 1', 'PENDING: 0']) {
+    expect(screen.getByText(entry)).toBeInTheDocument()
+  }
+})
+
+test('a non-zero count links to where its segment points', () => {
+  render(CmkStateCountBar, {
+    props: { segments: [seg('OK', 5, 'success', 'monitor_host_services.py?host=web-1')] }
+  })
+
+  expect(screen.getByRole('link', { name: 'OK: 5' })).toHaveAttribute(
+    'href',
+    'monitor_host_services.py?host=web-1'
+  )
+})
+
+test('the total, when given, leads the legend with the summed count', () => {
+  render(CmkStateCountBar, {
+    props: {
+      segments: MIX,
+      total: {
+        label: 'All services' as TranslatedString,
+        href: 'monitor_host_services.py?host=web-1'
+      }
+    }
+  })
+
+  const total = screen.getByRole('link', { name: 'All services: 8' })
+  expect(total).toHaveAttribute('href', 'monitor_host_services.py?host=web-1')
+  expect(total.compareDocumentPosition(screen.getByText('OK: 5'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
+
+test('the legend lists the states alone when no total is given', () => {
   const { container } = render(CmkStateCountBar, { props: { segments: MIX } })
 
-  const legendItems = container.querySelectorAll<HTMLElement>('.cmk-state-count-bar__legend-item')
-  const expected: [string, string][] = [
-    ['OK', '5'],
-    ['WARN', '2'],
-    ['CRIT', '0'],
-    ['UNKNOWN', '1'],
-    ['PENDING', '0']
-  ]
-  expected.forEach(([label, count], index) => {
-    const item = within(legendItems[index]!)
-    expect(item.getByText(label)).toBeInTheDocument()
-    expect(item.getByText(count)).toBeInTheDocument()
+  expect(container.querySelectorAll('.cmk-state-count-bar__legend-item')).toHaveLength(5)
+  expect(screen.queryByText(/All services/)).not.toBeInTheDocument()
+})
+
+test('a zero count is listed but not linked', () => {
+  render(CmkStateCountBar, {
+    props: { segments: [seg('CRIT', 0, 'danger', 'monitor_host_services.py?host=web-1')] }
   })
+
+  expect(screen.getByText('CRIT: 0')).toBeInTheDocument()
+  expect(screen.queryByRole('link')).not.toBeInTheDocument()
 })
 
 test('summarizes the counts in the bar aria-label', () => {

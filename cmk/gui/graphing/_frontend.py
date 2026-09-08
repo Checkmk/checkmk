@@ -4,22 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from tzlocal import get_localzone_name
 
 from cmk.graphing_engine import (
+    EvaluatedCurve,
+    EvaluatedGraph,
     Graph,
+    SeriesAttributes,
     Unit,
 )
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
+from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
@@ -42,9 +46,11 @@ from cmk.shared_typing.global_time_picker import (
 from cmk.web.utils.html import HTML
 
 from . import _plugins as engine_plugins
+from ._drawn_curves import DrawnCurve, line_type_with_mirroring, serialize_drawn_curves
 from ._graph_choices import BuiltGraph
 from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
+from ._graph_metric_expressions import AttributeGroup, LineType
 from ._graph_specification import GraphSpecification
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
@@ -362,3 +368,78 @@ def render_engine_graph_group(
     if not full_width:
         data["figure_width"] = int(size.width * HTML_SIZE_PER_EX)
     return HTMLWriter.render_vue_component("cmk-graph-group", data)
+
+
+_ATTRIBUTE_GROUPS: Final[tuple[AttributeGroup, ...]] = ("resource", "scope", "data_point")
+
+
+class Curve(TypedDict):
+    line_type: LineType
+    color: str
+    title: str
+    attributes: Mapping[AttributeGroup, Mapping[str, str]]
+    rrddata: Sequence[float | None]
+
+
+class GraphSpec(TypedDict):
+    start_time: int
+    end_time: int
+    step: int
+    curves: Sequence[Curve]
+
+
+def _attributes(
+    series_attributes: SeriesAttributes,
+) -> Mapping[AttributeGroup, Mapping[str, str]]:
+    return {
+        group: series_attributes[group] for group in _ATTRIBUTE_GROUPS if group in series_attributes
+    }
+
+
+def _curve(drawn: DrawnCurve[EvaluatedCurve]) -> Curve:
+    return Curve(
+        line_type=line_type_with_mirroring(drawn.line_type, drawn.mirrored),
+        color=drawn.curve.attributes.color,
+        title=drawn.curve.attributes.title,
+        attributes=_attributes(drawn.curve.series_attributes),
+        rrddata=drawn.curve.time_series.values,
+    )
+
+
+def empty_graph_spec(time_range: EngineTimeRange) -> GraphSpec:
+    """The graph spec of a request that matched no graph."""
+    return GraphSpec(
+        start_time=time_range.start,
+        end_time=time_range.end,
+        step=time_range.step,
+        curves=[],
+    )
+
+
+def evaluated_to_graph_spec(
+    evaluated: EvaluatedGraph,
+    *,
+    fallback_time_range: EngineTimeRange,
+) -> GraphSpec:
+    """The evaluated graph in the shape of a graph spec."""
+    time_range, curves = serialize_drawn_curves(
+        evaluated, _curve, fallback_time_range=fallback_time_range
+    )
+    return GraphSpec(
+        start_time=time_range.start,
+        end_time=time_range.end,
+        step=time_range.step,
+        curves=curves,
+    )
+
+
+GRAPH_PIN_USER_FILE: Final = "graph_pin"
+
+
+def load_graph_pin(user: LoggedInUser) -> int | None:
+    raw_pin_time = user.load_file(GRAPH_PIN_USER_FILE, None)
+    return None if raw_pin_time is None else int(raw_pin_time)
+
+
+def save_graph_pin(user: LoggedInUser, pin_time: int | None) -> None:
+    user.save_file(GRAPH_PIN_USER_FILE, pin_time)

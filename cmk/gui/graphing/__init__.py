@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -16,9 +15,12 @@ from ._from_api import (
 )
 from ._frontend import (
     default_time_range_seconds,
+    empty_graph_spec,
     EngineDisplayOptions,
+    evaluated_to_graph_spec,
     global_time_picker_props,
     global_time_picker_refresh,
+    GraphSpec,
     render_engine_graph_group,
     user_first_day_of_week,
 )

@@ -15,7 +15,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 
-from .._graph_pin_store import load_graph_pin
+from .._frontend import load_graph_pin
 from ._family import GRAPH_FAMILY
 
 

@@ -47,7 +47,7 @@ const topics: GlobalSettingsTopic[] = [
 ]
 
 function match(query: string): ReturnType<typeof matchTopics> {
-  return matchTopics(buildSearchIndex(topics), query)
+  return matchTopics(topics, buildSearchIndex(topics), query)
 }
 
 describe('matchTopics', () => {
@@ -106,6 +106,42 @@ describe('matchTopics', () => {
     const before = structuredClone(topics)
     match('site setting')
     expect(topics).toEqual(before)
+  })
+})
+
+describe('matchTopics with a variable filter', () => {
+  const modifiedOnly = (variable: GlobalSettingsVariable) => variable.modified
+  const defaultOnly = (variable: GlobalSettingsVariable) => !variable.modified
+  const filterTopics: GlobalSettingsTopic[] = [
+    topic('User management', 'Configures user/authentication settings', [
+      variable('lock_on_logon_failures', 'Lock user accounts after N login failures'),
+      { ...variable('user_idle_timeout', 'Login session idle timeout'), modified: true }
+    ]),
+    topic('Site management', 'Configures site settings', [variable('site_setting', 'Site setting')])
+  ]
+
+  function filtered(query: string, keep: (variable: GlobalSettingsVariable) => boolean) {
+    return matchTopics(filterTopics, buildSearchIndex(filterTopics), query, keep)
+  }
+
+  test('a filter without a query narrows every topic', () => {
+    expect(filtered('', modifiedOnly)).toEqual(
+      new Map([['User management', new Set(['user_idle_timeout'])]])
+    )
+  })
+
+  test('the filter applies on top of the query', () => {
+    expect(filtered('login', modifiedOnly)?.get('User management')).toEqual(
+      new Set(['user_idle_timeout'])
+    )
+  })
+
+  test('a topic whose hits are all filtered out drops out', () => {
+    expect(filtered('login failures', modifiedOnly)).toEqual(new Map())
+  })
+
+  test('a filter keeps every variable it accepts', () => {
+    expect(filtered('', defaultOnly)?.get('Site management')).toEqual(new Set(['site_setting']))
   })
 })
 

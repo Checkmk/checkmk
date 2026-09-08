@@ -16,9 +16,12 @@ export type SearchIndex = ReadonlyMap<string, ReadonlyMap<string, string>>
 
 /**
  * The variables to show, keyed by `topic.headline`. A topic without any hit is
- * absent; null means no active search, so everything is shown.
+ * absent; null means nothing narrows the list, so everything is shown.
  */
 export type SearchMatches = ReadonlyMap<string, ReadonlySet<string>> | null
+
+/** Keeps a variable regardless of the query, e.g. only the modified ones. */
+export type VariableFilter = (variable: GlobalSettingsVariable) => boolean
 
 // Attribute values are not searchable yet: rendering `spec` + `value` to text
 // means duplicating a good part of FormReadonly, which only produces VNodes.
@@ -42,22 +45,33 @@ export function buildSearchIndex(topics: GlobalSettingsTopic[]): SearchIndex {
   )
 }
 
-export function matchTopics(index: SearchIndex, query: string): SearchMatches {
+/** `keep` applies on top of the query, so a topic left without a variable drops out. */
+export function matchTopics(
+  topics: GlobalSettingsTopic[],
+  index: SearchIndex,
+  query: string,
+  keep: VariableFilter | null = null
+): SearchMatches {
   const needle = query.trim().toLowerCase()
-  if (needle === '') {
+  if (needle === '' && keep === null) {
     return null
   }
 
   const matches = new Map<string, ReadonlySet<string>>()
-  for (const [headline, variables] of index) {
+  for (const topic of topics) {
+    const haystacks = index.get(topic.headline)
+    if (haystacks === undefined) {
+      continue
+    }
     const shown = new Set<string>()
-    for (const [name, haystack] of variables) {
-      if (haystack.includes(needle)) {
-        shown.add(name)
+    for (const variable of topic.variables) {
+      const hit = needle === '' || haystacks.get(variable.name)?.includes(needle) === true
+      if (hit && (keep === null || keep(variable))) {
+        shown.add(variable.name)
       }
     }
     if (shown.size > 0) {
-      matches.set(headline, shown)
+      matches.set(topic.headline, shown)
     }
   }
   return matches

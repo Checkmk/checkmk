@@ -947,6 +947,81 @@ describe('GlobalSettingsApp search', () => {
     )
   })
 
+  describe('modification filter', () => {
+    async function filterBy(user: ReturnType<typeof setup>, label: string) {
+      await user.click(screen.getByRole('button', { name: `Toggle ${label}` }))
+    }
+
+    test('modified only hides the rows that still use their default', async () => {
+      const user = setup()
+      await filterBy(user, 'Modified only')
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+      expect(screen.getByText(label('Site setting'))).toBeInTheDocument()
+      expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
+    })
+
+    test('default only hides the modified rows', async () => {
+      const user = setup()
+      await filterBy(user, 'Default only')
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+      expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+      expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
+    })
+
+    test('the filter leaves the sections closed', async () => {
+      const user = setup()
+      await filterBy(user, 'Modified only')
+
+      expect(screen.getByText(label('Site management'))).toBeInTheDocument()
+      expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
+    })
+
+    test('the filter narrows the search result', async () => {
+      const user = setup()
+      await search(user, 'idle')
+      expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+
+      await filterBy(user, 'Modified only')
+      expect(screen.getByText('No matching settings found.')).toBeInTheDocument()
+    })
+
+    test('a filter in the URL pre-applies on mount', () => {
+      window.history.replaceState({}, '', '/?filter=modified')
+      setup()
+
+      expect(screen.getByText(label('Site management'))).toBeInTheDocument()
+      expect(screen.queryByText(label('User management'))).not.toBeInTheDocument()
+    })
+
+    test('switching the filter writes it to the URL', async () => {
+      const user = setup()
+      await filterBy(user, 'Modified only')
+      await vi.advanceTimersByTimeAsync(200)
+      expect(window.location.search).toBe('?filter=modified')
+
+      await filterBy(user, 'All settings')
+      await vi.advanceTimersByTimeAsync(200)
+      expect(window.location.search).toBe('')
+    })
+
+    test('the empty state resets the search and the filter together', async () => {
+      const user = setup()
+      await search(user, 'idle')
+      await filterBy(user, 'Modified only')
+
+      await user.click(screen.getByRole('button', { name: 'Reset search' }))
+      await vi.advanceTimersByTimeAsync(200)
+
+      expect(screen.getByRole('searchbox')).toHaveValue('')
+      expect(screen.getByRole('button', { name: 'Toggle All settings' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+    })
+  })
+
   test('a search query in the URL pre-filters on mount', () => {
     window.history.replaceState({}, '', '/?search=Site+setting')
     setup()

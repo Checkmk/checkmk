@@ -601,6 +601,60 @@ mssql:
     }
 
     #[test]
+    fn test_odbc_client_edition() {
+        const CONN_STRING: &str = "DSN=test";
+        let mut client = OdbcClient::new(CONN_STRING);
+        assert_eq!(client.conn_string(), CONN_STRING);
+        assert_eq!(client.get_edition(), Edition::Undefined);
+        client.set_edition(Edition::Azure);
+        assert_eq!(client.get_edition(), Edition::Azure);
+    }
+
+    #[test]
+    fn test_uni_client_edition() {
+        let mut client = UniClient::Odbc(OdbcClient::new("DSN=test"));
+        assert_eq!(client.get_edition(), Edition::Undefined);
+        client.set_edition(Edition::Azure);
+        assert_eq!(client.get_edition(), Edition::Azure);
+    }
+
+    /// A client that can not be queried must end up as `Normal`, not stay undefined.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_update_edition_falls_back_to_normal() {
+        let mut client = UniClient::Odbc(OdbcClient::new("DSN=missing"));
+        update_edition(&mut client).await;
+        assert_eq!(client.get_edition(), Edition::Normal);
+    }
+
+    /// Port 0 is never valid and must be replaced by the standard port.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_connect_custom_endpoint_replaces_port_zero() {
+        let config = make_config_with_auth_type("sql_server");
+        let error = connect_custom_endpoint(&config.endpoint(), Some(Port::from(0)))
+            .await
+            .err()
+            .map(|e| e.to_string())
+            .unwrap_or_default();
+        assert!(!error.contains("address:localhost:0"), "{error}");
+    }
+
+    #[test]
+    fn test_client_builder_database_and_config() {
+        let builder = ClientBuilder::new()
+            .logon_on_port(
+                &HostName::from("host".to_owned()),
+                Some(123u16.into()),
+                Credentials::SqlServer {
+                    user: "u",
+                    password: "p",
+                },
+            )
+            .database(Some("db"));
+        assert_eq!(builder.database.as_deref(), Some("db"));
+        assert_eq!(builder.make_config().unwrap().get_addr(), "host:123");
+    }
+
+    #[test]
     fn test_obtain_credentials_from_config() {
         #[cfg(windows)]
         assert!(obtain_config_credentials(make_config_with_auth_type("windows").auth()).is_some());

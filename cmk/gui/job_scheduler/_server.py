@@ -39,9 +39,9 @@ def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
                     "disable_existing_loggers": False,
                     "formatters": {
                         "default": {
-                            "()": "uvicorn.logging.DefaultFormatter",
-                            "fmt": "%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s",
-                            "use_colors": None,
+                            "()": "cmk.ccc.log.CMKFormatter",
+                            "with_process": True,
+                            "with_thread": True,
                         },
                         "access": {
                             "()": "uvicorn.logging.AccessFormatter",

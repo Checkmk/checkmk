@@ -173,6 +173,8 @@ describe('GlobalTimePicker', () => {
   )
 
   test('the chips are exactly the configured ranges, in configured order', () => {
+    // The extended (default) variant already shows a "Custom time range" chip on the trigger,
+    // so DynamicPresets does not get its own trailing Custom entry.
     const { container } = renderPicker(rangeOfSeconds(99))
     expect(presetChipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
   })

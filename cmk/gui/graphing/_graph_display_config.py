@@ -104,13 +104,6 @@ class _GraphDisplayConfigBase(BaseModel):
     title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
     vertical_axis_width: VerticalAxisWidth = "fixed"
 
-    def update_from_options(self, options: GraphRenderOptions) -> Self:
-        return self.model_copy(
-            update={
-                k: v for k, v in options.dump_set_fields().items() if k in type(self).model_fields
-            },
-        )
-
 
 class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     fixed_timerange: bool = False

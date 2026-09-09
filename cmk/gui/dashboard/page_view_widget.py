@@ -566,7 +566,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
 
 
 class ViewWidgetEditPage(Page):
-    type Mode = Literal["create", "copy", "edit"]
+    type Mode = Literal["create", "copy", "duplicate"]
 
     @dataclasses.dataclass(kw_only=True, slots=True)
     class ConfigurationErrorMessage:
@@ -590,20 +590,23 @@ class ViewWidgetEditPage(Page):
         This reuses the existing view editor, but should only show the view specific fields.
         The page is expected to be used in an iframe, so it should not render any header.
 
-        The page supports three modes:
-            - create: Create a new embedded view from scratch. Requires the datasource and
-                      single_infos query args.
-            - copy: Create a new embedded view by copying an existing view. Requires the view_name
-                    query arg.
-            - edit: Edit an existing embedded view.
+        The page always saves a new embedded view under the given embedded_id, and it refuses
+        an ID that the dashboard already uses. So an edit of a widget cannot overwrite an
+        embedded view that another widget also uses. The mode selects the initial content of
+        the editor:
+            - create: Start from an empty view. Requires the datasource and single_infos query
+                      args.
+            - copy: Start from an existing view. Requires the view_name query arg.
+            - duplicate: Start from an embedded view of the same dashboard. Requires the
+                         source_embedded_id query arg.
 
         In addition, the following query args are always used:
-            - mode: The mode of the editor, one of "create", "copy", "edit".
+            - mode: The mode of the editor, one of "create", "copy", "duplicate".
             - dashboard: The name of the dashboard the view is embedded in.
             - owner: The owner of the dashboard. Must match the logged-in user, unless the user
                      has the `general.edit_foreign_dashboards` permission.
-            - embedded_id: The internal ID of the embedded view in the dashboard. Must be generated
-                           on the client side even for new views.
+            - embedded_id: The internal ID of the new embedded view. Must be generated on the
+                           client side.
 
         The page communicates with the parent window via the JavaScript postMessage function.
         It sends the following messages:
@@ -664,7 +667,7 @@ class ViewWidgetEditPage(Page):
             html.hidden_field("embedded_id", embedded_id)
             html.hidden_field("datasource", view_spec["datasource"])
             html.hidden_field("single_infos", ",".join(view_spec["single_infos"]))
-            html.hidden_field("mode", "edit" if mode == "edit" else "create")  # copy -> create
+            html.hidden_field("mode", "create")  # copy and duplicate save as create
             html.hidden_field("owner", str(owner))
 
             render_view_config(view_spec, general_properties=True)
@@ -700,7 +703,7 @@ class ViewWidgetEditPage(Page):
     def _get_owner(request: Request, mode: Mode) -> UserId:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         if owner_id != user.id:
-            # Applies to all modes (create, copy, edit): editing foreign dashboards
+            # Applies to all modes (create, copy, duplicate): editing foreign dashboards
             # requires the general.edit_foreign_dashboards permission.
             if not user.may("general.edit_foreign_dashboards"):
                 raise MKAuthException(_("You are not allowed to edit foreign %s.") % "dashboards")
@@ -759,8 +762,12 @@ class ViewWidgetEditPage(Page):
             view_spec["name"] = view_name
             return view_spec
 
-        if mode == "edit":
-            return EmbeddedViewSpecManager.get_embedded_view_spec(dashboard, embedded_id, view_name)
+        if mode == "duplicate":
+            return EmbeddedViewSpecManager.get_embedded_view_spec(
+                dashboard,
+                request.get_ascii_input_mandatory("source_embedded_id"),
+                view_name,
+            )
 
         # create mode
         datasource = self._get_datasource_from_request(request)

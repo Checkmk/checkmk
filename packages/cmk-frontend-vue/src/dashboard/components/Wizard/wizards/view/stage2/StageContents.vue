@@ -65,7 +65,8 @@ const iframeUrl = computed(() => {
     case 'copy':
       params.append('view_name', configuration.viewName)
       break
-    case 'edit':
+    case 'duplicate':
+      params.append('source_embedded_id', configuration.sourceEmbeddedId)
       break
     default: {
       const unhandled: never = configuration

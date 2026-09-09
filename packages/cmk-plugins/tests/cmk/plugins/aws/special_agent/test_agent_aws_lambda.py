@@ -13,20 +13,20 @@ import pytest
 from mypy_boto3_logs.client import CloudWatchLogsClient
 from mypy_boto3_logs.type_defs import GetQueryResultsRequestTypeDef, GetQueryResultsResponseTypeDef
 
-from cmk.plugins.aws.special_agent.agent_aws import (
-    _create_lamdba_sections,
-    LambdaCloudwatch,
-    LambdaCloudwatchInsights,
-    LambdaProvisionedConcurrency,
-    LambdaRegionLimits,
-    LambdaSummary,
-)
+from cmk.plugins.aws.special_agent.agent_aws import _create_lamdba_sections
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
+)
+from cmk.plugins.aws.special_agent.sections.aws_lambda import (
+    LambdaCloudwatch,
+    LambdaCloudwatchInsights,
+    LambdaProvisionedConcurrency,
+    LambdaRegionLimits,
+    LambdaSummary,
 )
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 

@@ -60,7 +60,7 @@ const emit = defineEmits<{
   (e: 'reset-object-type-filters', objectType: ObjectType): void
   (e: 'reset-all-filters'): void
   (e: 'remove-filter', filterId: string): void
-  (e: 'goNext', selectedView: ViewSelection): void
+  (e: 'goNext', selectedView: ViewSelection | null): void
   (e: 'overwrite-filters', filters: ConfiguredFilters): void
 }>()
 
@@ -101,7 +101,7 @@ function goToNextStage() {
   error.value = null
 
   if (props.isEditMode) {
-    emit('goNext', { type: 'edit' } as unknown as ViewSelection)
+    emit('goNext', null)
     return
   }
 

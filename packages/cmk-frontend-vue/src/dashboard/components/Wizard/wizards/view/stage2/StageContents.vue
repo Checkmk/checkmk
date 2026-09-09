@@ -14,14 +14,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import ActionBar from '@/dashboard/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.vue'
-import type {
-  CopyExistingViewSelection,
-  NewViewSelection
-} from '@/dashboard/components/Wizard/wizards/view/types'
-import {
-  DataConfigurationMode,
-  ViewSelectionMode
-} from '@/dashboard/components/Wizard/wizards/view/types'
+import type { DataConfiguration } from '@/dashboard/components/Wizard/wizards/view/useDataConfiguration'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { EmbeddedViewContent } from '@/dashboard/types/widget'
 
@@ -45,9 +38,7 @@ type MessageEventData = ConfigurationErrorMessage | ValidationErrorMessage | Sav
 
 interface Stage2Props {
   dashboardKey: DashboardKey
-  embeddedId: string
-  configurationMode: DataConfigurationMode
-  viewSelection: NewViewSelection | CopyExistingViewSelection
+  dataConfiguration: DataConfiguration
 }
 
 const props = defineProps<Stage2Props>()
@@ -59,23 +50,29 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const iframeUrl = computed(() => {
-  const baseUrl = 'widget_edit_view.py'
+  const configuration = props.dataConfiguration
   const params = new URLSearchParams({
     dashboard: props.dashboardKey.name,
     owner: props.dashboardKey.owner,
-    embedded_id: props.embeddedId
+    embedded_id: configuration.embeddedId,
+    mode: configuration.mode
   })
-  if (props.configurationMode === DataConfigurationMode.EDIT) {
-    params.append('mode', 'edit')
-  } else if (props.viewSelection.type === ViewSelectionMode.COPY) {
-    params.append('mode', 'copy')
-    params.append('view_name', props.viewSelection.viewName)
-  } else if (props.viewSelection.type === ViewSelectionMode.NEW) {
-    params.append('mode', 'create')
-    params.append('datasource', props.viewSelection.datasource)
-    params.append('single_infos', props.viewSelection.restrictedToSingle.join(','))
+  switch (configuration.mode) {
+    case 'create':
+      params.append('datasource', configuration.datasource)
+      params.append('single_infos', configuration.restrictedToSingle.join(','))
+      break
+    case 'copy':
+      params.append('view_name', configuration.viewName)
+      break
+    case 'edit':
+      break
+    default: {
+      const unhandled: never = configuration
+      throw new Error(`Unhandled data configuration: ${JSON.stringify(unhandled)}`)
+    }
   }
-  return `${baseUrl}?${params.toString()}`
+  return `widget_edit_view.py?${params.toString()}`
 })
 const isSaving = ref(false)
 const configurationError = ref<string | undefined>()
@@ -131,7 +128,7 @@ function onMessageEvent(event: MessageEvent) {
     isSaving.value = false
     emit('goNext', {
       type: 'embedded_view',
-      embedded_id: props.embeddedId,
+      embedded_id: props.dataConfiguration.embeddedId,
       datasource: eventData.datasource,
       restricted_to_single: eventData.single_infos
     } as EmbeddedViewContent)

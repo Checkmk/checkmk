@@ -3,34 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-import contextlib
-import dataclasses
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
+from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     equals,
     get_rate,
     get_value_store,
     render,
+    Result,
+    Service,
+    SimpleSNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
-
-check_info = {}
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
 # .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.3.  index for IN bytes
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.5.  index for OUT bytes
 
+_UP = 0
 
-@dataclasses.dataclass
+_STATE_NAMES = {
+    _UP: "Up",
+    1: "Down (has no link and is initialized)",
+    2: "Disabled (has been forced down)",
+    3: "Uninitialized (has not been initialized)",
+    4: "Loopback (in loopback mode)",
+    5: "Unpopulated (interface not physically populated)",
+}
+
+
+@dataclass(frozen=True)
 class Interface:
     state: int
     inbytes: int
@@ -43,60 +55,46 @@ Section = Mapping[str, Interface]
 def parse_f5_bigip_interfaces(string_table: StringTable) -> Section:
     section = {}
     for port, ifstate, inbytes, outbytes in string_table:
-        with contextlib.suppress(ValueError):
-            section[port] = Interface(
-                state=int(ifstate), inbytes=int(inbytes), outbytes=int(outbytes)
-            )
+        # The device leaves the columns of OIDs it does not answer empty; a port without
+        # a state or without counters cannot be checked. Every other value has to be a
+        # number, so a non-numeric one is left to crash.
+        if not (ifstate and inbytes and outbytes):
+            continue
+        section[port] = Interface(state=int(ifstate), inbytes=int(inbytes), outbytes=int(outbytes))
     return section
 
 
-def discover_f5_bigip_interfaces(section: Section) -> Iterable[tuple[str, dict]]:
-    yield from ((port, {}) for port, interface in section.items() if interface.state == 0)
+def discover_f5_bigip_interfaces(section: Section) -> DiscoveryResult:
+    yield from (Service(item=port) for port, interface in section.items() if interface.state == _UP)
 
 
-def check_f5_bigip_interfaces(item, _no_params, section):
+def check_f5_bigip_interfaces(item: str, section: Section) -> CheckResult:
     if (interface := section.get(item)) is None:
         return
 
-    match interface.state:
-        case 0:
-            yield 0, "Up"
-        case 1:
-            yield 2, "Down (has no link and is initialized)"
-        case 2:
-            yield 2, "Disabled (has been forced down)"
-        case 3:
-            yield 2, "Uninitialized (has not been initialized)"
-        case 4:
-            yield 2, "Loopback (in loopback mode)"
-        case 5:
-            yield 2, "Unpopulated (interface not physically populated)"
-        case unknown_state:
-            yield 3, f"Unknown state ({unknown_state})"
-
-    if interface.state != 0:
+    if (state_name := _STATE_NAMES.get(interface.state)) is None:
+        yield Result(state=State.UNKNOWN, summary=f"Unknown state ({interface.state})")
         return
 
-    this_time = int(time.time())
+    yield Result(
+        state=State.OK if interface.state == _UP else State.CRIT,
+        summary=state_name,
+    )
+    if interface.state != _UP:
+        return
+
     value_store = get_value_store()
-    yield check_levels(
-        get_rate(value_store, "in", this_time, interface.inbytes),
-        "bytes_in",
-        None,
-        human_readable_func=render.iobandwidth,
-        infoname="In bytes",
-    )
-
-    yield check_levels(
-        get_rate(value_store, "out", this_time, interface.outbytes),
-        "bytes_out",
-        None,
-        human_readable_func=render.iobandwidth,
-        infoname="Out bytes",
-    )
+    this_time = int(time.time())
+    for direction, counter in (("in", interface.inbytes), ("out", interface.outbytes)):
+        yield from check_levels(
+            get_rate(value_store, direction, this_time, counter),
+            metric_name=f"bytes_{direction}",
+            render_func=render.iobandwidth,
+            label=f"{direction.capitalize()} bytes",
+        )
 
 
-check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
+snmp_section_f5_bigip_interfaces = SimpleSNMPSection(
     name="f5_bigip_interfaces",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.10"),
@@ -104,10 +102,20 @@ check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.2.4",
-        oids=["4.3.1.1", "1.2.1.17", "4.3.1.3", "4.3.1.5"],
+        oids=[
+            "4.3.1.1",  # ifname
+            "1.2.1.17",  # ifstate
+            "4.3.1.3",  # IN bytes
+            "4.3.1.5",  # OUT bytes
+        ],
     ),
-    service_name="f5 Interface %s",
     parse_function=parse_f5_bigip_interfaces,
+)
+
+
+check_plugin_f5_bigip_interfaces = CheckPlugin(
+    name="f5_bigip_interfaces",
+    service_name="f5 Interface %s",
     discovery_function=discover_f5_bigip_interfaces,
     check_function=check_f5_bigip_interfaces,
 )

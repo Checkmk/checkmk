@@ -12,11 +12,6 @@ from typing import Final, Protocol
 import pytest
 from dateutil.tz import tzutc
 
-from cmk.plugins.aws.special_agent.agent_aws import (
-    ElastiCache,
-    ElastiCacheLimits,
-    ElastiCacheSummary,
-)
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -29,6 +24,11 @@ from cmk.plugins.aws.special_agent.sections.core import (
     AWSSectionResult,
     AWSSectionResults,
     ResultDistributor,
+)
+from cmk.plugins.aws.special_agent.sections.elasticache import (
+    ElastiCache,
+    ElastiCacheLimits,
+    ElastiCacheSummary,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient

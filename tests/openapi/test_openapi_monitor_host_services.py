@@ -14,7 +14,7 @@ from cmk.graphing.v1 import perfometers
 from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.monitor.services._api._list_host_services import _MAX_HOST_SVC_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(name="registered_perfometer")

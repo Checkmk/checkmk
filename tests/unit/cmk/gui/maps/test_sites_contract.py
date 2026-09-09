@@ -32,7 +32,7 @@ from cmk.livestatus_client import (
 from cmk.maps.backend.core.config import settings as daemon_settings
 from cmk.maps.backend.integrations import checkmk_sites
 from cmk.maps.gui import _sites
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.fixture(name="shared_omd_root")

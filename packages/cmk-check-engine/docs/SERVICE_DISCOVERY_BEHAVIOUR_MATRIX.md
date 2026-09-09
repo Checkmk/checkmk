@@ -1904,7 +1904,7 @@ on the GUI path), the context manager's exit ordering (T2.13), and the endpoint 
 
 **Implemented.** 14 test functions, 59 cases, driving real requests through the Flask app with
 `ClientRegistry`. `update_service_phase` was added to `ServiceDiscoveryClient` in
-`tests/testlib/rest_api_client.py`, alongside the pre-existing `get_service_discovery_status`.
+`tests/testlib/unit/rest_api_client.py`, alongside the pre-existing `get_service_discovery_status`.
 Tier 4 needed the same helper on the other client, and now has it.
 
 **No `xfail(strict=True)` lives in this tier, and that is a decision rather than an omission.**
@@ -1963,7 +1963,7 @@ central site**. `ServiceDiscoveryAPI` in `tests/testlib/openapi_session.py` carr
 `run_discovery`, `run_discovery_and_wait_for_completion`, `get_discovery_result`,
 `get_discovery_status`, `get_discovery_job_status` and — added with this tier —
 `update_service_phase`.
-`tests/testlib/rest_api_client.py` has its own, from Tier 3.
+`tests/testlib/unit/rest_api_client.py` has its own, from Tier 3.
 
 Two mechanics shape every row and are worth stating once. **The preview reads cached agent data**
 (`get_result` → `_get_discovery_preview(prevent_fetching=True)` → `use_only_cache=True`), so only

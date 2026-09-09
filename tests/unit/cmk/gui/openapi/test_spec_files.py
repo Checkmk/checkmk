@@ -11,7 +11,7 @@ import yaml
 from openapi_spec_validator import validate
 
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("request_context")

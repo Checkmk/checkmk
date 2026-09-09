@@ -20,8 +20,8 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.mark.parametrize(

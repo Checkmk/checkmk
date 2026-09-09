@@ -21,7 +21,6 @@ py_cmk_test(
     deps = [
         "//cmk/plugins",
         "//tests/testlib/common",
-        "//tests/testlib/common:empty_config",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-mock"),

@@ -26,10 +26,10 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1.form_specs import Integer
-from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.unit.gui.config_variable_form_data_test_helper import (
     make_global_settings_context,
 )
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 DEFAULTS = {"test_var": 1}
 

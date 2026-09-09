@@ -18,6 +18,9 @@ py_library(
     }),
     imports = ["../../.."],
     deps = [
+        "//packages/cmk-plugins/cmk/plugins/aws",
+        "//packages/cmk-plugins/cmk/plugins/azure_v2",
+        "//packages/cmk-plugins/cmk/plugins/gcp",
         requirement("playwright"),
         requirement("pytest"),
         requirement("requests"),
@@ -36,7 +39,6 @@ py_library(
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
             "//packages/cmk-wsgi",
-            "//tests/testlib:consolidation_wire",
         ],
         "//:gpl_repo": [],
     }),

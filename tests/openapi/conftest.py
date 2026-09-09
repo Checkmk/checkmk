@@ -22,7 +22,7 @@ import cmk.ccc.version as cmk_version
 # NOTE: fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
 # Modules like cmk/gui/userdb/store.py capture `cmk.utils.paths.var_dir` at import time; patching
 # after those imports is too late and yields relative paths at runtime.
-from tests.testlib import fake_site
+from tests.testlib.unit import fake_site
 
 fake_site.fake_paths()
 
@@ -47,7 +47,7 @@ from cmk.livestatus_client.testing import (  # noqa: E402
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from tests.testlib.gui.common_fixtures import (  # noqa: E402
+from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     create_aut_user_auth_wsgi_app,
     create_flask_app,
     create_test_hosts,
@@ -62,19 +62,19 @@ from tests.testlib.gui.common_fixtures import (  # noqa: E402
     suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.openapi_test_helper import (  # noqa: E402
+from tests.testlib.unit.gui.openapi_test_helper import (  # noqa: E402
     clear_app_instance_caches,
     create_api_client,
     create_sample_host_context,
     create_test_groups,
 )
-from tests.testlib.gui.users import create_and_destroy_user  # noqa: E402
-from tests.testlib.gui.web_test_app import (  # noqa: E402
+from tests.testlib.unit.gui.users import create_and_destroy_user  # noqa: E402
+from tests.testlib.unit.gui.web_test_app import (  # noqa: E402
     SetConfig,
     WebTestAppForCMK,
     WebTestAppRequestHandler,
 )
-from tests.testlib.rest_api_client import (  # noqa: E402
+from tests.testlib.unit.rest_api_client import (  # noqa: E402
     ClientRegistry,
     get_client_registry,
     RestApiClient,

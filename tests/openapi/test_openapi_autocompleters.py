@@ -9,7 +9,7 @@ from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.config import Config
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.web.utils.choices import Choices
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(name="expected_autocompleters")

@@ -34,7 +34,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 
 @pytest.fixture(name="user_without_permissions")

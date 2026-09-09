@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_create_and_get(clients: ClientRegistry) -> None:

@@ -24,8 +24,8 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_get_bi_packs(clients: ClientRegistry) -> None:

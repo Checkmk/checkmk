@@ -13,7 +13,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
-        "//tests/testlib/gui",
+        "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),
         requirement("pytest-mock"),

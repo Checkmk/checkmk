@@ -11,14 +11,14 @@ from collections.abc import Iterator
 import pytest
 
 from cmk.ccc.user import UserId
-from tests.testlib.gui.openapi_test_helper import (
+from tests.testlib.unit.gui.openapi_test_helper import (
     clear_app_instance_caches,
     create_api_client,
     create_sample_host_context,
     create_test_groups,
 )
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import RestApiClient
 
 
 @pytest.fixture()

@@ -12,8 +12,8 @@ from cmk.ccc import version
 from cmk.gui.openapi.api_endpoints.downtime.models.request_models import _with_defaulted_timezone
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _is_managed_edition = version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
 

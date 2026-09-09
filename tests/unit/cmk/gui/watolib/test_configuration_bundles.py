@@ -43,7 +43,7 @@ from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.global_ident_type import PROGRAM_ID_CUSTOM_SERVICE, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import PasswordConfig
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 from tests.unit.cmk.gui.watolib.test_automatic_host_removal import default_site_config
 from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F401
     mock_update_passwords_merged_file,

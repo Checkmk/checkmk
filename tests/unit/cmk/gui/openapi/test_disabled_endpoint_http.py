@@ -24,7 +24,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.disabled_endpoint import disabled_legacy
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _DETAIL = "The Agent bakery is not available with your license"
 

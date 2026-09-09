@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.gui.availability.type_defs import AVEntry
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.availability.openapi.conftest import TIME_FROM, TIME_UNTIL
 
 _MODULE = "cmk.gui.availability.openapi.list_service_availability"

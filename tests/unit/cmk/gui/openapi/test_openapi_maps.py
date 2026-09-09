@@ -17,7 +17,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.maps.rest_api import utils
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _map(name: str, **overrides: object) -> dict[str, object]:

@@ -13,7 +13,7 @@ from cmk.base.configlib.fetchers import (
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.matcher import RulesetMatcher, RuleSpec
-from tests.testlib.common.empty_config import EMPTY_CONFIG
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 _MATCHING = HostName("matching-host")
 _OTHER = HostName("other-host")

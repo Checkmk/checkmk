@@ -31,8 +31,8 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import (
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
     Response,
     RestApiClient,

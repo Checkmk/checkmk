@@ -19,7 +19,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
 _TOKEN_TTL = timedelta(minutes=5)

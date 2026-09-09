@@ -18,7 +18,7 @@ from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.welcome.snapin import SidebarWelcomeSnapin
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 NO_PERMISSIONS = UserPermissions({}, {}, {}, [])
 

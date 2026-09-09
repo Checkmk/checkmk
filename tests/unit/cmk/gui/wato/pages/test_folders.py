@@ -17,7 +17,7 @@ from cmk.gui.wato.pages.folders import (
     FolderMenuLocation,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, SearchFolder
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 def test_folder_menu_entry_registry_filters_by_location() -> None:

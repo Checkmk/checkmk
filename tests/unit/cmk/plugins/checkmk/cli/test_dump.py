@@ -33,8 +33,8 @@ from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.trace import Context
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):

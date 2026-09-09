@@ -7,7 +7,7 @@ import pytest
 
 from cmk.gui.data_source.datasources import DataSourceComments
 from cmk.gui.data_source.registry import DataSourceRegistry, row_id
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("load_plugins")

@@ -25,7 +25,7 @@ from cmk.gui.openapi import (
     endpoint_registry,
     versioned_endpoint_registry,
 )
-from tests.testlib.openapi_slim_registration import register_edition_into_empty_registries
+from tests.testlib.unit.openapi_slim_registration import register_edition_into_empty_registries
 
 VersionedKey = tuple[str, str, str, str]
 LegacyKey = tuple[str, str, str]

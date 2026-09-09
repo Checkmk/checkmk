@@ -34,7 +34,7 @@ from cmk.gui.monitor.hosts._models import (
 from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
 from cmk.gui.sites import SiteStates, SiteStatus
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 SiteState = Literal["online", "disabled", "down", "unreach", "dead", "waiting"]
 

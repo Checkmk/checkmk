@@ -26,7 +26,7 @@ from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from tests.testlib import fake_site
+from tests.testlib.unit import fake_site
 from tests.unit.mocks_and_helpers import DummyLicensingHandler
 
 logger = logging.getLogger(__name__)

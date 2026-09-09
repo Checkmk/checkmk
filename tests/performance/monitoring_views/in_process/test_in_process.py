@@ -66,7 +66,7 @@ from tests.performance.monitoring_views.scenarios import (
     SITE_SCOPED_PAGES,
     TIERS,
 )
-from tests.testlib.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 #: What a scenario hands the probe: the requests one page load is made of.
 type PageRequests = Callable[[HttpCaller, PageContext], None]

@@ -14,7 +14,7 @@ from cmk.gui.wsgi.applications.profile_switcher import (
     ProfileConfigLoader,
     ProfileSetting,
 )
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(

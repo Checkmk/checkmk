@@ -19,7 +19,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store
 from cmk.gui.token_auth._store import TokenRevoked
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _issue_token(host_name: str) -> AuthToken:

@@ -23,7 +23,7 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceTimestampCondition,
     ServiceTimestampOp,
 )
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(

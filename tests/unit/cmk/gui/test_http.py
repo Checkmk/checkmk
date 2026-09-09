@@ -21,7 +21,7 @@ from cmk.gui import http
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.wsgi.app import application_and_request_context
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 global_request = request
 # The form size limit enforced by cmk.gui.http.Request.max_form_memory_size.

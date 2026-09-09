@@ -45,7 +45,7 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def _local_site_config() -> SiteConfiguration:

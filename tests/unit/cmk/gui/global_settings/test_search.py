@@ -17,7 +17,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Integer
-from tests.testlib.gui.global_settings import patch_factory_defaults, registered
+from tests.testlib.unit.gui.global_settings import patch_factory_defaults, registered
 
 TEST_VAR = "ident"
 

@@ -41,8 +41,8 @@ from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.utils import config_warnings
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 _TEST_LOCATION = PluginLocation(
     cmk.plugins.monitoring_plugins.server_side_calls.ftp.__name__,

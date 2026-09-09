@@ -28,7 +28,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import mock_livestatus_communication, MockLiveStatusConnection
 from cmk.utils.redis import disable_redis
-from tests.testlib.gui.common_fixtures import (
+from tests.testlib.unit.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
     create_flask_app,
     create_test_hosts,
@@ -43,13 +43,13 @@ from tests.testlib.gui.common_fixtures import (
     suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.users import create_and_destroy_user
-from tests.testlib.gui.web_test_app import (
+from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.web_test_app import (
     SetConfig,
     WebTestAppForCMK,
     WebTestAppRequestHandler,
 )
-from tests.testlib.rest_api_client import ClientRegistry, get_client_registry
+from tests.testlib.unit.rest_api_client import ClientRegistry, get_client_registry
 
 
 @pytest.fixture

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.ccc.version import Edition
-from tests.testlib.gui.common_fixtures import perform_load_plugins
+from tests.testlib.unit.gui.common_fixtures import perform_load_plugins
 
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]

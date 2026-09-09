@@ -44,7 +44,7 @@ from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.ruleset_matcher.definition import RuleGroup
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 
 def test_user_context(with_user: tuple[UserId, str]) -> None:

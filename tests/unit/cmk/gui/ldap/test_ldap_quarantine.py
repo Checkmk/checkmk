@@ -15,7 +15,7 @@ from cmk.gui.ldap_integration.ldap_connector import (
     SyncUsersResult,
 )
 from cmk.gui.type_defs import QuarantineInfo, Users, UserSpec
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.unit.cmk.gui.ldap.test_ldap_golden import _test_config
 
 _CONNECTION_ID = "test-golden-ldap-connector"

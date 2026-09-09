@@ -60,7 +60,7 @@ from cmk.gui.userdb.user_attributes import (
     TemperatureUnitUserAttribute,
 )
 from cmk.gui.utils.security_log_events import UserManagementEvent
-from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.fixture(name="mock_ldap")

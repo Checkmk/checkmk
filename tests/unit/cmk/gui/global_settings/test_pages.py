@@ -29,13 +29,13 @@ from cmk.livestatus_client import UnixSocketInfo
 from cmk.shared_typing import global_settings as shared
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames
-from tests.testlib.gui.global_settings import (
+from tests.testlib.unit.gui.global_settings import (
     logged_in,
     patch_factory_defaults,
     registered,
     shown_variables,
 )
-from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 REMOTE_SITE = SiteId("remote")
 UNREPLICATED_SITE = SiteId("unreplicated")

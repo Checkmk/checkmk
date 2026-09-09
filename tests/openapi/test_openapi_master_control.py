@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 from cmk.ccc.user import UserId
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 # A status row must carry the columns the GUI reads when connecting to a site (so the implicit
 # connection query keeps working) plus the master control columns this endpoint family reads.

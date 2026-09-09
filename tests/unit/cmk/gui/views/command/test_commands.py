@@ -23,7 +23,7 @@ from cmk.livestatus_client import DeleteServiceDowntime
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils.html import HTML
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 COMMENT_TABLE = [
     # Host comments

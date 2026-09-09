@@ -12,7 +12,7 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crash import make_crash_report_base_path
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _STACK = "TypeError: boom\n    at renderTile (http://localhost/NO_SITE/check_mk/js/main.js:120:31)"
 

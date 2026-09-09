@@ -52,8 +52,8 @@ from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 LOCAL_SITE = "NO_SITE"
 

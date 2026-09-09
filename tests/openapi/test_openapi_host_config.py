@@ -51,7 +51,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import BuiltinTagConfig
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from tests.testlib.rest_api_client import ClientRegistry, RestApiException
+from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 
 EDITIONS_ULTIMATE_PLUS = {
     version.Edition.ULTIMATEMT,

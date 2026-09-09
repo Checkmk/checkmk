@@ -26,7 +26,7 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _comprehensive_graph() -> Graph:

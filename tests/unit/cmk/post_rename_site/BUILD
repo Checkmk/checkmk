@@ -10,7 +10,7 @@ py_library(
     visibility = [":__subpackages__"],
     deps = [
         "//packages/cmk-ccc:version",
-        "//tests/testlib/gui",
+        "//tests/testlib/unit",
         requirement("pytest"),
     ],
 )

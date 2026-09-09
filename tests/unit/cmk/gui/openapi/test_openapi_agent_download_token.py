@@ -25,8 +25,8 @@ from cmk.gui.token_auth import (
 )
 from cmk.gui.token_auth._store import InvalidToken
 from cmk.utils.automation_config import RemoteAutomationConfig
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 REMOTE_SITE = SiteId("remote_site")
 UNCONNECTED_SITE = SiteId("unconnected")

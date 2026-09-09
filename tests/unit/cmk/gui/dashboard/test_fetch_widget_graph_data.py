@@ -50,7 +50,7 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentDownloadToken, AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.roles import UserPermissions
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 _WIDGET_ID = "test_dashboard-0"
 

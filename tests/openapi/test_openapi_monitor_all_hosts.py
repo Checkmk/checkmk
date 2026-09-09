@@ -15,8 +15,8 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.monitor.hosts._api._list_hosts import _MAX_NUMBER_OF_HOSTS
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _SITE_ID = "NO_SITE"
 

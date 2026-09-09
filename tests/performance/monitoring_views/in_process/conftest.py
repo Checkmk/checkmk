@@ -69,7 +69,7 @@ from tests.performance.monitoring_views.remotes import (  # noqa: E402
     build_sites,
     patched_remotes,
 )
-from tests.testlib.gui.common_fixtures import (  # noqa: E402
+from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     create_flask_app,
     create_wsgi_app,
     perform_gui_cleanup_after_test,
@@ -79,8 +79,8 @@ from tests.testlib.gui.common_fixtures import (  # noqa: E402
     set_config_context,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.users import create_and_destroy_user  # noqa: E402
-from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK  # noqa: E402
+from tests.testlib.unit.gui.users import create_and_destroy_user  # noqa: E402
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

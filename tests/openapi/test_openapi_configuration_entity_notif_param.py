@@ -32,7 +32,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from tests.testlib.common.utils import reset_registries
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def spec() -> ValueSpecDictionary:

@@ -24,7 +24,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 from cmk.gui.wsgi.app import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

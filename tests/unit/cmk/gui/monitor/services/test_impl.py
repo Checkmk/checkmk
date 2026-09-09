@@ -21,7 +21,7 @@ from cmk.gui.monitor.services._models import (
     ServiceSortDirection,
 )
 from cmk.livestatus_client.testing import expect_single_query
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 # "foo-server-01" matches no row in the default hosts/services test-data, so queries against it
 # return an empty result. This lets us assert on the exact query text without also needing to

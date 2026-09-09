@@ -14,7 +14,7 @@ import time_machine
 from faker import Faker
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 DOMAIN_TYPE = "comment"
 SITE_ID = "NO_SITE"

@@ -16,7 +16,7 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.common.utils import reset_registries
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_activate_changes_permission_denied_is_403(

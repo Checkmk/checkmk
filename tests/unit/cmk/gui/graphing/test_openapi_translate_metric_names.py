@@ -14,7 +14,7 @@ import pytest
 from cmk.graphing_engine import HostName, MetricName, Service, ServiceName
 from cmk.gui.graphing.openapi import translate_metric_names as endpoint_module
 from cmk.livestatus_client import MKLivestatusSocketError
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 # The CPU utilization check reports the raw perf-data name "wait", which the collection
 # plug-in renames to the metric "io_wait".

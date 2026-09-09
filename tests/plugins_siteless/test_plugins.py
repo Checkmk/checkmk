@@ -41,7 +41,7 @@ from tests.plugins_siteless.helpers import (
     store_services_states,
     summarizer,
 )
-from tests.testlib.common.empty_config import EMPTY_CONFIG
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 os.environ["OMD_SITE"] = ""
 HOSTNAME = HostName("test_host")

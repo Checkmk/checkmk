@@ -10,7 +10,7 @@ py_library(
     deps = [
         "//cmk/base/config",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
-        "//tests/testlib/gui",
+        "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),
         requirement("pytest-mock"),
@@ -27,7 +27,6 @@ py_cmk_test(
     env = {"EDITION": "community"},
     tags = [
         "deballast-keep=//cmk/update_config:update_config",  # config-update migrations exercised at runtime
-        "deballast-keep=//tests/testlib/unit:unit",  # provides tests.testlib.gui.common_fixtures transitively (fixture bundle)
     ],
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
@@ -35,7 +34,6 @@ py_cmk_test(
         ":conftest",
         "//cmk/config_anonymizer",
         "//cmk/update_config",
-        "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("flask"),
         requirement("pytest-mock"),

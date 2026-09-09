@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]

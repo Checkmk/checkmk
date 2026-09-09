@@ -21,7 +21,7 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _TEMPLATE_SPEC = {
     "graph_type": "template",

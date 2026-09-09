@@ -18,8 +18,8 @@ from cmk.gui.graphing import _graph_templates as template_graphs_module
 from cmk.gui.graphing import BuiltGraph, RRDFetchMetricNames, TemplateGraphSpecification
 from cmk.livestatus_client import MKLivestatusSocketError
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[BuiltGraph]]:

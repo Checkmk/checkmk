@@ -12,7 +12,7 @@ import cmk.ccc.resulttype as result
 import cmk.utils.paths
 from cmk.gui.background_job.job import AlreadyRunningError
 from cmk.gui.userdb.user_sync_job import UserSyncBackgroundJob
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(name="remote_site")

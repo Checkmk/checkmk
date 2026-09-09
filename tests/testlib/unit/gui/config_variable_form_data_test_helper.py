@@ -74,8 +74,8 @@ from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from tests.testlib.common.repo import repo_path
-from tests.testlib.fake_site import edition as edition_from_env
-from tests.testlib.gui.common_fixtures import perform_load_plugins
+from tests.testlib.unit.fake_site import edition as edition_from_env
+from tests.testlib.unit.gui.common_fixtures import perform_load_plugins
 
 
 def make_global_settings_context(edition: Edition) -> GlobalSettingsContext:

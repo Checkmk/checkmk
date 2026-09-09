@@ -83,8 +83,8 @@ from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 def _make_core_objects_config(config_cache: ConfigCache) -> config.CoreObjectsConfig:

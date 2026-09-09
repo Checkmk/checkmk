@@ -17,7 +17,7 @@ from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.backend import oauth_db_path
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 def test_a_damaged_database_does_not_authenticate_anyone(

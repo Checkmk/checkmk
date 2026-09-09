@@ -29,7 +29,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     TimestampCondition,
     TimestampOp,
 )
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def test_query_builder_nested_conditions_and_nodes() -> None:

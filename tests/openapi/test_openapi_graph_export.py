@@ -6,7 +6,7 @@
 import json
 from urllib.parse import parse_qs, urlparse
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _TEMPLATE_SPEC = {
     "graph_type": "template",

@@ -21,7 +21,7 @@ from cmk.gui.http import (
 )
 from cmk.gui.pages import page_registry, PageContext, PageEndpoint, PageHandler
 from cmk.web.utils.html import HTML
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 OS_ERROR_PAGE = "test_oserror_page"
 OS_ERROR_WSGI_PAGE = "test_oserror_wsgi_page"

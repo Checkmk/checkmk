@@ -24,7 +24,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.openapi import versioned_endpoint_registry
 from cmk.gui.openapi.framework import validate_endpoint_definition
 from cmk.gui.openapi.framework.api_config import APIConfig
-from tests.testlib.openapi_slim_registration import register_edition_into_empty_registries
+from tests.testlib.unit.openapi_slim_registration import register_edition_into_empty_registries
 
 
 def assert_registered_endpoints_valid(

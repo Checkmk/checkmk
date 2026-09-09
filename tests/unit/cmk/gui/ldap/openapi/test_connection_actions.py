@@ -15,7 +15,7 @@ from cmk.gui.user_connection_config_types import (
     LDAPUserConnectionConfig,
 )
 from cmk.gui.userdb import UserConnectionConfigFile
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 # Mocking wato_audit.log as its contents are not used in these tests and accessing it causes flaky results.

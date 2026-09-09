@@ -20,7 +20,7 @@ from cmk.gui.user_connection_config_types import (
 from cmk.gui.userdb import get_user_attributes, load_users, UserConnectionConfigFile
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.users import create_user, default_sites
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 LDAP_CONNECTION_ID = "CMKTest"
 

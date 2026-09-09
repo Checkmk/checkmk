@@ -56,8 +56,8 @@ from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import create_user, default_sites, edit_user
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _test_pending_changes() -> PendingChanges:

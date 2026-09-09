@@ -16,7 +16,6 @@ py_cmk_test(
     deps = [
         "//cmk/base:app",
         "//cmk/plugins/checkmk/cli",
-        "//tests/testlib/common:empty_config",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-random-order"),

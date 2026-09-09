@@ -14,7 +14,7 @@ from cmk.gui.monitor.hosts._api._events import (
     _SECONDS_PER_DAY,
 )
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _SITE_ID = "NO_SITE"
 

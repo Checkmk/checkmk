@@ -15,7 +15,7 @@ from cmk.base import config  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc.version import edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import paths
-from tests.testlib.gui.common_fixtures import (
+from tests.testlib.unit.gui.common_fixtures import (
     create_flask_app,
     perform_gui_cleanup_after_test,
     perform_load_plugins,

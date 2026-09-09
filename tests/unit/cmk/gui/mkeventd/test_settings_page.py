@@ -18,7 +18,7 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
-from tests.testlib.gui.global_settings import (
+from tests.testlib.unit.gui.global_settings import (
     logged_in,
     patch_factory_defaults,
     registered,

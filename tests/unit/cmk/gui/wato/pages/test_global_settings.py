@@ -12,7 +12,7 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.gui.htmllib.html import _load_vue_manifest
 from cmk.gui.watolib.paths import wato_var_dir
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture(name="frontend_vue_manifest")

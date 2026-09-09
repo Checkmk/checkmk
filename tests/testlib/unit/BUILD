@@ -1,27 +1,21 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
+# In-process test helpers: a fake site, the WSGI test app and REST API
+# client, config scenarios. Nothing here needs a running site or a
+# container. Used by tests/unit, tests/openapi and package tests.
 py_library(
     name = "unit",
     testonly = True,
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
-    tags = [
-        "deballast-keep=//cmk/gui:app",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//cmk/gui/graphing:graphing",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//cmk/gui/openapi/endpoints:endpoints",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//cmk/gui/openapi/framework:framework",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//cmk/gui/openapi/restful_objects:type_defs",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//cmk/gui/rest_api_types:notifications",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//cmk/gui/userdb:userdb",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//packages/cmk-crash:crash",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-        "deballast-keep=//tests/testlib/gui:gui",  # unit-test fixture bundle, loaded at runtime / provided to consumers
-    ],
     visibility = [
         "//non-free/packages/cmk-robotmk:__pkg__",
+        "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/base",
         "//cmk/base/config",
         "//cmk/gui:app",
         "//cmk/gui:config",
@@ -30,22 +24,33 @@ py_library(
         "//cmk/gui/graphing",
         "//cmk/gui/mkeventd",
         "//cmk/gui/nodevis:utils",
+        "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/openapi/spec/editions",
+        "//cmk/gui/plugins/wato/check_parameters:stub",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/userdb",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
+        "//cmk/utils",
+        "//cmk/utils:paths",
+        "//cmk/utils:redis",
+        "//packages/cmk-ccc:debug",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
         "//packages/cmk-crash:crash",
-        "//tests/testlib:fake_site",
-        "//tests/testlib:rest_api_client",
+        "//packages/cmk-crypto",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-wsgi",
         "//tests/testlib/common",
-        "//tests/testlib/common:empty_config",
-        "//tests/testlib/gui",
+        requirement("fakeredis"),
         requirement("flask"),
-        requirement("pytest-mock"),
         requirement("pytest"),
+        requirement("pytest-mock"),
+        requirement("requests"),
         requirement("werkzeug"),
     ],
 )

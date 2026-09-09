@@ -22,7 +22,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",
-        "//tests/testlib:fake_site",
+        "//tests/testlib/unit",
         requirement("pytest_metadata"),
     ],
 )

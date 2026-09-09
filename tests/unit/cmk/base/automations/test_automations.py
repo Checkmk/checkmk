@@ -13,8 +13,8 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.ruleset_matcher.labels import LabelSource
 from cmk.ruleset_matcher.matcher import RuleSpec
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 def test_analyse_host(monkeypatch: MonkeyPatch) -> None:

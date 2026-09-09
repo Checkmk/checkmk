@@ -38,8 +38,8 @@ from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hos
 from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.version import Version
 from cmk.checkengine.plugins import AgentBasedPlugins
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.common.utils import wait_until
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 class _DummyAutomationResult(ABCAutomationResult):

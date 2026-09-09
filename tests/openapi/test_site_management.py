@@ -26,7 +26,7 @@ from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.sites import SitesConfigFile
 from cmk.livestatus_client import SAMLAuthenticationEntry, SiteConfiguration
 from cmk.utils import paths
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 DOMAIN_TYPE = "site_connection"
 

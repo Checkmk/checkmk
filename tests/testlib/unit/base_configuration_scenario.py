@@ -29,8 +29,8 @@ from cmk.checkengine.plugins import AutocheckEntry, ServiceID
 from cmk.ruleset_matcher.labels import BuiltinHostLabelsStore
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.common.utils2 import get_standard_linux_agent_output
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 class _AutochecksMocker(AutochecksMemoizer):

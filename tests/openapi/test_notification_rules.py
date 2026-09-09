@@ -78,7 +78,7 @@ from cmk.gui.watolib.notification_parameter import (
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.ruleset_matcher.tags import TagID
 from cmk.utils import paths
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_get_notification_rule(clients: ClientRegistry) -> None:

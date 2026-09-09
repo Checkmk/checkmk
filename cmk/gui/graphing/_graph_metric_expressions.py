@@ -252,9 +252,6 @@ class GraphMetricExpression(BaseModel, ABC, frozen=True):
     @abstractmethod
     def expression_name() -> str: ...
 
-    def fade_odd_color(self) -> bool:
-        return True
-
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461
     # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)

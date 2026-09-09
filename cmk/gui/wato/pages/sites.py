@@ -105,7 +105,6 @@ from cmk.gui.watolib.global_settings import (
     make_global_settings_context,
     make_pending_changes,
     save_global_settings,
-    save_site_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -132,6 +131,7 @@ from cmk.gui.watolib.sites import (
     PingResult,
     ReplicationStatus,
     ReplicationStatusFetcher,
+    save_site_globals,
     site_globals_editable,
     site_management_registry,
     STATIC_PERMISSIONS_SITES,
@@ -2030,19 +2030,16 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "value": _("on") if self._current_settings[varname] else _("off"),
         }
 
-        self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
-        self._site_mgmt.save_sites(
-            make_folder_tree(config),
+        save_site_globals(
+            self._site_id,
             self._configured_sites,
-            activate=False,
+            self._current_settings,
+            tree=make_folder_tree(config),
             pprint_value=config.wato_pprint_config,
             liveproxyd_enabled=config.liveproxyd_enabled,
             use_git=config.wato_use_git,
             acting_user_id=user.id,
         )
-
-        if self._site_id == omd_site():
-            save_site_global_settings(self._current_settings)
 
         _pending_changes(
             config.sites,
@@ -2160,17 +2157,16 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def _save(
         self, tree: FolderTree, *, pprint_value: bool, use_git: bool, liveproxyd_enabled: bool
     ) -> None:
-        site_management_registry["site_management"].save_sites(
-            tree,
+        save_site_globals(
+            self._site_id,
             self._configured_sites,
-            activate=False,
+            self._current_settings,
+            tree=tree,
             pprint_value=pprint_value,
             liveproxyd_enabled=liveproxyd_enabled,
             use_git=use_git,
             acting_user_id=user.id,
         )
-        if self._site_id == omd_site():
-            save_site_global_settings(self._current_settings)
 
     @override
     def _show_global_setting(self) -> None:

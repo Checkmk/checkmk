@@ -10,7 +10,6 @@ from typing import Final, Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import ECS, ECSLimits, ECSSummary, StatusEnum
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -24,6 +23,7 @@ from cmk.plugins.aws.special_agent.sections.core import (
     AWSSectionResults,
     ResultDistributor,
 )
+from cmk.plugins.aws.special_agent.sections.ecs import ECS, ECSLimits, ECSSummary, StatusEnum
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 

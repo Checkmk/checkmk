@@ -427,33 +427,63 @@ test('the metrics tab carries no marker while nothing blocks the save', async ()
   expect(metrics.querySelector('.cmk-icon')).toBeNull()
 })
 
-test("a tab switch keeps each table's collapse state and the selection", async () => {
-  renderBody('edit', { graph: graphObject([rrdSource('A'), rrdQuerySource('B')]) })
-  await screen.findByRole('tab', { name: 'Metrics selection' })
+/**
+ * Queries against whichever config tab is open. The inactive panel keeps its
+ * `hidden` attribute, so role queries only ever see the open one.
+ */
+function configTab() {
+  const panel = () => screen.getByRole('tabpanel')
+  return {
+    panel,
+    toggles: () => within(panel()).getAllByRole('button', { name: 'Toggle details' }),
+    open: (name: string) => userEvent.click(screen.getByRole('tab', { name }))
+  }
+}
 
-  // The inactive panel keeps its `hidden` attribute, so role queries only see the open tab.
-  const openPanel = () => screen.getByRole('tabpanel')
-  const toggles = () => within(openPanel()).getAllByRole('button', { name: 'Toggle details' })
-  const openTab = (name: string) => userEvent.click(screen.getByRole('tab', { name }))
+test('a tab switch keeps one metrics row expanded and leaves its sibling alone', async () => {
+  renderBody('edit')
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+  const { toggles, open } = configTab()
 
   await fireEvent.click(toggles()[0]!)
-  const [selectA] = within(openPanel()).getAllByLabelText('Select row')
-  await fireEvent.click(selectA!)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
+
+  await open('Graph appearance')
+  await open('Metrics selection')
+
   expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
   expect(toggles()[1]!).toHaveAttribute('aria-expanded', 'false')
+})
+
+test("a tab switch keeps the metrics table's selection", async () => {
+  renderBody('edit')
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+  const { panel, open } = configTab()
+
+  const [selectA] = within(panel()).getAllByLabelText('Select row')
+  await fireEvent.click(selectA!)
+  expect(within(panel()).getByText('Selected rows: 1')).toBeInTheDocument()
+
+  await open('Graph appearance')
+  await open('Metrics selection')
+
+  expect(within(panel()).getByText('Selected rows: 1')).toBeInTheDocument()
+})
+
+test("a tab switch keeps the appearance table's own collapse state", async () => {
+  renderBody('edit', { graph: graphObject([rrdSource('A'), rrdQuerySource('B')]) })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+  const { toggles, open } = configTab()
 
   // Only the rrd_query row fans out into lines, and it starts open: collapse it.
-  await openTab('Graph appearance')
+  await open('Graph appearance')
   expect(toggles()).toHaveLength(1)
   await fireEvent.click(toggles()[0]!)
   expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
 
-  await openTab('Metrics selection')
-  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
-  expect(toggles()[1]!).toHaveAttribute('aria-expanded', 'false')
-  expect(within(openPanel()).getByText('Selected rows: 1')).toBeInTheDocument()
+  await open('Metrics selection')
+  await open('Graph appearance')
 
-  await openTab('Graph appearance')
   expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
 })
 

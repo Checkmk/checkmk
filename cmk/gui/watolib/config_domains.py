@@ -47,6 +47,8 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
     DomainRequest,
+    finalize_all_settings_per_site,
+    finalize_specifically_set_settings,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
@@ -494,34 +496,6 @@ def pid_from_file(pid_file: Path) -> ProcessId | None:
         return ProcessId(int(store.load_object_from_file(pid_file, default=None)))
     except Exception:
         return None
-
-
-def finalize_specifically_set_settings(
-    global_settings: GlobalSettings, site_specific_settings: GlobalSettings
-) -> GlobalSettings:
-    return {**global_settings, **site_specific_settings}
-
-
-def finalize_all_settings(
-    default_globals: GlobalSettings,
-    global_settings: GlobalSettings,
-    site_specific_settings: GlobalSettings,
-) -> GlobalSettings:
-    return {
-        **default_globals,
-        **finalize_specifically_set_settings(global_settings, site_specific_settings),
-    }
-
-
-def finalize_all_settings_per_site(
-    default_globals: GlobalSettings,
-    global_settings: GlobalSettings,
-    site_specific_settings_per_site: Mapping[SiteId, GlobalSettings],
-) -> Mapping[SiteId, GlobalSettings]:
-    return {
-        site_id: finalize_all_settings(default_globals, global_settings, site_conf)
-        for site_id, site_conf in site_specific_settings_per_site.items()
-    }
 
 
 def _all_sites(omd_path: Path) -> Iterable[str]:

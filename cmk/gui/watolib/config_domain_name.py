@@ -448,6 +448,34 @@ def filter_unknown_settings(settings: GlobalSettings) -> GlobalSettings:
     return {k: v for k, v in settings.items() if k in known_settings}
 
 
+def finalize_specifically_set_settings(
+    global_settings: GlobalSettings, site_specific_settings: GlobalSettings
+) -> GlobalSettings:
+    return {**global_settings, **site_specific_settings}
+
+
+def finalize_all_settings(
+    default_globals: GlobalSettings,
+    global_settings: GlobalSettings,
+    site_specific_settings: GlobalSettings,
+) -> GlobalSettings:
+    return {
+        **default_globals,
+        **finalize_specifically_set_settings(global_settings, site_specific_settings),
+    }
+
+
+def finalize_all_settings_per_site(
+    default_globals: GlobalSettings,
+    global_settings: GlobalSettings,
+    site_specific_settings_per_site: Mapping[SiteId, GlobalSettings],
+) -> Mapping[SiteId, GlobalSettings]:
+    return {
+        site_id: finalize_all_settings(default_globals, global_settings, site_conf)
+        for site_id, site_conf in site_specific_settings_per_site.items()
+    }
+
+
 def configvar_order() -> dict[str, int]:
     raise NotImplementedError(
         "Please don't use this API anymore. Have a look at werk #6911 for further information."

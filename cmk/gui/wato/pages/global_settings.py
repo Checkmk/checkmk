@@ -71,12 +71,12 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
+    finalize_all_settings_per_site,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainCore,
-    finalize_all_settings_per_site,
 )
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,

@@ -92,12 +92,10 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariableGroup,
+    finalize_all_settings_per_site,
     GlobalSettingsContext,
 )
-from cmk.gui.watolib.config_domains import (
-    ConfigDomainGUI,
-    finalize_all_settings_per_site,
-)
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_sync import (
     populate_saml_site_endpoint_urls,
 )

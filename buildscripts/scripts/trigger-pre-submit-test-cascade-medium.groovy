@@ -164,7 +164,8 @@ void waitForChainVerified(Map args) {
         def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
         while (true) {
             pending = pending.findAll { commit ->
-                gerritVerifiedState(change_id: "${args.all_change_info.get(commit).id}", auth_header: auth_header) == "PENDING"
+                // .id is only unique per branch; .number is unique across all of Gerrit.
+                gerritVerifiedState(change_id: "${args.all_change_info.get(commit).number}", auth_header: auth_header) == "PENDING"
             };
             if (!pending) {
                 break;

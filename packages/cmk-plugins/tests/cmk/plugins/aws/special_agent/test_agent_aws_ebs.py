@@ -10,7 +10,6 @@ from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import EBS, EBSLimits, EBSSummary
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -19,6 +18,7 @@ from cmk.plugins.aws.special_agent.config import (
     TagsOption,
 )
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.ebs import EBS, EBSLimits, EBSSummary
 from cmk.plugins.aws.special_agent.sections.ec2 import EC2Summary
 
 from .agent_aws_fake_clients import (

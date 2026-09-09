@@ -14,6 +14,7 @@ from ._ajax_handler import (
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
 from ._utils import (
+    clone_dashboard_config,
     convert_internal_relative_dashboard_to_api_model_dict,
     dashboard_owner_description,
     DashboardConstants,
@@ -39,6 +40,7 @@ __all__ = [
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
     "PERMISSIONS_DASHBOARD_READ",
+    "clone_dashboard_config",
     "convert_internal_relative_dashboard_to_api_model_dict",
     "dashboard_owner_description",
     "get_dashboard_for_read",

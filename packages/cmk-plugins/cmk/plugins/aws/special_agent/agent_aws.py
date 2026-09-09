@@ -8055,19 +8055,21 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
+def _resolve_optional_secret(args: argparse.Namespace, option_name: str) -> str | None:
+    if getattr(args, option_name) is None and getattr(args, f"{option_name}_id") is None:
+        return None
+    return resolve_secret_option(args, option_name).reveal()
+
+
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
-        try:
-            proxy_password = resolve_secret_option(args, PROXY_SECRET_OPTION).reveal()
-        except TypeError:
-            proxy_password = None
         return botocore.config.Config(
             proxies={
                 "https": _proxy_address(
                     args.proxy_host,
                     args.proxy_port,
                     args.proxy_user,
-                    proxy_password,
+                    _resolve_optional_secret(args, PROXY_SECRET_OPTION),
                 )
             }
         )
@@ -8153,10 +8155,7 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
 def _create_session_from_args(
     args: argparse.Namespace, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
-    try:
-        secret_access_key = resolve_secret_option(args, ACCESS_KEY_SECRET_OPTION).reveal()
-    except TypeError:
-        secret_access_key = None
+    secret_access_key = _resolve_optional_secret(args, ACCESS_KEY_SECRET_OPTION)
 
     if args.assume_role:
         return _sts_assume_role(

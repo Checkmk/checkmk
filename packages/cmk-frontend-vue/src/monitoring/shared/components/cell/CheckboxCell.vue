@@ -31,6 +31,7 @@ function toggle(): void {
         :class="{
           'monitoring-checkbox-cell__hit-area--vertical-middle': verticalAlign === 'middle'
         }"
+        :title="ariaLabel"
         @click="toggle"
       >
         <CmkCheckbox v-model="value" :aria-label="ariaLabel" @click.stop></CmkCheckbox>

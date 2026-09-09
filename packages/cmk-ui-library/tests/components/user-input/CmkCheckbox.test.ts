@@ -120,3 +120,26 @@ test('the label slot supplies the accessible name and still toggles on click', a
   expect(screen.getByRole('checkbox', { name: 'Notify affected users' })).toBeInTheDocument()
   expect(emitted('update:modelValue')).toEqual([[true]])
 })
+
+test('a checkbox with only an ariaLabel is still named', () => {
+  render(CmkCheckbox, {
+    props: { modelValue: false, ariaLabel: 'Select row' }
+  })
+
+  // A real <label> supplies the accessible name (content-based, not an aria-label
+  // attribute) - satisfying tooling that flags aria-label-only controls as unlabelled,
+  // and avoiding giving the name twice over to tooling that reads both.
+  const checkbox = screen.getByRole<HTMLButtonElement>('checkbox', { name: 'Select row' })
+  expect(checkbox.labels).toHaveLength(1)
+  expect(checkbox.labels?.[0]).toHaveTextContent('Select row')
+})
+
+test('an ariaLabel still names the checkbox alongside slotted content', () => {
+  render(CmkCheckbox, {
+    props: { modelValue: false, ariaLabel: 'Select row' },
+    slots: { default: '<span>a hint</span>' }
+  })
+
+  // The slot sits outside the label, so it neither replaces nor joins the name.
+  screen.getByRole('checkbox', { name: 'Select row' })
+})

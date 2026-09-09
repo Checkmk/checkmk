@@ -16,7 +16,7 @@ import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type CSSProperties, inject } from 'vue'
+import { type CSSProperties, computed, inject } from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
@@ -27,6 +27,9 @@ import type { ColumnFilterValue, SortDirection } from './filter/types'
 const { _t } = usei18n()
 
 const borderSpacing = TABLE_BORDER_SPACING_PX
+
+// Named once: the hit area's tooltip and the checkbox's accessible name have to agree.
+const selectAllLabel = computed(() => _t('Select all rows'))
 
 defineProps<{
   headerGroups: HeaderGroup<T>[]
@@ -196,11 +199,12 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             v-if="!header.isPlaceholder && header.column.columnDef.meta?.selectColumn"
             class="monitoring-table-header__select"
             :style="contentStyle(header.column.columnDef)"
+            :title="selectAllLabel"
             @click="toggleSelectAll(header.getContext().table)"
           >
             <CmkCheckbox
               :allow-indeterminate="true"
-              :aria-label="_t('Select all rows')"
+              :aria-label="selectAllLabel"
               :model-value="selectAllModel(header.getContext().table)"
               @update:model-value="setSelectAll(header.getContext().table, $event)"
               @click.stop

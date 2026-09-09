@@ -46,6 +46,22 @@ test('renders the checkbox in the checked state', () => {
   )
 })
 
+test('the checkbox has a real, content-based label', () => {
+  mountCell(false)
+
+  const checkbox = screen.getByRole<HTMLButtonElement>('checkbox', { name: 'Select row' })
+  expect(checkbox.labels).toHaveLength(1)
+  expect(checkbox.labels?.[0]).toHaveTextContent('Select row')
+})
+
+test('the hit area carries a native tooltip, since the checkbox itself cannot', () => {
+  mountCell(false)
+
+  // The checkbox has `pointer-events: none` here (see .monitoring-checkbox-cell__hit-area
+  // :deep(.cmk-checkbox__container)), so a title on it would never be hovered.
+  expect(hitArea()).toHaveAttribute('title', 'Select row')
+})
+
 test('clicking the checkbox emits the toggled value', async () => {
   const onUpdate = vi.fn()
   mountCell(false, onUpdate)

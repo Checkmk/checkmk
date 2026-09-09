@@ -514,3 +514,15 @@ test('offers row selection once a column declares itself the select column', asy
   expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
   expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('true')
 })
+
+test('the select-all hit area carries a native tooltip, since the checkbox itself cannot', async () => {
+  const { container } = mountTable({ columns: COLUMNS_WITH_SELECT })
+  await flushVirtualizer()
+
+  // The checkbox has `pointer-events: none` here (see .monitoring-table-header__select
+  // :deep(.cmk-checkbox__container)), so a title on it would never be hovered.
+  expect(container.querySelector('.monitoring-table-header__select')).toHaveAttribute(
+    'title',
+    'Select all rows'
+  )
+})

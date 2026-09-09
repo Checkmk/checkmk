@@ -11,9 +11,9 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui.graphing import (
     EngineDisplayOptions,
     GraphDisplayConfigHTML,
+    STATIC_INTERACTION,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._frontend import STATIC_INTERACTION
 from cmk.gui.type_defs import SizePT
 from cmk.gui.views import graph as graph_views
 from cmk.shared_typing.cmk_time_series_graph import Interaction

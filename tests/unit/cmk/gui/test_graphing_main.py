@@ -7,10 +7,14 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
-from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
-from cmk.gui.graphing._metrics import get_metric_spec
-from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
+from cmk.gui.graphing import (
+    ConvertibleUnitSpecification,
+    DecimalNotation,
+    get_graph_plugin_from_id,
+    get_metric_spec,
+    graphs_from_api,
+    metrics_from_api,
+)
 from cmk.gui.graphing_main import _add_graphing_plugins
 from cmk.gui.unit_formatter import StrictPrecision
 

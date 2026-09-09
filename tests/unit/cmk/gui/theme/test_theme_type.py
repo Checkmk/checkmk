@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.gui.theme._theme_type import Theme
+from cmk.gui.theme import Theme
 
 
 def test_theme_loading_and_setting(tmp_path: Path) -> None:

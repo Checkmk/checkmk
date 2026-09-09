@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.userdb import LoginTimeoutStore
 from cmk.gui.userdb._login_timeout import (
     ENTRY_STORAGE_LIFETIME,
     IP_TIMEOUT_DURATION,
-    LoginTimeoutStore,
     USER_ATTEMPT_LIMIT,
     USER_TIMEOUT_DURATION,
 )

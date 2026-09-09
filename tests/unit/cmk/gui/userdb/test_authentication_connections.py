@@ -24,7 +24,7 @@ from cmk.gui.user_connection_config_types import (
     LDAPUserConnectionConfig,
     SAMLUserConnectionConfig,
 )
-from cmk.gui.userdb._connections import (
+from cmk.gui.userdb import (
     effective_authentication_connections,
     get_saml_connections_for_current_site,
     resolved_authentication_connections,

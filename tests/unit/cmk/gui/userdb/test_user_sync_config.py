@@ -11,7 +11,7 @@ import pytest
 
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
-from cmk.gui.userdb._user_sync_config import user_sync_config, UserSyncConfig
+from cmk.gui.userdb import user_sync_config, UserSyncConfig
 
 if TYPE_CHECKING:
     from tests.testlib.gui.web_test_app import SetConfig

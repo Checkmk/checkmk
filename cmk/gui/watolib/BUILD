@@ -275,6 +275,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:resulttype",

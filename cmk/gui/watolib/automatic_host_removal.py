@@ -9,13 +9,14 @@ import itertools
 import json
 import time
 from collections.abc import Collection, Iterator, Mapping, Sequence
-from logging import FileHandler, Formatter
+from logging import FileHandler
 from typing import Literal, NamedTuple, override, TypedDict
 
 from redis import ConnectionError as RedisConnectionError
 
 import cmk.gui.log
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -156,10 +157,7 @@ def execute_host_removal_job(config: Config) -> None:
 def _init_logging() -> None:
     handler = FileHandler(log_file := log_dir / "automatic-host-removal.log", encoding="utf-8")
     _LOGGER.info("Logging host removal to %(log_file)s", {"log_file": log_file})
-    handler.setFormatter(
-        # astrein: disable=logging-formatter
-        Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
-    )
+    handler.setFormatter(CMKFormatter(with_process=True))
     del _LOGGER.handlers[:]  # Remove all previously existing handlers
     _LOGGER.addHandler(handler)
     _LOGGER.propagate = False

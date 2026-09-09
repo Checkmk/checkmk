@@ -10,8 +10,7 @@ from livestatus import LocalConnection
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.ccc.hostaddress import HostName
 from cmk.livestatus_client.testing import MockLiveStatusConnection, SiteName
-from cmk.utils.prediction import DataStat, PredictionData
-from cmk.utils.prediction._query import PredictionQuerier
+from cmk.utils.prediction import DataStat, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
 

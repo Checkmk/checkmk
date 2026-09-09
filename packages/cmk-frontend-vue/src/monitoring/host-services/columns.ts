@@ -228,20 +228,20 @@ export function useHostServicesColumns({
       meta: { filter: summaryFilter }
     },
     {
-      accessorKey: 'last_check',
-      header: _t('Last check'),
-      sortDescFirst: true,
-      minSize: 120,
-      maxSize: 200,
-      meta: { filter: lastCheckFilter }
-    },
-    {
       accessorKey: 'last_state_change',
       header: _t('Last state change'),
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
       meta: { filter: lastStateChangeFilter }
+    },
+    {
+      accessorKey: 'last_check',
+      header: _t('Last check'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: { filter: lastCheckFilter }
     },
     {
       accessorKey: 'labels',

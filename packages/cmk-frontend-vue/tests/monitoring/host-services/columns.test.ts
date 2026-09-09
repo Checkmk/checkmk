@@ -208,3 +208,8 @@ test('the actions column widens by one button width per inline action', () => {
   expect(actionsSize(2) - actionsSize(1)).toBe(actionsSize(1) - actionsSize(0))
   expect(actionsSize(1)).toBeGreaterThan(actionsSize(0))
 })
+
+test('last state change comes before last check, matching the legacy view', () => {
+  const ids = serviceColumns().map((column) => columnId(column as ColumnDef<never>))
+  expect(ids.indexOf('last_state_change')).toBeLessThan(ids.indexOf('last_check'))
+})

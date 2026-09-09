@@ -631,7 +631,7 @@ test('puts the columns left visible in the URL', async () => {
   await userEvent.click(within(picker).getByRole('button', { name: 'Apply' }))
 
   expect(new URLSearchParams(window.location.search).get('cols')).toBe(
-    'modes,last_check,last_state_change,perfometer'
+    'modes,last_state_change,last_check,perfometer'
   )
 })
 

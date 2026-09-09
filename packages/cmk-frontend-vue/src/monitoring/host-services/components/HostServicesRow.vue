@@ -123,12 +123,12 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
     @click="emit('open', row)"
   />
   <StringCell v-if="hasColumn('summary')" column-id="summary" :value="row.summary" state-markers />
-  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
   <StringCell
     v-if="hasColumn('last_state_change')"
     column-id="last_state_change"
     :value="lastStateChange"
   />
+  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
   <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />

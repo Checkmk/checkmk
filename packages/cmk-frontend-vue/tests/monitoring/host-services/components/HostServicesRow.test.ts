@@ -11,6 +11,7 @@ import { defineComponent, h } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b)
@@ -71,10 +72,26 @@ test('renders service name and summary in their cells', () => {
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
-  // select, state, modes, name, summary, last_check, last_state_change, labels, tags, contacts,
+  // select, state, modes, name, summary, last_state_change, last_check, labels, tags, contacts,
   // contact_groups, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
   expect(tds).toHaveLength(12)
+})
+
+test('renders last state change before last check, matching the legacy view', () => {
+  const service = makeService()
+  const { container } = mountRow(service)
+
+  const tds = Array.from(container.querySelectorAll('td'))
+  const lastStateChangeIndex = tds.findIndex(
+    (td) => td.querySelector(`[title="${formatTimestamp(service.last_state_change)}"]`) !== null
+  )
+  const lastCheckIndex = tds.findIndex(
+    (td) => td.querySelector(`[title="${formatTimestamp(service.last_check!)}"]`) !== null
+  )
+
+  expect(lastStateChangeIndex).toBeGreaterThanOrEqual(0)
+  expect(lastCheckIndex).toBeGreaterThan(lastStateChangeIndex)
 })
 
 test('renders the state markers of the summary as badges', () => {
@@ -313,7 +330,7 @@ test('dashes out the last check of a service that has never been checked', () =>
   const cellText = (td: Element): string =>
     (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(cellText(tds[5]!)).toBe('–')
+  expect(cellText(tds[6]!)).toBe('–')
 })
 
 test('renders the state badge with success color for state OK', () => {

@@ -45,6 +45,7 @@ from cmk.ccc.exceptions import (
     MKTerminate,
     raise_mkterminate_on_sigint,
 )
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.crash import (
     ABCCrashReport,
@@ -140,10 +141,7 @@ def main() -> int:
         _path = Path(path)
         _path.parent.mkdir(parents=True, exist_ok=True)
         handler = WatchedFileHandler(_path)
-        handler.setFormatter(
-            # astrein: disable=logging-formatter
-            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s")
-        )
+        handler.setFormatter(CMKFormatter())
         del root_logger.handlers[:]  # Remove the default stream handler.
         root_logger.addHandler(handler)
 

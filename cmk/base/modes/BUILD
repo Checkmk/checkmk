@@ -97,6 +97,7 @@ py_library(
         "//cmk/base:app",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-profiling:backend",

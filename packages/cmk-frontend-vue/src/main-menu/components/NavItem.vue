@@ -10,6 +10,7 @@ import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { CmkMultitoneIconColor, OneColorIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
@@ -61,6 +62,7 @@ const target = computed<string | undefined>(() => {
         :name="icon"
         :primary-color="color"
         :title="hideItemTitle ? item.title : item.hint"
+        :aria-label="hideItemTitle ? (item.title as TranslatedString) : undefined"
         size="xlarge"
         class="mm-nav-item__icon"
       />

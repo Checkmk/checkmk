@@ -2305,6 +2305,17 @@ class MetricBackendAPI(BaseAPI):
     def enable(self, site_id: str) -> None:
         self._request(site_id, "enabled")
 
+    def names_with_types(self, value: str) -> dict[str, list[str]]:
+        """The metric names the backend offers for `value`, each with the types it carries."""
+        response = self._post_internal_action(
+            "domain-types/metric_backend/actions/names_with_types/invoke",
+            {"value": value},
+        )
+        return {
+            str(choice["name"]): [str(metric_type) for metric_type in choice["types"]]
+            for choice in response["choices"]
+        }
+
 
 type Consolidation = Literal["min", "max", "avg"]
 

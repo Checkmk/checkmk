@@ -275,14 +275,15 @@ graph_metric_expression_registry = GraphMetricExpressionRegistry()
 
 
 def parse_graph_metric_expression(raw: object) -> GraphMetricExpression:
-    match raw:  # type: ignore[exhaustive-match]
+    match raw:
         case GraphMetricExpression():
             return raw
         case {"ident": str(ident), **rest}:
             return graph_metric_expression_registry[ident].model_validate(rest)
         case dict():
             raise ValueError("Missing 'ident' key in metric operation")
-    raise TypeError(raw)
+        case _:
+            raise TypeError(raw)
 
 
 class GraphMetricConstant(GraphMetricExpression, frozen=True):

@@ -30,7 +30,7 @@ from typing import Literal, override
 
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
-from cmk.gui.userdb._connections import distributed_saml_supported
+from cmk.gui.userdb import distributed_saml_supported
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import AuthenticationConnectionEntry, AuthenticationConnectionsValue

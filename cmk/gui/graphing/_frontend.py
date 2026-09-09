@@ -58,17 +58,6 @@ from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
 from ._unit_format import unit_to_unit_format
 
-# A view carrying one of these is driven by the global time picker rather than the
-# pnp_timerange painter option, and must not auto-reload.
-ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset(
-    {"svc_pnpgraph", "service_graphs", "host_pnpgraph", "host_graphs"}
-)
-
-
-def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:
-    """Whether any of the given painters renders through the graph engine."""
-    return any(ident in ENGINE_GRAPH_PAINTER_IDENTS for ident in painter_idents)
-
 
 def stored_time_range_seconds(
     *, painter_parameters: PainterParameters | None, stored_by_the_view: bool

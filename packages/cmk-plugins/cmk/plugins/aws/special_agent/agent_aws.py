@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: Using BaseClient all over the place is wrong and leads to the tons of attr-defined errors.
-# The code and types have to be restructured to use the right subclass of BaseClient for the client
-# in question. In addition, BaseClient does some weird __getattr__ Kung Fu, which doesn't exactly
-# help mypy, either... :-/
-
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
@@ -24,17 +19,13 @@ import argparse
 import logging
 import sys
 from collections.abc import Sequence
-from typing import (
-    NamedTuple,
-)
+from typing import NamedTuple
 
 import boto3
 import botocore
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.aws.constants import (
-    AWS_REGIONS,
-)
+from cmk.plugins.aws.constants import AWS_REGIONS
 from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 from .config import AGENT, AWSConfig, LOGGER, NamingConvention, TagsImportPatternOption
@@ -49,147 +40,12 @@ ACCESS_KEY_SECRET_OPTION = "secret"
 PROXY_SECRET_OPTION = "proxysecret"
 
 
-#   .--overview------------------------------------------------------------.
-#   |                                        _                             |
-#   |               _____   _____ _ ____   _(_) _____      __              |
-#   |              / _ \ \ / / _ \ '__\ \ / / |/ _ \ \ /\ / /              |
-#   |             | (_) \ V /  __/ |   \ V /| |  __/\ V  V /               |
-#   |              \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/                |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Overview of sections and dependencies                                |
-#   '----------------------------------------------------------------------'
-
-# CostsAndUsage
-
-# ReservationUtilization
-
-# EC2Limits
-# |
-# '-- EC2Summary
-#     |
-#     |-- EC2Labels
-#     |
-#     |-- EC2SecurityGroups
-#     |
-#     '-- EC2
-
-# EBSLimits,EC2Summary
-# |
-# '-- EBSSummary
-#     |
-#     '-- EBS
-
-# S3Limits
-# |
-# '-- S3Summary
-#     |
-#     |-- S3
-#     |
-#     '-- S3Requests
-
-# GlacierLimits
-# |
-# '-- Glacier
-
-# ELBLimits
-# |
-# '-- ELBSummaryGeneric
-#     |
-#     |-- ELBLabelsGeneric
-#     |
-#     |-- ELBHealth
-#     |
-#     '-- ELB
-
-# ELBv2Limits
-# |
-# '-- ELBSummaryGeneric
-#     |
-#     |-- ELBLabelsGeneric
-#     |
-#     |-- ELBv2TargetGroups
-#     |
-#     '-- ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda, ELBv2Network
-
-# RDSLimits
-
-# RDSSummary
-# |
-# '-- RDS
-
-# CloudFrontSummary
-# |
-# '-- CloudFront
-
-# CloudwatchAlarmsLimits
-# |
-# '-- CloudwatchAlarms
-
-# DynamoDBLimits
-# |
-# '-- DynamoDBSummary
-#     |
-#     '-- DynamoDBTable
-
-# WAFV2Limits
-# |
-# '-- WAFV2Summary
-#     |
-#     '-- WAFV2WebACL
-
-# LambdaSummary, LambdaRegionLimits
-# |
-# '-- LambdaProvisionedConcurrency
-#     |
-#     |-- LambdaCloudwatch
-#     |
-#     '-- LambdaCloudwatchInsights
-
-# Route53HealthChecks
-# |
-# '-- Route53Cloudwatch
-
-# SNSLimits
-# |
-# |-- SNSSMS
-# |
-# '-- SNSSummary
-#     |
-#     '-- SNS
-
-# ECSLimits
-# |
-# '-- ECSSummary
-#     |
-#     '-- ECS
-
-# ElastiCacheLimits
-# |
-# '-- ElastiCacheSummary
-#     |
-#     '-- ElastiCache
-
-
-# .
-#   .--helpers-------------------------------------------------------------.
-#   |                  _          _                                        |
-#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
-#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   '----------------------------------------------------------------------'
-
-
-# .
 #   ---result distributor---------------------------------------------------
 
 
 #   ---sections/colleagues--------------------------------------------------
 
 
-# .
 # Interval between 'Start' and 'End' must be a DateInterval. 'End' is exclusive.
 # Example:
 # 2017-01-01 - 2017-05-01; cost and usage data is retrieved from 2017-01-01 up
@@ -198,25 +54,10 @@ PROXY_SECRET_OPTION = "proxysecret"
 # The GetReservationUtilization operation supports only DAILY and MONTHLY granularities.
 
 
-# .
-# .
 # EBS are attached to EC2 instances. Thus we put the content to related EC2
 # instance as piggyback host.
 
 
-# .
-# .
-# .
-# .
-# .
-# .
-# .
-# .
-# .
-# .
-# .
-# .
-# .
 # SNS is a messaging service that follows the event-producers -> topics -> subscriptions model
 # producers and topics have a many-to-many-relationship.
 # topics and subscriptions also have a many-to-many-relationship.
@@ -224,22 +65,6 @@ PROXY_SECRET_OPTION = "proxysecret"
 # building blocks of AWS SNS. Subscriptions and Topics have specific limits per account so they
 # are handled in the limits section. For producers it is more important to look at what exactly
 # they are producing, so the cloudwatch section monitors detailed metrics about incoming traffic.
-
-
-# .
-# .
-
-
-# .
-# .
-#   .--main----------------------------------------------------------------.
-#   |                                       _                              |
-#   |                       _ __ ___   __ _(_)_ __                         |
-#   |                      | '_ ` _ \ / _` | | '_ \                        |
-#   |                      | | | | | | (_| | | | | |                       |
-#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 class AWSServiceAttributes(NamedTuple):

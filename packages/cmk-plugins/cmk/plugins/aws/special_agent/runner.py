@@ -72,6 +72,119 @@ def datetime_serializer(obj):
     raise TypeError("%r is not JSON serializable" % obj)
 
 
+# Overview of sections and dependencies
+
+# CostsAndUsage
+
+# ReservationUtilization
+
+# EC2Limits
+# |
+# '-- EC2Summary
+#     |
+#     |-- EC2Labels
+#     |
+#     |-- EC2SecurityGroups
+#     |
+#     '-- EC2
+
+# EBSLimits,EC2Summary
+# |
+# '-- EBSSummary
+#     |
+#     '-- EBS
+
+# S3Limits
+# |
+# '-- S3Summary
+#     |
+#     |-- S3
+#     |
+#     '-- S3Requests
+
+# GlacierLimits
+# |
+# '-- Glacier
+
+# ELBLimits
+# |
+# '-- ELBSummaryGeneric
+#     |
+#     |-- ELBLabelsGeneric
+#     |
+#     |-- ELBHealth
+#     |
+#     '-- ELB
+
+# ELBv2Limits
+# |
+# '-- ELBSummaryGeneric
+#     |
+#     |-- ELBLabelsGeneric
+#     |
+#     |-- ELBv2TargetGroups
+#     |
+#     '-- ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda, ELBv2Network
+
+# RDSLimits
+
+# RDSSummary
+# |
+# '-- RDS
+
+# CloudFrontSummary
+# |
+# '-- CloudFront
+
+# CloudwatchAlarmsLimits
+# |
+# '-- CloudwatchAlarms
+
+# DynamoDBLimits
+# |
+# '-- DynamoDBSummary
+#     |
+#     '-- DynamoDBTable
+
+# WAFV2Limits
+# |
+# '-- WAFV2Summary
+#     |
+#     '-- WAFV2WebACL
+
+# LambdaSummary, LambdaRegionLimits
+# |
+# '-- LambdaProvisionedConcurrency
+#     |
+#     |-- LambdaCloudwatch
+#     |
+#     '-- LambdaCloudwatchInsights
+
+# Route53HealthChecks
+# |
+# '-- Route53Cloudwatch
+
+# SNSLimits
+# |
+# |-- SNSSMS
+# |
+# '-- SNSSummary
+#     |
+#     '-- SNS
+
+# ECSLimits
+# |
+# '-- ECSSummary
+#     |
+#     '-- ECS
+
+# ElastiCacheLimits
+# |
+# '-- ElastiCacheSummary
+#     |
+#     '-- ElastiCache
+
+
 class AWSSections(abc.ABC):
     def __init__(
         self,

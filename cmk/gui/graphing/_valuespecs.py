@@ -442,12 +442,16 @@ def id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
             notation_id = "EngineeringScientificNotation"
         case TimeNotation():
             notation_id = "TimeNotation"
+        case other_notation:
+            assert_never(other_notation)
     match unit_spec.precision:
         case AutoPrecision():
             precision_id = "AutoPrecision"
         case StrictPrecision():
             precision_id = "StrictPrecision"
-    return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"  # type: ignore[possibly-undefined]
+        case other_precision:
+            assert_never(other_precision)
+    return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"
 
 
 def _title_from_formatter(formatter: NotationFormatter) -> str:

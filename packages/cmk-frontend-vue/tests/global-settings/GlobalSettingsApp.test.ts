@@ -288,6 +288,36 @@ describe('GlobalSettingsApp', () => {
     )
   })
 
+  test.each([
+    { closing: 'Escape', close: async () => userEvent.keyboard('{Escape}') },
+    {
+      closing: 'Cancel',
+      close: async () =>
+        userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
+    },
+    {
+      closing: 'Save',
+      close: async () => userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    }
+  ])('closing the editor with $closing returns focus to the edit button', async ({ close }) => {
+    render(GlobalSettingsApp, { props: data })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item User management' })
+    )
+    const editButton = screen.getByRole('button', {
+      name: 'Edit Lock user accounts after N login failures'
+    })
+    editButton.focus()
+    await userEvent.keyboard('{Enter}')
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET']))
+    await waitFor(() => expect(editButton).not.toHaveFocus())
+
+    await close()
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(editButton).toHaveFocus()
+  })
+
   test('opening the editor loads the server value and refreshes the row', async () => {
     await openEditor()
     expect(screen.getByRole('dialog')).toBeInTheDocument()

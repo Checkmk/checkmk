@@ -96,7 +96,6 @@ onBeforeUnmount(() => {
         :force-mount="true"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
-        @close-auto-focus.prevent
       >
         <slot />
       </DialogContent>

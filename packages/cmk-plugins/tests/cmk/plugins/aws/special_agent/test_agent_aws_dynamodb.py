@@ -10,7 +10,6 @@ from typing import Protocol, TypedDict
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import DynamoDBLimits, DynamoDBSummary, DynamoDBTable
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -19,6 +18,11 @@ from cmk.plugins.aws.special_agent.config import (
     TagsOption,
 )
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.dynamodb import (
+    DynamoDBLimits,
+    DynamoDBSummary,
+    DynamoDBTable,
+)
 
 from .agent_aws_fake_clients import (
     DynamoDBDescribeLimitsIB,

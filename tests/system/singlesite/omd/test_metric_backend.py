@@ -7,12 +7,12 @@ import pytest
 from tests.testlib.site import Site
 
 
-@pytest.mark.skip_if_edition("community", "pro", "cloud")
+@pytest.mark.skip_if_edition("community", "cloud")
 def test_clickhouse_exists(site: Site) -> None:
     assert (site.root / "bin" / "clickhouse").exists()
 
 
-@pytest.mark.skip_if_edition("community", "pro", "cloud")
+@pytest.mark.skip_if_edition("community", "cloud")
 def test_clickhouse_executable(site: Site) -> None:
     output = site.check_output(["clickhouse", "--version"])
     assert output.startswith("ClickHouse local version")

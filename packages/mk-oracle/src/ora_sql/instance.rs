@@ -129,6 +129,7 @@ pub async fn generate_data(
         } else {
             Some(ora_sql.product().cache_age())
         };
+        log::info!("Running with the {} section filter", filter);
         let sections = ora_sql
             .product()
             .sections()
@@ -137,7 +138,7 @@ pub async fn generate_data(
                 if s.is_allowed(filter) {
                     Some(Section::new(s, global, ora_sql.options()))
                 } else {
-                    log::info!("Skip section: {:?} not allowed in {:?}", s, filter);
+                    log::info!("Skipping section {}", s.name());
                     None
                 }
             })
@@ -658,7 +659,7 @@ fn connect_spots(
             let name = t.target().display_name();
             match t.connect(instance_name) {
                 Ok(opened) => {
-                    log::info!("Connected to instance: {:?}", &opened.target());
+                    log::info!("Connected to {}", &opened.target().display_name());
                     Ok(opened)
                 }
                 Err(e) => {

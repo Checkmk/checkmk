@@ -9,7 +9,6 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
@@ -212,14 +211,7 @@ def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> Glob
 def form_spec_of(
     config_variable: ConfigVariable, site_id: SiteId, api_context: ApiContext
 ) -> FormSpec[object]:
-    value_model = config_variable.value_model(global_settings_context_of(site_id, api_context))
-    if not isinstance(value_model, FormSpec):
-        raise MKGeneralException(
-            f"Configuration variable {config_variable.ident()!r} is not form spec backed yet "
-            f"and cannot be served by the REST API."
-        )
-
-    return value_model
+    return config_variable.value_model(global_settings_context_of(site_id, api_context))
 
 
 def value_to_json(form_spec: FormSpec[object], value: object) -> object:

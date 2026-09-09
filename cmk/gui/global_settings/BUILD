@@ -20,7 +20,6 @@ py_library(
         "//cmk/gui/product_usage_analytics",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
-        "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
     ],
 )

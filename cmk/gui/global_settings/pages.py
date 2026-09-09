@@ -53,7 +53,6 @@ from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     make_global_settings_context,
 )
-from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing.global_settings import (
     Components,
     GlobalSettingsApp,
@@ -218,7 +217,6 @@ def _variables(
         ):
             continue
         form_spec = config_variable.value_model(context)
-        assert isinstance(form_spec, FormSpec)
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
         default_value = default_values[varname]
         spec, vue_value = visitor.to_vue(RawDiskData(current_settings.get(varname, default_value)))

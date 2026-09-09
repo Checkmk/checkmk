@@ -49,6 +49,17 @@ function columnLabel(column: Column<T, unknown>): string {
   return column.columnDef.header?.toString() ?? column.id
 }
 
+function filterButtonLabel(column: Column<T, unknown>, isActive: boolean): string {
+  const columnTitle = (
+    column.columnDef.meta?.headerTitle?.toString() ??
+    column.columnDef.header?.toString() ??
+    ''
+  ).trim()
+  return isActive
+    ? _t('Filter %{column} (active)', { column: columnTitle })
+    : _t('Filter %{column}', { column: columnTitle })
+}
+
 function helpLabel(column: Column<T, unknown>): string {
   return _t('Help for %{label}', { label: columnLabel(column) })
 }
@@ -273,12 +284,8 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
                 :class="{
                   'monitoring-table-header__filter-button--active': isActive || isOpen
                 }"
-                :title="
-                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
-                "
-                :aria-label="
-                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
-                "
+                :title="filterButtonLabel(header.column, isActive)"
+                :aria-label="filterButtonLabel(header.column, isActive)"
                 :aria-expanded="isOpen"
                 :aria-controls="panelId"
                 @click="toggle"

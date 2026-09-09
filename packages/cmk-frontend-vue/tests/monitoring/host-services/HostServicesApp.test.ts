@@ -208,7 +208,7 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
   await fireEvent.update(within(panel).getByRole('textbox'), 'cpu')
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  await userEvent.click(screen.getByRole('button', { name: 'Filter Service' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Service (active)' }))
   panel = screen.getByRole('group', { name: 'Filter Service' })
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
@@ -251,7 +251,7 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   await fireEvent.update(within(panel).getByRole('textbox'), 'timeout')
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  await userEvent.click(screen.getByRole('button', { name: 'Filter Summary' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Summary (active)' }))
   panel = screen.getByRole('group', { name: 'Filter Summary' })
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
@@ -307,7 +307,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  await userEvent.click(screen.getByRole('button', { name: 'Filter Mode' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Mode (active)' }))
   panel = screen.getByRole('group', { name: 'Filter Mode' })
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
@@ -457,7 +457,7 @@ test('shows the state filter a link arrived with as an active filter', async () 
   mockServices([makeApiEntry()])
   renderApp()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State (active)' }))
 
   expect(
     within(screen.getByRole('group', { name: 'Filter State' })).getByLabelText('CRIT')
@@ -505,7 +505,7 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  await userEvent.click(screen.getByRole('button', { name: 'Filter State' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Filter State (active)' }))
   panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))

@@ -274,6 +274,20 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getByRole('dialog', { name: /^Edit global setting/ })).toBeInTheDocument()
   })
 
+  test('opening the editor with the keyboard moves focus into it', async () => {
+    render(GlobalSettingsApp, { props: data })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item User management' })
+    )
+    screen.getByRole('button', { name: 'Edit Lock user accounts after N login failures' }).focus()
+    await userEvent.keyboard('{Enter}')
+
+    await screen.findByRole('dialog')
+    await waitFor(() =>
+      expect(screen.getByRole('region', { name: 'Edit global setting' })).toHaveFocus()
+    )
+  })
+
   test('opening the editor loads the server value and refreshes the row', async () => {
     await openEditor()
     expect(screen.getByRole('dialog')).toBeInTheDocument()

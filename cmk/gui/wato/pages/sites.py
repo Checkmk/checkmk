@@ -79,7 +79,6 @@ from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
 )
-from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
@@ -122,6 +121,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.piggyback_hub import (
+    CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
     validate_piggyback_hub_config,
 )
 from cmk.gui.watolib.site_management import (

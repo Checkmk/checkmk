@@ -7,6 +7,7 @@
 
 from collections.abc import Collection, Iterable, Mapping
 from logging import Logger
+from typing import Final
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
@@ -18,6 +19,8 @@ from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.piggyback.hub import HostLocations, publish_persisted_locations_for_sites
 from cmk.utils.paths import omd_root
+
+CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT: Final = "site_piggyback_hub"
 
 _HOST_CHANGES = (
     "edit-host",  # includes moving a host from a site to another
@@ -93,13 +96,15 @@ def _filter_for_enabled_piggyback_hub(
 def _validate_piggyback_hub_config(
     settings_per_site: Mapping[SiteId, GlobalSettings], central_site_id: SiteId
 ) -> None:
-    config_var_ident = "site_piggyback_hub"
-    central_enabled = dict(settings_per_site).pop(central_site_id)[config_var_ident]
+    central_enabled = dict(settings_per_site).pop(central_site_id)[
+        CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
+    ]
     if not central_enabled and any(
-        remote_config[config_var_ident] for remote_config in settings_per_site.values()
+        remote_config[CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT]
+        for remote_config in settings_per_site.values()
     ):
         raise MKUserError(
-            config_var_ident,
+            CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
             _(
                 "The piggyback-hub cannot be enabled for a remote site if it is disabled for the central site"
             ),

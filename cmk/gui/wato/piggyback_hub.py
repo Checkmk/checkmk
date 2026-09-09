@@ -9,10 +9,9 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
+from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue
-
-CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT = "site_piggyback_hub"
 
 
 def register(config_variable_registry: ConfigVariableRegistry) -> None:

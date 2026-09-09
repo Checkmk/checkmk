@@ -64,7 +64,6 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -98,7 +97,10 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
-from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
+from cmk.gui.watolib.piggyback_hub import (
+    CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
+    validate_piggyback_hub_config,
+)
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec

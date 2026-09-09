@@ -16,9 +16,9 @@ import type { DesignerItem } from '../../drafts'
 import type { RowField, RowIssue } from '../../validation'
 import ConstantLineForm from './ConstantLineForm.vue'
 import FormulaForm from './FormulaForm.vue'
-import MetricBackendForm from './MetricBackendForm.vue'
 import RrdForm from './RrdForm.vue'
 import ServiceReferenceLineForm from './ServiceReferenceLineForm.vue'
+import MetricBackendForm from './TelemetryMetricsForm.vue'
 
 const { row, store, thresholds, issues } = defineProps<{
   row: DesignerItem

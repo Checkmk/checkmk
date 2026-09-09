@@ -43,7 +43,7 @@ import {
   newScalarDraft,
   scalarColor
 } from '../drafts'
-import { customServiceModelFor } from '../metricBackend'
+import { customServiceModelFor } from '../telemetryMetrics'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
 import type { RowIssue } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'

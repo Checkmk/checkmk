@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { filterPresets, presetOptions } from '@ucl/metric-backend/attributeFilterPresets'
+import { filterPresets, presetOptions } from '@ucl/telemetry-metrics/attributeFilterPresets'
 import { describe, expect, test } from 'vitest'
 
-import { isConditionValid } from '@/metric-backend/attribute-filter/types'
+import { isConditionValid } from '@/telemetry-metrics/attribute-filter/types'
 
 describe('attributeFilterPresets', () => {
   test('presetOptions and filterPresets cover the same names', () => {

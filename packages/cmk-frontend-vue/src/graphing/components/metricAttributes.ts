@@ -10,7 +10,7 @@ import {
   ATTRIBUTE_KIND_ORDER,
   type AttributeKind,
   attributeKindLabel
-} from '@/metric-backend/attribute-kind'
+} from '@/telemetry-metrics/attribute-kind'
 
 import type { Metric, MetricMetadata } from './TimeSeriesGraph'
 

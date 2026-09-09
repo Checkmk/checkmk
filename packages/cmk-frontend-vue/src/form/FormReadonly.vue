@@ -59,30 +59,30 @@ import {
   groupNestedValidations
 } from '@/form/private/validation'
 
-import { attributeKindPrefix, pillLabel } from '@/metric-backend/attribute-filter/pill-label'
-import { fromAttributeFilter } from '@/metric-backend/attributeFilterAdapter'
+import { attributeKindPrefix, pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
+import { fromAttributeFilter } from '@/telemetry-metrics/attributeFilterAdapter'
 import {
   compactFunction,
   lookbackLabel,
   typeLabel
-} from '@/metric-backend/consolidation/consolidation-label'
+} from '@/telemetry-metrics/consolidation/consolidation-label'
 import {
   catalogFunctionName,
   consolidationFunctionFromName
-} from '@/metric-backend/consolidation/types'
+} from '@/telemetry-metrics/consolidation/types'
 import type {
   ConsolidationFunction,
   ConsolidationParams
-} from '@/metric-backend/consolidation/types'
-import { clauseSummary, thenStepSummary } from '@/metric-backend/group-by/group-by-label'
-import type { GroupByModel } from '@/metric-backend/group-by/types'
+} from '@/telemetry-metrics/consolidation/types'
+import { clauseSummary, thenStepSummary } from '@/telemetry-metrics/group-by/group-by-label'
+import type { GroupByModel } from '@/telemetry-metrics/group-by/types'
 import {
   aggregatorToFloatGroupBy,
   aggregatorToThenSteps,
   fractionBelowGroupBy,
   fractionBetweenGroupBy,
   percentileGroupBy
-} from '@/metric-backend/group-by/wire'
+} from '@/telemetry-metrics/group-by/wire'
 
 import {
   type Operator,

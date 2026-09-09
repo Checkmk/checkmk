@@ -134,6 +134,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_delete",
     "cmk/bulk_discovery",
     "cmk/bulk_update",
+    "cmk/clone_dashboard_from_relative_grid",
     "cmk/clone_dashboard_relative_grid",
     "cmk/clone_dashboard_responsive_grid",
     "cmk/compute",

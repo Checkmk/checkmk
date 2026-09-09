@@ -491,6 +491,19 @@ describe('GlobalSettingsApp', () => {
     expect(row).not.toHaveTextContent('20')
   })
 
+  test('Escape closes the editor and discards the edit without saving', async () => {
+    await openEditor()
+    await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
+    await fireEvent.update(await screen.findByRole('spinbutton'), '20')
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(requests.map((r) => r.method)).toEqual(['GET'])
+    const row = settingRow()
+    expect(row).toHaveTextContent('15')
+    expect(row).not.toHaveTextContent('20')
+  })
+
   test('a failed load shows a loading error and keeps saving disabled', async () => {
     server.use(
       http.get(SETTING_URL, () =>

@@ -39,6 +39,20 @@ const twoSections: Section[] = [
   }
 ]
 
+const sectionsWithSharedKey: Section[] = [
+  {
+    title: 'Section A',
+    suggestions: [
+      { name: 'dup', title: 'Dup Alpha' },
+      { name: 'a2', title: 'Alpha Two' }
+    ]
+  },
+  {
+    title: 'Section B',
+    suggestions: [{ name: 'dup', title: 'Dup Beta' }]
+  }
+]
+
 test('renders a flat fixed suggestion list', async () => {
   render(CmkSuggestions, {
     props: {
@@ -509,6 +523,31 @@ test('keyboard navigation skips headers and clicking a header does not select', 
   await user.click(screen.getByRole('option', { name: 'Beta One' }))
   expect(emitted('select-suggestion')).toBeTruthy()
   expect(emitted('select-suggestion')![0]).toEqual([{ name: 'b1', title: 'Beta One' }])
+})
+
+test('a key shared across sections selects and navigates by position, not by name', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'fixed', suggestions: sectionsWithSharedKey },
+      role: 'option'
+    }
+  })
+
+  const list = await screen.findByRole('listbox')
+
+  expect(screen.getByRole('option', { name: 'Dup Alpha' })).toHaveClass('selected')
+  expect(screen.getByRole('option', { name: 'Dup Beta' })).not.toHaveClass('selected')
+
+  await fireEvent.keyDown(list, { key: 'ArrowDown' })
+  expect(screen.getByRole('option', { name: 'Alpha Two' })).toHaveClass('selected')
+
+  await fireEvent.keyDown(list, { key: 'ArrowDown' })
+  expect(screen.getByRole('option', { name: 'Dup Beta' })).toHaveClass('selected')
+  expect(screen.getByRole('option', { name: 'Dup Alpha' })).not.toHaveClass('selected')
+
+  await fireEvent.keyDown(list, { key: 'ArrowDown' })
+  expect(screen.getByRole('option', { name: 'Dup Alpha' })).toHaveClass('selected')
 })
 
 test('markSelected renders a checkmark only on the selected option', async () => {

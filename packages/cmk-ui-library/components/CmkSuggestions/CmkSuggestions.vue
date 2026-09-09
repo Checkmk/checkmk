@@ -91,16 +91,8 @@ function findSuggestionAsIndex(
   if (suggestion === null) {
     return null
   }
-  const currentElement = suggestions
-    .map((suggestion, index) => ({
-      name: suggestion.name,
-      index: index
-    }))
-    .find(({ name }) => suggestion.name === name)
-  if (currentElement === undefined) {
-    return null
-  }
-  return currentElement.index
+  const index = suggestions.indexOf(suggestion)
+  return index === -1 ? null : index
 }
 
 function asSingleSection(suggestions: Array<Suggestion>): Array<DisplaySection> {
@@ -417,7 +409,7 @@ defineExpose({
           "
           :class="{
             selectable: suggestion.name !== null,
-            selected: suggestion.name === activeSuggestion?.name,
+            selected: suggestion === activeSuggestion,
             'cmk-suggestions__item--in-section': section.title !== null,
             'cmk-suggestions__item--markable': markSelected
           }"

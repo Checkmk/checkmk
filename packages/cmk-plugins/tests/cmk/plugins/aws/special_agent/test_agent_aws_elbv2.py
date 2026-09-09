@@ -11,8 +11,6 @@ from typing import NamedTuple, Protocol, TypedDict
 import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    ELBLabelsGeneric,
-    ELBSummaryGeneric,
     ELBv2Application,
     ELBv2ApplicationTargetGroupsHTTP,
     ELBv2ApplicationTargetGroupsLambda,
@@ -28,6 +26,7 @@ from cmk.plugins.aws.special_agent.config import (
     TagsOption,
 )
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.elb import ELBLabelsGeneric, ELBSummaryGeneric
 
 from .agent_aws_fake_clients import (
     ELBDescribeTagsIB,

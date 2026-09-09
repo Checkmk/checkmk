@@ -47,6 +47,7 @@ from ._graph_choices import (
 )
 from ._graph_codec import (
     COMMUNITY_QUANTITY_SPECS,
+    context_from_json,
     ensure_type,
     graph_codec,
     GraphCodec,
@@ -228,6 +229,7 @@ __all__ = [
     "canonical_mapping_key",
     "CommonGraphOptions",
     "COMMUNITY_QUANTITY_SPECS",
+    "context_from_json",
     "compute_graph_ranges_for_width",
     "compute_image_graph_ranges",
     "compute_png_size_mm",

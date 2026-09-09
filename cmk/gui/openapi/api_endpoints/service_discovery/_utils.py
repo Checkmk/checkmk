@@ -11,6 +11,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.background_job.job import BackgroundStatusSnapshot
 from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.framework.endpoint_link import link_to_endpoint
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects.constructors import expand_rel
@@ -164,7 +165,7 @@ def _serialize_labels(
     return {
         name: ServiceDiscoveryResultHostLabelValueModel(
             value=label["value"],
-            plugin_name=label["plugin_name"],
+            plugin_name=ApiOmitted.from_optional(label["plugin_name"]),
         )
         for name, label in labels.items()
     }

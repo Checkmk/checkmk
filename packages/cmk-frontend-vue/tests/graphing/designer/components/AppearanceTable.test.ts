@@ -27,7 +27,8 @@ function metric(name: string, points: (number | null)[], color = '#123456'): Met
         precision: { type: 'auto', digits: 2 },
         convertible: false
       },
-      color
+      color,
+      attributes: []
     },
     render: { stack: null, inverse: false, hidden: false },
     data_points: points

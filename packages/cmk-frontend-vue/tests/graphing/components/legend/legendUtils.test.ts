@@ -17,7 +17,7 @@ const UNIT: Metric['metadata']['unit'] = {
 
 function makeMetric(dataPoints: (number | null)[]): Metric {
   return {
-    metadata: { name: 'util', title: 'Utilization', unit: UNIT, color: '#ff0000' },
+    metadata: { name: 'util', title: 'Utilization', unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack: null, inverse: false, hidden: false },
     data_points: dataPoints
   }

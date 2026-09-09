@@ -78,20 +78,26 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
 // stack: null makes computeStackedSeries classify the metric as a 'line' series (rather than
 // a stacked area), so this fixture is genuinely a line graph.
 const LINE_METRIC: Metric = {
-  metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000' },
+  metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000', attributes: [] },
   render: { stack: null, inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 const STACKED_METRIC: Metric = {
-  metadata: { name: 'user', title: 'User', unit: UNIT, color: '#00ff00' },
+  metadata: { name: 'user', title: 'User', unit: UNIT, color: '#00ff00', attributes: [] },
   render: { stack: 'area', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 // inverse mirrors the metric below the baseline.
 const INVERSE_METRIC: Metric = {
-  metadata: { name: 'if_out', title: 'Output bandwidth', unit: UNIT, color: '#0000ff' },
+  metadata: {
+    name: 'if_out',
+    title: 'Output bandwidth',
+    unit: UNIT,
+    color: '#0000ff',
+    attributes: []
+  },
   render: { stack: null, inverse: true, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
@@ -130,7 +136,13 @@ const IEC_UNIT: components['schemas']['ApiUnitFormat'] = {
   convertible: true
 }
 const MEMORY_METRIC: Metric = {
-  metadata: { name: 'mem_used', title: 'RAM used', unit: IEC_UNIT, color: '#ff0000' },
+  metadata: {
+    name: 'mem_used',
+    title: 'RAM used',
+    unit: IEC_UNIT,
+    color: '#ff0000',
+    attributes: []
+  },
   render: { stack: null, inverse: false, hidden: false },
   data_points: [1.2e9, 1.4e9, 1.6e9, 1.8e9, 2.0e9]
 }

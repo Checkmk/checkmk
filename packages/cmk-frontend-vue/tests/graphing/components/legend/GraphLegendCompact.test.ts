@@ -24,7 +24,7 @@ const UNIT: Metric['metadata']['unit'] = {
 
 function makeMetric(name: string, title: string): Metric {
   return {
-    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack: 'area', inverse: false, hidden: false },
     data_points: [10, 20, 30]
   }
@@ -32,7 +32,7 @@ function makeMetric(name: string, title: string): Metric {
 
 function makeMetricWithStack(name: string, title: string, stack: string | null): Metric {
   return {
-    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack, inverse: false, hidden: false },
     data_points: [1]
   }

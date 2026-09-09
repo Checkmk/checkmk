@@ -44,7 +44,8 @@ export function trendChartMetrics(
       name: item.name,
       title: item.name,
       unit: THROUGHPUT_UNIT,
-      color: SERIES_COLORS[index % SERIES_COLORS.length]!
+      color: SERIES_COLORS[index % SERIES_COLORS.length]!,
+      attributes: []
     },
     render: {
       stack: displayMode === 'stacked_area' ? STACK_ID : null,

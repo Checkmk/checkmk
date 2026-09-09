@@ -129,7 +129,13 @@ def test_fetch_graph_data_comprehensive_graph(
     }
 
     def _metadata(name: str) -> dict[str, object]:
-        return {"name": name, "title": "m", "unit": unit, "color": "#FFFFFF"}
+        return {
+            "name": name,
+            "title": "m",
+            "unit": unit,
+            "color": "#FFFFFF",
+            "attributes": [],
+        }
 
     assert resp.json == {
         # The header reads the evaluated title, so the fetch is what carries it.

@@ -394,6 +394,96 @@ def test_generic_omittable_argument_response_invalid() -> None:
         )
 
 
+@dataclass
+class _ModelInContainer:
+    in_list: list[_ModelWithDefault]
+
+
+@dataclass
+class _ModelInDict:
+    in_dict: dict[str, _ModelWithDefault]
+
+
+@dataclass
+class _ModelInUnion:
+    in_union: _ModelWithDefault | None
+
+
+@dataclass
+class _BareGenericInContainer:
+    in_list: list[_GenericValue]
+
+
+@dataclass
+class _SelfReferential:
+    children: list[_SelfReferential]
+
+
+def _handler_model_in_list() -> _ModelInContainer:
+    raise NotImplementedError
+
+
+def _handler_model_in_dict() -> _ModelInDict:
+    raise NotImplementedError
+
+
+def _handler_model_in_union() -> _ModelInUnion:
+    raise NotImplementedError
+
+
+def _handler_bare_generic_in_container() -> _BareGenericInContainer:
+    raise NotImplementedError
+
+
+def _handler_self_referential() -> _SelfReferential:
+    raise NotImplementedError
+
+
+@pytest.mark.parametrize(
+    "handler, match",
+    [
+        pytest.param(
+            _handler_model_in_list,
+            r"Forbidden `default` for `response\.in_list\.value`",
+            id="list",
+        ),
+        pytest.param(
+            _handler_model_in_dict,
+            r"Forbidden `default` for `response\.in_dict\.value`",
+            id="dict",
+        ),
+        pytest.param(
+            _handler_model_in_union,
+            r"Forbidden `default` for `response\.in_union\.value`",
+            id="union",
+        ),
+        pytest.param(
+            _handler_bare_generic_in_container,
+            "Generic models must be fully parameterized",
+            id="bare-generic",
+        ),
+    ],
+)
+def test_nested_model_in_container_is_validated(handler: HandlerFunction, match: str) -> None:
+    """A model only reachable through a container must be validated as well."""
+    with pytest.raises(ValueError, match=match):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": handler},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+def test_self_referential_model_terminates() -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": _handler_self_referential},
+            metadata={"content_type": "application/json"},
+        )
+    )
+
+
 def _handler_string_annotations() -> StringAnnotationModel:
     raise NotImplementedError
 

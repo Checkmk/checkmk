@@ -105,7 +105,6 @@ class ApiMetricMetadata:
     attributes: list[ApiMetricAttribute] = api_field(
         description="The attributes of the series the metric was fetched from. Empty for a metric "
         "without any, e.g. one fetched from an RRD.",
-        default_factory=list,
         example=[],
     )
 

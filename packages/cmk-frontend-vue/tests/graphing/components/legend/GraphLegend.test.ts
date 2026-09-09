@@ -46,7 +46,7 @@ const UNIT: Metric['metadata']['unit'] = {
 
 function makeMetric(name: string, title: string, dataPoints: (number | null)[]): Metric {
   return {
-    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack: 'area', inverse: false, hidden: false },
     data_points: dataPoints
   }
@@ -54,7 +54,7 @@ function makeMetric(name: string, title: string, dataPoints: (number | null)[]):
 
 function makeMetricWithStack(name: string, title: string, stack: string | null): Metric {
   return {
-    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack, inverse: false, hidden: false },
     data_points: [1]
   }
@@ -62,7 +62,7 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
 
 function makeMirroredMetric(name: string, title: string, stack: string | null): Metric {
   return {
-    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack, inverse: true, hidden: false },
     data_points: [1]
   }

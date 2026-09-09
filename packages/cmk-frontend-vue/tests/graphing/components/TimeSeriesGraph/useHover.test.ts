@@ -28,7 +28,7 @@ const PLOT_HEIGHT = 100
 
 function makeLineMetric(name: string, dataPoints: (number | null)[]): Metric {
   return {
-    metadata: { name, title: name, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title: name, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack: null, inverse: false, hidden: false },
     data_points: dataPoints
   }

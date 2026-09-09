@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Generic, Literal, NamedTuple, TypeVar
+from typing import Literal, NamedTuple
 
 import yaml
 from pydantic import BaseModel, ConfigDict
@@ -145,21 +145,18 @@ class OracleAuthType(StrEnum):
     WALLET = "wallet"
 
 
-SecretT = TypeVar("SecretT", default=Secret)
-
-
-class GuiAuthUserPasswordData(BaseModel, Generic[SecretT]):
+class GuiAuthUserPasswordData[SecretT = Secret](BaseModel):
     username: str | None
     password: SecretT | None
 
 
-class GuiAsmAuthConf(BaseModel, Generic[SecretT]):
+class GuiAsmAuthConf[SecretT = Secret](BaseModel):
     username: str
     password: SecretT
     role: str | None = None
 
 
-class GuiAuthConf(BaseModel, Generic[SecretT]):
+class GuiAuthConf[SecretT = Secret](BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData[SecretT] | None] | None = None
@@ -218,7 +215,7 @@ class GuiExcludedSectionConf(BaseModel):
     sections: list[str] | None = None
 
 
-class GuiMainConf(BaseModel, Generic[SecretT]):
+class GuiMainConf[SecretT = Secret](BaseModel):
     auth: GuiAuthConf[SecretT]
     connection: GuiConnectionConf
     cache_age: int | None = None
@@ -241,14 +238,14 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
     oracle_client_library: GuiOracleClientLibOptions | None = None
 
 
-class GuiInstanceConf(BaseModel, Generic[SecretT]):
+class GuiInstanceConf[SecretT = Secret](BaseModel):
     oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
     auth: GuiAuthConf[SecretT] | None = None
     connection: GuiConnectionConf | None = None
     piggyback_host: str | None = None
 
 
-class GuiConfig(BaseModel, Generic[SecretT]):
+class GuiConfig[SecretT = Secret](BaseModel):
     deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
     # `options` is a top-level GUI section; it is baked into `oracle.main.options`.
     options: GuiAdditionalOptionsConf | None = None

@@ -9,7 +9,6 @@
 import abc
 import binascii
 import email
-import email.message
 import email.mime.text
 import email.utils
 import imaplib

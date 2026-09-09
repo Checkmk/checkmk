@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 
 import importlib.util
-import os
 import os.path
 import types
 from importlib._bootstrap_external import SourceFileLoader

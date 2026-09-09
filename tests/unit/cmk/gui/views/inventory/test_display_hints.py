@@ -10,7 +10,6 @@ from collections.abc import Callable
 import pytest
 
 import cmk.gui.inventory
-import cmk.gui.utils
 from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvText,

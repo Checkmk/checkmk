@@ -64,15 +64,14 @@ def parse_tinkerforge(string_table: StringTable) -> Section:
     # "siblings" they are sorted by the port on this host.
     res: dict[str, dict[str, list[str]]] = {}
     for brick_type, bricks in temp.items():
-        counter = 1
-        for brick in sorted(
-            bricks, key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, " ")
+        for counter, brick in enumerate(
+            sorted(bricks, key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, " ")),
+            start=1,
         ):
             name = str(counter)
             if brick[2]:
                 name = f"{brick[2]} {counter}"
             res.setdefault(brick_type, {})[name] = brick[3]
-            counter += 1
 
     return res
 

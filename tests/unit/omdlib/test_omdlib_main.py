@@ -12,10 +12,8 @@ from cryptography.x509 import load_pem_x509_certificate
 from cryptography.x509.oid import NameOID
 from pytest_mock import MockerFixture
 
-import omdlib
 import omdlib.finalize
 import omdlib.main
-import omdlib.utils
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import Skeleton
 

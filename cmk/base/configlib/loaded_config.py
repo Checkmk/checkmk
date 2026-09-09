@@ -16,7 +16,6 @@ from typing import (
 )
 
 import cmk.ruleset_matcher.tags
-import cmk.utils
 from cmk.base.default_config.cmc import (
     CMCAuthorization,
     CMCGraphiteConnection,

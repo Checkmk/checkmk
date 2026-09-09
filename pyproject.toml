@@ -16,6 +16,10 @@ line-length = 100
 xfail_strict = true
 
 [tool.ruff.lint]
+# Required to select preview/unstable rules such as pytest-fixture-autouse.
+preview = true
+# ...but only the ones selected by exact name/code.
+explicit-preview-rules = true
 select = [
   "A",      # flake8: builtins
   "ARG",    # flake8: unused args

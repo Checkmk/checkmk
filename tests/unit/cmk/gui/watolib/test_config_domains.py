@@ -12,7 +12,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 import omdlib.finalize
-import omdlib.main
 from omdlib.contexts import SiteContext
 
 from cmk.ccc.site import SiteId

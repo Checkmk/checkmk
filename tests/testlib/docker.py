@@ -30,7 +30,6 @@ from typing import Any, Final, Literal, Self, TypedDict
 
 import docker.client
 import docker.errors
-import docker.models
 import docker.models.containers
 import docker.models.images
 import requests

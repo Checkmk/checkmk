@@ -641,9 +641,7 @@ class Document:
 
         l = l.strip(" ")
         self._linepos -= self.lineskip()
-        tab = -1
-
-        for part in l.split("\t"):
+        for tab, part in enumerate(l.split("\t"), start=-1):
             self.save_state()
             self.set_font_color(color)
             self.set_font_bold(bold)
@@ -669,7 +667,6 @@ class Document:
             else:
                 x_position = 0
                 alignment = "l"
-            tab += 1
             abs_x = self._left + x_position
             abs_y = (
                 self._linepos

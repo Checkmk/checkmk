@@ -18,7 +18,6 @@ from flask import Flask
 from pytest_mock import MockerFixture
 
 import cmk.gui.config as config_module
-import cmk.gui.watolib.password_store
 import cmk.utils.log
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName

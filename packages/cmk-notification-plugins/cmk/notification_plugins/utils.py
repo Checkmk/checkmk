@@ -22,7 +22,6 @@ import requests
 from requests import JSONDecodeError
 
 import cmk.utils.password_store
-import cmk.utils.paths
 from cmk.ccc import site
 from cmk.events.notification_result import NotificationContext
 from cmk.events.notify import find_wato_folder

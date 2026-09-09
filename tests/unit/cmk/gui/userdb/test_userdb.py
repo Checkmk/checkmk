@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import cmk.ccc.version
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing

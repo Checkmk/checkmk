@@ -19,7 +19,6 @@ from typing import assert_never, Literal, override
 from urllib import parse
 from uuid import uuid4
 
-import fido2
 import fido2.features
 from fido2.server import Fido2Server
 from fido2.webauthn import (

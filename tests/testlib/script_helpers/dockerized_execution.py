@@ -28,7 +28,6 @@ from typing import Any, Literal, TypedDict, Unpack
 
 import docker
 import docker.errors
-import docker.models
 import docker.models.containers
 import docker.models.images
 import docker.types

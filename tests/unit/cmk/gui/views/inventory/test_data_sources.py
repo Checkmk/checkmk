@@ -10,7 +10,6 @@ import pytest
 from livestatus import LivestatusResponse, LivestatusRow, OnlySites
 
 import cmk.gui.inventory
-import cmk.gui.utils
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions

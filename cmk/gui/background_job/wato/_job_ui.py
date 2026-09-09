@@ -10,7 +10,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal, override
 
-import cmk.ccc.plugin_registry
 import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import log

@@ -54,10 +54,8 @@ import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
-import cmk.ccc.plugin_registry
 import cmk.ccc.regex
 import cmk.utils.log
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress as HostAddressType
 from cmk.ccc.regex import RegexFutureWarning

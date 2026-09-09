@@ -11,7 +11,7 @@ from typing import Literal
 from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.plugins.lib.df import check_filesystem_levels, check_inodes, mountpoints_in_group
 from cmk.plugins.lib.df import (
-    FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS,  # ruff: ignore[unused-import]
+    FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS,
 )
 
 from .size_trend import size_trend

@@ -12,7 +12,6 @@ from collections.abc import Callable, Iterator, Sequence
 from typing import Final, override
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.pages
 import cmk.gui.view_utils
 import cmk.utils.paths
 from cmk.gui import sites, visuals, weblib

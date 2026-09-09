@@ -17,7 +17,6 @@ You can find an introduction to BI in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
 
-import http
 import http.client
 from collections.abc import Mapping
 from contextlib import suppress

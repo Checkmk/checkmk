@@ -564,8 +564,7 @@ def output_csv(werks: list[Werk]) -> None:
     def line(*parts: int | str) -> None:
         sys.stdout.write('"' + '";"'.join(map(str, parts)) + '"\n')
 
-    nr = 1
-    for entry in get_config().components:
+    for nr, entry in enumerate(get_config().components, start=1):
         if len(entry) != 2:
             bail_out(f"invalid component {entry!r}")
         name, alias = entry
@@ -577,7 +576,6 @@ def output_csv(werks: list[Werk]) -> None:
             if werk.content.metadata["component"] == name:
                 total_effort += werk_effort(werk)
         line("", f"{nr}. {alias}", "", total_effort)
-        nr += 1
 
         for werk in werks:
             if werk.content.metadata["component"] == name:

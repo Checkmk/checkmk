@@ -15,7 +15,6 @@ from typing import Final
 import docker
 import docker.client
 import docker.errors
-import docker.models
 import docker.models.containers
 import docker.models.images
 import pytest

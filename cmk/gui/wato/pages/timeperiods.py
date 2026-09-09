@@ -524,8 +524,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         get_vars["timeperiod_p_exceptions_count"] = "%d" % len(exception_map)
 
-        index = 1
-        for dtstart_str, timeranges in sorted(exception_map.items()):
+        for index, (dtstart_str, timeranges) in enumerate(sorted(exception_map.items()), start=1):
             get_vars["timeperiod_p_exceptions_%d_0" % index] = dtstart_str
             get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
             get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(
@@ -535,8 +534,6 @@ class ModeTimeperiodImportICal(WatoMode):
                 get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = timerange_from
                 get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = timerange_to
                 get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
-
-            index += 1
 
         for var, val in get_vars.items():
             request.set_var(var, val)

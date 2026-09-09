@@ -7,7 +7,6 @@
 import pytest
 
 import cmk.plugins.lib.interfaces
-import cmk.plugins.network.agent_based.lnx_if
 from cmk.agent_based.v2 import Result
 from cmk.plugins.lib.interfaces import (
     Attributes,

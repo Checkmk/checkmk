@@ -184,7 +184,6 @@ __all__ = [
     "user_sync_default_config",
     "UserAttribute",
     "UserAttributeRegistry",
-    "UserConnectionConfig",
     "UserData",
     "UserSyncConfig",
     "UserRole",

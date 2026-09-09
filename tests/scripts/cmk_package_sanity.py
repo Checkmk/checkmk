@@ -30,7 +30,6 @@ from textwrap import dedent
 from typing import ClassVar, Literal, override
 
 import docker
-import docker.models
 import docker.models.containers
 import docker.models.images
 import requests

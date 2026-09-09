@@ -19,7 +19,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, cast, Literal
 
-import cmk.gui.pages
 import cmk.utils.paths
 from cmk.ccc.store import (
     acquire_lock,

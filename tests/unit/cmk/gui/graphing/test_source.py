@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
@@ -30,6 +31,7 @@ from cmk.gui.graphing._graph_templates import (
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._source import (
+    chop_last_empty_step,
     HOST_PSEUDO_SERVICE,
     PerformanceDataRow,
     RRDFetchData,
@@ -348,3 +350,41 @@ def test_a_metric_without_perf_data_is_drawn_from_its_own_column_unscaled() -> N
     assert requested == ["y"]
     assert curve.value is None
     assert list(curve.time_series.values) == [1.0, 2.0, 3.0]
+
+
+_CHOPPED_METRIC = RRDMetric(
+    host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("x")
+)
+
+
+def _chopped_series(start: int, end: int, step: int, values: Sequence[float | None]) -> TimeSeries:
+    return TimeSeries(time_range=TimeRange(start=start, end=end, step=step), values=values)
+
+
+def test_the_empty_trailing_step_of_a_graph_ending_now_is_dropped() -> None:
+    # The current RRD step has no data yet, so an all-None last point is stripped rather than drawn as
+    # a gap. "Now" is what makes it the current step, hence the clock.
+    end = int(time.time())
+    chopped = chop_last_empty_step(
+        {_CHOPPED_METRIC: _chopped_series(end - 30, end, 10, [1.0, 2.0, None])}, end
+    )
+    assert list(chopped[_CHOPPED_METRIC].values) == [1.0, 2.0]
+    assert chopped[_CHOPPED_METRIC].time_range == TimeRange(start=end - 30, end=end - 10, step=10)
+
+
+def test_a_trailing_gap_in_the_past_is_kept() -> None:
+    # Well before "now" an all-None last point is real missing data, not a step that has yet to fill.
+    time_series = {_CHOPPED_METRIC: _chopped_series(0, 30, 10, [1.0, 2.0, None])}
+    assert chop_last_empty_step(time_series, 30) == time_series
+
+
+def test_a_step_one_curve_still_has_data_for_is_kept() -> None:
+    end = int(time.time())
+    other = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("y")
+    )
+    time_series = {
+        _CHOPPED_METRIC: _chopped_series(end - 30, end, 10, [1.0, 2.0, None]),
+        other: _chopped_series(end - 30, end, 10, [1.0, 2.0, 3.0]),
+    }
+    assert chop_last_empty_step(time_series, end) == time_series

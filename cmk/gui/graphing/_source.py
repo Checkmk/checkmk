@@ -10,6 +10,7 @@
 
 
 import contextlib
+import time
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Final, Protocol
@@ -36,7 +37,6 @@ from cmk.gui import sites
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
 from ._metric_data import (
-    chop_last_empty_step,
     map_metric_names,
     merge_series,
     parse_performance_data,
@@ -497,3 +497,26 @@ class RRDFetchData:
                 )
             )
         return result
+
+
+def chop_last_empty_step(
+    time_series: Mapping[RRDMetric, TimeSeries], end: int
+) -> Mapping[RRDMetric, TimeSeries]:
+    # Drop the empty trailing step of a graph that ends "now": the current RRD step has no data yet,
+    # so an all-None last point across every curve is stripped rather than drawn as a gap.
+    if not time_series:
+        return time_series
+    step = next(iter(time_series.values())).time_range.step
+    if step <= 0 or abs(time.time() - end) > step:
+        return time_series
+    if not all(series.values and series.values[-1] is None for series in time_series.values()):
+        return time_series
+    return {
+        metric: TimeSeries(
+            time_range=TimeRange(
+                start=series.time_range.start, end=series.time_range.end - step, step=step
+            ),
+            values=series.values[:-1],
+        )
+        for metric, series in time_series.items()
+    }

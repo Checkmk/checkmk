@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -12,15 +11,11 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics, Title, translations
 from cmk.graphing_engine import (
     ConsolidationFunction,
-    HostName,
     MetricName,
-    RRDMetric,
-    ServiceName,
     TimeRange,
     TimeSeries,
 )
 from cmk.gui.graphing._metric_data import (
-    chop_last_empty_step,
     evaluated_metrics,
     EvaluatedMetric,
     map_metric_names,
@@ -264,11 +259,6 @@ def test_reverse_translated_names_ignores_a_translation_to_another_metric() -> N
     ) == {MetricName("new")}
 
 
-_METRIC = RRDMetric(
-    host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("x")
-)
-
-
 def _series(start: int, end: int, step: int, values: Sequence[float | None]) -> TimeSeries:
     return TimeSeries(time_range=TimeRange(start=start, end=end, step=step), values=values)
 
@@ -324,33 +314,6 @@ def test_merging_takes_the_first_series_that_has_a_value_at_a_point() -> None:
         TimeRange(start=0, end=30, step=10),
     )
     assert list(merged.values) == [9.0, 2.0, 9.0]
-
-
-def test_the_empty_trailing_step_of_a_graph_ending_now_is_dropped() -> None:
-    # The current RRD step has no data yet, so an all-None last point is stripped rather than drawn as
-    # a gap. "Now" is what makes it the current step, hence the clock.
-    end = int(time.time())
-    chopped = chop_last_empty_step({_METRIC: _series(end - 30, end, 10, [1.0, 2.0, None])}, end)
-    assert list(chopped[_METRIC].values) == [1.0, 2.0]
-    assert chopped[_METRIC].time_range == TimeRange(start=end - 30, end=end - 10, step=10)
-
-
-def test_a_trailing_gap_in_the_past_is_kept() -> None:
-    # Well before "now" an all-None last point is real missing data, not a step that has yet to fill.
-    time_series = {_METRIC: _series(0, 30, 10, [1.0, 2.0, None])}
-    assert chop_last_empty_step(time_series, 30) == time_series
-
-
-def test_a_step_one_curve_still_has_data_for_is_kept() -> None:
-    end = int(time.time())
-    other = RRDMetric(
-        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("y")
-    )
-    time_series = {
-        _METRIC: _series(end - 30, end, 10, [1.0, 2.0, None]),
-        other: _series(end - 30, end, 10, [1.0, 2.0, 3.0]),
-    }
-    assert chop_last_empty_step(time_series, end) == time_series
 
 
 def _merged(

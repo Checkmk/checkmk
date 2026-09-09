@@ -6,7 +6,6 @@
 
 import re
 import shlex
-import time
 
 # A painter declares the livestatus columns it needs before it knows any row, then reads the values
 # back out of a row somebody else fetched. That splits what the engine's own fetch does in one go:
@@ -24,7 +23,6 @@ from cmk.graphing_engine import (
     metric_display_attributes,
     MetricName,
     PerformanceData,
-    RRDMetric,
     TimeRange,
     TimeSeries,
 )
@@ -517,29 +515,6 @@ def merge_series(time_series: Sequence[TimeSeries], time_range: TimeRange) -> Ti
             for point in zip(*(member.values for member in time_series))
         ],
     )
-
-
-def chop_last_empty_step(
-    time_series: Mapping[RRDMetric, TimeSeries], end: int
-) -> Mapping[RRDMetric, TimeSeries]:
-    # Drop the empty trailing step of a graph that ends "now": the current RRD step has no data yet,
-    # so an all-None last point across every curve is stripped rather than drawn as a gap.
-    if not time_series:
-        return time_series
-    step = next(iter(time_series.values())).time_range.step
-    if step <= 0 or abs(time.time() - end) > step:
-        return time_series
-    if not all(series.values and series.values[-1] is None for series in time_series.values()):
-        return time_series
-    return {
-        metric: TimeSeries(
-            time_range=TimeRange(
-                start=series.time_range.start, end=series.time_range.end - step, step=step
-            ),
-            values=series.values[:-1],
-        )
-        for metric, series in time_series.items()
-    }
 
 
 # The step the columns are requested with. RRD answers with the grid it actually holds, which is

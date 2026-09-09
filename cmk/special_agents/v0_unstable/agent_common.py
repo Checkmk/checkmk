@@ -25,6 +25,7 @@ from typing import Any, override
 
 import urllib3
 
+from cmk.ccc.log import CMKFormatter
 from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
 from cmk.utils.password_store import lookup as lookup_stored_passwords
 from cmk.utils.password_store.hack import resolve_password_hack
@@ -123,9 +124,10 @@ def _special_agent_main_core(
 ) -> int:
     """Main logic special agents"""
     args = parse_arguments(argv)
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        format="%(levelname)s %(asctime)s %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+    handler = logging.StreamHandler()
+    handler.setFormatter(CMKFormatter())
+    logging.basicConfig(
+        handlers=[handler],
         level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(
             args.verbose, logging.DEBUG
         ),

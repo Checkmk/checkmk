@@ -10,10 +10,11 @@ import time
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from dataclasses import dataclass
-from logging import DEBUG, Formatter, getLogger, Handler, INFO, StreamHandler
+from logging import DEBUG, getLogger, Handler, INFO, StreamHandler
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_mk_file
 from cmk.ccc.version import edition
@@ -62,7 +63,7 @@ def setup_logging(*, verbose: int, log_file: Path | None) -> None:
     handler: Handler
     if log_file is None:
         handler = StreamHandler(sys.stderr)
-        handler.setFormatter(Formatter("%(message)s"))  # astrein: disable=logging-formatter
+        handler.setFormatter(CMKFormatter(message_only=True))
     else:
         # Routine output goes here; stderr stays free for unhandled tracebacks.
         handler = RotatingFileHandler(
@@ -71,10 +72,7 @@ def setup_logging(*, verbose: int, log_file: Path | None) -> None:
             backupCount=3,
             delay=True,  # the feature is off by default; such a site creates no log file
         )
-        handler.setFormatter(
-            # astrein: disable=logging-formatter
-            Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
-        )
+        handler.setFormatter(CMKFormatter(with_process=True))
 
     getLogger().addHandler(handler)
 

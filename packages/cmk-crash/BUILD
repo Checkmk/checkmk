@@ -42,6 +42,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":crash",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",

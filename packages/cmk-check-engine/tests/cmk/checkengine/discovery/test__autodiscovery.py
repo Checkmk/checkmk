@@ -15,15 +15,17 @@ import pytest
 import time_machine
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.discovery._autochecks import AutocheckServiceWithNodes
+from cmk.checkengine.discovery import (
+    AutocheckServiceWithNodes,
+    get_host_services_by_host_name,
+    RediscoveryParameters,
+)
 from cmk.checkengine.discovery._autodiscovery import (
     _may_rediscover,
     _node_service_source,
     BasicTransition,
-    get_host_services_by_host_name,
     Transition,
 )
-from cmk.checkengine.discovery._utils.filters import RediscoveryParameters
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 

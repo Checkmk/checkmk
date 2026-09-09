@@ -51,7 +51,9 @@ from cmk.checkengine.discovery import (
     DiscoverySettings,
     DiscoveryValueSpecModel,
     find_plugins,
+    HostLabelPlugin,
     QualifiedDiscovery,
+    RediscoveryParameters,
 )
 from cmk.checkengine.discovery._autodiscovery import (
     _group_by_transition,
@@ -63,16 +65,12 @@ from cmk.checkengine.discovery._autodiscovery import (
     ServicesTable,
     ServicesTableEntry,
 )
-from cmk.checkengine.discovery._discover.host_labels import HostLabelPlugin
 from cmk.checkengine.discovery._entrypoints.active_check import (
     _check_host_labels,
     _check_service_lists,
 )
 from cmk.checkengine.discovery._entrypoints.commandline import _commandline_discovery_on_host
-from cmk.checkengine.discovery._utils.filters import (
-    RediscoveryParameters,
-    ServiceFilters,
-)
+from cmk.checkengine.discovery._utils.filters import ServiceFilters
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.fetcher_abc import Mode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets

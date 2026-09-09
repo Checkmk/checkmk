@@ -10,12 +10,13 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery import AutocheckServiceWithNodes, AutochecksStore
-from cmk.checkengine.discovery._autochecks import (
-    _consolidate_autochecks_of_real_hosts,
+from cmk.checkengine.discovery import (
+    AutocheckServiceWithNodes,
     AutochecksMemoizer,
     AutochecksSerializer,
+    AutochecksStore,
 )
+from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 

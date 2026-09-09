@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from logging import Formatter, getLogger, StreamHandler
+from logging import getLogger, StreamHandler
 
+from cmk.ccc.log import CMKFormatter
 from cmk.utils import log
 
 logger = getLogger("cmk.post_rename_site")
@@ -16,5 +17,5 @@ def setup_logging(*, verbose: int) -> None:
     log.logger.setLevel(log.verbosity_to_log_level(verbose))
     logger.setLevel(log.logger.level)
     handler = StreamHandler(sys.stdout)
-    handler.setFormatter(Formatter("%(message)s"))  # astrein: disable=logging-formatter
+    handler.setFormatter(CMKFormatter(message_only=True))
     getLogger().addHandler(handler)

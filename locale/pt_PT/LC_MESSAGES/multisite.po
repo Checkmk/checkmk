@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-05 13:22+0000\n"
+"PO-Revision-Date: 2026-09-08 17:17+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -880,8 +880,8 @@ msgstr "%s: Usa SSL"
 
 #, python-format
 msgid ""
-"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
-"in version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
 msgstr ""
 
 msgid "&lt;None&gt;"
@@ -26703,10 +26703,6 @@ msgstr "Estado esperado"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "Estado de bandeira esperado"
-
-#, fuzzy
-msgid "Experimental flags"
-msgstr "Característica da empresa"
 
 #, fuzzy
 msgid "Expiration date"
@@ -58330,6 +58326,10 @@ msgstr ""
 #, fuzzy
 msgid "Relays"
 msgstr "Atraso:"
+
+#, fuzzy
+msgid "Release flags"
+msgstr "Pacote de lançamento"
 
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
@@ -95217,7 +95217,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95740,7 +95739,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -102281,12 +102279,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "API endpoint from PagerDuty V2"
-#~ msgstr "API Endpoint do PagerDuty V2"
+#~ msgid "Experimental flags"
+#~ msgstr "Característica da empresa"
 
 #, fuzzy
-#~ msgid "Release flags"
-#~ msgstr "Pacote de lançamento"
+#~ msgid "API endpoint from PagerDuty V2"
+#~ msgstr "API Endpoint do PagerDuty V2"
 
 #, fuzzy
 #~ msgid "Authorize"

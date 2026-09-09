@@ -891,8 +891,8 @@ msgstr "%s: Verwendet SSL"
 
 #, fuzzy, python-format
 msgid ""
-"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
-"in version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
 msgstr ""
 "%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
 "entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
@@ -25857,10 +25857,6 @@ msgstr "Erwarteter virtueller Switch"
 
 msgid "Expected virtual switch name"
 msgstr "Erwarteter virtueller Switch-Name"
-
-#, fuzzy
-msgid "Experimental flags"
-msgstr "Experimentelle Funktionen von Vue"
 
 msgid "Expiration date"
 msgstr "Ablaufdatum"
@@ -55815,6 +55811,9 @@ msgstr ""
 
 msgid "Relays"
 msgstr "Relays"
+
+msgid "Release flags"
+msgstr "Release-Flags"
 
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
@@ -98742,11 +98741,12 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#, fuzzy
+#~ msgid "Experimental flags"
+#~ msgstr "Experimentelle Funktionen von Vue"
+
 #~ msgid "API endpoint from PagerDuty V2"
 #~ msgstr "API-Endpunkt von PagerDuty V2"
-
-#~ msgid "Release flags"
-#~ msgstr "Release-Flags"
 
 #, fuzzy
 #~ msgid "Authorize"

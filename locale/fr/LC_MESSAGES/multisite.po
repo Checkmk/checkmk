@@ -879,8 +879,8 @@ msgstr "%s : Utilise SSL"
 
 #, python-format
 msgid ""
-"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
-"in version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
 msgstr ""
 
 msgid "&lt;None&gt;"
@@ -26928,10 +26928,6 @@ msgstr "État attendu"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "État du drapeau attendu"
-
-#, fuzzy
-msgid "Experimental flags"
-msgstr "Fonctionnalité d'entreprise"
 
 #, fuzzy
 msgid "Expiration date"
@@ -58802,6 +58798,10 @@ msgstr ""
 #, fuzzy
 msgid "Relays"
 msgstr "Retard :"
+
+#, fuzzy
+msgid "Release flags"
+msgstr "Paquet de libération"
 
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
@@ -103282,12 +103282,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "API endpoint from PagerDuty V2"
-#~ msgstr "Point de terminaison API de PagerDuty V2"
+#~ msgid "Experimental flags"
+#~ msgstr "Fonctionnalité d'entreprise"
 
 #, fuzzy
-#~ msgid "Release flags"
-#~ msgstr "Paquet de libération"
+#~ msgid "API endpoint from PagerDuty V2"
+#~ msgstr "Point de terminaison API de PagerDuty V2"
 
 #, fuzzy
 #~ msgid "Authorize"

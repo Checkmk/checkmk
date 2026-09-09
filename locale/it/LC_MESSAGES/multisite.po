@@ -887,8 +887,8 @@ msgstr "%s: Utilizza SSL"
 
 #, python-format
 msgid ""
-"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
-"in version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
 msgstr ""
 
 msgid "&lt;None&gt;"
@@ -26534,10 +26534,6 @@ msgstr "Stato previsto"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "Stato previsto della bandiera"
-
-#, fuzzy
-msgid "Experimental flags"
-msgstr "Caratteristica dell'impresa"
 
 #, fuzzy
 msgid "Expiration date"
@@ -58105,6 +58101,10 @@ msgstr ""
 #, fuzzy
 msgid "Relays"
 msgstr "Ritardo:"
+
+#, fuzzy
+msgid "Release flags"
+msgstr "Pacchetto di rilascio"
 
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
@@ -102197,12 +102197,12 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Experimental flags"
+#~ msgstr "Caratteristica dell'impresa"
+
 #~ msgid "API endpoint from PagerDuty V2"
 #~ msgstr "Endpoint API di PagerDuty V2"
-
-#, fuzzy
-#~ msgid "Release flags"
-#~ msgstr "Pacchetto di rilascio"
 
 #, fuzzy
 #~ msgid "Authorize"

@@ -8,8 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.smb.server_side_calls.special_agent import special_agent_smb_share
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, SpecialAgentCommand
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="testhost",

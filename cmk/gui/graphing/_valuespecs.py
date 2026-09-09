@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+
 import json
 import re
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
@@ -49,7 +50,6 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
     ValueSpecHelp,
-    ValueSpecValidateFunc,
 )
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 
@@ -336,7 +336,6 @@ class ValuesWithUnits(CascadingDropdown):
         vs_name: str,
         metric_vs_name: str,
         elements: Sequence[ValueWithUnitElement],
-        validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,  # noqa: A002
     ):
         temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
@@ -345,12 +344,7 @@ class ValuesWithUnits(CascadingDropdown):
                 (
                     choice.id,
                     choice.title,
-                    self._unit_vs(
-                        choice.vs_type,
-                        choice.symbol,
-                        elements,
-                        validate_value_elements,
-                    ),
+                    self._unit_vs(choice.vs_type, choice.symbol, elements),
                 )
                 for choice in _sorted_unit_choices(
                     metrics_from_api,
@@ -368,13 +362,11 @@ class ValuesWithUnits(CascadingDropdown):
         vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
         symbol: str,
         elements: Sequence[ValueWithUnitElement],
-        validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None,
     ) -> Tuple[tuple[Any, ...]]:
         return Tuple(
             elements=[
                 _value_with_unit_vs(vs, symbol, elem["title"], elem["default"]) for elem in elements
             ],
-            validate=validate_value_elements,
         )
 
     @override

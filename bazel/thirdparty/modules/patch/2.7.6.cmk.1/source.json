@@ -2,6 +2,7 @@
   "integrity": "sha256-jPhuAK06qm0mrKMGQOhrDj4fOV7ZnxibBtTJ90vFik4=",
   "strip_prefix": "patch-2.7.6",
   "url": "https://ftpmirror.gnu.org/gnu/patch/patch-2.7.6.tar.gz",
+  "mirror_urls": ["https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.gz"],
   "patches": {
     "ed-style-01-missing-input-files.patch.dif": "sha256-HK/+rBOEucx3kAVt1OKRCf3BpzVLHoazFh9Ai0hpv3M=",
     "ed-style-02-fix-arbitrary-command-execution.patch.dif": "sha256-Dat6BpYVzj7z4ODxZ9dUdSt13U++gELOUX5gQQVru7A=",

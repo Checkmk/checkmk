@@ -4,3 +4,4 @@ feedparser<6.0.13 # CMK-37383, problems with conflicting __init__.py files due t
 kubernetes<36.0.0 # CMK-37075, some unit tests below //packages/cmk-plugins/tests/cmk/plugins/kube fail
 marshmallow<4 # CMK-25251, breaking changes
 pysmi<2.0.0 # CMK-37075, bazel build //omd/packages/net-snmp:generate_python_mibs fails with "Could not compile mib NET-SNMP-PASS-MIB"
+ast-serialize<0.9.0 # CMK-38929, pytokens pulls in mypy as a build dep, whose build-system requires ast-serialize; 0.9.0 requires rustc>=1.95, build image has 1.94.1

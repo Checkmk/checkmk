@@ -19,7 +19,6 @@ from cmk.plugins.aws.special_agent.agent_aws import (
     ELBv2Limits,
     ELBv2Network,
     ELBv2TargetGroups,
-    ResultDistributor,
 )
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
@@ -28,6 +27,7 @@ from cmk.plugins.aws.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import (
     ELBDescribeTagsIB,

@@ -10,22 +10,19 @@ from typing import Final, Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSRegionLimit,
-    AWSSectionResult,
-    AWSSectionResults,
-    ECS,
-    ECSLimits,
-    ECSSummary,
-    ResultDistributor,
-    StatusEnum,
-)
+from cmk.plugins.aws.special_agent.agent_aws import ECS, ECSLimits, ECSSummary, StatusEnum
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
+)
+from cmk.plugins.aws.special_agent.sections.core import (
+    AWSRegionLimit,
+    AWSSectionResult,
+    AWSSectionResults,
+    ResultDistributor,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient

@@ -9,12 +9,9 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
-    CloudwatchAlarms,
-    CloudwatchAlarmsLimits,
-    ResultDistributor,
-)
+from cmk.plugins.aws.special_agent.agent_aws import CloudwatchAlarms, CloudwatchAlarmsLimits
 from cmk.plugins.aws.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
 

@@ -12,7 +12,6 @@ import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
     _get_wafv2_web_acls,
-    ResultDistributor,
     WAFV2Limits,
     WAFV2Summary,
     WAFV2WebACL,
@@ -24,6 +23,7 @@ from cmk.plugins.aws.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import (
     FakeCloudwatchClient,

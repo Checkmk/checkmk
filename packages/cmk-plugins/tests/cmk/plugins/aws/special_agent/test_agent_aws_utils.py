@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import filter_resources_matching_tags
 from cmk.plugins.aws.special_agent.config import Tags
+from cmk.plugins.aws.special_agent.sections.core import filter_resources_matching_tags
 
 
 @pytest.mark.parametrize(

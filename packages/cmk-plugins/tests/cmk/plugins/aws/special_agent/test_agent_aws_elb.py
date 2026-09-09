@@ -16,7 +16,6 @@ from cmk.plugins.aws.special_agent.agent_aws import (
     ELBLabelsGeneric,
     ELBLimits,
     ELBSummaryGeneric,
-    ResultDistributor,
 )
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
@@ -25,6 +24,7 @@ from cmk.plugins.aws.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import (
     ELBDescribeAccountLimitsIB,

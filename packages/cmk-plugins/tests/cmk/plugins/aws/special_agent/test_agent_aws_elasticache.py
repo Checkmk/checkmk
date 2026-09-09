@@ -13,13 +13,9 @@ import pytest
 from dateutil.tz import tzutc
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSRegionLimit,
-    AWSSectionResult,
-    AWSSectionResults,
     ElastiCache,
     ElastiCacheLimits,
     ElastiCacheSummary,
-    ResultDistributor,
 )
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
@@ -27,6 +23,12 @@ from cmk.plugins.aws.special_agent.config import (
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
+)
+from cmk.plugins.aws.special_agent.sections.core import (
+    AWSRegionLimit,
+    AWSSectionResult,
+    AWSSectionResults,
+    ResultDistributor,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient

@@ -71,12 +71,8 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
       if (!response || response instanceof ErrorResponse) {
         return
       }
-      // The backend echoes the typed text as a leading (query, query) choice; a real
-      // key equal to the query is indistinguishable from the echo and is dropped too,
-      // falling into the kind-less user entry below.
       const suggestions = flattenSuggestions(response.choices).filter(
-        (s: Suggestion) =>
-          s.name !== query && (s.name === null || (s.name.length > 0 && s.title.length > 0))
+        (s: Suggestion) => s.name === null || (s.name.length > 0 && s.title.length > 0)
       )
       if (suggestions.length > 0) {
         sections.push({
@@ -86,9 +82,12 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
         })
       }
     })
-    const userEntry: KeySection[] = query
-      ? [{ title: untranslated(''), suggestions: [{ name: query, title: untranslated(query) }] }]
-      : []
+    // Offer free text only when the query is not already a real key, to avoid a duplicate row.
+    const isExactKey = sections.some((section) => section.suggestions.some((s) => s.name === query))
+    const userEntry: KeySection[] =
+      query && !isExactKey
+        ? [{ title: untranslated(''), suggestions: [{ name: query, title: untranslated(query) }] }]
+        : []
     return new Response([...userEntry, ...sections])
   }
 

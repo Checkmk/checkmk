@@ -5,7 +5,7 @@
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
+from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory import _register_sorter
 from cmk.gui.views.inventory._display_hints import (

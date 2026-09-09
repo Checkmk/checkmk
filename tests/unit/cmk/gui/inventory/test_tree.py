@@ -13,14 +13,14 @@ import cmk.ccc.store
 import cmk.gui.inventory
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.inventory._tree import (
-    _make_filter_choices_from_permitted_paths,
+from cmk.gui.inventory import (
     get_history,
     InventoryPath,
     load_delta_tree,
     load_latest_delta_tree,
     load_tree,
     make_filter_choices_from_api_request_paths,
+    make_filter_choices_from_permitted_paths,
     parse_internal_raw_path,
     TreeSource,
 )
@@ -240,10 +240,10 @@ def test_parse_tree_path(
         ),
     ],
 )
-def test__make_filter_choices_from_permitted_paths(
+def test_make_filter_choices_from_permitted_paths(
     entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
-    assert _make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
+    assert make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
 
 
 @pytest.mark.parametrize(

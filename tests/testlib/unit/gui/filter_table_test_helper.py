@@ -18,7 +18,7 @@ inventory_ui plug-in being loaded.
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
+from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,

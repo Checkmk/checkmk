@@ -117,7 +117,7 @@ def _transform_attribute[T](
     return [f(y) for y in x[1]]  # choices
 
 
-def _make_filter_choices_from_permitted_paths(
+def make_filter_choices_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
 ) -> Sequence[SDFilterChoice]:
     return [
@@ -255,7 +255,7 @@ def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> Imm
 
     merged_tree = merge_trees(inventory_tree, status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return filter_tree(merged_tree, _make_filter_choices_from_permitted_paths(permitted_paths))
+        return filter_tree(merged_tree, make_filter_choices_from_permitted_paths(permitted_paths))
 
     return merged_tree
 
@@ -296,7 +296,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
         hostname,
         history_paths_filter=lambda paths: [paths[-1]] if paths else [],
         delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
+            make_filter_choices_from_permitted_paths(permitted_paths)
             if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
             else None
         ),
@@ -337,7 +337,7 @@ def load_delta_tree(
         hostname,
         history_paths_filter=lambda paths: _search_timestamps(paths, timestamp),
         delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
+            make_filter_choices_from_permitted_paths(permitted_paths)
             if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
             else None
         ),
@@ -359,7 +359,7 @@ def get_history(
         hostname,
         history_paths_filter=lambda paths: paths,
         delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
+            make_filter_choices_from_permitted_paths(permitted_paths)
             if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
             else None
         ),

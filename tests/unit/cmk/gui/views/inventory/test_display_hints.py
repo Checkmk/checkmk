@@ -11,10 +11,11 @@ import pytest
 
 import cmk.gui.inventory
 import cmk.gui.utils
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
+from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvText,
 )
+from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint, TableWithView
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -29,10 +30,7 @@ from cmk.gui.views.inventory._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
     DisplayHints,
-    inv_display_hints,
-    NodeDisplayHint,
     Table,
-    TableWithView,
     TDStyles,
 )
 from cmk.gui.views.inventory._paint_functions import (

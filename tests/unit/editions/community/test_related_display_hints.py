@@ -7,7 +7,7 @@ import pytest
 
 from cmk.ccc.version import Edition
 from cmk.gui import main_modules
-from cmk.gui.views.inventory._display_hints import inv_display_hints
+from cmk.gui.views.inventory import inv_display_hints
 
 
 @pytest.fixture(scope="module", autouse=True)

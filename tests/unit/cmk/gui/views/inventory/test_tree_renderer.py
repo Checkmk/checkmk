@@ -7,13 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
+from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import FilterInvText
+from cmk.gui.views.inventory import NodeDisplayHint
 from cmk.gui.views.inventory._display_hints import (
     _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
-    NodeDisplayHint,
     Table,
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic

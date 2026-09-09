@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.ipmi.rulesets.special_agent import _migrate
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import Secret
 
 
 @pytest.mark.parametrize(

@@ -11,6 +11,7 @@ import type {
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
+import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
@@ -18,7 +19,7 @@ import { computed, inject, provide, ref, toRaw, watch } from 'vue'
 
 import { GLOBAL_SETTINGS_SERVICE, GLOBAL_SETTINGS_TOGGLE, globalSettingsService } from './api'
 import ExpandCollapseButtons from './components/ExpandCollapseButtons.vue'
-import GlobalSettingsEditSlideIn from './components/GlobalSettingsEditSlideIn.vue'
+import GlobalSettingsEditor from './components/GlobalSettingsEditor.vue'
 import GlobalSettingsEmptyState from './components/GlobalSettingsEmptyState.vue'
 import GlobalSettingsModificationFilter, {
   type ModificationFilter
@@ -164,7 +165,14 @@ function resetSearchAndFilters(): void {
         @edit="openEditor"
       />
     </CmkAccordion>
-    <GlobalSettingsEditSlideIn v-if="session !== null" :session="session" @close="closeEditor" />
+    <CmkSlideInDialog
+      :open="session !== null"
+      size="small"
+      :header="{ title: _t('Edit global setting'), closeButton: true }"
+      @close="closeEditor"
+    >
+      <GlobalSettingsEditor v-if="session !== null" :session="session" @close="closeEditor" />
+    </CmkSlideInDialog>
   </div>
 </template>
 

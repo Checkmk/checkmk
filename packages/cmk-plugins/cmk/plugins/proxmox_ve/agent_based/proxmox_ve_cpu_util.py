@@ -50,13 +50,14 @@ def check_proxmox_ve_cpu_util(params: Mapping[str, Any], section: Section) -> Ch
 
     core_usage_util = util
     core_usage_label = "Total CPU Core usage"
-    if "average" in params:
+    check_cpu_util_params = {"util": params["util"][1]}
+    if (average := params.get("average")) is not None:
         core_usage_util = get_average(
-            value_store, "cpu_util_average_core", section.uptime, util, params["average"]
+            value_store, "cpu_util_average_core", section.uptime, util, average
         )
-        core_usage_label = f"Total CPU Core usage ({params['average']} min average)"
+        core_usage_label = f"Total CPU Core usage ({average} min average)"
+        check_cpu_util_params["average"] = average
 
-    check_cpu_util_params = {"util": params["util"][1], "average": params["average"]}
     yield from check_cpu_util(
         util=util,
         params=check_cpu_util_params,
@@ -94,8 +95,5 @@ check_plugin_proxmox_ve_cpu_util = CheckPlugin(
     discovery_function=discover_single,
     check_function=check_proxmox_ve_cpu_util,
     check_ruleset_name="proxmox_ve_cpu_util",
-    check_default_parameters={
-        "util": ("fixed", (90.0, 95.0)),
-        "average": 1,
-    },
+    check_default_parameters={"util": ("fixed", (90.0, 95.0))},
 )

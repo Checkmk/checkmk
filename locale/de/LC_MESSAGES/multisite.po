@@ -69745,6 +69745,10 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "Die Beschreibung der Schnittstelle wie vom Gerät angegeben"
 
+#, fuzzy
+msgid "The deviation of the local clock from the time server."
+msgstr "Begrenzen Sie die Ausführung des Scans auf diesen Zeitraum."
+
 #, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
@@ -71665,12 +71669,6 @@ msgstr "Die Verschiebung in ms ab der ein Zustand WARN gemeldet wird."
 msgid "The offset in ms at which a critical state is triggered."
 msgstr "Die Verschiebung in ms ab welcher der Zustand CRIT gemeldet wird."
 
-msgid "The offset in s at which a WARNING state is triggered."
-msgstr "Die Verschiebung in s, bei der ein Zustand WARN ausgelöst wird."
-
-msgid "The offset in s at which a critical state is triggered."
-msgstr "Der Offset in s, bei dem ein kritischer Zustand ausgelöst wird."
-
 msgid ""
 "The offset of the information relative to counter base. You can get a "
 "detailed list of available counters in a Windows shell with the command "
@@ -72940,6 +72938,11 @@ msgstr "Der gespeicherte Bericht, den Sie löschen möchten, existiert nicht."
 msgid ""
 "The stratum (\"distance\" to the reference clock) at which the check gets "
 "critical."
+msgstr "Die Abweichung von der Referenzuhr ab welcher der Check critical wird."
+
+#, fuzzy
+msgid ""
+"The stratum (distance in hops to the reference clock) of the time source."
 msgstr "Die Abweichung von der Referenzuhr ab welcher der Check critical wird."
 
 msgid ""
@@ -75989,10 +75992,10 @@ msgstr ""
 "Diese Seite ist für Hosts, die über ein Relay überwacht werden, nicht "
 "verfügbar."
 
+#, fuzzy
 msgid ""
-"This page is work in progress. It shows a subset of the global settings and "
-"changes made here are not saved."
-msgstr ""
+"This page is work in progress. It shows a subset of the global settings."
+msgstr "Diese Einstellung wurde in den globalen Einstellungen geändert."
 
 #, python-format
 msgid ""
@@ -97302,6 +97305,15 @@ msgid "Remove modification"
 msgstr "Bedingung entfernen"
 
 #, fuzzy
+msgid "Remove explicit setting?"
+msgstr "Entferne explizite Einstellungen"
+
+msgid ""
+"Removing the explicit value will restore the default value for this site. "
+"The value will be inherited from Global settings or the factory settings."
+msgstr ""
+
+#, fuzzy
 msgid "Remove modification?"
 msgstr "Bedingung entfernen"
 
@@ -97318,6 +97330,11 @@ msgstr "Diese Einstellung wurde gesetzt."
 msgid "Reset to factory default"
 msgstr "Auf Standard zurücksetzen"
 
+msgid ""
+"This setting uses an explicit value and overrides the factory and Global "
+"settings value."
+msgstr ""
+
 #, fuzzy
 msgid "Factory settings"
 msgstr "Werkseinstellungen"
@@ -97333,6 +97350,10 @@ msgstr "Services zu folgendem Cluster zuordnen:"
 #, fuzzy
 msgid "Open site settings"
 msgstr "Testeinstellungen"
+
+#, fuzzy
+msgid "Toggle %{title}"
+msgstr "%{ title } umschalten"
 
 #, fuzzy
 msgid "%{count} variable"
@@ -97355,6 +97376,31 @@ msgstr "Datei modifiziert"
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "%(title)s bearbeiten"
+
+#, fuzzy
+msgid "Remove all modifications in \"%{topic}\"?"
+msgstr "Bedingung entfernen"
+
+msgid ""
+"The configured values will be discarded and the default values will be used "
+"instead."
+msgstr ""
+
+#, fuzzy
+msgid "Could not reach the server."
+msgstr "Metrik-Backend konnte nicht aktiviert werden"
+
+#, fuzzy
+msgid "Resetting failed"
+msgstr "Registrierung fehlgeschlagen"
+
+#, fuzzy
+msgid "Loading failed"
+msgstr "Anmeldung ist fehlgeschlagen"
+
+#, fuzzy
+msgid "Saving failed"
+msgstr "Anmeldung ist fehlgeschlagen"
 
 #, fuzzy
 msgid "No action available"
@@ -97842,17 +97888,6 @@ msgstr "Einen benutzerdefinierten Graph auswählen"
 msgid "No custom graphs found"
 msgstr "Keine Kontakt-Gruppen gefunden"
 
-msgid "At this point, rule values cannot be changed. "
-msgstr "An dieser Stelle können die Regelwerte nicht geändert werden. "
-
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Regel hinzufügen: Metrik-Backend (benutzerdefinierte Anfrage)"
-
-msgid "This creates a special agent rule based on the selected custom graph. "
-msgstr ""
-"Dies erstellt eine Spezialagentenregel auf der Grundlage des ausgewählten "
-"benutzerdefinierten Graphen. "
-
 #, fuzzy
 msgid "Checkmk RRD"
 msgstr "Checkmk"
@@ -97868,6 +97903,10 @@ msgstr "Service-Service-Ebene"
 #, fuzzy
 msgid "Constant line"
 msgstr "Konstant"
+
+#, fuzzy
+msgid "Create custom service"
+msgstr "Benutzerdefinierter Jira-Service"
 
 #, fuzzy
 msgid "Selected rows: %{count}"
@@ -101791,6 +101830,24 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "The offset in s at which a WARNING state is triggered."
+#~ msgstr "Die Verschiebung in s, bei der ein Zustand WARN ausgelöst wird."
+
+#~ msgid "The offset in s at which a critical state is triggered."
+#~ msgstr "Der Offset in s, bei dem ein kritischer Zustand ausgelöst wird."
+
+#~ msgid "At this point, rule values cannot be changed. "
+#~ msgstr "An dieser Stelle können die Regelwerte nicht geändert werden. "
+
+#~ msgid "Add rule: Metric backend (Custom query)"
+#~ msgstr "Regel hinzufügen: Metrik-Backend (benutzerdefinierte Anfrage)"
+
+#~ msgid ""
+#~ "This creates a special agent rule based on the selected custom graph. "
+#~ msgstr ""
+#~ "Dies erstellt eine Spezialagentenregel auf der Grundlage des ausgewählten "
+#~ "benutzerdefinierten Graphen. "
 
 #~ msgid "API endpoint from PagerDuty V2"
 #~ msgstr "API-Endpunkt von PagerDuty V2"

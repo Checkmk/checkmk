@@ -73037,6 +73037,10 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "De beschrijving van de interface zoals verstrekt door de inrichting"
 
+#, fuzzy
+msgid "The deviation of the local clock from the time server."
+msgstr "Beperk de uitvoering van de scan tot dit tijdsbereik."
+
 #, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
@@ -74845,13 +74849,6 @@ msgid "The offset in ms at which a critical state is triggered."
 msgstr "De offset in ms waarbij een kritieke toestand wordt getriggerd."
 
 #, fuzzy
-msgid "The offset in s at which a WARNING state is triggered."
-msgstr "De offset in s waarbij een waarschuwingstoestand wordt geactiveerd."
-
-msgid "The offset in s at which a critical state is triggered."
-msgstr "De offset in s waarbij een kritieke toestand wordt getriggerd."
-
-#, fuzzy
 msgid ""
 "The offset of the information relative to counter base. You can get a "
 "detailed list of available counters in a Windows shell with the command "
@@ -76063,6 +76060,13 @@ msgstr "Het opgeslagen rapport dat u probeert te verwijderen, bestaat niet."
 msgid ""
 "The stratum (\"distance\" to the reference clock) at which the check gets "
 "critical."
+msgstr ""
+"De stratum (\"afstand\" tot de referentieklok) waarop de controle kritisch "
+"wordt."
+
+#, fuzzy
+msgid ""
+"The stratum (distance in hops to the reference clock) of the time source."
 msgstr ""
 "De stratum (\"afstand\" tot de referentieklok) waarop de controle kritisch "
 "wordt."
@@ -79023,10 +79027,10 @@ msgstr "Deze pagina ondersteunt geen cluster hosts."
 msgid "This page is not available for hosts monitored via Relay."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"This page is work in progress. It shows a subset of the global settings and "
-"changes made here are not saved."
-msgstr ""
+"This page is work in progress. It shows a subset of the global settings."
+msgstr "Deze optie is gewijzigd in de globale instellingen."
 
 #, python-format
 msgid ""
@@ -101480,6 +101484,15 @@ msgid "Remove modification"
 msgstr "Verwijder tag voorwaarde"
 
 #, fuzzy
+msgid "Remove explicit setting?"
+msgstr "Expliciete instelling verwijderen"
+
+msgid ""
+"Removing the explicit value will restore the default value for this site. "
+"The value will be inherited from Global settings or the factory settings."
+msgstr ""
+
+#, fuzzy
 msgid "Remove modification?"
 msgstr "Verwijder tag voorwaarde"
 
@@ -101496,6 +101509,11 @@ msgstr "Deze optie is gewijzigd."
 msgid "Reset to factory default"
 msgstr "Terugzetten naar standaard"
 
+msgid ""
+"This setting uses an explicit value and overrides the factory and Global "
+"settings value."
+msgstr ""
+
 #, fuzzy
 msgid "Factory settings"
 msgstr "Fabrieksinstelling"
@@ -101511,6 +101529,10 @@ msgstr "Wijs diensten toe aan het volgende cluster:"
 #, fuzzy
 msgid "Open site settings"
 msgstr "Host instellingen"
+
+#, fuzzy
+msgid "Toggle %{title}"
+msgstr "Logboekvermeldingen wijzigen"
 
 #, fuzzy
 msgid "%{count} variable"
@@ -101533,6 +101555,31 @@ msgstr "Bestand gewijzigd"
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "Bewerk %(title)s"
+
+#, fuzzy
+msgid "Remove all modifications in \"%{topic}\"?"
+msgstr "Verwijder tag voorwaarde"
+
+msgid ""
+"The configured values will be discarded and the default values will be used "
+"instead."
+msgstr ""
+
+#, fuzzy
+msgid "Could not reach the server."
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "Resetting failed"
+msgstr "Registratie Staat"
+
+#, fuzzy
+msgid "Loading failed"
+msgstr "Inloggen uitgeschakeld"
+
+#, fuzzy
+msgid "Saving failed"
+msgstr "Inloggen uitgeschakeld"
 
 #, fuzzy
 msgid "No action available"
@@ -102028,17 +102075,6 @@ msgid "No custom graphs found"
 msgstr "Geen contactgroepen toegewezen."
 
 #, fuzzy
-msgid "At this point, rule values cannot be changed. "
-msgstr "De databron van een view kan niet worden gewijzigd."
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Oracle gevallen"
-
-msgid "This creates a special agent rule based on the selected custom graph. "
-msgstr ""
-
-#, fuzzy
 msgid "Checkmk RRD"
 msgstr "Checkmk"
 
@@ -102053,6 +102089,10 @@ msgstr "Service dienstverleningsniveau"
 #, fuzzy
 msgid "Constant line"
 msgstr "Instantie"
+
+#, fuzzy
+msgid "Create custom service"
+msgstr "Jira aangepaste dienst"
 
 #, fuzzy
 msgid "Selected rows: %{count}"
@@ -105954,6 +105994,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The offset in s at which a WARNING state is triggered."
+#~ msgstr "De offset in s waarbij een waarschuwingstoestand wordt geactiveerd."
+
+#~ msgid "The offset in s at which a critical state is triggered."
+#~ msgstr "De offset in s waarbij een kritieke toestand wordt getriggerd."
+
+#, fuzzy
+#~ msgid "At this point, rule values cannot be changed. "
+#~ msgstr "De databron van een view kan niet worden gewijzigd."
+
+#, fuzzy
+#~ msgid "Add rule: Metric backend (Custom query)"
+#~ msgstr "Oracle gevallen"
 
 #, fuzzy
 #~ msgid "API endpoint from PagerDuty V2"

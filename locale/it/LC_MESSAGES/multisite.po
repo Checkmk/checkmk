@@ -72814,6 +72814,10 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "La descrizione dell'interfaccia come fornita dal dispositivo"
 
+#, fuzzy
+msgid "The deviation of the local clock from the time server."
+msgstr "Limita l'esecuzione della scansione a questo intervallo di tempo."
+
 #, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
@@ -74646,13 +74650,6 @@ msgid "The offset in ms at which a critical state is triggered."
 msgstr "L'offset in ms al quale viene attivato uno stato critico."
 
 #, fuzzy
-msgid "The offset in s at which a WARNING state is triggered."
-msgstr "L'offset in s al quale viene attivato uno stato di avvertimento."
-
-msgid "The offset in s at which a critical state is triggered."
-msgstr "L'offset in s al quale viene attivato uno stato critico."
-
-#, fuzzy
 msgid ""
 "The offset of the information relative to counter base. You can get a "
 "detailed list of available counters in a Windows shell with the command "
@@ -75900,6 +75897,13 @@ msgstr "Il rapporto memorizzato che stai cercando di eliminare non esiste."
 msgid ""
 "The stratum (\"distance\" to the reference clock) at which the check gets "
 "critical."
+msgstr ""
+"Lo strato (\"distanza\" dall'orologio di riferimento) al quale il controllo "
+"diventa critico."
+
+#, fuzzy
+msgid ""
+"The stratum (distance in hops to the reference clock) of the time source."
 msgstr ""
 "Lo strato (\"distanza\" dall'orologio di riferimento) al quale il controllo "
 "diventa critico."
@@ -78853,10 +78857,10 @@ msgstr "Questa pagina non supporta gli host cluster."
 msgid "This page is not available for hosts monitored via Relay."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"This page is work in progress. It shows a subset of the global settings and "
-"changes made here are not saved."
-msgstr ""
+"This page is work in progress. It shows a subset of the global settings."
+msgstr "Questa opzione è stata modificata nelle impostazioni globali."
 
 #, python-format
 msgid ""
@@ -101261,6 +101265,15 @@ msgid "Remove modification"
 msgstr "Rimuovere la condizione di tag"
 
 #, fuzzy
+msgid "Remove explicit setting?"
+msgstr "Rimuovere l'impostazione esplicita"
+
+msgid ""
+"Removing the explicit value will restore the default value for this site. "
+"The value will be inherited from Global settings or the factory settings."
+msgstr ""
+
+#, fuzzy
 msgid "Remove modification?"
 msgstr "Rimuovere la condizione di tag"
 
@@ -101277,6 +101290,11 @@ msgstr "Questa opzione è stata modificata."
 msgid "Reset to factory default"
 msgstr "Ripristino delle impostazioni predefinite"
 
+msgid ""
+"This setting uses an explicit value and overrides the factory and Global "
+"settings value."
+msgstr ""
+
 #, fuzzy
 msgid "Factory settings"
 msgstr "Impostazione di fabbrica"
@@ -101292,6 +101310,10 @@ msgstr "Assegnare i servizi al seguente cluster:"
 #, fuzzy
 msgid "Open site settings"
 msgstr "Impostazioni dell'host"
+
+#, fuzzy
+msgid "Toggle %{title}"
+msgstr "Allineare le voci del registro"
 
 #, fuzzy
 msgid "%{count} variable"
@@ -101314,6 +101336,31 @@ msgstr "File modificato"
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "Modifica %(title)s"
+
+#, fuzzy
+msgid "Remove all modifications in \"%{topic}\"?"
+msgstr "Rimuovere la condizione di tag"
+
+msgid ""
+"The configured values will be discarded and the default values will be used "
+"instead."
+msgstr ""
+
+#, fuzzy
+msgid "Could not reach the server."
+msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+msgid "Resetting failed"
+msgstr "Stato di registrazione"
+
+#, fuzzy
+msgid "Loading failed"
+msgstr "Accesso disabilitato"
+
+#, fuzzy
+msgid "Saving failed"
+msgstr "Accesso disabilitato"
 
 #, fuzzy
 msgid "No action available"
@@ -101810,17 +101857,6 @@ msgid "No custom graphs found"
 msgstr "Nessun gruppo di contatto assegnato."
 
 #, fuzzy
-msgid "At this point, rule values cannot be changed. "
-msgstr "Il datasource di una vista non può essere cambiato."
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Istanze Oracle"
-
-msgid "This creates a special agent rule based on the selected custom graph. "
-msgstr ""
-
-#, fuzzy
 msgid "Checkmk RRD"
 msgstr "Checkmk"
 
@@ -101835,6 +101871,10 @@ msgstr "Livello di servizio"
 #, fuzzy
 msgid "Constant line"
 msgstr "Istanza"
+
+#, fuzzy
+msgid "Create custom service"
+msgstr "Servizio personalizzato Jira"
 
 #, fuzzy
 msgid "Selected rows: %{count}"
@@ -105754,6 +105794,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The offset in s at which a WARNING state is triggered."
+#~ msgstr "L'offset in s al quale viene attivato uno stato di avvertimento."
+
+#~ msgid "The offset in s at which a critical state is triggered."
+#~ msgstr "L'offset in s al quale viene attivato uno stato critico."
+
+#, fuzzy
+#~ msgid "At this point, rule values cannot be changed. "
+#~ msgstr "Il datasource di una vista non può essere cambiato."
+
+#, fuzzy
+#~ msgid "Add rule: Metric backend (Custom query)"
+#~ msgstr "Istanze Oracle"
 
 #~ msgid "API endpoint from PagerDuty V2"
 #~ msgstr "Endpoint API di PagerDuty V2"

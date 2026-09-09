@@ -73320,6 +73320,10 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "Descrierea interfeței, așa cum este furnizată de dispozitiv"
 
+#, fuzzy
+msgid "The deviation of the local clock from the time server."
+msgstr "Limitați execuția scanării la acest interval de timp."
+
 #, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
@@ -75158,13 +75162,6 @@ msgid "The offset in ms at which a critical state is triggered."
 msgstr "Decalajul în ms la care este declanșată o stare critică."
 
 #, fuzzy
-msgid "The offset in s at which a WARNING state is triggered."
-msgstr "Decalajul în s la care se declanșează o stare de avertizare."
-
-msgid "The offset in s at which a critical state is triggered."
-msgstr "Decalajul în s la care este declanșată o stare critică."
-
-#, fuzzy
 msgid ""
 "The offset of the information relative to counter base. You can get a "
 "detailed list of available counters in a Windows shell with the command "
@@ -76371,6 +76368,13 @@ msgstr "Raportul stocat pe care încercați să îl ștergeți nu există."
 msgid ""
 "The stratum (\"distance\" to the reference clock) at which the check gets "
 "critical."
+msgstr ""
+"Stratul (\"distanța\" față de ceasul de referință) la care verificarea "
+"devine critică."
+
+#, fuzzy
+msgid ""
+"The stratum (distance in hops to the reference clock) of the time source."
 msgstr ""
 "Stratul (\"distanța\" față de ceasul de referință) la care verificarea "
 "devine critică."
@@ -79365,10 +79369,10 @@ msgstr "Această pagină nu acceptă gazde de cluster."
 msgid "This page is not available for hosts monitored via Relay."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"This page is work in progress. It shows a subset of the global settings and "
-"changes made here are not saved."
-msgstr ""
+"This page is work in progress. It shows a subset of the global settings."
+msgstr "Această opțiune a fost modificată în setările globale."
 
 #, python-format
 msgid ""
@@ -101844,6 +101848,15 @@ msgid "Remove modification"
 msgstr "Eliminarea condiției de etichetare"
 
 #, fuzzy
+msgid "Remove explicit setting?"
+msgstr "Îndepărtați setarea explicită"
+
+msgid ""
+"Removing the explicit value will restore the default value for this site. "
+"The value will be inherited from Global settings or the factory settings."
+msgstr ""
+
+#, fuzzy
 msgid "Remove modification?"
 msgstr "Eliminarea condiției de etichetare"
 
@@ -101860,6 +101873,11 @@ msgstr "Această opțiune a fost modificată."
 msgid "Reset to factory default"
 msgstr "Resetare la valorile implicite"
 
+msgid ""
+"This setting uses an explicit value and overrides the factory and Global "
+"settings value."
+msgstr ""
+
 #, fuzzy
 msgid "Factory settings"
 msgstr "Setare din fabrică"
@@ -101875,6 +101893,10 @@ msgstr "Atribuiți servicii la următorul cluster:"
 #, fuzzy
 msgid "Open site settings"
 msgstr "Setări gazdă"
+
+#, fuzzy
+msgid "Toggle %{title}"
+msgstr "Comutarea intrărilor din jurnal"
 
 #, fuzzy
 msgid "%{count} variable"
@@ -101898,6 +101920,31 @@ msgstr "Fișier modificat"
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "Editare %(title)s"
+
+#, fuzzy
+msgid "Remove all modifications in \"%{topic}\"?"
+msgstr "Eliminarea condiției de etichetare"
+
+msgid ""
+"The configured values will be discarded and the default values will be used "
+"instead."
+msgstr ""
+
+#, fuzzy
+msgid "Could not reach the server."
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Resetting failed"
+msgstr "Statul de înregistrare"
+
+#, fuzzy
+msgid "Loading failed"
+msgstr "Login dezactivat"
+
+#, fuzzy
+msgid "Saving failed"
+msgstr "Login dezactivat"
 
 #, fuzzy
 msgid "No action available"
@@ -102397,17 +102444,6 @@ msgid "No custom graphs found"
 msgstr "Nu sunt alocate grupuri de contact."
 
 #, fuzzy
-msgid "At this point, rule values cannot be changed. "
-msgstr "Sursa de date a unei vizualizări nu poate fi modificată."
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Instanțe Oracle"
-
-msgid "This creates a special agent rule based on the selected custom graph. "
-msgstr ""
-
-#, fuzzy
 msgid "Checkmk RRD"
 msgstr "Checkmk"
 
@@ -102422,6 +102458,10 @@ msgstr "Nivelul de serviciu al serviciului"
 #, fuzzy
 msgid "Constant line"
 msgstr "Instanța"
+
+#, fuzzy
+msgid "Create custom service"
+msgstr "Serviciul personalizat Jira"
 
 #, fuzzy
 msgid "Selected rows: %{count}"
@@ -106371,6 +106411,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The offset in s at which a WARNING state is triggered."
+#~ msgstr "Decalajul în s la care se declanșează o stare de avertizare."
+
+#~ msgid "The offset in s at which a critical state is triggered."
+#~ msgstr "Decalajul în s la care este declanșată o stare critică."
+
+#, fuzzy
+#~ msgid "At this point, rule values cannot be changed. "
+#~ msgstr "Sursa de date a unei vizualizări nu poate fi modificată."
+
+#, fuzzy
+#~ msgid "Add rule: Metric backend (Custom query)"
+#~ msgstr "Instanțe Oracle"
 
 #, fuzzy
 #~ msgid "API endpoint from PagerDuty V2"

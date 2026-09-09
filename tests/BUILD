@@ -29,23 +29,6 @@ py_library(
 )
 
 py_library(
-    name = "etc",
-    testonly = True,
-    srcs = glob(
-        include = ["etc/**/*.py"],
-        allow_empty = True,
-        exclude = ["etc/**/nonfree/**"],
-    ) + select({
-        "//:gpl+nonfree_repo": glob(
-            include = ["etc/**/nonfree/**/*.py"],
-            allow_empty = True,
-        ),
-        "//:gpl_repo": [],
-    }),
-    imports = [".."],
-)
-
-py_library(
     name = "plugins_siteless",
     testonly = True,
     # TODO: The tests include non-free plugins (cmk.plugins.telemetry_metrics_custom_query.special_agents.nonfree.ultimate)

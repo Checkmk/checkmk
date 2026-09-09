@@ -157,6 +157,7 @@ py_library(
     ],
     imports = ["."],
     deps = [
+        "//packages/cmk-ccc:log",
         requirement("flask"),
         requirement("gunicorn"),
         requirement("werkzeug"),

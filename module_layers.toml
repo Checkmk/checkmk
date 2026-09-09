@@ -1899,7 +1899,7 @@ allows = [
 allows = ["@ccc"]
 
 [components."cmk.werk_ids_server"]
-allows = []
+allows = ["cmk.ccc.log"]
 
 [components."cmk.werks"]
 allows = ["@ccc", "cmk.utils.paths"]

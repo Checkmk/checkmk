@@ -5,6 +5,7 @@
 - [Migrating the Legacy mk_oracle Plugin Configuration](#migrating-the-legacy-mk_oracle-plugin-configuration)
   - [Running the Migration](#running-the-migration)
   - [Migration Output](#migration-output)
+  - [Validating the Migration](#validating-the-migration)
   - [What Is Migrated](#what-is-migrated)
   - [What Is Not Migrated](#what-is-not-migrated)
   - [Adapting Custom SQL Files](#adapting-custom-sql-files)
@@ -72,6 +73,38 @@ The generated file is a single YAML document consisting of:
 
 The legacy file itself is not copied into the output — keep it until you have
 verified the migrated configuration.
+
+A successful run ends with a `Next steps:` note on stderr (stdout stays the YAML alone,
+so it can be redirected to a file) that walks through the checks described in
+[Validating the Migration](#validating-the-migration).
+
+### Validating the Migration
+
+The migration converts the configuration without connecting to any database, so a
+configuration it accepts may still fail at runtime — no usable Oracle client, wrong
+credentials, an unreachable listener. Two checks remain, and the migration reminds you
+of them on stderr:
+
+1. **Validate the migrated configuration** with the plug-in itself, on the host it is
+   meant for:
+
+   ```bash
+   mk-oracle --no-spool -c /etc/check_mk/mk-oracle.yml
+   ```
+
+   `--no-spool` runs every section synchronously, so the command prints the complete
+   agent output of every configured instance. A connection problem shows up as a
+   `<SID>|FAILURE|<reason>` row in the `<<<oracle_instance:sep(124)>>>` section.
+
+2. **Validate the resulting services** once the plug-in is deployed. The legacy plug-in
+   kept the output of its asynchronous sections in `oracle_*.cache` files under the
+   agent's cache directory (`$MK_VARDIR/cache`: on Linux `/var/lib/check_mk_agent/cache`,
+   or `/opt/checkmk/agent/default/runtime/cache` for a single-directory installation).
+   Delete them so that no stale legacy data is
+   reported, wait for the next monitoring cycle — the asynchronous sections of the new
+   plug-in appear one agent run later — and check the Oracle services of the host in
+   Checkmk. Services that no longer receive data keep their last result until a service
+   rescan removes them.
 
 ### What Is Migrated
 

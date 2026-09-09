@@ -217,6 +217,7 @@ py_cmk_test(
         requirement("polyfactory"),
         requirement("pytest-mock"),
         requirement("python-dateutil"),
+        requirement("pyyaml"),
         requirement("redis"),
         requirement("responses"),
         requirement("time-machine"),

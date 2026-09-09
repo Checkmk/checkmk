@@ -61,7 +61,6 @@ from cmk.plugins.aws.constants import (
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
-from ._data_cache import DataCache
 from .config import (
     AGENT,
     AWSConfig,
@@ -71,6 +70,7 @@ from .config import (
     Tags,
     TagsImportPatternOption,
 )
+from .data_cache import DataCache
 
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import (  # type: ignore[attr-defined]

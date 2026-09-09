@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import http
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -36,8 +35,7 @@ from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._unit import ConvertibleUnitSpecification
 
 
-class MKCombinedGraphLimitExceededError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
+class MKCombinedGraphLimitExceededError(MKHTTPException): ...
 
 
 @dataclass(frozen=True)

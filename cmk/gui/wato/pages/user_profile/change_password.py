@@ -25,8 +25,7 @@ from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.userdb import get_user_attributes, UserAttribute
-from cmk.gui.userdb._connections import get_connection
+from cmk.gui.userdb import get_connection, get_user_attributes, UserAttribute
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent

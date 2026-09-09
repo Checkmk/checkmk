@@ -12,7 +12,7 @@ from cmk.gui.form_specs import (
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.form_specs.visitors._base import FormSpecVisitor
+from cmk.gui.form_specs.visitors import FormSpecVisitor
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import ValidationError

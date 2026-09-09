@@ -9,7 +9,7 @@ import typing
 
 import cmk.ccc.regex
 from cmk.ccc.hostaddress import HostAddress as CheckmkHostAddress
-from cmk.rulesets.v1._localize import Message
+from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex, ValidationError
 
 T = typing.TypeVar("T")

@@ -16,7 +16,7 @@ from cmk.ccc.version import Edition
 from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.form_specs._utils import create_validation_error_for_mk_user_error
+from cmk.gui.form_specs import create_validation_error_for_mk_user_error
 from cmk.gui.form_specs.generators.age import Age as FSAge
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
 from cmk.gui.form_specs.generators.host_address import HostAddressValidator

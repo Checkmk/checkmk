@@ -34,16 +34,14 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs import (
     DEFAULT_VALUE,
     get_visitor,
+    parse_and_validate_frontend_data,
     RawDiskData,
     RawFrontendData,
     serialize_data_for_frontend,
+    validate_value_from_frontend,
     VisitorOptions,
 )
-from cmk.gui.form_specs._utils import (
-    migrate_form_spec_disk_value,
-    parse_and_validate_frontend_data,
-    validate_value_from_frontend,
-)
+from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.form_specs.unstable import (
     ConditionChoices,
     DatePicker,

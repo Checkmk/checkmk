@@ -12,7 +12,7 @@ from cmk.rulesets.internal.form_specs import (
     DictGroupExtended,
     DictionaryExtended,
 )
-from cmk.rulesets.v1.form_specs._composed import NoGroup
+from cmk.rulesets.v1.form_specs import NoGroup
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor

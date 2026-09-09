@@ -11,6 +11,7 @@ from typing import Literal
 import pytest
 
 from cmk.gui.graphing._valuespecs import (
+    _value_with_unit_vs,
     _vs_show_title,
     migrate_graph_render_options,
     migrate_graph_render_options_title_format,
@@ -18,7 +19,15 @@ from cmk.gui.graphing._valuespecs import (
     vs_graph_render_option_elements,
 )
 from cmk.gui.http import request
-from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.valuespec import (
+    Age,
+    DropdownChoice,
+    Filesize,
+    Float,
+    Integer,
+    Percentage,
+    ValueSpec,
+)
 
 
 @pytest.mark.parametrize(
@@ -117,3 +126,20 @@ def _show_title_choice_ids(elements: Mapping[str, ValueSpec[object]]) -> list[ob
     show_title = elements["show_title"]
     assert isinstance(show_title, DropdownChoice)
     return [choice_id for choice_id, _title in show_title.choices()]
+
+
+@pytest.mark.parametrize(
+    "vs, expected_type",
+    [
+        pytest.param(Age, int, id="Age"),
+        pytest.param(Filesize, int, id="Filesize"),
+        pytest.param(Float, float, id="Float"),
+        pytest.param(Integer, int, id="Integer"),
+        pytest.param(Percentage, float, id="Percentage"),
+    ],
+)
+def test_value_with_unit_default_matches_the_valuespec_number_type(
+    vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
+    expected_type: type[int] | type[float],
+) -> None:
+    assert isinstance(_value_with_unit_vs(vs, "s", "Title", 1.5).default_value(), expected_type)

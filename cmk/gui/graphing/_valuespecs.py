@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import json
 import re
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, override, TypedDict
 
@@ -39,6 +37,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DictionaryEntry,
+    DictionaryModel,
     DropdownChoice,
     DropdownChoiceWithHostAndServiceHints,
     Filesize,
@@ -49,6 +48,7 @@ from cmk.gui.valuespec import (
     MigrateNotUpdated,
     Percentage,
     Tuple,
+    ValueSpec,
     ValueSpecHelp,
     ValueSpecValidateFunc,
 )
@@ -127,20 +127,26 @@ def migrate_graph_render_options_title_format_from_disk(
     raise ValueError(f"invalid graph title format {p}")
 
 
-def migrate_graph_render_options(value):
+def migrate_graph_render_options(value: Mapping[str, object]) -> DictionaryModel:
+    migrated: DictionaryModel = dict(value)
     # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
     # This has been consolidated with the option title_format from the reportlet.
-    if value.pop("show_service", False):
-        value["title_format"] = ["plain", "add_host_name", "add_service_description"]
+    if migrated.pop("show_service", False):
+        migrated["title_format"] = ["plain", "add_host_name", "add_service_description"]
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
-    if isinstance(value.get("title_format"), str | tuple):
-        value["title_format"] = migrate_graph_render_options_title_format(value["title_format"])
-    return value
+    if isinstance(migrated.get("title_format"), str | tuple):
+        migrated["title_format"] = migrate_graph_render_options_title_format_from_disk(
+            migrated["title_format"]
+        )
+    return migrated
 
 
 def vs_graph_render_options(
-    default_values=None, exclude=None, *, with_inline_title=True
-) -> MigrateNotUpdated:
+    default_values: Mapping[str, object] | None = None,
+    exclude: Collection[str] | None = None,
+    *,
+    with_inline_title: bool = True,
+) -> MigrateNotUpdated[DictionaryModel]:
     return MigrateNotUpdated(
         valuespec=Dictionary(
             elements=vs_graph_render_option_elements(
@@ -183,22 +189,25 @@ def _vs_show_title(
 
 
 def vs_graph_render_option_elements(
-    default_values=None, exclude=None, *, with_inline_title: bool = True
+    default_values: Mapping[str, object] | None = None,
+    exclude: Collection[str] | None = None,
+    *,
+    with_inline_title: bool = True,
 ) -> list[DictionaryEntry]:
     # Allow custom default values to be specified by the caller. This is, for example,
     # needed by the dashlets which should add the host/service by default.
-    default_values = GraphDisplayConfigHTML.model_validate(default_values or {})
+    defaults = GraphDisplayConfigHTML.model_validate(default_values or {})
 
     elements: list[DictionaryEntry] = [
         (
             "font_size",
             Fontsize(
-                default_value=default_values.font_size,
+                default_value=defaults.font_size,
             ),
         ),
         (
             "show_title",
-            _vs_show_title(default_values.show_title, with_inline_title),
+            _vs_show_title(defaults.show_title, with_inline_title),
         ),
         (
             "title_format",
@@ -212,7 +221,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show graph time range"),
                 label=_("Show the graph time range on top of the graph"),
-                default_value=default_values.show_graph_time,
+                default_value=defaults.show_graph_time,
             ),
         ),
         (
@@ -220,7 +229,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show margin round the graph"),
                 label=_("Show a margin round the graph"),
-                default_value=default_values.show_margin,
+                default_value=defaults.show_margin,
             ),
         ),
         (
@@ -228,7 +237,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show legend"),
                 label=_("Show the graph legend"),
-                default_value=default_values.show_legend,
+                default_value=defaults.show_legend,
             ),
         ),
         (
@@ -236,7 +245,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show vertical axis"),
                 label=_("Show the graph vertical axis"),
-                default_value=default_values.show_vertical_axis,
+                default_value=defaults.show_vertical_axis,
             ),
         ),
         (
@@ -267,7 +276,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show burger menu"),
                 label=_("Show the graph burger menu"),
-                default_value=default_values.show_controls,
+                default_value=defaults.show_controls,
             ),
         ),
         (
@@ -275,7 +284,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show pin"),
                 label=_("Show the pin"),
-                default_value=default_values.show_pin,
+                default_value=defaults.show_pin,
             ),
         ),
         (
@@ -283,7 +292,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show time range previews"),
                 label="Show previews",
-                default_value=default_values.show_time_range_previews,
+                default_value=defaults.show_time_range_previews,
             ),
         ),
         (
@@ -291,7 +300,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Time range synchronization"),
                 label="Do not follow timerange changes of other graphs on the current page",
-                default_value=default_values.fixed_timerange,
+                default_value=defaults.fixed_timerange,
             ),
         ),
     ]
@@ -305,6 +314,21 @@ def vs_graph_render_option_elements(
 class ValueWithUnitElement(TypedDict):
     title: str
     default: float
+
+
+def _value_with_unit_vs(
+    vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
+    symbol: str,
+    title: str,
+    default: float,
+) -> ValueSpec[int] | ValueSpec[float]:
+    if vs is Float:
+        return Float(title=title, unit=symbol, default_value=default)
+    if vs is Integer:
+        return Integer(title=title, unit=symbol, default_value=int(default))
+    if vs is Percentage:
+        return Percentage(title=title, default_value=default)
+    return vs(title=title, default_value=int(default))
 
 
 class ValuesWithUnits(CascadingDropdown):
@@ -347,13 +371,10 @@ class ValuesWithUnits(CascadingDropdown):
         elements: Sequence[ValueWithUnitElement],
         validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None,
     ) -> Tuple:
-        def set_vs(vs, title, default):
-            if vs.__name__ in ["Float", "Integer"]:
-                return vs(title=title, unit=symbol, default_value=default)
-            return vs(title=title, default_value=default)
-
         return Tuple(
-            elements=[set_vs(vs, elem["title"], elem["default"]) for elem in elements],
+            elements=[
+                _value_with_unit_vs(vs, symbol, elem["title"], elem["default"]) for elem in elements
+            ],
             validate=validate_value_elements,
         )
 

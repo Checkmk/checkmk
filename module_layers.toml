@@ -3,9 +3,27 @@
 # Defines which components may import from which other components.
 # Enforced by astrein's cmk-module-layer-violation checker.
 #
+# A component is a *module prefix*, not a directory: what lives below cmk.foobar
+# belongs to component cmk.foobar, wherever on disk the file happens to sit. The
+# deepest declared prefix wins, so cmk.foo.bar governs its subtree even though
+# cmk.foo is declared too.
+#
 # Syntax:
 #   "@group_name" in allows/excludes expands to the group defined in [groups]
 #   Self-imports (component importing from itself) are always allowed implicitly.
+#   "excludes" carves a subtree back out of what allows (and self-import) grants.
+#
+# Namespace packages: a cmk.* namespace may be populated by more than one Bazel
+# package. The guest package's files are then judged by the host's rules, so the
+# guest inherits the host's permissions and cannot reach its own package, while
+# the host may reach into the guest just by virtue of sharing a name. Where that
+# matters, give the guest subtree a component of its own listing what it really
+# imports, and add it to the host's excludes unless a deliberate host -> guest
+# edge exists. See cmk.checkengine.fetchers.telemetry_metrics.
+#
+# Not every shared namespace wants this. cmk.plugins is a plugin API contract
+# rather than a build unit, and families there are split across free and nonfree
+# packages by design.
 
 # Top-level namespaces that are considered first party: imports of these are
 # checked against the component rules below; everything else is ignored.
@@ -662,6 +680,19 @@ allows = [
 
 [components."cmk.checkengine.sources"]
 allows = ["@ccc", "cmk.checkengine"]
+# cmk-telemetry's guest subtree, see below.
+excludes = ["cmk.checkengine.sources.telemetry_metrics"]
+
+# Lives in non-free/packages/cmk-telemetry, see
+# cmk.checkengine.fetchers.telemetry_metrics.
+[components."cmk.checkengine.sources.telemetry_metrics"]
+allows = [
+  "@ccc",
+  "cmk.checkengine.fetchers.telemetry_metrics",
+  "cmk.checkengine.filecache",
+  "cmk.checkengine.helper_interface",
+  "cmk.checkengine.source_abc",
+]
 
 [components."cmk.core_client"]
 allows = ["@ccc", "@trace"]
@@ -821,7 +852,22 @@ allows = [
   "cmk.checkengine.snmp_backend_builder",
   "cmk.checkengine.snmp_backends",
   "cmk.checkengine.snmplib",
-  "cmk.telemetry",
+]
+# cmk-telemetry's guest subtree, see below. Excluded so that cmk-check-engine's
+# own fetchers cannot reach into it.
+excludes = ["cmk.checkengine.fetchers.telemetry_metrics"]
+
+# Lives in non-free/packages/cmk-telemetry, not in cmk-check-engine: the fetcher
+# runs in the fetcher process, so it is shaped like a fetcher, but everything it
+# renders belongs to the telemetry layer.
+[components."cmk.checkengine.fetchers.telemetry_metrics"]
+allows = [
+  "cmk.checkengine.fetcher_abc",
+  "cmk.checkengine.helper_interface",
+  "cmk.telemetry.custom_query_rule_value",
+  # imported lazily in _fetch_from_io, so that discovering the fetcher does not
+  # pull in the Clickhouse-heavy section rendering
+  "cmk.telemetry.fetcher.telemetry_metrics_sections",
 ]
 
 [components."cmk.fields"]

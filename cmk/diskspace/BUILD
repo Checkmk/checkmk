@@ -10,6 +10,7 @@ py_library(
         "//tests/unit:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:store",
     ],
 )

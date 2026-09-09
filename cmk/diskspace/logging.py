@@ -7,6 +7,7 @@
 import logging
 import sys
 
+from cmk.ccc.log import CMKFormatter
 from cmk.diskspace.config import Config
 from cmk.diskspace.free_space import fmt_bytes
 
@@ -24,9 +25,9 @@ def verbose(message: str) -> None:
 
 
 def setup_logging(is_verbose: bool) -> None:
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        format="%(message)s", stream=sys.stdout, level=logging.DEBUG if is_verbose else logging.INFO
-    )
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(CMKFormatter(message_only=True))
+    logging.basicConfig(handlers=[handler], level=logging.DEBUG if is_verbose else logging.INFO)
 
 
 def print_config(config: Config) -> None:

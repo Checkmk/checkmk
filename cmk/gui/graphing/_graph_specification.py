@@ -107,14 +107,15 @@ graph_specification_registry = GraphSpecificationRegistry()
 
 
 def parse_graph_specification(graph_specification: object) -> GraphSpecification:
-    match graph_specification:  # type: ignore[exhaustive-match]
+    match graph_specification:
         case GraphSpecification():
             return graph_specification
         case {"graph_type": str(graph_type), **rest}:
             return graph_specification_registry[graph_type].model_validate(rest)
         case dict():
             raise ValueError("Missing 'graph_type' key in graph specification")
-    raise TypeError(graph_specification)
+        case _:
+            raise TypeError(graph_specification)
 
 
 class GraphRanges(BaseModel, frozen=True):

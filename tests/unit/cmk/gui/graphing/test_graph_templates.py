@@ -30,15 +30,15 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
 )
-from cmk.gui.graphing._graph_choices import BuiltGraph
-from cmk.gui.graphing._graph_dispatch import CommonGraphOptions
-from cmk.gui.graphing._graph_templates import (
-    _EvaluateTemplateGraphs,
+from cmk.gui.graphing import (
     build_template_graphs,
+    CommonGraphOptions,
+    FetchDiagnostics,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._graph_choices import BuiltGraph
+from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
 from cmk.gui.graphing._metric_data import RawPerformanceValue
-from cmk.gui.graphing._source import FetchDiagnostics
 
 _SERVICE = Service(
     host_name=HostName("h"), service_name=ServiceName("svc"), site_id=SiteID("mysite")

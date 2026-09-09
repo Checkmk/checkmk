@@ -23,7 +23,7 @@ from cmk.graphing_engine import (
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.graphing._graph_display_config import GraphDisplayConfigImage
+from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, render_png, render_png_ex
 from cmk.gui.graphing._graph_png import (
     _all_curves_with_sign,
     _derived_y_axis_unit,
@@ -36,9 +36,6 @@ from cmk.gui.graphing._graph_png import (
     _values,
     _vertical_range_bounds,
     _y_axis_limits,
-    compute_png_size_mm,
-    render_png,
-    render_png_ex,
     render_png_graphs,
 )
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat

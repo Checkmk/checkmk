@@ -16,14 +16,14 @@ from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.graphing_engine import Service
 from cmk.graphing_engine import ServiceName as EngineServiceName
-from cmk.gui.graphing._from_api import graphs_from_api
-from cmk.gui.graphing._graph_dispatch import legacy_graph_id
-from cmk.gui.graphing._graph_templates import (
+from cmk.gui.graphing import (
     build_template_graphs,
+    graphs_from_api,
+    legacy_graph_id,
+    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graphs_order import sort_registered_graph_plugins
-from cmk.gui.graphing._plugins import registered_graphs as engine_registered_graphs
+from cmk.gui.graphing import registered_graphs as engine_registered_graphs
 
 _HOST = "host_name"
 _SERVICE = "service_name"

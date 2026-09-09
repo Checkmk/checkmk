@@ -39,19 +39,21 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRange,
 )
-from cmk.gui.graphing._frontend import (
-    derive_y_axis_unit,
+from cmk.gui.graphing import (
+    BuiltGraph,
     EngineDisplayOptions,
     evaluated_to_graph_spec,
     global_time_picker_props,
     global_time_picker_refresh,
-    resolve_default_time_range_seconds,
     stored_time_range_seconds,
     to_cmk_time_series_graph,
     user_first_day_of_week,
+)
+from cmk.gui.graphing._frontend import (
+    derive_y_axis_unit,
+    resolve_default_time_range_seconds,
     value_axis_width_px,
 )
-from cmk.gui.graphing._graph_choices import BuiltGraph
 from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT

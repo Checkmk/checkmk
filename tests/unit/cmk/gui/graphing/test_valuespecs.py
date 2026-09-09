@@ -10,13 +10,15 @@ from typing import Literal
 
 import pytest
 
+from cmk.gui.graphing import (
+    migrate_graph_render_options_title_format,
+    migrate_graph_render_options_title_format_from_disk,
+    vs_graph_render_option_elements,
+)
 from cmk.gui.graphing._valuespecs import (
     _value_with_unit_vs,
     _vs_show_title,
     migrate_graph_render_options,
-    migrate_graph_render_options_title_format,
-    migrate_graph_render_options_title_format_from_disk,
-    vs_graph_render_option_elements,
 )
 from cmk.gui.http import request
 from cmk.gui.valuespec import (

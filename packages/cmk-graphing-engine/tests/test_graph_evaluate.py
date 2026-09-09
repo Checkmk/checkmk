@@ -18,6 +18,7 @@ from cmk.graphing_engine import (
     EvaluatedGraph,
     EvaluatedLine,
     EvaluatedQuantity,
+    EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
     EvaluationContext,
@@ -40,11 +41,7 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
-from cmk.graphing_engine._graph_evaluate import (
-    _evaluate_graph,
-    _resolve_series_title,
-    EvaluatedRule,
-)
+from cmk.graphing_engine._graph_evaluate import _evaluate_graph, _resolve_series_title
 
 from ._fixtures import _data, _fetched, _metric, _time_series, _TR
 

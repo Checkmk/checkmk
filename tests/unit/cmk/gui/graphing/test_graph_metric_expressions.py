@@ -4,10 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.graphing._graph_metric_expressions import (
-    GaugeLast,
-    QueryDataKey,
-)
+from cmk.gui.graphing import GaugeLast, QueryDataKey
 from cmk.utils.metrics import MetricName
 
 

@@ -528,18 +528,6 @@ allows = [
   "cmk.ruleset_matcher",
 ]
 
-[components."cmk.cli"]
-allows = [
-  "@ccc",
-  "@crash",
-  "@trace",
-  "cmk.profiling",
-  "cmk.base.app",
-  "cmk.base.modes",
-  "cmk.utils",
-]
-
-
 [components."cmk.legacy_includes"]
 allows = ["@plugin_apis", "cmk.plugins"]
 
@@ -658,7 +646,6 @@ allows = [
   "cmk.ruleset_matcher",
   "cmk.utils.log",
   "cmk.utils.metrics",
-  "cmk.utils.parameters",
   "cmk.utils.paths",
   "cmk.utils.servicename",
   "cmk.utils.timeperiod",
@@ -1467,9 +1454,6 @@ allows = [
   "cmk.utils",
 ]
 
-[components."cmk.nonfree.pro.snmp_backend"]
-allows = []
-
 [components."cmk.liveproxyd.shared"]
 allows = []
 
@@ -1536,16 +1520,6 @@ allows = [
   "@relay_protocols",
   "cmk.check_helper_protocol",
   "cmk.relay_trigger_protocol",
-]
-
-[components."cmk.relay_engine"]
-allows = [
-  "@ccc",
-  "@crypto",
-  "@relay_protocols",
-  "cmk.check_helper_protocol",
-  "cmk.relay",
-  "cmk.testlib.relay",
 ]
 
 [components."cmk.relay_protocols"]
@@ -1780,9 +1754,6 @@ allows = ["cmk.ccc.site"]
 [components."cmk.utils.object_diff"]
 allows = ["cmk.ccc.i18n"]
 
-[components."cmk.utils.parameters"]
-allows = []
-
 [components."cmk.utils.password_store"]
 allows = [
   "cmk.ccc.config_path",
@@ -1822,17 +1793,11 @@ allows = []
 [components."cmk.utils.security_event"]
 allows = ["cmk.utils.jsontype", "cmk.utils.paths"]
 
-[components."cmk.utils.semantic_version"]
-allows = []
-
 [components."cmk.utils.servicename"]
 allows = []
 
 [components."cmk.utils.statename"]
 allows = ["cmk.ccc.i18n"]
-
-[components."cmk.utils.timeout"]
-allows = []
 
 [components."cmk.utils.timeperiod"]
 allows = ["cmk.ccc.i18n", "cmk.utils.dateutils"]
@@ -1915,7 +1880,6 @@ allows = [
 
 
 [file_components]
-"bin/check_mk.py" = "cmk.cli"
 "bin/cmk-migrate-extension-rulesets.py" = "cmk.update_config"
 "bin/cmk-migrate-oracle-rulesets.py" = "cmk.update_config"
 "omd/packages/appliance/webconf_snapin.py" = "cmk.gui"
@@ -1923,25 +1887,6 @@ allows = [
 "omd/non-free/packages/cmk-dcd/dcd.py" = "cmk.dcd.daemon"
 "omd/non-free/packages/cmk-liveproxyd/liveproxyd.py" = "cmk.liveproxyd.daemon"
 "omd/packages/maintenance/diskspace.py" = "cmk.diskspace"
-"web/app/index.wsgi" = "cmk.gui"
-# Notification plugins
-"packages/cmk-notification-plugins/notifications/asciimail" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/cisco_webex_teams" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/ilert" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/mail" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/msteams" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/opsgenie_issues" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/pagerduty" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/pushover" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/signl4" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/slack" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/sms_api" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/sms" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/spectrum" = "cmk.notification_plugins"
-"packages/cmk-notification-plugins/notifications/victorops" = "cmk.notification_plugins"
-# CEE specific notification plugins
-"non-free/packages/cmk-notification-plugins-nonfree/notifications/servicenow" = "cmk.notification_plugins"
-"non-free/packages/cmk-notification-plugins-nonfree/notifications/jira_issues" = "cmk.notification_plugins"
 
 
 # Files that depend on more than one component, yet we do not want to
@@ -1952,9 +1897,6 @@ allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
 
 [file_dependencies."bin/cmk-piggyback.py"]
 allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
-
-[file_dependencies."bin/mkbackup"]
-allows = ["@ccc", "cmk.backup", "cmk.utils"]
 
 [file_dependencies."bin/mkp.py"]
 allows = [

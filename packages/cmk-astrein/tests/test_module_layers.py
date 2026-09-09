@@ -139,9 +139,9 @@ def test_component_for_cmk_ccc(make_checker: _MakeChecker) -> None:
     assert checker.component == Component("cmk.ccc")
 
 
-def test_component_for_explicit_mapping_bin_check_mk(make_checker: _MakeChecker) -> None:
-    checker = make_checker("bin/check_mk.py")
-    assert checker.component == Component("cmk.cli")
+def test_component_for_explicit_mapping_diskspace(make_checker: _MakeChecker) -> None:
+    checker = make_checker("omd/packages/maintenance/diskspace.py")
+    assert checker.component == Component("cmk.diskspace")
 
 
 def test_component_for_file_without_component(make_checker: _MakeChecker) -> None:

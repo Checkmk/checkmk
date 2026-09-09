@@ -20,6 +20,7 @@ from cmk.rulesets.v1.form_specs import (
     Float,
     Integer,
     List,
+    migrate_to_password,
     Password,
     SingleChoice,
     SingleChoiceElement,
@@ -34,7 +35,8 @@ def _migrate_instance_config(instance_config: dict[str, Any]) -> dict[str, Any]:
 
     Migrates:
     - "server": string/None -> ("ip_or_fqdn", string) or ("use_local_fqdn", None)
-    - "login": tuple -> dictionary with password wrapped for migration
+    - "login": tuple -> dictionary; the password is converted from the 2.5 storage format
+      (("password", ...) or ("store", ...)) to the format of the Password form spec
     """
     migrated = dict(instance_config)
 
@@ -49,13 +51,9 @@ def _migrate_instance_config(instance_config: dict[str, Any]) -> dict[str, Any]:
         login = migrated["login"]
         if isinstance(login, tuple) and len(login) == 3:
             user, password, mode = login
-            if isinstance(password, str):
-                password = ("cmk_postprocessed", "explicit_password", ("", password))
-            elif not isinstance(password, tuple):
-                raise TypeError(f"Cannot migrate jolokia login password format: {password!r}")
             migrated["login"] = {
                 "user": user,
-                "password": password,
+                "password": migrate_to_password(password),
                 "mode": mode,
             }
 

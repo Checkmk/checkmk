@@ -5,12 +5,12 @@
 
 from pathlib import Path
 
-from cmk.mkp_tool import Installer, PackageID, PackageName, PackagePart, PackageVersion
+from cmk.mkp_tool import Installer, Manifest, PackageID, PackageName, PackagePart, PackageVersion
 from cmk.mkp_tool._installed import (
     cleanup_legacy_linked_lib_check_mk_path,
     replace_legacy_linked_lib_check_mk_path,
 )
-from cmk.mkp_tool._mkp import Manifest, manifest_template
+from cmk.mkp_tool._mkp import manifest_template
 
 
 def _manifest(name: str, files: dict[PackagePart, list[Path]] | None = None) -> Manifest:

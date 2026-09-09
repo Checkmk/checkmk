@@ -51,13 +51,10 @@ _VARIABLE_PERMISSIONS = permissions.DynamicRuntimePerm(
 RO_PERMISSIONS = _VARIABLE_PERMISSIONS
 RW_PERMISSIONS = permissions.AllPerm([permissions.Perm("wato.edit"), _VARIABLE_PERMISSIONS])
 
-SITE_RO_PERMISSIONS = permissions.AllPerm(
-    [permissions.Perm("wato.global"), permissions.Perm("wato.sites"), _VARIABLE_PERMISSIONS]
-)
+SITE_RO_PERMISSIONS = permissions.AllPerm([permissions.Perm("wato.sites"), _VARIABLE_PERMISSIONS])
 SITE_RW_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
-        permissions.Perm("wato.global"),
         permissions.Perm("wato.sites"),
         _VARIABLE_PERMISSIONS,
     ]

@@ -42,6 +42,8 @@ LOCAL_SITE = "NO_SITE"
 INT_VAR = "wato_max_snapshots"
 INT_DEFAULT = 50
 
+EXECUTABLES_VAR = "actions"
+
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -115,6 +117,22 @@ def fixture_user_without_event_console_permission(clients: ClientRegistry) -> No
         auth_option={"auth_type": "password", "password": "supersecretish"},
     )
     clients.GlobalSetting.set_credentials("no_event_console", "supersecretish")
+
+
+@pytest.fixture(name="user_without_executables_permission")
+def fixture_user_without_executables_permission(clients: ClientRegistry) -> None:
+    clients.UserRole.clone(body={"role_id": "admin", "new_role_id": "no_executables"})
+    clients.UserRole.edit(
+        role_id="no_executables",
+        body={"new_permissions": {"wato.add_or_modify_executables": "no"}},
+    )
+    clients.User.create(
+        username="no_executables",
+        fullname="no_executables",
+        roles=["no_executables"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.GlobalSetting.set_credentials("no_executables", "supersecretish")
 
 
 def _register_variable(
@@ -390,6 +408,54 @@ def test_an_event_console_setting_does_not_need_the_general_permission(
     assert clients.GlobalSetting.get(event_console_var).json["value"] is False
     assert clients.GlobalSetting.update(event_console_var, True).json["value"] is True
     clients.GlobalSetting.delete(event_console_var)
+
+
+@pytest.mark.usefixtures("user_without_event_console_permission")
+def test_an_event_console_site_override_needs_the_event_console_permission(
+    clients: ClientRegistry, remote_site: str, event_console_var: str
+) -> None:
+    """A site override asks for the variable's own permission, the same as the central value.
+
+    An ordinary variable is read afterwards on the same route, so the refusals cannot be
+    read as that user having no access to the site scope at all.
+    """
+    clients.GlobalSetting.get_site(
+        remote_site, event_console_var, expect_ok=False
+    ).assert_status_code(403)
+    clients.GlobalSetting.update_site(
+        remote_site, event_console_var, True, expect_ok=False
+    ).assert_status_code(403)
+    clients.GlobalSetting.delete_site(
+        remote_site, event_console_var, expect_ok=False
+    ).assert_status_code(403)
+
+    assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json["value"] == INT_DEFAULT
+
+
+@pytest.mark.usefixtures("user_without_global_permission")
+def test_an_event_console_site_override_does_not_need_the_general_permission(
+    clients: ClientRegistry, remote_site: str, event_console_var: str
+) -> None:
+    assert (
+        clients.GlobalSetting.update_site(remote_site, event_console_var, True).json["value"]
+        is True
+    )
+    clients.GlobalSetting.delete_site(remote_site, event_console_var)
+
+
+@pytest.mark.usefixtures("user_without_executables_permission")
+def test_the_event_console_actions_need_the_executables_permission(
+    clients: ClientRegistry,
+) -> None:
+    clients.GlobalSetting.get(EXECUTABLES_VAR, expect_ok=False).assert_status_code(403)
+
+
+@pytest.mark.usefixtures("user_without_global_permission")
+def test_the_event_console_actions_are_reachable_without_the_general_permission(
+    clients: ClientRegistry,
+) -> None:
+    """The executables gate comes on top of mkeventd.config, not on top of wato.global."""
+    assert clients.GlobalSetting.get(EXECUTABLES_VAR).json["value"] == []
 
 
 def test_site_value_falls_back_to_the_central_value(

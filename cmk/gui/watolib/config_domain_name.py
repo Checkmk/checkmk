@@ -93,9 +93,8 @@ class ABCConfigDomain(abc.ABC):
         stay editable there and via the REST API.
 
     global_settings_permission:
-        the permission needed to see or change this domain's configuration variables
-        centrally. The GUI derives it from the settings page the user is on; callers
-        holding only a variable name cannot, so the domain states it here.
+        the permission needed to read or change this domain's configuration variables,
+        centrally as well as per site.
     """
 
     needs_sync = True

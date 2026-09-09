@@ -42,9 +42,8 @@ def need_write_permission(config_variable: ConfigVariable) -> None:
 
 
 def need_site_read_permission(config_variable: ConfigVariable) -> None:
-    user.need_permission("wato.global")
     user.need_permission("wato.sites")
-    _need_executables_permission(config_variable)
+    need_read_permission(config_variable)
 
 
 def need_site_write_permission(config_variable: ConfigVariable) -> None:

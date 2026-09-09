@@ -50,7 +50,6 @@ py_library(
         requirement("flask"),
         requirement("pytest"),
         requirement("pytest-mock"),
-        requirement("requests"),
         requirement("werkzeug"),
     ],
 )

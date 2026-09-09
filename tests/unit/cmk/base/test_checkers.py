@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import socket
 import sys
 import time
 from collections.abc import Iterable, Mapping
+from pathlib import Path
 from typing import Literal
 
 import pytest
+from pytest import MonkeyPatch
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -19,13 +22,23 @@ from cmk.agent_based.prediction_backend import (
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base import checkers
+from cmk.base.checkers import CMKFetcher
+from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import resulttype as result
-from cmk.ccc.exceptions import MKTimeout
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.exceptions import MKTimeout, OnError
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.fetcher_abc import Mode
+from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
+from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
+from cmk.checkengine.fetchers.snmp import (
+    NoSelectedSNMPSections,
+    SNMPFetcherConfig,
+)
+from cmk.checkengine.filecache import FileCacheOptions
 from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
 from cmk.checkengine.parser import HostSections
-from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, FinalCheckResult
 from cmk.checkengine.specs.checkresults import (
     ServiceCheckResult,
     SubmittableServiceCheckResult,
@@ -34,8 +47,10 @@ from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import ServiceName
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 def make_timespecific_params_list(
@@ -530,3 +545,73 @@ def test_consume_check_results_clamps_inf_lower_levels() -> None:
     assert len(perfdata) == 1
     assert perfdata[0].warn_lower == sys.float_info.max
     assert perfdata[0].crit_lower == -sys.float_info.max
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """A failed address lookup must not be papered over with a fallback address.
+
+    A tolerant IP lookup answers with ``0.0.0.0`` when it could not resolve the
+    host.  Handing that on to the fetchers points them at the local system, so
+    the fetcher turns it into "no address": the sources that need one report
+    `MISSING_IP`, the sources that do not are unaffected.  See SUP-30417.
+    """
+    testhost = HostName("nodns-host")
+    ts = Scenario()
+    ts.add_host(testhost)  # no explicit address, name does not resolve
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
+    plugins = AgentBasedPlugins(
+        agent_sections={}, snmp_sections={}, check_plugins={}, inventory_plugins={}, errors=()
+    )
+
+    fetcher = CMKFetcher(
+        config_cache,
+        loading_result.host_tags,
+        get_relay_id=lambda hn: None,  # noqa: ARG005
+        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),  # noqa: ARG005
+        source_config=config_cache.make_source_config(
+            config_cache.make_service_configurer({}, service_name_config),
+            ip_lookup=lambda *a: HostAddress(""),  # noqa: ARG005
+            service_name_config=service_name_config,
+            enforced_services_table=lambda hn: {},  # noqa: ARG005
+            snmp_fetcher_config=SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=lambda host_name: False,  # noqa: ARG005
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                base_path=Path("/"),
+                relative_stored_walk_path=Path("dev/null"),
+                relative_walk_cache_path=Path("dev/null"),
+                relative_section_cache_path=Path("dev/null"),
+                caching_config=lambda host_name: {},  # noqa: ARG005
+            ),
+        ),
+        plugins=plugins,
+        clusters=loading_result.hosts_config.clusters,
+        default_address_family=lambda *a: socket.AddressFamily.AF_INET,  # noqa: ARG005
+        file_cache_options=FileCacheOptions(),
+        force_snmp_cache_refresh=False,
+        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,  # noqa: ARG005
+        # what a tolerant lookup answers when DNS resolution failed
+        ip_address_of=lambda *a: HostAddress("0.0.0.0"),  # noqa: ARG005
+        ip_address_of_mgmt=lambda *a: None,  # noqa: ARG005
+        mode=Mode.DISCOVERY,
+        simulation_mode=False,
+        secrets_config_relay=AdHocSecrets(path=Path("/pw/relay"), secrets={}),
+        secrets_config_site=StoredSecrets(path=Path("/pw/store"), secrets={}),
+    )
+
+    fetched = fetcher(testhost, ip_address=None)
+
+    agent_sources = [(source, res) for source, res, _snapshot in fetched if source.ident == "agent"]
+    assert len(agent_sources) == 1
+    source, res = agent_sources[0]
+    assert source.ipaddress is None
+    assert source.fetcher_type is FetcherType.NONE
+    assert res.is_error()

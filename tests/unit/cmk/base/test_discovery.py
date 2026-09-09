@@ -8,11 +8,13 @@
 import socket
 from collections.abc import Container, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple, override
+from typing import NamedTuple, Never, override
+from unittest.mock import Mock
 
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.ccc.resulttype as result
 import cmk.utils.paths
 from cmk.agent_based.v2 import (
     HostLabel as _APIHostLabel,
@@ -35,7 +37,7 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.ccc.exceptions import OnError
+from cmk.ccc.exceptions import MKIPAddressLookupError, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
@@ -72,7 +74,7 @@ from cmk.checkengine.discovery._entrypoints.active_check import (
 from cmk.checkengine.discovery._entrypoints.commandline import _commandline_discovery_on_host
 from cmk.checkengine.discovery._utils.filters import ServiceFilters
 from cmk.checkengine.discovery.types import DiscoveredItem
-from cmk.checkengine.fetcher_abc import Mode
+from cmk.checkengine.fetcher_abc import FetcherFunction, Mode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
 from cmk.checkengine.fetchers.snmp import (
@@ -80,7 +82,7 @@ from cmk.checkengine.fetchers.snmp import (
     SNMPFetcherConfig,
 )
 from cmk.checkengine.filecache import FileCacheOptions
-from cmk.checkengine.helper_interface import HostKey, SourceType
+from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -1677,7 +1679,6 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         force_snmp_cache_refresh=False,
         get_ip_stack_config=lambda *a: IPStackConfig.IPv4,  # noqa: ARG005
         ip_address_of=lambda *a: HostAddress(""),  # noqa: ARG005
-        ip_address_of_mandatory=lambda *a: HostAddress(""),  # noqa: ARG005
         ip_address_of_mgmt=lambda *a: HostAddress(""),  # noqa: ARG005
         mode=Mode.DISCOVERY,
         simulation_mode=True,
@@ -1691,7 +1692,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    commandline_discovery(
+    succeeded = commandline_discovery(
         host_name=testhost,
         clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
         parser=parser,
@@ -1717,12 +1718,95 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
 
+    assert succeeded is True
+
     entries = AutochecksStore(testhost, cmk.utils.paths.autochecks_dir).read()
     found = {e.id(): e.service_labels for e in entries}
     assert found == _EXPECTED_SERVICES
 
     store = DiscoveredHostLabelsStore(testhost, cmk.utils.paths.discovered_host_labels_dir)
     assert store.load() == _EXPECTED_HOST_LABELS
+
+
+class _FailingFetcher(FetcherFunction):
+    @override
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Never:
+        raise MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name} via DNS")
+
+
+@pytest.mark.usefixtures("disable_debug")
+def test_commandline_discovery_reports_failure(tmp_path: Path) -> None:
+    """A failed discovery is reported to the caller, not only printed.
+
+    ``cmk -I`` needs this to exit non-zero; it used to swallow every failure
+    and still exit 0.  Debug mode is off, as it is for a normal ``cmk -I``
+    run; with it on the exception is re-raised instead.
+    """
+    succeeded = commandline_discovery(
+        host_name=HostName("test-host"),
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [],  # noqa: ARG005
+        fetcher=_FailingFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        autochecks_config=Mock(spec=config.AutochecksConfigurer),
+        enforced_services={},
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=tmp_path / "autochecks",
+        discovered_host_labels_dir=tmp_path / "host_labels",
+    )
+
+    assert succeeded is False
+
+
+class _EmptyFetcher(FetcherFunction):
+    """Fetches nothing; the parser fake supplies the source result."""
+
+    @override
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[Never]:
+        return ()
+
+
+def test_commandline_discovery_reports_failed_source(tmp_path: Path) -> None:
+    """A data source that could not be contacted is reported as failure.
+
+    The discovery itself runs to the end -- the sources that did deliver data
+    are discovered as usual -- but the services of the failed source are
+    missing from the result, and the exit code is the only way ``cmk -I`` can
+    say so.
+    """
+    host_name = HostName("test-host")
+    failed: tuple[SourceInfo, result.Result[HostSections, Exception]] = (
+        SourceInfo(host_name, None, "agent", FetcherType.NONE, SourceType.HOST),
+        result.Error(MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name}")),
+    )
+    # The autochecks store and the host-labels store both use "<host>.mk" as the file
+    # name, so they must not share a directory.
+    (autochecks_dir := tmp_path / "autochecks").mkdir()
+
+    succeeded = commandline_discovery(
+        host_name=host_name,
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [failed],  # noqa: ARG005
+        fetcher=_EmptyFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        autochecks_config=Mock(spec=config.AutochecksConfigurer),
+        enforced_services={},
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=autochecks_dir,
+        discovered_host_labels_dir=tmp_path / "host_labels",
+    )
+
+    assert succeeded is False
 
 
 # ---------------------------------------------------------------------------

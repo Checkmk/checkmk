@@ -62,17 +62,28 @@ def commandline_discovery(
     on_error: OnError,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
-) -> None:
+) -> bool:
     """Implementing cmk -I and cmk -II
 
     This is directly called from the main option parsing code.
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
+
+    Returns whether the discovery succeeded.  A discovery that aborted counts
+    as failure, and so does one where a data source could not be contacted:
+    its services are missing from the result, which the user must be able to
+    tell from the exit code.  Neither aborts the discovery of the remaining
+    hosts, but the caller needs to know to set a meaningful exit code.
     """
     section.section_begin(host_name)
+    failed_sources: list[str] = []
     try:
         fetched = fetcher(host_name, ip_address=None)
         host_sections = parser((f[0], f[1]) for f in fetched)
+        for source, host_section in host_sections:
+            if host_section.is_error():
+                failed_sources.append(f"[{source.ident}] {host_section.error}")
+                section.section_error(failed_sources[-1])
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok())
         )
@@ -103,8 +114,11 @@ def commandline_discovery(
         if cmk.ccc.debug.enabled():
             raise
         section.section_error("%s" % e)
+        return False
     finally:
         cmk.ccc.cleanup.cleanup_globals()
+
+    return not failed_sources
 
 
 def _commandline_discovery_on_host(

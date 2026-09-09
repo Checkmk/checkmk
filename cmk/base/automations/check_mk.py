@@ -385,7 +385,6 @@ def _automation_service_discovery(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config),
         mode=Mode.DISCOVERY,
         simulation_mode=env.loaded_config.simulation_mode,
@@ -555,12 +554,16 @@ def _automation_discovery_preview(
     config_warnings.initialize()
 
     env = AutomationEnvironment.create(app, plugins, loading_result)
+    if host_name not in env.hosts_config.all_configured_hosts:
+        # There is no configuration to discover from, hence no data source to contact.
+        # An empty preview would be indistinguishable from a host without services.
+        raise MKAutomationError(f"Unknown host: {host_name}")
+
     config_cache = env.config_cache
     label_manager = env.label_manager
     ip_lookup_config = env.ip_lookup_config
 
     env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of_with_fallback = env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE)
     on_error = OnError.RAISE if raise_errors else OnError.WARN
     file_cache_options = FileCacheOptions(
@@ -617,7 +620,6 @@ def _automation_discovery_preview(
         force_snmp_cache_refresh=not prevent_fetching,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of_with_fallback,
-        ip_address_of_mandatory=ip_address_of_bare,
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
         simulation_mode=env.loaded_config.simulation_mode,
@@ -637,8 +639,12 @@ def _automation_discovery_preview(
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
         # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
-        else ip_address_of_bare(host_name, ip_family)
+        else ip_address_of_with_fallback(host_name, ip_family)
     )
+    if ip_address is not None and ip_lookup.is_fallback_ip(ip_address):
+        # A failed lookup must not abort the preview; the sources that need no
+        # address are still fetchable.  See CMK-38939.
+        ip_address = None
     return _get_discovery_preview(
         host_name,
         ip_lookup_config.default_address_family,
@@ -1137,7 +1143,6 @@ def _execute_autodiscovery(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=env.ip_lookup_config.ip_stack_config,
         ip_address_of=slightly_different_ip_address_of,
-        ip_address_of_mandatory=ip_address_of,
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         simulation_mode=env.loaded_config.simulation_mode,

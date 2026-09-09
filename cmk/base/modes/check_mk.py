@@ -2138,6 +2138,13 @@ mode_automation = Mode(
 #   '----------------------------------------------------------------------'
 
 
+def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
+    return check_result.state
+
+
 def _mode_check_discovery(
     app: CheckmkBaseApp, options: Mapping[str, object], hostname: HostName
 ) -> int:
@@ -2157,6 +2164,13 @@ def _mode_check_discovery(
     ruleset_matcher = config_cache.ruleset_matcher
     label_manager = config_cache.label_manager
     hosts_config = loading_result.hosts_config
+    if hostname not in hosts_config.all_configured_hosts:
+        # There is no configuration to discover from, hence no data source to contact.
+        # Such a host must not be reported as "all up to date".
+        return _write_active_check_result(
+            ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
+        )
+
     host_tags = loading_result.host_tags
     set_global_logwatch_config(
         loaded_config,
@@ -2232,8 +2246,6 @@ def _mode_check_discovery(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
@@ -2332,11 +2344,7 @@ def _mode_check_discovery(
     if error_handler.result is not None:
         check_results = (error_handler.result,)
 
-    check_result = ActiveCheckResult.from_subresults(*check_results)
-    with suppress(IOError):
-        sys.stdout.write(check_result.as_text() + "\n")
-        sys.stdout.flush()
-    return check_result.state
+    return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
 
 
 mode_check_discovery = Mode(
@@ -2516,7 +2524,7 @@ def _preprocess_hostnames(
     return node_names
 
 
-def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[str]) -> None:
+def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[str]) -> int:
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -2634,8 +2642,6 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
@@ -2655,6 +2661,8 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             secrets=secrets,
         ),
     )
+    any_failed = False
+    known_hosts = frozenset(hosts_config.all_configured_hosts)
     for hostname in sorted(
         _preprocess_hostnames(
             frozenset(hostnames),
@@ -2665,6 +2673,10 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             only_host_labels="only-host-labels" in options,
         )
     ):
+        if hostname not in known_hosts:
+            sys.stderr.write(f"unknown host: {hostname}\n")
+            any_failed = True
+            continue
 
         def section_error_handling(
             section_name: SectionName,
@@ -2679,7 +2691,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
                 rtc_package=None,
             )
 
-        commandline_discovery(
+        succeeded = commandline_discovery(
             hostname,
             clear_ruleset_matcher_caches=ruleset_matcher.clear_caches,
             parser=parser,
@@ -2707,6 +2719,9 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
+        any_failed |= not succeeded
+
+    return 1 if any_failed else 0
 
 
 mode_discover = Mode(
@@ -2734,6 +2749,12 @@ mode_discover = Mode(
             "Use: '--only-host-labels' or '-L' "
         ),
         "-II does the same as -I but deletes all existing checks of the specified types and hosts.",
+        (
+            "Exits with 1 if the discovery failed for at least one host, or if one of "
+            "a host's data sources could not be contacted -- the services of such a "
+            "source are missing from the result. The discovery of the remaining hosts "
+            "is carried out regardless."
+        ),
     ],
     sub_options=[
         *_FETCHER_OPTIONS,

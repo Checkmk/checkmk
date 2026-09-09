@@ -568,7 +568,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             }
         )
 
-        job_interface.send_result_message(_("Bulk discovery successful"))
+        job_interface.send_result_message(_("Bulk discovery finished"))
 
     def _run_discovery_tasks(
         self,

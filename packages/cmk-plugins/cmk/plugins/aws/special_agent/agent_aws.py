@@ -7738,8 +7738,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument(
         "--verbose",
-        action="store_true",
-        help="Log messages from AWS library 'boto3' and 'botocore'.",
+        "-v",
+        action="count",
+        default=0,
+        help="Increase log verbosity. Use -vv for debug output of 'boto3' and 'botocore'.",
     )
     parser.add_argument(
         "--vcrtrace",
@@ -7904,17 +7906,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _setup_logging(opt_debug: bool, opt_verbose: bool) -> None:
-    logger = logging.getLogger()
-    logger.disabled = True
-    fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
-    lvl = logging.INFO
-    if opt_verbose:
-        logger.disabled = False
-        lvl = logging.DEBUG
-    elif opt_debug:
-        logger.disabled = False
-    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
+def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
+    logging.getLogger().disabled = not (opt_debug or opt_verbose)
+    logging.basicConfig(  # astrein: disable=logging-formatter
+        level=logging.DEBUG if opt_verbose > 1 else logging.INFO,
+        format="%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s",
+    )
 
 
 def _create_anonymous_session(

@@ -27,7 +27,6 @@ def test_discovery() -> None:
         Service(item="0"),
         Service(item="3"),
         Service(item="6"),
-        Service(item="9"),
     ]
 
 

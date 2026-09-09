@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
+    DefaultValue,
     DictElement,
     Dictionary,
     migrate_to_password,
@@ -16,7 +17,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.rulesets.v1.form_specs._base import DefaultValue
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 

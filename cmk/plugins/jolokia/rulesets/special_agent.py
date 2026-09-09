@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    FieldSize,
     Integer,
     migrate_to_password,
     Password,
@@ -19,7 +20,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.rulesets.v1.form_specs._basic import FieldSize
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 

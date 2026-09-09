@@ -5,8 +5,7 @@
 
 
 from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import FixedValue
-from cmk.rulesets.v1.form_specs._composed import DictElement, Dictionary
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FixedValue
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 

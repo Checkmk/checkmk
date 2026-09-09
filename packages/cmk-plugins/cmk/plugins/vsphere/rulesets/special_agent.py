@@ -22,10 +22,10 @@ from cmk.rulesets.v1.form_specs import (
     MultipleChoiceElement,
     Password,
     SingleChoice,
+    SingleChoiceElement,
     String,
     validators,
 )
-from cmk.rulesets.v1.form_specs._basic import SingleChoiceElement
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 

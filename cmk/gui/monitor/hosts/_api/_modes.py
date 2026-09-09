@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.openapi.framework.model._api_field import api_field
-from cmk.gui.openapi.framework.model._api_model import api_model
+from cmk.gui.openapi.framework.model import api_field, api_model
 
 from .._models import Host
 from ._urls import host_view_link

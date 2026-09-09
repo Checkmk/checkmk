@@ -241,6 +241,23 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.getByText('1 modified')).toBeInTheDocument()
   })
 
+  test('tabbing through expanded topics reaches each edit button', async () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+    screen.getByRole('button', { name: 'Toggle accordion item User management' }).focus()
+
+    await userEvent.tab()
+    expect(
+      screen.getByRole('button', { name: 'Edit Lock user accounts after N login failures' })
+    ).toHaveFocus()
+    await userEvent.tab()
+    expect(
+      screen.getByRole('button', { name: 'Toggle accordion item Site management' })
+    ).toHaveFocus()
+    await userEvent.tab()
+    expect(screen.getByRole('button', { name: 'Edit Site setting' })).toHaveFocus()
+  })
+
   test('only modified rows are marked', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
     await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))

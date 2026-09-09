@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -76,6 +75,14 @@ type LivestatusQueryFunc = Callable[
 ]
 
 
+def _title_format(entry: object) -> GraphTitleFormatVS:
+    match entry:
+        case "plain" | "add_host_name" | "add_host_alias" | "add_service_description":
+            return entry
+        case _:
+            raise ValueError(f"invalid graph title format entry {entry}")
+
+
 def migrate_graph_render_options_title_format(
     p: (
         Literal["plain", "add_host_name", "add_host_alias"]
@@ -105,21 +112,17 @@ def migrate_graph_render_options_title_format_from_disk(
 
     if isinstance(p, tuple):
         if p[0] == "add_title_infos":
-            infos: Sequence[GraphTitleFormatVS] = ["plain"] + p[1]
-            return infos
+            return ["plain", *(_title_format(entry) for entry in p[1])]
         if p[0] == "plain":
             return ["plain"]
         raise ValueError(f"invalid graph title format {p}")
 
     # Because the spec could come from a JSON request CMK-6339
     if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":
-        return ["plain"] + p[1]
+        return ["plain", *(_title_format(entry) for entry in p[1])]
 
-    if isinstance(p, list) and all(
-        entry in ("plain", "add_host_name", "add_host_alias", "add_service_description")
-        for entry in p
-    ):
-        return p
+    if isinstance(p, list):
+        return [_title_format(entry) for entry in p]
 
     raise ValueError(f"invalid graph title format {p}")
 

@@ -10,9 +10,12 @@ import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
-import MetricBackendForm from '@/graphing/designer/components/forms/TelemetryMetricsForm.vue'
+import TelemetryMetricsForm from '@/graphing/designer/components/forms/TelemetryMetricsForm.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
-import { type DraftMetricBackendItem, newMetricBackendDraft } from '@/graphing/designer/drafts'
+import {
+  type DraftTelemetryMetricsItem,
+  newTelemetryMetricsDraft
+} from '@/graphing/designer/drafts'
 
 const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn(), fetchRestAPIDeprecated: vi.fn() }))
 
@@ -31,7 +34,7 @@ vi.mock(import('cmk-ui-library/lib/cmkFetch'), async (importOriginal) => {
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
-function renderForm(seed: DraftMetricBackendItem) {
+function renderForm(seed: DraftTelemetryMetricsItem) {
   mocks.fetchSuggestions.mockResolvedValue(new Response([]))
   mocks.fetchRestAPIDeprecated.mockResolvedValue({
     raiseForStatus: async () => {},
@@ -44,7 +47,7 @@ function renderForm(seed: DraftMetricBackendItem) {
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
         return item?.type === 'metric_backend'
-          ? h(MetricBackendForm, {
+          ? h(TelemetryMetricsForm, {
               item,
               store,
               metricNameErrors: [],
@@ -59,7 +62,7 @@ function renderForm(seed: DraftMetricBackendItem) {
 }
 
 test('composes the metric, where, consolidation and group by sections', async () => {
-  renderForm(newMetricBackendDraft('A'))
+  renderForm(newTelemetryMetricsDraft('A'))
 
   expect(await screen.findByText('Metric')).toBeInTheDocument()
   expect(screen.getByText('Where')).toBeInTheDocument()
@@ -68,7 +71,7 @@ test('composes the metric, where, consolidation and group by sections', async ()
 })
 
 test('names each section for assistive technology', async () => {
-  renderForm(newMetricBackendDraft('A'))
+  renderForm(newTelemetryMetricsDraft('A'))
 
   expect(await screen.findByRole('group', { name: 'Where: attribute filter' })).toBeInTheDocument()
   expect(
@@ -88,10 +91,10 @@ const SUM_BY_SERVICE: Aggregator = {
   ]
 }
 
-function storedItem(store: ReturnType<typeof renderForm>): DraftMetricBackendItem {
+function storedItem(store: ReturnType<typeof renderForm>): DraftTelemetryMetricsItem {
   const item = store.items.value.find((candidate) => candidate.id === 'A')
   if (item?.type !== 'metric_backend') {
-    throw new Error('metric-backend item went missing')
+    throw new Error('OpenTelemetry metrics item went missing')
   }
   return item
 }
@@ -102,7 +105,7 @@ async function openGroupByFunctionDropdown(): Promise<void> {
 }
 
 test('a float consolidation offers the float grouping functions, not the histogram ones', async () => {
-  renderForm(newMetricBackendDraft('A')) // defaults to the float gauge_last consolidation
+  renderForm(newTelemetryMetricsDraft('A')) // defaults to the float gauge_last consolidation
   // Editing an empty grouping opens the function dropdown directly.
   await userEvent.click(await screen.findByRole('button', { name: /Edit group by/ }))
 
@@ -112,7 +115,7 @@ test('a float consolidation offers the float grouping functions, not the histogr
 })
 
 test('a stored aggregator populates the group-by widget', async () => {
-  renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+  renderForm({ ...newTelemetryMetricsDraft('A'), aggregator: SUM_BY_SERVICE })
 
   const chip = await screen.findByRole('button', { name: /Edit group by/ })
   expect(chip).toHaveTextContent('sum by')
@@ -129,7 +132,7 @@ const MAX_BY_SERVICE: Aggregator = {
 }
 
 test('selecting another function re-persists the sibling aggregator', async () => {
-  const store = renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+  const store = renderForm({ ...newTelemetryMetricsDraft('A'), aggregator: SUM_BY_SERVICE })
   await openGroupByFunctionDropdown()
 
   await userEvent.click(await screen.findByRole('option', { name: 'max by' }))
@@ -138,7 +141,7 @@ test('selecting another function re-persists the sibling aggregator', async () =
 })
 
 test('selecting "no grouping" clears the sibling aggregator', async () => {
-  const store = renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+  const store = renderForm({ ...newTelemetryMetricsDraft('A'), aggregator: SUM_BY_SERVICE })
   await openGroupByFunctionDropdown()
 
   await userEvent.click(await screen.findByRole('option', { name: 'no grouping' }))
@@ -147,7 +150,7 @@ test('selecting "no grouping" clears the sibling aggregator', async () => {
 })
 
 test('adding a then step persists a second aggregator stage', async () => {
-  const store = renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+  const store = renderForm({ ...newTelemetryMetricsDraft('A'), aggregator: SUM_BY_SERVICE })
 
   await userEvent.click(await screen.findByRole('button', { name: 'Add then step' }))
 
@@ -162,7 +165,7 @@ test('adding a then step persists a second aggregator stage', async () => {
   )
 })
 
-const PRESERVE_QUANTILE_BY_SERVICE: DraftMetricBackendItem['consolidation_function'] = {
+const PRESERVE_QUANTILE_BY_SERVICE: DraftTelemetryMetricsItem['consolidation_function'] = {
   type: 'histogram_preserve_quantile',
   lookback_seconds: 300,
   percentile: 95,
@@ -171,7 +174,7 @@ const PRESERVE_QUANTILE_BY_SERVICE: DraftMetricBackendItem['consolidation_functi
 
 test('adding a then step to a histogram grouping persists a then-only aggregator', async () => {
   const store = renderForm({
-    ...newMetricBackendDraft('A'),
+    ...newTelemetryMetricsDraft('A'),
     consolidation_function: PRESERVE_QUANTILE_BY_SERVICE
   })
 
@@ -187,7 +190,7 @@ test('adding a then step to a histogram grouping persists a then-only aggregator
 
 test('a histogram grouping loads its then steps from every aggregator stage', async () => {
   renderForm({
-    ...newMetricBackendDraft('A'),
+    ...newTelemetryMetricsDraft('A'),
     consolidation_function: PRESERVE_QUANTILE_BY_SERVICE,
     aggregator: SUM_BY_SERVICE
   })

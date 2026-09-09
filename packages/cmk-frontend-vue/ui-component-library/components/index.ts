@@ -16,7 +16,7 @@ import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
 import { pages as monitoringPages } from '../monitoring'
 import { pages as networkFlowPages } from '../network-flow'
-import { pages as metricBackendPages } from '../telemetry-metrics'
+import { pages as telemetryMetricsPages } from '../telemetry-metrics'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
@@ -229,7 +229,7 @@ export const roots = [
     new Folder('Form Spec Elements', formSpecPages),
     new Folder('Global settings', globalSettingsPages),
     new Folder('Graphing', graphingPages),
-    new Folder('Metric backend', metricBackendPages),
+    new Folder('Metric backend', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
     new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)

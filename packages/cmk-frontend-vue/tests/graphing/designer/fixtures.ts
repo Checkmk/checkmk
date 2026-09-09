@@ -15,10 +15,10 @@ import {
   DEFAULT_TITLE_MACRO,
   type FormulaItem,
   type GraphItem,
-  type MetricBackendItem,
   type RRDMetricItem,
   type RRDQueryItem,
-  type ScalarItem
+  type ScalarItem,
+  type TelemetryMetricsItem
 } from '@/graphing/designer/types'
 
 function filterDefinition(
@@ -164,10 +164,10 @@ export function scalarItem(id: string, overrides: Partial<ScalarItem> = {}): Sca
   }
 }
 
-export function metricBackendItem(
+export function telemetryMetricsItem(
   id: string,
-  overrides: Partial<MetricBackendItem> = {}
-): MetricBackendItem {
+  overrides: Partial<TelemetryMetricsItem> = {}
+): TelemetryMetricsItem {
   return {
     id,
     type: 'metric_backend',
@@ -192,5 +192,5 @@ export const items: GraphItem[] = [
   rrdMetricItem('B'),
   rrdQueryItem('C'),
   formulaItem('D'),
-  metricBackendItem('E')
+  telemetryMetricsItem('E')
 ]

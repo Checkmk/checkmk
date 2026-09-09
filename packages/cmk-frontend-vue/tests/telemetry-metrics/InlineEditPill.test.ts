@@ -59,7 +59,7 @@ test('the collapsed pill shows the read-only slot, carries the item marker, and 
 
   const button = screen.getByRole('button', { name: 'Edit pill' })
   expect(button).toHaveTextContent('summary')
-  expect(container.querySelector('.metric-backend-inline-edit-pill__closed')).toHaveAttribute(
+  expect(container.querySelector('.telemetry-metrics-inline-edit-pill__closed')).toHaveAttribute(
     'data-af-item'
   )
 
@@ -70,7 +70,7 @@ test('the collapsed pill shows the read-only slot, carries the item marker, and 
 test('Enter and Space open the pill, Delete removes only removable pills', async () => {
   const nonRemovable = renderCollapsed()
   const nonRemovableClosed = nonRemovable.container.querySelector<HTMLElement>(
-    '.metric-backend-inline-edit-pill__closed'
+    '.telemetry-metrics-inline-edit-pill__closed'
   )!
   nonRemovableClosed.focus()
 
@@ -79,7 +79,9 @@ test('Enter and Space open the pill, Delete removes only removable pills', async
 
   nonRemovable.unmount()
   const { container, emitted } = renderCollapsed({ removable: true })
-  const closed = container.querySelector<HTMLElement>('.metric-backend-inline-edit-pill__closed')!
+  const closed = container.querySelector<HTMLElement>(
+    '.telemetry-metrics-inline-edit-pill__closed'
+  )!
   closed.focus()
 
   await userEvent.keyboard('{Enter}')
@@ -92,11 +94,11 @@ test('Enter and Space open the pill, Delete removes only removable pills', async
 
 test('tabFocusable controls whether the collapsed pill is tabbable', () => {
   expect(
-    renderCollapsed().container.querySelector('.metric-backend-inline-edit-pill__closed')
+    renderCollapsed().container.querySelector('.telemetry-metrics-inline-edit-pill__closed')
   ).toHaveAttribute('tabindex', '0')
   expect(
     renderCollapsed({ tabFocusable: false }).container.querySelector(
-      '.metric-backend-inline-edit-pill__closed'
+      '.telemetry-metrics-inline-edit-pill__closed'
     )
   ).toHaveAttribute('tabindex', '-1')
 })
@@ -154,7 +156,7 @@ test('Escape commits and returns focus to the collapsed pill', async () => {
   expect(done).toHaveBeenCalledWith('escape')
   await waitFor(() =>
     expect(document.activeElement).toBe(
-      container.querySelector('.metric-backend-inline-edit-pill__closed')
+      container.querySelector('.telemetry-metrics-inline-edit-pill__closed')
     )
   )
 })

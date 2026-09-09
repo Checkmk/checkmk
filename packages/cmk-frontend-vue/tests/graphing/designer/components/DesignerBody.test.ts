@@ -109,7 +109,7 @@ function rrdQuerySource(id: string): unknown {
 }
 
 // A metric_backend source in the API's nested wire shape, not the designer's flat one.
-function metricBackendSource(
+function telemetryMetricsSource(
   id: string,
   consolidationFunction: unknown = {
     type: 'histogram',
@@ -231,9 +231,9 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     title: 'My graph',
     mode: 'edit' as 'view' | 'edit',
     thresholds: { warning: '#ffd000', critical: '#ff3232' },
-    metricBackendAvailable: false,
+    telemetryMetricsAvailable: false,
     createServicesAvailable: true,
-    metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
+    telemetryMetricsDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
     titleMacros: [],
     issuesByRow: new Map<ItemId, RowIssue[]>()
   }
@@ -245,7 +245,7 @@ function renderBody(
     displaySettings?: boolean
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
-    metricBackendAvailable?: boolean
+    telemetryMetricsAvailable?: boolean
   } = {}
 ) {
   const { graph, ...rest } = overrides
@@ -328,7 +328,7 @@ test('view mode renders the legend beneath the preview, not the config tabs', as
 test('a source the rules reject is left out of the preview request', async () => {
   const postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue(fetchDataResponse())
-  const outOfRange = metricBackendSource('B', {
+  const outOfRange = telemetryMetricsSource('B', {
     type: 'histogram',
     function: 'histogram_quantile',
     lookback_seconds: 300,
@@ -654,21 +654,21 @@ test('toggling visibility in the appearance table drops the metric from the prev
 })
 
 test.each([
-  { kind: 'an RRD query', source: () => rrdQuerySource('Q'), metricBackendAvailable: false },
+  { kind: 'an RRD query', source: () => rrdQuerySource('Q'), telemetryMetricsAvailable: false },
   {
     kind: 'a metrics backend query',
-    source: () => metricBackendSource('Q'),
-    metricBackendAvailable: true
+    source: () => telemetryMetricsSource('Q'),
+    telemetryMetricsAvailable: true
   }
 ])(
   'hiding the parent of $kind takes every nested line off the preview at once',
-  async ({ source, metricBackendAvailable }) => {
+  async ({ source, telemetryMetricsAvailable }) => {
     vi.spyOn(client, 'POST').mockResolvedValue(
       fanOutResponse('Q', ['host-1', 'host-2', 'host-3']) as never
     )
     renderBody('edit', {
       graph: graphObject([source()]),
-      metricBackendAvailable
+      telemetryMetricsAvailable
     })
     await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
     await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))

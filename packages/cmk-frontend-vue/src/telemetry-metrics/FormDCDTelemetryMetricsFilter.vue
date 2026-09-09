@@ -11,7 +11,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { type ValidationMessages } from '@/form'
 
-import FormMetricBackendAttributes from './FormTelemetryMetricsAttributes.vue'
+import FormTelemetryMetricsAttributes from './FormTelemetryMetricsAttributes.vue'
 
 defineProps<{
   spec: DcdMetricBackendFilter
@@ -22,7 +22,7 @@ const { _t } = usei18n()
 
 const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
 
-const attributesComponent = ref<InstanceType<typeof FormMetricBackendAttributes> | null>(null)
+const attributesComponent = ref<InstanceType<typeof FormTelemetryMetricsAttributes> | null>(null)
 const validation = ref<ValidationMessages>([])
 
 function handleSubmit(event: SubmitEvent) {
@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
         <td>{{ _t('Attributes') }}</td>
         <td>
           <!-- AND-only until DCD's REST models support disjunction (CMK-37370). -->
-          <FormMetricBackendAttributes
+          <FormTelemetryMetricsAttributes
             ref="attributesComponent"
             v-model:attribute-filter="data.attribute_filter"
             v-model:backend-validation="validation"

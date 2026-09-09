@@ -53,9 +53,7 @@ const patternMap = {
   cmk: 'src/components/',
   db: 'src/dashboard/',
   qs: 'src/quick-setup/',
-  mbcq: 'src/telemetry-metrics-custom-query/',
-  // temporary: block classes keep the metric-backend prefix until they are renamed too
-  'metric-backend': 'src/telemetry-metrics/',
+  tmcq: 'src/telemetry-metrics-custom-query/',
   mm: 'src/main-menu/',
   mh: 'src/mode-host/'
 }

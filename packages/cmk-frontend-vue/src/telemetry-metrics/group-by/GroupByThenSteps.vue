@@ -45,13 +45,13 @@ function updateThenStep(targetIndex: number, updated: AggregationStep): void {
 </script>
 
 <template>
-  <div class="metric-backend-group-by-then-steps">
+  <div class="telemetry-metrics-group-by-then-steps">
     <div
       v-for="(step, index) in thenSteps"
       :key="step.id"
-      class="metric-backend-group-by-then-steps__step"
+      class="telemetry-metrics-group-by-then-steps__step"
     >
-      <span class="metric-backend-group-by-then-steps__label">{{ _t('then') }}</span>
+      <span class="telemetry-metrics-group-by-then-steps__label">{{ _t('then') }}</span>
       <GroupByThenStep
         :model-value="step"
         :allowed-keys="allowedKeysForStep(index)"
@@ -60,10 +60,10 @@ function updateThenStep(targetIndex: number, updated: AggregationStep): void {
         @remove="removeThenStep(index)"
       />
     </div>
-    <div class="metric-backend-group-by-then-steps__step">
-      <span class="metric-backend-group-by-then-steps__label">{{ _t('then') }}</span>
+    <div class="telemetry-metrics-group-by-then-steps__step">
+      <span class="telemetry-metrics-group-by-then-steps__label">{{ _t('then') }}</span>
       <CmkIconButton
-        class="metric-backend-group-by-then-steps__add"
+        class="telemetry-metrics-group-by-then-steps__add"
         name="add"
         size="large"
         :title="_t('Add then step')"
@@ -76,24 +76,24 @@ function updateThenStep(targetIndex: number, updated: AggregationStep): void {
 
 <style scoped>
 /* Styled locally so this shared component needs no dependency on graphing/designer. */
-.metric-backend-group-by-then-steps {
+.telemetry-metrics-group-by-then-steps {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
 }
 
-.metric-backend-group-by-then-steps__step {
+.telemetry-metrics-group-by-then-steps__step {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--dimension-4);
 }
 
-.metric-backend-group-by-then-steps__label {
+.telemetry-metrics-group-by-then-steps__label {
   font-style: italic;
 }
 
-.metric-backend-group-by-then-steps__add:hover {
+.telemetry-metrics-group-by-then-steps__add:hover {
   background-color: var(--input-hover-bg-color);
 }
 </style>

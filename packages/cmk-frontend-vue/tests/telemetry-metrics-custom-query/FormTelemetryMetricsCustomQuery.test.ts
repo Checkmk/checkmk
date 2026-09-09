@@ -9,10 +9,10 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 
 import type { ValidationMessages } from '@/form'
 
-import FormMetricBackendCustomQuery from '@/telemetry-metrics-custom-query/FormTelemetryMetricsCustomQuery.vue'
+import FormTelemetryMetricsCustomQuery from '@/telemetry-metrics-custom-query/FormTelemetryMetricsCustomQuery.vue'
 
 test('surfaces the metric-name error but not the consolidation error already shown on-field', () => {
-  render(FormMetricBackendCustomQuery, {
+  render(FormTelemetryMetricsCustomQuery, {
     props: {
       consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 0 },
       backendValidation: [
@@ -35,7 +35,7 @@ test('surfaces the metric-name error but not the consolidation error already sho
 })
 
 test('a preserve histograms line offers the groupings that pair with it', async () => {
-  render(FormMetricBackendCustomQuery, {
+  render(FormTelemetryMetricsCustomQuery, {
     props: {
       consolidation: {
         type: 'histogram',
@@ -70,7 +70,7 @@ const SUM_BY_SERVICE_THEN_AVG_BY_REGION: Aggregator = {
   ]
 }
 
-type Props = InstanceType<typeof FormMetricBackendCustomQuery>['$props']
+type Props = InstanceType<typeof FormTelemetryMetricsCustomQuery>['$props']
 
 test.each<[string, Props]>([
   [
@@ -101,7 +101,7 @@ test.each<[string, Props]>([
     }
   ]
 ])('renders the chained "avg by cloud.region" then step for %s', async (_scenario, props) => {
-  render(FormMetricBackendCustomQuery, { props })
+  render(FormTelemetryMetricsCustomQuery, { props })
 
   const thenChip = await screen.findByRole('button', { name: /Edit then step/ })
   expect(thenChip).toHaveTextContent('avg by')

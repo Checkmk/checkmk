@@ -5,10 +5,10 @@
  */
 import {
   newConstantDraft,
-  newMetricBackendDraft,
   newRrdMetricDraft,
   newRrdQueryDraft,
-  newScalarDraft
+  newScalarDraft,
+  newTelemetryMetricsDraft
 } from '@/graphing/designer/drafts'
 import { isValid, validateDesign, validateRow } from '@/graphing/designer/validation'
 
@@ -17,10 +17,10 @@ import {
   filterDefinitions,
   formulaItem,
   items,
-  metricBackendItem,
   rrdMetricItem,
   rrdQueryItem,
-  scalarItem
+  scalarItem,
+  telemetryMetricsItem
 } from './fixtures'
 
 describe('validateRow', () => {
@@ -49,7 +49,7 @@ describe('validateRow', () => {
   })
 
   test('a metric backend source only needs a metric', () => {
-    expect(validateRow(newMetricBackendDraft('B'), filterDefinitions)).toEqual([
+    expect(validateRow(newTelemetryMetricsDraft('B'), filterDefinitions)).toEqual([
       { id: 'B', field: 'metric_name', code: 'required' }
     ])
   })
@@ -173,7 +173,7 @@ describe('validateRow', () => {
     const consolidation = { type: 'gauge_last', lookback_seconds: 0 } as const
     expect(
       validateRow(
-        metricBackendItem('A', { consolidation_function: consolidation }),
+        telemetryMetricsItem('A', { consolidation_function: consolidation }),
         filterDefinitions
       )
     ).toEqual([{ id: 'A', field: 'consolidation_function', code: 'lookback-too-small' }])
@@ -187,7 +187,7 @@ describe('validateRow', () => {
     } as const
     expect(
       validateRow(
-        metricBackendItem('A', { consolidation_function: consolidation }),
+        telemetryMetricsItem('A', { consolidation_function: consolidation }),
         filterDefinitions
       )
     ).toEqual([{ id: 'A', field: 'consolidation_function', code: 'percentile-out-of-range' }])
@@ -201,7 +201,7 @@ describe('validateRow', () => {
     } as const
     expect(
       validateRow(
-        metricBackendItem('A', { consolidation_function: consolidation }),
+        telemetryMetricsItem('A', { consolidation_function: consolidation }),
         filterDefinitions
       )
     ).toEqual([{ id: 'A', field: 'consolidation_function', code: 'not-finite' }])
@@ -216,7 +216,7 @@ describe('validateRow', () => {
     } as const
     expect(
       validateRow(
-        metricBackendItem('A', { consolidation_function: consolidation }),
+        telemetryMetricsItem('A', { consolidation_function: consolidation }),
         filterDefinitions
       )
     ).toEqual([{ id: 'A', field: 'consolidation_function', code: 'thresholds-unordered' }])
@@ -234,7 +234,7 @@ describe('isValid', () => {
     for (const item of [
       rrdMetricItem('A'),
       rrdQueryItem('B'),
-      metricBackendItem('C'),
+      telemetryMetricsItem('C'),
       constantItem('D'),
       formulaItem('E'),
       scalarItem('F')
@@ -250,7 +250,10 @@ describe('isValid', () => {
       percentile: 500
     } as const
     expect(
-      isValid(metricBackendItem('A', { consolidation_function: consolidation }), filterDefinitions)
+      isValid(
+        telemetryMetricsItem('A', { consolidation_function: consolidation }),
+        filterDefinitions
+      )
     ).toBe(false)
     expect(isValid(newRrdMetricDraft('B', '#123456'), filterDefinitions)).toBe(false)
   })
@@ -315,7 +318,7 @@ describe('validateDesign', () => {
   })
 
   test('an RRD formula cannot reach into the metrics backend', () => {
-    const design = [metricBackendItem('E'), formulaItem('D', { ast: { op: 'ref', id: 'E' } })]
+    const design = [telemetryMetricsItem('E'), formulaItem('D', { ast: { op: 'ref', id: 'E' } })]
 
     expect(validateDesign(design, filterDefinitions)).toEqual([
       { id: 'D', field: 'ast', code: 'domain-mismatch', ref: 'E' }

@@ -134,29 +134,29 @@ function canLeaveEdit(): boolean {
     @remove="emit('remove')"
   >
     <template #read-only>
-      <span class="metric-backend-group-by-then-step__summary">
-        <span class="metric-backend-group-by-then-step__segment">{{
+      <span class="telemetry-metrics-group-by-then-step__summary">
+        <span class="telemetry-metrics-group-by-then-step__segment">{{
           functionLabel(model.function)
         }}</span>
         <span
           v-if="model.keys.length === 0"
-          class="metric-backend-group-by-then-step__everything"
+          class="telemetry-metrics-group-by-then-step__everything"
           >{{ _t('nothing, combine all series into one') }}</span
         >
         <template v-for="(key, index) in model.keys" :key="key.id">
           <span
             v-if="key.attributeKind !== null"
-            class="metric-backend-group-by-then-step__segment metric-backend-group-by-then-step__segment--dimmed"
+            class="telemetry-metrics-group-by-then-step__segment telemetry-metrics-group-by-then-step__segment--dimmed"
             >[{{ attributeKindLabel(key.attributeKind) }}]</span
           >
-          <span class="metric-backend-group-by-then-step__segment"
+          <span class="telemetry-metrics-group-by-then-step__segment"
             >{{ key.attributeKey }}{{ index < model.keys.length - 1 ? ',' : '' }}</span
           >
         </template>
       </span>
     </template>
     <template #edit>
-      <span class="metric-backend-group-by-then-step__segment">
+      <span class="telemetry-metrics-group-by-then-step__segment">
         <CmkDropdown
           ref="functionDropdownRef"
           floating
@@ -180,24 +180,24 @@ function canLeaveEdit(): boolean {
 </template>
 
 <style scoped>
-.metric-backend-group-by-then-step__summary {
+.telemetry-metrics-group-by-then-step__summary {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-4);
 }
 
-.metric-backend-group-by-then-step__segment {
+.telemetry-metrics-group-by-then-step__segment {
   padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-group-by-then-step__segment--dimmed {
+.telemetry-metrics-group-by-then-step__segment--dimmed {
   color: var(--font-color-dimmed);
   font-style: italic;
 }
 
-.metric-backend-group-by-then-step__everything {
+.telemetry-metrics-group-by-then-step__everything {
   color: var(--font-color-dimmed);
   font-style: italic;
 }

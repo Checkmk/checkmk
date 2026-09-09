@@ -21,8 +21,8 @@ import FormHelp from '@/form/private/FormHelp.vue'
 import SourceFormStack from '@/graphing/designer/components/forms/SourceFormStack.vue'
 import SourceFormText from '@/graphing/designer/components/forms/SourceFormText.vue'
 
-import FormMetricBackendCustomQuery from './FormTelemetryMetricsCustomQuery.vue'
-import { metricBackendMacroHelp } from './constants'
+import FormTelemetryMetricsCustomQuery from './FormTelemetryMetricsCustomQuery.vue'
+import { telemetryMetricsMacroHelp } from './constants'
 
 const { _t } = usei18n()
 
@@ -197,7 +197,7 @@ const aggregator = computed<Aggregator | undefined>({
 </script>
 
 <template>
-  <FormMetricBackendCustomQuery
+  <FormTelemetryMetricsCustomQuery
     :id="componentId"
     v-model:metric-name="metricName"
     v-model:attribute-filter="attributeFilter"
@@ -208,7 +208,7 @@ const aggregator = computed<Aggregator | undefined>({
     <template #additional-fields>
       <SourceFormStack spacing="label">
         <SourceFormText variant="description">{{ _t('Service name template') }}</SourceFormText>
-        <div class="mbcq-form-spec-telemetry-metrics-custom-query__service-name-template">
+        <div class="tmcq-form-spec-telemetry-metrics-custom-query__service-name-template">
           <CmkInput
             v-model="serviceNameTemplate"
             type="text"
@@ -216,16 +216,16 @@ const aggregator = computed<Aggregator | undefined>({
             :placeholder="_t('Service name template')"
             :external-errors="serviceNameTemplateErrors"
           />
-          <CmkHelpText :help="metricBackendMacroHelp()" />
+          <CmkHelpText :help="telemetryMetricsMacroHelp()" />
         </div>
-        <FormHelp :help="metricBackendMacroHelp()" />
+        <FormHelp :help="telemetryMetricsMacroHelp()" />
       </SourceFormStack>
     </template>
-  </FormMetricBackendCustomQuery>
+  </FormTelemetryMetricsCustomQuery>
 </template>
 
 <style scoped>
-.mbcq-form-spec-telemetry-metrics-custom-query__service-name-template {
+.tmcq-form-spec-telemetry-metrics-custom-query__service-name-template {
   display: flex;
   align-items: center;
   gap: 8px;

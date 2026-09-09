@@ -111,8 +111,8 @@ defineExpose({ tryChangeFocus, focusKey })
 </script>
 
 <template>
-  <div class="metric-backend-group-by-keys-area" :data-testid="testid">
-    <span v-if="keys.length === 0" class="metric-backend-group-by-keys-area__everything">{{
+  <div class="telemetry-metrics-group-by-keys-area" :data-testid="testid">
+    <span v-if="keys.length === 0" class="telemetry-metrics-group-by-keys-area__everything">{{
       _t('nothing, combine all series into one')
     }}</span>
     <GroupByKeyPill
@@ -133,7 +133,7 @@ defineExpose({ tryChangeFocus, focusKey })
     />
     <CmkIconButton
       v-if="canAdd"
-      class="metric-backend-group-by-keys-area__add"
+      class="telemetry-metrics-group-by-keys-area__add"
       name="add"
       size="large"
       :title="_t('Add group key')"
@@ -145,19 +145,19 @@ defineExpose({ tryChangeFocus, focusKey })
 </template>
 
 <style scoped>
-.metric-backend-group-by-keys-area {
+.telemetry-metrics-group-by-keys-area {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-3) var(--dimension-4);
 }
 
-.metric-backend-group-by-keys-area__everything {
+.telemetry-metrics-group-by-keys-area__everything {
   color: var(--font-color-dimmed);
   font-style: italic;
 }
 
-.metric-backend-group-by-keys-area__add:hover {
+.telemetry-metrics-group-by-keys-area__add:hover {
   background-color: var(--input-hover-bg-color);
 }
 </style>

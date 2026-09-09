@@ -10,7 +10,7 @@ import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-sha
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import FormMetricBackendCustomQuery from '@/telemetry-metrics-custom-query/FormTelemetryMetricsCustomQuery.vue'
+import FormTelemetryMetricsCustomQuery from '@/telemetry-metrics-custom-query/FormTelemetryMetricsCustomQuery.vue'
 
 const { _t } = usei18n()
 
@@ -28,7 +28,7 @@ const aggregator = defineModel<Aggregator | undefined>('aggregator', { required:
     <CmkParagraph class="mode-custom-services-define-metric-step__lead">{{
       _t('Select the metric for this service')
     }}</CmkParagraph>
-    <FormMetricBackendCustomQuery
+    <FormTelemetryMetricsCustomQuery
       v-model:metric-name="metricName"
       v-model:metric-types="metricTypes"
       v-model:attribute-filter="attributeFilter"

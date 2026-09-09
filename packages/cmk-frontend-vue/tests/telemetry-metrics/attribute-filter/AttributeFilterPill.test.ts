@@ -133,7 +133,7 @@ test.each([
 ])('the clear button empties the $segment segment', async ({ segment, expected, combobox }) => {
   const { condition, container } = renderClearablePill()
   const segmentElement = container.querySelector<HTMLElement>(
-    `.metric-backend-attribute-filter-pill__segment--${segment}`
+    `.telemetry-metrics-attribute-filter-pill__segment--${segment}`
   )!
 
   await userEvent.click(within(segmentElement).getByLabelText('Clear selection'))

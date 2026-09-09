@@ -6,13 +6,13 @@
 import { customServiceModelFor } from '@/graphing/designer/telemetryMetrics'
 import { DEFAULT_TITLE_MACRO } from '@/graphing/designer/types'
 
-import { metricBackendItem } from './fixtures'
+import { telemetryMetricsItem } from './fixtures'
 
 const DEFAULT_TITLE = '$METRIC_NAME$ - $SERIES_ID$'
 
 test('the model carries over metric and filter', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', {
+    telemetryMetricsItem('A', {
       metric_name: 'span.latency',
       attribute_filter: { type: 'exists', key: { kind: 'resource', name: 'service.name' } }
     }),
@@ -29,7 +29,7 @@ test('the model carries over metric and filter', () => {
 
 test('the row title becomes the service name, with the default title macro expanded', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', { title: `p95 of ${DEFAULT_TITLE_MACRO}` }),
+    telemetryMetricsItem('A', { title: `p95 of ${DEFAULT_TITLE_MACRO}` }),
     DEFAULT_TITLE
   )
 
@@ -38,7 +38,7 @@ test('the row title becomes the service name, with the default title macro expan
 
 test('a gauge consolidation maps to the gauge wire shape', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', {
+    telemetryMetricsItem('A', {
       consolidation_function: { type: 'gauge_avg', lookback_seconds: 42 }
     }),
     DEFAULT_TITLE
@@ -53,7 +53,7 @@ test('a gauge consolidation maps to the gauge wire shape', () => {
 
 test('a sum consolidation maps to the sum wire shape', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', {
+    telemetryMetricsItem('A', {
       consolidation_function: { type: 'sum_rate', lookback_seconds: 300 }
     }),
     DEFAULT_TITLE
@@ -68,7 +68,7 @@ test('a sum consolidation maps to the sum wire shape', () => {
 
 test('a histogram quantile keeps its percentile', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', {
+    telemetryMetricsItem('A', {
       consolidation_function: {
         type: 'histogram_quantile',
         lookback_seconds: 300,
@@ -88,7 +88,7 @@ test('a histogram quantile keeps its percentile', () => {
 
 test('a histogram fraction function keeps its thresholds', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', {
+    telemetryMetricsItem('A', {
       consolidation_function: {
         type: 'histogram_fraction_between',
         lookback_seconds: 300,
@@ -110,7 +110,7 @@ test('a histogram fraction function keeps its thresholds', () => {
 
 test('a preserve function keeps its group keys', () => {
   const model = customServiceModelFor(
-    metricBackendItem('A', {
+    telemetryMetricsItem('A', {
       consolidation_function: {
         type: 'histogram_preserve_fraction_below',
         lookback_seconds: 300,
@@ -139,13 +139,13 @@ test('the aggregator is carried over', () => {
       }
     ]
   }
-  const model = customServiceModelFor(metricBackendItem('A', { aggregator }), DEFAULT_TITLE)
+  const model = customServiceModelFor(telemetryMetricsItem('A', { aggregator }), DEFAULT_TITLE)
 
   expect(model.aggregator).toEqual(aggregator)
 })
 
 test('an ungrouped line yields no aggregator', () => {
-  const model = customServiceModelFor(metricBackendItem('A'), DEFAULT_TITLE)
+  const model = customServiceModelFor(telemetryMetricsItem('A'), DEFAULT_TITLE)
 
   expect(model.aggregator).toBeUndefined()
 })

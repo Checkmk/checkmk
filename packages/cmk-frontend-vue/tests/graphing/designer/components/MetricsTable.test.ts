@@ -15,10 +15,10 @@ import { useValidationMessages } from '@/graphing/designer/composables/useValida
 import {
   type DesignerItem,
   newConstantDraft,
-  newMetricBackendDraft,
   newRrdMetricDraft,
   newRrdQueryDraft,
-  newScalarDraft
+  newScalarDraft,
+  newTelemetryMetricsDraft
 } from '@/graphing/designer/drafts'
 import type { ItemId } from '@/graphing/designer/types'
 import { type RowField, type RowIssue, validateDesign } from '@/graphing/designer/validation'
@@ -27,8 +27,8 @@ import {
   constantItem,
   filterDefinitions,
   formulaItem,
-  metricBackendItem,
-  rrdMetricItem
+  rrdMetricItem,
+  telemetryMetricsItem
 } from '../fixtures'
 
 vi.mock('@/mode-custom-services/CreateCustomServiceSlideIn.vue', () => ({
@@ -71,7 +71,7 @@ async function expectScrolledToRow(scrollIntoView: MockInstance, id: string): Pr
 
 function renderTable(
   seed: DesignerItem[] = [],
-  metricBackendAvailable = true,
+  telemetryMetricsAvailable = true,
   createServicesAvailable = true,
   { issuesByRow = new Map<ItemId, RowIssue[]>(), resolvedTitles = new Map<ItemId, string>() } = {}
 ) {
@@ -84,9 +84,9 @@ function renderTable(
         h(MetricsTable, {
           store,
           thresholds: THRESHOLDS,
-          metricBackendAvailable,
+          telemetryMetricsAvailable,
           createServicesAvailable,
-          metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
+          telemetryMetricsDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
           titleMacros: TITLE_MACROS,
           issuesByRow,
           resolvedTitles
@@ -286,7 +286,7 @@ test('a formula row expands to the read-only formula form', async () => {
 })
 
 test('a metric_backend row expands to the metric backend form', async () => {
-  renderTable([metricBackendItem('A')])
+  renderTable([telemetryMetricsItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
@@ -315,7 +315,7 @@ test('the title column header exposes the rendered macro help', async () => {
 })
 
 test('a complete metric_backend row offers the create-custom-service action', () => {
-  renderTable([metricBackendItem('A')])
+  renderTable([telemetryMetricsItem('A')])
   expect(screen.getByRole('button', { name: CREATE_SERVICE_LABEL })).toBeInTheDocument()
 })
 
@@ -325,22 +325,22 @@ test('the create-custom-service action is absent on non metric_backend rows', ()
 })
 
 test('the create-custom-service action is absent while the metric_backend query is incomplete', () => {
-  renderTable([newMetricBackendDraft('A')])
+  renderTable([newTelemetryMetricsDraft('A')])
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
 test('the create-custom-service action is absent when the metric backend is unavailable', () => {
-  renderTable([metricBackendItem('A')], false)
+  renderTable([telemetryMetricsItem('A')], false)
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
 test('the create-custom-service action is absent when creating services is unavailable', () => {
-  renderTable([metricBackendItem('A')], true, false)
+  renderTable([telemetryMetricsItem('A')], true, false)
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
 test('clicking the create-custom-service action opens the slide-in prefilled from that row', async () => {
-  renderTable([metricBackendItem('A', { title: '$DEFAULT_TITLE$' })])
+  renderTable([telemetryMetricsItem('A', { title: '$DEFAULT_TITLE$' })])
   expect(screen.queryByTestId('create-custom-service-slidein')).not.toBeInTheDocument()
 
   await fireEvent.click(screen.getByRole('button', { name: CREATE_SERVICE_LABEL }))
@@ -356,7 +356,7 @@ describe('a blocked row', () => {
     'Constant line': { ...newConstantDraft('A', '#28a2f3'), title: '' },
     'Service reference line': { ...newScalarDraft('A', '#28a2f3'), title: '' },
     'Metrics backend': {
-      ...newMetricBackendDraft('A'),
+      ...newTelemetryMetricsDraft('A'),
       title: '',
       consolidation_function: { type: 'gauge_last', lookback_seconds: 0 }
     },

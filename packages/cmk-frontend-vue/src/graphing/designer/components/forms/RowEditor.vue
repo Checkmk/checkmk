@@ -18,7 +18,7 @@ import ConstantLineForm from './ConstantLineForm.vue'
 import FormulaForm from './FormulaForm.vue'
 import RrdForm from './RrdForm.vue'
 import ServiceReferenceLineForm from './ServiceReferenceLineForm.vue'
-import MetricBackendForm from './TelemetryMetricsForm.vue'
+import TelemetryMetricsForm from './TelemetryMetricsForm.vue'
 
 const { row, store, thresholds, issues } = defineProps<{
   row: DesignerItem
@@ -120,7 +120,7 @@ function messagesFor(field: RowField): TranslatedString[] {
         :service-name-errors="messagesFor('service_name')"
         :metric-name-errors="messagesFor('metric_name')"
       />
-      <MetricBackendForm
+      <TelemetryMetricsForm
         v-else-if="row.type === 'metric_backend'"
         :item="row"
         :store="formStore"

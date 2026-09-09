@@ -9,7 +9,7 @@ import { defineComponent, nextTick, ref } from 'vue'
 
 import type { ValidationMessages } from '@/form'
 
-import FormMetricBackendConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
+import FormTelemetryMetricsConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
 import type { ConsolidationFunction } from '@/telemetry-metrics/consolidation/types'
 
 afterEach(cleanup)
@@ -43,12 +43,12 @@ function renderConsolidation(initial: {
     backendValidation: ref<ValidationMessages>(initial.backendValidation ?? [])
   }
   const wrapper = defineComponent({
-    components: { FormMetricBackendConsolidation },
+    components: { FormTelemetryMetricsConsolidation },
     setup() {
       return { models }
     },
     template: `
-      <FormMetricBackendConsolidation
+      <FormTelemetryMetricsConsolidation
         v-model:aggregation-lookback="models.aggregationLookback.value"
         v-model:aggregation-histogram-percentile="models.aggregationHistogramPercentile.value"
         v-model:aggregation-histogram-threshold-for-fraction-below="

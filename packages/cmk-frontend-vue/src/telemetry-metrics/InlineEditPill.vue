@@ -97,8 +97,8 @@ defineExpose({
 
 <template>
   <span
-    class="metric-backend-inline-edit-pill"
-    :class="{ 'metric-backend-inline-edit-pill--editing': editing }"
+    class="telemetry-metrics-inline-edit-pill"
+    :class="{ 'telemetry-metrics-inline-edit-pill--editing': editing }"
     :aria-label="ariaLabel"
     role="group"
   >
@@ -106,7 +106,7 @@ defineExpose({
       v-if="editing"
       ref="editPaneRef"
       v-click-outside="onOutsideClick"
-      class="metric-backend-inline-edit-pill__edit"
+      class="telemetry-metrics-inline-edit-pill__edit"
       :[scopeMarkerAttr]="''"
       :title="title"
       @keydown.tab.capture.stop
@@ -117,7 +117,7 @@ defineExpose({
       <CmkIconButton
         v-if="removable"
         :[itemMarkerAttr]="''"
-        class="metric-backend-inline-edit-pill__remove"
+        class="telemetry-metrics-inline-edit-pill__remove"
         name="close"
         size="small"
         :title="removeLabel"
@@ -130,7 +130,7 @@ defineExpose({
       v-else
       ref="closedPillRef"
       :[itemMarkerAttr]="''"
-      class="metric-backend-inline-edit-pill__closed"
+      class="telemetry-metrics-inline-edit-pill__closed"
       :tabindex="tabFocusable ? 0 : -1"
       @keydown.enter.prevent="emit('edit')"
       @keydown.space.prevent="emit('edit')"
@@ -138,7 +138,7 @@ defineExpose({
     >
       <button
         type="button"
-        class="metric-backend-inline-edit-pill__main"
+        class="telemetry-metrics-inline-edit-pill__main"
         tabindex="-1"
         :title="title"
         :aria-label="editAriaLabel"
@@ -150,7 +150,7 @@ defineExpose({
       </button>
       <CmkIconButton
         v-if="removable"
-        class="metric-backend-inline-edit-pill__remove"
+        class="telemetry-metrics-inline-edit-pill__remove"
         name="close"
         size="small"
         tabindex="-1"
@@ -164,7 +164,7 @@ defineExpose({
 </template>
 
 <style scoped>
-.metric-backend-inline-edit-pill {
+.telemetry-metrics-inline-edit-pill {
   display: inline-flex;
   align-items: stretch;
   background: var(--default-form-element-bg-color);
@@ -172,27 +172,27 @@ defineExpose({
   white-space: nowrap;
 }
 
-.metric-backend-inline-edit-pill:not(.metric-backend-inline-edit-pill--editing):hover {
+.telemetry-metrics-inline-edit-pill:not(.telemetry-metrics-inline-edit-pill--editing):hover {
   background-color: var(--input-hover-bg-color);
 }
 
-.metric-backend-inline-edit-pill--editing {
+.telemetry-metrics-inline-edit-pill--editing {
   background: var(--ux-theme-3);
 }
 
-.metric-backend-inline-edit-pill__edit,
-.metric-backend-inline-edit-pill__closed {
+.telemetry-metrics-inline-edit-pill__edit,
+.telemetry-metrics-inline-edit-pill__closed {
   display: inline-flex;
   align-items: stretch;
   gap: var(--dimension-4);
   padding: 0 var(--dimension-3);
 }
 
-.metric-backend-inline-edit-pill__closed:focus-visible {
+.telemetry-metrics-inline-edit-pill__closed:focus-visible {
   outline: revert;
 }
 
-.metric-backend-inline-edit-pill__main {
+.telemetry-metrics-inline-edit-pill__main {
   display: inline-flex;
   gap: var(--dimension-4);
   background: transparent;
@@ -204,16 +204,16 @@ defineExpose({
   cursor: pointer;
 }
 
-.metric-backend-inline-edit-pill__main:focus-visible {
+.telemetry-metrics-inline-edit-pill__main:focus-visible {
   outline: revert;
 }
 
-.metric-backend-inline-edit-pill__remove {
+.telemetry-metrics-inline-edit-pill__remove {
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-inline-edit-pill--editing .metric-backend-inline-edit-pill__remove:hover {
+.telemetry-metrics-inline-edit-pill--editing .telemetry-metrics-inline-edit-pill__remove:hover {
   background-color: var(--default-form-element-bg-color);
 }
 </style>

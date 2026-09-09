@@ -38,9 +38,9 @@ import { useValidationMessages } from '../composables/useValidationMessages'
 import {
   type DesignerItem,
   newConstantDraft,
-  newMetricBackendDraft,
   newRrdMetricDraft,
   newScalarDraft,
+  newTelemetryMetricsDraft,
   scalarColor
 } from '../drafts'
 import { customServiceModelFor } from '../telemetryMetrics'
@@ -55,19 +55,19 @@ const NO_ISSUES: readonly RowIssue[] = Object.freeze([])
 const {
   store,
   thresholds,
-  metricBackendAvailable,
+  telemetryMetricsAvailable,
   createServicesAvailable,
-  metricBackendDefaultTitle,
+  telemetryMetricsDefaultTitle,
   titleMacros,
   issuesByRow,
   resolvedTitles
 } = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
-  metricBackendAvailable: boolean
+  telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
   /** What the engine expands `$DEFAULT_TITLE$` to for a metric-backend row. */
-  metricBackendDefaultTitle: string
+  telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
   resolvedTitles: ReadonlyMap<ItemId, string>
@@ -152,7 +152,9 @@ const selectedIds = computed<ItemId[]>(() => {
 const addSourceSuggestions = computed(() => {
   const suggestions = [
     { name: 'rrd_metric', title: _t('Checkmk RRD') },
-    ...(metricBackendAvailable ? [{ name: 'metric_backend', title: _t('Metrics backend') }] : []),
+    ...(telemetryMetricsAvailable
+      ? [{ name: 'metric_backend', title: _t('Metrics backend') }]
+      : []),
     { name: 'scalar', title: _t('Service reference line') },
     { name: 'constant', title: _t('Constant line') }
   ]
@@ -169,7 +171,7 @@ function onAddSource(value: string): void {
       case 'scalar':
         return newScalarDraft(assigned, scalarColor('warning', store.nextColor.value, thresholds))
       case 'metric_backend':
-        return newMetricBackendDraft(assigned)
+        return newTelemetryMetricsDraft(assigned)
       default:
         throw new Error(`Unknown source type: ${value}`)
     }
@@ -186,7 +188,7 @@ const rowActions: CellAction[] = [
 /** Metric-backend rows gain a "Create custom service" action once their query is complete. */
 function rowActionsFor(row: DesignerItem): CellAction[] {
   if (
-    metricBackendAvailable &&
+    telemetryMetricsAvailable &&
     createServicesAvailable &&
     row.type === 'metric_backend' &&
     isValid(row)
@@ -218,7 +220,7 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
     row.type === 'metric_backend' &&
     isValid(row)
   ) {
-    customServiceModel.value = customServiceModelFor(row, metricBackendDefaultTitle)
+    customServiceModel.value = customServiceModelFor(row, telemetryMetricsDefaultTitle)
   }
 }
 

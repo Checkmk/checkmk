@@ -58,8 +58,8 @@ describe('POST_SAVE_ACTIONS', () => {
     expect(POST_SAVE_ACTIONS[0]!.label()).toBe('OpenTelemetry Collector activation')
   })
 
-  test('enableMetricBackend action is present as the second registry entry', () => {
-    expect(POST_SAVE_ACTIONS[1]!.key).toBe('enableMetricBackend')
+  test('enableDataBackend action is present as the second registry entry', () => {
+    expect(POST_SAVE_ACTIONS[1]!.key).toBe('enableDataBackend')
     expect(POST_SAVE_ACTIONS[1]!.label()).toBe('Metric backend connection')
   })
 
@@ -148,14 +148,14 @@ describe('POST_SAVE_ACTIONS', () => {
     })
   })
 
-  describe('enableMetricBackend.execute', () => {
+  describe('enableDataBackend.execute', () => {
     test('PATCHes the metric backend update endpoint with the selected site', async () => {
       const spy = vi
         .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
         .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
         .mockResolvedValueOnce(makeFetchResponse(204))
 
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
@@ -171,7 +171,7 @@ describe('POST_SAVE_ACTIONS', () => {
         .mockResolvedValueOnce(makeFetchResponse(200, { type: 'enabled' }))
         .mockResolvedValueOnce(makeFetchResponse(204))
 
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
@@ -187,7 +187,7 @@ describe('POST_SAVE_ACTIONS', () => {
         .mockResolvedValueOnce(makeFetchResponse(204))
         .mockResolvedValueOnce(makeFetchResponse(204))
 
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
@@ -207,7 +207,7 @@ describe('POST_SAVE_ACTIONS', () => {
         makeFetchResponse(400, { title: 'Bad request', detail: 'Site does not exist' })
       )
 
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'ghost', configName: 'test-config' })
 
       expect(result.ok).toBe(false)
@@ -220,7 +220,7 @@ describe('POST_SAVE_ACTIONS', () => {
     test('returns a generic error for unexpected failures', async () => {
       vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network down'))
 
-      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(false)
@@ -849,7 +849,7 @@ describe('buildPrometheusFinalizeActions', () => {
 
     expect(actions.map((a) => a.key)).toEqual([
       'enableCollector',
-      'enableMetricBackend',
+      'enableDataBackend',
       'createPrometheusScrapeConfig',
       'createDCDConnector',
       'createOTelBundle'

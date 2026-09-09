@@ -10,7 +10,7 @@ import { HttpResponse, delay, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
-import FormMetricBackendAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
+import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
 import { KEY_IDENTS, VALUE_IDENTS } from '@/telemetry-metrics/attributeFilterAdapter'
 
 // Keys the backend offers under each attribute-kind key autocompleter, keyed by its ident.
@@ -47,12 +47,12 @@ function renderAttributes(
 ): AttributeFilterModel {
   const model = ref<AttributeFilter | null | undefined>(attributeFilter)
   const wrapper = defineComponent({
-    components: { FormMetricBackendAttributes },
+    components: { FormTelemetryMetricsAttributes },
     setup() {
       return { model, allowOr }
     },
     template: `
-      <FormMetricBackendAttributes
+      <FormTelemetryMetricsAttributes
         v-model:attribute-filter="model"
         :allow-or="allowOr"
         label="Attributes"

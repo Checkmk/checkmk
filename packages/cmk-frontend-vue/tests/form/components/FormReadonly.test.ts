@@ -375,7 +375,7 @@ test('FormReadonly renders dual list choice', () => {
   expect(screen.queryByText('Choice 3')).toBeNull()
 })
 
-const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
+const telemetryMetricsCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   type: 'metric_backend_custom_query',
   title: 'mbTitle',
   help: 'mbHelp',
@@ -392,7 +392,7 @@ const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   service_name_template: ''
 }
 
-function renderMetricBackendCustomQuery(
+function renderTelemetryMetricsCustomQuery(
   attributeFilter?: unknown,
   consolidationFunction: string = 'sum_rate',
   groupBy: unknown[] = [],
@@ -400,7 +400,7 @@ function renderMetricBackendCustomQuery(
 ): void {
   render(FormReadonly, {
     props: {
-      spec: metricBackendCustomQuerySpec,
+      spec: telemetryMetricsCustomQuerySpec,
       backendValidation: [],
       data: {
         metric_name: 'metric',
@@ -441,18 +441,18 @@ test.each([
     '[Resource] foo is bar OR [Scope] baz exists'
   ]
 ])('FormReadonly renders the attribute filter as a sentence', (attributeFilter, sentence) => {
-  renderMetricBackendCustomQuery(attributeFilter)
+  renderTelemetryMetricsCustomQuery(attributeFilter)
   screen.getByText(sentence)
 })
 
 test('FormReadonly omits the attribute row and renders a compact lookback without a filter', () => {
-  renderMetricBackendCustomQuery(undefined)
+  renderTelemetryMetricsCustomQuery(undefined)
   expect(screen.queryByText('Attributes:')).toBeNull()
   screen.getByText(/3\s+m\s+42\s+s/)
 })
 
 test('FormReadonly renders the persisted consolidation function as a pill sentence', () => {
-  renderMetricBackendCustomQuery(undefined)
+  renderTelemetryMetricsCustomQuery(undefined)
   screen.getByText('Consolidation:')
   screen.getByText(/\[Sum\] rate · 3\s+m\s+42\s+s/)
 })
@@ -464,14 +464,14 @@ test.each([
 ])(
   'FormReadonly renders only the parameters of the picked function',
   (consolidationFunction, sentence) => {
-    renderMetricBackendCustomQuery(undefined, consolidationFunction)
+    renderTelemetryMetricsCustomQuery(undefined, consolidationFunction)
     screen.getByText(sentence)
     expect(screen.queryByText(/Percentile/)).toBeNull()
   }
 )
 
 test('FormReadonly falls back to the plain fields for a name outside the catalog', () => {
-  renderMetricBackendCustomQuery(undefined, 'gone_from_the_catalog')
+  renderTelemetryMetricsCustomQuery(undefined, 'gone_from_the_catalog')
 
   expect(screen.queryByText('Consolidation:')).toBeNull()
   screen.getByText('Aggregation lookback:')
@@ -480,7 +480,7 @@ test('FormReadonly falls back to the plain fields for a name outside the catalog
 })
 
 test('FormReadonly renders a preserve spelling as the preserve-histograms pill', () => {
-  renderMetricBackendCustomQuery(undefined, 'histogram_preserve_quantile')
+  renderTelemetryMetricsCustomQuery(undefined, 'histogram_preserve_quantile')
 
   screen.getByText('Consolidation:')
   screen.getByText(/\[Histogram\] preserve histograms ·/)
@@ -491,21 +491,21 @@ test.each([
   ['histogram_preserve_fraction_below', 'fraction <5 by [Resource] k8s.pod.name'],
   ['histogram_preserve_fraction_between', 'fraction 10–90 by [Resource] k8s.pod.name']
 ])('FormReadonly renders the preserve grouping as the editor chip', (fn, clause) => {
-  renderMetricBackendCustomQuery(undefined, fn, [{ kind: 'resource', key: 'k8s.pod.name' }])
+  renderTelemetryMetricsCustomQuery(undefined, fn, [{ kind: 'resource', key: 'k8s.pod.name' }])
 
   screen.getByText('Group by:')
   screen.getByText(clause)
 })
 
 test('FormReadonly renders an ungrouped preserve view with its parameter', () => {
-  renderMetricBackendCustomQuery(undefined, 'histogram_preserve_quantile')
+  renderTelemetryMetricsCustomQuery(undefined, 'histogram_preserve_quantile')
 
   screen.getByText('Group by:')
   screen.getByText('p95 by nothing, combine all series into one')
 })
 
 test('FormReadonly renders the aggregator stages', () => {
-  renderMetricBackendCustomQuery(undefined, 'gauge_last', [], {
+  renderTelemetryMetricsCustomQuery(undefined, 'gauge_last', [], {
     stages: [
       {
         aggregate_by: [{ kind: 'resource', name: 'k8s.pod.name' }],
@@ -519,7 +519,7 @@ test('FormReadonly renders the aggregator stages', () => {
 })
 
 test('FormReadonly renders a chained aggregator as the editor clause plus then steps', () => {
-  renderMetricBackendCustomQuery(undefined, 'gauge_last', [], {
+  renderTelemetryMetricsCustomQuery(undefined, 'gauge_last', [], {
     stages: [
       {
         aggregate_by: [{ kind: 'resource', name: 'k8s.pod.name' }],
@@ -537,7 +537,7 @@ test('FormReadonly renders a chained aggregator as the editor clause plus then s
 })
 
 test('FormReadonly renders a keyless aggregator stage as combining all series', () => {
-  renderMetricBackendCustomQuery(undefined, 'gauge_last', [], {
+  renderTelemetryMetricsCustomQuery(undefined, 'gauge_last', [], {
     stages: [{ aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } }]
   })
 
@@ -546,7 +546,7 @@ test('FormReadonly renders a keyless aggregator stage as combining all series', 
 })
 
 test('FormReadonly renders a preserve grouping and its then step in one row', () => {
-  renderMetricBackendCustomQuery(
+  renderTelemetryMetricsCustomQuery(
     undefined,
     'histogram_preserve_quantile',
     [{ kind: 'resource', key: 'k8s.pod.name' }],

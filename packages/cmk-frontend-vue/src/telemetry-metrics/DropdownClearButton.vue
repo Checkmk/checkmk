@@ -17,7 +17,7 @@ const emit = defineEmits<{
 
 <template>
   <CmkDropdownButton
-    class="metric-backend-dropdown-clear-button"
+    class="telemetry-metrics-dropdown-clear-button"
     group="end"
     :aria-label="_t('Clear selection')"
     @click="emit('clear')"
@@ -27,7 +27,7 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.metric-backend-dropdown-clear-button {
+.telemetry-metrics-dropdown-clear-button {
   align-items: center;
   padding-top: 0;
   padding-bottom: 1px;

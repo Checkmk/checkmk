@@ -215,7 +215,7 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
     if (!props.collector_activation_allowed && action.key === 'enableCollector') {
       return false
     }
-    if (!props.metric_backend_allowed && action.key === 'enableMetricBackend') {
+    if (!props.metric_backend_allowed && action.key === 'enableDataBackend') {
       return false
     }
     return true

@@ -20,8 +20,8 @@ import SourceFormField from '@/graphing/designer/components/forms/SourceFormFiel
 import SourceFormStack from '@/graphing/designer/components/forms/SourceFormStack.vue'
 import SourceFormText from '@/graphing/designer/components/forms/SourceFormText.vue'
 import FormMetricNameAutocompleter from '@/telemetry-metrics/FormMetricNameAutocompleter.vue'
-import FormMetricBackendAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
-import FormMetricBackendConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
+import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
+import FormTelemetryMetricsConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
 import { buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/telemetry-metrics/attributeKeySuggestions'
 import { type ConsolidationFunction, outputType } from '@/telemetry-metrics/consolidation/types'
@@ -64,7 +64,7 @@ const props = defineProps<{
   backendValidation?: ValidationMessages
 }>()
 
-// Only the metric name is validated here; the rest moved to FormMetricBackendConsolidation.
+// Only the metric name is validated here; the rest moved to FormTelemetryMetricsConsolidation.
 const metricNameValidation = ref<TranslatedString[]>([])
 
 immediateWatch(
@@ -243,7 +243,7 @@ const {
 
     <SourceFormStack spacing="label">
       <SourceFormText variant="description">{{ _t('Attributes') }}</SourceFormText>
-      <FormMetricBackendAttributes
+      <FormTelemetryMetricsAttributes
         v-model:attribute-filter="attributeFilter"
         :label="_t('Attributes')"
         :metric-name="metricName"
@@ -252,7 +252,7 @@ const {
 
     <SourceFormStack spacing="label">
       <SourceFormText variant="description">{{ _t('Consolidation') }}</SourceFormText>
-      <FormMetricBackendConsolidation
+      <FormTelemetryMetricsConsolidation
         v-model:aggregation-lookback="aggregationLookback"
         v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
         v-model:aggregation-histogram-threshold-for-fraction-below="

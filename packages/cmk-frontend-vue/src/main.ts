@@ -44,7 +44,7 @@ import ProfilingFlamegraphApp from './profiling/ProfilingFlamegraphApp.vue'
 import ProfilingProfilesListApp from './profiling/ProfilingProfilesListApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
-import { registerMetricBackendFormComponents } from './telemetry-metrics/registerFormComponents'
+import { registerTelemetryMetricsFormComponents } from './telemetry-metrics/registerFormComponents'
 import TrialModeSelectionApp from './trial-mode-selection/TrialModeSelectionApp.vue'
 import TwoFactorAuthApp from './two-factor-auth/TwoFactorAuthApp.vue'
 import WebAuthnRegisterButtonApp from './two-factor-auth/WebAuthnRegisterButtonApp.vue'
@@ -58,7 +58,7 @@ const { defineCmkComponent } = initCmkUi({ translationLoader })
 initializeComponentRegistry()
 registerCustomQueryFormComponents()
 registerOAuth2ConnectionFormComponents()
-registerMetricBackendFormComponents()
+registerTelemetryMetricsFormComponents()
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)

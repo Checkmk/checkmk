@@ -175,7 +175,7 @@ const editAriaLabel = computed(
 </script>
 
 <template>
-  <div class="metric-backend-form-consolidation">
+  <div class="telemetry-metrics-form-consolidation">
     <CmkInlineValidation :validation="validationMessages" />
     <InlineEditPill
       :editing="editing"
@@ -189,21 +189,21 @@ const editAriaLabel = computed(
     >
       <template #read-only>
         <span
-          class="metric-backend-form-consolidation__segment metric-backend-form-consolidation__segment--dimmed"
+          class="telemetry-metrics-form-consolidation__segment telemetry-metrics-form-consolidation__segment--dimmed"
           >{{ typeToken }}</span
         >
-        <span class="metric-backend-form-consolidation__segment">{{ functionToken }}</span>
+        <span class="telemetry-metrics-form-consolidation__segment">{{ functionToken }}</span>
         <!-- Collapsed view stays terse: a middle dot stands in for the "over last"
       the edit mode spells out in full. -->
-        <span class="metric-backend-form-consolidation__word" aria-hidden="true">·</span>
-        <span class="metric-backend-form-consolidation__segment">{{ lookbackToken }}</span>
+        <span class="telemetry-metrics-form-consolidation__word" aria-hidden="true">·</span>
+        <span class="telemetry-metrics-form-consolidation__segment">{{ lookbackToken }}</span>
       </template>
       <template #edit>
         <!--
       Mirror the read-only summary for not yet as editable implemented elements
       -->
         <span
-          class="metric-backend-form-consolidation__segment metric-backend-form-consolidation__segment--dimmed"
+          class="telemetry-metrics-form-consolidation__segment telemetry-metrics-form-consolidation__segment--dimmed"
           >{{ typeToken }}</span
         >
         <CmkDropdown
@@ -216,7 +216,7 @@ const editAriaLabel = computed(
         />
         <span
           v-if="model.function === 'histogram_quantile'"
-          class="metric-backend-form-consolidation__param"
+          class="telemetry-metrics-form-consolidation__param"
         >
           <CmkInput
             v-model="quantileInput"
@@ -229,7 +229,7 @@ const editAriaLabel = computed(
         </span>
         <span
           v-if="model.function === 'histogram_fraction_below'"
-          class="metric-backend-form-consolidation__param"
+          class="telemetry-metrics-form-consolidation__param"
         >
           <CmkInput
             v-model="fractionBelowThresholdInput"
@@ -242,7 +242,7 @@ const editAriaLabel = computed(
         </span>
         <span
           v-if="model.function === 'histogram_fraction_between'"
-          class="metric-backend-form-consolidation__param"
+          class="telemetry-metrics-form-consolidation__param"
         >
           <CmkInput
             v-model="fractionLowerThresholdInput"
@@ -252,7 +252,7 @@ const editAriaLabel = computed(
             hide-validation-message
             :aria-label="_t('Lower threshold')"
           />
-          <span class="metric-backend-form-consolidation__word">–</span>
+          <span class="telemetry-metrics-form-consolidation__word">–</span>
           <CmkInput
             v-model="fractionUpperThresholdInput"
             type="number"
@@ -260,8 +260,8 @@ const editAriaLabel = computed(
             :aria-label="_t('Upper threshold')"
           />
         </span>
-        <span class="metric-backend-form-consolidation__lookback">
-          <span class="metric-backend-form-consolidation__word">{{ _t('over last') }}</span>
+        <span class="telemetry-metrics-form-consolidation__lookback">
+          <span class="telemetry-metrics-form-consolidation__word">{{ _t('over last') }}</span>
           <CmkTimeSpan
             v-model="lookbackInput"
             :aria-label="_t('Lookback')"
@@ -281,37 +281,37 @@ const editAriaLabel = computed(
 </template>
 
 <style scoped>
-.metric-backend-form-consolidation {
+.telemetry-metrics-form-consolidation {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--dimension-2);
 }
 
-.metric-backend-form-consolidation__segment {
+.telemetry-metrics-form-consolidation__segment {
   padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-form-consolidation__segment--dimmed {
+.telemetry-metrics-form-consolidation__segment--dimmed {
   color: var(--font-color-dimmed);
   font-style: italic;
 }
 
-.metric-backend-form-consolidation__param {
+.telemetry-metrics-form-consolidation__param {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-2);
 }
 
-.metric-backend-form-consolidation__lookback {
+.telemetry-metrics-form-consolidation__lookback {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-2);
 }
 
-.metric-backend-form-consolidation__word {
+.telemetry-metrics-form-consolidation__word {
   display: inline-flex;
   align-items: center;
   color: var(--font-color-dimmed);

@@ -10,7 +10,7 @@ import { defineComponent, ref } from 'vue'
 
 import type { ValidationMessages } from '@/form'
 
-import FormSpecMetricBackendCustomQuery from '@/telemetry-metrics-custom-query/FormSpecTelemetryMetricsCustomQuery.vue'
+import FormSpecTelemetryMetricsCustomQuery from '@/telemetry-metrics-custom-query/FormSpecTelemetryMetricsCustomQuery.vue'
 
 const SPEC: MetricBackendCustomQuery = {
   type: 'metric_backend_custom_query',
@@ -30,7 +30,7 @@ const SPEC: MetricBackendCustomQuery = {
 }
 
 test('surfaces the service-name-template error on its field', () => {
-  render(FormSpecMetricBackendCustomQuery, {
+  render(FormSpecTelemetryMetricsCustomQuery, {
     props: {
       spec: SPEC,
       data: { ...SPEC },
@@ -48,7 +48,7 @@ test('surfaces the service-name-template error on its field', () => {
 })
 
 test('picking preserve histograms stores its wire spelling', async () => {
-  const { emitted } = render(FormSpecMetricBackendCustomQuery, {
+  const { emitted } = render(FormSpecTelemetryMetricsCustomQuery, {
     props: { spec: SPEC, data: { ...SPEC }, backendValidation: [] }
   })
 
@@ -80,12 +80,12 @@ test('picking preserve lands both the function and the cleared aggregator', asyn
     }
   })
   const harness = defineComponent({
-    components: { FormSpecMetricBackendCustomQuery },
+    components: { FormSpecTelemetryMetricsCustomQuery },
     setup() {
       return { value, spec: SPEC }
     },
     template: `
-      <FormSpecMetricBackendCustomQuery
+      <FormSpecTelemetryMetricsCustomQuery
         :spec="spec"
         :data="value"
         :backend-validation="[]"
@@ -109,7 +109,7 @@ test('picking preserve lands both the function and the cleared aggregator', asyn
 })
 
 test('adding a then step persists a second aggregator stage', async () => {
-  const { emitted } = render(FormSpecMetricBackendCustomQuery, {
+  const { emitted } = render(FormSpecTelemetryMetricsCustomQuery, {
     props: {
       spec: SPEC,
       data: {
@@ -145,7 +145,7 @@ test('adding a then step persists a second aggregator stage', async () => {
 })
 
 test('switching from preserve to a scalar histogram function clears the grouping', async () => {
-  const { emitted } = render(FormSpecMetricBackendCustomQuery, {
+  const { emitted } = render(FormSpecTelemetryMetricsCustomQuery, {
     props: {
       spec: SPEC,
       data: {
@@ -169,7 +169,7 @@ test('switching from preserve to a scalar histogram function clears the grouping
 })
 
 test('switching from preserve to a gauge function clears the grouping', async () => {
-  const { emitted } = render(FormSpecMetricBackendCustomQuery, {
+  const { emitted } = render(FormSpecTelemetryMetricsCustomQuery, {
     props: {
       spec: SPEC,
       data: {
@@ -193,7 +193,7 @@ test('switching from preserve to a gauge function clears the grouping', async ()
 })
 
 test('a stored preserve spelling is restored into the picker', () => {
-  render(FormSpecMetricBackendCustomQuery, {
+  render(FormSpecTelemetryMetricsCustomQuery, {
     props: {
       spec: SPEC,
       data: {

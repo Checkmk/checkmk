@@ -6,10 +6,13 @@
 import type { ServiceModel } from '@/mode-custom-services/types'
 
 import { consolidationToWire } from './consolidation'
-import { DEFAULT_TITLE_MACRO, type MetricBackendItem } from './types'
+import { DEFAULT_TITLE_MACRO, type TelemetryMetricsItem } from './types'
 
 /** The custom-service model prefilled from a designer row, with the row's title as the service name. */
-export function customServiceModelFor(item: MetricBackendItem, defaultTitle: string): ServiceModel {
+export function customServiceModelFor(
+  item: TelemetryMetricsItem,
+  defaultTitle: string
+): ServiceModel {
   return {
     metricName: item.metric_name,
     metricTypes: [],

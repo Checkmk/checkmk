@@ -283,7 +283,7 @@ defineExpose({
       <span
         v-if="condition.key"
         data-af-item
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-kind"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--attribute-kind"
       >
         <CmkDropdown
           ref="attributeKindDropdownRef"
@@ -298,7 +298,7 @@ defineExpose({
       </span>
       <span
         data-af-item
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--key"
       >
         <CmkDropdown
           ref="keyDropdownRef"
@@ -319,7 +319,7 @@ defineExpose({
       <span
         v-if="showOperator"
         data-af-item
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--operator"
       >
         <CmkDropdown
           floating
@@ -331,13 +331,13 @@ defineExpose({
       </span>
       <span
         v-else
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator metric-backend-attribute-filter-pill__segment--dimmed"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--operator telemetry-metrics-attribute-filter-pill__segment--dimmed"
         >{{ operatorText }}</span
       >
       <span
         v-if="showValue"
         data-af-item
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--value"
       >
         <CmkDropdown
           ref="valueDropdownRef"
@@ -359,20 +359,20 @@ defineExpose({
     <template #read-only>
       <span
         v-if="attributeKindText !== ''"
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-kind metric-backend-attribute-filter-pill__segment--dimmed"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--attribute-kind telemetry-metrics-attribute-filter-pill__segment--dimmed"
         >{{ attributeKindText }}</span
       >
       <span
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--key"
         >{{ condition.key }}</span
       >
       <span
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator metric-backend-attribute-filter-pill__segment--dimmed"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--operator telemetry-metrics-attribute-filter-pill__segment--dimmed"
         >{{ operatorText }}</span
       >
       <span
         v-if="showValue"
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
+        class="telemetry-metrics-attribute-filter-pill__segment telemetry-metrics-attribute-filter-pill__segment--value"
         >{{ condition.value }}</span
       >
     </template>
@@ -380,13 +380,13 @@ defineExpose({
 </template>
 
 <style scoped>
-.metric-backend-attribute-filter-pill__segment {
+.telemetry-metrics-attribute-filter-pill__segment {
   padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-attribute-filter-pill__segment--dimmed {
+.telemetry-metrics-attribute-filter-pill__segment--dimmed {
   color: var(--font-color-dimmed);
   font-style: italic;
 }

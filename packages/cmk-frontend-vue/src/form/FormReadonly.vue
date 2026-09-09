@@ -184,7 +184,7 @@ function _renderForm(
     case 'file_upload':
       return renderFileUpload(formSpec as FileUpload, value as FileUploadData)
     case 'metric_backend_custom_query':
-      return renderMetricBackendCustomQuery(value as MetricBackendCustomQuery)
+      return renderTelemetryMetricsCustomQuery(value as MetricBackendCustomQuery)
     case 'dcd_metric_backend_filter':
       return h('div', 'DCD Metric Backend Filter does not support readonly')
     case 'oauth2_connection_setup':
@@ -262,7 +262,7 @@ function preserveGroupByModel(value: MetricBackendCustomQuery): GroupByModel | n
   }
 }
 
-function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode {
+function renderTelemetryMetricsCustomQuery(value: MetricBackendCustomQuery): VNode {
   const rows: VNode[] = []
   const row = (label: string, text: string): VNode =>
     h('tr', [h('td', { class: 'dict_title' }, [label]), h('td', [text])])
@@ -327,7 +327,7 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
 
   return h(
     'table',
-    { class: 'form-readonly__dictionary form-readonly__metric-backend-query' },
+    { class: 'form-readonly__dictionary form-readonly__telemetry-metrics-query' },
     rows
   )
 }
@@ -1058,13 +1058,13 @@ table.form-readonly__table {
   display: inline-block;
 }
 
-.form-readonly__metric-backend-query {
+.form-readonly__telemetry-metrics-query {
   padding: var(--spacing);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
 }
 
-.form-readonly__list > li:not(:first-child) > .form-readonly__metric-backend-query {
+.form-readonly__list > li:not(:first-child) > .form-readonly__telemetry-metrics-query {
   margin-top: var(--spacing);
 }
 

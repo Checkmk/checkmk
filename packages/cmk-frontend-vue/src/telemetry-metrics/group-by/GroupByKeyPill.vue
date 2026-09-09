@@ -148,7 +148,7 @@ defineExpose({
       <span
         v-if="condition.attributeKey && !hideAttributeKind"
         data-gb-item
-        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind"
+        class="telemetry-metrics-group-by-key-pill__segment telemetry-metrics-group-by-key-pill__segment--attribute-kind"
       >
         <CmkDropdown
           ref="attributeKindDropdownRef"
@@ -163,7 +163,7 @@ defineExpose({
       </span>
       <span
         data-gb-item
-        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--key"
+        class="telemetry-metrics-group-by-key-pill__segment telemetry-metrics-group-by-key-pill__segment--key"
       >
         <CmkDropdown
           ref="keyDropdownRef"
@@ -181,11 +181,11 @@ defineExpose({
     <template #read-only>
       <span
         v-if="condition.attributeKind !== null"
-        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind metric-backend-group-by-key-pill__segment--dimmed"
+        class="telemetry-metrics-group-by-key-pill__segment telemetry-metrics-group-by-key-pill__segment--attribute-kind telemetry-metrics-group-by-key-pill__segment--dimmed"
         >[{{ attributeKindLabel(condition.attributeKind) }}]</span
       >
       <span
-        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--key"
+        class="telemetry-metrics-group-by-key-pill__segment telemetry-metrics-group-by-key-pill__segment--key"
         >{{ condition.attributeKey }}</span
       >
     </template>
@@ -193,13 +193,13 @@ defineExpose({
 </template>
 
 <style scoped>
-.metric-backend-group-by-key-pill__segment {
+.telemetry-metrics-group-by-key-pill__segment {
   padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-group-by-key-pill__segment--dimmed {
+.telemetry-metrics-group-by-key-pill__segment--dimmed {
   color: var(--font-color-dimmed);
   font-style: italic;
 }

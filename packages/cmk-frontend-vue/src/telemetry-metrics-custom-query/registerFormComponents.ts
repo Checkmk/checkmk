@@ -5,10 +5,10 @@
  */
 import { registerFormComponents } from '@/form'
 
-import FormSpecMetricBackendCustomQuery from './FormSpecTelemetryMetricsCustomQuery.vue'
+import FormSpecTelemetryMetricsCustomQuery from './FormSpecTelemetryMetricsCustomQuery.vue'
 
 export function registerCustomQueryFormComponents(): void {
   registerFormComponents({
-    metric_backend_custom_query: FormSpecMetricBackendCustomQuery
+    metric_backend_custom_query: FormSpecTelemetryMetricsCustomQuery
   })
 }

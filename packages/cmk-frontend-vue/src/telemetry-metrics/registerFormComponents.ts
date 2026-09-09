@@ -5,10 +5,10 @@
  */
 import { registerFormComponents } from '@/form'
 
-import FormDCDMetricBackendFilter from './FormDCDTelemetryMetricsFilter.vue'
+import FormDCDTelemetryMetricsFilter from './FormDCDTelemetryMetricsFilter.vue'
 
-export function registerMetricBackendFormComponents(): void {
+export function registerTelemetryMetricsFormComponents(): void {
   registerFormComponents({
-    dcd_metric_backend_filter: FormDCDMetricBackendFilter
+    dcd_metric_backend_filter: FormDCDTelemetryMetricsFilter
   })
 }

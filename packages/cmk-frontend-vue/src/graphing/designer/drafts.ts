@@ -13,10 +13,10 @@ import {
   type FormulaItem,
   type GraphItem,
   type ItemId,
-  type MetricBackendItem,
   type RRDMetricItem,
   type RRDQueryItem,
   type ScalarItem,
+  type TelemetryMetricsItem,
   isFormula
 } from './types'
 
@@ -28,7 +28,7 @@ export type DraftRRDMetricItem = WithNullable<
   'host_name' | 'service_name' | 'metric_name'
 >
 export type DraftRRDQueryItem = WithNullable<RRDQueryItem, 'metric_name'>
-export type DraftMetricBackendItem = WithNullable<MetricBackendItem, 'metric_name'>
+export type DraftTelemetryMetricsItem = WithNullable<TelemetryMetricsItem, 'metric_name'>
 export type DraftConstantItem = WithNullable<ConstantItem, 'value'>
 export type DraftScalarItem = WithNullable<ScalarItem, 'host_name' | 'service_name' | 'metric_name'>
 
@@ -36,7 +36,7 @@ export type DraftScalarItem = WithNullable<ScalarItem, 'host_name' | 'service_na
 export type DesignerItem =
   | DraftRRDMetricItem
   | DraftRRDQueryItem
-  | DraftMetricBackendItem
+  | DraftTelemetryMetricsItem
   | DraftConstantItem
   | DraftScalarItem
   | FormulaItem
@@ -121,7 +121,7 @@ export function newRrdQueryDraft(id: ItemId): DraftRRDQueryItem {
   }
 }
 
-export function newMetricBackendDraft(id: ItemId): DraftMetricBackendItem {
+export function newTelemetryMetricsDraft(id: ItemId): DraftTelemetryMetricsItem {
   return {
     id,
     type: 'metric_backend',

@@ -12,7 +12,7 @@ import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import type { DesignerItem } from '@/graphing/designer/drafts'
 import type { ItemId } from '@/graphing/designer/types'
 
-import { metricBackendItem, rrdMetricItem, rrdQueryItem } from '../fixtures'
+import { rrdMetricItem, rrdQueryItem, telemetryMetricsItem } from '../fixtures'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
@@ -172,7 +172,7 @@ test('lists a multi-line row as one legend-styled row per resolved line', () => 
 
 test('a resolved metrics-backend series expands into its attribute table', async () => {
   renderTable(
-    [metricBackendItem('B', { title: 'Latency' })],
+    [telemetryMetricsItem('B', { title: 'Latency' })],
     new Map([['B', [backendMetric('line one')]]])
   )
 
@@ -192,8 +192,8 @@ test('a resolved metrics-backend series expands into its attribute table', async
 test('expanding a series leaves the same-named series of another source row collapsed', async () => {
   renderTable(
     [
-      metricBackendItem('A', { title: 'Latency A' }),
-      metricBackendItem('B', { title: 'Latency B' })
+      telemetryMetricsItem('A', { title: 'Latency A' }),
+      telemetryMetricsItem('B', { title: 'Latency B' })
     ],
     new Map([
       ['A', [backendMetric('shared')]],
@@ -210,7 +210,7 @@ test('expanding a series leaves the same-named series of another source row coll
 test('a series that loses its attributes while expanded leaves no table behind', async () => {
   const metricsBySource = new Map([['B', [backendMetric('line one')]]])
   const { rerender, store } = renderTable(
-    [metricBackendItem('B', { title: 'Latency' })],
+    [telemetryMetricsItem('B', { title: 'Latency' })],
     metricsBySource
   )
 
@@ -243,7 +243,10 @@ test('collapsing a multi-line row hides its per-line rows, reopening brings them
 
 test('a row states its source, telling RRD and metrics backend rows apart', () => {
   renderTable(
-    [rrdMetricItem('A', { title: 'From RRD' }), metricBackendItem('B', { title: 'From backend' })],
+    [
+      rrdMetricItem('A', { title: 'From RRD' }),
+      telemetryMetricsItem('B', { title: 'From backend' })
+    ],
     new Map()
   )
 

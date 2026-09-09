@@ -75,7 +75,7 @@ test('the collapsed chip summarises the clause with the attribute kind shown dim
   const chip = screen.getByRole('button', { name: /Edit group by/ })
   expect(chip).toHaveTextContent('avg by')
   const attributeKind = within(chip).getByText('[Resource]')
-  expect(attributeKind).toHaveClass('metric-backend-form-group-by__segment--dimmed')
+  expect(attributeKind).toHaveClass('telemetry-metrics-form-group-by__segment--dimmed')
   expect(within(chip).getByText('service.name,')).toBeVisible()
   expect(within(chip).getByText('http.route')).toBeVisible()
 })

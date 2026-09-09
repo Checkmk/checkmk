@@ -53,9 +53,9 @@ const {
   title,
   mode,
   thresholds,
-  metricBackendAvailable,
+  telemetryMetricsAvailable,
   createServicesAvailable,
-  metricBackendDefaultTitle,
+  telemetryMetricsDefaultTitle,
   titleMacros,
   issuesByRow
 } = defineProps<{
@@ -64,9 +64,9 @@ const {
   title: string
   mode: CustomGraphDesignerMode
   thresholds: { warning: string; critical: string }
-  metricBackendAvailable: boolean
+  telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
-  metricBackendDefaultTitle: string
+  telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
 }>()
@@ -343,9 +343,9 @@ const yAxis = computed<YAxis | null>(() => {
             <MetricsTable
               :store="store"
               :thresholds="thresholds"
-              :metric-backend-available="metricBackendAvailable"
+              :telemetry-metrics-available="telemetryMetricsAvailable"
               :create-services-available="createServicesAvailable"
-              :metric-backend-default-title="metricBackendDefaultTitle"
+              :telemetry-metrics-default-title="telemetryMetricsDefaultTitle"
               :title-macros="titleMacros"
               :issues-by-row="issuesByRow"
               :resolved-titles="data.resolvedTitles.value"

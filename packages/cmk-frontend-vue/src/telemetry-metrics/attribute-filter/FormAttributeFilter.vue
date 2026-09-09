@@ -317,7 +317,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
 
 <template>
   <div
-    class="metric-backend-form-attribute-filter"
+    class="telemetry-metrics-form-attribute-filter"
     role="group"
     :aria-label="ariaLabel ?? _t('Attribute filter')"
     @keydown.left.capture="handleArrowNav"
@@ -325,7 +325,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
   >
     <CmkIconButton
       v-if="model.length === 0"
-      class="metric-backend-form-attribute-filter__add"
+      class="telemetry-metrics-form-attribute-filter__add"
       name="add"
       size="large"
       :title="_t('Add condition')"
@@ -339,7 +339,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
       <button
         v-if="groupIndex > 0"
         type="button"
-        class="metric-backend-form-attribute-filter__connector"
+        class="telemetry-metrics-form-attribute-filter__connector"
         :aria-label="_t('Toggle connector, currently %{connector}', { connector: 'OR' })"
         :title="_t('Toggle AND / OR')"
         @mousedown.prevent
@@ -350,7 +350,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
       <template v-if="group.conditions.length > 1">
         <div
           v-click-outside="() => onGroupClickOutside(group)"
-          class="metric-backend-form-attribute-filter__group"
+          class="telemetry-metrics-form-attribute-filter__group"
           data-testid="attribute-filter-group"
           :data-af-scope="isEntered(group) ? '' : undefined"
           :tabindex="isEntered(group) ? -1 : 0"
@@ -359,7 +359,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
           @keydown.escape="(e) => onGroupEscape(e, group)"
         >
           <CmkIconButton
-            class="metric-backend-form-attribute-filter__remove-group"
+            class="telemetry-metrics-form-attribute-filter__remove-group"
             name="close"
             size="small"
             data-af-item
@@ -373,7 +373,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
             <button
               v-if="conditionIndex > 0"
               type="button"
-              class="metric-backend-form-attribute-filter__connector"
+              class="telemetry-metrics-form-attribute-filter__connector"
               data-af-item
               :tabindex="isEntered(group) ? 0 : -1"
               :aria-label="_t('Toggle connector, currently %{connector}', { connector: 'AND' })"
@@ -402,7 +402,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
               @update:value="(value) => updateValue(condition, value)"
             />
             <CmkIconButton
-              class="metric-backend-form-attribute-filter__add"
+              class="telemetry-metrics-form-attribute-filter__add"
               name="add"
               size="large"
               data-af-item
@@ -416,7 +416,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
         </div>
         <!-- After-group +: starts a new OR clause. The per-pill +s inside the box add AND. -->
         <CmkIconButton
-          class="metric-backend-form-attribute-filter__add"
+          class="telemetry-metrics-form-attribute-filter__add"
           name="add"
           size="large"
           :title="_t('Add condition')"
@@ -445,7 +445,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
         />
         <!-- Adding to a lone pill joins it into an AND group; OR needs a second pill first. -->
         <CmkIconButton
-          class="metric-backend-form-attribute-filter__add"
+          class="telemetry-metrics-form-attribute-filter__add"
           name="add"
           size="large"
           :title="_t('Add condition')"
@@ -459,7 +459,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
     <template v-for="(condition, index) in allowOr ? [] : flatConditions" :key="condition.id">
       <!-- Connectors (AND) are intentionally kept untranslated:
            they have no agreed product-wide localisations yet. -->
-      <span v-if="index > 0" class="metric-backend-form-attribute-filter__connector-static">
+      <span v-if="index > 0" class="telemetry-metrics-form-attribute-filter__connector-static">
         {{ untranslated('AND') }}
       </span>
       <AttributeFilterPill
@@ -480,7 +480,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
         @update:value="(value) => updateValue(condition, value)"
       />
       <CmkIconButton
-        class="metric-backend-form-attribute-filter__add"
+        class="telemetry-metrics-form-attribute-filter__add"
         name="add"
         size="large"
         :title="_t('Add condition')"
@@ -493,14 +493,14 @@ function onGroupClickOutside(group: ConditionGroup): void {
 </template>
 
 <style scoped>
-.metric-backend-form-attribute-filter {
+.telemetry-metrics-form-attribute-filter {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-3) var(--dimension-4);
 }
 
-.metric-backend-form-attribute-filter__group {
+.telemetry-metrics-form-attribute-filter__group {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -512,7 +512,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
 }
 
 /* Anchored top-left to keep the destructive remove far from the right-edge `+` controls. */
-.metric-backend-form-attribute-filter__remove-group {
+.telemetry-metrics-form-attribute-filter__remove-group {
   position: absolute;
   top: 0;
   left: 0;
@@ -522,19 +522,19 @@ function onGroupClickOutside(group: ConditionGroup): void {
   transition: opacity 0.15s ease-in-out;
 }
 
-.metric-backend-form-attribute-filter__add:hover,
-.metric-backend-form-attribute-filter__remove-group:hover {
+.telemetry-metrics-form-attribute-filter__add:hover,
+.telemetry-metrics-form-attribute-filter__remove-group:hover {
   background-color: var(--input-hover-bg-color);
 }
 
-.metric-backend-form-attribute-filter__group:hover
-  .metric-backend-form-attribute-filter__remove-group,
-.metric-backend-form-attribute-filter__group:focus-within
-  .metric-backend-form-attribute-filter__remove-group {
+.telemetry-metrics-form-attribute-filter__group:hover
+  .telemetry-metrics-form-attribute-filter__remove-group,
+.telemetry-metrics-form-attribute-filter__group:focus-within
+  .telemetry-metrics-form-attribute-filter__remove-group {
   opacity: 1;
 }
 
-.metric-backend-form-attribute-filter__connector {
+.telemetry-metrics-form-attribute-filter__connector {
   flex-shrink: 0;
   appearance: none;
   background-color: var(--default-form-element-bg-color);
@@ -545,17 +545,17 @@ function onGroupClickOutside(group: ConditionGroup): void {
   padding: 1px 6px;
 }
 
-.metric-backend-form-attribute-filter__connector:hover {
+.telemetry-metrics-form-attribute-filter__connector:hover {
   background-color: var(--input-hover-bg-color);
 }
 
-.metric-backend-form-attribute-filter__connector-static {
+.telemetry-metrics-form-attribute-filter__connector-static {
   flex-shrink: 0;
   color: var(--font-color-dimmed);
   font-style: italic;
 }
 
-.metric-backend-form-attribute-filter__connector:focus-visible {
+.telemetry-metrics-form-attribute-filter__connector:focus-visible {
   outline: revert;
 }
 </style>

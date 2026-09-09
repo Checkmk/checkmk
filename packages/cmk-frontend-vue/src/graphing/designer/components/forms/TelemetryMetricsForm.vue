@@ -12,8 +12,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
 import FormMetricNameAutocompleter from '@/telemetry-metrics/FormMetricNameAutocompleter.vue'
-import FormMetricBackendAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
-import FormMetricBackendConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
+import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
+import FormTelemetryMetricsConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
 import { buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/telemetry-metrics/attributeKeySuggestions'
 import { type ConsolidationFunction, outputType } from '@/telemetry-metrics/consolidation/types'
@@ -47,14 +47,14 @@ import {
 } from '@/telemetry-metrics/histogram-params'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
-import type { DraftMetricBackendItem } from '../../drafts'
-import type { MetricBackendItem } from '../../types'
+import type { DraftTelemetryMetricsItem } from '../../drafts'
+import type { TelemetryMetricsItem } from '../../types'
 import SourceFormField from './SourceFormField.vue'
 import SourceFormStack from './SourceFormStack.vue'
 import SourceFormText from './SourceFormText.vue'
 
 const { item, store, metricNameErrors, consolidationErrors } = defineProps<{
-  item: DraftMetricBackendItem
+  item: DraftTelemetryMetricsItem
   store: GraphItemsStore
   metricNameErrors: TranslatedString[]
   consolidationErrors: TranslatedString[]
@@ -62,7 +62,7 @@ const { item, store, metricNameErrors, consolidationErrors } = defineProps<{
 
 const { _t } = usei18n()
 
-type Consolidation = MetricBackendItem['consolidation_function']
+type Consolidation = TelemetryMetricsItem['consolidation_function']
 
 // The picker edits function, lookback and percentile independently and speaks the grouped
 // {type, function} shape, while the item stores the flat engine union — so map between them
@@ -328,7 +328,7 @@ const {
 
       <SourceFormStack spacing="label">
         <SourceFormText variant="description">{{ _t('Where') }}</SourceFormText>
-        <FormMetricBackendAttributes
+        <FormTelemetryMetricsAttributes
           v-model:attribute-filter="attributeFilter"
           :label="_t('Where: attribute filter')"
           :metric-name="metricName"
@@ -341,7 +341,7 @@ const {
           v-if="consolidationErrors.length > 0"
           :validation="consolidationErrors"
         />
-        <FormMetricBackendConsolidation
+        <FormTelemetryMetricsConsolidation
           v-model:aggregation-lookback="aggregationLookback"
           v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
           v-model:aggregation-histogram-threshold-for-fraction-below="

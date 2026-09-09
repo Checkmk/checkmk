@@ -173,7 +173,7 @@ function canLeaveEdit(): boolean {
 </script>
 
 <template>
-  <div class="metric-backend-form-group-by">
+  <div class="telemetry-metrics-form-group-by">
     <CmkInlineValidation :validation="validationMessages" />
     <InlineEditPill
       :editing="editing"
@@ -189,22 +189,24 @@ function canLeaveEdit(): boolean {
       @remove="removeGrouping"
     >
       <template #read-only>
-        <span class="metric-backend-form-group-by__summary">
-          <span class="metric-backend-form-group-by__segment">{{
+        <span class="telemetry-metrics-form-group-by__summary">
+          <span class="telemetry-metrics-form-group-by__segment">{{
             compactFunctionLabel(model)
           }}</span>
           <template v-if="keysEnabled">
-            <span v-if="model.keys.length === 0" class="metric-backend-form-group-by__everything">{{
-              _t('nothing, combine all series into one')
-            }}</span>
+            <span
+              v-if="model.keys.length === 0"
+              class="telemetry-metrics-form-group-by__everything"
+              >{{ _t('nothing, combine all series into one') }}</span
+            >
             <template v-for="(key, index) in model.keys" :key="key.id">
               <span
                 v-if="key.attributeKind !== null"
-                class="metric-backend-form-group-by__segment metric-backend-form-group-by__segment--dimmed"
+                class="telemetry-metrics-form-group-by__segment telemetry-metrics-form-group-by__segment--dimmed"
                 >[{{ attributeKindLabel(key.attributeKind) }}]</span
               >
               <!-- Comma stays glued to the key so the summary gap only spaces whole terms. -->
-              <span class="metric-backend-form-group-by__segment"
+              <span class="telemetry-metrics-form-group-by__segment"
                 >{{ key.attributeKey }}{{ index < model.keys.length - 1 ? ',' : '' }}</span
               >
             </template>
@@ -212,7 +214,7 @@ function canLeaveEdit(): boolean {
         </span>
       </template>
       <template #edit>
-        <span class="metric-backend-form-group-by__segment">
+        <span class="telemetry-metrics-form-group-by__segment">
           <CmkDropdown
             ref="functionDropdownRef"
             floating
@@ -222,7 +224,7 @@ function canLeaveEdit(): boolean {
             @update:model-value="onFunctionUpdate"
           />
         </span>
-        <span v-if="paramKind === 'quantile'" class="metric-backend-form-group-by__param">
+        <span v-if="paramKind === 'quantile'" class="telemetry-metrics-form-group-by__param">
           <CmkInput
             v-model="quantileInput"
             type="number"
@@ -233,7 +235,7 @@ function canLeaveEdit(): boolean {
             :placeholder="_t('Quantile')"
           />
         </span>
-        <span v-if="paramKind === 'fraction_below'" class="metric-backend-form-group-by__param">
+        <span v-if="paramKind === 'fraction_below'" class="telemetry-metrics-form-group-by__param">
           <CmkInput
             v-model="fractionBelowThresholdInput"
             type="number"
@@ -244,7 +246,10 @@ function canLeaveEdit(): boolean {
             :placeholder="_t('Threshold')"
           />
         </span>
-        <span v-if="paramKind === 'fraction_between'" class="metric-backend-form-group-by__param">
+        <span
+          v-if="paramKind === 'fraction_between'"
+          class="telemetry-metrics-form-group-by__param"
+        >
           <CmkInput
             v-model="fractionLowerThresholdInput"
             type="number"
@@ -254,7 +259,7 @@ function canLeaveEdit(): boolean {
             :aria-label="_t('Lower threshold')"
             :placeholder="_t('Lower')"
           />
-          <span class="metric-backend-form-group-by__word">–</span>
+          <span class="telemetry-metrics-form-group-by__word">–</span>
           <CmkInput
             v-model="fractionUpperThresholdInput"
             type="number"
@@ -278,31 +283,31 @@ function canLeaveEdit(): boolean {
 </template>
 
 <style scoped>
-.metric-backend-form-group-by {
+.telemetry-metrics-form-group-by {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--dimension-2);
 }
 
-.metric-backend-form-group-by__summary {
+.telemetry-metrics-form-group-by__summary {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-4);
 }
 
-.metric-backend-form-group-by__segment {
+.telemetry-metrics-form-group-by__segment {
   padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-form-group-by__segment--dimmed {
+.telemetry-metrics-form-group-by__segment--dimmed {
   color: var(--font-color-dimmed);
   font-style: italic;
 }
 
-.metric-backend-form-group-by__param {
+.telemetry-metrics-form-group-by__param {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-2);
@@ -310,18 +315,18 @@ function canLeaveEdit(): boolean {
 
 /* Widen the narrow default number field so the placeholder fits. */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.metric-backend-form-group-by__param :deep(.cmk-input--number) {
+.telemetry-metrics-form-group-by__param :deep(.cmk-input--number) {
   width: 6em;
 }
 
-.metric-backend-form-group-by__word {
+.telemetry-metrics-form-group-by__word {
   display: inline-flex;
   align-items: center;
   color: var(--font-color-dimmed);
   white-space: nowrap;
 }
 
-.metric-backend-form-group-by__everything {
+.telemetry-metrics-form-group-by__everything {
   color: var(--font-color-dimmed);
   font-style: italic;
 }

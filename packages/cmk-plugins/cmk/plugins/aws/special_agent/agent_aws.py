@@ -27,7 +27,7 @@ import json
 import logging
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -63,6 +63,7 @@ from .config import (
     TagsImportPatternOption,
 )
 from .sections.cloudfront import CloudFront, CloudFrontSummary
+from .sections.cloudwatch import CloudwatchAlarms, CloudwatchAlarmsLimits
 from .sections.core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -388,16 +389,6 @@ def _get_wafv2_web_acls(
     return web_acls
 
 
-def _describe_alarms(
-    client: BaseClient, get_response_content: Callable, names: Sequence[str] | None = None
-) -> Iterator[Mapping[str, object]]:
-    paginator = client.get_paginator("describe_alarms")
-    kwargs = {"AlarmNames": names} if names else {}
-
-    for page in paginator.paginate(**kwargs):
-        yield from get_response_content(page, "MetricAlarms")
-
-
 # .
 #   ---result distributor---------------------------------------------------
 
@@ -429,118 +420,6 @@ def _describe_alarms(
 # .
 # .
 # .
-#   .--Cloudwatch----------------------------------------------------------.
-#   |         ____ _                 _               _       _             |
-#   |        / ___| | ___  _   _  __| |_      ____ _| |_ ___| |__          |
-#   |       | |   | |/ _ \| | | |/ _` \ \ /\ / / _` | __/ __| '_ \         |
-#   |       | |___| | (_) | |_| | (_| |\ V  V / (_| | || (__| | | |        |
-#   |        \____|_|\___/ \__,_|\__,_| \_/\_/ \__,_|\__\___|_| |_|        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class CloudwatchAlarmsLimits(AWSSectionLimits):
-    @property
-    @override
-    def name(self) -> str:
-        return "cloudwatch_alarms_limits"
-
-    @property
-    @override
-    def cache_interval(self) -> int:
-        return 300
-
-    @property
-    @override
-    def granularity(self) -> int:
-        return 300
-
-    @override
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        return AWSColleagueContents(None, 0.0)
-
-    @override
-    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
-        return list(_describe_alarms(self._client, self._get_response_content))
-
-    @override
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        self._add_limit(
-            "",
-            AWSLimit(
-                "cloudwatch_alarms",
-                "CloudWatch Alarms",
-                5000,
-                len(raw_content.content),
-            ),
-        )
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
-
-
-class CloudwatchAlarms(AWSSection):
-    def __init__(
-        self,
-        client: BaseClient,
-        region: str,
-        config: AWSConfig,
-        distributor: ResultDistributor | None = None,
-    ) -> None:
-        super().__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config["cloudwatch_alarms"]
-
-    @property
-    @override
-    def name(self) -> str:
-        return "cloudwatch_alarms"
-
-    @property
-    @override
-    def cache_interval(self) -> int:
-        return 300
-
-    @property
-    @override
-    def granularity(self) -> int:
-        return 300
-
-    @override
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("cloudwatch_alarms_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
-
-    @override
-    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
-        (colleague_contents,) = args
-        if self._names:
-            if colleague_contents.content:
-                return [
-                    alarm
-                    for alarm in colleague_contents.content
-                    if alarm["AlarmName"] in self._names
-                ]
-            return list(
-                _describe_alarms(self._client, self._get_response_content, names=self._names)
-            )
-        return list(_describe_alarms(self._client, self._get_response_content))
-
-    @override
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        if raw_content.content:
-            return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
-        dflt_alarms = [{"AlarmName": "Check_MK/CloudWatch Alarms", "StateValue": "NO_ALARMS"}]
-        return AWSComputedContent(dflt_alarms, raw_content.cache_timestamp)
-
-    @override
-    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
-
-
 # .
 #   .--DynamoDB------------------------------------------------------------.
 #   |         ____                                    ____  ____           |

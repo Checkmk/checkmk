@@ -81,7 +81,7 @@ test('clicking a suggestion emits select-suggestion with that item', async () =>
   await user.click(await screen.findByRole('option', { name: 'Option Two' }))
 
   expect(emitted('select-suggestion')).toBeTruthy()
-  expect(emitted('select-suggestion')![0]).toEqual([{ name: 'option2', title: 'Option Two' }])
+  expect(emitted('select-suggestion')![0]).toEqual([{ name: 'option2', title: 'Option Two' }, null])
 })
 
 test.each([
@@ -522,7 +522,10 @@ test('keyboard navigation skips headers and clicking a header does not select', 
 
   await user.click(screen.getByRole('option', { name: 'Beta One' }))
   expect(emitted('select-suggestion')).toBeTruthy()
-  expect(emitted('select-suggestion')![0]).toEqual([{ name: 'b1', title: 'Beta One' }])
+  expect(emitted('select-suggestion')![0]).toEqual([
+    { name: 'b1', title: 'Beta One' },
+    twoSections[1]
+  ])
 })
 
 test('a key shared across sections selects and navigates by position, not by name', async () => {
@@ -548,6 +551,25 @@ test('a key shared across sections selects and navigates by position, not by nam
 
   await fireEvent.keyDown(list, { key: 'ArrowDown' })
   expect(screen.getByRole('option', { name: 'Dup Alpha' })).toHaveClass('selected')
+})
+
+test('picking the selected key from another section still emits it with that section', async () => {
+  const user = userEvent.setup()
+  const { emitted } = render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('dup', 'Dup Alpha'),
+      suggestions: { type: 'fixed', suggestions: sectionsWithSharedKey },
+      role: 'option'
+    }
+  })
+
+  await user.click(await screen.findByRole('option', { name: 'Dup Beta' }))
+
+  expect(emitted('select-suggestion')).toBeTruthy()
+  expect(emitted('select-suggestion')![0]).toEqual([
+    { name: 'dup', title: 'Dup Beta' },
+    sectionsWithSharedKey[1]
+  ])
 })
 
 test('markSelected renders a checkmark only on the selected option', async () => {

@@ -21,7 +21,11 @@ import {
   isSectioned
 } from './types'
 
-type DisplaySection = Omit<Section, 'title'> & { title: Section['title'] | null }
+// `source` is the caller's section, reported on selection; null when not sectioned.
+type DisplaySection = Omit<Section, 'title'> & {
+  title: Section['title'] | null
+  source: Section | null
+}
 
 const { _t } = usei18n()
 
@@ -47,7 +51,7 @@ const showFilter = computed<boolean>(() => {
 })
 
 const emit = defineEmits<{
-  'select-suggestion': [Suggestion | null]
+  'select-suggestion': [Suggestion | null, Section | null]
   'request-close-suggestions': []
   blur: []
 }>()
@@ -96,7 +100,7 @@ function findSuggestionAsIndex(
 }
 
 function asSingleSection(suggestions: Array<Suggestion>): Array<DisplaySection> {
-  return suggestions.length > 0 ? [{ title: null, suggestions }] : []
+  return suggestions.length > 0 ? [{ title: null, suggestions, source: null }] : []
 }
 
 function buildSectionedDisplaySections(
@@ -107,20 +111,17 @@ function buildSectionedDisplaySections(
   const lowerCaseQuery = query.toLowerCase()
   const survivingSections = sections
     .map((section) => ({
-      title: section.title,
+      source: section,
       suggestions: doFilter
         ? section.suggestions.filter((s) => s.title.toLowerCase().includes(lowerCaseQuery))
         : section.suggestions
     }))
     .filter((section) => section.suggestions.length > 0)
 
-  if (survivingSections.length <= 1) {
-    return asSingleSection(survivingSections[0]?.suggestions ?? [])
-  }
-
-  return survivingSections.map((section) => ({
-    title: section.title.trim() !== '' ? section.title : null,
-    suggestions: section.suggestions
+  return survivingSections.map(({ source, suggestions }) => ({
+    source,
+    suggestions,
+    title: survivingSections.length > 1 && source.title.trim() !== '' ? source.title : null
   }))
 }
 
@@ -283,16 +284,20 @@ function onKeyEnter(event: InputEvent): void {
   selectSuggestion(activeSuggestion.value)
 }
 
-function selectSuggestion(suggestion: Suggestion | null) {
-  if (suggestion && suggestion.name === null) {
+function selectSuggestion(suggestion: Suggestion) {
+  if (suggestion.name === null) {
     // do not select non-selectable elements
     return
   }
-  if (suggestion && suggestion.name === selectedSuggestion.getName()) {
+  const source =
+    displaySections.value.find((section) => section.suggestions.includes(suggestion))?.source ??
+    null
+  // A name can recur across sections, so only short-circuit when unsectioned, where names are unique.
+  if (source === null && suggestion.name === selectedSuggestion.getName()) {
     emit('request-close-suggestions')
     return
   }
-  emit('select-suggestion', suggestion)
+  emit('select-suggestion', suggestion, source)
 }
 
 function setSiblingOrFirstActive(offset: number) {

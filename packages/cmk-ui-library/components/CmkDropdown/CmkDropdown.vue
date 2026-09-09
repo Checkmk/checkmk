@@ -8,6 +8,7 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkSuggestions, {
   ErrorResponse,
   NoSelection,
+  type Section,
   Selection,
   SelectionWithTitle,
   type Suggestion,
@@ -35,6 +36,7 @@ export interface DropdownOption {
 }
 
 const {
+  modelValue = null,
   inputHint = untranslated(''),
   noResultsHint = '',
   disabled = false,
@@ -48,6 +50,7 @@ const {
   describedBy,
   floating = false
 } = defineProps<{
+  modelValue?: string | null
   options: Suggestions
   inputHint?: TranslatedString
   noResultsHint?: TranslatedString
@@ -62,7 +65,9 @@ const {
   floating?: boolean
 }>()
 
-const selectedOptionPublic = defineModel<string | null>({ default: null })
+const emit = defineEmits<{
+  'update:modelValue': [name: string | null, section?: Section]
+}>()
 
 const vClickOutside = useClickOutside()
 
@@ -77,7 +82,7 @@ const selectedOption = ref<SuggestionValue>(new NoSelection())
 
 immediateWatch(
   () => ({
-    newValue: selectedOptionPublic.value,
+    newValue: modelValue,
     newOptions: options
   }),
   async ({ newValue, newOptions }) => {
@@ -90,7 +95,7 @@ immediateWatch(
     callbackFilteredLoading.value = false
     internallyDisabled.value = false
     // Only update if the selected option hasn't changed again while awaiting
-    if (newValue === selectedOptionPublic.value) {
+    if (newValue === modelValue) {
       buttonLabel.value = currentSelectionState.buttonLabel
       selectedOption.value = currentSelectionState.value
     }
@@ -308,11 +313,13 @@ function onFloatingInteractOutside(event: Event): void {
   }
 }
 
-function handleUpdate(selected: Suggestion | null): void {
-  // Only write the model; the internal state syncs back from the watch, so a
-  // controlled parent that keeps its value (e.g. an add-control pinned to
-  // null) keeps the dropdown unselected and repeated picks emit again.
-  selectedOptionPublic.value = selected === null || selected.name === null ? null : selected.name
+function handleUpdate(selected: Suggestion | null, section: Section | null): void {
+  // Blur reports an option click first; the click itself then finds the list already closed.
+  if (!suggestionsShown.value) {
+    return
+  }
+  // Internal state syncs back from the watch, so a parent that keeps its value stays unselected.
+  emit('update:modelValue', selected?.name ?? null, section ?? undefined)
   callbackFilteredErrorMessage.value = null
   hideSuggestions()
 }

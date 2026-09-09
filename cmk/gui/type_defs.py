@@ -456,7 +456,12 @@ class PainterParameters(TypedDict, total=False):
     path_to_table: SDPath
     column_to_display: str
     columns_to_match: list[tuple[str, str]]
-    color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+    # "rel_pop" levels are relative to the column maximum. Their choice is no longer offered,
+    # but views stored before it was withdrawn still carry them.
+    color_levels: (
+        tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+        | tuple[Literal["rel_pop"], tuple[float, float]]
+    )
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
     time_range: tuple[str | int, int] | Literal["report"]

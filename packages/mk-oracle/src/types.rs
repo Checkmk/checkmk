@@ -362,6 +362,18 @@ pub enum SectionFilter {
     AsyncCustomMetrics,
 }
 
+impl fmt::Display for SectionFilter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.pad(match self {
+            SectionFilter::All => "all",
+            SectionFilter::Sync => "synchronous",
+            SectionFilter::AsyncAll => "asynchronous",
+            SectionFilter::AsyncBuiltinSections => "asynchronous",
+            SectionFilter::AsyncCustomMetrics => "custom metrics",
+        })
+    }
+}
+
 impl From<&str> for SectionFilter {
     fn from(s: &str) -> Self {
         match s.to_lowercase().as_str() {

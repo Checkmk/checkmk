@@ -305,7 +305,7 @@ function onRetry(): void {
           :figure-width="effectiveWidth"
           :figure-height="figure_height"
           :add-to="panelSlot.graph.addTo"
-          :header-is-compact="layout === 'wrap'"
+          :is-hover-graph="layout === 'wrap'"
           @update:requested-time-range="
             (range, kind) => onPanelTimeRange(range, kind, panelSlot.index)
           "

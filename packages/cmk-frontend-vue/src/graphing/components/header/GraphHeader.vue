@@ -37,7 +37,7 @@ const props = withDefaults(
     showConsolidation?: boolean | undefined
     showBurgerMenu?: boolean | undefined
     burgerMenuGroups?: BurgerMenuGroup[] | undefined
-    isCompact?: boolean | undefined
+    isHoverGraph?: boolean | undefined
   }>(),
   { showControls: true }
 )
@@ -133,7 +133,7 @@ const timestampLabel = computed(() => {
 })
 
 const resolutionLabel = computed(() => {
-  const prefix = !!props.isCompact || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
+  const prefix = !!props.isHoverGraph || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
   const resolution = props.timeRange ? withMinutesSpelledOut(stepLabel(props.timeRange.step)) : ''
   return `${prefix} ${resolution}`
 })
@@ -144,7 +144,7 @@ const resolutionLabel = computed(() => {
     ref="headerEl"
     class="graphing-graph-header"
     :class="{
-      'graphing-graph-header--compact': !!isCompact,
+      'graphing-graph-header--hover-graph': !!isHoverGraph,
       'graphing-graph-header--title-wrapped': headerLineBreakLevel === 2
     }"
   >
@@ -152,7 +152,7 @@ const resolutionLabel = computed(() => {
       v-if="showTitle"
       ref="titleComp"
       :title="title ?? ''"
-      :is-compact="!!isCompact"
+      :is-compact="!!isHoverGraph"
       class="graphing-graph-header__title"
     />
     <div
@@ -273,8 +273,19 @@ const resolutionLabel = computed(() => {
   font-weight: var(--font-weight-bold);
 }
 
-.graphing-graph-header--compact .graphing-graph-header__title,
-.graphing-graph-header--compact .graphing-graph-header__timestamp {
+.graphing-graph-header--hover-graph {
+  // For hover graphs the background color is handled in the panel
+  background-color: transparent;
+  padding: var(--dimension-4) var(--dimension-4) var(--dimension-5);
+}
+
+.graphing-graph-header--hover-graph .graphing-graph-header__title {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.graphing-graph-header--hover-graph .graphing-graph-header__title,
+.graphing-graph-header--hover-graph .graphing-graph-header__timestamp {
   font-size: var(--font-size-xsmall);
 }
 </style>

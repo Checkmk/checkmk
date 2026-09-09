@@ -207,7 +207,11 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
 </script>
 
 <template>
-  <div class="graphing-graph-panel" :style="{ width: `${figureWidth}px` }">
+  <div
+    class="graphing-graph-panel"
+    :class="{ 'graphing-graph-panel--hover-graph': isHoverGraph }"
+    :style="{ width: `${figureWidth}px` }"
+  >
     <div
       class="graphing-graph-panel__container"
       :class="{ 'graphing-graph-panel__container--legend-right': legendPosition === 'right' }"
@@ -218,7 +222,6 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
           v-model:zoom-mode="zoomMode"
           v-model:consolidation-fn="consolidationFn"
           class="graphing-graph-panel__header"
-          :class="{ 'graphing-graph-panel__header--compact': headerIsCompact }"
           :title="title"
           :show-title="showTitle"
           :time-range="headerTimeRange"
@@ -227,7 +230,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
           :show-consolidation="showConsolidation"
           :show-burger-menu="showBurgerMenu"
           :burger-menu-groups="burgerMenuGroups"
-          :is-compact="headerIsCompact"
+          :is-hover-graph="isHoverGraph"
           @do-action="triggerBurgerMenuAction"
         />
 
@@ -314,20 +317,13 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
 </template>
 
 <style scoped lang="scss">
-// Transparent and borderless by default.
-// A context (e.g. the graph icon hover; _graphs.scss) defines these css variables and by that
-// handles background and border color of the panel.
-.graphing-graph-panel {
-  background-color: var(--cmk-graph-panel-bg, transparent);
-  border: var(--cmk-graph-panel-border, none);
+.graphing-graph-panel--hover-graph {
+  background-color: var(--ux-theme-5);
+  border: 1px solid var(--color-mid-grey-90);
 }
 
 .graphing-graph-panel__header {
   margin-bottom: var(--dimension-3);
-}
-
-.graphing-graph-panel__header--compact {
-  margin: var(--spacing-half) var(--spacing);
 }
 
 .graphing-graph-panel__container--legend-right {

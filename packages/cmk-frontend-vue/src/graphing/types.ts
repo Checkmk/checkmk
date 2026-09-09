@@ -122,7 +122,7 @@ export interface GraphPanelProps {
   legendPosition?: 'bottom' | 'right'
   brushSnapshot?: BrushSnapshot<BrushOverview> | undefined
   addTo?: AddTo | null | undefined
-  headerIsCompact?: boolean
+  isHoverGraph?: boolean
 }
 
 // `update:consolidationFn` is absent by necessity: `defineModel` already declares it in the panel.

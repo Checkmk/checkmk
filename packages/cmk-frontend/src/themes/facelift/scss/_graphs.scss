@@ -6,15 +6,8 @@
 
 /* Stylesheets for graphs */
 
-/* The engine-rendered (Vue) hover graph is transparent; give it a graph surface
-   background of its own. */
 /* stylelint-disable-next-line selector-id-pattern */
 div#hover_menu div.cmk_graph_hover {
-  /* CSS variables defined here for consumption within the Vue graphing components. In case of the
-     hover graphs each GraphPanel calls them for background and border color. */
-  --cmk-graph-panel-bg: #{$bg-color-secondary};
-  --cmk-graph-panel-border: 1px solid #{$ux-theme-5};
-
   width: max-content;
   max-width: 90vw;
 }

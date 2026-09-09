@@ -94,7 +94,7 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
         if not filename.exists():
             return {}
         raw = store.load_text_from_file(filename, default="{}")
-        return dict(ExperimentalFlagConfig.model_validate_json(raw).model_dump())
+        return dict(ExperimentalFlagConfig.model_validate_json(raw).model_dump(exclude_unset=True))
 
     @override
     def save(
@@ -108,7 +108,7 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
             filename = Path(custom_site_path) / os.path.relpath(filename, omd_root)
         filename.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         config = ExperimentalFlagConfig.model_validate(dict(settings))
-        store.save_text_to_file(filename, config.model_dump_json(indent=2))
+        store.save_text_to_file(filename, config.model_dump_json(indent=2, exclude_unset=True))
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

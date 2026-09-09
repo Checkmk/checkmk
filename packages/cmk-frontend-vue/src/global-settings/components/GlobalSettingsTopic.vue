@@ -10,7 +10,6 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -22,7 +21,6 @@ const { _t, _tn } = usei18n()
 const props = defineProps<{
   topic: GlobalSettingsTopic
   value: string
-  resetting: boolean
   /** The variables to show, or null while no search narrows them. */
   match: ReadonlySet<string> | null
   query: string
@@ -30,7 +28,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [variable: GlobalSettingsVariable]
-  reset: []
 }>()
 
 // Only the variable array is filtered, so the header counts below stay totals.
@@ -75,15 +72,6 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         :content="modifiedCountLabel"
         :title="modifiedCountLabel"
       />
-      <CmkButton
-        size="small"
-        :icon="{ name: 'reset', size: 'small' }"
-        :title="_t('Reset all settings in this category to their factory defaults')"
-        :disabled="modifiedCount === 0 || resetting"
-        @click="emit('reset')"
-      >
-        {{ _t('Reset') }}
-      </CmkButton>
     </template>
     <template #content>
       <CmkAlertBox v-if="topic.warning !== null" variant="warning" size="small">

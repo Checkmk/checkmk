@@ -97,17 +97,6 @@ const booleanTopic: GlobalSettingsTopic = {
   ]
 }
 
-const resettableTopic: GlobalSettingsTopic = {
-  icon: 'users',
-  headline: 'Resettable settings',
-  subline: 'Everything in here was modified',
-  warning: null,
-  variables: [
-    { ...data.topics[0]!.variables[0]!, modified: true },
-    { ...booleanTopic.variables[0]!, value: true, modified: true }
-  ]
-}
-
 interface Recorded {
   method: string
   ifMatch: string | null
@@ -139,13 +128,6 @@ const server = setupServer(
     serverValue = { value: 10, is_default: true }
     return new HttpResponse(null, { status: 204 })
   }),
-  http.get(BOOLEAN_SETTING_URL, () => {
-    requests.push({ method: 'GET', ifMatch: null, body: null })
-    return HttpResponse.json(
-      { varname: 'site_piggyback_hub', ...booleanServerValue },
-      { headers: { ETag: '"b1"' } }
-    )
-  }),
   http.put(BOOLEAN_SETTING_URL, async ({ request }) => {
     const body = (await request.json()) as { value: boolean }
     requests.push({ method: 'PUT', ifMatch: request.headers.get('If-Match'), body })
@@ -154,11 +136,6 @@ const server = setupServer(
       { varname: 'site_piggyback_hub', ...booleanServerValue },
       { headers: { ETag: '"b2"' } }
     )
-  }),
-  http.delete(BOOLEAN_SETTING_URL, ({ request }) => {
-    requests.push({ method: 'DELETE', ifMatch: request.headers.get('If-Match'), body: null })
-    booleanServerValue = { value: false, is_default: true }
-    return new HttpResponse(null, { status: 204 })
   })
 )
 
@@ -197,11 +174,6 @@ function topic(headline: string): HTMLElement {
     throw new Error(`No accordion item found for the topic "${headline}"`)
   }
   return element
-}
-
-// Named, because the permanent work-in-progress notice is an alert as well.
-function resetConfirmation(): HTMLElement {
-  return screen.getByRole('alert', { name: /Remove all modifications in/ })
 }
 
 const secondTopic: GlobalSettingsTopic = {
@@ -267,13 +239,6 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.getAllByText('1 variable')).toHaveLength(2)
     expect(screen.getByText('0 modified')).toBeInTheDocument()
     expect(screen.getByText('1 modified')).toBeInTheDocument()
-  })
-
-  test('the topic reset button is disabled while nothing is modified', () => {
-    render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
-    const [untouched, modified] = screen.getAllByRole('button', { name: 'Reset' })
-    expect(untouched).toBeDisabled()
-    expect(modified).toBeEnabled()
   })
 
   test('only modified rows are marked', async () => {
@@ -448,64 +413,6 @@ describe('GlobalSettingsApp', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('resetting a topic deletes every modified value guarded by its etag', async () => {
-    render(GlobalSettingsApp, { props: { ...data, topics: [resettableTopic] } })
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
-    )
-    expect(screen.getAllByText('(modified)')).toHaveLength(2)
-
-    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
-    const confirmation = resetConfirmation()
-    expect(confirmation).toHaveAccessibleName('Remove all modifications in "Resettable settings"?')
-    await userEvent.click(within(confirmation).getByRole('button', { name: 'Remove' }))
-
-    await waitFor(() =>
-      expect(requests.map((r) => r.method)).toEqual([
-        'GET',
-        'DELETE',
-        'GET',
-        'GET',
-        'DELETE',
-        'GET'
-      ])
-    )
-    expect(requests[1]!.ifMatch).toBe('"v1"')
-    expect(requests[4]!.ifMatch).toBe('"b1"')
-    await waitFor(() => expect(screen.queryByText('(modified)')).not.toBeInTheDocument())
-    expect(screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })).toHaveAttribute(
-      'aria-checked',
-      'false'
-    )
-    expect(
-      screen.queryByRole('alert', { name: /Remove all modifications in/ })
-    ).not.toBeInTheDocument()
-  })
-
-  test('a rejected topic reset reports the server message and keeps the remaining values', async () => {
-    server.use(
-      http.delete(SETTING_URL, ({ request }) => {
-        requests.push({ method: 'DELETE', ifMatch: request.headers.get('If-Match'), body: null })
-        return HttpResponse.json(
-          { title: 'Precondition failed', detail: 'ETag mismatch' },
-          { status: 412 }
-        )
-      })
-    )
-    render(GlobalSettingsApp, { props: { ...data, topics: [resettableTopic] } })
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
-    )
-    expect(screen.getAllByText('(modified)')).toHaveLength(2)
-
-    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
-    await userEvent.click(within(resetConfirmation()).getByRole('button', { name: 'Remove' }))
-
-    expect(await screen.findByText(/ETag mismatch/)).toBeInTheDocument()
-    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE']))
-    expect(screen.getAllByText('(modified)')).toHaveLength(2)
-  })
-
   test('a rejected save keeps the editor open and shows the server message', async () => {
     server.use(
       http.put(SETTING_URL, () =>
@@ -622,74 +529,6 @@ describe('GlobalSettingsApp', () => {
 
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
     expect(requests[1]).toMatchObject({ ifMatch: '"s1"', body: { value: 20 } })
-  })
-
-  test("resetting a topic on a site page removes only that site's explicit values", async () => {
-    const siteUrl = (varname: string) =>
-      `${location.protocol}//${location.host}/api/internal/objects/site_connection/remote_1/global_setting/${varname}`
-    const siteRequests: Recorded[] = []
-    let siteLock = { value: 10, is_default: false }
-    let siteHub = { value: true, is_default: false }
-    server.use(
-      http.get(siteUrl('lock_on_logon_failures'), () => {
-        siteRequests.push({ method: 'GET', ifMatch: null, body: null })
-        return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', ...siteLock },
-          { headers: { ETag: '"s1"' } }
-        )
-      }),
-      http.delete(siteUrl('lock_on_logon_failures'), ({ request }) => {
-        siteRequests.push({
-          method: 'DELETE',
-          ifMatch: request.headers.get('If-Match'),
-          body: null
-        })
-        siteLock = { value: 10, is_default: true }
-        return new HttpResponse(null, { status: 204 })
-      }),
-      http.get(siteUrl('site_piggyback_hub'), () => {
-        siteRequests.push({ method: 'GET', ifMatch: null, body: null })
-        return HttpResponse.json(
-          { varname: 'site_piggyback_hub', ...siteHub },
-          { headers: { ETag: '"sb1"' } }
-        )
-      }),
-      http.delete(siteUrl('site_piggyback_hub'), ({ request }) => {
-        siteRequests.push({
-          method: 'DELETE',
-          ifMatch: request.headers.get('If-Match'),
-          body: null
-        })
-        siteHub = { value: false, is_default: true }
-        return new HttpResponse(null, { status: 204 })
-      })
-    )
-    render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [resettableTopic] }
-    })
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
-    )
-    expect(screen.getAllByText('(modified)')).toHaveLength(2)
-
-    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
-    await userEvent.click(within(resetConfirmation()).getByRole('button', { name: 'Remove' }))
-
-    await waitFor(() =>
-      expect(siteRequests.map((r) => r.method)).toEqual([
-        'GET',
-        'DELETE',
-        'GET',
-        'GET',
-        'DELETE',
-        'GET'
-      ])
-    )
-    expect(siteRequests[1]!.ifMatch).toBe('"s1"')
-    expect(siteRequests[4]!.ifMatch).toBe('"sb1"')
-    expect(requests).toEqual([])
-    await waitFor(() => expect(screen.queryByText('(modified)')).not.toBeInTheDocument())
-    expect(screen.getByText('0 modified')).toBeInTheDocument()
   })
 
   test('a load response arriving after its editor was closed does not leak into the next editor', async () => {

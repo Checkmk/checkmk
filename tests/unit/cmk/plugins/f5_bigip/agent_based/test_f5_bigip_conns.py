@@ -9,7 +9,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.f5_bigip_conns import (
+from cmk.plugins.f5_bigip.agent_based.f5_bigip_conns import (
     check_f5_bigip_conns,
     ConnectionStats,
     ConnsParams,

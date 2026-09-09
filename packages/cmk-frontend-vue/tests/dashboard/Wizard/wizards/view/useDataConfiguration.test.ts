@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { describe, expect, it } from 'vitest'
+import { ref } from 'vue'
 
 import type {
   CopyExistingViewSelection,
@@ -11,6 +12,7 @@ import type {
 } from '@/dashboard/components/Wizard/wizards/view/types'
 import { ViewSelectionMode } from '@/dashboard/components/Wizard/wizards/view/types'
 import { useDataConfiguration } from '@/dashboard/components/Wizard/wizards/view/useDataConfiguration'
+import type { EmbeddedViewContent, LinkedViewContent } from '@/dashboard/types/widget'
 
 const newView: NewViewSelection = {
   type: ViewSelectionMode.NEW,
@@ -23,9 +25,22 @@ const copiedView: CopyExistingViewSelection = {
   viewName: 'allhosts'
 }
 
+function embeddedView(embeddedId: string): EmbeddedViewContent {
+  return {
+    type: 'embedded_view',
+    embedded_id: embeddedId,
+    datasource: 'hosts',
+    restricted_to_single: []
+  }
+}
+
+function noContent() {
+  return ref<EmbeddedViewContent | LinkedViewContent | undefined>(undefined)
+}
+
 describe('startNewView', () => {
   it('creates a view from the selected data source', () => {
-    const { configuration, startNewView } = useDataConfiguration(undefined)
+    const { configuration, startNewView } = useDataConfiguration(noContent())
 
     startNewView(newView)
 
@@ -38,7 +53,7 @@ describe('startNewView', () => {
   })
 
   it('copies the selected view', () => {
-    const { configuration, startNewView } = useDataConfiguration(undefined)
+    const { configuration, startNewView } = useDataConfiguration(noContent())
 
     startNewView(copiedView)
 
@@ -50,7 +65,7 @@ describe('startNewView', () => {
   })
 
   it('uses a new embedded view for every selection', () => {
-    const { configuration, startNewView } = useDataConfiguration(undefined)
+    const { configuration, startNewView } = useDataConfiguration(noContent())
 
     startNewView(newView)
     const firstId = configuration.value!.embeddedId
@@ -60,28 +75,61 @@ describe('startNewView', () => {
   })
 })
 
-describe('openForEdit', () => {
-  it('edits the embedded view of the widget', () => {
-    const { configuration, openForEdit } = useDataConfiguration('view-of-the-widget')
+describe('duplicateCurrentView', () => {
+  it('duplicates the view of the widget into a new one', () => {
+    const content = ref(embeddedView('view-of-the-widget'))
+    const { configuration, duplicateCurrentView } = useDataConfiguration(content)
 
-    openForEdit()
+    duplicateCurrentView()
 
-    expect(configuration.value).toEqual({ mode: 'edit', embeddedId: 'view-of-the-widget' })
+    expect(configuration.value).toEqual({
+      mode: 'duplicate',
+      embeddedId: expect.any(String),
+      sourceEmbeddedId: 'view-of-the-widget'
+    })
+    expect(configuration.value!.embeddedId).not.toBe('view-of-the-widget')
   })
 
-  it('edits the embedded view of the previous stage', () => {
-    const { configuration, startNewView, openForEdit } = useDataConfiguration(undefined)
+  it('duplicates the view that the widget got in the previous stage', () => {
+    const content = ref(embeddedView('view-of-the-widget'))
+    const { configuration, duplicateCurrentView } = useDataConfiguration(content)
 
-    startNewView(newView)
-    const createdId = configuration.value!.embeddedId
-    openForEdit()
+    content.value = embeddedView('view-of-the-previous-stage')
+    duplicateCurrentView()
 
-    expect(configuration.value).toEqual({ mode: 'edit', embeddedId: createdId })
+    expect(configuration.value).toEqual({
+      mode: 'duplicate',
+      embeddedId: expect.any(String),
+      sourceEmbeddedId: 'view-of-the-previous-stage'
+    })
   })
 
-  it('refuses a widget without an embedded view', () => {
-    const { openForEdit } = useDataConfiguration(undefined)
+  it('keeps the source when the previous stage saved nothing', () => {
+    const content = ref(embeddedView('view-of-the-widget'))
+    const { configuration, duplicateCurrentView } = useDataConfiguration(content)
 
-    expect(() => openForEdit()).toThrow('The widget has no embedded view')
+    duplicateCurrentView()
+    const plannedId = configuration.value!.embeddedId
+    duplicateCurrentView()
+
+    expect(configuration.value).toEqual({
+      mode: 'duplicate',
+      embeddedId: expect.any(String),
+      sourceEmbeddedId: 'view-of-the-widget'
+    })
+    expect(configuration.value!.embeddedId).not.toBe(plannedId)
+  })
+
+  it('refuses a widget without content', () => {
+    const { duplicateCurrentView } = useDataConfiguration(noContent())
+
+    expect(() => duplicateCurrentView()).toThrow('The widget has no embedded view')
+  })
+
+  it('refuses a widget that links a view', () => {
+    const content = ref<LinkedViewContent>({ type: 'linked_view', view_name: 'allhosts' })
+    const { duplicateCurrentView } = useDataConfiguration(content)
+
+    expect(() => duplicateCurrentView()).toThrow('The widget has no embedded view')
   })
 })

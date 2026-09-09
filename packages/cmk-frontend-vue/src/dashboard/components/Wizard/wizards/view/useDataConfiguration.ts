@@ -4,7 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { randomId } from 'cmk-ui-library/lib/randomId'
-import { shallowRef } from 'vue'
+import { type Ref, shallowRef } from 'vue'
+
+import type { EmbeddedViewContent, LinkedViewContent } from '@/dashboard/types/widget'
 
 import type { CopyExistingViewSelection, NewViewSelection } from './types'
 import { ViewSelectionMode } from './types'
@@ -12,10 +14,12 @@ import { ViewSelectionMode } from './types'
 export type DataConfiguration =
   | { mode: 'create'; embeddedId: string; datasource: string; restrictedToSingle: string[] }
   | { mode: 'copy'; embeddedId: string; viewName: string }
-  | { mode: 'edit'; embeddedId: string }
+  | { mode: 'duplicate'; embeddedId: string; sourceEmbeddedId: string }
 
 /** Tracks the embedded view that the data configuration stage of the view wizard writes. */
-export function useDataConfiguration(editedEmbeddedId: string | undefined) {
+export function useDataConfiguration(
+  widgetContent: Ref<EmbeddedViewContent | LinkedViewContent | undefined>
+) {
   const configuration = shallowRef<DataConfiguration | null>(null)
 
   function startNewView(selection: NewViewSelection | CopyExistingViewSelection): void {
@@ -30,13 +34,17 @@ export function useDataConfiguration(editedEmbeddedId: string | undefined) {
         : { mode: 'copy', embeddedId: randomId(), viewName: selection.viewName }
   }
 
-  function openForEdit(): void {
-    const embeddedId = configuration.value?.embeddedId ?? editedEmbeddedId
-    if (!embeddedId) {
+  function duplicateCurrentView(): void {
+    const current = widgetContent.value
+    if (current?.type !== 'embedded_view') {
       throw new Error('The widget has no embedded view')
     }
-    configuration.value = { mode: 'edit', embeddedId }
+    configuration.value = {
+      mode: 'duplicate',
+      embeddedId: randomId(),
+      sourceEmbeddedId: current.embedded_id
+    }
   }
 
-  return { configuration, startNewView, openForEdit }
+  return { configuration, startNewView, duplicateCurrentView }
 }

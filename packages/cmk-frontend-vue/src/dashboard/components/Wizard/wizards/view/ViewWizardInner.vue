@@ -154,13 +154,6 @@ function getDefaultReferencedViewName(): string | null {
   return null
 }
 
-function getDefaultEmbeddedId(): string | undefined {
-  if (props.editWidgetSpec && props.editWidgetSpec.content.type === 'embedded_view') {
-    return props.editWidgetSpec.content.embedded_id
-  }
-  return undefined
-}
-
 function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefined {
   if (props.editWidgetSpec) {
     return props.editWidgetSpec.content as EmbeddedViewContent | LinkedViewContent
@@ -169,12 +162,12 @@ function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefine
 }
 
 const widgetId = ref<string>(getDefaultWidgetId())
+const content = ref<EmbeddedViewContent | LinkedViewContent | undefined>(getDefaultContent())
 
 // Stage 2
-const dataConfiguration = useDataConfiguration(getDefaultEmbeddedId())
+const dataConfiguration = useDataConfiguration(content)
 
 // Stage 3
-const content = ref<EmbeddedViewContent | LinkedViewContent | undefined>(getDefaultContent())
 const visualizationProps = useWidgetVisualizationProps(
   '$DEFAULT_TITLE$',
   props.editWidgetSpec?.general_settings,
@@ -208,7 +201,7 @@ function stage1GoNext(selectedView: ViewSelection | null) {
       // skip data config stage
       wizardHandler.goto(2)
     } else {
-      dataConfiguration.openForEdit()
+      dataConfiguration.duplicateCurrentView()
       wizardHandler.next()
     }
     return
@@ -261,7 +254,7 @@ function stage3GoPrev() {
     // stage 2 doesn't exist for linked views, so go back to stage 1
     wizardHandler.goto(0)
   } else {
-    dataConfiguration.openForEdit()
+    dataConfiguration.duplicateCurrentView()
     wizardHandler.prev()
   }
 }

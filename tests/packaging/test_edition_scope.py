@@ -19,7 +19,7 @@ import pytest
 
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import check_output
-from tests.testlib.version import TypeCMKEdition
+from tests.testlib.common.version import TypeCMKEdition
 
 _ULTIMATE_AND_HIGHER = frozenset(
     {

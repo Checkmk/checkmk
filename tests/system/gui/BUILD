@@ -27,8 +27,7 @@ py_library(
         requirement("clickhouse_connect"),
         "//tests/system:pkg_marker",
         "//tests/testlib",
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
     ] + select({
         "//:gpl+nonfree_repo": [

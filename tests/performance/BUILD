@@ -32,8 +32,7 @@ py_library(
         requirement("pytest_benchmark"),
         requirement("cryptography"),
         "//tests/testlib",
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
     ],
 )
 
@@ -54,7 +53,7 @@ py_library(
     ],
     deps = [
         "//tests:pkg_marker",
-        "//tests/testlib",
+        "//tests/testlib/common",
         requirement("psutil"),
     ],
 )

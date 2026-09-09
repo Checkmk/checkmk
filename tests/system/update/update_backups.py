@@ -22,13 +22,13 @@ import logging
 import tarfile
 from pathlib import Path
 
-from tests.testlib.site import SiteFactory
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKEdition,
     CMKPackageInfo,
     CMKVersion,
     get_min_version,
 )
+from tests.testlib.site import SiteFactory
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

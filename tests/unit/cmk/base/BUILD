@@ -20,8 +20,8 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/plugins",
+        "//tests/testlib/common",
         "//tests/testlib/common:empty_config",
-        "//tests/testlib/common:utils",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-mock"),

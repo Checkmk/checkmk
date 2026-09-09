@@ -7,7 +7,7 @@ py_library(
     imports = ["../../.."],
     visibility = ["//tests:__subpackages__"],
     deps = [
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
         requirement("checkmk-dev-tools"),
         requirement("psutil"),
         requirement("pytest"),

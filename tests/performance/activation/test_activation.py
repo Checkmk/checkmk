@@ -14,7 +14,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 
 from tests.performance.activation import scenario
 from tests.performance.perftest import PerformanceTest
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.common.version import CMKVersion, version_from_env
 
 
 @pytest.mark.usefixtures("track_system_resources")

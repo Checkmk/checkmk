@@ -25,7 +25,7 @@ py_library(
     ],
     imports = ["../.."],
     deps = [
-        "//tests/testlib/common:repo",
+        "//tests/testlib/common",
         requirement("pydantic"),
         requirement("pytest"),
         requirement("isort"),

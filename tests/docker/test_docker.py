@@ -15,19 +15,19 @@ import requests
 from pytest import LogCaptureFixture
 
 import docker
+from tests.testlib.common.version import (
+    CMKEdition,
+    CMKPackageInfo,
+    edition_from_env,
+    get_min_version,
+    version_from_env,
+)
 from tests.testlib.docker import (
     build_checkmk,
     build_path,
     CheckmkApp,
     package_name,
     prepare_package,
-)
-from tests.testlib.version import (
-    CMKEdition,
-    CMKPackageInfo,
-    edition_from_env,
-    get_min_version,
-    version_from_env,
 )
 
 # Apply the skipif marker to all tests in this file for SaaS edition

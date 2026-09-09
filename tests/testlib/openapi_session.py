@@ -60,7 +60,7 @@ from cmk.relay_protocols.tasks import (
     TaskResponse,
 )
 from cmk.utils.keypair_store import KeyId
-from tests.testlib.version import CMKVersion, TypeCMKEdition
+from tests.testlib.common.version import CMKVersion, TypeCMKEdition
 
 logger = logging.getLogger("rest-session")
 tracer = trace.get_tracer()

@@ -11,8 +11,8 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import (
     GRAPH_SURFACES,
     surfaces_for_edition,
 )
+from tests.testlib.common.version import CMKEdition
 from tests.testlib.graphing import service_rrd_path
-from tests.testlib.version import CMKEdition
 
 
 def test_surface_page_objects_resolve() -> None:

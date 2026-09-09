@@ -8,8 +8,7 @@ py_library(
     imports = ["../.."],
     visibility = ["//tests:__subpackages__"],
     deps = [
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
         requirement("pytest"),
     ],
 )

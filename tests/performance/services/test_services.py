@@ -12,7 +12,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 
 from tests.performance.perftest import PerformanceTest
 from tests.performance.services import scenario
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.common.version import CMKVersion, version_from_env
 
 
 @pytest.mark.skipif(

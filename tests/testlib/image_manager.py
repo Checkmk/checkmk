@@ -29,7 +29,7 @@ import docker
 import docker.errors
 
 from tests.testlib.common.repo import repo_path
-from tests.testlib.version import CMKEdition
+from tests.testlib.common.version import CMKEdition
 
 logger = logging.getLogger(__name__)
 

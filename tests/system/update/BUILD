@@ -21,7 +21,7 @@ py_library(
         requirement("pytest"),
         "//tests/system:pkg_marker",
         "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-otel-collector:testlib",

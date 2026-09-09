@@ -36,8 +36,8 @@ import requests
 
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.common.utils2 import get_cmk_download_credentials, is_cleanup_enabled
+from tests.testlib.common.version import CMKPackageInfo, CMKVersion, package_hash_path
 from tests.testlib.package_manager import DISTRO_CODES
-from tests.testlib.version import CMKPackageInfo, CMKVersion, package_hash_path
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
@@ -513,7 +513,7 @@ def _runtime_binds() -> dict[str, Mapping[str, str]]:
     return {
         **_git_repos(),
         # Credentials file for fetching the package from the download server. Used by
-        # testlib/version.py in case the version package needs to be downloaded
+        # testlib/common/version.py in case the version package needs to be downloaded
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.

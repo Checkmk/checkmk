@@ -11,8 +11,8 @@ from random import randint
 import pytest
 
 import docker
+from tests.testlib.common.version import version_from_env
 from tests.testlib.docker import CheckmkApp
-from tests.testlib.version import version_from_env
 
 logger = logging.getLogger()
 

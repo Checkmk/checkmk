@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
 
-from tests.testlib.version import TypeCMKEdition
+from tests.testlib.common.version import TypeCMKEdition
 
 
 class GraphContainment(StrEnum):

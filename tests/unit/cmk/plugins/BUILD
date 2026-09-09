@@ -27,7 +27,7 @@ py_cmk_test(
         "//packages/cmk-plugins:azure_deprecated",
         "//packages/cmk-plugins:azure_v2",
         "//packages/cmk-plugins:proxmox_ve",
-        "//tests/testlib/common:repo",
+        "//tests/testlib/common",
         requirement("exchangelib"),
         requirement("feedparser"),
         requirement("polyfactory"),

@@ -26,12 +26,12 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from tests.testlib.common.repo import current_base_branch_name
-from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     edition_from_env,
     version_from_env,
 )
+from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()

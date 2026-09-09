@@ -22,8 +22,8 @@ from typing import Final
 import pytest
 
 from tests.testlib.common.utils2 import logger, run
+from tests.testlib.common.version import CMKVersion, get_min_version
 from tests.testlib.site import Site
-from tests.testlib.version import CMKVersion, get_min_version
 
 
 def create_agent_dump_rule(

@@ -30,7 +30,7 @@ py_library(
         "//packages/cmk-wsgi",
         "//tests/system:pkg_marker",
         "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//cmk/gui/job_scheduler",

@@ -17,8 +17,7 @@ py_library(
     testonly = True,
     srcs = ["conftest.py"],
     deps = [
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
         requirement("playwright"),
         requirement("pytest"),
         requirement("pytest-check"),

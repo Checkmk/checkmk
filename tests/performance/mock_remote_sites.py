@@ -57,7 +57,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
-from tests.testlib.version import CMKVersion
+from tests.testlib.common.version import CMKVersion
 
 logger = logging.getLogger(__name__)
 

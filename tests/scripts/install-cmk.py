@@ -17,12 +17,12 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
-from tests.testlib.package_manager import ABCPackageManager
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     edition_from_env,
     version_from_env,
 )
+from tests.testlib.package_manager import ABCPackageManager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()

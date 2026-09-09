@@ -22,12 +22,12 @@ from tests.system.update.helpers import (
 )
 from tests.testlib.agent_dumps import get_dump_names, inject_dumps
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKEdition,
     edition_from_env,
     TypeCMKEdition,
 )
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 

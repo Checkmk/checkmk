@@ -22,7 +22,7 @@ from tests.testlib.common.utils2 import (
     get_cmk_download_credentials,
     run,
 )
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKEdition,
     CMKPackageInfo,
     edition_from_env,
@@ -433,7 +433,7 @@ class PackageManagerCMA(PackageManagerDEB):
 
 
 def package_info_from_path(package_path: Path) -> CMKPackageInfo:
-    from tests.testlib.version import CMKVersion
+    from tests.testlib.common.version import CMKVersion
 
     if package_path.suffix != ".gz":
         pkg_manager = ABCPackageManager.from_package(package_path)

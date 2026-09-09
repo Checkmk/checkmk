@@ -7,8 +7,8 @@ py_library(
     srcs = glob(["**/*.py"]),
     imports = ["../.."],
     deps = [
+        "//tests/testlib/common",
         "//tests/testlib/common:empty_config",
-        "//tests/testlib/common:repo",
         requirement("pytest"),
     ],
 )

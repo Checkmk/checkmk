@@ -66,18 +66,18 @@ from tests.testlib.common.utils2 import (
     spawn_expect_process,
     write_file,
 )
-from tests.testlib.openapi_session import (
-    AgentReceiverApiSession,
-    CMKOpenApiSession,
-    UnexpectedResponse,
-)
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
     get_min_version,
     TypeCMKEdition,
     version_from_env,
+)
+from tests.testlib.openapi_session import (
+    AgentReceiverApiSession,
+    CMKOpenApiSession,
+    UnexpectedResponse,
 )
 from tests.testlib.web_session import CMKWebSession
 

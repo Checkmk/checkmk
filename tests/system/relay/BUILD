@@ -15,6 +15,6 @@ py_library(
         requirement("pytest"),
         "//tests/system:pkg_marker",
         "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
     ],
 )

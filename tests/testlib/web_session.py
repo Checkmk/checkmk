@@ -21,7 +21,7 @@ from http.cookiejar import Cookie
 import requests
 from bs4 import BeautifulSoup
 
-from tests.testlib.version import edition_from_env
+from tests.testlib.common.version import edition_from_env
 
 
 class APIError(Exception):

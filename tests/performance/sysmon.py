@@ -21,7 +21,7 @@ from typing import IO
 
 import psutil
 
-from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
+from tests.testlib.common.version import CMKPackageInfo, edition_from_env, version_from_env
 
 perf_dict = dict[str, int | float | str | None]
 nested_perf_dict = dict[str, perf_dict]

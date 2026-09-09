@@ -38,13 +38,13 @@ from cmk.crypto.password import Password
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.openapi_session import AgentReceiverApiSession, APIVersion, CMKOpenApiSession
-from tests.testlib.package_manager import ABCPackageManager
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     edition_from_env,
     version_from_env,
 )
+from tests.testlib.openapi_session import AgentReceiverApiSession, APIVersion, CMKOpenApiSession
+from tests.testlib.package_manager import ABCPackageManager
 
 logger = logging.getLogger()
 

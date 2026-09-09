@@ -17,9 +17,9 @@ import pytest
 from tests.testlib.common.utils2 import (
     DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
 )
+from tests.testlib.common.version import edition_from_env
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.version import edition_from_env
 
 logger = logging.getLogger(__name__)
 

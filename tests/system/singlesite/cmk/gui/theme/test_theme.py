@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from cmk.gui.theme import Theme
+from tests.testlib.common.version import TypeCMKEdition
 from tests.testlib.site import Site
-from tests.testlib.version import TypeCMKEdition
 
 
 @pytest.fixture(name="th")

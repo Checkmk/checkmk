@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.common.version import edition_from_env
 from tests.testlib.site import Site
-from tests.testlib.version import edition_from_env
 
 
 @pytest.mark.skipif(

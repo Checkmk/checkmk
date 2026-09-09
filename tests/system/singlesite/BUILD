@@ -48,7 +48,7 @@ py_library(
         "//cmk/utils:redis",
         "//tests/system:pkg_marker",
         "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
     ] + select({
         "//:gpl+nonfree_repo": [

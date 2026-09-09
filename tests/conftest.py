@@ -27,6 +27,12 @@ from tests.testlib.common.utils2 import (
     run,
     verbose_called_process_error,
 )
+from tests.testlib.common.version import (
+    CMKEdition,
+    CMKVersion,
+    edition_from_env,
+    TypeCMKEdition,
+)
 from tests.testlib.pytest_helpers.sharding import (
     Durations,
     fetch_durations,
@@ -36,12 +42,6 @@ from tests.testlib.pytest_helpers.sharding import (
 from tests.testlib.pytest_helpers.timeouts import (
     MonitorTimeout,
     SessionTimeoutError,
-)
-from tests.testlib.version import (
-    CMKEdition,
-    CMKVersion,
-    edition_from_env,
-    TypeCMKEdition,
 )
 
 logger = logging.getLogger(__name__)

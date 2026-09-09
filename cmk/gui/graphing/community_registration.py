@@ -53,7 +53,7 @@ def register(
     def wrapped_autocompleter(
         config: object,  # noqa: ARG001
         value: str,
-        params: dict,  # type: ignore[type-arg]
+        params: dict[str, object],
     ) -> Choices:
         return metrics_autocompleter(value, params, livestatus_query=livestatus_query)
 

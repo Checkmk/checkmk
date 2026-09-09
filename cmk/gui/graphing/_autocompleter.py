@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
+
+from collections.abc import Mapping
 
 from cmk.gui.type_defs import Choices
 
 from ._from_api import metrics_from_api
+from ._graph_codec import context_from_json
 from ._metrics import registered_metric_ids_and_titles
 from ._plugins import registered_metrics, registered_translations
 from ._valuespecs import LivestatusQueryFunc, metrics_of_query
@@ -15,10 +17,10 @@ from ._valuespecs import LivestatusQueryFunc, metrics_of_query
 
 def metrics_autocompleter(
     value: str,
-    params: dict,
+    params: Mapping[str, object],
     livestatus_query: LivestatusQueryFunc,
 ) -> Choices:
-    context = params.get("context", {})
+    context = context_from_json(params.get("context", {}))
     host = context.get("host", {}).get("host", "")
     service = context.get("service", {}).get("service", "")
     if not params.get("show_independent_of_context") and not all((host, service)):

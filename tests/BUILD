@@ -29,30 +29,6 @@ py_library(
 )
 
 py_library(
-    name = "bandit-nosec-markers",
-    testonly = True,
-    srcs = glob(
-        include = ["bandit-nosec-markers/**/*.py"],
-    ),
-    imports = [".."],
-)
-
-py_library(
-    name = "docker",
-    testonly = True,
-    srcs = glob(
-        include = ["docker/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        requirement("docker"),
-        requirement("pytest"),
-        requirement("requests"),
-        "//tests/testlib",
-    ],
-)
-
-py_library(
     name = "etc",
     testonly = True,
     srcs = glob(
@@ -67,20 +43,6 @@ py_library(
         "//:gpl_repo": [],
     }),
     imports = [".."],
-)
-
-py_library(
-    name = "packaging",
-    testonly = True,
-    srcs = glob(
-        include = ["packaging/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
-        requirement("pytest"),
-    ],
 )
 
 py_library(

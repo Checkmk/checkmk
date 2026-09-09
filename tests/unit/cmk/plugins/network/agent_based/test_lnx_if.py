@@ -6,7 +6,6 @@
 
 import copy
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 
 import pytest
 
@@ -1588,15 +1587,3 @@ def test_inventorize_lnx_if_ip(
     assert list(lnx_if.inventorize_lnx_if(section, None)) == list(expected_result), (
         f"in param {request.node.callspec.id}"
     )
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just set _PYTEST_RAISES=1 and run this file from your IDE and dive into the code.
-    source_file_path = (
-        (base := (test_file := Path(__file__)).parents[6])
-        / test_file.parent.relative_to(base / "tests/unit")
-        / test_file.name[5:]
-    ).as_posix()
-    assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
-    pytest.main(["-vvsx", __file__])

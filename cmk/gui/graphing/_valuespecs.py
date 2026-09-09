@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 
 import json
 import re
@@ -358,7 +356,7 @@ class ValuesWithUnits(CascadingDropdown):
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
 
-    def _unit_vs(
+    def _unit_vs(  # type: ignore[explicit-any]
         self,
         vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
         symbol: str,
@@ -530,12 +528,12 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
     ident = "monitored_metrics"
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # type: ignore[explicit-any]
         # Customer's metrics from local checks or other custom plug-ins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
-        kwargs_with_defaults: Mapping[str, Any] = {
+        kwargs_with_defaults: Mapping[str, Any] = {  # type: ignore[explicit-any]
             "css_spec": ["ajax-vals"],
             "hint_label": _("metric"),
             "title": _("Metric"),

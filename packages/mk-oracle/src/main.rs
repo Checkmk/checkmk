@@ -47,6 +47,26 @@ async fn main() {
                 1
             }
         };
+        if code == 0 {
+            // On stderr: without --migrate-output, stdout is the YAML itself.
+            let program = std::env::args()
+                .next()
+                .unwrap_or_else(|| "mk-oracle".to_string());
+            let config = cli
+                .migrate_output
+                .as_ref()
+                .map_or("<mk-oracle.yml>".to_string(), |p| p.display().to_string());
+            eprintln!(
+                "Next steps:
+1. Validate the migrated configuration on this host:
+     {program} --no-spool -c {config}
+2. Validate the resulting services: delete the cache files of the legacy
+   mk_oracle plug-in (oracle_*.cache) from the agent's cache directory (on
+   Linux /var/lib/check_mk_agent/cache, or /opt/checkmk/agent/default/runtime/cache
+   for a single-directory installation), wait for the next monitoring cycle
+   and check the Oracle services of the host in Checkmk."
+            );
+        }
         std::process::exit(code);
     }
 

@@ -184,6 +184,10 @@ function settingRow() {
     .closest('.global-settings-variable-row')
 }
 
+function resetConfirmation(): HTMLElement {
+  return screen.getByRole('alert', { name: /Remove all modifications in/ })
+}
+
 const secondTopic: GlobalSettingsTopic = {
   icon: 'sites',
   headline: 'Site management',
@@ -414,8 +418,8 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getAllByText('(modified)')).toHaveLength(2)
 
     await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
-    const confirmation = screen.getByRole('alert')
-    expect(confirmation).toHaveTextContent('Remove all modifications in "Resettable settings"?')
+    const confirmation = resetConfirmation()
+    expect(confirmation).toHaveAccessibleName('Remove all modifications in "Resettable settings"?')
     await userEvent.click(within(confirmation).getByRole('button', { name: 'Remove' }))
 
     await waitFor(() =>
@@ -435,7 +439,9 @@ describe('GlobalSettingsApp', () => {
       'aria-checked',
       'false'
     )
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('alert', { name: /Remove all modifications in/ })
+    ).not.toBeInTheDocument()
   })
 
   test('a rejected topic reset reports the server message and keeps the remaining values', async () => {
@@ -455,7 +461,7 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getAllByText('(modified)')).toHaveLength(2)
 
     await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
-    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Remove' }))
+    await userEvent.click(within(resetConfirmation()).getByRole('button', { name: 'Remove' }))
 
     expect(await screen.findByText(/ETag mismatch/)).toBeInTheDocument()
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE']))
@@ -629,7 +635,7 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getAllByText('(modified)')).toHaveLength(2)
 
     await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
-    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Remove' }))
+    await userEvent.click(within(resetConfirmation()).getByRole('button', { name: 'Remove' }))
 
     await waitFor(() =>
       expect(siteRequests.map((r) => r.method)).toEqual([

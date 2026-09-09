@@ -12,6 +12,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, onUnmounted, watch } from 'vue'
 
 import CmkHeading from './typography/CmkHeading.vue'
@@ -62,6 +63,8 @@ export type CmkAlertBoxProps = BaseProps &
 const props = defineProps<CmkAlertBoxProps>()
 
 const open = defineModel<boolean>('open', { default: true })
+
+const headingId = useId()
 
 let timeoutId: number | null = null
 
@@ -124,13 +127,14 @@ const alertIconColor = computed(() => {
     :class="propsCva({ size })"
     :style="{ background: `var(--cmk-alert-box-${variant ?? 'info'}-bg-color)` }"
     :role="variant === 'error' || variant === 'warning' ? 'alert' : 'status'"
+    :aria-labelledby="heading ? headingId : undefined"
   >
     <div class="cmk-alert-box__icon">
       <CmkIcon v-if="variant === 'loading'" name="load-graph" size="large" />
       <CmkMultitoneIcon v-else :name="alertIconName" :primary-color="alertIconColor" size="large" />
     </div>
     <div class="cmk-alert-box__text">
-      <CmkHeading v-if="heading" type="h4">{{ heading }}</CmkHeading>
+      <CmkHeading v-if="heading" :id="headingId" type="h4">{{ heading }}</CmkHeading>
       <div class="cmk-alert-box__body">
         <slot />
       </div>

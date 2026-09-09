@@ -54,6 +54,7 @@ from cmk.gui.valuespec import (
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 
 from ._from_api import metrics_from_api, RegisteredMetric
+from ._graph_codec import ensure_type
 from ._graph_display_config import GraphDisplayConfigHTML
 from ._metric_data import parse_performance_data, translate_metric_names
 from ._metrics import get_metric_spec, registered_metric_ids_and_titles
@@ -70,7 +71,7 @@ from ._unit import (
 )
 
 type LivestatusQueryFunc = Callable[
-    [Literal["host", "service"], VisualContext, list[str]], list[dict[str, Any]]
+    [Literal["host", "service"], VisualContext, list[str]], Sequence[Mapping[str, object]]
 ]
 
 
@@ -595,6 +596,11 @@ def _metric_choices(
         )
 
 
+def _engine_metric_names(raw: object) -> Iterator[EngineMetricName]:
+    for name in ensure_type(raw, list):
+        yield EngineMetricName(ensure_type(name, str))
+
+
 def metrics_of_query(
     context: VisualContext,
     registered_metrics: Mapping[str, metrics_v1.Metric],
@@ -612,14 +618,16 @@ def metrics_of_query(
         "host_metrics",
     ]
 
-    row = {}
+    row: Mapping[str, object] = {}
     for row in livestatus_query("service", context, columns):
         raw = parse_performance_data(
-            row["service_perf_data"], row["service_check_command"], debug=active_config.debug
+            ensure_type(row["service_perf_data"], str),
+            ensure_type(row["service_check_command"], str),
+            debug=active_config.debug,
         )
         yield from _metric_choices(
             raw.check_command,
-            [*raw.values, *map(EngineMetricName, row["service_metrics"])],
+            [*raw.values, *_engine_metric_names(row["service_metrics"])],
             registered_metrics,
             registered_translations,
         )
@@ -627,7 +635,7 @@ def metrics_of_query(
     if row.get("host_check_command"):
         yield from _metric_choices(
             str(row["host_check_command"]),
-            [EngineMetricName(name) for name in row["host_metrics"]],
+            list(_engine_metric_names(row["host_metrics"])),
             registered_metrics,
             registered_translations,
         )

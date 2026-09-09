@@ -10,7 +10,6 @@ from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import Glacier, GlacierLimits
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -19,6 +18,7 @@ from cmk.plugins.aws.special_agent.config import (
     TagsOption,
 )
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.glacier import Glacier, GlacierLimits
 
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
 

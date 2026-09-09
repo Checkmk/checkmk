@@ -19,7 +19,7 @@ def test_mcp_conf_proxies_the_public_prm_route_when_enabled(tmp_path: Path) -> N
     MCP_SERVER.activation("unit", site_home, {"MCP_SERVER": "on"})
 
     conf = (site_home / "etc" / "apache" / "conf.d" / "mcp.conf").read_text()
-    assert "http://localhost/.well-known/oauth-protected-resource/unit/check_mk/mcp" in conf
+    assert "http://localhost:1/.well-known/oauth-protected-resource/unit/check_mk/mcp" in conf
     assert "ProxyPreserveHost On" in conf
     assert "Require all granted" in conf
 

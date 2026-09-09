@@ -26,8 +26,16 @@ LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
 LoadModule proxy_http_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy_http.so
 </IfModule>
 
-ProxyPass "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/" retry=0 timeout=120
-ProxyPassReverse "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/"
+ProxyPass "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost:1/" retry=0 timeout=120
+ProxyPassReverse "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost:1/"
+
+# No retry=/timeout= here: mod_proxy keys workers by the socket origin (the
+# "unix://...sock|http://localhost:1" prefix, path excluded), so this ProxyPass
+# reuses the worker the "/{site_name}/check_mk/mcp" line above already defined.
+# Those parameters are worker-scoped and set there; repeating them is ignored
+# ("AH01146: Ignoring parameter ... because of worker sharing" at startup).
+ProxyPass "{prm}" "unix://{sock}|http://localhost:1{prm}"
+ProxyPassReverse "{prm}" "unix://{sock}|http://localhost:1{prm}"
 
 # OAuth 2.0 Protected Resource Metadata (RFC 9728). Public discovery document,
 # proxied to the MCP server preserving the full path so its PRM route matches.
@@ -35,13 +43,6 @@ ProxyPassReverse "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/"
   ProxyPreserveHost On
   Require all granted
 </Location>
-# No retry=/timeout= here: mod_proxy keys workers by the socket origin (the
-# "unix://...sock|http://localhost" prefix, path excluded), so this ProxyPass
-# reuses the worker the "/{site_name}/check_mk/mcp" line above already defined.
-# Those parameters are worker-scoped and set there; repeating them is ignored
-# ("AH01146: Ignoring parameter ... because of worker sharing" at startup).
-ProxyPass "{prm}" "unix://{sock}|http://localhost{prm}"
-ProxyPassReverse "{prm}" "unix://{sock}|http://localhost{prm}"
 
 # Browser-based MCP clients (MCP Inspector, web IDEs) send CORS preflights, so
 # OPTIONS must reach the MCP endpoint, the OAuth discovery/registration/token

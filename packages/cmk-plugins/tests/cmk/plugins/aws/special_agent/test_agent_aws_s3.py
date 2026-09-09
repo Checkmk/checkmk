@@ -11,9 +11,6 @@ from typing import Protocol
 
 import pytest
 
-# Needed to monkeypatch agent_aws.NOW
-from cmk.plugins.aws.special_agent import agent_aws
-from cmk.plugins.aws.special_agent.agent_aws import S3, S3Limits, S3Requests, S3Summary
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -21,7 +18,11 @@ from cmk.plugins.aws.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+
+# Needed to monkeypatch NOW in the s3 module
+from cmk.plugins.aws.special_agent.sections import s3 as s3_module
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.s3 import S3, S3Limits, S3Requests, S3Summary
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
 
@@ -76,7 +77,7 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
     ) -> S3Sections:
         # on_time is somehow not feeded from here to S3Limits, so use monkey patch...
         monkeypatch.setattr(
-            agent_aws, "NOW", dt.strptime("2020-09-28 15:30 UTC", "%Y-%m-%d %H:%M %Z")
+            s3_module, "NOW", dt.strptime("2020-09-28 15:30 UTC", "%Y-%m-%d %H:%M %Z")
         )
 
         region = "region"

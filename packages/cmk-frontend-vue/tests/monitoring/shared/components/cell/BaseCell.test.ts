@@ -74,6 +74,11 @@ test('renders a <td> with default slot content', async () => {
   expect(td).toHaveTextContent('cell content')
 })
 
+test('exposes its column id on the <td>', async () => {
+  const { container } = await mountCell({}, { cellWidth: 500 })
+  expect(container.querySelector('td')).toHaveAttribute('data-column-id', TEST_COLUMN_ID)
+})
+
 test('renders the largest-fitting named slot from breakpoints', async () => {
   const { container } = await mountCell(
     { breakpoints: { short: 's', long: 'l', verbose: 'xl' } },

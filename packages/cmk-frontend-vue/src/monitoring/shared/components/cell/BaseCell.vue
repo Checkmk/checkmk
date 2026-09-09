@@ -98,6 +98,7 @@ const highlightStyle = computed<CSSProperties>(() =>
 <template>
   <td
     class="monitoring-base-cell"
+    :data-column-id="columnId"
     :class="{
       'monitoring-base-cell--pinned': pinnedLeft !== null || pinnedRight !== null,
       'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned,

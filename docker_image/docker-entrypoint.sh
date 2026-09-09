@@ -121,7 +121,7 @@ fi
 if [ -n "$TZ" ]; then
     if grep -E '^TZ=' "/opt/omd/sites/$CMK_SITE_ID/etc/environment" >/dev/null; then
         # Update an existing TZ setting
-        sed -i -E "s_^TZ=.*_TZ=\"${TZ}\"_" "/opt/omd/sites/$CMK_SITE_ID/etc/environment"
+        sed -i -E "s|^TZ=.*|TZ=\"${TZ}\"|" "/opt/omd/sites/$CMK_SITE_ID/etc/environment"
     else
         # Write an inital timezone setting
         echo "TZ=\"${TZ}\"" >>"/opt/omd/sites/$CMK_SITE_ID/etc/environment"

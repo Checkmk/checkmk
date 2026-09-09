@@ -42,8 +42,9 @@ import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 import Stage3 from './stage3/StageContents.vue'
-import type { CopyExistingViewSelection, NewViewSelection, ViewSelection } from './types'
-import { DataConfigurationMode, ViewSelectionMode } from './types'
+import type { ViewSelection } from './types'
+import { ViewSelectionMode } from './types'
+import { useDataConfiguration } from './useDataConfiguration'
 
 const { _t } = usei18n()
 
@@ -160,13 +161,6 @@ function getDefaultEmbeddedId(): string | undefined {
   return undefined
 }
 
-function getConfigMode(mode: DataConfigurationMode): DataConfigurationMode {
-  if (props.editWidgetSpec) {
-    return DataConfigurationMode.EDIT
-  }
-  return mode
-}
-
 function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefined {
   if (props.editWidgetSpec) {
     return props.editWidgetSpec.content as EmbeddedViewContent | LinkedViewContent
@@ -177,11 +171,7 @@ function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefine
 const widgetId = ref<string>(getDefaultWidgetId())
 
 // Stage 2
-const dataConfigurationMode = ref<DataConfigurationMode>(
-  getConfigMode(DataConfigurationMode.CREATE)
-)
-const embeddedId = ref<string | undefined>(getDefaultEmbeddedId())
-const viewSelection = ref<NewViewSelection | CopyExistingViewSelection>()
+const dataConfiguration = useDataConfiguration(getDefaultEmbeddedId())
 
 // Stage 3
 const content = ref<EmbeddedViewContent | LinkedViewContent | undefined>(getDefaultContent())
@@ -210,7 +200,7 @@ const wizardStages: QuickSetupStageSpec[] = [
   }
 ]
 
-function stage1GoNext(selectedView: ViewSelection) {
+function stage1GoNext(selectedView: ViewSelection | null) {
   widgetFilterManager.closeSelectionMenu() // ensure filter menu is closed
 
   if (props.editWidgetSpec) {
@@ -218,13 +208,17 @@ function stage1GoNext(selectedView: ViewSelection) {
       // skip data config stage
       wizardHandler.goto(2)
     } else {
-      dataConfigurationMode.value = DataConfigurationMode.EDIT
+      dataConfiguration.openForEdit()
       wizardHandler.next()
     }
     return
   }
 
-  if (selectedView.type === 'link') {
+  if (!selectedView) {
+    throw new Error('No view selected')
+  }
+
+  if (selectedView.type === ViewSelectionMode.LINK) {
     wizardStages[0]!.recapContent = h(
       'div',
       _t('Link to view: %{viewName}', { viewName: selectedView.viewName })
@@ -235,27 +229,26 @@ function stage1GoNext(selectedView: ViewSelection) {
     } as LinkedViewContent
     // skip data config stage
     wizardHandler.goto(2)
-  } else {
-    if (selectedView.type === 'new') {
-      wizardStages[0]!.recapContent = h(
-        'div',
-        _t('New view based on: %{datasource}', {
-          datasource: selectedView.datasource
-        })
-      )
-    } else if (selectedView.type === 'copy') {
-      wizardStages[0]!.recapContent = h(
-        'div',
-        _t('Copy existing view: %{viewName}', {
-          viewName: selectedView.viewName
-        })
-      )
-    }
-    dataConfigurationMode.value = DataConfigurationMode.CREATE
-    embeddedId.value = randomId()
-    viewSelection.value = selectedView as NewViewSelection | CopyExistingViewSelection
-    wizardHandler.next()
+    return
   }
+
+  if (selectedView.type === ViewSelectionMode.NEW) {
+    wizardStages[0]!.recapContent = h(
+      'div',
+      _t('New view based on: %{datasource}', {
+        datasource: selectedView.datasource
+      })
+    )
+  } else {
+    wizardStages[0]!.recapContent = h(
+      'div',
+      _t('Copy existing view: %{viewName}', {
+        viewName: selectedView.viewName
+      })
+    )
+  }
+  dataConfiguration.startNewView(selectedView)
+  wizardHandler.next()
 }
 
 function stage2GoNext(embeddedViewContent: EmbeddedViewContent) {
@@ -268,9 +261,7 @@ function stage3GoPrev() {
     // stage 2 doesn't exist for linked views, so go back to stage 1
     wizardHandler.goto(0)
   } else {
-    // the user already saved an embedded view in stage 2
-    // we need to change the mode to EDIT, so the editor page can load the existing data
-    dataConfigurationMode.value = DataConfigurationMode.EDIT
+    dataConfiguration.openForEdit()
     wizardHandler.prev()
   }
 }
@@ -385,9 +376,7 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
       <Stage2
         v-if="wizardHandler.stage.value === 1"
         :dashboard-key="dashboardKey"
-        :embedded-id="embeddedId!"
-        :configuration-mode="dataConfigurationMode"
-        :view-selection="viewSelection!"
+        :data-configuration="dataConfiguration.configuration.value!"
         @go-prev="wizardHandler.prev"
         @go-next="stage2GoNext"
       />

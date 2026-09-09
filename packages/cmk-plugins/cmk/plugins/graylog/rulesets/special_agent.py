@@ -9,14 +9,18 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    Integer,
     migrate_to_password,
+    MultipleChoice,
+    MultipleChoiceElement,
     Password,
     SingleChoice,
+    SingleChoiceElement,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
-from cmk.rulesets.v1.form_specs._basic import Integer, SingleChoiceElement, TimeMagnitude, TimeSpan
-from cmk.rulesets.v1.form_specs._composed import MultipleChoice, MultipleChoiceElement
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 

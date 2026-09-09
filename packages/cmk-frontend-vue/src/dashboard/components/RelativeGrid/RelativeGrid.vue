@@ -73,6 +73,7 @@ const dashboard = ref<HTMLElement | null>(null)
 
 const {
   dashboardState,
+  getWidgetReadingOrder,
   getAbsoluteLayout,
   getLayoutZIndex,
   getAnchorPosition,
@@ -189,6 +190,11 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 watch(enterMissingRuntimeFiltersAction, async () => {
   await nextTick()
   setDashboardLayout()
+})
+
+defineExpose({
+  /** The widget IDs in reading order, or null while the grid has not been measured yet. */
+  getWidgetReadingOrder
 })
 </script>
 

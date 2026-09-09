@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type {
   ContentProps,
@@ -75,6 +75,17 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
   return record
 })
 
+const relativeGrid = ref<InstanceType<typeof RelativeGrid> | null>(null)
+
+defineExpose({
+  /**
+   * The relative grid's widget IDs in reading order, or null when the active dashboard does not
+   * use the relative grid layout or its grid has not been measured yet.
+   */
+  getRelativeGridWidgetOrder: (): string[] | null =>
+    relativeGrid.value?.getWidgetReadingOrder() ?? null
+})
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
@@ -97,6 +108,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
     />
     <RelativeGrid
       v-else-if="dashboard.content.layout.type === 'relative_grid'"
+      ref="relativeGrid"
       v-model:content="dashboard.content as ContentRelativeGrid"
       :content-props="widgetContentProps"
       :updated-widget-render-keys="updatedWidgetRenderKeys.value"

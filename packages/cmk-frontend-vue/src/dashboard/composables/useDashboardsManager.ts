@@ -5,6 +5,7 @@
  */
 import { type Ref, computed, onBeforeMount, ref } from 'vue'
 
+import { defaultResponsiveGridLayout } from '@/dashboard/components/ResponsiveGrid/composables/utils'
 import {
   type ContentRelativeGrid,
   type ContentResponsiveGrid,
@@ -137,15 +138,7 @@ export function useDashboardsManager() {
         id: dashboardName,
         general_settings: generalSettings,
         filter_context: filterContext,
-        layout: {
-          type: 'responsive_grid',
-          layouts: {
-            default: {
-              title: 'Default layout',
-              breakpoints: ['M', 'XL', 'L', 'S', 'XS']
-            }
-          }
-        },
+        layout: defaultResponsiveGridLayout(),
         widgets: {}
       }
       const resp = await dashboardAPI.createResponsiveGridDashboard(dashboardBody)

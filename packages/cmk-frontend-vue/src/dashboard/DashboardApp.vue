@@ -48,7 +48,9 @@ import { useProvideDashboardConstants } from '@/dashboard/composables/useProvide
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import { useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
+import { buildResponsiveWidgetLayouts } from '@/dashboard/dashboardMigration.ts'
 import {
+  type ContentRelativeGrid,
   type ContentResponsiveGrid,
   type DashboardGeneralSettings,
   type DashboardKey,
@@ -60,6 +62,7 @@ import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { DashboardPageProperties } from '@/dashboard/types/page.ts'
 import type {
+  ResponsiveGridWidgetLayouts,
   WidgetContent,
   WidgetFilterContext,
   WidgetGeneralSettings,
@@ -80,6 +83,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 const props = defineProps<DashboardPageProperties>()
 
 const dbAppRef = ref<HTMLElement | null>(null)
+const dashboardComponent = ref<InstanceType<typeof DashboardComponent> | null>(null)
 const isDashboardLoading = ref(false)
 const loadingError = ref<Error | null>(null)
 const isDashboardEditingMode = ref(props.mode === 'edit_layout' && !!props.dashboard)
@@ -458,6 +462,23 @@ const cloneDashboard = async (
   if (!key) {
     throw new Error('No active dashboard to clone from')
   }
+
+  // an anchored source needs a responsive placement per widget, which only the rendered grid can
+  // tell us; without it there is nothing to send, so the clone does not start
+  const sourceContent = dashboardsManager.activeDashboard.value!.model.content
+  let migratedWidgetLayouts: Record<string, ResponsiveGridWidgetLayouts> | null = null
+  if (sourceContent.layout.type === 'relative_grid' && layout === DashboardLayout.RESPONSIVE_GRID) {
+    const readingOrder = dashboardComponent.value?.getRelativeGridWidgetOrder() ?? null
+    if (readingOrder === null) {
+      return
+    }
+    migratedWidgetLayouts = buildResponsiveWidgetLayouts(
+      readingOrder,
+      sourceContent as ContentRelativeGrid,
+      dashboardsManager.constants.value!
+    )
+  }
+
   openDashboardCloneDialog.value = false
   isCloning.value = true
   loadingError.value = null
@@ -465,7 +486,16 @@ const cloneDashboard = async (
   let newKey: DashboardKey
   try {
     let newOwner
-    if (layout === DashboardLayout.RELATIVE_GRID) {
+    if (migratedWidgetLayouts !== null) {
+      const response = await dashboardAPI.cloneRelativeAsResponsiveGridDashboard(
+        key.name,
+        key.owner,
+        dashboardId,
+        generalSettings,
+        migratedWidgetLayouts
+      )
+      newOwner = response.extensions.owner
+    } else if (layout === DashboardLayout.RELATIVE_GRID) {
       const response = await dashboardAPI.cloneAsRelativeGridDashboard(
         key.name,
         key.owner,
@@ -736,6 +766,7 @@ const reviewFilters = () => {
           />
           <DashboardComponent
             v-else-if="dashboardsManager.isInitialized.value"
+            ref="dashboardComponent"
             :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
             v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
             :dashboard-key="dashboardsManager.activeDashboardKey.value!"

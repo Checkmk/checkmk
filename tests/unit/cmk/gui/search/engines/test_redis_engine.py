@@ -184,7 +184,7 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
         return False
 
 
-@pytest.fixture(name="get_languages", scope="function", autouse=True)
+@pytest.fixture(name="get_languages", scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.search._engines._redis,  # noqa: SLF001

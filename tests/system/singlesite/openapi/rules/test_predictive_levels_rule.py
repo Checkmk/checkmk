@@ -41,7 +41,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def setup_test_environment_fixture(site: Site) -> Generator:
     """Set up and tear down test environment with a folder and a host.."""
     with setup_test_environment(site=site, hostname=HOSTNAME, folder=FOLDER_PATH):

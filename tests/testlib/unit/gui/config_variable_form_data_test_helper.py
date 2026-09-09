@@ -2731,7 +2731,7 @@ class ConfigVariableSuite:
 
     EDITION: ClassVar[Edition] = edition_from_env()
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def fixture_shipped_locales(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # standard test environment only knows about en, we make all available:
         monkeypatch.setattr(cmk.utils.paths, "locale_dir", repo_path() / "locale")
@@ -2740,7 +2740,7 @@ class ConfigVariableSuite:
     def fixture_global_settings_context(self) -> GlobalSettingsContext:
         return make_global_settings_context(self.EDITION)
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def fixture_empty_password_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Rendering the Password form spec lists the password store entries the
         user may read, which requires a logged-in user this suite does not have."""

@@ -142,14 +142,14 @@ def expected_output_engine(request, testconfig):
     #       params 'test' and 'debug' are tested in section check_mk tests
     params=[["version"], ["showconfig"], ["help"], ["bad"]],
     ids=["version", "showconfig", "help", "bad"],
-    autouse=True,
+    autouse=True,  # ruff: ignore[pytest-fixture-autouse]
 )
 def pre_test(request):
     Globals.param = request.param
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def post_test():
     yield
 

@@ -28,7 +28,7 @@ from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.output_funnel import output_funnel
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
     request_context: None,
     monkeypatch: pytest.MonkeyPatch,

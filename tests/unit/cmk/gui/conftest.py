@@ -61,7 +61,7 @@ def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def deactivate_redis(request: pytest.FixtureRequest) -> Iterator[None]:
     """Disable redis for all GUI unit tests by default
 
@@ -86,17 +86,17 @@ def allow_redis() -> None:
     """Opt-out of the deactivate_redis fixture (see there)"""
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
@@ -153,7 +153,7 @@ def fixture_remote_site() -> Iterator[None]:
             distr_wato_mk.write_bytes(previous)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: Edition) -> None:
     perform_load_plugins(test_edition)
 
@@ -210,7 +210,7 @@ def allow_background_jobs() -> None:
     return
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_unannotated_background_job_start(
     request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:

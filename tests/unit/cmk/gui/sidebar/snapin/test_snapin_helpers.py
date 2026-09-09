@@ -39,7 +39,7 @@ from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransi
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry, TopicItemMode
 
 
-@pytest.fixture(name="rendering_user", autouse=True)
+@pytest.fixture(name="rendering_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_rendering_user(
     request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch: pytest.MonkeyPatch,

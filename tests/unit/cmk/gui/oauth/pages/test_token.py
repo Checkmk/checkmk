@@ -54,7 +54,7 @@ def _stored_record(
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def seeded_test_client(flask_app: Flask) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Issued tokens reference their client (tokens.client_id), so _VALID_FORM's
     # client has to exist in the registry for redemption to succeed. Raw SQL

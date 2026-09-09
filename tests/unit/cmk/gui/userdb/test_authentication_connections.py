@@ -191,7 +191,7 @@ class TestResolvedAuthenticationConnections:
 class TestGetSamlConnectionsForCurrentSite:
     """`get_saml_connections_for_current_site` returns the site's referenced enabled SAML connections."""
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def _on_central_site(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr("cmk.gui.userdb._connections.omd_site", lambda: _CENTRAL_SITE)
 
@@ -233,7 +233,7 @@ class TestLoginPageSsoButtonGating:
     empty per-site list yields no buttons while local ``cmkadmin`` login stays.
     """
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def _on_central_site(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr("cmk.gui.userdb._connections.omd_site", lambda: _CENTRAL_SITE)
 

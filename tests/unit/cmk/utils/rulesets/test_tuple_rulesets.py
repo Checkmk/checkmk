@@ -28,7 +28,7 @@ from cmk.ruleset_matcher.tuple_rulesets import (
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fake_version(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(cmk_version, "omd_version", lambda *args, **kw: "1.4.0i1.cee")  # noqa: ARG005
 

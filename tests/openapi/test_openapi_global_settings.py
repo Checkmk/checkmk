@@ -43,7 +43,7 @@ INT_VAR = "wato_max_snapshots"
 INT_DEFAULT = 50
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     """get_all_default_globals() runs an automation and reads files only a real site has."""
     monkeypatch.setattr(
@@ -58,7 +58,7 @@ def patch_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def sample_ca_certificates() -> None:
     """ConfigDomainCACertificates.save() - which every write triggers - trips over its own
     fallback when the variable is unset. A real site always has it from the sample config."""

@@ -21,46 +21,47 @@ preview = true
 # ...but only the ones selected by exact name/code.
 explicit-preview-rules = true
 select = [
-  "A",      # flake8: builtins
-  "ARG",    # flake8: unused args
-  "B005",   # flake8-bugbear: strip-with-multi-characters
-  "B006",   # flake8-bugbear: mutable-argument-default
-  "B012",   # flake8-bugbear: jump-statement-in-finally
-  "B014",   # flake8-bugbear: duplicate-handler-exception
-  "B017",   # flake8-bugbear: assert-raises-exception
-  "B019",   # flake8-bugbear: cached-instance-method
-  "B020",   # flake8-bugbear: loop-variable-overrides-iterator
-  "B023",   # flake8-bugbear: function-uses-loop-variable
-  "B024",   # flake8-bugbear: abstract-base-class-without-abstract-method
-  "B027",   # flake8-bugbear: empty-method-without-abstract-decorator
-  "B031",   # flake8-bugbear: reuse-of-groupby-generator
-  "B033",   # flake8-bugbear: duplicate-value
-  "B034",   # flake8-bugbear: re-sub-positional-args
-  "B035",   # flake8-bugbear: static-key-dict-comprehension
-  "B039",   # flake8-bugbear: mutable-contextvar-default
-  "C4",     # flake8: comprehensions
-  "C90",    # mccabe
-  "E",      # pycodestyle (error)
-  "F",      # pyflakes
-  "FLY",    # flake8: flynt
-  "G",      # flake8: logging format
-  "N804",   # pep8-naming: invalid-first-argument-name-for-class-method (cls)
-  "N805",   # pep8-naming: invalid-first-argument-name-for-method (self)
-  "I",      # isort
-  "ISC",    # flake8: implicit string concat
-  "LOG",    # flake8: logging
-  "PIE",    # flake8: misc lints
-  "PL",     # pylint
-  "RET",    # flake8: return
-  "RSE",    # flake8: raise
-  "RUF100", # ruff: unused noqa
-  "SIM",    # flake8: simplify
-  "SLF",    # flake8: self
-  "UP",     # pyugrade
-  "W",      # pycodestyle (warning)
-  "T10",    # flake8: debugger
-  "T20",    # flake8: print
-  "TRY400", # tryceratops: use logger.exception() instead of logger.error() in except blocks
+  "A",                      # flake8: builtins
+  "ARG",                    # flake8: unused args
+  "B005",                   # flake8-bugbear: strip-with-multi-characters
+  "B006",                   # flake8-bugbear: mutable-argument-default
+  "B012",                   # flake8-bugbear: jump-statement-in-finally
+  "B014",                   # flake8-bugbear: duplicate-handler-exception
+  "B017",                   # flake8-bugbear: assert-raises-exception
+  "B019",                   # flake8-bugbear: cached-instance-method
+  "B020",                   # flake8-bugbear: loop-variable-overrides-iterator
+  "B023",                   # flake8-bugbear: function-uses-loop-variable
+  "B024",                   # flake8-bugbear: abstract-base-class-without-abstract-method
+  "B027",                   # flake8-bugbear: empty-method-without-abstract-decorator
+  "B031",                   # flake8-bugbear: reuse-of-groupby-generator
+  "B033",                   # flake8-bugbear: duplicate-value
+  "B034",                   # flake8-bugbear: re-sub-positional-args
+  "B035",                   # flake8-bugbear: static-key-dict-comprehension
+  "B039",                   # flake8-bugbear: mutable-contextvar-default
+  "C4",                     # flake8: comprehensions
+  "C90",                    # mccabe
+  "E",                      # pycodestyle (error)
+  "F",                      # pyflakes
+  "FLY",                    # flake8: flynt
+  "G",                      # flake8: logging format
+  "N804",                   # pep8-naming: invalid-first-argument-name-for-class-method (cls)
+  "N805",                   # pep8-naming: invalid-first-argument-name-for-method (self)
+  "I",                      # isort
+  "ISC",                    # flake8: implicit string concat
+  "LOG",                    # flake8: logging
+  "PIE",                    # flake8: misc lints
+  "PL",                     # pylint
+  "RET",                    # flake8: return
+  "RSE",                    # flake8: raise
+  "RUF100",                 # ruff: unused noqa
+  "SIM",                    # flake8: simplify
+  "SLF",                    # flake8: self
+  "UP",                     # pyugrade
+  "W",                      # pycodestyle (warning)
+  "T10",                    # flake8: debugger
+  "T20",                    # flake8: print
+  "TRY400",                 # tryceratops: use logger.exception() instead of logger.error() in except blocks
+  "pytest-fixture-autouse", # ruff (preview): ban autouse pytest fixtures (selected by name, no code)
 ]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.

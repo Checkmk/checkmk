@@ -42,7 +42,7 @@ def flask_app(
     yield from create_flask_app()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
@@ -54,7 +54,7 @@ def load_config(request_context: None) -> Iterator[Config]:
     yield from perform_load_config()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: Edition) -> None:
     perform_load_plugins(test_edition)
 

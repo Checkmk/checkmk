@@ -65,7 +65,7 @@ def test_registered_background_jobs_attributes() -> None:
         assert isinstance(job_class.gui_title(), str)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def job_base_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     var_dir = tmp_path
 

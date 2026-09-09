@@ -20,7 +20,7 @@ from cmk.dev_deploy.state.deploy_state import compute_file_hash, DeployerState, 
 from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, ChangeSet, DiffBaseSource
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _inject_computed_rules() -> None:
     """Inject categorization rules computed from checked-in data.
 

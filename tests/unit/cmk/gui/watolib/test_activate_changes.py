@@ -1068,7 +1068,7 @@ class _NoLicenseEffect:
 class TestGetAllDataRequiredForActivationPopout:
     SITE_ID = SiteId("popout_test_site")
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def _patch_externals(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Suppress license checks and livestatus calls by default.
 

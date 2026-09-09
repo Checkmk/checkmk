@@ -21,7 +21,7 @@ from cmk.dev_deploy.core.bazel import (
 from cmk.dev_deploy.errors import DeployError
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(OUTPUT_BASE_ENV, raising=False)
     monkeypatch.delenv(SHARED_SERVER_ENV, raising=False)

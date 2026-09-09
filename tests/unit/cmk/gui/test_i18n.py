@@ -29,13 +29,13 @@ def locale_base_dir() -> Path:
     return repo_path() / "locale"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def locale_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, locale_base_dir: Path) -> None:
     monkeypatch.setattr(cmk.utils.paths, "locale_dir", locale_base_dir)
     monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def compile_builtin_po_files(locale_base_dir: Path) -> None:
     builtin_dir = locale_base_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"

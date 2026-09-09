@@ -77,7 +77,7 @@ def expected_output_engine():
         "include_with_newline",
         "include_with_newline_forward_slash",
     ],
-    autouse=True,
+    autouse=True,  # ruff: ignore[pytest-fixture-autouse]
 )
 def manage_plugin(request):
     Globals.newline = request.param

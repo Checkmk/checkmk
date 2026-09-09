@@ -11,7 +11,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, registration, VisitorOp
 from cmk.plugins.f5_bigip.rulesets.f5_connections import rule_spec_f5_connections
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _register_form_spec_visitors() -> None:
     registration.register()
 

@@ -23,7 +23,7 @@ type _IPLookupCacheMapping = dict[ip_lookup.IPLookupCacheId, HostAddress | MKIPA
 type _PersistedCache = dict[ip_lookup.IPLookupCacheId, str | None]
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def no_io_ip_lookup_cache(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(ip_lookup.IPLookupCache, "PATH", tmp_path / "cache")
 

@@ -205,7 +205,7 @@ class TestCrashReport:
     def crash_info(self, component: str, uuid: str) -> dict[str, str]:
         return {"component": component, "id": uuid}
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def crash_report(
         self, site: Site, component: str, uuid: str, crash_info: dict[str, str]
     ) -> Iterator[None]:

@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.search import index
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def update_requests_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(index, "_PATH_UPDATE_REQUESTS", tmp_path / "search_index_updates.json")
 

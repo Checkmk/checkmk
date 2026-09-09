@@ -31,14 +31,14 @@ def flask_app(
     yield from create_flask_app()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
     yield from perform_gui_cleanup_after_test(mocker)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins() -> None:
     perform_load_plugins(edition(paths.omd_root))
 

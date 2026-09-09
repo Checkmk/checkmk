@@ -170,7 +170,7 @@ def plugin_dir_engine(request):
     return os.path.join(user_dir, request.param)
 
 
-@pytest.fixture(name="manage_plugins", params=["windows_if.ps1"], autouse=True)
+@pytest.fixture(name="manage_plugins", params=["windows_if.ps1"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files\\regression")

@@ -64,7 +64,7 @@ def _ensure_cloud_initial_config() -> None:
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def instrument_requests() -> None:
     RequestsInstrumentor().instrument()
 
@@ -156,7 +156,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _verify_central_livestatus_alive(
     central_site: Site,
     request: pytest.FixtureRequest,

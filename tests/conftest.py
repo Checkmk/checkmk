@@ -78,7 +78,7 @@ def get_test_type(test_path: Path) -> str:
     return test_path_relative.parts[0]
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     session_timeout_cli = "--session-timeout"
     timeout_duration = (
@@ -90,7 +90,7 @@ def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config
         yield
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_log_exception(
     caplog: pytest.LogCaptureFixture, pytestconfig: pytest.Config
 ) -> Iterator[None]:

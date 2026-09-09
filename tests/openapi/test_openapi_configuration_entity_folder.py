@@ -37,7 +37,7 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def create_folder_test_environment(
     with_admin_login: None,
     load_config: None,

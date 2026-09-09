@@ -152,7 +152,7 @@ _reader._load_raw = _seeded_load_raw  # noqa: SLF001
 # own patched git output, so the memo must not survive between them.
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _fresh_git_cache() -> None:
     _deploy_state.reset_git_cache()
 
@@ -166,7 +166,7 @@ def _fresh_git_cache() -> None:
 # repository.  Tests that care about untracked files override this.
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _no_untracked_files() -> Iterator[None]:
     with patch.object(_deploy_state, "query_untracked_files", return_value=[]):
         yield

@@ -82,7 +82,7 @@ def fixture_tag_config() -> TagConfig:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_tag_config(
     request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch: MonkeyPatch,

@@ -12,7 +12,7 @@ from cmk.plugins.f5_bigip.agent_based.f5_bigip_cluster import CONFIG_SYNC_DEFAUL
 from cmk.plugins.f5_bigip.rulesets.f5_bigip_cluster_v11 import rule_spec_f5_bigip_cluster_v11
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _register_form_spec_visitors() -> None:
     registration.register()
 

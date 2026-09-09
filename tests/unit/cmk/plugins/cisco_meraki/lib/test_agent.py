@@ -22,7 +22,7 @@ from .fakes import FakeMerakiSDK
 _DEFAULT_ARGS = ["heute", "--apikey", "my-api-key"]
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
 

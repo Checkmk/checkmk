@@ -26,7 +26,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 PERFORMANCE_COLUMNS = 16
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
     request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     monkeypatch: pytest.MonkeyPatch,

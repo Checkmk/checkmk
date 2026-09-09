@@ -9,7 +9,7 @@ import pytest
 
 
 # patch cmk.utils.paths
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True, scope="function")  # ruff: ignore[pytest-fixture-autouse]
 def patch_cmk_utils_paths(monkeypatch, tmp_path):
     import cmk.utils.paths
 

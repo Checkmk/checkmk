@@ -16,7 +16,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def everything_is_licensed(is_licensed: None) -> None:
     pass
 

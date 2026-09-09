@@ -21,7 +21,7 @@ from tests.testlib.common.utils import reset_registries
 EDITION = cmk_version.Edition.COMMUNITY
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def restore_orig_replication_paths() -> Generator[None]:
     with reset_registries([replication_path_registry]):
         yield

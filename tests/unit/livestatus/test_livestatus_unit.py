@@ -23,7 +23,7 @@ from cmk.utils.certs import SiteCA
 
 
 # Override top level fixture to make livestatus connects possible here
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_livestatus_connect() -> None:
     pass
 

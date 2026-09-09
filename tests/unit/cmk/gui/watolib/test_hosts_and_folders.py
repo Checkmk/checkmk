@@ -85,7 +85,7 @@ def test_effective_attributes() -> None:
     assert first_attributes != attributes()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def tree() -> Iterator[FolderTree]:
     # Build the tree explicitly instead of using the request-global
     # folder_tree(), so no Flask request context is needed at all.

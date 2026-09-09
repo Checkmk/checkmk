@@ -37,7 +37,7 @@ _FAMILY_NAME = "test_endpoint_link"
 _LINK_REL: LinkRelation = "cmk/show"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _registry_fixture() -> Generator[None]:
     """Register the family and snapshot/restore the endpoint registry per-test."""
     fam = EndpointFamilyFactory.build(name=_FAMILY_NAME, doc_group="Setup")

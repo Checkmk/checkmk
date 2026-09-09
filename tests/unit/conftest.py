@@ -71,7 +71,7 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="fake_site", autouse=True)
+@pytest.fixture(name="fake_site", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_fake_site(
     cleanup_cmk: None,
     enable_debug_fixture: None,
@@ -144,7 +144,7 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     yield from fake_site.setup_fake_omd_site(monkeypatch)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_after_test() -> Generator[None]:
     yield from fake_site.cleanup_omd_root_after_test()
 
@@ -156,14 +156,14 @@ def site(request: pytest.FixtureRequest) -> None:
     pass
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def clear_caches_per_module() -> Generator[None]:
     """Ensures that module-scope fixtures are executed with clean caches."""
     fake_site.clear_caches()
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def clear_caches_per_function() -> Generator[None]:
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     fake_site.clear_caches()
@@ -180,7 +180,7 @@ def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[A
     yield plugins
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_livestatus_connect() -> Iterator[None]:
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""

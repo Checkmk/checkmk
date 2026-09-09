@@ -65,7 +65,7 @@ def _write_user_bookmark_lists(user_id: UserId, spec: dict[str, object]) -> None
     store.save_object_to_file(profile_dir / "user_bookmark_lists.mk", spec)
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
     request_context: None,
     monkeypatch: pytest.MonkeyPatch,

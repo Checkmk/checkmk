@@ -170,7 +170,7 @@ class _ClearingTestAttribute(ABCHostAttributeValueSpec):
         return {"test/relay": LABEL_CLEAR_VALUE, "test/relay_monitored": LABEL_CLEAR_VALUE}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     # Provide an application context and start from clean folder/host caches.
     tree = folder_tree()

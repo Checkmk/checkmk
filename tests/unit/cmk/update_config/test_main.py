@@ -20,7 +20,7 @@ from cmk.update_config import main, registry
 from cmk.update_config.lib import ExpiryVersion
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def ensure_logging_framework_not_altered() -> Iterator[None]:
     logger = logging.getLogger()
     before_handlers = list(logger.handlers)

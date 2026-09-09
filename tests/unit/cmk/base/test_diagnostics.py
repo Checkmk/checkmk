@@ -75,7 +75,7 @@ def _catalogue() -> Mapping[str, DiagnosticsPlugin]:
     return diagnostics._load_plugin_catalogue(logger=diagnostics.ConsoleLogger())  # noqa: SLF001
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def reset_collector_caches() -> None:
     # diagnostics.get_omd_config.cache_clear()
     diagnostics.verify_checkmk_server_host.cache_clear()

@@ -21,7 +21,7 @@ from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def autochecks_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", tmp_path)
 

@@ -58,7 +58,7 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "block_network: block network access during test execution")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def auto_block_network(request: pytest.FixtureRequest) -> None:
     """Automatically apply block_network marker to all tests."""
     request.node.add_marker(pytest.mark.block_network)

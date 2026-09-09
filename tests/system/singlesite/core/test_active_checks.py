@@ -16,7 +16,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="test_cfg", scope="module", autouse=True)
+@pytest.fixture(name="test_cfg", scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
     site.openapi.hosts.create(

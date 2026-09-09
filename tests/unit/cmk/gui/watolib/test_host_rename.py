@@ -42,7 +42,7 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def test_env(
     monkeypatch: MonkeyPatch,
     with_admin_login: UserId,

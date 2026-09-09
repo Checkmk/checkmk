@@ -10,7 +10,7 @@ from cmk.gui import main_modules
 from cmk.gui.views.inventory import inv_display_hints
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _load_gui_plugins() -> None:
     """Run the gui edition's full plug-in registration chain so the inv-UI
     registry is populated with the production set the snapshots assert on.

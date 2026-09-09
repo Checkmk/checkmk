@@ -121,7 +121,7 @@ def _unpack_dump(dataset: str, tmpdir: Path) -> Iterator[Path]:
         shutil.rmtree(target)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def instrument_requests() -> None:
     RequestsInstrumentor().instrument()
 

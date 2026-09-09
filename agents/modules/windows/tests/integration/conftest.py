@@ -53,7 +53,7 @@ def fixture_regression_data(expected_version: str) -> Mapping[str, bytes]:
 client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 
 
-@pytest.fixture(scope="session", autouse=True, name="python_subdir")
+@pytest.fixture(scope="session", autouse=True, name="python_subdir")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_python_subdir() -> Iterator[Path]:
     tmpdir = tempfile.mkdtemp()
     subdir = os.path.join(tmpdir, "modules")
@@ -73,7 +73,7 @@ def run_proc(command: list[str], *, cwd: Path | None = None) -> None:
     )
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def python_to_test(python_subdir: Path, regression_data: Mapping[str, bytes]) -> Path:
     """This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method

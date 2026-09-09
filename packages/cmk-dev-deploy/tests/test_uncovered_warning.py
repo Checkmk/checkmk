@@ -17,7 +17,7 @@ from cmk.dev_deploy.types import ChangeCategory, ChangeSet
 _PATH = "zzz_uncovered/script.py"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _fake_registry() -> Iterator[None]:
     """Coverage stub: cmk/ is covered, everything else is not.
 

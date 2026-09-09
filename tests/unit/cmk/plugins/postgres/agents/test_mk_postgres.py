@@ -53,7 +53,7 @@ VALID_CONFIG_WITH_PG_BINARY_PATH = [
 
 
 class TestNotImplementedOS:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def is_not_implemented_os(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
@@ -68,7 +68,7 @@ class TestNotImplementedOS:
 
 
 class TestLinux:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def is_linux(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
@@ -392,7 +392,7 @@ class TestLinux:
 
 
 class TestWindows:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def is_windows(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)

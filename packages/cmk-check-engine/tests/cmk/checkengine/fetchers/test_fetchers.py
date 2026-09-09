@@ -793,7 +793,7 @@ class TestSNMPFetcherFetch:
 
 
 class TestSNMPFetcherConfiguredCaching:
-    @pytest.fixture(autouse=True, scope="function")
+    @pytest.fixture(autouse=True, scope="function")  # ruff: ignore[pytest-fixture-autouse]
     def _get_snmp_table(self, monkeypatch: pytest.MonkeyPatch) -> None:
         vals = iter("ab")
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: [[next(vals)]])

@@ -26,7 +26,7 @@ def mock_update_passwords_merged_file(monkeypatch: pytest.MonkeyPatch) -> Iterab
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def create_password_test_environment(
     with_admin_login: None,
     load_config: None,

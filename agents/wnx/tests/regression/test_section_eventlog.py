@@ -198,7 +198,7 @@ def with_statefile(request):
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def verify_eventstate():
     yield
     if platform.system() == "Windows":

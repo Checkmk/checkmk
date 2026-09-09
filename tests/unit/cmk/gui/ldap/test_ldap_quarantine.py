@@ -31,7 +31,7 @@ def fixture_sync_result() -> SyncUsersResult:
     return SyncUsersResult(sync_start_time=time(), fetched_users={})
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _no_security_log(mocker: MockerFixture) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.log_security_event")
     mocker.patch(

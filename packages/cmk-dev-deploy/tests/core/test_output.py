@@ -20,7 +20,7 @@ from cmk.dev_deploy.types import StepResult
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _reset_output_config() -> Iterator[None]:
     """Reset all output configuration before and after each test."""
     from cmk.dev_deploy.core.output import reset

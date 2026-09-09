@@ -16,7 +16,7 @@ from cmk.plugins.kaspersky.agent_based import kaspersky_av_client
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield

@@ -178,7 +178,7 @@ def with_statefile():
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def verify_logstate():
     yield
     if platform.system() == "Windows":
@@ -217,7 +217,7 @@ def verify_logstate():
             )
 
 
-@pytest.fixture(params=["utf-8", "utf-16"], autouse=True)
+@pytest.fixture(params=["utf-8", "utf-16"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def manage_logfiles(request):
     Globals.utf_encoding = request.param
     if platform.system() == "Windows":

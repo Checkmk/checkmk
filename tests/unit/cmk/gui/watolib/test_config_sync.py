@@ -38,7 +38,7 @@ def fixture_mocked_responses() -> Iterable[responses.RequestsMock]:
         yield rsps
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     # During these tests we treat all sites a being online
     monkeypatch.setattr(
@@ -59,7 +59,7 @@ def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> None:
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
@@ -67,7 +67,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(cmk.gui.mkeventd.wato, "_get_rule_stats_from_ec", dict)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_disable_cmk_update_config(monkeypatch: pytest.MonkeyPatch) -> None:
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails

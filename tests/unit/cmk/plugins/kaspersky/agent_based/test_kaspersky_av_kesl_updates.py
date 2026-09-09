@@ -18,7 +18,7 @@ from cmk.plugins.kaspersky.agent_based.kaspersky_av_kesl_updates import (
 )
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield

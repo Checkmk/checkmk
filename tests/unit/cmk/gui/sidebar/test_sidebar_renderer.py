@@ -91,7 +91,7 @@ class QuietSnapin(SidebarSnapin):
         html.write_text_permissive("quiet body")
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
     request_context: None,
     monkeypatch: pytest.MonkeyPatch,

@@ -44,7 +44,7 @@ def default_cfg(site: Site) -> Generator[None]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_product_usage_data(site: Site) -> Iterator[None]:
     yield
     # Delete product usage directory if it exists

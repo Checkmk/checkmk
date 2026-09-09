@@ -82,7 +82,7 @@ class SomeMainModule(ABCMainModule):
         return False
 
 
-@pytest.fixture(name="main_module_registry", scope="function", autouse=True)
+@pytest.fixture(name="main_module_registry", scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_main_module_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_base, "main_module_registry", module_registry)
 

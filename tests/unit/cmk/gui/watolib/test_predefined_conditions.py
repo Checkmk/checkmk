@@ -18,7 +18,7 @@ from cmk.gui.watolib.predefined_conditions import (
 )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def profile_dir() -> None:
     cmk.utils.paths.profile_dir.mkdir(parents=True, exist_ok=True)
 

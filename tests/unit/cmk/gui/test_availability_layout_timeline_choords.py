@@ -21,7 +21,7 @@ HOURS = 3600
 DAYS = 24 * HOURS
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fix_localaity(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     monkeypatch.setattr(time, "mktime", calendar.timegm)

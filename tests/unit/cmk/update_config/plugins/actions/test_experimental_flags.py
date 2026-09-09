@@ -17,7 +17,7 @@ from cmk.update_config.registry import update_action_registry
 LOGGER = logging.getLogger("test")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _experimental_flags_config_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(global_config, "EXPERIMENTAL_FLAGS_CONFIG_DIR", tmp_path)
 

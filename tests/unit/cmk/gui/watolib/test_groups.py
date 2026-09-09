@@ -15,7 +15,7 @@ from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
 from cmk.gui.wsgi.app import application_and_request_context
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_config_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     cmk_confd = tmp_path / "check_mk" / "conf.d"
     monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", cmk_confd)

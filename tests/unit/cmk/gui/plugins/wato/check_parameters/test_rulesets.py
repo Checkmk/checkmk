@@ -73,7 +73,7 @@ def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
 GEN_ID_COUNT = {"c": 0}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 

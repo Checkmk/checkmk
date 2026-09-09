@@ -53,7 +53,7 @@ def form_spec() -> DictionaryExtended:
     )
 
 
-@pytest.fixture(name="registry", autouse=True)
+@pytest.fixture(name="registry", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[NotificationParameterRegistry]:
     notification_parameter_registry = NotificationParameterRegistry()
     notification_parameter_registry.register(

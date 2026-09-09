@@ -21,7 +21,7 @@ from cmk.gui.sidebar import UserSidebarSnapin
 from cmk.gui.utils.roles import UserPermissions
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))

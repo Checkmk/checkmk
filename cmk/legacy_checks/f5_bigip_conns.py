@@ -3,107 +3,174 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
+from collections.abc import MutableMapping, Sequence
+from dataclasses import dataclass
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
-from cmk.legacy_includes.f5_bigip import get_conn_rate_params
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    LevelsT,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.f5_bigip.lib import F5_BIGIP
 
-check_info = {}
+_NO_LEVELS: LevelsT[int] = ("no_levels", None)
 
 
-def discover_f5_bigip_conns(info):
-    if info:
-        return [(None, {})]
-    return []
+class ConnsParams(TypedDict, total=False):
+    conns: LevelsT[int]
+    ssl_conns: LevelsT[int]
+    connections_rate: LevelsT[int]
+    connections_rate_lower: LevelsT[int]
+    http_req_rate: LevelsT[int]
 
 
-def check_f5_bigip_conns(item, params, info):  # noqa: ARG001
-    # Connection rate
-    now = time.time()
+@dataclass(frozen=True)
+class ConnectionStats:
+    connections: int | None
+    ssl_connections: int | None
+    native_connections: int | None
+    compat_connections: int | None
+    http_requests: int | None
+
+
+Section = Sequence[ConnectionStats]
+
+
+def _optional_counter(value: str) -> int | None:
+    """Return the counter, or None if the device does not answer this OID.
+
+    cmk.checkengine.snmplib fills the columns of an SNMP tree the device does not answer
+    with empty strings. Every other value comes from the device, and all of the OIDs
+    fetched here are counters or gauges, so it has to be a number: one that is present but
+    not numeric means the device violated the MIB, and a crash report is more useful than
+    silently reporting nothing.
+    """
+    return int(value) if value else None
+
+
+def parse_f5_bigip_conns(string_table: StringTable) -> Section:
+    return [
+        ConnectionStats(
+            connections=_optional_counter(connections),
+            ssl_connections=_optional_counter(ssl_connections),
+            native_connections=_optional_counter(native),
+            compat_connections=_optional_counter(compat),
+            http_requests=_optional_counter(http_requests),
+        )
+        for connections, ssl_connections, native, compat, http_requests in string_table
+    ]
+
+
+def discover_f5_bigip_conns(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def _counter_rate(
+    value_store: MutableMapping[str, object],
+    key: str,
+    now: float,
+    counter: int | None,
+) -> float:
+    if counter is None:
+        return 0.0
+    return get_rate(value_store, key, now, counter, raise_overflow=True)
+
+
+def check_f5_bigip_conns(params: ConnsParams, section: Section) -> CheckResult:
     value_store = get_value_store()
-    total_native_compat_rate = 0.0
-    conns_dict: dict[str, int] = {}
+    now = time.time()
 
-    for line in info:
-        if line[2] != "":
-            native_conn_rate = get_rate(
-                value_store, "native", now, int(line[2]), raise_overflow=True
-            )
-        else:
-            native_conn_rate = 0
+    connections: int | None = None
+    ssl_connections: int | None = None
+    connection_rate = 0.0
+    http_request_rate: float | None = None
 
-        if line[3] != "":
-            compat_conn_rate = get_rate(
-                value_store, "compat", now, int(line[3]), raise_overflow=True
-            )
-        else:
-            compat_conn_rate = 0
+    for stats in section:
+        connection_rate += _counter_rate(value_store, "native", now, stats.native_connections)
+        connection_rate += _counter_rate(value_store, "compat", now, stats.compat_connections)
 
-        total_native_compat_rate += native_conn_rate + compat_conn_rate
+        http_request_rate = (
+            get_rate(value_store, "stathttpreqs", now, stats.http_requests, raise_overflow=True)
+            if stats.http_requests is not None
+            else None
+        )
 
-        if line[4] != "":
-            stat_http_req_rate = get_rate(
-                value_store, "stathttpreqs", now, int(line[4]), raise_overflow=True
-            )
-        else:
-            stat_http_req_rate = None
+        if stats.connections is not None:
+            connections = (connections or 0) + stats.connections
+        if stats.ssl_connections is not None:
+            ssl_connections = (ssl_connections or 0) + stats.ssl_connections
 
-        if line[0] != "":
-            conns_dict.setdefault("total", 0)
-            conns_dict["total"] += int(line[0])
-
-        if line[1] != "":
-            conns_dict.setdefault("total_ssl", 0)
-            conns_dict["total_ssl"] += int(line[1])
-
-    try:
-        conn_rate_params = get_conn_rate_params(params)
-    except ValueError as err:
-        yield 3, str(err)
-        return
-
-    # Current connections
-    for val, params_values, perfkey, title in [
-        (conns_dict.get("total"), params.get("conns"), "connections", "Connections"),
+    for value, levels_upper, levels_lower, metric_name, label in (
+        (connections, params.get("conns"), None, "connections", "Connections"),
+        (ssl_connections, params.get("ssl_conns"), None, "connections_ssl", "SSL connections"),
         (
-            conns_dict.get("total_ssl"),
-            params.get("ssl_conns"),
-            "connections_ssl",
-            "SSL connections",
+            connection_rate,
+            params.get("connections_rate"),
+            params.get("connections_rate_lower"),
+            "connections_rate",
+            "Connections/s",
         ),
-        (total_native_compat_rate, conn_rate_params, "connections_rate", "Connections/s"),
-        (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),  # type: ignore[possibly-undefined]
-    ]:
+        (
+            http_request_rate,
+            params.get("http_req_rate"),
+            None,
+            "requests_per_second",
+            "HTTP requests/s",
+        ),
+    ):
         # SSL may not be configured, eg. on test servers
-        if val is None:
-            yield 0, "%s: not configured" % title
-        else:
-            yield check_levels(val, perfkey, params_values, infoname=title)
+        if value is None:
+            yield Result(state=State.OK, summary=f"{label}: not configured")
+            continue
+
+        yield from check_levels(
+            value,
+            levels_upper=levels_upper or _NO_LEVELS,
+            levels_lower=levels_lower or _NO_LEVELS,
+            metric_name=metric_name,
+            label=label,
+        )
 
 
-def parse_f5_bigip_conns(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["f5_bigip_conns"] = LegacyCheckDefinition(
+snmp_section_f5_bigip_conns = SimpleSNMPSection(
     name="f5_bigip_conns",
-    parse_function=parse_f5_bigip_conns,
     detect=F5_BIGIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.1.2",
-        oids=["1.8", "9.2", "9.6", "9.9", "1.56"],
+        oids=[
+            "1.8",  # F5-BIGIP-SYSTEM-MIB::sysStatClientCurConns
+            "9.2",  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatCurConns
+            "9.6",  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatTotNativeConns
+            "9.9",  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatTotCompatConns
+            "1.56",  # F5-BIGIP-SYSTEM-MIB::sysStatHttpRequests
+        ],
     ),
+    parse_function=parse_f5_bigip_conns,
+)
+
+
+check_plugin_f5_bigip_conns = CheckPlugin(
+    name="f5_bigip_conns",
     service_name="Open Connections",
     discovery_function=discover_f5_bigip_conns,
     check_function=check_f5_bigip_conns,
     check_ruleset_name="f5_connections",
-    check_default_parameters={
-        "conns": (25000, 30000),
-        "ssl_conns": (25000, 30000),
-        "http_req_rate": (500, 1000),
-    },
+    check_default_parameters=ConnsParams(
+        conns=("fixed", (25000, 30000)),
+        ssl_conns=("fixed", (25000, 30000)),
+        http_req_rate=("fixed", (500, 1000)),
+    ),
 )

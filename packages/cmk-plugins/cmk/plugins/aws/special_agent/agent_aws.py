@@ -156,25 +156,6 @@ class TagsImportPatternOption(Enum):
 TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPatternOption.import_all]
 
 
-# TODO
-# Rewrite API calls from low-level client to high-level resource:
-# Boto3 has two distinct levels of APIs. Client (or "low-level") APIs provide
-# one-to-one mappings to the underlying HTTP API operations. Resource APIs hide
-# explicit network calls but instead provide resource objects and collections to
-# access attributes and perform actions.
-
-# Note that in this case you do not have to make a second API call to get the
-# objects; they're available to you as a collection on the bucket. These
-# collections of subresources are lazily-loaded.
-
-# TODO limits
-# - per account (S3)
-# - per region (EC2, EBS, ELB, RDS)
-
-# TODO network load balancers
-# - gather the metrics HealthyHostCount and UnHealthyHostCount using the correct dimensions (load
-#   balancer and target group)
-
 #   .--overview------------------------------------------------------------.
 #   |                                        _                             |
 #   |               _____   _____ _ ____   _(_) _____      __              |

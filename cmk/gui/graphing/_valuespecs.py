@@ -343,7 +343,14 @@ class ValuesWithUnits(CascadingDropdown):
                 (
                     choice.id,
                     choice.title,
-                    self._unit_vs(choice.vs_type, choice.symbol, elements),
+                    Tuple(
+                        elements=[
+                            _value_with_unit_vs(
+                                choice.vs_type, choice.symbol, elem["title"], elem["default"]
+                            )
+                            for elem in elements
+                        ]
+                    ),
                 )
                 for choice in _sorted_unit_choices(
                     metrics_from_api,
@@ -355,18 +362,6 @@ class ValuesWithUnits(CascadingDropdown):
         )
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
-
-    def _unit_vs(  # type: ignore[explicit-any]
-        self,
-        vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
-        symbol: str,
-        elements: Sequence[ValueWithUnitElement],
-    ) -> Tuple[tuple[Any, ...]]:
-        return Tuple(
-            elements=[
-                _value_with_unit_vs(vs, symbol, elem["title"], elem["default"]) for elem in elements
-            ],
-        )
 
     @override
     def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:

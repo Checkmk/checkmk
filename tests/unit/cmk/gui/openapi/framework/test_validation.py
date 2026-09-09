@@ -23,6 +23,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework._validation import ParameterValidator
 from cmk.gui.openapi.framework.endpoint_model import SignatureParametersProcessor
 from cmk.gui.openapi.framework.model import ApiOmitted
+from tests.unit.cmk.gui.openapi.framework._future_annotation_models import (
+    StringAnnotationModel,
+    StringAnnotationWithDefault,
+)
 from tests.unit.cmk.gui.openapi.framework.factories import EndpointDefinitionFactory
 
 
@@ -385,6 +389,35 @@ def test_generic_omittable_argument_response_invalid() -> None:
         validate_endpoint_definition(
             EndpointDefinitionFactory.build(
                 handler={"handler": _handler_generic_omittable_argument_response},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+def _handler_string_annotations() -> StringAnnotationModel:
+    raise NotImplementedError
+
+
+def _handler_string_annotations_with_default() -> StringAnnotationWithDefault:
+    raise NotImplementedError
+
+
+def test_string_annotations_are_resolved() -> None:
+    """A model of a module with `from __future__ import annotations` must validate."""
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": _handler_string_annotations},
+            metadata={"content_type": "application/json"},
+        )
+    )
+
+
+def test_string_annotations_are_validated() -> None:
+    """Resolving the annotations must not skip the checks on them."""
+    with pytest.raises(ValueError, match="Forbidden `default` for `response.value`"):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": _handler_string_annotations_with_default},
                 metadata={"content_type": "application/json"},
             )
         )

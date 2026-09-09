@@ -7,7 +7,7 @@ import functools
 import operator
 import types
 from collections.abc import Iterable, Iterator, Mapping
-from typing import Annotated, get_args, get_origin, TypeAliasType, TypeVar
+from typing import Annotated, get_args, get_origin, get_type_hints, TypeAliasType, TypeVar
 
 from cmk.gui.utils.dataclasses import DataclassInstance
 
@@ -127,7 +127,7 @@ def iter_model_fields(
 
     Raises:
         ValueError: if the annotation is not a dataclass, if a generic model is not fully
-            parameterized, or if a field uses a string annotation.
+            parameterized, or if an annotation cannot be resolved.
     """
     if (origin := get_dataclass_origin(annotation)) is None:
         raise ValueError(f"Expected a dataclass annotation for `{path}`.")
@@ -140,12 +140,16 @@ def iter_model_fields(
             f"Generic models must be fully parameterized."
         )
 
+    # `get_type_hints` resolves the string annotations of a module that uses
+    # `from __future__ import annotations`, and it merges the annotations of the base classes.
+    try:
+        hints = get_type_hints(origin, include_extras=True)
+    except NameError as e:
+        raise ValueError(f"Cannot resolve the annotations of `{path}`: {e}") from None
+
     substitutions = dict(zip(parameters, arguments, strict=True))
     for field in dataclasses.fields(origin):
-        if isinstance(field.type, str):
-            raise ValueError(f"String annotation for `{path}.{field.name}` is not allowed.")
-
-        yield field, substitute_type_vars(field.type, substitutions)
+        yield field, substitute_type_vars(hints[field.name], substitutions)
 
 
 def iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:

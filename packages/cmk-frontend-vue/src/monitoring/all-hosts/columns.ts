@@ -53,18 +53,18 @@ const OPTIONAL_FIELD_COLUMNS = [
   'alias',
   'address',
   'folder',
-  'num_services',
-  'num_services_ok',
-  'num_services_warn',
-  'num_services_crit',
-  'num_services_unknown',
-  'num_services_pending',
   'last_check',
   'last_state_change',
   'labels',
   'tags',
   'contacts',
-  'contact_groups'
+  'contact_groups',
+  'num_services',
+  'num_services_ok',
+  'num_services_warn',
+  'num_services_crit',
+  'num_services_unknown',
+  'num_services_pending'
 ] as const satisfies readonly HostOptionalField[]
 
 /**
@@ -373,6 +373,54 @@ export function buildHostColumns({
       meta: { filter: siteFilter, hidden: true }
     },
     {
+      accessorKey: 'last_check',
+      header: _t('Last check'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: { hidden: true, filter: lastCheckFilter }
+    },
+    {
+      accessorKey: 'last_state_change',
+      header: _t('Last state change'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: { hidden: true, filter: lastStateChangeFilter }
+    },
+    {
+      accessorKey: 'labels',
+      header: _t('Labels'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 400,
+      meta: { hidden: true, filter: labelsFilter }
+    },
+    {
+      accessorKey: 'tags',
+      header: _t('Tags'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 400,
+      meta: { hidden: true, filter: tagsFilter }
+    },
+    {
+      accessorKey: 'contacts',
+      header: _t('Contacts'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: contactsFilter }
+    },
+    {
+      accessorKey: 'contact_groups',
+      header: _t('Contact groups'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: contactGroupsFilter }
+    },
+    {
       accessorKey: 'num_services',
       header: _t('All services'),
       sortDescFirst: true,
@@ -447,54 +495,6 @@ export function buildHostColumns({
       },
       minSize: 70,
       maxSize: 70
-    },
-    {
-      accessorKey: 'last_check',
-      header: _t('Last check'),
-      sortDescFirst: true,
-      minSize: 120,
-      maxSize: 200,
-      meta: { hidden: true, filter: lastCheckFilter }
-    },
-    {
-      accessorKey: 'last_state_change',
-      header: _t('Last state change'),
-      sortDescFirst: true,
-      minSize: 120,
-      maxSize: 200,
-      meta: { hidden: true, filter: lastStateChangeFilter }
-    },
-    {
-      accessorKey: 'labels',
-      header: _t('Labels'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 400,
-      meta: { hidden: true, filter: labelsFilter }
-    },
-    {
-      accessorKey: 'tags',
-      header: _t('Tags'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 400,
-      meta: { hidden: true, filter: tagsFilter }
-    },
-    {
-      accessorKey: 'contacts',
-      header: _t('Contacts'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 300,
-      meta: { hidden: true, filter: contactsFilter }
-    },
-    {
-      accessorKey: 'contact_groups',
-      header: _t('Contact groups'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 300,
-      meta: { hidden: true, filter: contactGroupsFilter }
     },
     ...(showCustomer
       ? [

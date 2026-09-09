@@ -213,6 +213,20 @@ test('renders its cells in the order the columns are defined in', () => {
   expect(rendered).toEqual(defined)
 })
 
+test('renders the host detail columns before the service count columns', () => {
+  const host = makeHost()
+  const { container } = mountRow(host)
+
+  const tds = Array.from(container.querySelectorAll('td'))
+  const lastCheckIndex = tds.findIndex(
+    (td) => td.querySelector(`[title="${formatTimestamp(host.last_check!)}"]`) !== null
+  )
+  const numServicesIndex = tds.findIndex((td) => td.textContent?.trim() === '6')
+
+  expect(lastCheckIndex).toBeGreaterThanOrEqual(0)
+  expect(numServicesIndex).toBeGreaterThan(lastCheckIndex)
+})
+
 function serviceCountLinks(container: Element): Array<HTMLAnchorElement | null> {
   return SERVICE_COUNT_COLUMNS.map((id) => cell(container, id).querySelector('a'))
 }

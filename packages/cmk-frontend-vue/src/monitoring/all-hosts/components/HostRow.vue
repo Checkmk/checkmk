@@ -152,6 +152,23 @@ const lastStateChange = computed(() =>
   />
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />
+
+  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
+  <StringCell
+    v-if="hasColumn('last_state_change')"
+    column-id="last_state_change"
+    :value="lastStateChange"
+  />
+  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
+  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
+  <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
+  <LabelCell
+    v-if="hasColumn('contact_groups')"
+    column-id="contact_groups"
+    :items="contactGroups"
+    size="small"
+  />
+
   <NumberCell
     v-if="hasColumn('num_services')"
     column-id="num_services"
@@ -217,22 +234,6 @@ const lastStateChange = computed(() =>
       active: !!row.num_services_pending
     }"
     :linked-to="!row.num_services_pending ? undefined : servicesInStateLink('PENDING')"
-  />
-
-  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
-  <StringCell
-    v-if="hasColumn('last_state_change')"
-    column-id="last_state_change"
-    :value="lastStateChange"
-  />
-  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
-  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
-  <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
-  <LabelCell
-    v-if="hasColumn('contact_groups')"
-    column-id="contact_groups"
-    :items="contactGroups"
-    size="small"
   />
   <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
 

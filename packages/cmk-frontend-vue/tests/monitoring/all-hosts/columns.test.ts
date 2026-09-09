@@ -89,18 +89,18 @@ test('the optional columns are offered in the picker, abbreviated headers spelle
     { id: 'address', label: 'IP address' },
     { id: 'folder', label: 'Folder' },
     { id: 'site_id', label: 'Site' },
-    { id: 'num_services', label: 'All services' },
-    { id: 'num_services_ok', label: 'OK' },
-    { id: 'num_services_warn', label: 'Warning (Wa)' },
-    { id: 'num_services_crit', label: 'Critical (Cr)' },
-    { id: 'num_services_unknown', label: 'Unknown (Un)' },
-    { id: 'num_services_pending', label: 'Pending (Pd)' },
     { id: 'last_check', label: 'Last check' },
     { id: 'last_state_change', label: 'Last state change' },
     { id: 'labels', label: 'Labels' },
     { id: 'tags', label: 'Tags' },
     { id: 'contacts', label: 'Contacts' },
-    { id: 'contact_groups', label: 'Contact groups' }
+    { id: 'contact_groups', label: 'Contact groups' },
+    { id: 'num_services', label: 'All services' },
+    { id: 'num_services_ok', label: 'OK' },
+    { id: 'num_services_warn', label: 'Warning (Wa)' },
+    { id: 'num_services_crit', label: 'Critical (Cr)' },
+    { id: 'num_services_unknown', label: 'Unknown (Un)' },
+    { id: 'num_services_pending', label: 'Pending (Pd)' }
   ])
 })
 
@@ -131,18 +131,18 @@ test('the fixed columns keep their position around the optional ones', () => {
     'address',
     'folder',
     'site_id',
-    'num_services',
-    'num_services_ok',
-    'num_services_warn',
-    'num_services_crit',
-    'num_services_unknown',
-    'num_services_pending',
     'last_check',
     'last_state_change',
     'labels',
     'tags',
     'contacts',
     'contact_groups',
+    'num_services',
+    'num_services_ok',
+    'num_services_warn',
+    'num_services_crit',
+    'num_services_unknown',
+    'num_services_pending',
     'actions'
   ])
 })
@@ -306,7 +306,7 @@ test('the customer column is offered last, before the actions, under multi-tenan
 
   expect(offered.at(-1)).toEqual({ id: 'customer', label: 'Customer' })
   expect(columnIds({ showCustomer: true }).slice(-3)).toEqual([
-    'contact_groups',
+    'num_services_pending',
     'customer',
     'actions'
   ])

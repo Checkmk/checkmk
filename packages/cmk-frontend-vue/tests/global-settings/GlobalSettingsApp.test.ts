@@ -390,6 +390,25 @@ describe('GlobalSettingsApp', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  test('the inline switch toggles with Enter and Space and keeps focus', async () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [booleanTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Distributed monitoring' })
+    )
+    const inlineSwitch = screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })
+    inlineSwitch.focus()
+
+    await userEvent.keyboard('{Enter}')
+    await waitFor(() => expect(inlineSwitch).toHaveAttribute('aria-checked', 'true'))
+
+    await userEvent.keyboard(' ')
+    await waitFor(() => expect(inlineSwitch).toHaveAttribute('aria-checked', 'false'))
+
+    expect(requests.map((r) => r.method)).toEqual(['PUT', 'PUT'])
+    expect(inlineSwitch).toHaveFocus()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   test('a rejected toggle keeps the shown value and reports the server message on the row', async () => {
     server.use(
       http.put(BOOLEAN_SETTING_URL, () =>

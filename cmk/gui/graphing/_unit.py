@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -116,10 +115,9 @@ def user_specific_unit(
         converter=lambda v: v,
     )
     conversion = (
-        _TEMPERATURE_CONVERSION_COMPUTER.get(
-            unit_specification.notation.symbol,
-            lambda *_: noop_conversion,
-        )(temperature_unit)
+        _temperature_conversion(
+            unit_specification.notation.symbol, temperature_unit, noop_conversion
+        )
         if isinstance(unit_specification, ConvertibleUnitSpecification)
         else noop_conversion
     )
@@ -172,9 +170,7 @@ def user_specific_unit_from_unit_format(
     specification. ``UnitFormat`` is what PNG and the Vue graph both already carry."""
     noop_conversion = _Conversion(symbol=unit_format.symbol, converter=lambda v: v)
     conversion = (
-        _TEMPERATURE_CONVERSION_COMPUTER.get(unit_format.symbol, lambda *_: noop_conversion)(
-            temperature_unit
-        )
+        _temperature_conversion(unit_format.symbol, temperature_unit, noop_conversion)
         if unit_format.convertible is not False
         else noop_conversion
     )
@@ -229,6 +225,14 @@ _TEMPERATURE_CONVERSION_COMPUTER: Mapping[str, Callable[[TemperatureUnit], _Conv
     "°C": _degree_celsius_conversion,
     "°F": _degree_fahrenheit_conversion,
 }
+
+
+def _temperature_conversion(
+    symbol: str, temperature_unit: TemperatureUnit, fallback: _Conversion
+) -> _Conversion:
+    if (compute_conversion := _TEMPERATURE_CONVERSION_COMPUTER.get(symbol)) is None:
+        return fallback
+    return compute_conversion(temperature_unit)
 
 
 def get_temperature_unit(user: LoggedInUser, temperature_unit: str) -> TemperatureUnit:

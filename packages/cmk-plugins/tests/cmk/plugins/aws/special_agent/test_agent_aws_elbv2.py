@@ -10,14 +10,6 @@ from typing import NamedTuple, Protocol, TypedDict
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
-    ELBv2Application,
-    ELBv2ApplicationTargetGroupsHTTP,
-    ELBv2ApplicationTargetGroupsLambda,
-    ELBv2Limits,
-    ELBv2Network,
-    ELBv2TargetGroups,
-)
 from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
@@ -27,6 +19,14 @@ from cmk.plugins.aws.special_agent.config import (
 )
 from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws.special_agent.sections.elb import ELBLabelsGeneric, ELBSummaryGeneric
+from cmk.plugins.aws.special_agent.sections.elbv2 import (
+    ELBv2Application,
+    ELBv2ApplicationTargetGroupsHTTP,
+    ELBv2ApplicationTargetGroupsLambda,
+    ELBv2Limits,
+    ELBv2Network,
+    ELBv2TargetGroups,
+)
 
 from .agent_aws_fake_clients import (
     ELBDescribeTagsIB,

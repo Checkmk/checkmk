@@ -63,7 +63,6 @@ from ._graph_dispatch import (
     legacy_graph_id,
 )
 from ._graph_display_config import (
-    get_mm_per_ex,
     GraphDestinations,
     GraphDisplayConfigHTML,
     GraphDisplayConfigImage,
@@ -163,7 +162,7 @@ from ._metric_data import (
     translate_metric_names,
 )
 from ._metric_visitor import MetricVisitor
-from ._metrics import get_metric_spec, MetricSpec, registered_metric_ids_and_titles
+from ._metrics import get_metric_spec, registered_metric_ids_and_titles
 from ._perfometers import (
     drawn_segments,
     DrawnSegment,
@@ -264,7 +263,6 @@ __all__ = [
     "get_graph_plugin_choices",
     "get_graph_plugin_from_id",
     "get_metric_spec",
-    "get_mm_per_ex",
     "get_temperature_unit",
     "get_template_graph_specification",
     "global_time_picker_props",
@@ -330,7 +328,6 @@ __all__ = [
     "metrics_autocompleter",
     "metrics_from_api",
     "metrics_of_query",
-    "MetricSpec",
     "MetricVisitor",
     "migrate_graph_render_options_title_format",
     "migrate_graph_render_options_title_format_from_disk",

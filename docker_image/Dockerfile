@@ -35,9 +35,6 @@ COPY docker-entrypoint.sh /
 # Starts the entrypoint script and hands over CMD by default
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-# Make the list of required packages available to the following command
-COPY needed-packages /needed-packages
-
 # Install the tools we need for fetching the package and installation
 # Then fetch the package and install it. This will make sure all Checkmk
 # containers will share all dependencies, including this step.
@@ -46,7 +43,8 @@ COPY needed-packages /needed-packages
 # be up-to-date, especially when they are pinned in our build environment.
 #
 # hadolint ignore=SC2046,DL3008
-RUN set -e \
+RUN --mount=type=bind,source=needed-packages,target=/needed-packages \
+    set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -70,7 +68,6 @@ RUN set -e \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
-    && rm needed-packages \
     && mv /etc/apt/sources.list.bak /etc/apt/sources.list
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
@@ -79,28 +76,24 @@ ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
 ARG DISTRO_CODENAME="jammy"
 
-# Optionally copy an existing Checkmk debian package to the container. In case the file is
-# available that is later used by the build procedure the file will not be downloaded.
-COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.${DISTRO_CODENAME}*.deb Check_MK-pubkey.gpg /
-
 # Now install the Checkmk version specific things
 # hadolint ignore=DL3003,DL3008,DL4006
-RUN set -e \
+RUN --mount=type=bind,target=/source \
+    set -e \
     && mkdir -p /usr/share/man/man8 \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
     && PKG_FILE="${PKG_NAME}_0.${DISTRO_CODENAME}_$(dpkg --print-architecture).deb" \
-    && if [ ! -e "/${PKG_FILE}" ]; then \
+    && if [ ! -e "/source/${PKG_FILE}" ]; then \
         echo "ERROR: Please provide ${PKG_FILE} by downloading it from https://download.checkmk.com/checkmk" \
         && return 1 ; \
        fi \
-    && gpg -q --import "/Check_MK-pubkey.gpg" \
-    && gpg --verify "${PKG_FILE}" \
-    && dpkg -i "${PKG_FILE}" \
+    && gpg -q --import "/source/Check_MK-pubkey.gpg" \
+    && gpg --verify "/source/${PKG_FILE}" \
+    && dpkg -i "/source/${PKG_FILE}" \
     && dpkg -i "$(ls /omd/versions/default/share/check_mk/agents/check-mk-agent_*-1_all.deb)" \
-    && rm -f -- *.deb *.gpg \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*
@@ -112,3 +105,4 @@ LABEL \
     org.opencontainers.image.vendor="Checkmk GmbH" \
     org.opencontainers.image.source="https://github.com/checkmk/checkmk" \
     org.opencontainers.image.url="https://checkmk.com/"
+

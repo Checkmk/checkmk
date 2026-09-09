@@ -37,7 +37,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
         "site-certificate",
         "product_usage_analytics",
-        "experimental_flags",
+        "release_flags",
     ]
 
     registered = sorted(config_domain_registry.keys())
@@ -245,7 +245,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
         "Developer tools",
         "Product usage analytics",
-        "Experimental flags",
+        "Release flags",
     ]
 
     registered = sorted(config_variable_group_registry.keys())

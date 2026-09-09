@@ -11,7 +11,6 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.experimental_flags.global_config import ConfigVariableGroupExperimentalFlags
 from cmk.gui.form_specs.visitors import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -27,6 +26,7 @@ from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.product_usage_analytics.global_config import (
     ConfigVariableGroupProductUsageAnalytics,
 )
+from cmk.gui.release_flags.global_config import ConfigVariableGroupReleaseFlags
 from cmk.gui.wato._check_mk_configuration import (
     ConfigVariableGroupCheckExecution,
     ConfigVariableGroupServiceDiscovery,
@@ -174,7 +174,7 @@ _TOPICS: list[tuple[ConfigVariableGroup | str, IconNames, str]] = [
         "Configures consent and config for anonymized usage",
     ),
     (
-        ConfigVariableGroupExperimentalFlags,
+        ConfigVariableGroupReleaseFlags,
         IconNames.experiment,
         "Configures temporary auto-generated flags tied to features",
     ),

@@ -9,6 +9,7 @@ import logging
 import sys
 from collections.abc import Sequence
 
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
@@ -51,7 +52,7 @@ def main(argv: Sequence[str]) -> int:
     args = parser.parse_args(argv)
 
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))  # astrein: disable=logging-formatter
+    handler.setFormatter(CMKFormatter(message_only=True))
     logger.setLevel(logging.INFO)
     main_modules.register(edition(paths.omd_root))
 

@@ -26,6 +26,7 @@ from typing import Literal
 # with it.
 from cmk.base import config as base_config
 from cmk.ccc import debug, tty
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as cmk_edition
@@ -175,7 +176,7 @@ def _setup_logging(verbose: int) -> logging.Logger:
     logger.setLevel(log.logger.level)
 
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(message)s"))  # astrein: disable=logging-formatter
+    handler.setFormatter(CMKFormatter(message_only=True))
     logging.getLogger().addHandler(handler)
 
     # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level

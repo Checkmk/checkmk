@@ -142,7 +142,6 @@ from ._graph_templates import (
     TEMPLATE_KIND,
     TemplateGraphSpecification,
 )
-from ._graph_title import render_plain_graph_title
 from ._graphs_order import sort_registered_graph_plugins
 from ._metric_backend_registry import (
     BackendQueryBuilderProtocol,
@@ -367,7 +366,6 @@ __all__ = [
     "render_engine_graph_group",
     "render_global_time_picker",
     "render_graph_error_html",
-    "render_plain_graph_title",
     "render_png",
     "render_png_ex",
     "resolve_graph_id_from_index",

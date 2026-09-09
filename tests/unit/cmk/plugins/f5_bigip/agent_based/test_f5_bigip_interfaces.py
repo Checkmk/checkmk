@@ -9,7 +9,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.f5_bigip_interfaces import (
+from cmk.plugins.f5_bigip.agent_based.f5_bigip_interfaces import (
     check_f5_bigip_interfaces,
     discover_f5_bigip_interfaces,
     Interface,

@@ -64,8 +64,6 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, 
 
 from ._data_cache import DataCache
 
-LOGGER = logging.getLogger(__name__)
-
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import (  # type: ignore[attr-defined]
         CloudWatchLogsClient,
@@ -77,6 +75,8 @@ if TYPE_CHECKING:
 __version__ = "3.0.0b1"
 
 AGENT = "aws"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 ACCESS_KEY_SECRET_OPTION = "secret"
 

@@ -192,6 +192,15 @@ def test_on_failed_login_with_locking(
         assert userdb.user_locked(user_id)
 
 
+@pytest.mark.usefixtures("request_context")
+def test_on_failed_login_locking_disabled(user_id: UserId, set_config: SetConfig) -> None:
+    now = datetime.now()
+    with set_config(lock_on_logon_failures=None):
+        userdb.on_failed_login(user_id, now)
+        assert _load_failed_logins(user_id) == 0
+        assert not userdb.user_locked(user_id)
+
+
 def test_on_logout_no_session(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
     wsgi_app.get(auth_request)
 

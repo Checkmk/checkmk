@@ -18,7 +18,8 @@ if omd_root:
     # or via pip.
     sys.path.insert(0, omd_root + "/local/lib/python3")
 
-    # Block the import of modules that are not licensed for the current edition:
+    # Block the import of modules that are not licensed for the current edition.
+    # See doc/documentation/arch-comp-licensing-feature-filter.rst for the rationale.
     from cmk.licensing.basics.finder import apply_feature_filter
 
     sys.meta_path[:] = apply_feature_filter(Path(omd_root), sys.meta_path)

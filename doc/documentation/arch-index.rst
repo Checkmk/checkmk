@@ -19,13 +19,14 @@ Topology and interfaces
    arch-comp-omd.rst
    arch-comp-hosts.rst
 
-Ongoing migrations
-==================
+Cross cutting concerns
+======================
 
 .. toctree::
    :maxdepth: 1
 
    arch-migrations.rst
+   arch-licensing-feature-filter.rst
 
 Components
 ==========

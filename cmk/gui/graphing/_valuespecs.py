@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
 
 import json
 import re
@@ -171,7 +170,7 @@ def _vs_title_infos() -> ListChoice:
 
 def _vs_show_title(
     default_value: bool | Literal["inline"], with_inline_title: bool
-) -> DropdownChoice:
+) -> DropdownChoice[bool | Literal["inline"]]:
     choices: list[tuple[bool | Literal["inline"], str]] = [
         (False, _("Don't show graph title")),
         (True, _("Show graph title")),
@@ -370,7 +369,7 @@ class ValuesWithUnits(CascadingDropdown):
         symbol: str,
         elements: Sequence[ValueWithUnitElement],
         validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None,
-    ) -> Tuple:
+    ) -> Tuple[tuple[Any, ...]]:
         return Tuple(
             elements=[
                 _value_with_unit_vs(vs, symbol, elem["title"], elem["default"]) for elem in elements

@@ -255,7 +255,7 @@ class MKDockerClient(docker.DockerClient):
 
     def __init__(self, config):
         super().__init__(config["base_url"], version=MKDockerClient.API_VERSION)
-        all_containers = _robust_inspect(self, "containers")
+        all_containers = _dedupe_swarm_tasks(_robust_inspect(self, "containers"))
         if config["container_id"] == "name":
             self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
         elif config["container_id"] == "long":
@@ -486,6 +486,26 @@ def _robust_inspect(client, docker_object):
     for response in api(**kwargs):
         with contextlib.suppress(docker.errors.NotFound):
             yield getter(response["Id"])
+
+def _dedupe_swarm_tasks(containers):
+    """Collapses multiple containers belonging to the same Swarm service+slot
+    (e.g. because Docker still keeps the old task around in its task history)
+    into a single one: only the most recently created one is ever considered."""
+    groups = {}
+    passthrough = []
+    for c in containers:
+        labels = (c.attrs.get("Config") or {}).get("Labels") or {}
+        service = labels.get("com.docker.swarm.service.name")
+        slot = labels.get("com.docker.swarm.task.slot")
+        if service is None:
+            passthrough.append(c)  # not a Swarm task -> pass through unchanged
+            continue
+        groups.setdefault((service, slot), []).append(c)
+
+    result = passthrough
+    for candidates in groups.values():
+        result.append(max(candidates, key=lambda c: c.attrs["Created"]))
+    return result
 
 
 @time_it

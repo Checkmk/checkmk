@@ -43,7 +43,13 @@ export const emblemPanelConfig = {
     initialState: 'warning' as '' | IconEmblems,
     help: 'Only the fixed IconEmblems set can be used here — these are separate from SimpleIcons.'
   },
-  colored: { type: 'boolean' as const, title: 'Colored', initialState: true }
+  colored: { type: 'boolean' as const, title: 'Colored', initialState: true },
+  ariaLabel: {
+    type: 'string' as const,
+    title: 'Aria label',
+    initialState: '',
+    help: 'Omit when the emblem carries no meaning beyond decoration.'
+  }
 } satisfies PanelConfigFor<typeof CmkIconEmblem>
 
 export const iconPanelConfig = {
@@ -120,6 +126,7 @@ const iconPropState = new PanelStateCreator<typeof CmkIcon>().createRef(iconPane
       <CmkIconEmblem
         :emblem="emblemPropState.emblem || undefined"
         :colored="emblemPropState.colored"
+        :aria-label="emblemPropState.ariaLabel || undefined"
       >
         <CmkIcon
           :name="iconPropState.name"

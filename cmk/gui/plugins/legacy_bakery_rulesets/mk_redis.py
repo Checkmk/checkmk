@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
-
 from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -17,27 +13,11 @@ from cmk.gui.valuespec import (
     FixedValue,
     Hostname,
     ListOf,
-    Migrate,
     NetworkPort,
     TextInput,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
-
-
-def _migrate(value: object) -> Any:
-    """
-    >>> _migrate(("instance", "host", 4444, "pa$$word"))
-    {'instance': 'instance', 'password': 'pa$$word', 'connection': ('tcp', {'host': 'host', 'port': 4444})}
-    """
-    if isinstance(value, tuple):
-        instance, host, port, password = value
-        return {
-            "instance": instance,
-            "password": password,
-            "connection": ("tcp", {"host": host, "port": port}),
-        }
-    return value
 
 
 def _valuespec_agent_config_mk_redis() -> CascadingDropdown:
@@ -53,90 +33,87 @@ def _valuespec_agent_config_mk_redis() -> CascadingDropdown:
                 "static",
                 _("Specific list of instances"),
                 ListOf(
-                    valuespec=Migrate(
-                        valuespec=Dictionary(
-                            elements=[
-                                (
-                                    "instance",
-                                    TextInput(
-                                        title=_("Name of the instance in the monitoring"),
-                                        allow_empty=False,
-                                        regex="^[A-Za-z0-9_][A-Za-z0-9_-]{0,62}$",
-                                        regex_error=_(
-                                            "Use at most 63 letters, digits, underscores and "
-                                            "hyphens, and do not start with a hyphen."
+                    valuespec=Dictionary(
+                        elements=[
+                            (
+                                "instance",
+                                TextInput(
+                                    title=_("Name of the instance in the monitoring"),
+                                    allow_empty=False,
+                                    regex="^[A-Za-z0-9_][A-Za-z0-9_-]{0,62}$",
+                                    regex_error=_(
+                                        "Use at most 63 letters, digits, underscores and "
+                                        "hyphens, and do not start with a hyphen."
+                                    ),
+                                ),
+                            ),
+                            (
+                                "connection",
+                                CascadingDropdown(
+                                    title=_("Connection"),
+                                    choices=[
+                                        (
+                                            "tcp",
+                                            _("TCP"),
+                                            Dictionary(
+                                                elements=[
+                                                    (
+                                                        "host",
+                                                        Hostname(
+                                                            title=_("IPv4 address"),
+                                                            default_value="127.0.0.1",
+                                                            allow_empty=False,
+                                                        ),
+                                                    ),
+                                                    (
+                                                        "port",
+                                                        NetworkPort(
+                                                            title=_("TCP port number"),
+                                                            default_value=6379,
+                                                        ),
+                                                    ),
+                                                ],
+                                                optional_keys=False,
+                                            ),
                                         ),
-                                    ),
-                                ),
-                                (
-                                    "connection",
-                                    CascadingDropdown(
-                                        title=_("Connection"),
-                                        choices=[
-                                            (
-                                                "tcp",
-                                                _("TCP"),
-                                                Dictionary(
-                                                    elements=[
-                                                        (
-                                                            "host",
-                                                            Hostname(
-                                                                title=_("IPv4 address"),
-                                                                default_value="127.0.0.1",
-                                                                allow_empty=False,
-                                                            ),
+                                        (
+                                            "unix-socket",
+                                            _("Unix socket"),
+                                            Dictionary(
+                                                elements=[
+                                                    (
+                                                        "socket",
+                                                        TextInput(
+                                                            title=_("Path to Unix socket"),
+                                                            allow_empty=False,
                                                         ),
-                                                        (
-                                                            "port",
-                                                            NetworkPort(
-                                                                title=_("TCP port number"),
-                                                                default_value=6379,
-                                                            ),
-                                                        ),
-                                                    ],
-                                                    optional_keys=False,
-                                                ),
+                                                    ),
+                                                ],
+                                                optional_keys=False,
                                             ),
-                                            (
-                                                "unix-socket",
-                                                _("Unix socket"),
-                                                Dictionary(
-                                                    elements=[
-                                                        (
-                                                            "socket",
-                                                            TextInput(
-                                                                title=_("Path to Unix socket"),
-                                                                allow_empty=False,
-                                                            ),
-                                                        ),
-                                                    ],
-                                                    optional_keys=False,
-                                                ),
-                                            ),
-                                        ],
-                                    ),
+                                        ),
+                                    ],
                                 ),
-                                (
-                                    "password",
-                                    Alternative(
-                                        title=_("Password"),
-                                        elements=[
-                                            FixedValue(
-                                                value=None,
-                                                title=_("Don't use password"),
-                                                totext=_("Connect without password"),
-                                            ),
-                                            MigrateToIndividualOrStoredPassword(
-                                                title=_("Password"),
-                                                allow_empty=False,
-                                            ),
-                                        ],
-                                    ),
+                            ),
+                            (
+                                "password",
+                                Alternative(
+                                    title=_("Password"),
+                                    elements=[
+                                        FixedValue(
+                                            value=None,
+                                            title=_("Don't use password"),
+                                            totext=_("Connect without password"),
+                                        ),
+                                        IndividualOrStoredPassword(
+                                            title=_("Password"),
+                                            allow_empty=False,
+                                        ),
+                                    ],
                                 ),
-                            ],
-                            optional_keys=False,
-                        ),
-                        migrate=_migrate,
+                            ),
+                        ],
+                        optional_keys=False,
                     ),
                 ),
             ),

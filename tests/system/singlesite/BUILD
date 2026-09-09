@@ -49,6 +49,7 @@ py_library(
         "//tests/system:pkg_marker",
         "//tests/testlib",
         "//tests/testlib/common:utils",
+        "//tests/testlib/pytest_helpers",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-core-helpers:inline-snmp",

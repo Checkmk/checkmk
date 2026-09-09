@@ -24,6 +24,7 @@ py_library(
         requirement("pytest-check"),
         requirement("pytest-metadata"),
         "//tests/testlib",
+        "//tests/testlib/pytest_helpers",
     ],
 )
 
@@ -121,6 +122,7 @@ py_library(
         requirement("requests"),
         requirement("jinja2"),
         "//tests/testlib",
+        "//tests/testlib/pytest_helpers",
     ],
 )
 

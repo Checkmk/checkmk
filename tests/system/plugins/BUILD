@@ -21,6 +21,7 @@ py_library(
         requirement("pytest"),
         "//tests/system:pkg_marker",
         "//tests/testlib",
+        "//tests/testlib/pytest_helpers",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/tests/testlib/system/licensing",

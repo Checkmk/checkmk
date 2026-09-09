@@ -9,6 +9,7 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//tests/testlib:testlib_system_level",
+        "//tests/testlib/pytest_helpers",
         requirement("docker"),
         requirement("pytest-random-order"),
     ],

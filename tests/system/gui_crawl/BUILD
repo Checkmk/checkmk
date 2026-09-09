@@ -19,5 +19,6 @@ py_library(
         "//scripts/html_validation",
         "//tests/system:pkg_marker",
         "//tests/testlib",
+        "//tests/testlib/pytest_helpers",
     ],
 )

@@ -125,6 +125,13 @@ const { headerLineBreakLevel } = useHeaderLineBreakLevel(
   }
 )
 
+const timestampLabel = computed(() => {
+  const date = dateLabel.value ?? ''
+  return showConsolidationControl.value
+    ? _t('for %{date},', { date })
+    : _t('Graph values for %{date},', { date })
+})
+
 const resolutionLabel = computed(() => {
   const prefix = !!props.isCompact || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
   const resolution = props.timeRange ? withMinutesSpelledOut(stepLabel(props.timeRange.step)) : ''
@@ -166,7 +173,7 @@ const resolutionLabel = computed(() => {
         />
       </template>
       <span v-if="showTimestamp && timeRange" class="graphing-graph-header__timestamp">
-        {{ _t('for %{date},', { date: dateLabel ?? '' }) }}
+        {{ timestampLabel }}
         <span class="graphing-graph-header__resolution">
           {{ resolutionLabel }}
         </span>

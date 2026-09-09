@@ -69,7 +69,7 @@ test('describes a same-day range with a single date and its resolution', () => {
     }
   })
 
-  expect(screen.getByText('for 2026-06-15,')).toBeInTheDocument()
+  expect(screen.getByText(/for 2026-06-15,/)).toBeInTheDocument()
   expect(screen.getByText('resolution: 5 min')).toBeInTheDocument()
 })
 
@@ -81,8 +81,24 @@ test('describes a cross-day range as start — end', () => {
     }
   })
 
-  expect(screen.getByText('for 2026-06-14 — 2026-06-15,')).toBeInTheDocument()
+  expect(screen.getByText(/for 2026-06-14 — 2026-06-15,/)).toBeInTheDocument()
   expect(screen.getByText('resolution: 6 h')).toBeInTheDocument()
+})
+
+test('the time range note names the graph values while the consolidation dropdown is hidden', () => {
+  render(GraphHeader, {
+    props: { showTimestamp: true, showConsolidation: true, timeRange: RAW_TIME_RANGE }
+  })
+
+  expect(screen.getByText('Graph values for 2026-06-15,')).toBeInTheDocument()
+})
+
+test('the time range note leaves naming the graph values to the consolidation dropdown', () => {
+  render(GraphHeader, {
+    props: { showTimestamp: true, showConsolidation: true, timeRange: AGGREGATED_TIME_RANGE }
+  })
+
+  expect(screen.getByText('for 2026-06-15,')).toBeInTheDocument()
 })
 
 test('omits the range note while no time range is known', () => {

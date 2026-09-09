@@ -158,3 +158,42 @@ test('CmkButton ignores a reason while the action is available', () => {
   })
   expect(screen.getByRole('button')).toHaveAttribute('title', 'Save the graph')
 })
+
+test('CmkButton keeps a disabled link discoverable and focusable', () => {
+  render(CmkButton, {
+    props: { disabled: true, href: 'https://example.com/reschedule' },
+    slots: { default: 'Reschedule' }
+  })
+  const link = screen.getByRole('link')
+  expect(link).not.toHaveAttribute('href')
+  expect(link).toHaveAttribute('aria-disabled', 'true')
+  expect(link).toHaveAttribute('tabindex', '0')
+})
+
+test('CmkButton refuses the click of a disabled link', async () => {
+  const onClick = vi.fn()
+  render(CmkButton, {
+    props: { disabled: true, href: 'https://example.com/reschedule', onClick },
+    slots: { default: 'Reschedule' }
+  })
+
+  await userEvent.click(screen.getByRole('link'))
+
+  expect(onClick).not.toHaveBeenCalled()
+})
+
+test('CmkButton keeps a blocked link focusable and titles it with the reason', () => {
+  render(CmkButton, {
+    props: {
+      disabled: true,
+      disabledReason: untranslated('Pick a metric first'),
+      href: 'https://example.com/reschedule'
+    },
+    slots: { default: 'Reschedule' }
+  })
+  const link = screen.getByRole('link')
+  expect(link).not.toHaveAttribute('href')
+  expect(link).toHaveAttribute('aria-disabled', 'true')
+  expect(link).toHaveAttribute('tabindex', '0')
+  expect(link).toHaveAttribute('title', 'Pick a metric first')
+})

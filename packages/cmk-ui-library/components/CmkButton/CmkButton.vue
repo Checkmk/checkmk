@@ -47,7 +47,10 @@ defineEmits(['click'])
       { 'cmk-button--with-icon': props.icon !== undefined, 'cmk-button--running': props.running }
     ]"
     :href="isDisabled ? undefined : props.href"
-    :target="props.target"
+    :target="isDisabled ? undefined : props.target"
+    :role="isDisabled ? 'link' : undefined"
+    :tabindex="isDisabled ? 0 : undefined"
+    :aria-disabled="isDisabled"
     :title="titleText"
     :aria-busy="props.running"
     @click="

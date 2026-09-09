@@ -5,7 +5,7 @@
 
 import json
 import traceback
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import Final, TypedDict
 
@@ -17,7 +17,6 @@ from cmk.graphing_engine import (
     EvaluatedGraph,
     Graph,
     SeriesAttributes,
-    Unit,
 )
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
@@ -56,7 +55,7 @@ from ._graph_metric_expressions import AttributeGroup, LineType
 from ._graph_specification import GraphSpecification
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
-from ._unit_format import unit_to_unit_format
+from ._unit_format import unit_from_curves
 
 
 def stored_time_range_seconds(
@@ -148,18 +147,6 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     if specification is None or (add_type := specification.add_visual_type()) is None:
         return None
     return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
-
-
-def unit_from_curves(units: Iterable[Unit]) -> UnitFormat | None:
-    """The axis unit taken from the first of an ordered sequence of curve units.
-
-    Every curve in a graph draws in one shared unit (enforced backend-side), so the axis unit is
-    the unit of any curve; None when there are no units at all, in which case the renderer falls
-    back to raw, unit-less ticks. Shared by derive_y_axis_unit (the pre-evaluation Graph, here) and
-    _graph_png._derived_y_axis_unit (the EvaluatedGraph), which carries the same CurveAttributes.unit
-    on its curves but has no common curve type to walk with this one.
-    """
-    return next((unit_to_unit_format(unit) for unit in units), None)
 
 
 def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:

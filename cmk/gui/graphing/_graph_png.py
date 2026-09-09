@@ -36,9 +36,9 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._drawn_curves import drawn_curves
-from ._frontend import unit_from_curves
 from ._graph_display_config import GraphDisplayConfigImage
 from ._unit import user_specific_unit_from_unit_format
+from ._unit_format import unit_from_curves
 
 DPI = 96
 TITLE_COLOR = "#1E262E"

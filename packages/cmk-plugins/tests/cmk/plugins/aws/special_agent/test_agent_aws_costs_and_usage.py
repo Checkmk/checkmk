@@ -6,7 +6,8 @@
 
 from argparse import Namespace as Args
 
-from cmk.plugins.aws.special_agent.agent_aws import AWSConfig, CostsAndUsage, NamingConvention
+from cmk.plugins.aws.special_agent.agent_aws import CostsAndUsage
+from cmk.plugins.aws.special_agent.config import AWSConfig, NamingConvention
 
 from .agent_aws_fake_clients import CEGetCostsAndUsageIB
 

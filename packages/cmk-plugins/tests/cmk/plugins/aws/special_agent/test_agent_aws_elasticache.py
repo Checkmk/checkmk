@@ -13,16 +13,18 @@ import pytest
 from dateutil.tz import tzutc
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
     AWSRegionLimit,
     AWSSectionResult,
     AWSSectionResults,
     ElastiCache,
     ElastiCacheLimits,
     ElastiCacheSummary,
+    ResultDistributor,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

@@ -12,13 +12,11 @@ from typing import Literal, Protocol
 import pytest
 from dateutil.tz import tzutc
 
-from cmk.plugins.aws.special_agent.agent_aws import (
+from cmk.plugins.aws.special_agent.agent_aws import CloudFront, CloudFrontSummary, ResultDistributor
+from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
-    CloudFront,
-    CloudFrontSummary,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

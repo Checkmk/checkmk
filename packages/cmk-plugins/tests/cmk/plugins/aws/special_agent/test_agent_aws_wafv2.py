@@ -12,15 +12,17 @@ import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
     _get_wafv2_web_acls,
-    AWSConfig,
-    NamingConvention,
-    OverallTags,
     ResultDistributor,
-    TagsImportPatternOption,
-    TagsOption,
     WAFV2Limits,
     WAFV2Summary,
     WAFV2WebACL,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    OverallTags,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (

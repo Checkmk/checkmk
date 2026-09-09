@@ -14,14 +14,16 @@ import pytest
 # Needed to monkeypatch agent_aws.NOW
 from cmk.plugins.aws.special_agent import agent_aws
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
-    NamingConvention,
-    OverallTags,
     ResultDistributor,
     S3,
     S3Limits,
     S3Requests,
     S3Summary,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    OverallTags,
     TagsImportPatternOption,
     TagsOption,
 )

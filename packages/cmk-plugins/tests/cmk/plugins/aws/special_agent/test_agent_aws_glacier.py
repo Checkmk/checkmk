@@ -10,13 +10,11 @@ from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
+from cmk.plugins.aws.special_agent.agent_aws import Glacier, GlacierLimits, ResultDistributor
+from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
-    Glacier,
-    GlacierLimits,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

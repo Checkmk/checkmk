@@ -11,7 +11,6 @@ from typing import NamedTuple, Protocol, TypedDict
 import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
     ELBLabelsGeneric,
     ELBSummaryGeneric,
     ELBv2Application,
@@ -20,9 +19,12 @@ from cmk.plugins.aws.special_agent.agent_aws import (
     ELBv2Limits,
     ELBv2Network,
     ELBv2TargetGroups,
+    ResultDistributor,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

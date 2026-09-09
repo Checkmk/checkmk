@@ -11,17 +11,19 @@ from typing import Final, Protocol
 import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
     AWSRegionLimit,
     AWSSectionResult,
     AWSSectionResults,
     ECS,
     ECSLimits,
     ECSSummary,
-    NamingConvention,
-    OverallTags,
     ResultDistributor,
     StatusEnum,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    OverallTags,
     TagsImportPatternOption,
     TagsOption,
 )

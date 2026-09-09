@@ -12,16 +12,18 @@ from typing import Protocol
 import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
     AWSRegionLimit,
-    NamingConvention,
-    OverallTags,
     ResultDistributor,
     SNS,
     SNSLimits,
     SNSSMS,
     SNSSummary,
     SNSTopicsFetcher,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    OverallTags,
     TagsImportPatternOption,
     TagsOption,
 )

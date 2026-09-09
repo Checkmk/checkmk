@@ -15,15 +15,17 @@ from mypy_boto3_logs.type_defs import GetQueryResultsRequestTypeDef, GetQueryRes
 
 from cmk.plugins.aws.special_agent.agent_aws import (
     _create_lamdba_sections,
-    AWSConfig,
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
     LambdaProvisionedConcurrency,
     LambdaRegionLimits,
     LambdaSummary,
+    ResultDistributor,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

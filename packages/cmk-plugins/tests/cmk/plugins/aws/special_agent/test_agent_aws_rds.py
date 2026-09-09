@@ -10,14 +10,11 @@ from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
+from cmk.plugins.aws.special_agent.agent_aws import RDS, RDSLimits, RDSSummary, ResultDistributor
+from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
     OverallTags,
-    RDS,
-    RDSLimits,
-    RDSSummary,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

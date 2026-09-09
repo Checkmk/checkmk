@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-import cmk.plugins.aws.special_agent.agent_aws as agent
 from cmk.plugins.aws.special_agent.agent_aws import parse_arguments
+from cmk.plugins.aws.special_agent.config import NamingConvention, TagsImportPatternOption
 
 # These have to always exist, so just set them here
 REQUIRED_ARGS = ["--hostname", "foo", "--piggyback-naming-convention", "ip_region_instance"]
@@ -24,8 +24,8 @@ REQUIRED_ARGS = ["--hostname", "foo", "--piggyback-naming-convention", "ip_regio
             REQUIRED_ARGS,
             {
                 "hostname": "foo",
-                "piggyback_naming_convention": agent.NamingConvention.ip_region_instance,
-                "tag_key_pattern": agent.TagsImportPatternOption.import_all,
+                "piggyback_naming_convention": NamingConvention.ip_region_instance,
+                "tag_key_pattern": TagsImportPatternOption.import_all,
             },
         ),
         (
@@ -41,8 +41,8 @@ REQUIRED_ARGS = ["--hostname", "foo", "--piggyback-naming-convention", "ip_regio
             ],
             {
                 "hostname": "foo",
-                "piggyback_naming_convention": agent.NamingConvention.ip_region_instance,
-                "tag_key_pattern": agent.TagsImportPatternOption.import_all,
+                "piggyback_naming_convention": NamingConvention.ip_region_instance,
+                "tag_key_pattern": TagsImportPatternOption.import_all,
                 "regions": ["af-south-1", "ap-east-1", "us-west-2"],
                 "wafv2_cloudfront": True,
             },
@@ -87,8 +87,8 @@ REQUIRED_ARGS = ["--hostname", "foo", "--piggyback-naming-convention", "ip_regio
             ],
             {
                 "hostname": "foo",
-                "piggyback_naming_convention": agent.NamingConvention.ip_region_instance,
-                "tag_key_pattern": agent.TagsImportPatternOption.import_all,
+                "piggyback_naming_convention": NamingConvention.ip_region_instance,
+                "tag_key_pattern": TagsImportPatternOption.import_all,
                 "regions": ["af-south-1", "ap-east-1"],
                 "global_services": ["ce", "cloudfront"],
                 "services": ["ebs", "s3"],

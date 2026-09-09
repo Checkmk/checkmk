@@ -11,15 +11,17 @@ from typing import Protocol
 import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
     EC2,
     EC2Labels,
     EC2Limits,
     EC2SecurityGroups,
     EC2Summary,
+    ResultDistributor,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

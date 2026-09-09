@@ -11,13 +11,15 @@ from typing import Protocol, TypedDict
 import pytest
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
     DynamoDBLimits,
     DynamoDBSummary,
     DynamoDBTable,
+    ResultDistributor,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )

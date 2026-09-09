@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import asdict
 from typing import cast
 
@@ -13,6 +13,7 @@ from cmk.gui.breadcrumb import BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.experimental_flags.global_config import ConfigVariableGroupExperimentalFlags
 from cmk.gui.form_specs.visitors import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -35,7 +36,6 @@ from cmk.gui.wato._check_mk_configuration import (
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
-    ConfigVariable,
     ConfigVariableGroup,
     GlobalSettingsContext,
 )
@@ -48,8 +48,11 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import site_neutral_path
+from cmk.gui.watolib.global_settings import (
+    is_available_in_global_settings,
+    load_configuration_settings,
+    make_global_settings_context,
+)
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing.global_settings import (
     Components,
@@ -182,17 +185,6 @@ _TOPICS: list[tuple[ConfigVariableGroup | str, IconNames, str]] = [
 ]
 
 
-def _make_context(config: Config) -> GlobalSettingsContext:
-    return GlobalSettingsContext(
-        target_site_id=omd_site(),
-        edition_of_local_site=edition(paths.omd_root),
-        site_neutral_log_dir=site_neutral_path(paths.log_dir),
-        site_neutral_var_dir=site_neutral_path(paths.var_dir),
-        configured_sites=config.sites,
-        configured_graph_timeranges=config.graph_timeranges,
-    )
-
-
 def _site_overrides(varname: str, config: Config) -> list[GlobalSettingsSiteOverride]:
     return [
         GlobalSettingsSiteOverride(
@@ -215,10 +207,15 @@ def _variables(
     context: GlobalSettingsContext,
     current_settings: dict[str, object],
     default_values: dict[str, object],
+    is_activated: Callable[[str], bool],
 ) -> Iterator[GlobalSettingsVariable]:
     for config_variable in group.config_variables():
         varname = config_variable.ident()
-        if not _is_shown(config_variable, default_values):
+        if not config_variable.primary_domain().in_global_settings:
+            continue
+        if not is_available_in_global_settings(
+            config_variable, default_values=default_values, is_activated=is_activated
+        ):
             continue
         form_spec = config_variable.value_model(context)
         assert isinstance(form_spec, FormSpec)
@@ -241,19 +238,16 @@ def _variables(
         )
 
 
-def _is_shown(config_variable: ConfigVariable, default_values: dict[str, object]) -> bool:
-    return (
-        config_variable.in_global_settings()
-        and config_variable.primary_domain().enabled()
-        and config_variable.primary_domain().in_global_settings
-        and config_variable.ident() in default_values
-    )
-
-
 def _topics(config: Config) -> Iterator[GlobalSettingsTopic]:
-    context = _make_context(config)
+    context = make_global_settings_context(
+        edition(paths.omd_root),
+        omd_site(),
+        sites=config.sites,
+        graph_timeranges=config.graph_timeranges,
+    )
     current_settings = dict(load_configuration_settings())
     default_values = dict(ABCConfigDomain.get_all_default_globals())
+    is_activated = get_global_config().global_settings.is_activated
     for group_or_ident, icon, subline in _TOPICS:
         group = (
             group_or_ident
@@ -262,7 +256,9 @@ def _topics(config: Config) -> Iterator[GlobalSettingsTopic]:
         )
         if group is None:
             continue
-        variables = list(_variables(group, config, context, current_settings, default_values))
+        variables = list(
+            _variables(group, config, context, current_settings, default_values, is_activated)
+        )
         if not variables:
             continue
         yield GlobalSettingsTopic(

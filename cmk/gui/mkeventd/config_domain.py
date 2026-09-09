@@ -5,7 +5,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, override
+from typing import override
 
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.utils.paths
@@ -15,11 +15,14 @@ from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    ConfigDomainName,
+    EVENT_CONSOLE,
+    SerializedSettings,
+)
 from cmk.livestatus_client import ECReload, LivestatusClient
 from cmk.utils.config_warnings import ConfigurationWarnings
-
-EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
 
 
 class ConfigDomainEventConsole(ABCConfigDomain):

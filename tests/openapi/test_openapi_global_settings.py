@@ -160,6 +160,21 @@ def fixture_event_console_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     )
 
 
+@pytest.fixture(name="var_without_factory_default")
+def fixture_var_without_factory_default() -> Iterator[str]:
+    varname = "test_no_default"
+    config_variable_registry.register(
+        ConfigVariable(
+            group=ConfigVariableGroupUserInterface,
+            primary_domain=ConfigDomainGUI,
+            ident=varname,
+            form_spec=lambda context: BooleanChoice(),  # noqa: ARG005
+        )
+    )
+    yield varname
+    config_variable_registry.unregister(varname)
+
+
 def test_show_factory_setting(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.get(INT_VAR)
     assert resp.json == {"varname": INT_VAR, "value": INT_DEFAULT, "is_default": True}
@@ -173,6 +188,12 @@ def test_unknown_variable_404(clients: ClientRegistry) -> None:
 def test_variable_outside_the_global_settings_404(clients: ClientRegistry) -> None:
     """default_language is registered but declared in_global_settings=False."""
     clients.GlobalSetting.get("default_language", expect_ok=False).assert_status_code(404)
+
+
+def test_variable_without_a_factory_default_404(
+    clients: ClientRegistry, var_without_factory_default: str
+) -> None:
+    clients.GlobalSetting.get(var_without_factory_default, expect_ok=False).assert_status_code(404)
 
 
 def _changes_of(site_id: str) -> list[str]:

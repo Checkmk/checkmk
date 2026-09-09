@@ -49,6 +49,7 @@ GUI: Final[ConfigDomainName] = "multisite"
 CA_CERTIFICATES: Final[ConfigDomainName] = "ca-certificates"
 SITE_CERTIFICATE: Final[ConfigDomainName] = "site-certificate"
 OMD: Final[ConfigDomainName] = "omd"
+EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
 
 
 def wato_fileheader() -> str:
@@ -85,6 +86,11 @@ class ABCConfigDomain(abc.ABC):
         activated regardless of the change type.
         Pass ``domains=[]`` to :meth:`PendingChanges.add` to have more granular
         control.
+
+    in_global_settings:
+        whether the global settings page lists this domain's configuration variables.
+        Domains with a settings page of their own set it to false; their variables
+        stay editable there and via the REST API.
 
     global_settings_permission:
         the permission needed to see or change this domain's configuration variables

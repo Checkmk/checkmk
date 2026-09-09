@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Mapping
-from typing import Annotated, Final
+from typing import Annotated
 
 from pydantic import AfterValidator
 
@@ -23,11 +23,12 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
-    ConfigDomainName,
     ConfigVariable,
+    EVENT_CONSOLE,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import (
+    is_available_in_global_settings,
     load_configuration_settings,
     make_global_settings_context,
     save_site_global_settings,
@@ -102,56 +103,27 @@ SITE_RW_PERMISSIONS = permissions.AllPerm(
 )
 
 
-# cmk.gui.mkeventd.config_domain.EVENT_CONSOLE; not imported, openapi does not depend on it
-_EVENT_CONSOLE_DOMAIN: Final[ConfigDomainName] = "ec"
+def _editable_global_setting(varname: str) -> str:
+    """Accepts any variable the global settings can edit, on whichever page.
 
+    A variable the edition deactivates is rejected here; save_global_settings() would
+    otherwise drop the write and the endpoint would report a success that changed nothing.
+    """
+    try:
+        config_variable = config_variable_registry[varname]
+    except KeyError:
+        raise ValueError(f"Unknown configuration variable: {varname!r}.") from None
 
-class GlobalSettingConverter:
-    @staticmethod
-    def _lookup(varname: str) -> ConfigVariable:
-        try:
-            config_variable = config_variable_registry[varname]
-        except KeyError:
-            raise ValueError(f"Unknown configuration variable: {varname!r}.") from None
+    if not is_available_in_global_settings(
+        config_variable,
+        default_values=ABCConfigDomain.get_all_default_globals(),
+        is_activated=get_global_config().global_settings.is_activated,
+    ):
+        raise ValueError(
+            f"The configuration variable {varname!r} is not available in the global settings."
+        )
 
-        try:
-            domain = config_variable.primary_domain()
-        except KeyError:
-            raise ValueError(
-                f"The configuration variable {varname!r} is not available in this edition."
-            ) from None
-
-        if not domain.enabled():
-            raise ValueError(
-                f"The configuration variable {varname!r} belongs to a component that is "
-                f"disabled on this site."
-            )
-
-        return config_variable
-
-    @staticmethod
-    def exists(varname: str) -> str:
-        """Accept any variable the global settings can edit, on whichever page.
-
-        Consults the variable's flag, not the domain's same-named one: that only says
-        whether a domain shows on the default page, which the Event Console clears even
-        though its variables are editable on their own page.
-
-        A variable the edition deactivates is rejected here; save_global_settings() would
-        otherwise drop the write and the endpoint would report a success that changed nothing.
-        """
-        config_variable = GlobalSettingConverter._lookup(varname)
-        if not config_variable.in_global_settings():
-            raise ValueError(
-                f"The configuration variable {varname!r} is not editable via global settings."
-            )
-
-        if not get_global_config().global_settings.is_activated(varname):
-            raise ValueError(
-                f"The configuration variable {varname!r} is not activated in this edition."
-            )
-
-        return varname
+    return varname
 
 
 def _permission_for_varname(varname: str) -> str:
@@ -194,7 +166,7 @@ def need_site_write_permission(varname: str) -> None:
 
 def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:
     """The sites a change has to be activated on; None means all activation sites."""
-    if config_variable.primary_domain().ident() == _EVENT_CONSOLE_DOMAIN:
+    if config_variable.primary_domain().ident() == EVENT_CONSOLE:
         return [site_id for site_id, _title in get_event_console_site_choices()]
 
     return None
@@ -219,7 +191,7 @@ SiteIdPathParam = Annotated[
 
 GlobalSettingVarName = Annotated[
     str,
-    AfterValidator(GlobalSettingConverter.exists),
+    AfterValidator(_editable_global_setting),
     PathParam(
         description="The name of a global setting. Event Console settings are addressed "
         "the same way, e.g. `log_level`.",

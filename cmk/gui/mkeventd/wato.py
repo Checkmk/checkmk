@@ -140,6 +140,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
+    EVENT_CONSOLE,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
@@ -236,7 +237,7 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 from ._rulespecs import RulespecLogwatchEC
-from .config_domain import ConfigDomainEventConsole, EVENT_CONSOLE
+from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
 from .helpers import action_choices, eventd_configuration, service_levels
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE

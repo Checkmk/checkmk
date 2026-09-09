@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
@@ -136,6 +136,26 @@ def make_global_settings_context(
         site_neutral_var_dir=site_neutral_path(var_dir),
         configured_sites=sites,
         configured_graph_timeranges=graph_timeranges,
+    )
+
+
+def is_available_in_global_settings(
+    config_variable: ConfigVariable,
+    *,
+    default_values: Mapping[str, object],
+    is_activated: Callable[[str], bool],
+) -> bool:
+    """Whether this site offers the variable for editing, on whichever settings page.
+
+    A variable without a factory default is unknown to this installation. is_activated is
+    the edition-specific activation check for a variable name.
+    """
+    varname = config_variable.ident()
+    return (
+        config_variable.in_global_settings()
+        and config_variable.primary_domain().enabled()
+        and varname in default_values
+        and is_activated(varname)
     )
 
 

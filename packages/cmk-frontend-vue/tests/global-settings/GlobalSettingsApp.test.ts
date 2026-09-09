@@ -493,6 +493,29 @@ describe('GlobalSettingsApp', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  test('a rejected toggle announces the server message as an alert', async () => {
+    server.use(
+      http.put(BOOLEAN_SETTING_URL, () =>
+        HttpResponse.json(
+          { title: 'Precondition failed', detail: 'ETag mismatch' },
+          { status: 412 }
+        )
+      )
+    )
+    render(GlobalSettingsApp, { props: { ...data, topics: [booleanTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Distributed monitoring' })
+    )
+    const inlineSwitch = screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })
+    inlineSwitch.focus()
+    await userEvent.keyboard(' ')
+
+    expect(await within(topic('Distributed monitoring')).findByRole('alert')).toHaveTextContent(
+      /ETag mismatch/
+    )
+    expect(inlineSwitch).toHaveFocus()
+  })
+
   test('a rejected save keeps the editor open and shows the server message', async () => {
     server.use(
       http.put(SETTING_URL, () =>

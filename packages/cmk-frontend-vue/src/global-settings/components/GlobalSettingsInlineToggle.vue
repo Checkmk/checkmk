@@ -55,7 +55,7 @@ async function toggle(): Promise<void> {
   >
     <CmkSwitch inert :model-value="checked" />
   </span>
-  <span v-if="state.variant === 'error'" class="global-settings-inline-toggle__error">
+  <span v-if="state.variant === 'error'" role="alert" class="global-settings-inline-toggle__error">
     {{ state.message }}
   </span>
 </template>

@@ -23,7 +23,7 @@ from tests.system.gui.testlib.playwright.pom.setup.global_settings import (
     SiteSpecificSettings,
 )
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 SOUNDS_SETTING = "Sounds in views"
 SOUNDS_VARNAME = "enable_sounds"

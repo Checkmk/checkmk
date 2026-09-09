@@ -12,7 +12,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.change_password import ChangePassword
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.testlib.site import ADMIN_USER, Site
+from tests.testlib.system.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
 

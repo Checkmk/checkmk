@@ -7,7 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 # The OMD config variable backing the "Enable MCP server" global setting. Setting
 # it to "on" and restarting the site is what ``ConfigDomainOMD`` does when the

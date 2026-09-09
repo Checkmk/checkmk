@@ -22,7 +22,7 @@ from urllib.parse import urljoin
 import pytest
 
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

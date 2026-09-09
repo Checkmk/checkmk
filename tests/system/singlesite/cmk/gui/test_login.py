@@ -17,8 +17,8 @@ from cmk.ccc.user import UserId
 from cmk.crypto.totp import TOTP
 from cmk.gui.type_defs import TotpCredential, TwoFactorCredentials
 from cmk.gui.userdb.session import generate_auth_hash
-from tests.testlib.site import ADMIN_USER, Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import ADMIN_USER, Site
+from tests.testlib.system.web_session import CMKWebSession
 
 
 @pytest.fixture(name="with_automation_user")

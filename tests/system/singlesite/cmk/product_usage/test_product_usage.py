@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
-from tests.testlib.site import Site
+from tests.testlib.system.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

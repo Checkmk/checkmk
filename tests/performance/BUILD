@@ -31,8 +31,8 @@ py_library(
         requirement("playwright"),
         requirement("pytest_benchmark"),
         requirement("cryptography"),
-        "//tests/testlib",
         "//tests/testlib/common",
+        "//tests/testlib/system",
     ],
 )
 

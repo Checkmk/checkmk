@@ -22,7 +22,7 @@ from tests.testlib.common.version import (
     edition_from_env,
     version_from_env,
 )
-from tests.testlib.package_manager import ABCPackageManager
+from tests.testlib.system.package_manager import ABCPackageManager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()

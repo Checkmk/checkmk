@@ -30,7 +30,7 @@ pytest.register_assert_rewrite(
 from tests.performance.perftest import PerformanceTest  # noqa: E402
 from tests.performance.sysmon import track_resources  # noqa: E402
 from tests.testlib.common.utils2 import is_containerized, run  # noqa: E402
-from tests.testlib.site import (  # noqa: E402
+from tests.testlib.system.site import (  # noqa: E402
     connection,
     get_site_factory,
     GlobalSettingsUpdate,

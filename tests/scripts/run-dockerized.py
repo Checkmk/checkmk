@@ -31,7 +31,7 @@ from tests.testlib.common.version import (
     edition_from_env,
     version_from_env,
 )
-from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
+from tests.testlib.system.script_helpers.dockerized_execution import execute_tests_in_container
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()

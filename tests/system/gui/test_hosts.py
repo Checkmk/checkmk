@@ -23,7 +23,7 @@ from tests.system.gui.testlib.playwright.pom.setup.hosts import (
     SetupHost,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

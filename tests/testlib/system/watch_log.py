@@ -12,7 +12,7 @@ from pathlib import Path
 
 from psutil import Process
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 class WatchLog:

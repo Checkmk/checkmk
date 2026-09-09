@@ -14,7 +14,7 @@ py_library(
         requirement("docker"),
         requirement("pytest"),
         "//tests/system:pkg_marker",
-        "//tests/testlib",
         "//tests/testlib/common",
+        "//tests/testlib/system",
     ],
 )

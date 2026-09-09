@@ -54,10 +54,14 @@ from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHo
 from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
-from tests.testlib.emails import EmailManager
-from tests.testlib.notifications import create_host, create_notification_host, NotificationTarget
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import (
+from tests.testlib.system.emails import EmailManager
+from tests.testlib.system.notifications import (
+    create_host,
+    create_notification_host,
+    NotificationTarget,
+)
+from tests.testlib.system.site import (
     ADMIN_USER,
     get_site_factory,
     Site,

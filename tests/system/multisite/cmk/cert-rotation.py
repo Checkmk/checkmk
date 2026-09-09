@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def _read_fingerprint(site: Site, cert: Path) -> str:

@@ -19,7 +19,7 @@ void main() {
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
-    // Use the directory also used by tests/testlib/containers.py to have it find
+    // Use the directory also used by tests/testlib/system/package_manager.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
     def make_target = "test-performance-docker";

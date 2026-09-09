@@ -36,7 +36,7 @@ from tests.system.singlesite.openapi.rules.helpers import (
     TestRuleConfig,
     verify_rule_conversion,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

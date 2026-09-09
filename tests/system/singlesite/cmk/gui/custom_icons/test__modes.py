@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from tests.testlib.site import PythonHelper, Site
+from tests.testlib.system.site import PythonHelper, Site
 
 
 def test_icon_modes(site: Site) -> None:

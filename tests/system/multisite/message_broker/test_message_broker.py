@@ -23,8 +23,8 @@ from tests.system.multisite.message_broker.utils import (
     timeout,
 )
 from tests.system.multisite.utils import await_broker_ready, Timeout
-from tests.testlib.site import Site
-from tests.testlib.tls import CMKTLSError, tls_connect
+from tests.testlib.system.site import Site
+from tests.testlib.system.tls import CMKTLSError, tls_connect
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_protobuf_api_implementation(site: Site) -> None:

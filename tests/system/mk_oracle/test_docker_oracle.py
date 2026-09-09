@@ -15,7 +15,7 @@ from tests.system.mk_oracle.test_plugin_comparison import (
     KNOWN_DEVIATIONS,
     run_old_plugin,
 )
-from tests.testlib.docker import copy_to_container
+from tests.testlib.system.docker import copy_to_container
 
 _SECTION_HEADER_RE = re.compile(r"^<<<([^>:]+)")
 

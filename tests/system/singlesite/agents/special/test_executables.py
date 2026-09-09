@@ -7,7 +7,7 @@ import subprocess
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @pytest.mark.skip(reason="Skipped due to CMK-17239")

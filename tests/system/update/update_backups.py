@@ -28,7 +28,7 @@ from tests.testlib.common.version import (
     CMKVersion,
     get_min_version,
 )
-from tests.testlib.site import SiteFactory
+from tests.testlib.system.site import SiteFactory
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

@@ -43,7 +43,7 @@ from tests.system.gui.testlib.playwright.pom.setup.predictive_level_helpers impo
 from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, makedirs
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

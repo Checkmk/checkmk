@@ -37,8 +37,8 @@ from tests.system.gui.testlib.playwright.pom.monitor.service_search import Servi
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_SLOW_DASHBOARD_LOAD_MS
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.graphing import InjectedRrd
-from tests.testlib.site import ADMIN_USER, Site
+from tests.testlib.system.graphing import InjectedRrd
+from tests.testlib.system.site import ADMIN_USER, Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
 SERVICE_WITH_GRAPHS = "Memory"

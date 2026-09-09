@@ -20,9 +20,9 @@ from tests.system.gui.testlib.playwright.pom.setup.notification_configuration im
 )
 from tests.system.gui.testlib.playwright.pom.setup.notification_rules import EditNotificationRule
 from tests.testlib.common.utils2 import run
-from tests.testlib.emails import EmailManager
-from tests.testlib.notifications import NotificationTarget
-from tests.testlib.site import Site
+from tests.testlib.system.emails import EmailManager
+from tests.testlib.system.notifications import NotificationTarget
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

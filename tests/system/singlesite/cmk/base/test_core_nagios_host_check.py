@@ -12,7 +12,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from tests.system.singlesite.linux_test_host import create_linux_test_host
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @contextmanager

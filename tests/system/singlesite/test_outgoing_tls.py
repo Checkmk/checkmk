@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
-from tests.testlib.tls import tls_connect, tls_listening_socket
+from tests.testlib.system.site import Site
+from tests.testlib.system.tls import tls_connect, tls_listening_socket
 
 TLS_VERSIONS = (
     ssl.TLSVersion.TLSv1,

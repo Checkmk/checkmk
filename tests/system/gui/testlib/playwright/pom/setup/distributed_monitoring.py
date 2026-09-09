@@ -17,7 +17,7 @@ from tests.system.gui.testlib.playwright.helpers import (
     url_suffix_regex,
 )
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
-from tests.testlib.openapi_session import UsersAPI
+from tests.testlib.system.openapi_session import UsersAPI
 
 logger = logging.getLogger(__name__)
 

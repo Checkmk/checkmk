@@ -56,7 +56,7 @@ from tests.performance.monitoring_views.scenarios import (
     PAGES,
 )
 from tests.performance.sysmon import get_process_group_usage
-from tests.testlib.site import ADMIN_USER, Site
+from tests.testlib.system.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
 

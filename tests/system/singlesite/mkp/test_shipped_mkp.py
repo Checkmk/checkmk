@@ -12,7 +12,7 @@ from typing import Self
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 from .lib import disable_extension, enable_extension
 

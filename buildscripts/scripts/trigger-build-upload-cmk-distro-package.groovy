@@ -37,7 +37,7 @@ void main() {
     def selected_fips_distros = [];
     def branch_name = safe_branch_name;
 
-    // Use the directory also used by tests/testlib/containers.py to have it find
+    // Use the directory also used by tests/testlib/system/package_manager.py to have it find
     // the downloaded package.
     def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique().sort();
     def fips_edition = "pro";

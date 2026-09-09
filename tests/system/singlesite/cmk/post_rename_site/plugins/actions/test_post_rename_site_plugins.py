@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 from . import prs_test_plugin
 

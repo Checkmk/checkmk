@@ -5,8 +5,8 @@
 
 import pytest
 
-from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
-from tests.testlib.site import Site, SiteFactory
+from tests.testlib.system.agent_hosts import piggyback_host_from_dummy_generator
+from tests.testlib.system.site import Site, SiteFactory
 
 
 @pytest.mark.skip_if_edition("community")

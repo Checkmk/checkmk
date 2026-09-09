@@ -16,7 +16,7 @@ from tests.system.gui.testlib.playwright.pom.setup.global_settings import (
     GlobalSettings,
     SiteSpecificSettings,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 HUB_SETTING = "Enable piggyback-hub"
 

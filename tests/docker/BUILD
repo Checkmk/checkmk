@@ -11,6 +11,6 @@ py_library(
         requirement("docker"),
         requirement("pytest"),
         requirement("requests"),
-        "//tests/testlib",
+        "//tests/testlib/system",
     ],
 )

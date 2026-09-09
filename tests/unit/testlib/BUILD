@@ -8,8 +8,8 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
-        "//tests/testlib:testlib_system_level",
         "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
         requirement("docker"),
         requirement("pytest-random-order"),
         requirement("psutil"),

@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from tests.testlib.https import HTTPSDummy
+from tests.testlib.system.https import HTTPSDummy
 
 
 class CMKTLSError(RuntimeError): ...

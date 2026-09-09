@@ -11,7 +11,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

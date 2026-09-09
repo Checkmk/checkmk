@@ -48,7 +48,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
-        "//tests/testlib",
+        "//tests/testlib/system",
     ],
 )
 

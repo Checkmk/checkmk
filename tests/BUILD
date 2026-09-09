@@ -22,7 +22,7 @@ py_library(
         requirement("pytest"),
         requirement("pytest-check"),
         requirement("pytest-metadata"),
-        "//tests/testlib",
         "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
     ],
 )

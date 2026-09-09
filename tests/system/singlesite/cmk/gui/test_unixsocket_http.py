@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_automation_helper_and_ui_job_scheduler_unaffected_by_proxies(site: Site) -> None:

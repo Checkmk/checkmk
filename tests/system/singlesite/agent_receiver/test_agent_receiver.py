@@ -17,8 +17,8 @@ from dateutil.relativedelta import relativedelta
 from cmk.crypto.certificate import CertificateSigningRequest, CertificateWithPrivateKey
 from cmk.crypto.keys import PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
-from tests.testlib.site import Site
-from tests.testlib.tls import CMKTLSError, tls_connect
+from tests.testlib.system.site import Site
+from tests.testlib.system.tls import CMKTLSError, tls_connect
 
 
 # Copied from tests/unit/agent_receiver/certs.py to make cmk-agent-receiver/tests self contained

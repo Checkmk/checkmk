@@ -32,7 +32,7 @@ from tests.testlib.common.utils2 import (
     is_containerized,
     run,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

@@ -29,8 +29,8 @@ py_library(
         "//cmk/gui:app",
         "//packages/cmk-wsgi",
         "//tests/system:pkg_marker",
-        "//tests/testlib",
         "//tests/testlib/common",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//cmk/gui/job_scheduler",

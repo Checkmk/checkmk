@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from cmk.mkp_tool import Manifest, PackageName, PackagePart, PackageVersion
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_mkp_help(site: Site) -> None:

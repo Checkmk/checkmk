@@ -51,7 +51,7 @@ from cmk.gui.graphing import ensure_type
 from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.rrd import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from cmk.utils.misc import pnp_cleanup
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

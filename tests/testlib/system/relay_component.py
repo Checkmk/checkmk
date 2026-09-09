@@ -39,7 +39,7 @@ import docker.models.networks
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.container_lifecycle import (
+from tests.testlib.system.container_lifecycle import (
     CONTAINER_READY_TIMEOUT,
     get_container_ip,
     wait_for_container_removed,

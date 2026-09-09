@@ -24,7 +24,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import ADMIN_USER, Site
+from tests.testlib.system.site import ADMIN_USER, Site
 
 # Its plug-in unit is degrees Celsius, so this is the metric the profile setting re-renders.
 _TEMPERATURE_METRIC: Final = "temp"

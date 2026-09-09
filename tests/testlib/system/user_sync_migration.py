@@ -25,7 +25,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Final, Literal, override, TypedDict
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

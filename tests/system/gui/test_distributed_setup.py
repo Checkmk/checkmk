@@ -21,7 +21,7 @@ from tests.system.gui.testlib.playwright.pom.setup.distributed_monitoring import
 )
 from tests.system.gui.testlib.playwright.pom.setup.hosts import HostProperties
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site, SiteFactory
+from tests.testlib.system.site import Site, SiteFactory
 
 
 @contextmanager

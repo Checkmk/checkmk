@@ -11,8 +11,8 @@ py_library(
         requirement("docker"),
         requirement("requests"),
         requirement("jinja2"),
-        "//tests/testlib",
         "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
     ],
 )
 

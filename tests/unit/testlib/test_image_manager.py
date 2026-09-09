@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Unit tests for :mod:`tests.testlib.image_manager`.
+"""Unit tests for :mod:`tests.testlib.system.image_manager`.
 
 Cover the four-step lookup priority of :py:meth:`ABCImageManager.get`:
     a. registry-form tag found locally
@@ -22,7 +22,7 @@ import docker.errors
 import pytest
 from docker import DockerClient
 
-from tests.testlib.image_manager import ABCImageManager, RelayImageManager
+from tests.testlib.system.image_manager import ABCImageManager, RelayImageManager
 
 _REGISTRY_REF = "registry.example/test-image:1.0"
 _LOCAL_TAG = "test-image:1.0"

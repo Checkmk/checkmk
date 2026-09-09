@@ -7,7 +7,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.system.site import get_site_factory, Site
 
 
 @pytest.fixture(name="plugin_validation_site", scope="session")

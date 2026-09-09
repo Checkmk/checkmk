@@ -11,8 +11,8 @@ from typing import Final
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from tests.testlib.site import Site
-from tests.testlib.watch_log import WatchLog
+from tests.testlib.system.site import Site
+from tests.testlib.system.watch_log import WatchLog
 
 
 @pytest.fixture(name="fake_notification_rule")

@@ -15,6 +15,6 @@ py_library(
         requirement("grequests"),
         requirement("multipart"),
         requirement("opentelemetry-instrumentation-requests"),
-        "//tests/testlib",
+        "//tests/testlib/system",
     ],
 )

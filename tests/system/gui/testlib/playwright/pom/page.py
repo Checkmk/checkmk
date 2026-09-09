@@ -14,7 +14,7 @@ from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES_MS
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

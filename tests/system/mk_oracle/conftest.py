@@ -22,7 +22,7 @@ import pytest
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.docker import (
+from tests.testlib.system.docker import (
     copy_to_container,
     get_container_ip,
     resolve_image_alias,

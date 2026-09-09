@@ -8,7 +8,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @pytest.fixture(name="disable_checks")

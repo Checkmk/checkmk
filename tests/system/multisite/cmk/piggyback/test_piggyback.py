@@ -22,7 +22,7 @@ from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
 )
 from tests.system.multisite.utils import await_broker_ready
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"

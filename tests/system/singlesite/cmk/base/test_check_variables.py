@@ -12,7 +12,7 @@ from cmk.checkengine.discovery import AutochecksSerializer
 from cmk.utils import paths
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.common.version import CMKEdition
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 # Test whether or not factory settings and checkgroup parameters work

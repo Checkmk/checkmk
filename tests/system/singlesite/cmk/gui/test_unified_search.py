@@ -10,8 +10,8 @@ import pytest
 from requests import Response
 
 from cmk.shared_typing.unified_search import ProviderName
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@
 from pathlib import Path
 from types import ModuleType
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def get_source_file(test_site: Site, module: ModuleType) -> Path:

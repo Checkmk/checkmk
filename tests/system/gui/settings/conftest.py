@@ -14,7 +14,7 @@ from tests.system.gui.settings.settings_files import (
     SITE_SPECIFIC_SETTINGS_REL_PATH,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site, SiteFactory
+from tests.testlib.system.site import Site, SiteFactory
 
 logger = logging.getLogger(__name__)
 

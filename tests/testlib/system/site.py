@@ -74,12 +74,12 @@ from tests.testlib.common.version import (
     TypeCMKEdition,
     version_from_env,
 )
-from tests.testlib.openapi_session import (
+from tests.testlib.system.openapi_session import (
     AgentReceiverApiSession,
     CMKOpenApiSession,
     UnexpectedResponse,
 )
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.web_session import CMKWebSession
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()

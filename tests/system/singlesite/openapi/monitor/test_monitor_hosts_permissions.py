@@ -27,8 +27,8 @@ import pytest
 import requests
 
 from cmk.ccc.hostaddress import HostName
-from tests.testlib.openapi_session import APIVersion
-from tests.testlib.site import Site
+from tests.testlib.system.openapi_session import APIVersion
+from tests.testlib.system.site import Site
 
 _CONTACT_GROUP = "cg-38731"
 _VISIBLE_HOST = HostName("h-seen-38731")

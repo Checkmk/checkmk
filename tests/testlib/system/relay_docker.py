@@ -22,16 +22,16 @@ import docker.models.volumes
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.container_lifecycle import (
+from tests.testlib.system.container_lifecycle import (
     CONTAINER_READY_TIMEOUT,
     wait_for_container_removed,
     wait_for_container_running,
 )
-from tests.testlib.container_lifecycle import (
+from tests.testlib.system.container_lifecycle import (
     get_container_ip as get_container_ip,
 )
-from tests.testlib.docker import CheckmkApp
-from tests.testlib.openapi_session import APIVersion
+from tests.testlib.system.docker import CheckmkApp
+from tests.testlib.system.openapi_session import APIVersion
 
 logger = logging.getLogger(__name__)
 

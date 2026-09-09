@@ -12,7 +12,7 @@ from collections.abc import Collection, Iterator
 from pathlib import Path
 from typing import NamedTuple
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 ldd_regex = re.compile(r"(\S+) => (\S+) \(0x[0-9a-f]+\)")
 not_found_regex = re.compile(r"(\S+) => not found")

@@ -16,7 +16,7 @@ from tests.system.update.helpers import (
 )
 from tests.testlib.common.utils2 import get_services_with_status
 from tests.testlib.common.version import TypeCMKEdition
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

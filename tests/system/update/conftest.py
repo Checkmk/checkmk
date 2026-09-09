@@ -20,14 +20,14 @@ from tests.system.update.helpers import (
     inject_rules,
     InteractiveModeDistros,
 )
-from tests.testlib.agent_dumps import get_dump_names, inject_dumps
 from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.common.version import (
     CMKEdition,
     edition_from_env,
     TypeCMKEdition,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.agent_dumps import get_dump_names, inject_dumps
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

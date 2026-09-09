@@ -19,7 +19,7 @@ import logging
 import pytest
 import requests
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 _OAUTH_METADATA_ENDPOINT_PATH = "oauth_authorization_server.py"
 _MCP_SERVER_CONFIG = "MCP_SERVER"

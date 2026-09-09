@@ -524,7 +524,7 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 def pytest_runtest_teardown(item: pytest.Item) -> None:
     """Teardown hook to report crashes after each test."""
     try:
-        from tests.testlib.site import Site
+        from tests.testlib.system.site import Site
     except ImportError:
         # Site class is not available during packaging tests for community edition
         return

@@ -20,7 +20,7 @@ from tests.system.gui.testlib.playwright.pom.setup.signature_keys import (
     SignatureKeysPage,
     UploadSignatureKeyPage,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

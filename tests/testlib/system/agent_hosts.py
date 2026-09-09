@@ -14,15 +14,15 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import NamedTuple
 
-from tests.testlib.agent_dumps import (
+from tests.testlib.common.repo import qa_test_data_path
+from tests.testlib.system.agent_dumps import (
     copy_dumps,
     dummy_agent_dump_generator,
     read_disk_dump,
     read_piggyback_hosts_from_dump,
 )
-from tests.testlib.common.repo import qa_test_data_path
-from tests.testlib.dcd import dcd_connector, execute_dcd_cycle
-from tests.testlib.site import Site
+from tests.testlib.system.dcd import dcd_connector, execute_dcd_cycle
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

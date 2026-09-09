@@ -16,7 +16,7 @@ from tests.system.gui.testlib.host_details import AddressFamily, AgentAndApiInte
 from tests.system.gui.testlib.playwright.pom.monitor.bi_all_aggregations import AllAggregations
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

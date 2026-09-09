@@ -24,7 +24,7 @@ from faker import Faker  # type: ignore[import-not-found,unused-ignore]
 
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import run
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

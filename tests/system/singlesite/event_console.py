@@ -9,7 +9,7 @@
 import socket
 from typing import Any
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 class CMKEventConsole:

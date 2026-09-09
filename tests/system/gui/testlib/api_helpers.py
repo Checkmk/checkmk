@@ -14,7 +14,7 @@ from contextlib import contextmanager
 
 from tests.system.gui.testlib.host_details import HostDetails
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 LOCALHOST_IPV4 = "127.0.0.1"

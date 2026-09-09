@@ -28,7 +28,7 @@ from tests.testlib.common.version import (
     get_min_version,
     TypeCMKEdition,
 )
-from tests.testlib.site import Site, SiteFactory
+from tests.testlib.system.site import Site, SiteFactory
 
 MODULE_PATH = Path(__file__).parent.resolve()
 RULES_DIR = MODULE_PATH / "rules"

@@ -15,7 +15,7 @@ import pytest
 from semver import VersionInfo
 
 from tests.testlib.common.repo import repo_path
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 ImportName = NewType("ImportName", "str")
 

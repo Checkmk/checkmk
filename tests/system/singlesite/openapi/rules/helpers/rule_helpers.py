@@ -23,7 +23,7 @@ from tests.system.singlesite.openapi.rules.helpers.rule_configs import (
     DEFAULT_PERIOD,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

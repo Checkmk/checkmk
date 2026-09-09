@@ -16,7 +16,7 @@ import pytest
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import run
 from tests.testlib.common.version import CMKPackageInfo, edition_from_env, version_from_env
-from tests.testlib.site import Site, SiteFactory
+from tests.testlib.system.site import Site, SiteFactory
 
 
 def _ensure_cloud_initial_config() -> None:

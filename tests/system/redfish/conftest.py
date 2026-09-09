@@ -15,7 +15,7 @@ import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from cmk.ccc.hostaddress import HostName
-from tests.testlib.site import (
+from tests.testlib.system.site import (
     get_site_factory,
     Site,
     tracing_config_from_env,

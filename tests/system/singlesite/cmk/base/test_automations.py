@@ -18,7 +18,7 @@ from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 from tests.testlib.common.utils2 import get_standard_linux_agent_output
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

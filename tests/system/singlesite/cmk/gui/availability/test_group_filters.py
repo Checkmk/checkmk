@@ -18,9 +18,9 @@ from urllib.parse import unquote
 import pytest
 from bs4 import BeautifulSoup
 
-from tests.testlib.openapi_session import UnexpectedResponse
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.openapi_session import UnexpectedResponse
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 logger = logging.getLogger(__name__)
 

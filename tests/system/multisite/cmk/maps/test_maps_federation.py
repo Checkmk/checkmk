@@ -37,8 +37,8 @@ import pytest
 import requests
 
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 _MAPS_SETTINGS_PATH = Path("etc/check_mk/maps.d/wato/global.mk")
 

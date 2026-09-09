@@ -8,7 +8,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.system.multisite.utils import enable_rabbitmq_tracing
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]

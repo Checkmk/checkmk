@@ -27,7 +27,7 @@ from cmk.ec.config import (  # astrein: disable=cmk-module-layer-violation
     State,
 )
 from cmk.gui.watolib.site_changes import ChangeSpec  # astrein: disable=cmk-module-layer-violation
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

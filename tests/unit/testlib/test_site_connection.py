@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from tests.testlib.common.version import CMKVersion
-from tests.testlib.site import connection, Site
+from tests.testlib.system.site import connection, Site
 
 
 def _site(site_id: str) -> MagicMock:

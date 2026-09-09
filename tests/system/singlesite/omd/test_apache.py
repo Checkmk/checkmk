@@ -9,8 +9,8 @@ import uuid
 import pytest
 import requests
 
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 
 def test_http_methods(site: Site) -> None:

@@ -22,7 +22,7 @@ from tests.testlib.common.version import (
     get_min_version,
     version_from_env,
 )
-from tests.testlib.docker import (
+from tests.testlib.system.docker import (
     build_checkmk,
     build_path,
     CheckmkApp,

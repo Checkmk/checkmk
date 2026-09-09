@@ -5,7 +5,7 @@
 
 import os
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_init_scripts(site: Site) -> None:

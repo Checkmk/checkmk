@@ -43,8 +43,12 @@ from tests.testlib.common.version import (
     edition_from_env,
     version_from_env,
 )
-from tests.testlib.openapi_session import AgentReceiverApiSession, APIVersion, CMKOpenApiSession
-from tests.testlib.package_manager import ABCPackageManager
+from tests.testlib.system.openapi_session import (
+    AgentReceiverApiSession,
+    APIVersion,
+    CMKOpenApiSession,
+)
+from tests.testlib.system.package_manager import ABCPackageManager
 
 logger = logging.getLogger()
 

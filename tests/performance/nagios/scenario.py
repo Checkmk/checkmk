@@ -11,7 +11,7 @@ from pathlib import Path
 from tests.performance.perftest import PerformanceTest
 from tests.performance.sysmon import track_resources
 from tests.testlib.common.utils2 import check_output
-from tests.testlib.site import PythonHelper
+from tests.testlib.system.site import PythonHelper
 
 logger = logging.getLogger(__name__)
 

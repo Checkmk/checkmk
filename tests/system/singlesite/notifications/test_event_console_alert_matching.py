@@ -11,7 +11,7 @@ import pytest
 from cmk.automations import results
 from cmk.automations.results import SerializedResult
 from cmk.ccc.hostaddress import HostName
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 _RULE_DESCRIPTION = "Do not match Event Console alerts"
 

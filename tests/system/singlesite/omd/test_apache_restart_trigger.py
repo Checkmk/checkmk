@@ -10,7 +10,7 @@ from subprocess import run as subprocess_run
 import pytest
 
 from tests.testlib.common.utils2 import run
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

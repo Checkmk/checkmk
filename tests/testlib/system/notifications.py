@@ -12,7 +12,7 @@ from typing import NamedTuple
 from cmk.livestatus_client import MKLivestatusException
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

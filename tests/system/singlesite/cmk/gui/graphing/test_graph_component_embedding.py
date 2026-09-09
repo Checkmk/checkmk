@@ -18,7 +18,7 @@ separate fetch_data call - neither needs a site. See
 
 import pytest
 
-from tests.testlib.graphing import SKIP_PENDING_GRAPH_BACKEND
+from tests.testlib.system.graphing import SKIP_PENDING_GRAPH_BACKEND
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)

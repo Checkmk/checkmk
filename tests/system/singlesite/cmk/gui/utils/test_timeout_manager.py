@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import PythonHelper, Site
+from tests.testlib.system.site import PythonHelper, Site
 
 
 @pytest.mark.parametrize("test_name", ["raises_timeout", "disable"])

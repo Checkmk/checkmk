@@ -21,9 +21,12 @@ from typing import Final
 
 import pytest
 
+from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import logger, run
 from tests.testlib.common.version import CMKVersion, get_min_version
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
+
+DUMMY_AGENT_DUMP_GENERATOR_PATH = repo_path() / "tests/scripts/dummy_agent_dump_generator.py"
 
 
 def create_agent_dump_rule(
@@ -269,8 +272,7 @@ def dummy_agent_dump_generator(
         rule_folder: The host folder in the site to create the program call rule in.
         cleanup: Specifies if the program call rule is cleaned up at the end.
     """
-    source_path = Path(__file__).parent.parent / "scripts/dummy_agent_dump_generator.py"
-    with site.copy_file(source_path, "dump_generator.py") as target_path:
+    with site.copy_file(DUMMY_AGENT_DUMP_GENERATOR_PATH, "dump_generator.py") as target_path:
         # Use a tilde path so that the script can be run in a copied site
         tilde_path = f"~/{target_path.relative_to(site.root).as_posix()}"
 

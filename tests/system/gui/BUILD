@@ -29,9 +29,9 @@ py_library(
         requirement("pytest_playwright"),
         requirement("clickhouse_connect"),
         "//tests/system:pkg_marker",
-        "//tests/testlib",
         "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//cmk/gui/nonfree/pro",

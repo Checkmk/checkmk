@@ -7,7 +7,7 @@ import os
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_basic_commands(site: Site) -> None:

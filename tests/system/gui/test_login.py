@@ -18,7 +18,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import ProblemDashboard
 from tests.testlib.common.utils2 import is_containerized
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @pytest.fixture(name="tmp_path_module", scope="module")

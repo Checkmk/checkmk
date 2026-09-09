@@ -8,7 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.agent_download import _utils
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @pytest.mark.skip_if_faked_artifacts

@@ -15,7 +15,7 @@ Lookup order for a given version ``X`` (see :py:meth:`ABCImageManager.get`):
 Each step returns its own tag form unchanged — no retagging — so ``docker images``
 keeps the provenance visible.
 
-Mirrors :mod:`tests.testlib.package_manager`: the abstract class encodes the
+Mirrors :mod:`tests.testlib.system.package_manager`: the abstract class encodes the
 orchestration in :py:meth:`ABCImageManager.get`; concrete subclasses declare
 only the image-specific bits.
 """

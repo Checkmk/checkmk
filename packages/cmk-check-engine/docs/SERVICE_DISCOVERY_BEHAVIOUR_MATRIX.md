@@ -1959,7 +1959,7 @@ no-op passed. Harness in the session scratchpad, not committed.
 
 Uses the existing `central_site` / `remote_site` session fixtures. One identically-configured host
 per site (same agent output, so the same preview), everything driven through the REST API **on the
-central site**. `ServiceDiscoveryAPI` in `tests/testlib/openapi_session.py` carries
+central site**. `ServiceDiscoveryAPI` in `tests/testlib/system/openapi_session.py` carries
 `run_discovery`, `run_discovery_and_wait_for_completion`, `get_discovery_result`,
 `get_discovery_status`, `get_discovery_job_status` and — added with this tier —
 `update_service_phase`.

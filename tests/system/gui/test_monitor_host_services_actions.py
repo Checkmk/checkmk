@@ -29,7 +29,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.host_services_experimental 
     HostServicesExperimental,
 )
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

@@ -24,7 +24,7 @@ from cmk.base.automation_helper._config import (
 from cmk.ruleset_matcher.definition import RuleGroup
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_config_reloading_without_reloader(site: Site) -> None:

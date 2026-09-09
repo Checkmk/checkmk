@@ -17,7 +17,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.change_password import ChangePassword
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_v2_1_5(

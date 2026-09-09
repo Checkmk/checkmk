@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 from cmk.licensing.export import RawLicenseUsageReport
 from cmk.licensing.helper import rot47
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 LOGGER = logging.getLogger(__name__)
 

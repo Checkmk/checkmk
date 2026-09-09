@@ -10,9 +10,9 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from tests.testlib.common.utils2 import ServiceInfo
-from tests.testlib.https import HTTPSDummy
-from tests.testlib.openapi_session import UnexpectedResponse
-from tests.testlib.site import Site
+from tests.testlib.system.https import HTTPSDummy
+from tests.testlib.system.openapi_session import UnexpectedResponse
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

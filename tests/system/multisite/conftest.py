@@ -18,14 +18,14 @@ import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.system.multisite.utils import get_cre_agent_path
-from tests.testlib.agent import (
+from tests.testlib.common.utils2 import is_containerized, run
+from tests.testlib.system.agent import (
     agent_controller_daemon,
     bake_agents,
     download_and_install_agent_package,
     install_agent_package,
 )
-from tests.testlib.common.utils2 import is_containerized, run
-from tests.testlib.site import (
+from tests.testlib.system.site import (
     connection,
     get_site_factory,
     GlobalSettingsUpdate,

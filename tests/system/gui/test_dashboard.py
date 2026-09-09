@@ -38,7 +38,7 @@ from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar impor
     VisualizationType,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 # Carried by every agent host and reporting the metric the graph widget draws.
 _GRAPH_WIDGET_SERVICE = "Check_MK"

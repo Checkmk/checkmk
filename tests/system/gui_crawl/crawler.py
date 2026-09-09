@@ -24,7 +24,7 @@ from lxml import etree
 from playwright.async_api import async_playwright
 
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger()
 

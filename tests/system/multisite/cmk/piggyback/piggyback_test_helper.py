@@ -13,7 +13,7 @@ from types import FrameType
 from typing import Final, IO, Literal
 
 from tests.testlib.common.utils2 import ServiceInfo
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 CMK_TRACK_TIMEOUT: Final = 30  # secs
 

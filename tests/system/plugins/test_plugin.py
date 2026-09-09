@@ -28,15 +28,6 @@ def test_plugin(
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
 ) -> None:
-    skipped_dumps = {
-        "agent-2.2.0p14-windows-veeam-backup": (
-            "SUP-30173; the canon in qa-test-data still expects UNKNOWN for a Veeam job "
-            "awaiting its first run, werk 22291 reports it as OK."
-        ),
-    }
-    if reason := skipped_dumps.get(host_name):
-        pytest.skip(reason=reason)
-
     with (
         setup_host(test_site, host_name)
         if not pytestconfig.getoption(name="--bulk-mode")

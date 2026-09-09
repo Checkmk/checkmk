@@ -12,6 +12,7 @@ from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils import roles
 
+from ._check_credentials import user_exists
 from ._user_attribute import UserAttribute
 from .store import load_users, update_user
 
@@ -26,6 +27,11 @@ def on_failed_login(
     lock_on_logon_failures: int | None,
     log_logon_failures: bool,
 ) -> None:
+    if not lock_on_logon_failures:
+        if log_logon_failures:
+            _log_failed_login(username, "Yes" if user_exists(username) else "No", "N/A", "N/A")
+        return
+
     all_users = load_users(lock=True)
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
@@ -34,7 +40,6 @@ def on_failed_login(
 
     if log_logon_failures:
         if user:
-            existing = "Yes"
             log_msg_until_locked = str(bool(lock_on_logon_failures) - user["num_failed_logins"])
             if not user["locked"]:
                 log_msg_locked = "No"
@@ -42,18 +47,22 @@ def on_failed_login(
                 log_msg_locked = "Yes (now)"
             else:
                 log_msg_locked = "Yes"
+            _log_failed_login(username, "Yes", log_msg_locked, log_msg_until_locked)
         else:
-            existing = "No"
-            log_msg_until_locked = "N/A"
-            log_msg_locked = "N/A"
-        auth_logger.warning(
-            "Login failed for username: %s (existing: %s, locked: %s, failed logins until locked: %s), client: %s",
-            username,
-            existing,
-            log_msg_locked,
-            log_msg_until_locked,
-            request.remote_ip,
-        )
+            _log_failed_login(username, "No", "N/A", "N/A")
+
+
+def _log_failed_login(
+    username: UserId, existing: str, locked: str, failed_logins_until_locked: str
+) -> None:
+    auth_logger.warning(
+        "Login failed for username: %s (existing: %s, locked: %s, failed logins until locked: %s), client: %s",
+        username,
+        existing,
+        locked,
+        failed_logins_until_locked,
+        request.remote_ip,
+    )
 
 
 def _increment_failed_logins_and_lock(user: UserSpec, lock_on_logon_failures: int | None) -> None:

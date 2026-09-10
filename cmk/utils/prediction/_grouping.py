@@ -28,16 +28,6 @@ class PeriodInfo(NamedTuple):
     groupby: Callable[[int], tuple[Timegroup, int]]
 
 
-def is_dst(timestamp: float) -> bool:
-    """Check wether a certain time stamp lies with in daylight saving time (DST)"""
-    return bool(time.localtime(timestamp).tm_isdst)
-
-
-def timezone_at(timestamp: float) -> int:
-    """Returns the timezone *including* DST shift at a certain point of time"""
-    return time.altzone if is_dst(timestamp) else time.timezone
-
-
 def _second_of_hour(t: time.struct_time) -> int:
     return t.tm_min * 60 + t.tm_sec
 

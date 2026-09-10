@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ._grouping import PREDICTION_PERIODS, Timegroup, timezone_at
 from ._plugin_interface import estimate_levels, make_updated_predictions
 from ._prediction import DataStat, MetricRecord, PredictionData, PredictionStore
 
@@ -14,8 +13,5 @@ __all__ = [
     "make_updated_predictions",
     "MetricRecord",
     "PredictionData",
-    "PREDICTION_PERIODS",
     "PredictionStore",
-    "Timegroup",
-    "timezone_at",
 ]

@@ -30,6 +30,7 @@ py_library(
         "//cmk/gui/watolib:registries",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",

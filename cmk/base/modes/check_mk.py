@@ -970,7 +970,7 @@ mode_dump = Mode(
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
-def _fail_with_deprecation_msg(argv: list[str]) -> Literal[1]:
+def _fail_with_deprecation_msg(_app: object, argv: Sequence[str]) -> Literal[1]:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
     return 1
 

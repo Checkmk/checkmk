@@ -18,6 +18,7 @@ PS_DISCOVERY_RULE_NAME = RuleGroup.DiscoveryParameters("inventory_processes_rule
 _NEW_DEFAULT_RULE_IDS = frozenset(
     [
         "9c90e72e-443e-4400-8374-cd4f9d9fdbf5",  # mcp-server
+        "e7083f95-5ee1-4814-bdba-d7c1fbbff57d",  # agent-engine
     ]
 )
 EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"

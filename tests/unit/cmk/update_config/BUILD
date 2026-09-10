@@ -37,6 +37,7 @@ py_cmk_test(
         "//cmk/update_config",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-plugins/cmk/plugins/lib",
         "//packages/cmk-werks:site",
         "//packages/cmk-wsgi",
         "//tests/unit:conftest",

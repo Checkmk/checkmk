@@ -255,7 +255,6 @@ def _paint_time_graph_cmk(
     )
 
     return "", _render_engine_graph_group(
-        row,
         graph_specification,
         display_config,
         graph_size=graph_size,
@@ -266,7 +265,6 @@ def _paint_time_graph_cmk(
 
 
 def _render_engine_graph_group(
-    row: Row,
     graph_specification: TemplateGraphSpecification,
     display_config: GraphDisplayConfigHTML,
     *,
@@ -278,8 +276,6 @@ def _render_engine_graph_group(
     """Render the graph-engine (Vue) graph group for a row's template graphs."""
     return render_engine_graph_group(
         graph_specification,
-        host_name=row["host_name"],
-        service_name=row.get("service_description", "_HOST_"),
         size=Size(
             width=graph_size[0],
             height=graph_size[1],

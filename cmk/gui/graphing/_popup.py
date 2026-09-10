@@ -50,8 +50,6 @@ def host_service_graph_popup_cmk(
                 host_name=host_name,
                 service_name=service_description,
             ),
-            host_name=host_name,
-            service_name=service_description,
             size=Size(width=popup_size[0], height=popup_size[1], mode="fixed"),
             time_range=(start_time, end_time),
             interaction=_HOVER_INTERACTION,

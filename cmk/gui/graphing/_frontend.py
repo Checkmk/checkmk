@@ -292,8 +292,6 @@ class EngineDisplayOptions:
 def render_engine_graph_group(
     specification: TemplateGraphSpecification,
     *,
-    host_name: str,
-    service_name: str,
     size: Size,
     time_range: tuple[int, int],
     show_graph_time: bool,
@@ -313,8 +311,8 @@ def render_engine_graph_group(
         registered_graphs=engine_plugins.registered_graphs(),
         registered_metrics=engine_plugins.registered_metrics(),
         fetch_metric_names=RRDFetchMetricNames(
-            host_name=EngineHostName(host_name),
-            service_name=EngineServiceName(service_name),
+            host_name=EngineHostName(str(specification.host_name)),
+            service_name=EngineServiceName(str(specification.service_description)),
             debug=debug,
             site_id=specification.site,
             registered_translations=engine_plugins.registered_translations(),

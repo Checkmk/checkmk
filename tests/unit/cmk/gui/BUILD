@@ -152,6 +152,7 @@ py_cmk_test(
         "deballast-keep=//cmk/gui/wato:wato",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
         "deballast-keep=//cmk/utils:redis",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
         "deballast-keep=//omd/packages/omd:omdlib",  # loaded at runtime by test fixtures (inline_background_jobs / parent-scan jobs)
+        "deballast-keep=//packages/cmk-plugins/cmk/plugins/kube:kube",  # rulesets loaded at runtime for Kubernetes Quick Setup persistence tests
     ],
     use_project_pytest_config = True,
     deps = [
@@ -209,6 +210,7 @@ py_cmk_test(
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugins:azure_deprecated",
+        "//packages/cmk-plugins:kube",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",

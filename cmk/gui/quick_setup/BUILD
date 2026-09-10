@@ -12,6 +12,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/automations",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -38,6 +39,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
         "//packages/cmk-licensing",
+        "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:azure_deprecated",

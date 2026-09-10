@@ -16,11 +16,14 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
-from cmk.gui.watolib.global_settings import load_configuration_settings, need_read_permission
+from cmk.gui.watolib.global_settings import (
+    effective_value,
+    load_configuration_settings,
+    need_read_permission,
+)
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
-    effective_value,
     form_spec_of,
     global_setting_etag,
     GlobalSettingVarName,

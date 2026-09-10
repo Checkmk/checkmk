@@ -18,19 +18,19 @@ from cmk.gui.openapi.restful_objects.constructors import sub_object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
+    effective_site_value,
     global_settings_diff_text,
     need_site_write_permission,
 )
+from cmk.gui.watolib.sites import load_site_globals
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
-    effective_site_value,
     form_spec_of,
     global_settings_context_of,
     GlobalSettingVarName,
     load_configured_sites,
-    load_site_globals,
     make_pending_changes,
     save_site_setting,
     site_global_setting_etag,

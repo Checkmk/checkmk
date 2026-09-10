@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping
 from typing import Annotated
 
 from pydantic import AfterValidator
@@ -16,26 +15,27 @@ from cmk.gui.global_config import get_global_config
 from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariable,
-    EVENT_CONSOLE,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import (
     is_available_in_global_settings,
-    load_configuration_settings,
     make_global_settings_context,
-    save_site_global_settings,
 )
 from cmk.gui.watolib.global_settings import (
     make_pending_changes as make_setup_pending_changes,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import PendingChanges
-from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
+from cmk.gui.watolib.sites import (
+    save_site_globals,
+    site_globals_editable,
+    site_management_registry,
+)
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
@@ -79,14 +79,6 @@ def _editable_global_setting(varname: str) -> str:
         )
 
     return varname
-
-
-def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:
-    """The sites a change has to be activated on; None means all activation sites."""
-    if config_variable.primary_domain().ident() == EVENT_CONSOLE:
-        return [site_id for site_id, _title in get_event_console_site_choices()]
-
-    return None
 
 
 def _site_globals_editable(value: str) -> SiteId:
@@ -180,38 +172,8 @@ def site_global_setting_etag(
     )
 
 
-def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
-    """The value in effect and whether it is the built-in default.
-
-    Writers pass the same mapping they later hand to save_global_settings(), which
-    rewrites the whole file, so they need a mutable copy of it.
-    """
-    if varname in settings:
-        return settings[varname], False
-
-    return ABCConfigDomain.get_all_default_globals()[varname], True
-
-
 def load_configured_sites() -> SiteConfigurations:
     return site_management_registry["site_management"].load_sites()
-
-
-def load_site_globals(sites: SiteConfigurations, site_id: SiteId) -> dict[str, object]:
-    """The site's own overrides, as a copy that writers may mutate before saving."""
-    return dict(sites[site_id].get("globals", {}))
-
-
-def effective_site_value(site_globals: Mapping[str, object], varname: str) -> tuple[object, bool]:
-    """The value in effect for the site and whether it comes from outside the site.
-
-    Without an override the site inherits the central value, which in turn falls back
-    to the built-in default.
-    """
-    if varname in site_globals:
-        return site_globals[varname], False
-
-    value, _is_built_in_default = effective_value(load_configuration_settings(), varname)
-    return value, True
 
 
 def save_site_setting(
@@ -220,18 +182,16 @@ def save_site_setting(
     site_globals: dict[str, object],
     api_context: ApiContext,
 ) -> None:
-    configured_sites[site_id]["globals"] = site_globals
-    site_management_registry["site_management"].save_sites(
-        make_folder_tree(api_context.config),
+    save_site_globals(
+        site_id,
         configured_sites,
-        activate=False,
+        site_globals,
+        tree=make_folder_tree(api_context.config),
         pprint_value=api_context.config.wato_pprint_config,
         liveproxyd_enabled=api_context.config.liveproxyd_enabled,
         use_git=api_context.config.wato_use_git,
         acting_user_id=api_context.user.id,
     )
-    if site_id == omd_site():
-        save_site_global_settings(site_globals)
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:

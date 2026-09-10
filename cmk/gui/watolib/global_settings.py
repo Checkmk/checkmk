@@ -13,12 +13,14 @@ from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings, GraphTimerange
+from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import LogMessage, make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariable,
+    EVENT_CONSOLE,
     GlobalSettingsContext,
     UNREGISTERED_SETTINGS,
 )
@@ -64,6 +66,14 @@ def _need_executables_permission(config_variable: ConfigVariable) -> None:
         user.need_permission("wato.add_or_modify_executables")
 
 
+def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:
+    """The sites a change has to be activated on; None means all activation sites."""
+    if config_variable.primary_domain().ident() == EVENT_CONSOLE:
+        return [site_id for site_id, _title in get_event_console_site_choices()]
+
+    return None
+
+
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
 ) -> GlobalSettings:
@@ -76,6 +86,31 @@ def load_configuration_settings(
         else:
             settings.update(domain.load())
     return settings
+
+
+def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
+    """The value in effect and whether it is the built-in default.
+
+    Writers pass the same mapping they later hand to save_global_settings(), which
+    rewrites the whole file, so they need a mutable copy of it.
+    """
+    if varname in settings:
+        return settings[varname], False
+
+    return ABCConfigDomain.get_all_default_globals()[varname], True
+
+
+def effective_site_value(site_globals: Mapping[str, object], varname: str) -> tuple[object, bool]:
+    """The value in effect for the site and whether it comes from outside the site.
+
+    Without an override the site inherits the central value, which in turn falls back
+    to the built-in default.
+    """
+    if varname in site_globals:
+        return site_globals[varname], False
+
+    value, _is_built_in_default = effective_value(load_configuration_settings(), varname)
+    return value, True
 
 
 def save_global_settings(

@@ -6,10 +6,15 @@
 import pytest
 
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable
+from cmk.gui.session_context import SuperUserContext
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariable,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
-from cmk.gui.watolib.global_settings import is_available_in_global_settings
+from cmk.gui.watolib.global_settings import affected_sites, is_available_in_global_settings
 from cmk.rulesets.v1.form_specs import Integer
 from tests.testlib.gui.web_test_app import SetConfig
 
@@ -78,3 +83,13 @@ def test_variable_of_a_domain_outside_the_main_page_is_available(set_config: Set
             default_values=DEFAULTS,
             is_activated=_always_activated,
         )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_affected_sites_of_an_event_console_variable() -> None:
+    with SuperUserContext():
+        assert affected_sites(config_variable_registry["log_level"]) == ["NO_SITE"]
+
+
+def test_affected_sites_of_an_ordinary_variable() -> None:
+    assert affected_sites(config_variable_registry["wato_max_snapshots"]) is None

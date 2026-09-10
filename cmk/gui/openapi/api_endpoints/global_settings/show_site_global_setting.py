@@ -15,15 +15,14 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import sub_object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
-from cmk.gui.watolib.global_settings import need_site_read_permission
+from cmk.gui.watolib.global_settings import effective_site_value, need_site_read_permission
+from cmk.gui.watolib.sites import load_site_globals
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
-    effective_site_value,
     form_spec_of,
     GlobalSettingVarName,
     load_configured_sites,
-    load_site_globals,
     site_global_setting_etag,
     SITE_RO_PERMISSIONS,
     SiteIdPathParam,

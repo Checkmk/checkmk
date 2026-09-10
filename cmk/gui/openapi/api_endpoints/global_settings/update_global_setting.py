@@ -19,6 +19,8 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
+    affected_sites,
+    effective_value,
     global_settings_diff_text,
     load_configuration_settings,
     need_write_permission,
@@ -28,8 +30,6 @@ from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
-    affected_sites,
-    effective_value,
     form_spec_of,
     global_setting_etag,
     global_settings_context_of,

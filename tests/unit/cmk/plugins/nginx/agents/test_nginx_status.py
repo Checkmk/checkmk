@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.plugins.nginx.agents import nginx_status
 
 
@@ -89,7 +87,6 @@ class TestExtractStatsFromIproute2:
             ("http", "127.0.0.1", 80),
         ]
 
-    @pytest.mark.xfail(reason="CMK-38256", strict=True, raises=ValueError)
     def test_with_socket_without_process(self) -> None:
         # Kernel-owned sockets (e.g. nfsd) have no process column in `ss -tlnp`.
         lines = [

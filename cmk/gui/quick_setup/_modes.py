@@ -31,6 +31,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.permissions import permission_registry
+from cmk.gui.quick_setup.config_setups.kubernetes.constants import (
+    QUICK_SETUP_ID as KUBERNETES_QUICK_SETUP_ID,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult
@@ -104,6 +107,7 @@ def register(
     main_module_registry.register(MainModuleQuickSetupAzureV2)
     main_module_registry.register(MainModuleQuickSetupGCP)
     main_module_registry.register(MainModuleQuickSetupProxmoxVE)
+    main_module_registry.register(MainModuleQuickSetupKubernetes)
 
 
 MainModuleTopicQuickSetup = MainModuleTopic(
@@ -738,6 +742,43 @@ class MainModuleQuickSetupProxmoxVE(ABCMainModuleQuickSetup):
     @override
     def main_menu_search_terms(cls) -> Sequence[str]:
         return ["proxmox", "proxmox_ve"]
+
+
+class MainModuleQuickSetupKubernetes(ABCMainModuleQuickSetup):
+    @property
+    @override
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
+    @property
+    @override
+    def mode_or_url(self) -> str:
+        return mode_url(ModeEditConfigurationBundles.name(), varname=KUBERNETES_QUICK_SETUP_ID)
+
+    @property
+    @override
+    def title(self) -> str:
+        return _("Kubernetes")
+
+    @property
+    @override
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.kubernetes)
+
+    @property
+    @override
+    def description(self) -> str:
+        return _("Configure Kubernetes monitoring using the in-cluster agent")
+
+    @property
+    @override
+    def sort_index(self) -> int:
+        return 15
+
+    @classmethod
+    @override
+    def main_menu_search_terms(cls) -> Sequence[str]:
+        return ["kubernetes", "k8s", "cluster"]
 
 
 class EditDCDConnection(Protocol):

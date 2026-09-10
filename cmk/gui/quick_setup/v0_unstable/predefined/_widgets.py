@@ -38,6 +38,8 @@ from cmk.rulesets.v1.form_specs import (
 def unique_id_formspec_wrapper(
     title: Title,
     prefill_template: str = "unique_id",
+    *,
+    help_text: Help | None = None,
 ) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId(UniqueFormSpecIDStr),
@@ -46,6 +48,7 @@ def unique_id_formspec_wrapper(
                 UniqueBundleIDStr: DictElement(
                     parameter_form=String(
                         title=title,
+                        help_text=help_text,
                         field_size=FieldSize.MEDIUM,
                         custom_validate=id_validators(
                             Message("%(title)s is required but not specified.")

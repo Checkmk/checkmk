@@ -665,6 +665,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.gui.nonfree.pro"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_FLAGS,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
         *PACKAGE_MKP_TOOL,

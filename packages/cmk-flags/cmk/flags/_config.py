@@ -77,6 +77,21 @@ class ReleaseFlagConfig(BaseModel):
         ),
     ] = False
 
+    exp_ai_assistant: Annotated[
+        bool,
+        release_field(
+            description=(
+                "Show the settings for Checkmk's AI assistant, starting with the "
+                "toggle for the AI agent engine, the site-side daemon that hosts "
+                "LLM-backed agents. More AI assistant UI features will land behind "
+                "this same gate."
+            ),
+            remove_ticket="CMK-39016",
+            remove_after="3.1.0",
+            owner="max.linke@checkmk.com",
+        ),
+    ] = False
+
 
 def load_release_flags(config_dir: Path) -> ReleaseFlagConfig:
     """Read the release flags from ``config_dir``, defaulting to all-off."""

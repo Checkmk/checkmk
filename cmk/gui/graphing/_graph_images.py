@@ -29,7 +29,6 @@ from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
 
 from . import _plugins as engine_plugins
-from ._from_api import graphs_from_api, metrics_from_api
 from ._graph_dispatch import evaluate_built_graphs
 from ._graph_display_config import (
     get_mm_per_ex,
@@ -45,9 +44,7 @@ from ._graph_specification import (
     GraphRanges,
 )
 from ._graph_templates import build_template_graphs, get_template_graph_specification
-from ._metric_backend_registry import METRIC_BACKEND_KEY, metric_backend_registry
 from ._source import RRDFetchMetricNames
-from ._unit import get_temperature_unit
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -65,13 +62,7 @@ class AjaxGraphImagesForNotifications(AjaxPage):
         return _answer_graph_image_request(
             ctx.request,
             GraphEnvironment(
-                registered_metrics=metrics_from_api,
-                registered_graphs=graphs_from_api,
                 user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
-                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                backend_time_series_fetcher=metric_backend_registry[
-                    METRIC_BACKEND_KEY
-                ].get_time_series_fetcher(),
                 debug=ctx.config.debug,
             ),
         )

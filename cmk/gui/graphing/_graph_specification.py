@@ -5,7 +5,6 @@
 
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Annotated, final, override
 
@@ -21,16 +20,13 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from ._from_api import GraphFromAPI, RegisteredMetric
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     GraphMetricExpression,
     LineType,
     parse_graph_metric_expression,
 )
-from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._unit import ConvertibleUnitSpecification
 
 
@@ -39,13 +35,7 @@ class MKCombinedGraphLimitExceededError(MKHTTPException): ...
 
 @dataclass(frozen=True)
 class GraphEnvironment:
-    """Bundles the server-side environment passed unchanged through every rendering path."""
-
-    registered_metrics: Mapping[str, RegisteredMetric]
-    registered_graphs: Mapping[str, GraphFromAPI]
     user_permissions: UserPermissions
-    temperature_unit: TemperatureUnit
-    backend_time_series_fetcher: FetchTimeSeriesProtocol | None
     debug: bool = False
 
 

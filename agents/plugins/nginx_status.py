@@ -76,7 +76,10 @@ def extract_stats_from_iproute2(lines, ssl_ports):
     process_regex = re.compile(r'^\w+:\(\("(nginx|nginx.conf)",pid=(\d+).*$')
 
     for line in lines[1:]:  # skip column headers
-        _, _, _, local_addr, _, process_info = line.split(None, line_maxsplit)
+        parts = line.split(None, line_maxsplit)
+        if len(parts) < 6:  # kernel-owned sockets (e.g. nfsd) have no process column
+            continue
+        _, _, _, local_addr, _, process_info = parts
 
         process_match = process_regex.match(process_info)
         if process_match is None:

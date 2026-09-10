@@ -209,7 +209,6 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
-        "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-ruleset-matcher",

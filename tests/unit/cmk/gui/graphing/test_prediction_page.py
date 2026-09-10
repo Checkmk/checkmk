@@ -15,6 +15,7 @@ from cmk.gui.graphing._prediction_page import _predictions_of, _selected_title
 from cmk.gui.graphing._prediction_source import Direction
 from cmk.gui.http import request as request_
 from cmk.utils.metrics import MetricName
+from cmk.utils.prediction import PredictionData
 
 _VALID_FROM = 1700000000
 _VALID_UNTIL = _VALID_FROM + 86400
@@ -45,6 +46,9 @@ class _FakePredictions:
 
     def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]:
         yield from (info for info in self.stored if info.metric == metric)
+
+    def query_prediction_data(self, meta: PredictionInfo) -> PredictionData:
+        raise NotImplementedError
 
 
 def test_a_metric_predicted_in_both_directions_becomes_one_graph() -> None:

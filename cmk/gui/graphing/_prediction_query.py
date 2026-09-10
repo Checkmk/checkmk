@@ -7,6 +7,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
+from typing import Protocol
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName
@@ -14,9 +15,16 @@ from cmk.livestatus_client import SingleSiteConnection
 from cmk.livestatus_client.expressions import And, LqSafe
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.services import Services
+from cmk.utils.prediction import PredictionData, PredictionStore
 from cmk.utils.servicename import ServiceName
 
-from ._prediction import PredictionData, PredictionStore
+
+class PredictionQuerierProtocol(Protocol):
+    def query_predicted_metrics(self) -> Sequence[str]: ...
+
+    def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]: ...
+
+    def query_prediction_data(self, meta: PredictionInfo) -> PredictionData: ...
 
 
 @dataclass(frozen=True, kw_only=True)

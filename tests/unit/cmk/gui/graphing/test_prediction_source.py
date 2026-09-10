@@ -323,6 +323,9 @@ def _key(service_name: ServiceName, metric: MetricName = _METRIC) -> _Prediction
 class _FakeQuerier:
     stored: Sequence[PredictionInfo]
 
+    def query_predicted_metrics(self) -> Sequence[str]:
+        return sorted({info.metric for info in self.stored})
+
     def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]:
         yield from (info for info in self.stored if info.metric == metric)
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, override, Protocol
 
@@ -26,9 +26,10 @@ from cmk.graphing_engine import (
 )
 from cmk.gui import sites
 from cmk.utils.metrics import MetricName as CoreMetricName
-from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
+from cmk.utils.prediction import estimate_levels, PredictionData
 from cmk.utils.servicename import ServiceName as CoreServiceName
 
+from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
 from ._source import RRDFetchData
 
 type Direction = Literal["upper", "lower"]
@@ -99,19 +100,13 @@ def _keys_by_service(
     return by_service
 
 
-class _PredictionQuerierProtocol(Protocol):
-    def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]: ...
-
-    def query_prediction_data(self, meta: PredictionInfo) -> PredictionData: ...
-
-
 class _QuerierSourceProtocol(Protocol):
-    def __call__(self, key: _PredictionKey) -> _PredictionQuerierProtocol: ...
+    def __call__(self, key: _PredictionKey) -> PredictionQuerierProtocol: ...
 
 
 @dataclass(frozen=True)
 class _LivestatusQuerierSource:
-    def __call__(self, key: _PredictionKey) -> _PredictionQuerierProtocol:
+    def __call__(self, key: _PredictionKey) -> PredictionQuerierProtocol:
         return PredictionQuerier(
             livestatus_connection=sites.live().get_connection(SiteId(str(key.site_id))),
             host_name=CoreHostName(str(key.host_name)),

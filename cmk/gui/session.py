@@ -228,9 +228,12 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         credentials have been provided, 2FA has been completed, ...).
 
         For automation users this always sets the state to "logged_in" as they authenticate
-        non-interactively and cannot manage their own profile.
+        non-interactively and cannot manage their own profile. The same applies to an
+        OAuth access token: it is only ever handed out after the interactive /authorize
+        consent step, which itself required a fully logged-in (2FA-complete, password
+        up to date) session, so the credential already proves those checks were satisfied.
         """
-        if self.user.automation_user:
+        if self.user.automation_user or self.session_info.auth_type == "oauth":
             self.session_info.session_state = "logged_in"
             return self.session_info.session_state
 

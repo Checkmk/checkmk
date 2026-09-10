@@ -818,7 +818,7 @@ def parse_hostname_list(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     host_tags: HostTags,
-    args: list[str],
+    args: Sequence[str],
     with_clusters: bool = True,
     with_foreign_hosts: bool = False,
 ) -> Sequence[HostName]:

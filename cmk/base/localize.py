@@ -7,11 +7,12 @@ import logging
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.utils.paths
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.modes.modes import Mode
+from cmk.base.modes.modes import Mode, OptionalArguments
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
 from cmk.utils.log import VERBOSE
@@ -32,16 +33,17 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:  # noqa: ARG001
-    do_localize(args)
+def _mode_localize(app: CheckmkBaseApp, args: Sequence[str]) -> int:  # noqa: ARG001
+    do_localize(list(args))
+    return 0
 
 
 mode_localize = Mode(
     long_option="localize",
-    handler_function=_mode_localize,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
+    dispatch=OptionalArguments(
+        descr="COMMAND",
+        handler=_mode_localize,
+    ),
     short_help="Do localization operations",
     long_help=[
         (

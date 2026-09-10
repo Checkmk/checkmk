@@ -18,6 +18,8 @@ import cmk.utils.paths as cmk_paths
 from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
+from cmk.base.modes.call import call
+from cmk.base.modes.modes import Options
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
@@ -28,6 +30,7 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.trace import Context
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
@@ -119,22 +122,12 @@ class TestModeDumpAgent:
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
         )
 
-        fn = check_mk.mode_dump_agent.handler_function
-        assert fn is not None
-        fn(app, {}, hostname)
+        call(app, check_mk.mode_dump_agent, hostname, [], [], Context())
+
         assert capsys.readouterr().out == raw_data.decode()
 
 
-class TestModeDumpAgentUseWalk:
-    """Test that the --usewalk CLI option causes make_backend to create a
-    StoredWalkSNMPBackend.
-
-    mode_dump_agent skips SNMP sources in its source loop (they are only used
-    by other modes), so make_backend is never invoked directly by the mode.
-    We capture the SNMPSource that make_sources creates and open its fetcher
-    manually to drive make_backend and assert the returned backend type.
-    """
-
+class TestModeDumpAgentSnmpBackend:
     @pytest.fixture
     def hostname(self) -> HostName:
         return HostName("snmphost")
@@ -198,15 +191,16 @@ class TestModeDumpAgentUseWalk:
     @pytest.mark.parametrize(
         ["options", "expected_backend_type"],
         [
-            pytest.param({}, ClassicSNMPBackend, id="default"),
-            pytest.param({"usewalk": True}, StoredWalkSNMPBackend, id="walk=True"),
-            pytest.param({"usewalk": False}, ClassicSNMPBackend, id="walk=False"),
+            pytest.param([], ClassicSNMPBackend, id="default"),
+            pytest.param(
+                [("--snmp-backend", "stored-walk")], StoredWalkSNMPBackend, id="stored-walk"
+            ),
         ],
     )
-    def test_usewalk_creates_expected_backend(  # type: ignore[misc]
+    def test_the_snmp_backend_option_selects_the_backend(
         self,
         hostname: HostName,
-        options: dict,
+        options: Options,
         expected_backend_type: type,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -234,9 +228,7 @@ class TestModeDumpAgentUseWalk:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),  # noqa: ARG005
         )
-        fn = check_mk.mode_dump_agent.handler_function
-        assert fn is not None
-        fn(app, options, hostname)
+        call(app, check_mk.mode_dump_agent, hostname, options, [], Context())
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

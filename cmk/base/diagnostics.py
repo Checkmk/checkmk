@@ -13,7 +13,7 @@ import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
-from dataclasses import fields
+from dataclasses import dataclass, fields
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
@@ -25,7 +25,7 @@ from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosti
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.config import LoadingResult
-from cmk.base.modes.modes import Mode, Option
+from cmk.base.modes.modes import Mode, Option, option_string, SubOptions
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -55,7 +55,7 @@ from cmk.utils.log import console, section
 
 # TODO(3.1): delete together with the legacy wire sections below.
 DiagnosticsCLParameters = Sequence[str]
-DiagnosticsModesParameters = dict[str, Any]  # type: ignore[explicit-any]
+
 DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 
 SUFFIX = ".tar.gz"
@@ -66,6 +66,23 @@ _CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
     "medium": Sensitivity.MEDIUM,
     "high": Sensitivity.HIGH,
 }
+
+
+@dataclass(frozen=True)
+class _CliSelection:
+    list_plugins: bool
+    all_topics: str | None
+    plugins: str | None
+    checkmk_server_host: str
+
+
+def _cli_selection(parsed: Mapping[str, object]) -> _CliSelection:
+    return _CliSelection(
+        list_plugins="list" in parsed,
+        all_topics=option_string(parsed, "all-topics"),
+        plugins=option_string(parsed, "plugins"),
+        checkmk_server_host=option_string(parsed, "checkmk-server-host") or "",
+    )
 
 
 def _parse_cli_threshold(raw: str) -> Sensitivity | None:
@@ -80,24 +97,24 @@ def _parse_cli_threshold(raw: str) -> Sensitivity | None:
 
 
 def _resolve_cli_selection(
-    catalogue: Mapping[str, DiagnosticsPlugin], options: DiagnosticsModesParameters
+    catalogue: Mapping[str, DiagnosticsPlugin], options: _CliSelection
 ) -> DumpSelection:
     default_threshold = (
-        _parse_cli_threshold(options["all-topics"]) if "all-topics" in options else None
+        _parse_cli_threshold(options.all_topics) if options.all_topics is not None else None
     )
     thresholds: dict[Topic, Sensitivity | None] = dict.fromkeys(
         (plugin.topic for plugin in catalogue.values()), default_threshold
     )
 
     selected = set(resolve_selection(catalogue.values(), thresholds))
-    for name in options.get("plugins", "").split(",") if "plugins" in options else []:
+    for name in options.plugins.split(",") if options.plugins is not None else []:
         if name not in catalogue:
             raise MKGeneralException("Unknown plugin %r (see --list for available plugins)" % name)
         selected.add(name)
 
     return DumpSelection(
         plugins=sorted(selected),
-        checkmk_server_host=options.get("checkmk-server-host", ""),
+        checkmk_server_host=options.checkmk_server_host,
     )
 
 
@@ -117,14 +134,14 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
             )
 
 
-def _mode_create_diagnostics_dump(_app: object, options: DiagnosticsModesParameters) -> None:
+def _mode_create_diagnostics_dump(_app: object, options: _CliSelection) -> int:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     loading_result = load_config()
     catalogue = _load_plugin_catalogue(logger=ConsoleLogger())
 
-    if "list" in options:
+    if options.list_plugins:
         _print_available_plugins(catalogue)
-        return
+        return 0
 
     dump = create_diagnostics_dump_v2(
         omd_root=cmk.utils.paths.omd_root,
@@ -141,11 +158,44 @@ def _mode_create_diagnostics_dump(_app: object, options: DiagnosticsModesParamet
         )
     else:
         logger.message("No dump")
+    return 0
 
 
 mode_create_diagnostics_dump = Mode(
     long_option="create-diagnostics-dump",
-    handler_function=_mode_create_diagnostics_dump,
+    dispatch=SubOptions.parsing(
+        parse_options=_cli_selection,
+        options=[
+            Option(
+                long_option="list",
+                short_help="List the available topics and plugins and exit",
+            ),
+            Option(
+                long_option="all-topics",
+                short_help=(
+                    "Select all plugins of all topics up to the given sensitivity threshold "
+                    "(off, low, medium or high)"
+                ),
+                argument=True,
+                argument_descr="THRESHOLD",
+            ),
+            Option(
+                long_option="plugins",
+                short_help="Additionally select the given plugins, regardless of topic thresholds",
+                argument=True,
+                argument_descr="NAME,NAME...",
+            ),
+            Option(
+                long_option="checkmk-server-host",
+                short_help=(
+                    "The name of the host monitoring the Checkmk server; needed by some plugins"
+                ),
+                argument=True,
+                argument_descr="HOST",
+            ),
+        ],
+        handler=_mode_create_diagnostics_dump,
+    ),
     short_help="Create diagnostics dump",
     long_help=[
         (
@@ -155,35 +205,6 @@ mode_create_diagnostics_dump = Mode(
             "to see what is available on this site. Without any option only "
             "the always collected plugins are packed."
         )
-    ],
-    sub_options=[
-        Option(
-            long_option="list",
-            short_help="List the available topics and plugins and exit",
-        ),
-        Option(
-            long_option="all-topics",
-            short_help=(
-                "Select all plugins of all topics up to the given sensitivity threshold "
-                "(off, low, medium or high)"
-            ),
-            argument=True,
-            argument_descr="THRESHOLD",
-        ),
-        Option(
-            long_option="plugins",
-            short_help="Additionally select the given plugins, regardless of topic thresholds",
-            argument=True,
-            argument_descr="NAME,NAME...",
-        ),
-        Option(
-            long_option="checkmk-server-host",
-            short_help=(
-                "The name of the host monitoring the Checkmk server; needed by some plugins"
-            ),
-            argument=True,
-            argument_descr="HOST",
-        ),
     ],
 )
 

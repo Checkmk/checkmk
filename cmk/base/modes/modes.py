@@ -11,8 +11,10 @@ import sys
 import textwrap
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import override
+from dataclasses import dataclass
+from typing import override, Self
 
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import discover_plugins_from_modules
@@ -22,9 +24,9 @@ OptionSpec = str
 Argument = str
 OptionName = str
 OptionFunction = Callable
-ModeFunction = Callable
 ConvertFunction = Callable
 Options = list[tuple[OptionSpec, Argument]]
+Arguments = Sequence[str]
 
 
 def print_(txt: str) -> None:
@@ -78,9 +80,13 @@ class Modes:
         return Mode(
             long_option="help",
             short_option="h",
-            handler_function=lambda *a, **kw: print_(self.help()),  # noqa: ARG005
+            dispatch=NoArgument(handler=self._show_help),
             short_help="Print this help",
         )
+
+    def _show_help(self, _app: CheckmkBaseApp) -> int:
+        print_(self.help())
+        return 0
 
     def exists(self, opt: OptionName) -> bool:
         try:
@@ -310,33 +316,160 @@ def parse_sub_options(
     return options
 
 
+def option_string(parsed: Mapping[OptionName, object], name: OptionName) -> str | None:
+    match parsed.get(name):
+        case None:
+            return None
+        case str() as value:
+            return value
+        case value:
+            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+
+
+def option_count(parsed: Mapping[OptionName, object], name: OptionName) -> int:
+    match parsed.get(name):
+        case int() as value:
+            return value
+        case value:
+            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+
+
+def option_names[NameT](
+    parsed: Mapping[OptionName, object], name: OptionName, type_: type[NameT]
+) -> frozenset[NameT]:
+    match parsed.get(name):
+        case set() | frozenset() as value:
+            names = frozenset(element for element in value if isinstance(element, type_))
+            if len(names) == len(value):
+                return names
+            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+        case value:
+            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+
+
+@dataclass(frozen=True)
+class NoArgument:
+    handler: Callable[[CheckmkBaseApp], int]
+
+
+@dataclass(frozen=True)
+class RequiredArgument:
+    descr: str
+    handler: Callable[[CheckmkBaseApp, Argument], int]
+
+
+@dataclass(frozen=True)
+class OptionalArguments:
+    descr: str
+    handler: Callable[[CheckmkBaseApp, Arguments], int]
+
+
+@dataclass(frozen=True)
+class SubOptions:
+    options: Sequence[Option]
+    handler: Callable[[CheckmkBaseApp, Mapping[OptionName, object]], int]
+
+    @classmethod
+    def parsing[OptionsT](
+        cls,
+        *,
+        options: Sequence[Option],
+        parse_options: Callable[[Mapping[OptionName, object]], OptionsT],
+        handler: Callable[[CheckmkBaseApp, OptionsT], int],
+    ) -> Self:
+        return cls(
+            options=options,
+            handler=lambda app, parsed: handler(app, parse_options(parsed)),
+        )
+
+
+@dataclass(frozen=True)
+class SubOptionsAndRequiredArgument:
+    options: Sequence[Option]
+    descr: str
+    handler: Callable[[CheckmkBaseApp, Mapping[OptionName, object], Argument], int]
+
+
+@dataclass(frozen=True)
+class SubOptionsAndOptionalArguments:
+    options: Sequence[Option]
+    descr: str
+    handler: Callable[[CheckmkBaseApp, Mapping[OptionName, object], Arguments], int]
+
+    @classmethod
+    def parsing[OptionsT](
+        cls,
+        *,
+        options: Sequence[Option],
+        descr: str,
+        parse_options: Callable[[Mapping[OptionName, object]], OptionsT],
+        handler: Callable[[CheckmkBaseApp, OptionsT, Arguments], int],
+    ) -> Self:
+        return cls(
+            options=options,
+            descr=descr,
+            handler=lambda app, parsed, arguments: handler(app, parse_options(parsed), arguments),
+        )
+
+
+Dispatch = (
+    NoArgument
+    | RequiredArgument
+    | OptionalArguments
+    | SubOptions
+    | SubOptionsAndRequiredArgument
+    | SubOptionsAndOptionalArguments
+)
+
+
+def _argument_descr(dispatch: Dispatch) -> str | None:
+    match dispatch:
+        case RequiredArgument(descr=descr) | OptionalArguments(descr=descr):
+            return descr
+        case (
+            SubOptionsAndRequiredArgument(descr=descr) | SubOptionsAndOptionalArguments(descr=descr)
+        ):
+            return descr
+        case _:
+            return None
+
+
+def _sub_options(dispatch: Dispatch) -> Sequence[Option]:
+    match dispatch:
+        case (
+            SubOptions(options=options)
+            | SubOptionsAndRequiredArgument(options=options)
+            | SubOptionsAndOptionalArguments(options=options)
+        ):
+            return options
+        case _:
+            return ()
+
+
 class Mode(Option):
     def __init__(
         self,
         *,
         long_option: OptionName,
-        handler_function: ModeFunction,
+        dispatch: Dispatch,
         short_help: str,
         short_option: OptionName | None = None,
-        argument: bool = False,
-        argument_descr: str | None = None,
-        argument_conv: ConvertFunction | None = None,
-        argument_optional: bool = False,
         long_help: list[str] | None = None,
-        sub_options: list[Option] | None = None,
     ) -> None:
+        descr = _argument_descr(dispatch)
         super().__init__(
             long_option=long_option,
             short_help=short_help,
             short_option=short_option,
-            argument=argument,
-            argument_descr=argument_descr,
-            argument_conv=argument_conv,
-            argument_optional=argument_optional,
-            handler_function=handler_function,
+            argument=descr is not None,
+            argument_descr=descr,
+            argument_optional=isinstance(
+                dispatch, OptionalArguments | SubOptionsAndOptionalArguments
+            ),
         )
+        self.dispatch = dispatch
         self.long_help = long_help
-        self.sub_options = sub_options or []
+        self.sub_options = _sub_options(dispatch)
 
     @override
     def short_getopt_specs(self) -> list[str]:

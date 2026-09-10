@@ -16,7 +16,7 @@ _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
 @dataclass(frozen=True)
 class RunMode:
     mode: Mode
-    argument: Argument | None
+    argument: Argument
     options: Options
     arguments: Sequence[str]
 
@@ -47,6 +47,6 @@ def parse(modes: Modes, argv: Sequence[str]) -> RunMode | ShowHelp | InvalidArgu
     if (arguments and len(arguments) <= _IMPLICIT_CHECK_ARGUMENT_LIMIT) or "--keepalive" in [
         option for option, _argument in options
     ]:
-        return RunMode(modes.get("check"), None, options, arguments)
+        return RunMode(modes.get("check"), "", options, arguments)
 
     return ShowHelp(options)

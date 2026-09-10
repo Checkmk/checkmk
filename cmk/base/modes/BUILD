@@ -13,6 +13,7 @@ py_library(
         "//non-free/packages/cmk-bakery:__pkg__",
     ],
     deps = [
+        "//cmk/base:base-app",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",

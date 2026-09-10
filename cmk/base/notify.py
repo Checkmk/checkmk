@@ -56,7 +56,7 @@ from cmk.base import config, events
 from cmk.base.automations.automations import Automation, load_config, load_plugins
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.modes.modes import Mode, Option
+from cmk.base.modes.modes import Mode, Option, SubOptionsAndOptionalArguments
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, raise_mkterminate_on_sigint
 from cmk.ccc.hostaddress import HostName
@@ -360,12 +360,19 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   '----------------------------------------------------------------------'
 
 
-def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
+def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
+    return dict.fromkeys(parsed, True)
+
+
+def _mode_notify(app: CheckmkBaseApp, options: dict[str, bool], args: Sequence[str]) -> int:
     community_edition = app.edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
-        return _do_notify_via_automation(
-            options=options,
-            args=args,
+        return (
+            _do_notify_via_automation(
+                options=options,
+                args=list(args),
+            )
+            or 0
         )
 
     if keepalive := not community_edition and "keepalive" in options:
@@ -377,9 +384,9 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
             validate_hosts=False,
         )
 
-    return do_notify(
+    exit_status = do_notify(
         options,
-        args,
+        list(args),
         notification_config=make_notification_config(
             app.edition,
             loading_result.loaded_config,
@@ -396,6 +403,7 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
             livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
     )
+    return exit_status or 0
 
 
 def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
@@ -961,22 +969,22 @@ def _automation_get_bulks(
 
 mode_notify = Mode(
     long_option="notify",
-    handler_function=_mode_notify,
-    argument=True,
-    argument_descr="MODE",
-    argument_optional=True,
+    dispatch=SubOptionsAndOptionalArguments.parsing(
+        options=[
+            Option(
+                long_option="log-to-stdout",
+                short_help="Also write log messages to console",
+            ),
+            Option(
+                long_option="keepalive",
+                short_help="Execute in keepalive mode (Commercial editions only)",
+            ),
+        ],
+        descr="MODE",
+        parse_options=_notify_flags,
+        handler=_mode_notify,
+    ),
     short_help="Used to send notifications from core",
-    # TODO: Write long help
-    sub_options=[
-        Option(
-            long_option="log-to-stdout",
-            short_help="Also write log messages to console",
-        ),
-        Option(
-            long_option="keepalive",
-            short_help="Execute in keepalive mode (Commercial editions only)",
-        ),
-    ],
 )
 
 automation_notification_replay = Automation(

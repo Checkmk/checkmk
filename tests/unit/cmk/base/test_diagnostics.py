@@ -205,15 +205,23 @@ _CLI_CATALOGUE = {
 
 def test_resolve_cli_selection() -> None:
     # no options: only 'always' plugins run (empty explicit selection)
-    assert diagnostics._resolve_cli_selection(_CLI_CATALOGUE, {}).plugins == []  # noqa: SLF001
+    assert (
+        diagnostics._resolve_cli_selection(  # noqa: SLF001
+            _CLI_CATALOGUE,
+            diagnostics._cli_selection({}),  # noqa: SLF001
+        ).plugins
+        == []
+    )
 
     selection = diagnostics._resolve_cli_selection(  # noqa: SLF001
         _CLI_CATALOGUE,
-        {
-            "all-topics": "low",
-            "plugins": "b_high",
-            "checkmk-server-host": "my_server",
-        },
+        diagnostics._cli_selection(  # noqa: SLF001
+            {
+                "all-topics": "low",
+                "plugins": "b_high",
+                "checkmk-server-host": "my_server",
+            }
+        ),
     )
     assert selection.checkmk_server_host == "my_server"
     assert "a_low" in selection.plugins  # low via --all-topics
@@ -224,9 +232,15 @@ def test_resolve_cli_selection() -> None:
 
 def test_resolve_cli_selection_rejects_unknown() -> None:
     with pytest.raises(Exception, match="Unknown plugin"):
-        diagnostics._resolve_cli_selection(_CLI_CATALOGUE, {"plugins": "nope"})  # noqa: SLF001
+        diagnostics._resolve_cli_selection(  # noqa: SLF001
+            _CLI_CATALOGUE,
+            diagnostics._cli_selection({"plugins": "nope"}),  # noqa: SLF001
+        )
     with pytest.raises(Exception, match="Invalid sensitivity"):
-        diagnostics._resolve_cli_selection(_CLI_CATALOGUE, {"all-topics": "extreme"})  # noqa: SLF001
+        diagnostics._resolve_cli_selection(  # noqa: SLF001
+            _CLI_CATALOGUE,
+            diagnostics._cli_selection({"all-topics": "extreme"}),  # noqa: SLF001
+        )
 
 
 def test_legacy_selection() -> None:

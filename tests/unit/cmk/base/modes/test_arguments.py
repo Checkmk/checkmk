@@ -159,7 +159,7 @@ def test_one_argument_runs_the_implicit_check_mode() -> None:
     parsed = parse(_MODES, ["cmk", "myhost"])
 
     assert isinstance(parsed, RunMode)
-    assert (parsed.mode.name, parsed.argument, parsed.arguments) == ("check", None, ["myhost"])
+    assert (parsed.mode.name, parsed.argument, parsed.arguments) == ("check", "", ["myhost"])
 
 
 def test_a_host_and_an_address_run_the_implicit_check_mode() -> None:

@@ -401,7 +401,7 @@ It contains:
 The file `cmk/dev_deploy/manifest/deploy_specs.toml` contains:
 
 - **Package specs** -- compiled artifact deploy definitions that have no Bazel representation (binary name, install destination, post-install actions like `setcap`)
-- **Service overrides** -- non-default service restart mappings keyed by Bazel target. Convention: all `py_wheel` targets automatically trigger `apache:reload`; only non-default restarts need explicit entries.
+- **Service overrides** -- non-default service restart mappings keyed by Bazel target. Convention: all `py_wheel` targets automatically trigger `apache:reload`; only non-default restarts need explicit entries. Adding a new `Service` enum member also requires adding it to `SERVICE_RESTART_ORDER` and, if edition-specific, to `EDITION_GATED_SERVICES` in `cmk/dev_deploy/execution/service_manager.py` -- an omission there silently sorts the service last instead of erroring.
 - **Config overrides** -- extra metadata for auto-discovered config specs (includes patterns, `delete_extra`, `file_chmod`, services).
 
 ### Deployer state machine

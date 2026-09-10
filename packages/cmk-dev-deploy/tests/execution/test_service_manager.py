@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.dev_deploy.execution.service_manager import resolve_services
+from cmk.dev_deploy.execution.service_manager import resolve_services, SERVICE_RESTART_ORDER
 from cmk.dev_deploy.types import (
     BazelTarget,
     BazelTargetKind,
@@ -226,6 +226,36 @@ class TestResolveServicesEditionGating:
         result = resolve_services(changes, None, _site(Edition.PRO))
         assert result == [(Service.CMC, ServiceAction.RESTART)]
 
+    def test_ai_agent_engine_filtered_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_specs(
+            monkeypatch,
+            service_specs=[
+                ServiceSpec(
+                    source_prefix="non-free/packages/cmk-agent-engine/",
+                    services=((Service.AI_AGENT_ENGINE, ServiceAction.RESTART),),
+                    edition_constraint=None,
+                ),
+            ],
+        )
+        changes = _changeset(files=("non-free/packages/cmk-agent-engine/cmk/agent_engine/app.py",))
+        result = resolve_services(changes, None, _site(Edition.COMMUNITY))
+        assert result == []
+
+    def test_ai_agent_engine_included_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_specs(
+            monkeypatch,
+            service_specs=[
+                ServiceSpec(
+                    source_prefix="non-free/packages/cmk-agent-engine/",
+                    services=((Service.AI_AGENT_ENGINE, ServiceAction.RESTART),),
+                    edition_constraint=None,
+                ),
+            ],
+        )
+        changes = _changeset(files=("non-free/packages/cmk-agent-engine/cmk/agent_engine/app.py",))
+        result = resolve_services(changes, None, _site(Edition.PRO))
+        assert result == [(Service.AI_AGENT_ENGINE, ServiceAction.RESTART)]
+
 
 class TestResolveServicesOrdering:
     """Results follow SERVICE_RESTART_ORDER."""
@@ -248,6 +278,14 @@ class TestResolveServicesOrdering:
         result = resolve_services(changes, None, _site())
         services = [svc for svc, _ in result]
         assert services.index(Service.APACHE) < services.index(Service.AUTOMATION_HELPER)
+
+    def test_every_service_has_a_restart_order_position(self) -> None:
+        """Every Service enum member must appear in SERVICE_RESTART_ORDER.
+
+        An omission silently falls back to sort-key 999 (last), which is easy
+        to miss when a new service is added.
+        """
+        assert set(Service) == set(SERVICE_RESTART_ORDER)
 
 
 class TestResolveServicesDeployedDeployers:

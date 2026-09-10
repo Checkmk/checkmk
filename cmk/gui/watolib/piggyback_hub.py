@@ -96,12 +96,15 @@ def _filter_for_enabled_piggyback_hub(
 def _validate_piggyback_hub_config(
     settings_per_site: Mapping[SiteId, GlobalSettings], central_site_id: SiteId
 ) -> None:
-    central_enabled = dict(settings_per_site).pop(central_site_id)[
-        CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
-    ]
-    if not central_enabled and any(
-        remote_config[CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT]
-        for remote_config in settings_per_site.values()
+    remote_settings = dict(settings_per_site)
+    central_settings = remote_settings.pop(central_site_id, {})
+    if CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT not in central_settings:
+        # Value is not set for the central site, so there is nothing to validate.
+        return
+
+    if not central_settings[CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT] and any(
+        remote_config.get(CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT)
+        for remote_config in remote_settings.values()
     ):
         raise MKUserError(
             CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,

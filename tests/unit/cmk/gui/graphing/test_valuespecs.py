@@ -142,3 +142,27 @@ def test_value_with_unit_default_matches_the_valuespec_number_type(
     expected_type: type[int] | type[float],
 ) -> None:
     assert isinstance(_value_with_unit_vs(vs, "s", "Title", 1.5).default_value(), expected_type)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "show_graph_time",
+        "show_margin",
+        "show_legend",
+        "show_vertical_axis",
+        "show_time_axis",
+        "show_controls",
+        "show_pin",
+        "show_time_range_previews",
+        "fixed_timerange",
+    ],
+)
+def test_every_render_flag_takes_its_default_from_the_caller(key: str) -> None:
+    elements = dict(vs_graph_render_option_elements({key: False}))
+    assert elements[key].default_value() is False
+
+
+def test_the_font_size_takes_its_default_from_the_caller() -> None:
+    elements = dict(vs_graph_render_option_elements({"font_size": 11.0}))
+    assert elements["font_size"].default_value() == 11.0

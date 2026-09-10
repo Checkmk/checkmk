@@ -266,7 +266,7 @@ def vs_graph_render_option_elements(
             Checkbox(
                 title=_("Show time axis"),
                 label=_("Show the graph time axis"),
-                default_value=True,
+                default_value=defaults.show_time_axis,
             ),
         ),
         (

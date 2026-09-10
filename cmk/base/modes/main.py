@@ -61,6 +61,7 @@ from cmk.trace.export import (
 from cmk.utils.paths import profile_dir
 
 from .arguments import InvalidArguments, parse, ShowHelp
+from .modes import write_paged
 
 
 class CrashReport(ABCCrashReport[BaseDetails]):
@@ -166,7 +167,7 @@ def main() -> int:
 
     try:
         if isinstance(parsed, ShowHelp):
-            sys.stdout.write(modes.help())
+            write_paged(modes.help())
             return 0
 
         return call(

@@ -7,12 +7,15 @@
 # mypy: disable-error-code="type-arg"
 
 
+import os
+import shlex
+import subprocess
 import sys
 import textwrap
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import override, Self
+from typing import Final, override, Self
 
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
@@ -446,6 +449,26 @@ def print_(txt: str) -> None:
         sys.stdout.flush()
 
 
+_DEFAULT_PAGER: Final = "less --quit-if-one-screen --no-init"
+
+
+def write_paged(txt: str) -> None:
+    if not sys.stdout.isatty():
+        print_(txt)
+        return
+
+    try:
+        with suppress(BrokenPipeError):
+            subprocess.run(
+                shlex.split(os.environ.get("PAGER") or _DEFAULT_PAGER),
+                input=txt,
+                text=True,
+                check=False,
+            )
+    except OSError, ValueError:
+        print_(txt)
+
+
 class Modes:
     def __init__(
         self,
@@ -473,7 +496,7 @@ class Modes:
         )
 
     def _show_help(self, _app: CheckmkBaseApp) -> int:
-        print_(self.help())
+        write_paged(self.help())
         return 0
 
     def exists(self, opt: OptionName) -> bool:

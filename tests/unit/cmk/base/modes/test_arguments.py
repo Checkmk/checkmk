@@ -12,6 +12,7 @@ from cmk.base.modes.arguments import InvalidArguments, parse, RunMode, ShowHelp
 from cmk.base.modes.check_mk import general_options
 from cmk.base.modes.modes import (
     discover_modes,
+    GeneralOption,
     Mode,
     Modes,
     Option,
@@ -32,6 +33,12 @@ def _mode_argv(mode: Mode, option: str) -> Sequence[str]:
     if option.startswith("--"):
         return [f"{option}={_MODE_ARGUMENT}"]
     return [option, _MODE_ARGUMENT]
+
+
+def _general_option_argv(option: GeneralOption) -> Sequence[str]:
+    if option.takes_argument():
+        return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
+    return [f"--{option.long_option}"]
 
 
 def _sub_option_argv(option: Option) -> Sequence[str]:
@@ -209,3 +216,19 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
 
     assert isinstance(parsed, InvalidArguments)
     assert "see `check_mk --help`" in parsed.message
+
+
+@pytest.mark.parametrize("option", general_options(), ids=lambda option: option.name)
+def test_a_general_option_does_not_select_a_mode(option: GeneralOption) -> None:
+    parsed = parse(_MODES, ["cmk", *_general_option_argv(option), "myhost"])
+
+    assert isinstance(parsed, RunMode)
+    assert parsed.mode.name == "check"
+
+
+@pytest.mark.parametrize("option", general_options(), ids=lambda option: option.name)
+def test_a_general_option_is_handed_back_for_processing(option: GeneralOption) -> None:
+    parsed = parse(_MODES, ["cmk", *_general_option_argv(option), "myhost"])
+
+    assert isinstance(parsed, RunMode)
+    assert f"--{option.long_option}" in [name for name, _argument in parsed.options]

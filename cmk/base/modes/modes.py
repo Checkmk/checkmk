@@ -28,149 +28,6 @@ Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
 
 
-def print_(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
-
-
-def discover_modes() -> Sequence[Mode]:
-    discovery_result = discover_plugins_from_modules(
-        plugin_prefixes={Mode: "mode_"},
-        module_names_by_priority=[
-            # TODO: We need to get rid of this hard-coded list
-            "cmk.base.modes.check_mk",
-            "cmk.base.diagnostics",
-            "cmk.base.localize",
-            "cmk.base.notify",
-            "cmk.base.nonfree.alert_handling",
-            "cmk.base.nonfree.dump_protobufs",
-            "cmk.base.nonfree.cmc_helpers",
-            "cmk.base.nonfree.convert_rrds",
-            "cmk.base.nonfree.compress_history",
-            "cmk.bakery.base.mode",  # non-free, optional
-            "cmk.plugins.bakery.modes.cap",  # non-free, optional
-        ],
-        skip_wrong_types=True,
-        raise_errors=True,
-    )
-    return tuple(discovery_result.plugins.values())
-
-
-class Modes:
-    def __init__(
-        self,
-        *,
-        plugins: Sequence[Mode],
-        general_options: Sequence[GeneralOption],
-    ) -> None:
-        super().__init__()
-        modes = [*plugins, self.mode_help()]
-        self._mode_map: Mapping[OptionName, Mode] = {
-            **{m.long_option: m for m in modes},
-            **{m.short_option: m for m in modes if m.short_option is not None},
-        }
-        self._modes = modes
-        self._general_options = general_options
-
-    def mode_help(self) -> Mode:
-        # It's a little weird to implement the --help option like this,
-        # but it is the easiest way to be consistent with how we use `getopt`.
-        return Mode(
-            long_option="help",
-            short_option="h",
-            dispatch=NoArgument(handler=self._show_help),
-            short_help="Print this help",
-        )
-
-    def _show_help(self, _app: CheckmkBaseApp) -> int:
-        print_(self.help())
-        return 0
-
-    def exists(self, opt: OptionName) -> bool:
-        try:
-            self.get(opt)
-            return True
-        except KeyError:
-            return False
-
-    def get(self, name: OptionName) -> Mode:
-        return self._mode_map[name]
-
-    def short_getopt_specs(self) -> str:
-        options = ""
-        for mode in self._modes:
-            options += "".join(mode.short_getopt_specs())
-        for option in self._general_options:
-            options += "".join(option.short_getopt_specs())
-        return options
-
-    def long_getopt_specs(self) -> list[str]:
-        options: list[str] = []
-        for mode in self._modes:
-            options += mode.long_getopt_specs()
-        for option in self._general_options:
-            options += option.long_getopt_specs()
-        return options
-
-    def help(self) -> str:
-        return f"""WAYS TO CALL:
-{self._short_help()}
-
-OPTIONS:
-{self._general_option_help()}
-
-NOTES:
-{self._long_help()}
-
-"""
-
-    def _short_help(self) -> str:
-        texts = []
-        for mode in self._modes:
-            text = mode.short_help_text(" cmk %-36s")
-            if text:
-                texts.append(text)
-        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
-
-    def _long_help(self) -> str:
-        texts = []
-        for mode in self._modes:
-            text = mode.long_help_text()
-            if text:
-                texts.append(text)
-        return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
-
-    #
-    # GENERAL OPTIONS
-    #
-
-    def process_general_options(self, all_opts: Options) -> None:
-        for o, a in all_opts:
-            if (option := self._get_general_option(o)) is None:
-                continue
-
-            match option.action:
-                case Flag(handler=handler):
-                    handler()
-                case WithArgument(handler=handler):
-                    handler(a)
-
-    def _general_option_help(self) -> str:
-        texts = []
-        for option in self._general_options:
-            text = option.short_help_text(fmt="  %-21s")
-            if text:
-                texts.append("%s" % text)
-        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
-
-    def _get_general_option(self, opt: str) -> GeneralOption | None:
-        for option in self._general_options:
-            if opt.lstrip("-") in [option.long_option, option.short_option]:
-                return option
-        return None
-
-
 class Option:
     def __init__(
         self,
@@ -272,48 +129,6 @@ class Option:
         return specs
 
 
-@dataclass(frozen=True)
-class Flag:
-    handler: Callable[[], None]
-
-
-@dataclass(frozen=True)
-class WithArgument:
-    descr: str
-    handler: Callable[[Argument], None]
-
-
-Action = Flag | WithArgument
-
-
-def _action_descr(action: Action) -> str | None:
-    match action:
-        case WithArgument(descr=descr):
-            return descr
-        case Flag():
-            return None
-
-
-class GeneralOption(Option):
-    def __init__(
-        self,
-        *,
-        long_option: OptionName,
-        action: Action,
-        short_help: str,
-        short_option: OptionName | None = None,
-    ) -> None:
-        descr = _action_descr(action)
-        super().__init__(
-            long_option=long_option,
-            short_help=short_help,
-            short_option=short_option,
-            argument=descr is not None,
-            argument_descr=descr,
-        )
-        self.action = action
-
-
 def parse_sub_options(
     sub_options: Sequence[Option], all_opts: Options
 ) -> Mapping[OptionName, object]:
@@ -381,6 +196,48 @@ def option_names[NameT](
             raise MKGeneralException(f"--{name}: invalid argument {value!r}")
         case value:
             raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+
+
+@dataclass(frozen=True)
+class Flag:
+    handler: Callable[[], None]
+
+
+@dataclass(frozen=True)
+class WithArgument:
+    descr: str
+    handler: Callable[[Argument], None]
+
+
+Action = Flag | WithArgument
+
+
+def _action_descr(action: Action) -> str | None:
+    match action:
+        case WithArgument(descr=descr):
+            return descr
+        case Flag():
+            return None
+
+
+class GeneralOption(Option):
+    def __init__(
+        self,
+        *,
+        long_option: OptionName,
+        action: Action,
+        short_help: str,
+        short_option: OptionName | None = None,
+    ) -> None:
+        descr = _action_descr(action)
+        super().__init__(
+            long_option=long_option,
+            short_help=short_help,
+            short_option=short_option,
+            argument=descr is not None,
+            argument_descr=descr,
+        )
+        self.action = action
 
 
 @dataclass(frozen=True)
@@ -558,3 +415,146 @@ class Mode(Option):
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
+
+
+def discover_modes() -> Sequence[Mode]:
+    discovery_result = discover_plugins_from_modules(
+        plugin_prefixes={Mode: "mode_"},
+        module_names_by_priority=[
+            # TODO: We need to get rid of this hard-coded list
+            "cmk.base.modes.check_mk",
+            "cmk.base.diagnostics",
+            "cmk.base.localize",
+            "cmk.base.notify",
+            "cmk.base.nonfree.alert_handling",
+            "cmk.base.nonfree.dump_protobufs",
+            "cmk.base.nonfree.cmc_helpers",
+            "cmk.base.nonfree.convert_rrds",
+            "cmk.base.nonfree.compress_history",
+            "cmk.bakery.base.mode",  # non-free, optional
+            "cmk.plugins.bakery.modes.cap",  # non-free, optional
+        ],
+        skip_wrong_types=True,
+        raise_errors=True,
+    )
+    return tuple(discovery_result.plugins.values())
+
+
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        sys.stdout.write(txt)
+        sys.stdout.flush()
+
+
+class Modes:
+    def __init__(
+        self,
+        *,
+        plugins: Sequence[Mode],
+        general_options: Sequence[GeneralOption],
+    ) -> None:
+        super().__init__()
+        modes = [*plugins, self.mode_help()]
+        self._mode_map: Mapping[OptionName, Mode] = {
+            **{m.long_option: m for m in modes},
+            **{m.short_option: m for m in modes if m.short_option is not None},
+        }
+        self._modes = modes
+        self._general_options = general_options
+
+    def mode_help(self) -> Mode:
+        # It's a little weird to implement the --help option like this,
+        # but it is the easiest way to be consistent with how we use `getopt`.
+        return Mode(
+            long_option="help",
+            short_option="h",
+            dispatch=NoArgument(handler=self._show_help),
+            short_help="Print this help",
+        )
+
+    def _show_help(self, _app: CheckmkBaseApp) -> int:
+        print_(self.help())
+        return 0
+
+    def exists(self, opt: OptionName) -> bool:
+        try:
+            self.get(opt)
+            return True
+        except KeyError:
+            return False
+
+    def get(self, name: OptionName) -> Mode:
+        return self._mode_map[name]
+
+    def short_getopt_specs(self) -> str:
+        options = ""
+        for mode in self._modes:
+            options += "".join(mode.short_getopt_specs())
+        for option in self._general_options:
+            options += "".join(option.short_getopt_specs())
+        return options
+
+    def long_getopt_specs(self) -> list[str]:
+        options: list[str] = []
+        for mode in self._modes:
+            options += mode.long_getopt_specs()
+        for option in self._general_options:
+            options += option.long_getopt_specs()
+        return options
+
+    def help(self) -> str:
+        return f"""WAYS TO CALL:
+{self._short_help()}
+
+OPTIONS:
+{self._general_option_help()}
+
+NOTES:
+{self._long_help()}
+
+"""
+
+    def _short_help(self) -> str:
+        texts = []
+        for mode in self._modes:
+            text = mode.short_help_text(" cmk %-36s")
+            if text:
+                texts.append(text)
+        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+
+    def _long_help(self) -> str:
+        texts = []
+        for mode in self._modes:
+            text = mode.long_help_text()
+            if text:
+                texts.append(text)
+        return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+
+    #
+    # GENERAL OPTIONS
+    #
+
+    def process_general_options(self, all_opts: Options) -> None:
+        for o, a in all_opts:
+            if (option := self._get_general_option(o)) is None:
+                continue
+
+            match option.action:
+                case Flag(handler=handler):
+                    handler()
+                case WithArgument(handler=handler):
+                    handler(a)
+
+    def _general_option_help(self) -> str:
+        texts = []
+        for option in self._general_options:
+            text = option.short_help_text(fmt="  %-21s")
+            if text:
+                texts.append("%s" % text)
+        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+
+    def _get_general_option(self, opt: str) -> GeneralOption | None:
+        for option in self._general_options:
+            if opt.lstrip("-") in [option.long_option, option.short_option]:
+                return option
+        return None

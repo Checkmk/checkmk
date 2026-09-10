@@ -392,27 +392,6 @@ _SNMP_BACKEND_OPTION: Final = Option(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_list_hosts(_app: object, options: Mapping[str, object], args: Sequence[str]) -> int:
-    loading_result = config.load()
-    config_cache = loading_result.config_cache
-    core_objects_config = config.CoreObjectsConfig(
-        loading_result.loaded_config,
-        config_cache.ruleset_matcher,
-        config_cache.label_manager,
-    )
-    hosts = _list_all_hosts(
-        config_cache,
-        loading_result.hosts_config,
-        core_objects_config,
-        args,
-        options,
-    )
-    with suppress(IOError):
-        sys.stdout.write("\n".join(hosts) + "\n")
-        sys.stdout.flush()
-    return 0
-
-
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
     config_cache: ConfigCache,
@@ -449,6 +428,27 @@ def _list_all_hosts(
                 break
 
     return hostlist
+
+
+def _mode_list_hosts(_app: object, options: Mapping[str, object], args: Sequence[str]) -> int:
+    loading_result = config.load()
+    config_cache = loading_result.config_cache
+    core_objects_config = config.CoreObjectsConfig(
+        loading_result.loaded_config,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+    )
+    hosts = _list_all_hosts(
+        config_cache,
+        loading_result.hosts_config,
+        core_objects_config,
+        args,
+        options,
+    )
+    with suppress(IOError):
+        sys.stdout.write("\n".join(hosts) + "\n")
+        sys.stdout.flush()
+    return 0
 
 
 mode_list_hosts = Mode(
@@ -489,20 +489,6 @@ mode_list_hosts = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_list_tag(_app: object, args: Sequence[str]) -> int:
-    loading_result = config.load()
-    hosts = _list_all_hosts_with_tags(
-        tuple(TagID(_) for _ in args),
-        loading_result.config_cache,
-        loading_result.hosts_config,
-        loading_result.host_tags,
-    )
-    print_("\n".join(sorted(hosts)))
-    if hosts:
-        print_("\n")
-    return 0
-
-
 def _list_all_hosts_with_tags(
     tags: Sequence[TagID],
     config_cache: ConfigCache,
@@ -526,6 +512,20 @@ def _list_all_hosts_with_tags(
         if hosttags_match_taglist(host_tags.tag_list(h), tags):
             hosts.append(h)
     return hosts
+
+
+def _mode_list_tag(_app: object, args: Sequence[str]) -> int:
+    loading_result = config.load()
+    hosts = _list_all_hosts_with_tags(
+        tuple(TagID(_) for _ in args),
+        loading_result.config_cache,
+        loading_result.hosts_config,
+        loading_result.host_tags,
+    )
+    print_("\n".join(sorted(hosts)))
+    if hosts:
+        print_("\n")
+    return 0
 
 
 mode_list_tag = Mode(
@@ -1179,37 +1179,6 @@ _extra_oids: list[str] = []
 _SNMPWalkOptions = dict[str, list[OID]]
 
 
-def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
-    cmk.utils.paths.snmpwalks_dir.mkdir(parents=True, exist_ok=True)
-
-    # TODO: What about SNMP management boards?
-    try:
-        _do_snmpwalk_on(
-            options,
-            cmk.utils.paths.snmpwalks_dir / backend.hostname,
-            backend=backend,
-        )
-    except Exception as e:
-        console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
-        if cmk.ccc.debug.enabled():
-            raise
-    cmk.ccc.cleanup.cleanup_globals()
-
-
-def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
-    console.verbose(f"{backend.hostname}:")
-
-    oids = oids_to_walk(options)
-
-    with filename.open("w", encoding="utf-8") as file:
-        for rows in _execute_walks_for_dump(oids, backend=backend):
-            for oid, value in rows:
-                file.write(f"{oid} {value}\n")
-            console.verbose(f"{len(rows)} variables.")
-
-    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
-
-
 def _execute_walks_for_dump(
     oids: list[OID], *, backend: SNMPBackend
 ) -> Iterable[list[tuple[OID, str]]]:
@@ -1229,6 +1198,37 @@ def _execute_walks_for_dump(
             console.error(f"Error: {e}", file=sys.stderr)
             if cmk.ccc.debug.enabled():
                 raise
+
+
+def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
+    console.verbose(f"{backend.hostname}:")
+
+    oids = oids_to_walk(options)
+
+    with filename.open("w", encoding="utf-8") as file:
+        for rows in _execute_walks_for_dump(oids, backend=backend):
+            for oid, value in rows:
+                file.write(f"{oid} {value}\n")
+            console.verbose(f"{len(rows)} variables.")
+
+    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
+
+
+def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
+    cmk.utils.paths.snmpwalks_dir.mkdir(parents=True, exist_ok=True)
+
+    # TODO: What about SNMP management boards?
+    try:
+        _do_snmpwalk_on(
+            options,
+            cmk.utils.paths.snmpwalks_dir / backend.hostname,
+            backend=backend,
+        )
+    except Exception as e:
+        console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
+        if cmk.ccc.debug.enabled():
+            raise
+    cmk.ccc.cleanup.cleanup_globals()
 
 
 def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
@@ -2495,6 +2495,59 @@ def _lookup_plugin[PluginName: (CheckPluginName, InventoryPluginName)](
         raise MKBailOut(f"Unknown check plugin '{plugin_name}'") from exc
 
 
+_CheckingOptions = TypedDict(
+    "_CheckingOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "no-submit": bool,
+        "perfdata": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
+
+
+_DiscoveryOptions = TypedDict(
+    "_DiscoveryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+        "discover": int,
+        "only-host-labels": bool,
+    },
+    total=False,
+)
+
+
+_InventoryOptions = TypedDict(
+    "_InventoryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "force": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[InventoryPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
+
+
 def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
     options: _CheckingOptions | _DiscoveryOptions | _InventoryOptions,
     plugins: Mapping[PluginName, CheckPlugin | InventoryPlugin],
@@ -2531,24 +2584,6 @@ def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)
         ),
         plugin_names,
     )
-
-
-_DiscoveryOptions = TypedDict(
-    "_DiscoveryOptions",
-    {
-        "cache": Literal[True],
-        "snmp-backend": str,
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[CheckPluginName],
-        "detect-plugins": frozenset[str],
-        "discover": int,
-        "only-host-labels": bool,
-    },
-    total=False,
-)
 
 
 def _discovery_options(parsed: Mapping[str, object]) -> _DiscoveryOptions:
@@ -2865,23 +2900,6 @@ mode_discover = Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-_CheckingOptions = TypedDict(
-    "_CheckingOptions",
-    {
-        "cache": Literal[True],
-        "snmp-backend": str,
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "no-submit": bool,
-        "perfdata": bool,
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[CheckPluginName],
-        "detect-plugins": frozenset[str],
-    },
-    total=False,
-)
-
 
 def _checking_options(parsed: Mapping[str, object]) -> _CheckingOptions:
     options = _CheckingOptions()
@@ -2906,46 +2924,6 @@ def _checking_options(parsed: Mapping[str, object]) -> _CheckingOptions:
     if "detect-plugins" in parsed:
         options["detect-plugins"] = option_names(parsed, "detect-plugins", str)
     return options
-
-
-def _mode_check(
-    app: CheckmkBaseApp, options: _CheckingOptions, args: Sequence[str]
-) -> ServiceState:
-    plugins = load_checks()
-    loading_result = config.load()
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-
-    secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-
-    return run_checking(
-        app,
-        loaded_config,
-        ruleset_matcher,
-        label_manager,
-        plugins,
-        loading_result.config_cache,
-        config.make_hosts_config(loaded_config),
-        loading_result.host_tags,
-        loaded_config.monitoring_core,
-        config.ServiceDependsOn(
-            tag_list=loading_result.host_tags.tag_list,
-            service_dependencies=loaded_config.service_dependencies,
-        ),
-        options,
-        args,
-        secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-                cmk.utils.paths.relative_tmp_dir
-            ),
-            secrets=secrets,
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
-        ),
-        trusted_ca_file=cmk.utils.paths.trusted_ca_file,
-    )
 
 
 # also used in precompiled host checks!
@@ -3199,6 +3177,46 @@ def run_checking(
     return check_result.state
 
 
+def _mode_check(
+    app: CheckmkBaseApp, options: _CheckingOptions, args: Sequence[str]
+) -> ServiceState:
+    plugins = load_checks()
+    loading_result = config.load()
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+
+    secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+
+    return run_checking(
+        app,
+        loaded_config,
+        ruleset_matcher,
+        label_manager,
+        plugins,
+        loading_result.config_cache,
+        config.make_hosts_config(loaded_config),
+        loading_result.host_tags,
+        loaded_config.monitoring_core,
+        config.ServiceDependsOn(
+            tag_list=loading_result.host_tags.tag_list,
+            service_dependencies=loaded_config.service_dependencies,
+        ),
+        options,
+        args,
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
+            ),
+            secrets=secrets,
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
+        ),
+        trusted_ca_file=cmk.utils.paths.trusted_ca_file,
+    )
+
+
 mode_check = Mode(
     long_option="check",
     dispatch=SubOptionsAndOptionalArguments.parsing(
@@ -3255,22 +3273,6 @@ mode_check = Mode(
 #   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
-
-_InventoryOptions = TypedDict(
-    "_InventoryOptions",
-    {
-        "cache": Literal[True],
-        "snmp-backend": str,
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "force": bool,
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[InventoryPluginName],
-        "detect-plugins": frozenset[str],
-    },
-    total=False,
-)
 
 
 def _inventory_options(parsed: Mapping[str, object]) -> _InventoryOptions:
@@ -3530,6 +3532,47 @@ mode_inventory = Mode(
 )
 
 
+class _SaveTreeActions(NamedTuple):
+    do_archive: bool
+    do_save: bool
+
+
+def _render_update_results(
+    update_results: Mapping[SDPath, Sequence[str]],
+) -> str:
+    lines = ["Updated inventory tree:"]
+    for path, messages in update_results.items():
+        lines.append(f"  Path '{' > '.join(path)}':")
+        lines.extend(f"    {r}" for r in sorted(messages))
+    return "\n".join(lines) + "\n"
+
+
+def _get_save_tree_actions(
+    *,
+    previous_tree: ImmutableTree,
+    inventory_tree: MutableTree,
+) -> _SaveTreeActions:
+    if not inventory_tree:
+        # Archive current inventory tree file if it exists. Important for host inventory icon
+        console.verbose("No inventory tree.")
+        return _SaveTreeActions(do_archive=True, do_save=False)
+
+    if not previous_tree:
+        console.verbose("New inventory tree.")
+        return _SaveTreeActions(do_archive=False, do_save=True)
+
+    if has_changed := previous_tree != inventory_tree:
+        console.verbose("Inventory tree has changed.")
+
+    if update_results := inventory_tree.get_update_results():
+        console.verbose_no_lf(_render_update_results(update_results))
+
+    return _SaveTreeActions(
+        do_archive=has_changed,
+        do_save=(has_changed or len(update_results) > 0),
+    )
+
+
 def execute_active_check_inventory(
     host_name: HostName,
     *,
@@ -3599,47 +3642,6 @@ def execute_active_check_inventory(
             )
 
     return result.check_results
-
-
-class _SaveTreeActions(NamedTuple):
-    do_archive: bool
-    do_save: bool
-
-
-def _render_update_results(
-    update_results: Mapping[SDPath, Sequence[str]],
-) -> str:
-    lines = ["Updated inventory tree:"]
-    for path, messages in update_results.items():
-        lines.append(f"  Path '{' > '.join(path)}':")
-        lines.extend(f"    {r}" for r in sorted(messages))
-    return "\n".join(lines) + "\n"
-
-
-def _get_save_tree_actions(
-    *,
-    previous_tree: ImmutableTree,
-    inventory_tree: MutableTree,
-) -> _SaveTreeActions:
-    if not inventory_tree:
-        # Archive current inventory tree file if it exists. Important for host inventory icon
-        console.verbose("No inventory tree.")
-        return _SaveTreeActions(do_archive=True, do_save=False)
-
-    if not previous_tree:
-        console.verbose("New inventory tree.")
-        return _SaveTreeActions(do_archive=False, do_save=True)
-
-    if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed.")
-
-    if update_results := inventory_tree.get_update_results():
-        console.verbose_no_lf(_render_update_results(update_results))
-
-    return _SaveTreeActions(
-        do_archive=has_changed,
-        do_save=(has_changed or len(update_results) > 0),
-    )
 
 
 def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, object]) -> int:

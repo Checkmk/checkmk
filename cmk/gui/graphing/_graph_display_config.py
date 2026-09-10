@@ -132,7 +132,6 @@ class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     border_width: SizeMM = 0.05
     show_title: bool = True
     background_color: str = "#f8f4f0"
-    canvas_color: str = "#ffffff"
     foreground_color: str = "#000000"
 
     @classmethod

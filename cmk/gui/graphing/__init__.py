@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from ._autocompleter import metrics_autocompleter
+from ._autocompleter import monitored_metrics_autocompleter
 from ._drawn_curves import (
     drawn_curves,
     DrawnCurve,
@@ -325,7 +325,7 @@ __all__ = [
     "metric_backend_registry",
     "MetricBackend",
     "MetricName",
-    "metrics_autocompleter",
+    "monitored_metrics_autocompleter",
     "metrics_from_api",
     "metrics_of_query",
     "MetricVisitor",

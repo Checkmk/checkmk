@@ -6,6 +6,8 @@
 
 from collections.abc import Mapping
 
+from cmk.gui.autocompleters import AutocompleterFunc
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Choices
 
 from ._from_api import metrics_from_api
@@ -39,6 +41,13 @@ def metrics_autocompleter(
         (v for v in metrics if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
+
+
+def monitored_metrics_autocompleter(livestatus_query: LivestatusQueryFunc) -> AutocompleterFunc:
+    def autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:  # noqa: ARG001
+        return metrics_autocompleter(value, params, livestatus_query=livestatus_query)
+
+    return autocompleter
 
 
 def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:

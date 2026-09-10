@@ -7,10 +7,9 @@ from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.form_specs.unstable import MetricExtended
 from cmk.gui.form_specs.visitors import register_visitor_class
 from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from ._autocompleter import metrics_autocompleter
+from ._autocompleter import monitored_metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_codec import community_graph_codec, GraphCodec
 from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
@@ -50,14 +49,9 @@ def register(
 
     config_variable_registry.register(ConfigVariableGraphTimeranges)
 
-    def wrapped_autocompleter(
-        config: object,  # noqa: ARG001
-        value: str,
-        params: dict[str, object],
-    ) -> Choices:
-        return metrics_autocompleter(value, params, livestatus_query=livestatus_query)
-
-    autocompleter_registry.register_autocompleter("monitored_metrics", wrapped_autocompleter)
+    autocompleter_registry.register_autocompleter(
+        "monitored_metrics", monitored_metrics_autocompleter(livestatus_query)
+    )
 
     graph_metric_expression_registry.register(GraphMetricConstant)
     graph_metric_expression_registry.register(GraphMetricConstantNA)

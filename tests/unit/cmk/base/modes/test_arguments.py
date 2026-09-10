@@ -10,7 +10,13 @@ import pytest
 
 from cmk.base.modes.arguments import InvalidArguments, parse, RunMode, ShowHelp
 from cmk.base.modes.check_mk import general_options
-from cmk.base.modes.modes import discover_modes, Mode, Modes, Option, parse_sub_options
+from cmk.base.modes.modes import (
+    discover_modes,
+    Mode,
+    Modes,
+    Option,
+    parse_sub_options,
+)
 from cmk.checkengine.plugins import CheckPluginName
 
 _MODES: Final = Modes(plugins=discover_modes(), general_options=general_options())

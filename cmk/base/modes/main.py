@@ -35,8 +35,9 @@ from cmk.base.modes.call import call
 from cmk.base.modes.check_mk import general_options
 from cmk.base.modes.modes import (
     discover_modes,
+    GeneralOption,
     Modes,
-    Option,
+    WithArgument,
 )
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -145,12 +146,10 @@ def main() -> int:
         del root_logger.handlers[:]  # Remove the default stream handler.
         root_logger.addHandler(handler)
 
-    _log_file_option = Option(
+    _log_file_option = GeneralOption(
         long_option="log-file",
         short_help="Log to the given file (with timestamps) instead of stderr",
-        handler_function=_enable_file_logging,
-        argument=True,
-        argument_descr="PATH",
+        action=WithArgument(descr="PATH", handler=_enable_file_logging),
     )
 
     modes = Modes(

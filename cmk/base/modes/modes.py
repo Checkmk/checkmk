@@ -23,7 +23,6 @@ from cmk.utils.log import console
 OptionSpec = str
 Argument = str
 OptionName = str
-OptionFunction = Callable
 ConvertFunction = Callable
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
@@ -63,7 +62,7 @@ class Modes:
         self,
         *,
         plugins: Sequence[Mode],
-        general_options: Sequence[Option],
+        general_options: Sequence[GeneralOption],
     ) -> None:
         super().__init__()
         modes = [*plugins, self.mode_help()]
@@ -148,17 +147,14 @@ NOTES:
 
     def process_general_options(self, all_opts: Options) -> None:
         for o, a in all_opts:
-            option = self._get_general_option(o)
-            if not option:
+            if (option := self._get_general_option(o)) is None:
                 continue
 
-            if option.handler_function is None:
-                raise TypeError
-
-            if option.takes_argument():
-                option.handler_function(a)
-            else:
-                option.handler_function()
+            match option.action:
+                case Flag(handler=handler):
+                    handler()
+                case WithArgument(handler=handler):
+                    handler(a)
 
     def _general_option_help(self) -> str:
         texts = []
@@ -168,7 +164,7 @@ NOTES:
                 texts.append("%s" % text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def _get_general_option(self, opt: str) -> Option | None:
+    def _get_general_option(self, opt: str) -> GeneralOption | None:
         for option in self._general_options:
             if opt.lstrip("-") in [option.long_option, option.short_option]:
                 return option
@@ -192,7 +188,6 @@ class Option:
         argument_optional: bool = False,
         count: bool = False,
         # ----------------------------------------------------------------------
-        handler_function: OptionFunction | None = None,
         deprecated_long_options: set[str] | None = None,
     ) -> None:
         super().__init__()
@@ -220,7 +215,6 @@ class Option:
         self.argument_descr = argument_descr
         self.argument_conv = argument_conv
         self.argument_optional = argument_optional
-        self.handler_function = handler_function
 
     @property
     def name(self) -> str:
@@ -276,6 +270,48 @@ class Option:
         if self.argument and not self.argument_optional:
             return [f"{spec}=" for spec in specs]
         return specs
+
+
+@dataclass(frozen=True)
+class Flag:
+    handler: Callable[[], None]
+
+
+@dataclass(frozen=True)
+class WithArgument:
+    descr: str
+    handler: Callable[[Argument], None]
+
+
+Action = Flag | WithArgument
+
+
+def _action_descr(action: Action) -> str | None:
+    match action:
+        case WithArgument(descr=descr):
+            return descr
+        case Flag():
+            return None
+
+
+class GeneralOption(Option):
+    def __init__(
+        self,
+        *,
+        long_option: OptionName,
+        action: Action,
+        short_help: str,
+        short_option: OptionName | None = None,
+    ) -> None:
+        descr = _action_descr(action)
+        super().__init__(
+            long_option=long_option,
+            short_help=short_help,
+            short_option=short_option,
+            argument=descr is not None,
+            argument_descr=descr,
+        )
+        self.action = action
 
 
 def parse_sub_options(

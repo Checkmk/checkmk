@@ -161,6 +161,9 @@ from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
 from .modes import (
+    Argument,
+    Flag,
+    GeneralOption,
     Mode,
     NoArgument,
     Option,
@@ -172,6 +175,7 @@ from .modes import (
     SubOptions,
     SubOptionsAndOptionalArguments,
     SubOptionsAndRequiredArgument,
+    WithArgument,
 )
 
 tracer = trace.get_tracer()
@@ -224,17 +228,28 @@ def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
             raise ValueError(backend)
 
 
+def _host_address(raw_host_address: str) -> HostAddress:
+    try:
+        return HostAddress(raw_host_address)
+    except HostNameValidationError as exc:
+        raise MKBailOut(str(exc)) from exc
+
+
+def _host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
+    return [_host_address(raw_host_address) for raw_host_address in raw_host_addresses]
+
+
 def option_verbosity() -> None:
     global _verbosity
     _verbosity += 1
     log.logger.setLevel(log.verbosity_to_log_level(_verbosity))
 
 
-_VERBOSE_OPTION = Option(
+_VERBOSE_OPTION = GeneralOption(
     long_option="verbose",
     short_option="v",
     short_help="Enable verbose output (Use twice for more)",
-    handler_function=option_verbosity,
+    action=Flag(handler=option_verbosity),
 )
 
 
@@ -242,10 +257,10 @@ def option_debug() -> None:
     cmk.ccc.debug.enable()
 
 
-_DEBUG_OPTION = Option(
+_DEBUG_OPTION = GeneralOption(
     long_option="debug",
     short_help="Let most Python exceptions raise through",
-    handler_function=option_debug,
+    action=Flag(handler=option_debug),
 )
 
 
@@ -254,24 +269,22 @@ def option_profile() -> None:
     log.logger.debug("Enabled profiling")
 
 
-_PROFILE_OPTION = Option(
+_PROFILE_OPTION = GeneralOption(
     long_option="profile",
     short_help="Enable profiling mode",
-    handler_function=option_profile,
+    action=Flag(handler=option_profile),
 )
 
 
-def option_fake_dns(a: HostAddress) -> None:
+def option_fake_dns(a: Argument) -> None:
     global _fake_dns
-    _fake_dns = a
+    _fake_dns = _host_address(a)
 
 
-_FAKE_DNS_OPTION = Option(
+_FAKE_DNS_OPTION = GeneralOption(
     long_option="fake-dns",
     short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    handler_function=option_fake_dns,
-    argument=True,
-    argument_descr="IP",
+    action=WithArgument(descr="IP", handler=option_fake_dns),
 )
 
 
@@ -283,18 +296,7 @@ def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
     return None
 
 
-def _host_name(raw_host_name: str) -> HostName:
-    try:
-        return HostName(raw_host_name)
-    except HostNameValidationError as exc:
-        raise MKBailOut(str(exc)) from exc
-
-
-def _host_names(raw_host_names: Sequence[str]) -> Sequence[HostName]:
-    return [_host_name(raw_host_name) for raw_host_name in raw_host_names]
-
-
-def general_options() -> list[Option]:
+def general_options() -> Sequence[GeneralOption]:
     return [
         _VERBOSE_OPTION,
         _DEBUG_OPTION,
@@ -664,7 +666,7 @@ mode_list_checks = Mode(
 
 
 def _mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], raw_host_name: str) -> int:
-    hostname = _host_name(raw_host_name)
+    hostname = _host_address(raw_host_name)
     file_cache_options = _handle_fetcher_options(options)
 
     try:
@@ -898,7 +900,7 @@ mode_dump_agent = Mode(
 
 
 def _mode_dump_hosts(_app: object, args: Sequence[str]) -> int:
-    hostlist: Iterable[HostName] = _host_names(args)
+    hostlist: Iterable[HostName] = _host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
     loading_result = config.load()
@@ -1402,7 +1404,7 @@ mode_snmpget = Mode(
 
 
 def _mode_flush(_app: object, args: Sequence[str]) -> int:
-    hosts = _host_names(args)
+    hosts = _host_addresses(args)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1531,7 +1533,7 @@ mode_flush = Mode(
 
 
 def _mode_dump_nagios_config(app: CheckmkBaseApp, raw_host_names: Sequence[str]) -> int:
-    args = _host_names(raw_host_names)
+    args = _host_addresses(raw_host_names)
 
     from cmk.base.core.nagios import create_config
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
@@ -1805,7 +1807,7 @@ mode_update = Mode(
 
 
 def _mode_restart(app: CheckmkBaseApp, raw_host_names: Sequence[str]) -> int:
-    args = _host_names(raw_host_names)
+    args = _host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1917,7 +1919,7 @@ mode_restart = Mode(
 
 
 def _mode_reload(app: CheckmkBaseApp, raw_host_names: Sequence[str]) -> int:
-    args = _host_names(raw_host_names)
+    args = _host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -2196,7 +2198,7 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 def _mode_check_discovery(
     app: CheckmkBaseApp, options: Mapping[str, object], raw_host_name: str
 ) -> int:
-    hostname = _host_name(raw_host_name)
+    hostname = _host_address(raw_host_name)
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))

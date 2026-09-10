@@ -16,7 +16,11 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import sub_object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
-from cmk.gui.watolib.global_settings import add_global_settings_change, global_settings_diff_text
+from cmk.gui.watolib.global_settings import (
+    add_global_settings_change,
+    global_settings_diff_text,
+    need_site_write_permission,
+)
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
@@ -28,7 +32,6 @@ from ._utils import (
     load_configured_sites,
     load_site_globals,
     make_pending_changes,
-    need_site_write_permission,
     save_site_setting,
     site_global_setting_etag,
     SITE_RW_PERMISSIONS,
@@ -50,8 +53,8 @@ def update_site_global_setting_v1(
 
     Also serves Event Console settings.
     """
-    need_site_write_permission(varname)
     config_variable = config_variable_registry[varname]
+    need_site_write_permission(config_variable)
     form_spec = form_spec_of(config_variable, site_id, api_context)
 
     sites = load_configured_sites()

@@ -21,6 +21,7 @@ from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
     global_settings_diff_text,
     load_configuration_settings,
+    need_write_permission,
     save_global_settings,
 )
 from cmk.web.utils.html import HTML
@@ -34,7 +35,6 @@ from ._utils import (
     global_settings_context_of,
     GlobalSettingVarName,
     make_pending_changes,
-    need_write_permission,
     RW_PERMISSIONS,
     value_from_json,
     value_to_json,
@@ -52,8 +52,8 @@ def update_global_setting_v1(
 
     Also serves Event Console settings.
     """
-    need_write_permission(varname)
     config_variable = config_variable_registry[varname]
+    need_write_permission(config_variable)
     context = global_settings_context_of(omd_site(), api_context)
     form_spec = form_spec_of(config_variable, omd_site(), api_context)
 

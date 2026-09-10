@@ -16,7 +16,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
-from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.global_settings import load_configuration_settings, need_read_permission
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
@@ -24,7 +24,6 @@ from ._utils import (
     form_spec_of,
     global_setting_etag,
     GlobalSettingVarName,
-    need_read_permission,
     RO_PERMISSIONS,
     value_to_json,
 )
@@ -39,8 +38,8 @@ def show_global_setting_v1(
 
     Also serves Event Console settings.
     """
-    need_read_permission(varname)
     config_variable = config_variable_registry[varname]
+    need_read_permission(config_variable)
     value, is_default = effective_value(load_configuration_settings(), varname)
     json_value = value_to_json(form_spec_of(config_variable, omd_site(), api_context), value)
     return ApiResponse(

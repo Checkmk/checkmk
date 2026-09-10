@@ -13,7 +13,6 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.global_config import get_global_config
-from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
@@ -45,9 +44,9 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
 
-# Every value ABCConfigDomain.global_settings_permission can take, since a permission checked
-# during a request must be declared. Not derivable from config_domain_registry, which is
-# populated only after this module is imported.
+# Every permission the need_*_permission() helpers in cmk.gui.watolib.global_settings can
+# check, since a permission checked during a request must be declared. Not derivable from
+# config_domain_registry, which is populated only after this module is imported.
 RO_PERMISSIONS = permissions.AnyPerm(
     [
         permissions.AllPerm(
@@ -123,44 +122,6 @@ def _editable_global_setting(varname: str) -> str:
         )
 
     return varname
-
-
-def _permission_for_varname(varname: str) -> str:
-    return config_variable_registry[varname].primary_domain().global_settings_permission
-
-
-def _need_executables_permission(varname: str) -> None:
-    """Mirrors ABCEditGlobalSettingMode._may_edit_configvar()."""
-    if varname == "actions":
-        user.need_permission("wato.add_or_modify_executables")
-
-
-def need_read_permission(varname: str) -> None:
-    """Must stay in sync with RO_PERMISSIONS."""
-    user.need_permission(_permission_for_varname(varname))
-    _need_executables_permission(varname)
-
-
-def need_write_permission(varname: str) -> None:
-    """Must stay in sync with RW_PERMISSIONS."""
-    user.need_permission("wato.edit")
-    user.need_permission(_permission_for_varname(varname))
-    _need_executables_permission(varname)
-
-
-def need_site_read_permission(varname: str) -> None:
-    """Must stay in sync with SITE_RO_PERMISSIONS."""
-    user.need_permission("wato.global")
-    user.need_permission("wato.sites")
-    _need_executables_permission(varname)
-
-
-def need_site_write_permission(varname: str) -> None:
-    """Must stay in sync with SITE_RW_PERMISSIONS."""
-    user.need_permission("wato.edit")
-    user.need_permission("wato.global")
-    user.need_permission("wato.sites")
-    _need_executables_permission(varname)
 
 
 def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:

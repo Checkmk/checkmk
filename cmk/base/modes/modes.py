@@ -352,11 +352,11 @@ class Mode(Option):
 
         return "\n\n".join(text)
 
-    def get_sub_options(self, all_opts: Options) -> dict[OptionName, Argument | int | bool] | None:
+    def get_sub_options(self, all_opts: Options) -> Mapping[OptionName, object] | None:
         if not self.sub_options:
             return None
 
-        options: dict[OptionName, Argument | int | bool] = {}
+        options: dict[OptionName, object] = {}
 
         for o, a in all_opts:
             for option in self.sub_options:
@@ -373,7 +373,7 @@ class Mode(Option):
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)
 
-                val: Argument | bool = a
+                val: object = a
                 if not option.takes_argument():
                     if option.count:
                         value = options.setdefault(option.name, 0)

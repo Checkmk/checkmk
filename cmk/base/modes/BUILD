@@ -2,7 +2,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
     name = "modes-registry",
-    srcs = ["modes.py"],
+    srcs = [
+        "arguments.py",
+        "modes.py",
+    ],
     imports = ["../../.."],
     visibility = [
         "//cmk:__pkg__",

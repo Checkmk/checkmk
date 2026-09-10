@@ -11,7 +11,6 @@
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
 import errno
-import getopt
 import logging
 import os
 import sys
@@ -59,6 +58,8 @@ from cmk.trace.export import (
     init_span_processor,
 )
 from cmk.utils.paths import profile_dir
+
+from .arguments import InvalidArguments, parse, ShowHelp
 
 
 class CrashReport(ABCCrashReport[BaseDetails]):
@@ -157,47 +158,26 @@ def main() -> int:
         general_options=[*general_options(), _log_file_option],
     )
 
-    try:
-        opts, args = getopt.getopt(
-            sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs()
-        )
-    except getopt.GetoptError as err:
-        prog = sys.argv[0].split("/")[-1]
-        sys.stdout.write(f"ERROR: {err} (see `{prog} --help` for valid options)\n")
+    parsed = parse(modes, sys.argv)
+    if isinstance(parsed, InvalidArguments):
+        sys.stdout.write(parsed.message)
         return 1
 
-    # First load the general modifying options
-    modes.process_general_options(opts)
+    modes.process_general_options(parsed.options)
 
     try:
-        # Now find the requested mode and execute it
-        mode_name, mode_args = None, None
-        for o, a in opts:
-            if modes.exists(o := o.lstrip("-")):
-                mode_name, mode_args = o, a
-                break
-
-        if not opts and not args:
+        if isinstance(parsed, ShowHelp):
             sys.stdout.write(modes.help())
             return 0
 
-        app = make_app(cmk_version.edition(OMD_ROOT))
-
-        done, exit_status = False, 0
-        trace_context = trace.extract_context_from_environment(dict(os.environ))
-        if mode_name is not None and mode_args is not None:
-            exit_status = call(app, modes.get(mode_name), mode_args, opts, args, trace_context)
-            done = True
-
-        # When no mode was found, Checkmk is running the "check" mode
-        if not done:
-            if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-                exit_status = call(app, modes.get("check"), None, opts, args, trace_context)
-            else:
-                sys.stdout.write(modes.help())
-                exit_status = 0
-
-        return exit_status
+        return call(
+            make_app(cmk_version.edition(OMD_ROOT)),
+            parsed.mode,
+            parsed.argument,
+            parsed.options,
+            parsed.arguments,
+            trace.extract_context_from_environment(dict(os.environ)),
+        )
 
     except MKTerminate:
         logger.error("<Interrupted>")  # noqa: TRY400

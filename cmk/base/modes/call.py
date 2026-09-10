@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from cmk import trace
 from cmk.base.base_app import CheckmkBaseApp
@@ -16,7 +16,7 @@ OptionFunction = Callable  # type: ignore[type-arg]
 ModeFunction = Callable  # type: ignore[type-arg]
 ConvertFunction = Callable  # type: ignore[type-arg]
 Options = list[tuple[OptionSpec, Argument]]
-Arguments = list[str]
+Arguments = Sequence[str]
 
 tracer = trace.get_tracer()
 

@@ -44,59 +44,22 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
 
-# Every permission the need_*_permission() helpers in cmk.gui.watolib.global_settings can
-# check, since a permission checked during a request must be declared. Not derivable from
-# config_domain_registry, which is populated only after this module is imported.
-RO_PERMISSIONS = permissions.AnyPerm(
-    [
-        permissions.AllPerm(
-            [
-                permissions.Perm("wato.global"),
-                # the password visitor checks this for every secret carrying variable
-                permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
-                # only required for the "actions" variable
-                permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
-            ]
-        ),
-        permissions.Perm("mkeventd.config"),
-    ]
-)
-RW_PERMISSIONS = permissions.AnyPerm(
-    [
-        permissions.AllPerm(
-            [
-                permissions.Perm("wato.edit"),
-                permissions.Perm("wato.global"),
-                # the password visitor checks this for every secret carrying variable
-                permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
-                # only required for the "actions" variable
-                permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
-            ]
-        ),
-        permissions.AllPerm(
-            [
-                permissions.Perm("wato.edit"),
-                permissions.Perm("mkeventd.config"),
-            ]
-        ),
-    ]
+_VARIABLE_PERMISSIONS = permissions.DynamicRuntimePerm(
+    description="The permissions required depend on the targeted variable"
 )
 
+RO_PERMISSIONS = _VARIABLE_PERMISSIONS
+RW_PERMISSIONS = permissions.AllPerm([permissions.Perm("wato.edit"), _VARIABLE_PERMISSIONS])
+
 SITE_RO_PERMISSIONS = permissions.AllPerm(
-    [
-        permissions.Perm("wato.global"),
-        permissions.Perm("wato.sites"),
-        # only required for the "actions" variable
-        permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
-    ]
+    [permissions.Perm("wato.global"), permissions.Perm("wato.sites"), _VARIABLE_PERMISSIONS]
 )
 SITE_RW_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.global"),
         permissions.Perm("wato.sites"),
-        # only required for the "actions" variable
-        permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
+        _VARIABLE_PERMISSIONS,
     ]
 )
 

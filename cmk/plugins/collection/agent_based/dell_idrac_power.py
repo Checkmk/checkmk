@@ -62,6 +62,11 @@ def _get_translate_status(firmware_shortname: str | None) -> Mapping[str, tuple[
     return TRANSLATE_STATUS_V4
 
 
+# A column the device does not answer for a row is padded with an empty string, and a row exists
+# as soon as any column answers. An empty value therefore means the device reported nothing.
+NOT_REPORTED = "Status: not reported by the device"
+
+
 def check_dell_idrac_power(item: str, section: Sequence[StringTable]) -> CheckResult:
     def _get_value(idx: int) -> str | None:
         try:
@@ -73,6 +78,9 @@ def check_dell_idrac_power(item: str, section: Sequence[StringTable]) -> CheckRe
 
     for index, status, _count in section[0]:
         if index == item:
+            if not status:
+                yield Result(state=State.UNKNOWN, summary=NOT_REPORTED)
+                return
             state, state_readable = translate_status.get(status, (State.UNKNOWN, "n/a"))
             yield Result(state=state, summary="Status: %s" % state_readable)
 
@@ -138,12 +146,16 @@ def check_dell_idrac_power_unit(item: str, section: Sequence[StringTable]) -> Ch
 
     for index, status, psu_type, location in section[1]:
         if index == item:
+            if not status:
+                yield Result(state=State.UNKNOWN, summary=NOT_REPORTED)
+                return
             state, state_readable = translate_status[status]
-            psu_type_readable = translate_type[psu_type]
-            yield Result(
-                state=state,
-                summary=f"Status: {state_readable}, Type: {psu_type_readable}, Name: {location}",
-            )
+            summary = [f"Status: {state_readable}"]
+            if psu_type:
+                summary.append(f"Type: {translate_type[psu_type]}")
+            if location:
+                summary.append(f"Name: {location}")
+            yield Result(state=state, summary=", ".join(summary))
             return
 
 

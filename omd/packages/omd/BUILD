@@ -250,6 +250,7 @@ py_library(
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
+        "//packages/cmk-flags",
         requirement("psutil"),
     ],
 )

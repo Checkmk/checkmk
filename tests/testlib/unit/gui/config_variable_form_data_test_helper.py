@@ -1792,6 +1792,7 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("missing-required-keys", {"by_host": {"limit": 500, "action": "stop"}}),
     ],
     "eventsocket_queue_len": MIN_ONE_INTEGER_CASES,
+    "exp_ai_assistant": CHECKBOX_CASES,
     "exp_relay_active_checks": CHECKBOX_CASES,
     "exp_trial_mode_selection": CHECKBOX_CASES,
     "failed_notification_horizon": [
@@ -2474,6 +2475,7 @@ CASES: Mapping[str, list[Case]] = {
             },
         ),
     ],
+    "site_ai_agent_engine": CHECKBOX_CASES,
     "site_mcp_server": CHECKBOX_CASES,
     "site_mcp_trace_forward": CHECKBOX_CASES,
     "site_mkeventd": [

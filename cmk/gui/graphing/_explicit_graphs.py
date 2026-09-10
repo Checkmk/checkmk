@@ -23,7 +23,6 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     omit_zero_metrics: bool
     horizontal_rules: Sequence[HorizontalRule]
     metrics: Sequence[GraphMetric]
-    mark_requested_end_time: bool = False
 
     @staticmethod
     @override

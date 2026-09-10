@@ -20,6 +20,7 @@ py_library(
         "//cmk/gui/background_job/job",
         "//cmk/gui/fields",
         "//cmk/gui/form_specs",
+        "//cmk/gui/token_auth",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
@@ -33,7 +34,10 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
+        "//packages/cmk-licensing",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:azure_deprecated",
@@ -41,7 +45,9 @@ py_library(
         "//packages/cmk-plugins:gcp",
         "//packages/cmk-plugins:proxmox_ve",
         "//packages/cmk-web/cmk/web/utils",
+        requirement("pydantic"),
         requirement("pyyaml"),
+        requirement("python-dateutil"),
     ],
 )
 

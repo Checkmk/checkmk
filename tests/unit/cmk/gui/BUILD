@@ -203,6 +203,7 @@ py_cmk_test(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",

@@ -67,6 +67,7 @@ def test_registered_automation_commands() -> None:
         "get-agent-receiver-port",
         "get-config-sync-state",
         "hosts-for-auto-removal",
+        "kubernetes-push-registration",
         "network-scan",
         "notification-test",
         "ping",

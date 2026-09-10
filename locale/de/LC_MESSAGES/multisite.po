@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-03 12:59+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
-">\n"
+"PO-Revision-Date: 2026-09-09 20:17+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
+"de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -40690,6 +40690,7 @@ msgstr "Erfolgreich an die Event Console geschickte Logs"
 msgid "Logswitches"
 msgstr "Logswitches"
 
+#, fuzzy
 msgid "Logwatch"
 msgstr "Logwatch"
 

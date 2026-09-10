@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 
 from cmk import trace
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.modes.modes import Mode
+from cmk.base.modes.modes import Mode, parse_sub_options
 
 OptionSpec = str
 Argument = str
@@ -29,7 +29,7 @@ def call(
     all_args: Arguments,
     trace_context: trace.Context,
 ) -> int:
-    sub_options = mode.get_sub_options(all_opts)
+    sub_options = parse_sub_options(mode.sub_options, all_opts)
 
     handler_args: list[object] = [app]
     if mode.sub_options:

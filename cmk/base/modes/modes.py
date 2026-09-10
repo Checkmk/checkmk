@@ -272,6 +272,44 @@ class Option:
         return specs
 
 
+def parse_sub_options(
+    sub_options: Sequence[Option], all_opts: Options
+) -> Mapping[OptionName, object]:
+    options: dict[OptionName, object] = {}
+
+    for o, a in all_opts:
+        for option in sub_options:
+            if o not in option.options():
+                continue
+
+            if option.is_deprecated_option(o):
+                console.warning(
+                    tty.format_warning(f"{o!r} is deprecated in favour of option {option.name!r}")
+                )
+
+            if a and not option.takes_argument():
+                raise MKGeneralException("No argument to %s expected." % o)
+
+            val: object = a
+            if not option.takes_argument():
+                if option.count:
+                    value = options.setdefault(option.name, 0)
+                    if not isinstance(value, int):
+                        raise TypeError
+                    options[option.name] = value + 1
+                    continue
+                val = True
+            elif option.argument_conv:
+                try:
+                    val = option.argument_conv(a)
+                except ValueError:
+                    raise MKGeneralException("%s: Invalid argument" % o)
+
+            options[option.name] = val
+
+    return options
+
+
 class Mode(Option):
     def __init__(
         self,
@@ -351,43 +389,3 @@ class Mode(Option):
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
-
-    def get_sub_options(self, all_opts: Options) -> Mapping[OptionName, object] | None:
-        if not self.sub_options:
-            return None
-
-        options: dict[OptionName, object] = {}
-
-        for o, a in all_opts:
-            for option in self.sub_options:
-                if o not in option.options():
-                    continue
-
-                if option.is_deprecated_option(o):
-                    console.warning(
-                        tty.format_warning(
-                            f"{o!r} is deprecated in favour of option {option.name!r}"
-                        )
-                    )
-
-                if a and not option.takes_argument():
-                    raise MKGeneralException("No argument to %s expected." % o)
-
-                val: object = a
-                if not option.takes_argument():
-                    if option.count:
-                        value = options.setdefault(option.name, 0)
-                        if not isinstance(value, int):
-                            raise TypeError
-                        options[option.name] = value + 1
-                        continue
-                    val = True
-                elif option.argument_conv:
-                    try:
-                        val = option.argument_conv(a)
-                    except ValueError:
-                        raise MKGeneralException("%s: Invalid argument" % o)
-
-                options[option.name] = val
-
-        return options

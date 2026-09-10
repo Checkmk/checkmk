@@ -10,7 +10,7 @@ import pytest
 
 from cmk.base.modes.arguments import InvalidArguments, parse, RunMode, ShowHelp
 from cmk.base.modes.check_mk import general_options
-from cmk.base.modes.modes import discover_modes, Mode, Modes, Option
+from cmk.base.modes.modes import discover_modes, Mode, Modes, Option, parse_sub_options
 from cmk.checkengine.plugins import CheckPluginName
 
 _MODES: Final = Modes(plugins=discover_modes(), general_options=general_options())
@@ -72,7 +72,7 @@ def test_every_sub_option_reaches_its_mode(mode: Mode, option: Option) -> None:
     )
 
     assert isinstance(parsed, RunMode)
-    assert option.name in (parsed.mode.get_sub_options(parsed.options) or {})
+    assert option.name in parse_sub_options(parsed.mode.sub_options, parsed.options)
 
 
 @pytest.mark.parametrize(
@@ -92,7 +92,7 @@ def test_every_short_sub_option_reaches_its_mode(mode: Mode, option: Option) -> 
     )
 
     assert isinstance(parsed, RunMode)
-    assert option.name in (parsed.mode.get_sub_options(parsed.options) or {})
+    assert option.name in parse_sub_options(parsed.mode.sub_options, parsed.options)
 
 
 def test_a_bare_command_shows_the_help() -> None:
@@ -136,21 +136,23 @@ def test_a_repeated_sub_option_is_counted() -> None:
     parsed = parse(_MODES, ["cmk", "-II", "myhost"])
 
     assert isinstance(parsed, RunMode)
-    assert parsed.mode.get_sub_options(parsed.options) == {"discover": 2}
+    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"discover": 2}
 
 
 def test_a_sub_option_argument_is_converted() -> None:
     parsed = parse(_MODES, ["cmk", "--check", "--plugins=cpu", "myhost"])
 
     assert isinstance(parsed, RunMode)
-    assert parsed.mode.get_sub_options(parsed.options) == {"plugins": {CheckPluginName("cpu")}}
+    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {
+        "plugins": {CheckPluginName("cpu")}
+    }
 
 
 def test_a_deprecated_sub_option_reaches_the_option_it_replaces() -> None:
     parsed = parse(_MODES, ["cmk", "--check", "--checks=cpu", "myhost"])
 
     assert isinstance(parsed, RunMode)
-    assert parsed.mode.get_sub_options(parsed.options) == {"detect-plugins": {"cpu"}}
+    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"detect-plugins": {"cpu"}}
 
 
 def test_one_argument_runs_the_implicit_check_mode() -> None:

@@ -349,7 +349,7 @@ const dualListChoiceFormSpec: FormSpec.DualListChoice = {
     autocompleter_loading: 'autocompleter_loading',
     search_available_options: 'search_available_options',
     search_selected_options: 'search_selected_options',
-    and_x_more: 'and_x_more'
+    and_x_more: 'and %(count)s more'
   },
   validators: [],
   elements: [
@@ -374,6 +374,31 @@ test('FormReadonly renders dual list choice', () => {
   screen.getByText('Choice 2')
   expect(screen.queryByText('Choice 3')).toBeNull()
 })
+
+test.each(['dual_list_choice', 'checkbox_list_choice'] as const)(
+  'FormReadonly interpolates the remaining selection count for %s',
+  (type) => {
+    const elements = Array.from({ length: 7 }, (_, index) => ({
+      name: `choice${index}`,
+      title: `Choice ${index}`
+    }))
+    const spec: FormSpec.DualListChoice | FormSpec.CheckboxListChoice = {
+      ...dualListChoiceFormSpec,
+      type,
+      elements
+    }
+    render(FormReadonly, {
+      props: {
+        spec,
+        backendValidation: [],
+        data: elements
+      }
+    })
+    screen.getByText('Choice 4')
+    screen.getByText('and 2 more')
+    expect(screen.queryByText('Choice 5')).toBeNull()
+  }
+)
 
 const telemetryMetricsCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   type: 'metric_backend_custom_query',

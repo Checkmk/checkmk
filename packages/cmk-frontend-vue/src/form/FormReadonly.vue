@@ -430,7 +430,7 @@ function renderMultipleChoice(
     textSpans.push(h('span', nameToTitle[entry]!))
   }
   if (value.length > maxEntries) {
-    const moreText = formSpec.i18n.and_x_more.replace('%s', `${value.length - maxEntries}`)
+    const moreText = formSpec.i18n.and_x_more.replace('%(count)s', `${value.length - maxEntries}`)
     textSpans.push(
       h('span', { class: 'form-readonly__multiple-choice__max-entries' }, ` ${moreText}`)
     )

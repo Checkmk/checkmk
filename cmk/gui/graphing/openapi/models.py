@@ -396,17 +396,9 @@ class BurgerMenuCollection(DomainObjectCollectionModel):
 
 
 @api_model
-class GraphInternalRepresentation:
-    internal: str = api_field(
-        description="The internal representation of the graph",
-        example="<implementation detail>",
-    )
-
-
-@api_model
 class AddToRequest:
-    # Not a GraphInternalRepresentation: the add-to backends store the legacy specification and
-    # replay it when the target is rendered, so the engine's graph definition is of no use here.
+    # The add-to backends store the legacy specification and replay it when the target is
+    # rendered, so the engine's graph definition is of no use here.
     specification: dict[str, object] = api_field(
         example={
             "graph_type": "template",
@@ -450,9 +442,9 @@ class AddToContainerResponse:
 
 @api_model
 class ExportRequest:
-    # Not a GraphInternalRepresentation: the export pages render from the legacy specification, the
-    # same one the add-to actions replay. The consolidation function and the range are the ones the
-    # graph currently shows - unlike the add-to actions, the export does honour them.
+    # The export pages render from the legacy specification, the same one the add-to actions
+    # replay. The consolidation function and the range are the ones the graph currently shows -
+    # unlike the add-to actions, the export does honour them.
     specification: dict[str, object] = api_field(
         example={
             "graph_type": "template",

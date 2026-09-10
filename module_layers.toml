@@ -945,6 +945,7 @@ allows = [
   "@plugin_apis",
   "cmk.backup",
   "cmk.bakery.shared",
+  "cmk.data_backend.gui",
   "cmk.dcd.gui",
   "cmk.discover_plugins",
   "cmk.fields",

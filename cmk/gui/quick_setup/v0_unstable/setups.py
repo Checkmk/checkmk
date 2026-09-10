@@ -281,6 +281,8 @@ class QuickSetup:
     stages: Sequence[StageFactory]
     actions: Sequence[QuickSetupAction]
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None
+    # A push-agent source host does not need a special-agent rule in its bundle.
+    allow_push_agent: bool = False
 
     @property
     def has_conditional_stages(self) -> bool:

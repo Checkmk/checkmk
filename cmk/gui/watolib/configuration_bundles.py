@@ -29,6 +29,7 @@ from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.ruleset_matcher.definition import RuleGroupType
 from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import PasswordConfig
 
@@ -172,9 +173,15 @@ class BundleReferences:
     otel_configs: Sequence[tuple[str, OTelCollectorConfigSpec]] | None = None
 
 
-def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
+def valid_special_agent_bundle(bundle: BundleReferences, *, allow_push_agent: bool = False) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
+    if allow_push_agent and not bundle.rules and bundle.hosts and host_conditions:
+        attributes = bundle.hosts[0].effective_attributes()
+        rule_conditions = (
+            attributes.get("cmk_agent_connection") == HostAgentConnectionMode.PUSH.value
+            and attributes.get("tag_agent") == "cmk-agent"
+        )
     password_conditions = bundle.passwords is None or len(bundle.passwords) == 1
     return host_conditions and rule_conditions and password_conditions
 

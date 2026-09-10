@@ -416,6 +416,8 @@ class ModeEditConfigurationBundles(WatoMode):
         self, group_name: str, bundles: Mapping[BundleId, BundleReferences]
     ) -> None:
         special_agent_valuespec = rulespec_registry[group_name].valuespec
+        quick_setup = quick_setup_registry.get(group_name)
+        allow_push_agent = quick_setup is not None and quick_setup.allow_push_agent
         with table_element(
             table_id=None,
             title="Configurations",
@@ -426,11 +428,9 @@ class ModeEditConfigurationBundles(WatoMode):
             limit=0,
         ) as table:
             for index, (bundle_id, bundle) in enumerate(sorted(bundles.items())):
-                if not valid_special_agent_bundle(bundle):
+                if not valid_special_agent_bundle(bundle, allow_push_agent=allow_push_agent):
                     raise MKGeneralException(f"Invalid configuration: {bundle_id}")
-                assert bundle.rules is not None
                 assert bundle.hosts is not None
-                rule_value = bundle.rules[0].value
                 host_name = bundle.hosts[0].name()
                 table.row()
 
@@ -454,6 +454,10 @@ class ModeEditConfigurationBundles(WatoMode):
                         )
                     )
                 )
+                if not bundle.rules:
+                    html.write_text(_("Push mode"))
+                    continue
+                rule_value = bundle.rules[0].value
                 try:
                     value_html = special_agent_valuespec.value_to_html(rule_value)
                 except Exception as e:
@@ -829,7 +833,11 @@ class ModeConfigurationBundle(WatoMode):
                 )
 
     def _verify_special_agent_vars(self) -> None:
-        if not valid_special_agent_bundle(self._bundle_references):
+        quick_setup = quick_setup_registry.get(self._bundle_group)
+        if not valid_special_agent_bundle(
+            self._bundle_references,
+            allow_push_agent=quick_setup is not None and quick_setup.allow_push_agent,
+        ):
             raise MKGeneralException(
                 _(
                     "The configuration bundle '%(bundle_id)s' is not valid. "
@@ -881,26 +889,10 @@ class ModeConfigurationBundle(WatoMode):
                 )
 
     def _page_section_bundle_links(self) -> None:
-        assert self._bundle_references.rules and self._bundle_references.hosts
+        assert self._bundle_references.hosts
         host = self._bundle_references.hosts[0]
-        rule = self._bundle_references.rules[0]
 
         bundle_entity_links = [
-            MenuItem(
-                mode_or_url=mode_url(
-                    "edit_rule",
-                    varname=RuleGroup.SpecialAgents(self._bundle_group.split(":")[1]),
-                    rule_id=rule.id,
-                ),
-                title=_("Rule"),
-                icon=StaticIcon(IconNames.cloud),
-                permission="rulesets",
-                description=_(
-                    'The rule set "{rule_title}" contains the special '
-                    "agent configuration. Credentials and other "
-                    "agent-specific data can be edited here."
-                ).format(rule_title=rule.ruleset.title()),
-            ),
             MenuItem(
                 mode_or_url=mode_url("edit_host", host=host.name()),
                 title=_("Host"),
@@ -911,6 +903,27 @@ class ModeConfigurationBundle(WatoMode):
                 ).format(host_name=host.name()),
             ),
         ]
+
+        if self._bundle_references.rules:
+            rule = self._bundle_references.rules[0]
+            bundle_entity_links.insert(
+                0,
+                MenuItem(
+                    mode_or_url=mode_url(
+                        "edit_rule",
+                        varname=RuleGroup.SpecialAgents(self._bundle_group.split(":")[1]),
+                        rule_id=rule.id,
+                    ),
+                    title=_("Rule"),
+                    icon=StaticIcon(IconNames.cloud),
+                    permission="rulesets",
+                    description=_(
+                        'The rule set "{rule_title}" contains the special '
+                        "agent configuration. Credentials and other "
+                        "agent-specific data can be edited here."
+                    ).format(rule_title=rule.ruleset.title()),
+                ),
+            )
 
         if self._bundle_references.dcd_connections:
             dcd_config_id, dcd_config_spec = self._bundle_references.dcd_connections[0]

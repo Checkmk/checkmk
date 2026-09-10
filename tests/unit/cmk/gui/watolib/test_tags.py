@@ -13,7 +13,13 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.gui.nagvis._hosttags
-from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.tags import (
+    change_host_tags,
+    OperationRemoveTagGroup,
+    TagCleanupMode,
+    TagConfigFile,
+)
 from cmk.gui.watolib.utils import multisite_dir
 from cmk.utils import tags
 from cmk.utils.tags import TagGroupID, TagID
@@ -116,3 +122,31 @@ def test_tag_config_save(mocker: MockerFixture) -> None:
     cfg = tags.TagConfig.from_config(config_file.load_for_reading())
     assert len(cfg.tag_groups) == 1
     assert cfg.tag_groups[0].id == "tgid2"
+
+
+@pytest.mark.usefixtures("test_cfg", "with_admin_login")
+def test_change_host_tags_removes_tag_group_from_folder() -> None:
+    """A tag group explicitly set on a folder must be removable
+
+    The removal has to be persisted, so the folder is re-read from disk here.
+    """
+    tree = folder_tree()
+    tree.root_folder().create_subfolder(
+        "test_tag_group_removal",
+        title="Test tag group removal",
+        attributes={"tag_criticality": "test"},
+        pprint_value=False,
+        use_git=False,
+    )
+
+    affected_folders, affected_hosts, _affected_rulesets = change_host_tags(
+        OperationRemoveTagGroup(TagGroupID("criticality")),
+        TagCleanupMode.REMOVE,
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+
+    assert [folder.name() for folder in affected_folders] == ["test_tag_group_removal"]
+    assert not affected_hosts
+    assert "tag_criticality" not in tree.folder("test_tag_group_removal").attributes

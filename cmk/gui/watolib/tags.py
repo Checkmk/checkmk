@@ -360,7 +360,7 @@ def _change_host_tags_in_rulesets(
 def _change_host_tags_in_folders(
     operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
     mode: TagCleanupMode,
-    folder: Any,
+    folder: Folder,
     *,
     pprint_value: bool,
 ) -> tuple[list[Folder], list[Host]]:
@@ -377,7 +377,7 @@ def _change_host_tags_in_folders(
 
         if aff_folders and mode != TagCleanupMode.CHECK:
             try:
-                folder.save()
+                folder.save(pprint_value=pprint_value)
             except MKAuthException:
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass

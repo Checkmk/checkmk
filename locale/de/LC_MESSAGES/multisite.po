@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-03 13:59+0000\n"
+"PO-Revision-Date: 2026-09-09 20:17+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -1536,6 +1536,15 @@ msgstr ""
 "<b>Anzeigegrenze erreicht:</b> Diese Tabelle zeigt nur %s Einträge. Weitere "
 "Datensätze sind in dieser Ansicht nicht enthalten. Die Sortierreihenfolge "
 "ist möglicherweise nicht korrekt."
+
+msgid ""
+"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
+"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
+"can understand how the MCP server is used and improve it.<br><br>We collect: "
+"which tools were called, response times, response sizes, error codes, which "
+"AI client or tool was used, and a random session ID.<br><br>We do not "
+"collect: the content of your requests or their results."
+msgstr ""
 
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
@@ -16712,11 +16721,18 @@ msgstr ""
 "Ereignisregeln von der Zentralinstanz wurden in die lokale Konfiguration "
 "kopiert"
 
+msgid "Copied to clipboard"
+msgstr "In die Zwischenablage kopiert"
+
 msgid "Copies a view to a dashboard element"
 msgstr "Kopiert eine Ansicht in ein Dashboard-Element"
 
 msgid "Copy"
 msgstr "Kopieren"
+
+#, fuzzy
+msgid "Copy URL to clipboard"
+msgstr "Code in die Zwischenablage kopieren"
 
 msgid "Copy all event rules from the central site"
 msgstr "Kopiere alle Ereignisregeln von der Zentralinstanz"
@@ -24004,6 +24020,10 @@ msgstr ""
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Livestatus-Zugriff über das Netzwerk (TCP) verfügbar machen"
 
+#, fuzzy
+msgid "Enable MCP server"
+msgstr "SMTP-Server"
+
 msgid "Enable OpenTelemetry Collector"
 msgstr "OpenTelemetry Collector aktivieren"
 
@@ -24186,6 +24206,10 @@ msgstr "Service-Benachrichtigungen ein"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone Zustellung per SMTP aktivieren"
+
+#, fuzzy
+msgid "Enable the MCP Server"
+msgstr "Den gRPC-basierten OTLP-Empfänger aktivieren"
 
 msgid "Enable the ntopng host filter"
 msgstr "Aktiviere den Host-Filter von ntopng"
@@ -25857,6 +25881,10 @@ msgstr "Erwarteter virtueller Switch"
 
 msgid "Expected virtual switch name"
 msgstr "Erwarteter virtueller Switch-Name"
+
+#, fuzzy
+msgid "Experimental flags (for testing only)"
+msgstr "Experimentelle Funktionen von Vue"
 
 msgid "Expiration date"
 msgstr "Ablaufdatum"
@@ -40769,6 +40797,7 @@ msgstr "Erfolgreich an die Event Console geschickte Logs"
 msgid "Logswitches"
 msgstr "Logswitches"
 
+#, fuzzy
 msgid "Logwatch"
 msgstr "Logwatch"
 
@@ -48465,6 +48494,9 @@ msgstr ""
 msgid "On-call schedule"
 msgstr "Bereitschaftsplan"
 
+msgid "Once enabled, your site's MCP server will be reachable at "
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -55812,9 +55844,6 @@ msgstr ""
 msgid "Relays"
 msgstr "Relays"
 
-msgid "Release flags"
-msgstr "Release-Flags"
-
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
 msgstr "Das Erweiterungspaket \"%s\" freigeben"
@@ -59677,6 +59706,10 @@ msgstr "Senden"
 
 msgid "Send HTTP POST data"
 msgstr "HTTP POST Daten senden"
+
+#, fuzzy
+msgid "Send MCP usage data to Checkmk"
+msgstr "Traces von Checkmk senden"
 
 msgid "Send custom notification"
 msgstr "Benutzerdefinierte Benachrichtigung senden"
@@ -74285,6 +74318,14 @@ msgstr ""
 msgid "This is a top-level rule. Show rule tree"
 msgstr ""
 "Dies ist eine Regel, die an der Spitze des Baums steht. Anzeigen der Regel"
+
+#, fuzzy
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
+"%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
+"entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -91588,6 +91629,10 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "Ihre Einstellungen und die Werkseinstellungen sind gleich."
 
+#, fuzzy
+msgid "Your site's MCP server is reachable at "
+msgstr "Redis-Server ist nicht erreichbar."
+
 msgid ""
 "Your trial period has ended, and your license state is automatically "
 "converted to 'Free'. In this license state, a distributed setup is not "
@@ -94090,9 +94135,6 @@ msgstr "Akkordeon-Element %{item} umschalten"
 
 msgid "Toggle %{ title }"
 msgstr "%{ title } umschalten"
-
-msgid "Copied to clipboard"
-msgstr "In die Zwischenablage kopiert"
 
 msgid "Copy to clipboard failed with error: "
 msgstr "Kopieren in die Zwischenablage fehlgeschlagen mit Fehler: "
@@ -96984,6 +97026,9 @@ msgstr "Keine Passwörter verfügbar"
 msgid "Creating a new password is not available for your account. "
 msgstr "Für Ihr Konto ist die Erstellung eines neuen Passworts nicht möglich. "
 
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
 msgid "Send log messages to event console"
 msgstr "Log-Meldungen an Event Console senden"
 
@@ -96999,8 +97044,9 @@ msgstr "Der Port muss sich vom anderen Protokoll-Endpunkt unterscheiden."
 msgid "Configuration details:"
 msgstr "Konfigurationsdetails:"
 
-msgid " | created"
-msgstr " | erstellt"
+#, fuzzy
+msgid " | new"
+msgstr "Neu hinzufügen"
 
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
 msgstr "Mindestens ein Empfänger (gRPC oder HTTP) muss aktiviert sein."
@@ -98741,9 +98787,11 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
-#, fuzzy
-#~ msgid "Experimental flags"
-#~ msgstr "Experimentelle Funktionen von Vue"
+#~ msgid "Release flags"
+#~ msgstr "Release-Flags"
+
+#~ msgid " | created"
+#~ msgstr " | erstellt"
 
 #~ msgid "API endpoint from PagerDuty V2"
 #~ msgstr "API-Endpunkt von PagerDuty V2"
@@ -100842,9 +100890,6 @@ msgstr ""
 
 #~ msgid "Read capacity units"
 #~ msgstr "Lesekapazitätseinheiten"
-
-#~ msgid "Redis server is not reachable."
-#~ msgstr "Redis-Server ist nicht erreichbar."
 
 #~ msgid "Register host & download monitoring agents of your hosts"
 #~ msgstr "Host registrieren & Monitoring-Agenten für Ihre Hosts herunterladen"

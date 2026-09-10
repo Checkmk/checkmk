@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-08 17:17+0000\n"
+"PO-Revision-Date: 2026-09-09 20:18+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -1532,6 +1532,15 @@ msgstr ""
 msgid ""
 "<b>Display limit reached:</b> This table shows only %s entries. Additional "
 "records are not included in this view. Sort order may not be correct."
+msgstr ""
+
+msgid ""
+"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
+"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
+"can understand how the MCP server is used and improve it.<br><br>We collect: "
+"which tools were called, response times, response sizes, error codes, which "
+"AI client or tool was used, and a random session ID.<br><br>We do not "
+"collect: the content of your requests or their results."
 msgstr ""
 
 msgid ""
@@ -17211,11 +17220,19 @@ msgid ""
 "Copied the event rules from the central site into the local configuration"
 msgstr "Copiou as regras do evento do mestre para a configuração local"
 
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "Segredo copiado para a área de transferência"
+
 msgid "Copies a view to a dashboard element"
 msgstr "Copia uma vista para um elemento do painel de instrumentos"
 
 msgid "Copy"
 msgstr "Cópia"
+
+#, fuzzy
+msgid "Copy URL to clipboard"
+msgstr "Segredo copiado para a área de transferência"
 
 msgid "Copy all event rules from the central site"
 msgstr "Copiar todas as regras de eventos do sítio central"
@@ -24838,6 +24855,10 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "Habilitar o acesso ao Livestatus via rede (TCP)"
 
 #, fuzzy
+msgid "Enable MCP server"
+msgstr "Servidor SMTP"
+
+#, fuzzy
 msgid "Enable OpenTelemetry Collector"
 msgstr "Intervalo para recolha de dados"
 
@@ -25031,6 +25052,9 @@ msgstr "Habilitar notificações de serviço"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Habilitar a entrega síncrona via SMTP"
+
+msgid "Enable the MCP Server"
+msgstr ""
 
 #, fuzzy
 msgid "Enable the ntopng host filter"
@@ -26703,6 +26727,10 @@ msgstr "Estado esperado"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "Estado de bandeira esperado"
+
+#, fuzzy
+msgid "Experimental flags (for testing only)"
+msgstr "Característica da empresa"
 
 #, fuzzy
 msgid "Expiration date"
@@ -50513,6 +50541,9 @@ msgstr ""
 msgid "On-call schedule"
 msgstr "Trabalho de Programador Oracle"
 
+msgid "Once enabled, your site's MCP server will be reachable at "
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
@@ -58327,10 +58358,6 @@ msgstr ""
 msgid "Relays"
 msgstr "Atraso:"
 
-#, fuzzy
-msgid "Release flags"
-msgstr "Pacote de lançamento"
-
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
 msgstr "Pacote de extensão removido %s %s"
@@ -62343,6 +62370,10 @@ msgstr "Enviar"
 
 msgid "Send HTTP POST data"
 msgstr "Enviar dados HTTP POST"
+
+#, fuzzy
+msgid "Send MCP usage data to Checkmk"
+msgstr "Mapear o estado do GCP para verificar mk"
 
 msgid "Send custom notification"
 msgstr "Enviar notificação personalizada"
@@ -76850,6 +76881,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Esta é uma regra de alto nível. Mostrar árvore de regras"
+
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -94794,6 +94830,10 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "A sua configuração e as configurações de fábrica são idênticas."
 
+#, fuzzy
+msgid "Your site's MCP server is reachable at "
+msgstr "Este site não está disponível no momento."
+
 msgid ""
 "Your trial period has ended, and your license state is automatically "
 "converted to 'Free'. In this license state, a distributed setup is not "
@@ -97400,10 +97440,6 @@ msgstr ""
 #, fuzzy
 msgid "Toggle %{ title }"
 msgstr "Alternar entradas de log"
-
-#, fuzzy
-msgid "Copied to clipboard"
-msgstr "Segredo copiado para a área de transferência"
 
 msgid "Copy to clipboard failed with error: "
 msgstr ""
@@ -100579,6 +100615,9 @@ msgstr "Portos disponíveis"
 msgid "Creating a new password is not available for your account. "
 msgstr "A nova senha deve ser diferente da sua senha atual."
 
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
 #, fuzzy
 msgid "Send log messages to event console"
 msgstr "Enviar eventos para o console de eventos local"
@@ -100597,8 +100636,8 @@ msgid "Configuration details:"
 msgstr "Ficheiros de configuração"
 
 #, fuzzy
-msgid " | created"
-msgstr "Arquivo criado"
+msgid " | new"
+msgstr "Adicionar novo"
 
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
 msgstr ""
@@ -102279,8 +102318,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Experimental flags"
-#~ msgstr "Característica da empresa"
+#~ msgid "Release flags"
+#~ msgstr "Pacote de lançamento"
+
+#, fuzzy
+#~ msgid " | created"
+#~ msgstr "Arquivo criado"
 
 #, fuzzy
 #~ msgid "API endpoint from PagerDuty V2"
@@ -104304,10 +104347,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Read capacity units"
 #~ msgstr "Unidades de Capacidade de Leitura"
-
-#, fuzzy
-#~ msgid "Redis server is not reachable."
-#~ msgstr "Este site não está disponível no momento."
 
 #, fuzzy
 #~ msgid "Register host & download monitoring agents of your hosts"

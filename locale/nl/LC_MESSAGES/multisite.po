@@ -1536,6 +1536,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
+"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
+"can understand how the MCP server is used and improve it.<br><br>We collect: "
+"which tools were called, response times, response sizes, error codes, which "
+"AI client or tool was used, and a random session ID.<br><br>We do not "
+"collect: the content of your requests or their results."
+msgstr ""
+
+msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -17212,11 +17221,19 @@ msgid ""
 msgstr ""
 "Kopieerde de gebeurtenisregels van de master naar de lokale configuratie"
 
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "Geheim gekopieerd naar klembord"
+
 msgid "Copies a view to a dashboard element"
 msgstr "Kopieert een view naar een dashboard element"
 
 msgid "Copy"
 msgstr "Kopie"
+
+#, fuzzy
+msgid "Copy URL to clipboard"
+msgstr "Geheim gekopieerd naar klembord"
 
 msgid "Copy all event rules from the central site"
 msgstr "Kopieer alle gebeurtenisregels van de centrale site"
@@ -24838,6 +24855,10 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 
 #, fuzzy
+msgid "Enable MCP server"
+msgstr "SMTP-server"
+
+#, fuzzy
 msgid "Enable OpenTelemetry Collector"
 msgstr "Interval voor het verzamelen van gegevens"
 
@@ -25030,6 +25051,9 @@ msgstr "Inschakelen dienst meldingen"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone levering via SMTP inschakelen"
+
+msgid "Enable the MCP Server"
+msgstr ""
 
 #, fuzzy
 msgid "Enable the ntopng host filter"
@@ -26702,6 +26726,10 @@ msgstr "Verwachte toestand"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "Verwachte vlaggenstaat"
+
+#, fuzzy
+msgid "Experimental flags (for testing only)"
+msgstr "Ondernemingsfunctie"
 
 #, fuzzy
 msgid "Expiration date"
@@ -50516,6 +50544,9 @@ msgstr ""
 msgid "On-call schedule"
 msgstr "Oracle Scheduler Job"
 
+msgid "Once enabled, your site's MCP server will be reachable at "
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
@@ -58329,10 +58360,6 @@ msgstr ""
 msgid "Relays"
 msgstr "Vertraging:"
 
-#, fuzzy
-msgid "Release flags"
-msgstr "Release pakket"
-
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
 msgstr "Uitbreidingspakket verwijderd %s %s"
@@ -62329,6 +62356,10 @@ msgstr "Stuur"
 
 msgid "Send HTTP POST data"
 msgstr "HTTP POST-gegevens verzenden"
+
+#, fuzzy
+msgid "Send MCP usage data to Checkmk"
+msgstr "Kaart GCP status te controleren mk"
 
 msgid "Send custom notification"
 msgstr "Aangepaste kennisgeving verzenden"
@@ -76888,6 +76919,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Dit is een regel van het hoogste niveau. Toon regelstructuur"
+
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -94872,6 +94908,10 @@ msgid "Your setting and factory settings are identical."
 msgstr "Uw instelling en de fabrieksinstellingen zijn identiek."
 
 #, fuzzy
+msgid "Your site's MCP server is reachable at "
+msgstr "Deze site is momenteel niet bereikbaar."
+
+#, fuzzy
 msgid ""
 "Your trial period has ended, and your license state is automatically "
 "converted to 'Free'. In this license state, a distributed setup is not "
@@ -97485,10 +97525,6 @@ msgstr ""
 #, fuzzy
 msgid "Toggle %{ title }"
 msgstr "Logboekvermeldingen wijzigen"
-
-#, fuzzy
-msgid "Copied to clipboard"
-msgstr "Geheim gekopieerd naar klembord"
 
 msgid "Copy to clipboard failed with error: "
 msgstr ""
@@ -100667,6 +100703,9 @@ msgstr "Beschikbare poorten"
 msgid "Creating a new password is not available for your account. "
 msgstr "Het nieuwe wachtwoord moet verschillen van uw huidige wachtwoord."
 
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
 #, fuzzy
 msgid "Send log messages to event console"
 msgstr "Gebeurtenissen verzenden naar lokale gebeurtenissenconsole"
@@ -100685,8 +100724,8 @@ msgid "Configuration details:"
 msgstr "Configuratiebestanden"
 
 #, fuzzy
-msgid " | created"
-msgstr "Bestand aangemaakt"
+msgid " | new"
+msgstr "Nieuwe toevoegen"
 
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
 msgstr ""
@@ -102364,8 +102403,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Experimental flags"
-#~ msgstr "Ondernemingsfunctie"
+#~ msgid "Release flags"
+#~ msgstr "Release pakket"
+
+#, fuzzy
+#~ msgid " | created"
+#~ msgstr "Bestand aangemaakt"
 
 #, fuzzy
 #~ msgid "API endpoint from PagerDuty V2"
@@ -104378,10 +104421,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Read capacity units"
 #~ msgstr "Lees Capaciteit Eenheden"
-
-#, fuzzy
-#~ msgid "Redis server is not reachable."
-#~ msgstr "Deze site is momenteel niet bereikbaar."
 
 #, fuzzy
 #~ msgid "Register host & download monitoring agents of your hosts"

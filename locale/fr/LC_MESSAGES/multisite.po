@@ -1548,6 +1548,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
+"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
+"can understand how the MCP server is used and improve it.<br><br>We collect: "
+"which tools were called, response times, response sizes, error codes, which "
+"AI client or tool was used, and a random session ID.<br><br>We do not "
+"collect: the content of your requests or their results."
+msgstr ""
+
+msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -17346,11 +17355,19 @@ msgid ""
 "Copied the event rules from the central site into the local configuration"
 msgstr "Copie des règles d'événements du maître dans la configuration locale"
 
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "Copie du secret dans le presse-papiers"
+
 msgid "Copies a view to a dashboard element"
 msgstr "Copie une vue sur un élément du tableau de bord"
 
 msgid "Copy"
 msgstr "(copie)"
+
+#, fuzzy
+msgid "Copy URL to clipboard"
+msgstr "Copie du secret dans le presse-papiers"
 
 msgid "Copy all event rules from the central site"
 msgstr ""
@@ -25048,6 +25065,10 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "Activer l'accès au Livestatus via le réseau (TCP)"
 
 #, fuzzy
+msgid "Enable MCP server"
+msgstr "Serveur SMTP"
+
+#, fuzzy
 msgid "Enable OpenTelemetry Collector"
 msgstr "Intervalle de collecte des données"
 
@@ -25245,6 +25266,9 @@ msgstr "Activer les notifications de service"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Activer la livraison synchrone via SMTP"
+
+msgid "Enable the MCP Server"
+msgstr ""
 
 #, fuzzy
 msgid "Enable the ntopng host filter"
@@ -26928,6 +26952,10 @@ msgstr "État attendu"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "État du drapeau attendu"
+
+#, fuzzy
+msgid "Experimental flags (for testing only)"
+msgstr "Fonctionnalité d'entreprise"
 
 #, fuzzy
 msgid "Expiration date"
@@ -50917,6 +50945,9 @@ msgstr ""
 msgid "On-call schedule"
 msgstr "Fonction Oracle Scheduler"
 
+msgid "Once enabled, your site's MCP server will be reachable at "
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
@@ -58799,10 +58830,6 @@ msgstr ""
 msgid "Relays"
 msgstr "Retard :"
 
-#, fuzzy
-msgid "Release flags"
-msgstr "Paquet de libération"
-
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
 msgstr "Suppression du paquet d'extensions %s %s"
@@ -62855,6 +62882,10 @@ msgstr "Envoyer"
 
 msgid "Send HTTP POST data"
 msgstr "Envoyer des données HTTP POST"
+
+#, fuzzy
+msgid "Send MCP usage data to Checkmk"
+msgstr "Statut de la carte GCP à vérifier mk"
 
 msgid "Send custom notification"
 msgstr "Envoyer une notification personnalisée"
@@ -77537,6 +77568,11 @@ msgstr ""
 msgid "This is a top-level rule. Show rule tree"
 msgstr ""
 "Il s'agit d'une règle de niveau supérieur. Afficher l'arborescence des règles"
+
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -95775,6 +95811,10 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "Votre réglage et les réglages d'usine sont identiques."
 
+#, fuzzy
+msgid "Your site's MCP server is reachable at "
+msgstr "Ce site n'est actuellement pas joignable."
+
 msgid ""
 "Your trial period has ended, and your license state is automatically "
 "converted to 'Free'. In this license state, a distributed setup is not "
@@ -98388,10 +98428,6 @@ msgstr ""
 #, fuzzy
 msgid "Toggle %{ title }"
 msgstr "Basculer les entrées du journal"
-
-#, fuzzy
-msgid "Copied to clipboard"
-msgstr "Copie du secret dans le presse-papiers"
 
 msgid "Copy to clipboard failed with error: "
 msgstr ""
@@ -101579,6 +101615,9 @@ msgid "Creating a new password is not available for your account. "
 msgstr ""
 "Le nouveau mot de passe doit être différent de votre mot de passe actuel."
 
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
 #, fuzzy
 msgid "Send log messages to event console"
 msgstr "Envoyer des événements à la console d'événements locale"
@@ -101597,8 +101636,8 @@ msgid "Configuration details:"
 msgstr "Fichiers de configuration"
 
 #, fuzzy
-msgid " | created"
-msgstr "Fichier créé"
+msgid " | new"
+msgstr "Ajouter un nouveau"
 
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
 msgstr ""
@@ -103282,8 +103321,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Experimental flags"
-#~ msgstr "Fonctionnalité d'entreprise"
+#~ msgid "Release flags"
+#~ msgstr "Paquet de libération"
+
+#, fuzzy
+#~ msgid " | created"
+#~ msgstr "Fichier créé"
 
 #, fuzzy
 #~ msgid "API endpoint from PagerDuty V2"
@@ -105323,10 +105366,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Read capacity units"
 #~ msgstr "Unités de capacité de lecture"
-
-#, fuzzy
-#~ msgid "Redis server is not reachable."
-#~ msgstr "Ce site n'est actuellement pas joignable."
 
 #, fuzzy
 #~ msgid "Register host & download monitoring agents of your hosts"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-08 17:17+0000\n"
+"PO-Revision-Date: 2026-09-09 20:17+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -1497,6 +1497,15 @@ msgstr ""
 "<b>表示上限に達しました：</b> このテーブルには %s 件のみが表示されます。追加"
 "レコードはこのビューに含まれていません。ソート順序が正しくない場合がありま"
 "す。"
+
+msgid ""
+"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
+"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
+"can understand how the MCP server is used and improve it.<br><br>We collect: "
+"which tools were called, response times, response sizes, error codes, which "
+"AI client or tool was used, and a random session ID.<br><br>We do not "
+"collect: the content of your requests or their results."
+msgstr ""
 
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
@@ -16054,11 +16063,19 @@ msgid ""
 "Copied the event rules from the central site into the local configuration"
 msgstr "セントラルからローカル構成にイベントルールをコピーしました"
 
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "秘密をクリップボードにコピーする"
+
 msgid "Copies a view to a dashboard element"
 msgstr "ビューをダッシュボード要素にコピーします"
 
 msgid "Copy"
 msgstr "コピー"
+
+#, fuzzy
+msgid "Copy URL to clipboard"
+msgstr "コードをクリップボードにコピーする"
 
 msgid "Copy all event rules from the central site"
 msgstr "セントラルサイトからすべてのイベントルールをコピーする"
@@ -23364,6 +23381,10 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にする"
 
 #, fuzzy
+msgid "Enable MCP server"
+msgstr "SMTPサーバー"
+
+#, fuzzy
 msgid "Enable OpenTelemetry Collector"
 msgstr "OpenTelemetryコレクターの有効化（実験的）"
 
@@ -23547,6 +23568,10 @@ msgstr "サービス通知を有効にする"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "SMTP経由の同期配信を有効にする"
+
+#, fuzzy
+msgid "Enable the MCP Server"
+msgstr "GRPCベースの受信機"
 
 msgid "Enable the ntopng host filter"
 msgstr "ntopngホストフィルターを有効にする"
@@ -25210,6 +25235,10 @@ msgstr "期待される状態"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "予想されるフラグの状態"
+
+#, fuzzy
+msgid "Experimental flags (for testing only)"
+msgstr "エンタープライズ機能"
 
 msgid "Expiration date"
 msgstr "有効期限なし"
@@ -40080,8 +40109,9 @@ msgstr "ログがイベントコンソールに正常に送信されました"
 msgid "Logswitches"
 msgstr "ログスイッチ"
 
+#, fuzzy
 msgid "Logwatch"
-msgstr "ログウォッチ"
+msgstr "logwatch"
 
 #, fuzzy
 msgid "Logwatch Event Console forwarding"
@@ -47906,6 +47936,9 @@ msgstr ""
 msgid "On-call schedule"
 msgstr "Oracleスケジューラジョブ"
 
+msgid "Once enabled, your site's MCP server will be reachable at "
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -55261,10 +55294,6 @@ msgstr ""
 msgid "Relays"
 msgstr "ディレイ:"
 
-#, fuzzy
-msgid "Release flags"
-msgstr "リリースパッケージ"
-
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
 msgstr "非推奨拡張パッケージ: %s"
@@ -59154,6 +59183,10 @@ msgstr "送信"
 
 msgid "Send HTTP POST data"
 msgstr "HTTP POSTデータを送信する"
+
+#, fuzzy
+msgid "Send MCP usage data to Checkmk"
+msgstr "Checkmkからトレースを送信する"
 
 msgid "Send custom notification"
 msgstr "カスタム通知の送信"
@@ -73366,6 +73399,14 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "これはトップレベルのルールです。ルールツリーを表示する"
+
+#, fuzzy
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
+"%s<br><br>これは一時的な実験的なフラグです。バージョン%sでの削除のスケジュー"
+"ルが立てられており、恒久的な設定として依存しないようにしてください。"
 
 #, fuzzy
 msgid ""
@@ -90350,6 +90391,10 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "工場出荷時の設定と同じです。"
 
+#, fuzzy
+msgid "Your site's MCP server is reachable at "
+msgstr "Redisサーバーにアクセスできません。"
+
 msgid ""
 "Your trial period has ended, and your license state is automatically "
 "converted to 'Free'. In this license state, a distributed setup is not "
@@ -92886,10 +92931,6 @@ msgstr "トグル式アコーディオンアイテムn item%{item}"
 #, fuzzy
 msgid "Toggle %{ title }"
 msgstr "ログエントリを切り替えます"
-
-#, fuzzy
-msgid "Copied to clipboard"
-msgstr "秘密をクリップボードにコピーする"
 
 msgid "Copy to clipboard failed with error: "
 msgstr "クリップボードへのコピーがエラーで失敗しました： "
@@ -96190,6 +96231,9 @@ msgid "Creating a new password is not available for your account. "
 msgstr ""
 "お客様のアカウントでは、新しいパスワードの設定はご利用いただけません。 "
 
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
 msgid "Send log messages to event console"
 msgstr "ログメッセージをイベントコンソールに送信"
 
@@ -96205,8 +96249,9 @@ msgstr "ポート番号は、他のプロトコルエンドポイントとは異
 msgid "Configuration details:"
 msgstr "設定の詳細："
 
-msgid " | created"
-msgstr " | 作成"
+#, fuzzy
+msgid " | new"
+msgstr "新しく追加する"
 
 #, fuzzy
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
@@ -98081,8 +98126,11 @@ msgstr ""
 "スできます"
 
 #, fuzzy
-#~ msgid "Experimental flags"
-#~ msgstr "エンタープライズ機能"
+#~ msgid "Release flags"
+#~ msgstr "リリースパッケージ"
+
+#~ msgid " | created"
+#~ msgstr " | 作成"
 
 #~ msgid "API endpoint from PagerDuty V2"
 #~ msgstr "PagerDuty V2のAPIエンドポイント"
@@ -100174,9 +100222,6 @@ msgstr ""
 
 #~ msgid "Read capacity units"
 #~ msgstr "容量単位の読み取り"
-
-#~ msgid "Redis server is not reachable."
-#~ msgstr "Redisサーバーにアクセスできません。"
 
 #~ msgid "Register host & download monitoring agents of your hosts"
 #~ msgstr "ホストの登録と監視エージェントのダウンロード"

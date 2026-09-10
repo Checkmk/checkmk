@@ -1546,6 +1546,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
+"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
+"can understand how the MCP server is used and improve it.<br><br>We collect: "
+"which tools were called, response times, response sizes, error codes, which "
+"AI client or tool was used, and a random session ID.<br><br>We do not "
+"collect: the content of your requests or their results."
+msgstr ""
+
+msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -17261,11 +17270,19 @@ msgid ""
 "Copied the event rules from the central site into the local configuration"
 msgstr "A copiat regulile de evenimente din master în configurația locală"
 
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "Secret copiat în clipboard"
+
 msgid "Copies a view to a dashboard element"
 msgstr "Copiază o vizualizare într-un element de tablou de bord"
 
 msgid "Copy"
 msgstr "Copiați"
+
+#, fuzzy
+msgid "Copy URL to clipboard"
+msgstr "Copiați codurile în clipboard"
 
 msgid "Copy all event rules from the central site"
 msgstr "Copiați toate regulile de eveniment de pe site-ul central"
@@ -24929,6 +24946,10 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "Activarea accesului la Livestatus prin rețea (TCP)"
 
 #, fuzzy
+msgid "Enable MCP server"
+msgstr "Server SMTP"
+
+#, fuzzy
 msgid "Enable OpenTelemetry Collector"
 msgstr "Intervalul de colectare a datelor"
 
@@ -25121,6 +25142,9 @@ msgstr "Activați notificările de serviciu"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Activați livrarea sincronă prin SMTP"
+
+msgid "Enable the MCP Server"
+msgstr ""
 
 #, fuzzy
 msgid "Enable the ntopng host filter"
@@ -26810,6 +26834,10 @@ msgstr "Starea așteptată"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "Starea așteptată a steagului"
+
+#, fuzzy
+msgid "Experimental flags (for testing only)"
+msgstr "Caracteristica Enterprise"
 
 #, fuzzy
 msgid "Expiration date"
@@ -50660,6 +50688,9 @@ msgstr ""
 msgid "On-call schedule"
 msgstr "Scheduler Oracle Scheduler Job"
 
+msgid "Once enabled, your site's MCP server will be reachable at "
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Once you enable this option, this plug-in will not only handle direct group "
@@ -58485,10 +58516,6 @@ msgstr ""
 msgid "Relays"
 msgstr "Întârziere:"
 
-#, fuzzy
-msgid "Release flags"
-msgstr "Pachet de lansare"
-
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
 msgstr "Pachet de extensie eliminat %s %s"
@@ -62515,6 +62542,10 @@ msgstr "Trimiteți"
 
 msgid "Send HTTP POST data"
 msgstr "Trimiteți date HTTP POST"
+
+#, fuzzy
+msgid "Send MCP usage data to Checkmk"
+msgstr "Starea GCP pentru a verifica mk"
 
 msgid "Send custom notification"
 msgstr "Trimiteți o notificare personalizată"
@@ -77178,6 +77209,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Aceasta este o regulă de nivel superior. Afișați arborele de reguli"
+
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -95208,6 +95244,10 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "Setarea dvs. și setările din fabrică sunt identice."
 
+#, fuzzy
+msgid "Your site's MCP server is reachable at "
+msgstr "În prezent, acest site nu este accesibil."
+
 msgid ""
 "Your trial period has ended, and your license state is automatically "
 "converted to 'Free'. In this license state, a distributed setup is not "
@@ -97830,10 +97870,6 @@ msgstr ""
 #, fuzzy
 msgid "Toggle %{ title }"
 msgstr "Comutarea intrărilor din jurnal"
-
-#, fuzzy
-msgid "Copied to clipboard"
-msgstr "Secret copiat în clipboard"
 
 msgid "Copy to clipboard failed with error: "
 msgstr ""
@@ -101023,6 +101059,9 @@ msgstr "Porturi disponibile"
 msgid "Creating a new password is not available for your account. "
 msgstr "Noua parolă trebuie să fie diferită de cea actuală."
 
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
 #, fuzzy
 msgid "Send log messages to event console"
 msgstr "Trimiterea evenimentelor către consola locală de evenimente"
@@ -101041,8 +101080,8 @@ msgid "Configuration details:"
 msgstr "Fișiere de configurare"
 
 #, fuzzy
-msgid " | created"
-msgstr "Fișier creat"
+msgid " | new"
+msgstr "Adăugați un nou"
 
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
 msgstr ""
@@ -102739,8 +102778,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Experimental flags"
-#~ msgstr "Caracteristica Enterprise"
+#~ msgid "Release flags"
+#~ msgstr "Pachet de lansare"
+
+#, fuzzy
+#~ msgid " | created"
+#~ msgstr "Fișier creat"
 
 #, fuzzy
 #~ msgid "API endpoint from PagerDuty V2"
@@ -104772,10 +104815,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Read capacity units"
 #~ msgstr "Unități de capacitate de citire"
-
-#, fuzzy
-#~ msgid "Redis server is not reachable."
-#~ msgstr "În prezent, acest site nu este accesibil."
 
 #~ msgid "Register host & download monitoring agents of your hosts"
 #~ msgstr ""

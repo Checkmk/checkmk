@@ -81,7 +81,6 @@ from cmk.gui.wato.pages.global_settings import (
 )
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
-from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_site_login,
@@ -107,6 +106,7 @@ from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
     make_global_settings_context,
+    make_pending_changes,
     save_global_settings,
     save_site_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
@@ -120,17 +120,10 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.pending_changes import (
-    Change,
-    ChangeScope,
-    index_update_change_hook,
-    PendingChanges,
-    PendingChangesStore,
-)
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.piggyback_hub import (
     validate_piggyback_hub_config,
 )
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
@@ -2490,14 +2483,9 @@ def _pending_changes(
     local_site: SiteId,
     user_id: UserId | None,
 ) -> PendingChanges:
-    return PendingChanges(
+    return make_pending_changes(
         activation_sites=activation_sites(sites),
         local_site=local_site,
         acting_user=user_id,
-        store=PendingChangesStore(),
-        hooks=(
-            make_audit_log_change_hook(use_git=use_git),
-            sidebar_reload_change_hook,
-            index_update_change_hook,
-        ),
+        use_git=use_git,
     )

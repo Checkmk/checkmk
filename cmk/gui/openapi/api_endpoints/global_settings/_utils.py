@@ -17,7 +17,6 @@ from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
-from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
@@ -31,13 +30,11 @@ from cmk.gui.watolib.global_settings import (
     make_global_settings_context,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
-from cmk.gui.watolib.pending_changes import (
-    index_update_change_hook,
-    PendingChanges,
-    PendingChangesStore,
+from cmk.gui.watolib.global_settings import (
+    make_pending_changes as make_setup_pending_changes,
 )
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
@@ -238,14 +235,9 @@ def save_site_setting(
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:
-    return PendingChanges(
+    return make_setup_pending_changes(
         activation_sites=activation_sites(api_context.config.sites),
         local_site=omd_site(),
         acting_user=api_context.user.id,
-        store=PendingChangesStore(),
-        hooks=(
-            make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
-            sidebar_reload_change_hook,
-            index_update_change_hook,
-        ),
+        use_git=api_context.config.wato_use_git,
     )

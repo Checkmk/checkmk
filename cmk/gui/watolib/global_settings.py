@@ -6,6 +6,7 @@
 from collections.abc import Callable, Mapping, Sequence
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config, GlobalConfig
@@ -13,7 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings, GraphTimerange
 from cmk.gui.watolib import config_domain_name
-from cmk.gui.watolib.audit_log import LogMessage
+from cmk.gui.watolib.audit_log import LogMessage, make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
@@ -21,7 +22,14 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
     UNREGISTERED_SETTINGS,
 )
-from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
@@ -121,6 +129,26 @@ def save_site_global_settings(
     settings: GlobalSettings, custom_site_path: str | None = None
 ) -> None:
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)
+
+
+def make_pending_changes(
+    *,
+    activation_sites: SiteConfigurations,
+    local_site: SiteId,
+    acting_user: UserId | None,
+    use_git: bool,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites,
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
 
 
 def add_global_settings_change(

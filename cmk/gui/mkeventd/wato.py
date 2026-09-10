@@ -129,7 +129,7 @@ from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
-from cmk.gui.watolib.audit_log import log_audit, make_audit_log_change_hook
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
@@ -158,6 +158,7 @@ from cmk.gui.watolib.config_variable_groups import (
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     make_global_settings_context,
+    make_pending_changes,
     save_global_settings,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
@@ -171,13 +172,7 @@ from cmk.gui.watolib.notification_parameter import (
     NotificationParameter,
     NotificationParameterRegistry,
 )
-from cmk.gui.watolib.pending_changes import (
-    Change,
-    ChangeScope,
-    index_update_change_hook,
-    PendingChanges,
-    PendingChangesStore,
-)
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
@@ -193,7 +188,6 @@ from cmk.gui.watolib.sample_config import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.translation import translation_form_spec_elements
 from cmk.livestatus_client import (
     ECCreate,
@@ -3490,16 +3484,11 @@ def _get_event_console_sync_sites() -> list[SiteId]:
 
 
 def _pending_changes_for_ec(*, config: Config, acting_user: UserId | None) -> PendingChanges:
-    return PendingChanges(
+    return make_pending_changes(
         activation_sites=activation_sites(config.sites),
         local_site=omd_site(),
         acting_user=acting_user,
-        store=PendingChangesStore(),
-        hooks=(
-            make_audit_log_change_hook(use_git=config.wato_use_git),
-            sidebar_reload_change_hook,
-            index_update_change_hook,
-        ),
+        use_git=config.wato_use_git,
     )
 
 

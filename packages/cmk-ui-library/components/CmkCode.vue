@@ -16,11 +16,17 @@ import { computed, ref } from 'vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<{
+const {
+  collapsible = true,
+  wrap = false,
+  ...props
+} = defineProps<{
   title?: TranslatedString
   codeText: string
   width?: 'default' | 'fill'
   copyButtonTestId?: string
+  collapsible?: boolean
+  wrap?: boolean
 }>()
 
 const MAX_LINES = 10
@@ -29,12 +35,12 @@ const isExpanded = ref(false)
 
 const codeLines = computed(() => props.codeText.split('\n'))
 const displayedCode = computed(() => {
-  if (isExpanded.value || codeLines.value.length <= MAX_LINES) {
+  if (!collapsible || isExpanded.value || codeLines.value.length <= MAX_LINES) {
     return props.codeText
   }
   return codeLines.value.slice(0, MAX_LINES).join('\n')
 })
-const shouldShowToggle = computed(() => codeLines.value.length > MAX_LINES)
+const shouldShowToggle = computed(() => collapsible && codeLines.value.length > MAX_LINES)
 
 const toggleExpansion = () => {
   isExpanded.value = !isExpanded.value
@@ -42,7 +48,8 @@ const toggleExpansion = () => {
 const containerClasses = computed(() => ({
   'has-toggle': shouldShowToggle.value,
   expanded: isExpanded.value,
-  'cmk-code__is-wide': props.width === 'fill'
+  'cmk-code__is-wide': props.width === 'fill',
+  'cmk-code__wrap': wrap
 }))
 </script>
 
@@ -132,6 +139,11 @@ const containerClasses = computed(() => ({
     pre {
       margin: 0;
       white-space: pre;
+    }
+
+    &.cmk-code__wrap pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -51,6 +51,7 @@ defineEmits(['click'])
     :role="isDisabled ? 'link' : undefined"
     :tabindex="isDisabled ? 0 : undefined"
     :aria-disabled="isDisabled"
+    :download="props.download"
     :title="titleText"
     :aria-busy="props.running"
     @click="

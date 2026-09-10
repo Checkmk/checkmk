@@ -107,6 +107,12 @@ export const panelConfig = {
     initialState: '',
     help: 'Only applicable if href is set. Specifies where to open the linked document.'
   },
+  download: {
+    type: 'string' as const,
+    title: 'Download filename',
+    initialState: '',
+    help: 'Only applicable if href is set. Suggests a filename when downloading the linked file.'
+  },
   title: {
     type: 'string' as const,
     title: 'Title Attribute',
@@ -169,6 +175,7 @@ const disabledReason = computed(() =>
         :disabled-reason="disabledReason"
         :href="propState.href || undefined"
         :target="propState.target || undefined"
+        :download="propState.download || undefined"
         :title="propState.title"
         :icon="icon"
         :running="propState.running"

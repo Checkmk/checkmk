@@ -19,6 +19,7 @@ from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
+from cmk.gui.watolib import read_only
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -29,7 +30,10 @@ from cmk.gui.watolib.global_settings import (
     is_available_in_global_settings,
     load_configuration_settings,
     make_global_settings_context,
+    may_read,
 )
+from cmk.gui.watolib.mode import ensure_static_permissions
+from cmk.gui.watolib.setup_access import ensure_provider_site, ensure_setup_enabled
 from cmk.shared_typing.global_settings import (
     Components,
     GlobalSettingsApp,
@@ -47,6 +51,12 @@ from cmk.web.utils.urls import makeuri_contextless
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("global_settings", _global_settings_page))
+
+
+def ensure_permitted(config: Config) -> None:
+    ensure_setup_enabled(config)
+    ensure_provider_site(config)
+    ensure_static_permissions(["wato.global"], need_modification_permission=False)
 
 
 def _site_overrides(varname: str, config: Config) -> list[GlobalSettingsSiteOverride]:
@@ -80,6 +90,8 @@ def _variables(
         if not is_available_in_global_settings(
             config_variable, default_values=default_values, is_activated=is_activated
         ):
+            continue
+        if not may_read(config_variable):
             continue
         form_spec = config_variable.value_model(context)
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
@@ -148,8 +160,11 @@ def app_data(config: Config) -> GlobalSettingsApp:
 
 
 def _global_settings_page(ctx: PageContext) -> None:
+    ensure_permitted(ctx.config)
     data = app_data(ctx.config)
     MainNavigation.render(ctx.config, data.title)
     html.begin_page_content(enable_scrollbar=True)
+    if read_only.is_enabled(ctx.config.wato_read_only):
+        html.show_warning(read_only.message(ctx.config.wato_read_only))
     html.vue_component(component_name="cmk-global-settings", data=asdict(data))
     html.footer()

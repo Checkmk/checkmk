@@ -286,7 +286,7 @@ test-system-ai-features-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
 	    ../scripts/run-in-docker.sh make --quiet test-system-ai-features
 
-test-system-ai-features:
+test-system-ai-features: prepare-playwright # the ai_control_plane fixture enables the feature on the Global settings page
 	EDITION=pro $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath system/ai_features) --session-timeout 3600
 

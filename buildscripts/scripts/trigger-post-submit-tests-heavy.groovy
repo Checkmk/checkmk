@@ -28,6 +28,7 @@ void main() {
         "test-system-singlesite-community",
         "test-system-singlesite-cloud",
         "test-system-redfish",
+        "test-system-ai-features",
         "test-system-singlesite-ultimatemt",
         "test-system-singlesite-single-node",
         "test-system-plugins",

@@ -19,7 +19,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import RulespecGroupIntegrateOtherServices
+from cmk.gui.watolib.rulespec_groups import RulespecGroupIntegrateOtherServices
 from cmk.ruleset_matcher.definition import RuleGroup
 
 

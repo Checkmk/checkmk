@@ -15,7 +15,6 @@ import cmk.gui.valuespec as legacy_valuespecs
 import cmk.rulesets.v1 as api_v1
 from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
-from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable import (
     Autocompleter,
@@ -1514,7 +1513,7 @@ def test_convert_to_legacy_rulespec_group(
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.DiscoveryParameters("test_rulespec"),
                 group=_to_generated_builtin_sub_group(
-                    legacy_wato.RulespecGroupDiscoveryCheckParameters,
+                    legacy_rulespec_groups.RulespecGroupDiscoveryCheckParameters,
                     "Applications",
                     lambda x: x,
                 ),

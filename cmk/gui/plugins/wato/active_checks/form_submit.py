@@ -21,7 +21,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato import RulespecGroupActiveChecks
+from cmk.gui.watolib.rulespec_groups import RulespecGroupActiveChecks
 from cmk.ruleset_matcher.definition import RuleGroup
 
 

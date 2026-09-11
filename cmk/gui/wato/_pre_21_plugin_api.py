@@ -20,19 +20,9 @@ import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
+from cmk.gui import wato as setup_module
 from cmk.gui.hooks import register_hook
 from cmk.gui.plugins.wato import datasource_programs  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.plugins.wato.utils import (  # astrein: disable=cmk-module-layer-violation
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersEnvironment,
-    RulespecGroupCheckParametersHardware,
-    RulespecGroupCheckParametersNetworking,
-    RulespecGroupCheckParametersOperatingSystem,
-    RulespecGroupCheckParametersPrinters,
-    RulespecGroupCheckParametersStorage,
-    RulespecGroupCheckParametersVirtualization,
-)
 from cmk.gui.wato._main_module_topics import (
     MainModuleTopicAgents,
     MainModuleTopicEvents,
@@ -43,7 +33,15 @@ from cmk.gui.wato._main_module_topics import (
     MainModuleTopicServices,
     MainModuleTopicUsers,
 )
-from cmk.gui.watolib.main_menu import register_modules, WatoModule
+from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.main_menu import (
+    ABCMainModule,
+    main_module_registry,
+    MainModuleTopic,
+    MenuItem,
+    register_modules,
+    WatoModule,
+)
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
@@ -52,6 +50,15 @@ from cmk.gui.watolib.notification_parameter import (
 )
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupActiveChecks,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersEnvironment,
+    RulespecGroupCheckParametersHardware,
+    RulespecGroupCheckParametersNetworking,
+    RulespecGroupCheckParametersOperatingSystem,
+    RulespecGroupCheckParametersPrinters,
+    RulespecGroupCheckParametersStorage,
+    RulespecGroupCheckParametersVirtualization,
     RulespecGroupDatasourcePrograms,
     RulespecGroupDatasourceProgramsApps,
     RulespecGroupDatasourceProgramsCloud,
@@ -59,9 +66,14 @@ from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupDatasourceProgramsHardware,
     RulespecGroupDatasourceProgramsOS,
     RulespecGroupDatasourceProgramsTesting,
+    RulespecGroupDiscoveryCheckParameters,
+    RulespecGroupEnforcedServicesOperatingSystem,
+    RulespecGroupEnforcedServicesVirtualization,
     RulespecGroupIntegrateOtherServices,
     RulespecGroupVMCloudContainer,
 )
+from cmk.gui.watolib.rulespecs import BinaryServiceRulespec, ServiceRulespec
+from cmk.web.utils.confirm_links import make_confirm_link
 
 from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
@@ -72,18 +84,6 @@ from .pages._password_store_valuespecs import (
     MigrateToIndividualOrStoredPassword,
     PasswordFromStore,
 )
-
-# Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the Setup plug-in context
-subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
-subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
-subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
-subgroup_printing = RulespecGroupCheckParametersPrinters().sub_group_name
-subgroup_environment = RulespecGroupCheckParametersEnvironment().sub_group_name
-subgroup_applications = RulespecGroupCheckParametersApplications().sub_group_name
-subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
-subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
-subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
 def register() -> None:
@@ -126,27 +126,36 @@ def register() -> None:
         ("monitoring_macro_help", monitoring_macro_help),
         ("HTTPProxyInput", HTTPProxyInput),
         ("HTTPProxyReference", HTTPProxyReference),
+        ("ABCHostAttributeNagiosText", cmk.gui.watolib.host_attributes.ABCHostAttributeNagiosText),
+        ("ABCHostAttributeValueSpec", cmk.gui.watolib.host_attributes.ABCHostAttributeValueSpec),
+        ("ABCMainModule", ABCMainModule),
+        ("BinaryServiceRulespec", BinaryServiceRulespec),
+        ("main_module_registry", main_module_registry),
+        ("MainModuleTopic", MainModuleTopic),
+        ("make_confirm_link", make_confirm_link),
+        ("MenuItem", MenuItem),
+        ("ReplicationPath", ReplicationPath),
+        (
+            "RulespecGroupEnforcedServicesOperatingSystem",
+            RulespecGroupEnforcedServicesOperatingSystem,
+        ),
+        (
+            "RulespecGroupEnforcedServicesVirtualization",
+            RulespecGroupEnforcedServicesVirtualization,
+        ),
+        ("ServiceRulespec", ServiceRulespec),
     ]:
         api_module.__dict__[name] = wato_utils.__dict__[name] = value
 
     for name in (
-        "ABCHostAttributeNagiosText",
-        "ABCHostAttributeValueSpec",
-        "ABCMainModule",
         "BinaryHostRulespec",
-        "BinaryServiceRulespec",
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
         "HostRulespec",
         "is_wato_slave_site",
         "Levels",
-        "main_module_registry",
-        "MainModuleTopic",
-        "make_confirm_link",
         "ManualCheckParameterRulespec",
-        "MenuItem",
         "PredictiveLevels",
-        "ReplicationPath",
         "RulespecGroup",
         "RulespecGroupCheckParametersApplications",
         "RulespecGroupCheckParametersDiscovery",
@@ -161,11 +170,8 @@ def register() -> None:
         "RulespecGroupEnforcedServicesEnvironment",
         "RulespecGroupEnforcedServicesHardware",
         "RulespecGroupEnforcedServicesNetworking",
-        "RulespecGroupEnforcedServicesOperatingSystem",
         "RulespecGroupEnforcedServicesStorage",
-        "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
-        "ServiceRulespec",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
     for name, value in (
@@ -222,6 +228,28 @@ def register() -> None:
         "wato_root_dir",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]
+
+    for name, value in (
+        ("_", lambda message: message),
+        ("RulespecGroupActiveChecks", RulespecGroupActiveChecks),
+        ("RulespecGroupCheckParametersApplications", RulespecGroupCheckParametersApplications),
+        ("RulespecGroupCheckParametersDiscovery", RulespecGroupCheckParametersDiscovery),
+        ("RulespecGroupCheckParametersEnvironment", RulespecGroupCheckParametersEnvironment),
+        ("RulespecGroupCheckParametersHardware", RulespecGroupCheckParametersHardware),
+        ("RulespecGroupCheckParametersNetworking", RulespecGroupCheckParametersNetworking),
+        (
+            "RulespecGroupCheckParametersOperatingSystem",
+            RulespecGroupCheckParametersOperatingSystem,
+        ),
+        ("RulespecGroupCheckParametersPrinters", RulespecGroupCheckParametersPrinters),
+        ("RulespecGroupCheckParametersStorage", RulespecGroupCheckParametersStorage),
+        ("RulespecGroupCheckParametersVirtualization", RulespecGroupCheckParametersVirtualization),
+        ("RulespecGroupDatasourceProgramsCustom", RulespecGroupDatasourceProgramsCustom),
+        ("RulespecGroupDiscoveryCheckParameters", RulespecGroupDiscoveryCheckParameters),
+        ("RulespecGroupIntegrateOtherServices", RulespecGroupIntegrateOtherServices),
+        ("RulespecGroupVMCloudContainer", RulespecGroupVMCloudContainer),
+    ):
+        setup_module.__dict__[name] = value
 
     for name, value in (
         ("RulespecGroupVMCloudContainer", RulespecGroupVMCloudContainer),

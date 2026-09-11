@@ -59,6 +59,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-otel                        Run system tests for otel (ultimate edition)
   test-system-azure                       Run system tests for azure (ultimate edition)
   test-system-mcp                         Run system tests for the mcp-server (pro edition)
+  test-system-ai-agent-engine             Run system tests for the ai-agent-engine Apache routing (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
   test-system-update-community            Run update tests for community edition
@@ -362,6 +363,12 @@ test-system-azure-ultimate() {
 test-system-mcp() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/pro/mcp/" \
+        --session-timeout 1800
+}
+
+test-system-ai-agent-engine() {
+    EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/ai_agent_engine")" \
         --session-timeout 1800
 }
 

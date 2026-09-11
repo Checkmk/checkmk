@@ -24,6 +24,7 @@ from cmk.gui.watolib.global_settings import (
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
+    ensure_setup_access,
     form_spec_of,
     global_setting_etag,
     GlobalSettingVarName,
@@ -41,6 +42,7 @@ def show_global_setting_v1(
 
     Also serves Event Console settings.
     """
+    ensure_setup_access(api_context)
     config_variable = config_variable_registry[varname]
     need_read_permission(config_variable)
     value, is_default = effective_value(load_configuration_settings(), varname)

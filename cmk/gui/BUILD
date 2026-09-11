@@ -293,6 +293,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":config",
         ":core_toolkit",
         "//cmk/gui/valuespec",
         "//packages/cmk-ccc:plugin-registry",

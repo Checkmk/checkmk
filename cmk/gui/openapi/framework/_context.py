@@ -11,6 +11,7 @@ from werkzeug.datastructures import ETags
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
+from cmk.gui.customer import is_provider_site
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
@@ -85,11 +86,13 @@ class ApiConfig:
     debug: bool
     default_temperature_unit: str
     graph_timeranges: list[GraphTimerange]
+    is_provider_site: bool
     liveproxyd_enabled: bool
     password_policy: PasswordPolicy
     sites: SiteConfigurations
     tags: TagConfig
     ui_theme: str
+    wato_enabled: bool
     wato_hide_folders_without_read_permissions: bool
     wato_host_attrs: Sequence[CustomHostAttrSpec]
     wato_icon_categories: list[tuple[str, str]]
@@ -110,11 +113,13 @@ class ApiConfig:
             debug=config.debug,
             default_temperature_unit=config.default_temperature_unit,
             graph_timeranges=config.graph_timeranges,
+            is_provider_site=is_provider_site(config),
             liveproxyd_enabled=config.liveproxyd_enabled,
             password_policy=config.password_policy,
             sites=config.sites,
             tags=config.tags,
             ui_theme=config.ui_theme,
+            wato_enabled=config.wato_enabled,
             wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
             wato_host_attrs=config.wato_host_attrs,
             wato_icon_categories=config.wato_icon_categories,

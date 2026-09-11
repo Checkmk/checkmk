@@ -20,6 +20,7 @@ from cmk.gui.watolib.sites import load_site_globals
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
+    ensure_setup_access,
     form_spec_of,
     GlobalSettingVarName,
     load_configured_sites,
@@ -40,6 +41,7 @@ def show_site_global_setting_v1(
 
     Also serves Event Console settings.
     """
+    ensure_setup_access(api_context)
     config_variable = config_variable_registry[varname]
     need_site_read_permission(config_variable)
     sites = load_configured_sites()

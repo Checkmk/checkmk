@@ -8,13 +8,23 @@
 import json
 import logging
 from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import override
 
 import pytest
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.crypto.certificate import CertificateWithPrivateKey
+from cmk.gui.config import Config
+from cmk.gui.customer import (
+    customer_api_registry,
+    CustomerAPIStub,
+    CustomerIdOrGlobal,
+    SCOPE_GLOBAL,
+)
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example,
@@ -143,6 +153,36 @@ def fixture_user_without_executables_permission(clients: ClientRegistry) -> None
         auth_option={"auth_type": "password", "password": "supersecretish"},
     )
     clients.GlobalSetting.set_credentials("no_executables", "supersecretish")
+
+
+class _SiteOfACustomer(CustomerAPIStub):
+    """Multi-tenancy as an edition with customers implements it."""
+
+    @classmethod
+    @override
+    def current_customer(cls, config: Config) -> CustomerIdOrGlobal:
+        return "customer_a"
+
+    @classmethod
+    @override
+    def is_global(cls, customer_id: CustomerIdOrGlobal) -> bool:
+        return customer_id is SCOPE_GLOBAL
+
+    @classmethod
+    @override
+    def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool:
+        return customer_id == "provider"
+
+
+@contextmanager
+def _site_of_a_customer(local_edition: Edition) -> Iterator[None]:
+    ident = str(local_edition)
+    previous = customer_api_registry[ident]
+    customer_api_registry.register(_SiteOfACustomer(ident))
+    try:
+        yield
+    finally:
+        customer_api_registry.register(previous)
 
 
 def _register_variable(
@@ -521,6 +561,54 @@ def test_a_user_allowed_to_override_read_only_still_writes(
 ) -> None:
     with set_config(wato_read_only=_read_only(with_automation_user[0])):
         assert clients.GlobalSetting.update(INT_VAR, 42).json["value"] == 42
+
+
+def test_a_disabled_setup_refuses_the_central_scope(
+    clients: ClientRegistry, set_config: SetConfig
+) -> None:
+    with set_config(wato_enabled=False):
+        clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+
+
+def test_a_disabled_setup_refuses_the_site_scope(
+    clients: ClientRegistry, set_config: SetConfig, remote_site: str
+) -> None:
+    with set_config(wato_enabled=False):
+        clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+            403
+        )
+        clients.GlobalSetting.update_site(
+            remote_site, INT_VAR, 42, expect_ok=False
+        ).assert_status_code(403)
+        clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+            403
+        )
+
+
+def test_the_site_of_a_customer_refuses_the_central_scope(
+    clients: ClientRegistry, test_edition: Edition
+) -> None:
+    with _site_of_a_customer(test_edition):
+        clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+
+
+def test_the_site_of_a_customer_refuses_the_site_scope(
+    clients: ClientRegistry, remote_site: str, test_edition: Edition
+) -> None:
+    with _site_of_a_customer(test_edition):
+        clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+            403
+        )
+        clients.GlobalSetting.update_site(
+            remote_site, INT_VAR, 42, expect_ok=False
+        ).assert_status_code(403)
+        clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+            403
+        )
 
 
 def test_site_value_falls_back_to_the_central_value(

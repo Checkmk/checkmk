@@ -31,6 +31,7 @@ from cmk.web.utils.html import HTML
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
+    ensure_setup_access,
     form_spec_of,
     global_setting_etag,
     global_settings_context_of,
@@ -49,6 +50,7 @@ def delete_global_setting_v1(
 
     Also serves Event Console settings.
     """
+    ensure_setup_access(api_context)
     config_variable = config_variable_registry[varname]
     need_write_permission(config_variable)
     ensure_changes_allowed(api_context)

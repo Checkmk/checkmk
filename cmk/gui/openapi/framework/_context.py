@@ -23,6 +23,7 @@ from cmk.gui.type_defs import (
     CustomUserAttrSpec,
     GraphTimerange,
     PasswordPolicy,
+    ReadOnlySpec,
     UserSpec,
 )
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
@@ -94,6 +95,7 @@ class ApiConfig:
     wato_icon_categories: list[tuple[str, str]]
     wato_max_snapshots: int
     wato_pprint_config: bool
+    wato_read_only: ReadOnlySpec
     wato_use_git: bool
     roles: Mapping[str, CustomUserRole | BuiltInUserRole]
     wato_user_attrs: Sequence[CustomUserAttrSpec]
@@ -118,6 +120,7 @@ class ApiConfig:
             wato_icon_categories=config.wato_icon_categories,
             wato_max_snapshots=config.wato_max_snapshots,
             wato_pprint_config=config.wato_pprint_config,
+            wato_read_only=config.wato_read_only,
             wato_use_git=config.wato_use_git,
             roles=config.roles,
             wato_user_attrs=config.wato_user_attrs,

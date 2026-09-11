@@ -30,6 +30,7 @@ from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
+    ensure_changes_allowed,
     form_spec_of,
     global_setting_etag,
     global_settings_context_of,
@@ -50,6 +51,7 @@ def delete_global_setting_v1(
     """
     config_variable = config_variable_registry[varname]
     need_write_permission(config_variable)
+    ensure_changes_allowed(api_context)
     if not config_variable.allow_reset():
         raise ProblemException(
             status=400,

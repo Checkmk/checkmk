@@ -13,6 +13,7 @@ import pytest
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
@@ -23,6 +24,7 @@ from cmk.gui.openapi.endpoints.global_settings.schemas import (
     FileUploadSchema,
     IconSchema,
 )
+from cmk.gui.type_defs import ReadOnlySpec
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -38,6 +40,7 @@ from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 
 LOCAL_SITE = "NO_SITE"
@@ -474,6 +477,50 @@ def test_the_event_console_actions_are_reachable_without_the_general_permission(
 ) -> None:
     """The executables gate comes on top of mkeventd.config, not on top of wato.global."""
     assert clients.GlobalSetting.get(EXECUTABLES_VAR).json["value"] == []
+
+
+def _read_only(*rw_users: UserId) -> ReadOnlySpec:
+    return {"enabled": True, "rw_users": rw_users, "message": "Maintenance in progress"}
+
+
+def test_a_read_only_setup_refuses_a_write(clients: ClientRegistry, set_config: SetConfig) -> None:
+    clients.GlobalSetting.update(INT_VAR, 42)
+
+    with set_config(wato_read_only=_read_only()):
+        clients.GlobalSetting.update(INT_VAR, 7, expect_ok=False).assert_status_code(403)
+        clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+
+    assert clients.GlobalSetting.get(INT_VAR).json["value"] == 42
+
+
+def test_a_read_only_setup_refuses_a_site_write(
+    clients: ClientRegistry, set_config: SetConfig, remote_site: str
+) -> None:
+    clients.GlobalSetting.update_site(remote_site, INT_VAR, 7)
+
+    with set_config(wato_read_only=_read_only()):
+        clients.GlobalSetting.update_site(
+            remote_site, INT_VAR, 8, expect_ok=False
+        ).assert_status_code(403)
+        clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(
+            403
+        )
+
+    assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json["value"] == 7
+
+
+def test_a_read_only_setup_still_serves_a_read(
+    clients: ClientRegistry, set_config: SetConfig
+) -> None:
+    with set_config(wato_read_only=_read_only()):
+        assert clients.GlobalSetting.get(INT_VAR).json["value"] == INT_DEFAULT
+
+
+def test_a_user_allowed_to_override_read_only_still_writes(
+    clients: ClientRegistry, set_config: SetConfig, with_automation_user: tuple[UserId, str]
+) -> None:
+    with set_config(wato_read_only=_read_only(with_automation_user[0])):
+        assert clients.GlobalSetting.update(INT_VAR, 42).json["value"] == 42
 
 
 def test_site_value_falls_back_to_the_central_value(

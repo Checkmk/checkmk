@@ -16,6 +16,7 @@ from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib import read_only
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
@@ -40,6 +41,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
+from cmk.web.utils.escaping import strip_tags
 
 _VARIABLE_PERMISSIONS = permissions.DynamicRuntimePerm(
     description="The permissions required depend on the targeted variable"
@@ -107,6 +109,15 @@ GlobalSettingVarName = Annotated[
         example="log_levels",
     ),
 ]
+
+
+def ensure_changes_allowed(api_context: ApiContext) -> None:
+    if read_only.blocks_changes(api_context.config.wato_read_only):
+        raise ProblemException(
+            status=403,
+            title="Setup is in read-only mode",
+            detail=strip_tags(read_only.message(api_context.config.wato_read_only)),
+        )
 
 
 def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> GlobalSettingsContext:

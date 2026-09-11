@@ -15,7 +15,11 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import sub_object_href
 from cmk.gui.watolib.config_domain_name import config_variable_registry
-from cmk.gui.watolib.global_settings import effective_site_value, need_site_read_permission
+from cmk.gui.watolib.global_settings import (
+    effective_site_value,
+    load_configuration_settings,
+    need_site_read_permission,
+)
 from cmk.gui.watolib.sites import load_site_globals
 
 from ._family import GLOBAL_SETTINGS_FAMILY
@@ -45,7 +49,11 @@ def show_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_read_permission(config_variable)
     sites = load_configured_sites()
-    value, is_default = effective_site_value(load_site_globals(sites, site_id), varname)
+    value, is_default = effective_site_value(
+        load_site_globals(sites, site_id),
+        varname,
+        global_settings=load_configuration_settings(),
+    )
     json_value = value_to_json(form_spec_of(config_variable, site_id, api_context), value)
     return ApiResponse(
         body=SiteGlobalSettingModel(

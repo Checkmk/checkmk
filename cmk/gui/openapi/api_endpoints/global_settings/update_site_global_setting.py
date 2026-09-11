@@ -20,6 +20,7 @@ from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
     effective_site_value,
     global_settings_diff_text,
+    load_configuration_settings,
     need_site_write_permission,
 )
 from cmk.gui.watolib.sites import load_site_globals
@@ -63,7 +64,9 @@ def update_site_global_setting_v1(
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
-    old_value, was_default = effective_site_value(site_globals, varname)
+    old_value, was_default = effective_site_value(
+        site_globals, varname, global_settings=load_configuration_settings()
+    )
     if api_context.etag.enabled:
         api_context.etag.verify(
             site_global_setting_etag(

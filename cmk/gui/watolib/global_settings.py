@@ -108,7 +108,12 @@ def effective_value(settings: Mapping[str, object], varname: str) -> tuple[objec
     return ABCConfigDomain.get_all_default_globals()[varname], True
 
 
-def effective_site_value(site_globals: Mapping[str, object], varname: str) -> tuple[object, bool]:
+def effective_site_value(
+    site_globals: Mapping[str, object],
+    varname: str,
+    *,
+    global_settings: Mapping[str, object],
+) -> tuple[object, bool]:
     """The value in effect for the site and whether it comes from outside the site.
 
     Without an override the site inherits the central value, which in turn falls back
@@ -117,7 +122,7 @@ def effective_site_value(site_globals: Mapping[str, object], varname: str) -> tu
     if varname in site_globals:
         return site_globals[varname], False
 
-    value, _is_built_in_default = effective_value(load_configuration_settings(), varname)
+    value, _is_built_in_default = effective_value(global_settings, varname)
     return value, True
 
 

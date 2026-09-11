@@ -16,7 +16,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, NewType, override
+from typing import Any, Literal, NewType, override
 
 from pydantic import BaseModel
 
@@ -248,55 +248,58 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     def config_dir(self) -> Path:
         return multisite_dir()
 
-    @staticmethod
-    def log_changes(
-        config_before: TrustedCertificateAuthorities | None,
-        config_after: TrustedCertificateAuthorities,
-    ) -> None:
-        if config_before is None:
-            current_certs = {}
-        else:
-            current_certs = {
-                (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
-                    HashAlgorithm.Sha256
-                ): cert
-                for value in config_before["trusted_cas"] or []
-            }
+    @override
+    @contextlib.contextmanager
+    def settings_change(
+        self,
+        sites: SiteConfigurations,
+        before: Mapping[SiteId, GlobalSettings],
+        after: Mapping[SiteId, GlobalSettings],
+    ) -> Iterator[None]:
+        yield
+        self._log_trust_changes(before, after)
 
-        new_certs = {
-            (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
-                HashAlgorithm.Sha256
-            ): cert
-            for value in config_after["trusted_cas"]
+    def _log_trust_changes(
+        self,
+        before: Mapping[SiteId, GlobalSettings],
+        after: Mapping[SiteId, GlobalSettings],
+    ) -> None:
+        added: dict[bytes, Certificate] = {}
+        removed: dict[bytes, Certificate] = {}
+        for site_id, settings in after.items():
+            cas_before = before[site_id]["trusted_certificate_authorities"]["trusted_cas"]
+            cas_after = settings["trusted_certificate_authorities"]["trusted_cas"]
+            if cas_before == cas_after:
+                continue
+            certs_before = self._certs_by_fingerprint(cas_before)
+            certs_after = self._certs_by_fingerprint(cas_after)
+            added |= {f: certs_after[f] for f in certs_after.keys() - certs_before.keys()}
+            removed |= {f: certs_before[f] for f in certs_before.keys() - certs_after.keys()}
+
+        for cert in added.values():
+            self._log_trust_change("certificate added", cert)
+        for cert in removed.values():
+            self._log_trust_change("certificate removed", cert)
+
+    @classmethod
+    def _certs_by_fingerprint(cls, trusted_cas: Sequence[str]) -> Mapping[bytes, Certificate]:
+        return {
+            cert.fingerprint(HashAlgorithm.Sha256): cert for cert in cls._load_certs(trusted_cas)
         }
 
-        added_certs = [
-            new_certs[fingerprint] for fingerprint in new_certs if fingerprint not in current_certs
-        ]
-        removed_certs = [
-            current_certs[fingerprint]
-            for fingerprint in current_certs
-            if fingerprint not in new_certs
-        ]
-
-        for cert in added_certs:
-            log_security_event(
-                CertManagementEvent(
-                    event="certificate added",
-                    component="trusted certificate authorities",
-                    actor=user.id,
-                    cert=cert,
-                )
+    @staticmethod
+    def _log_trust_change(
+        event: Literal["certificate added", "certificate removed"],
+        cert: Certificate,
+    ) -> None:
+        log_security_event(
+            CertManagementEvent(
+                event=event,
+                component="trusted certificate authorities",
+                actor=user.id,
+                cert=cert,
             )
-        for cert in removed_certs:
-            log_security_event(
-                CertManagementEvent(
-                    event="certificate removed",
-                    component="trusted certificate authorities",
-                    actor=user.id,
-                    cert=cert,
-                )
-            )
+        )
 
     @override
     def config_file(self, site_specific: bool) -> Path:

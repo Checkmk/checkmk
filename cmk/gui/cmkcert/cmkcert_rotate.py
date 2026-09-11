@@ -194,9 +194,13 @@ def start_rotate_site_ca_certificate(
         # Add site-ca certificate to the trusted store
         new_ca_settings["trusted_certificate_authorities"]["trusted_cas"].append(new_ca_certificate)
         ca_domain.save(new_ca_settings)
-        ConfigDomainCACertificates.log_changes(
-            current_ca_settings.get("trusted_certificate_authorities"),
-            new_ca_settings["trusted_certificate_authorities"],
+        log_security_event(
+            CertManagementEvent(
+                event="certificate added",
+                component="trusted certificate authorities",
+                actor="cmk-cert",
+                cert=Certificate.load_pem(CertificatePEM(new_ca_certificate)),
+            )
         )
 
         PendingChanges(

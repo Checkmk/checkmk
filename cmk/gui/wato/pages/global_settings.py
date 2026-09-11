@@ -72,10 +72,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     GlobalSettingsContext,
 )
-from cmk.gui.watolib.config_domains import (
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-)
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
     global_settings_diff_text,
@@ -396,7 +393,6 @@ class ABCEditGlobalSettingMode(WatoMode):
         old_settings: GlobalSettings = (
             {self._varname: current} if self._varname in self._current_settings else {}
         )
-        new_value: Any = None
         if request.var("_reset"):
             if not transactions.check_transaction(request):
                 return None
@@ -424,8 +420,6 @@ class ABCEditGlobalSettingMode(WatoMode):
             use_git=config.wato_use_git,
             liveproxyd_enabled=config.liveproxyd_enabled,
         )
-        if new_value and self._varname == "trusted_certificate_authorities":
-            ConfigDomainCACertificates.log_changes(current, new_value)
 
         add_global_settings_change(
             self._config_variable,

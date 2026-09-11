@@ -5,12 +5,15 @@
 
 # mypy: disable-error-code="type-arg"
 
+import json
+import logging
 from collections.abc import Iterator
 
 import pytest
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc.site import SiteId
+from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example,
@@ -23,6 +26,7 @@ from cmk.gui.openapi.endpoints.global_settings.schemas import (
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    CA_CERTIFICATES,
     config_variable_registry,
     ConfigVariable,
     get_config_domain,
@@ -56,6 +60,7 @@ def patch_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
             lambda cls: {  # noqa: ARG005
                 **get_config_domain(GUI).default_globals(),
                 **get_config_domain("ec").default_globals(),
+                **get_config_domain(CA_CERTIFICATES).default_globals(),
             }
         ),
     )
@@ -63,8 +68,9 @@ def patch_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def sample_ca_certificates() -> None:
-    """ConfigDomainCACertificates.save() - which every write triggers - trips over its own
-    fallback when the variable is unset. A real site always has it from the sample config."""
+    """ConfigDomainCACertificates.save() - which every write triggers - would otherwise fall
+    back to its default and scan the system-wide CAs. A real site always has the variable
+    from the sample config."""
     config_file = get_config_domain("ca-certificates").config_file(site_specific=False)
     config_file.parent.mkdir(parents=True, exist_ok=True)
     config_file.write_text(
@@ -632,3 +638,75 @@ def test_the_central_site_cannot_reset_the_piggyback_hub_a_remote_site_runs(
     clients.GlobalSetting.update_site(remote_site, piggyback_hub_var, True)
 
     clients.GlobalSetting.delete(piggyback_hub_var, expect_ok=False).assert_status_code(400)
+
+
+def _self_signed_ca_pem() -> str:
+    return (
+        CertificateWithPrivateKey.generate_self_signed(
+            common_name="test CA", organization="test", key_size=2048
+        )
+        .certificate.dump_pem()
+        .str
+    )
+
+
+def _trusted_cas_value(*pems: str) -> dict[str, object]:
+    return {"use_system_wide_cas": False, "trusted_cas": list(pems)}
+
+
+def _trust_changes(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """The certificate events on the security log."""
+    return [
+        json.loads(record.getMessage())["summary"]
+        for record in caplog.records
+        if record.name.startswith("cmk_security")
+    ]
+
+
+def test_adding_a_trusted_ca_is_logged_as_a_security_event(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.INFO, logger="cmk_security"):
+        clients.GlobalSetting.update(
+            "trusted_certificate_authorities", _trusted_cas_value(_self_signed_ca_pem())
+        )
+
+    assert _trust_changes(caplog) == ["certificate added"]
+
+
+@pytest.mark.usefixtures("remote_site")
+def test_a_central_trusted_ca_is_logged_once_for_all_the_sites_inheriting_it(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.INFO, logger="cmk_security"):
+        clients.GlobalSetting.update(
+            "trusted_certificate_authorities", _trusted_cas_value(_self_signed_ca_pem())
+        )
+
+    assert _trust_changes(caplog) == ["certificate added"]
+
+
+def test_a_remote_site_override_of_the_trusted_cas_is_logged(
+    clients: ClientRegistry, remote_site: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.INFO, logger="cmk_security"):
+        clients.GlobalSetting.update_site(
+            remote_site,
+            "trusted_certificate_authorities",
+            _trusted_cas_value(_self_signed_ca_pem()),
+        )
+
+    assert _trust_changes(caplog) == ["certificate added"]
+
+
+def test_a_change_of_another_setting_logs_no_certificate_event(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    clients.GlobalSetting.update(
+        "trusted_certificate_authorities", _trusted_cas_value(_self_signed_ca_pem())
+    )
+
+    with caplog.at_level(logging.INFO, logger="cmk_security"):
+        clients.GlobalSetting.update(INT_VAR, 7)
+
+    assert _trust_changes(caplog) == []

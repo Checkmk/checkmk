@@ -15,7 +15,7 @@ from datetime import datetime, UTC
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
 from cmk.gui.log import logger
-from cmk.gui.oauth.store.backend import Backend, connect, oauth_db_path
+from cmk.gui.oauth.token.backend import Backend, connect, oauth_db_path
 from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, ScopeId
 
 

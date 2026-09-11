@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import userdb
-from cmk.gui.oauth.store.token_store import get_token_store, TokenRecord
+from cmk.gui.oauth.token.token_store import get_token_store, TokenRecord
 from cmk.gui.userdb import load_user
 
 

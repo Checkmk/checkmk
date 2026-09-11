@@ -14,7 +14,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._introspect import OAuthIntrospectPage
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import DEFAULT_SCOPE
 from tests.unit.cmk.gui.users import create_and_destroy_user

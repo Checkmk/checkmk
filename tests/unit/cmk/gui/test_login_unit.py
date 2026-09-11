@@ -26,7 +26,7 @@ from cmk.gui.exceptions import MKInsufficientScope
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential

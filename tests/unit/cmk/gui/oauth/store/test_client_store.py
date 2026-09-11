@@ -10,9 +10,9 @@ import pytest
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.store.backend import create_schema
 from cmk.gui.oauth.store.client_store import ClientStore, RegistryFull
-from cmk.gui.oauth.store.token_store import TokenStore
+from cmk.gui.oauth.token.backend import create_schema
+from cmk.gui.oauth.token.token_store import TokenStore
 from cmk.gui.scopes import DEFAULT_SCOPE
 
 

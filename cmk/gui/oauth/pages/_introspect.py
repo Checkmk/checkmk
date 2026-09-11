@@ -8,8 +8,8 @@ from collections.abc import Callable
 from typing import override
 
 from cmk.gui.http import request, response
-from cmk.gui.oauth.active_token import active_token
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenIntrospectionResponse
+from cmk.gui.oauth.token.active_token import active_token
 from cmk.gui.pages import Page, PageContext, PageResult
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -26,7 +26,7 @@ class OAuthIntrospectPage(Page):
     """RFC 7662 token introspection endpoint for this site.
 
     Reports whether an access token is still usable -- unexpired, with a user
-    that still exists and isn't locked (see cmk.gui.oauth.active_token), the
+    that still exists and isn't locked (see cmk.gui.oauth.token.active_token), the
     same bar cmk.gui.auth applies. Deliberately unauthenticated, deviating
     from RFC 7662 section 2.1's MUST-protect: only reachable over the
     loopback trust boundary, and tokens are 256-bit secrets, so a

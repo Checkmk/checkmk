@@ -6,19 +6,25 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import cmk.plugins.aws.constants as aws_types
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
 
 check_info = {}
 
+DEFAULT_LEVELS = (None, 80.0, 90.0)
+_INSTANCE_TYPE_PREFIX = "running_ondemand_instances_"
+
 default_running_ondemand_instances = [
-    (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
+    (inst_type, DEFAULT_LEVELS) for inst_type in aws_types.AWSEC2InstTypes
 ]
 
 default_running_ondemand_instance_families = [
-    ("%s_vcpu" % inst_fam, (None, 80.0, 90.0)) for inst_fam in aws_types.AWSEC2InstFamilies
+    ("%s_vcpu" % inst_fam, DEFAULT_LEVELS) for inst_fam in aws_types.AWSEC2InstFamilies
 ]
 
 
@@ -44,8 +50,32 @@ def check_aws_ec2_limits(item, params, parsed):
     # params look like:
     # {'vpc_sec_group_rules': (50, 80.0, 90.0),
     #  'running_ondemand_instances': [('a1.4xlarge', (20, 80.0, 90.0))]}
-    params = _transform_ec2_limits(params)
-    yield from check_aws_limits("ec2", params, region_data)
+    limits = _transform_ec2_limits(params)
+    # AWS releases instance types faster than AWSEC2InstTypes is updated
+    listed_data = [row for row in region_data if not _is_unlisted_instance_type(row[0], limits)]
+    unlisted_data = [row for row in region_data if _is_unlisted_instance_type(row[0], limits)]
+    yield from check_aws_limits("ec2", limits, listed_data)
+    yield from _check_unlisted_instance_types(unlisted_data)
+
+
+def _is_unlisted_instance_type(resource_key: str, limits: Mapping[str, Any]) -> bool:
+    return resource_key.startswith(_INSTANCE_TYPE_PREFIX) and resource_key not in limits
+
+
+def _check_unlisted_instance_types(region_data: Sequence[Sequence[Any]]) -> CheckResult:
+    if not region_data:
+        return
+    usage: dict[str, int] = {}
+    for resource_key, _title, _limit, amount, _render in region_data:
+        yield Metric(f"aws_ec2_{resource_key}", amount)
+        usage[resource_key.removeprefix(_INSTANCE_TYPE_PREFIX)] = amount
+    yield Result(
+        state=State.OK,
+        summary="%d unrecognized instance type%s (limits not checked)"
+        % (len(usage), "" if len(usage) == 1 else "s"),
+        details="Instance types unknown to Checkmk, no limits checked: %s"
+        % ", ".join(f"{inst_type} ({amount})" for inst_type, amount in usage.items()),
+    )
 
 
 def discover_aws_ec2_limits(section):

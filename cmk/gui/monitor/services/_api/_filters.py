@@ -125,7 +125,7 @@ class ServiceLabelChoiceCondition:
     )
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
     value: Annotated[
-        list[str],
+        list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
         MinLen(1),
         AfterValidator(validate_uniqueness),
         AfterValidator(validate_label_pairs),

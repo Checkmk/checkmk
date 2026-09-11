@@ -552,7 +552,7 @@ def pick_header(query: str, header_name: str, default: str | None = None) -> str
     Returns:
         The header value.
     """
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith(header_name):
             return line.split(": ", 1)[1]
 
@@ -582,7 +582,7 @@ def remove_headers(query: str, headers: list[str]) -> str:
 
     """
     result = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         header = line.split(": ", 1)[0]
         if header in headers:
             continue
@@ -852,8 +852,8 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     if match_type == "loose":
         # FIXME: Too loose, needs to be more strict.
         #   "GET hosts" also matches "GET hosts\nColumns: ..." which should not be possible.
-        string_lines = query.splitlines()
-        for line in expected.splitlines():
+        string_lines = query.split("\n")
+        for line in expected.split("\n"):
             if line not in string_lines:
                 result = False
                 break
@@ -944,7 +944,7 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
 
     """
     reducers = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Stats: "):
             reducers.append(make_reducer_func(line))
         elif line.startswith(("StatsAnd: ", "StatsOr: ", "StatsNegate: ")):
@@ -1071,7 +1071,7 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
 
     """
     filters = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Filter:"):
             filters.append(make_filter_func(line))
         elif line.startswith(("And:", "Or:")):
@@ -1326,7 +1326,7 @@ def _column_of_query(query: str) -> list[ColumnName] | None:
         >>> _column_of_query('GET hosts\\nFilter: name = foo')
 
     """
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Columns:"):
             return line[8:].split()  # len("Columns:") == 8
 
@@ -1354,7 +1354,7 @@ def _table_of_query(query: str) -> TableName | None:
         >>> _table_of_query("GET\\n")
 
     """
-    lines = query.splitlines()
+    lines = query.split("\n")
     if lines and lines[0].startswith("GET "):
         return lines[0].split(None, 1)[1]
 
@@ -1384,7 +1384,7 @@ def _unpack_headers(query: str) -> dict[str, str]:
 
     """
     unpacked = {}
-    for header in query.splitlines():
+    for header in query.split("\n"):
         if header.startswith("GET "):
             continue
         if ": " not in header:

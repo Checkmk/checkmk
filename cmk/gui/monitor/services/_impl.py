@@ -60,7 +60,7 @@ class LiveStatusHostServicesRepository:
         filters: ServiceFilter,
         fields: Set[ServiceOptionalField],
     ) -> Sequence[Service]:
-        extra_headers = [*filters.splitlines(), _build_primary_sort(sorters)]
+        extra_headers = [*_split_filter_lines(filters), _build_primary_sort(sorters)]
 
         if limit is not None:
             extra_headers.append(f"Limit: {limit}")
@@ -249,12 +249,12 @@ class LiveStatusHostServicesRepository:
     ) -> int:
         filter_expr = _build_host_services_filter(hostname, _sanitize_query(query))
         stats_query = "\n".join(
-            [
+            (
                 f"GET {Services.__tablename__}",
                 "Stats: state >= 0",
                 *(": ".join(line) for line in filter_expr.render()),
-                *filters.splitlines(),
-            ]
+                *_split_filter_lines(filters),
+            )
         )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
@@ -340,6 +340,10 @@ def _sanitize_query(q: str) -> str:
     # TODO: decide on how we want to handle invalid regex? This will likely require coordinating
     # with frontend implementation to pass down errors to the response.
     return q.replace("*", ".*")
+
+
+def _split_filter_lines(filters: ServiceFilter) -> list[str]:
+    return filters.split("\n") if filters else []
 
 
 def _build_query_filter(query: str) -> QueryExpression:

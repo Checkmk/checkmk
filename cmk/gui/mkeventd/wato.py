@@ -3421,18 +3421,24 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
     title=_l("Event Console: generic"),
     sort_index=18,
+    icon=IconNames.snmpmib,
+    description=_l("Configures general Event Console settings"),
 )
 
 
 ConfigVariableGroupEventConsoleLogging = ConfigVariableGroup(
     title=_l("Event Console: logging & diagnose"),
     sort_index=19,
+    icon=IconNames.snmpmib,
+    description=_l("Configures Event Console logging and diagnostic settings"),
 )
 
 
 ConfigVariableGroupEventConsoleSNMP = ConfigVariableGroup(
     title=_l("Event Console: SNMP traps"),
     sort_index=20,
+    icon=IconNames.snmpmib,
+    description=_l("Configures how the Event Console receives SNMP traps"),
 )
 
 

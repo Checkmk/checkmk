@@ -28,6 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     GlobalSettings,
     GraphTimerange,
+    IconNames,
     PermissionName,
 )
 from cmk.gui.utils.speaklater import LazyString
@@ -297,11 +298,19 @@ def generate_hosts_to_update_settings(hostnames: Sequence[HostName]) -> Serializ
 
 class ConfigVariableGroup:
     def __init__(
-        self, *, title: LazyString, sort_index: int, warning: LazyString | None = None
+        self,
+        *,
+        title: LazyString,
+        sort_index: int,
+        warning: LazyString | None = None,
+        icon: IconNames = IconNames.configuration,
+        description: LazyString | None = None,
     ) -> None:
         self._title = title
         self._sort_index = sort_index
         self._warning = warning
+        self._icon = icon
+        self._description = description
 
     # TODO: The identity of a configuration variable group should be a pure
     # internal unique key and it should not be localized. The title of a
@@ -323,6 +332,12 @@ class ConfigVariableGroup:
     def warning(self) -> str | None:
         """Return a string if you want to show a warning at the top of this group"""
         return str(self._warning) if self._warning else None
+
+    def icon(self) -> IconNames:
+        return self._icon
+
+    def description(self) -> str:
+        return str(self._description) if self._description else ""
 
     def config_variables(self) -> list[ConfigVariable]:
         """Returns a list of configuration variable classes that belong to this group"""

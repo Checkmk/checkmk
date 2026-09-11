@@ -11,7 +11,6 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.experimental_flags.global_config import ConfigVariableGroupExperimentalFlags
 from cmk.gui.form_specs.visitors import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.html import html
@@ -19,34 +18,12 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.main_navigation import MainNavigation
-from cmk.gui.mkeventd.wato import (
-    ConfigVariableGroupEventConsoleGeneric,
-    ConfigVariableGroupEventConsoleLogging,
-    ConfigVariableGroupEventConsoleSNMP,
-)
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
-from cmk.gui.product_usage_analytics.global_config import (
-    ConfigVariableGroupProductUsageAnalytics,
-)
-from cmk.gui.wato._check_mk_configuration import (
-    ConfigVariableGroupCheckExecution,
-    ConfigVariableGroupServiceDiscovery,
-    ConfigVariableGroupUserManagement,
-)
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
     ConfigVariableGroup,
     GlobalSettingsContext,
-)
-from cmk.gui.watolib.config_variable_groups import (
-    ConfigVariableGroupAIFeatures,
-    ConfigVariableGroupDeveloperTools,
-    ConfigVariableGroupNotifications,
-    ConfigVariableGroupSiteManagement,
-    ConfigVariableGroupSupport,
-    ConfigVariableGroupUserInterface,
-    ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import (
     is_available_in_global_settings,
@@ -70,118 +47,6 @@ from cmk.web.utils.urls import makeuri_contextless
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("global_settings", _global_settings_page))
-
-
-# TODO Groups defined in edition-specific packages cannot be imported here and are
-# referenced by their registry ident instead; they are skipped when the active
-# edition does not register them.
-_TOPICS: list[tuple[ConfigVariableGroup | str, IconNames, str]] = [
-    (
-        "Monitoring core",
-        IconNames.topic_monitoring,
-        "Configures the Checkmk Micro Core, its helpers and check scheduling",
-    ),
-    (
-        "Livestatus proxy",
-        IconNames.connection_tests,
-        "Configures the Livestatus proxy daemon for connections to remote sites",
-    ),
-    (
-        ConfigVariableGroupServiceDiscovery,
-        IconNames.service_discovery,
-        "Configures service discovery behavior - how often it runs and how results are treated",
-    ),
-    (
-        ConfigVariableGroupCheckExecution,
-        IconNames.reminders,
-        "Configures how checks technically run against hosts",
-    ),
-    (
-        ConfigVariableGroupNotifications,
-        IconNames.notifications,
-        "Configures global notification system behavior",
-    ),
-    (
-        ConfigVariableGroupEventConsoleGeneric,
-        IconNames.snmpmib,
-        "Configures general Event Console settings",
-    ),
-    (
-        ConfigVariableGroupEventConsoleLogging,
-        IconNames.snmpmib,
-        "Configures Event Console logging and diagnostic settings",
-    ),
-    (
-        ConfigVariableGroupEventConsoleSNMP,
-        IconNames.snmpmib,
-        "Configures how the Event Console receives SNMP traps",
-    ),
-    (
-        "Alert handlers",
-        IconNames.alert_notify,
-        "Configures how alert handlers are executed",
-    ),
-    (
-        ConfigVariableGroupUserInterface,
-        IconNames.ui_component_library,
-        "Configures broad GUI look, behavior, and performance",
-    ),
-    (
-        "ntopng (chargeable add-on)",
-        IconNames.ntop,
-        "Configures the connection to ntopng for network flow data",
-    ),
-    (
-        ConfigVariableGroupWATO,
-        IconNames.main_setup,
-        "Configures behavior of the config workflow itself",
-    ),
-    (
-        ConfigVariableGroupSiteManagement,
-        IconNames.sites,
-        "Configures distributed monitoring and site connection settings",
-    ),
-    (
-        "Automatic agent updates",
-        IconNames.agents,
-        "Configures the agent updater and automatic agent deployment",
-    ),
-    (
-        ConfigVariableGroupUserManagement,
-        IconNames.users,
-        "Configures user/authentication settings",
-    ),
-    (
-        "Reporting",
-        IconNames.report,
-        "Configures report generation, scheduling and layout defaults",
-    ),
-    (
-        ConfigVariableGroupSupport,
-        IconNames.diagnostics,
-        "Configures support and diagnostics properties",
-    ),
-    (
-        ConfigVariableGroupDeveloperTools,
-        IconNames.developer_resources,
-        "Configures internal and experimental developer settings",
-    ),
-    (
-        ConfigVariableGroupAIFeatures,
-        IconNames.sparkle,
-        "Configures the AI assistant and MCP server integration",
-    ),
-    (
-        ConfigVariableGroupProductUsageAnalytics,
-        IconNames.custom_graph,
-        "Configures consent and config for anonymized usage",
-    ),
-    (
-        ConfigVariableGroupExperimentalFlags,
-        IconNames.experiment,
-        "Configures temporary auto-generated flags tied to features",
-    ),
-]
 
 
 def _site_overrides(varname: str, config: Config) -> list[GlobalSettingsSiteOverride]:
@@ -246,23 +111,18 @@ def _topics(config: Config) -> Iterator[GlobalSettingsTopic]:
     current_settings = dict(load_configuration_settings())
     default_values = dict(ABCConfigDomain.get_all_default_globals())
     is_activated = get_global_config().global_settings.is_activated
-    for group_or_ident, icon, subline in _TOPICS:
-        group = (
-            group_or_ident
-            if isinstance(group_or_ident, ConfigVariableGroup)
-            else config_variable_group_registry.get(group_or_ident)
-        )
-        if group is None:
-            continue
+    for group in sorted(config_variable_group_registry.values(), key=lambda g: g.sort_index()):
         variables = list(
             _variables(group, config, context, current_settings, default_values, is_activated)
         )
         if not variables:
             continue
         yield GlobalSettingsTopic(
-            icon=icon,
+            # The generated module carries its own copy of the icon enum, so the
+            # group's icon is re-created from its value.
+            icon=IconNames(group.icon()),
             headline=group.title(),
-            subline=subline,
+            subline=group.description(),
             warning=group.warning(),
             variables=variables,
         )
@@ -276,7 +136,7 @@ def _breadcrumb_items(title: str) -> list[GlobalSettingsBreadcrumbItem]:
     ]
 
 
-def _app_data(config: Config) -> GlobalSettingsApp:
+def app_data(config: Config) -> GlobalSettingsApp:
     title = _("Global settings")
     return GlobalSettingsApp(
         title=title,
@@ -288,7 +148,7 @@ def _app_data(config: Config) -> GlobalSettingsApp:
 
 
 def _global_settings_page(ctx: PageContext) -> None:
-    data = _app_data(ctx.config)
+    data = app_data(ctx.config)
     MainNavigation.render(ctx.config, data.title)
     html.begin_page_content(enable_scrollbar=True)
     html.vue_component(component_name="cmk-global-settings", data=asdict(data))

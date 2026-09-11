@@ -123,6 +123,7 @@ py_cmk_test(
     name = "setup_tests",
     srcs = glob([
         "form_specs/**/*.py",
+        "global_settings/**/*.py",
         "parentscan/**/*.py",
         "plugins/**/*.py",
         "quick_setup/**/*.py",
@@ -133,6 +134,7 @@ py_cmk_test(
     ]),
     args = [
         "tests/unit/cmk/gui/form_specs",
+        "tests/unit/cmk/gui/global_settings",
         "tests/unit/cmk/gui/parentscan",
         "tests/unit/cmk/gui/plugins",
         "tests/unit/cmk/gui/quick_setup",
@@ -168,6 +170,7 @@ py_cmk_test(
         "//cmk/gui/background_job/process",
         "//cmk/gui/data_source",
         "//cmk/gui/form_specs",
+        "//cmk/gui/global_settings",
         "//cmk/gui/graphing",
         "//cmk/gui/inventory",
         "//cmk/gui/openapi/api_endpoints",

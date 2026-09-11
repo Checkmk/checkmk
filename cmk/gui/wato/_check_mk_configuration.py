@@ -37,7 +37,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
-from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.type_defs import GlobalSettings, IconNames
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils.temperature_unit import temperature_unit_choices, TemperatureUnit
 from cmk.gui.valuespec import (
@@ -2392,6 +2392,8 @@ ConfigVariableWATOIconCategories = ConfigVariable(
 ConfigVariableGroupUserManagement = ConfigVariableGroup(
     title=_l("User management"),
     sort_index=40,
+    icon=IconNames.users,
+    description=_l("Configures user/authentication settings"),
 )
 
 
@@ -2828,6 +2830,8 @@ def find_usages_of_contact_group_in_default_user_profile(
 ConfigVariableGroupCheckExecution = ConfigVariableGroup(
     title=_l("Execution of checks"),
     sort_index=10,
+    icon=IconNames.reminders,
+    description=_l("Configures how checks technically run against hosts"),
 )
 
 
@@ -3307,6 +3311,10 @@ def _validate_proxies(value: Sequence[Mapping[str, object]]) -> None:
 ConfigVariableGroupServiceDiscovery = ConfigVariableGroup(
     title=_l("Service discovery"),
     sort_index=4,
+    icon=IconNames.service_discovery,
+    description=_l(
+        "Configures service discovery behavior - how often it runs and how results are treated"
+    ),
 )
 
 

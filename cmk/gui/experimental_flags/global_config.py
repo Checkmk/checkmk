@@ -24,7 +24,7 @@ from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as EXPERIMENTAL_FLAGS_CONFIG_FILENAME
 from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.type_defs import GlobalSettings, IconNames
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -126,6 +126,8 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
 ConfigVariableGroupExperimentalFlags = ConfigVariableGroup(
     title=_l("Experimental flags (for testing only)"),
     sort_index=200,
+    icon=IconNames.experiment,
+    description=_l("Configures temporary auto-generated flags tied to features"),
 )
 
 

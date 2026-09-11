@@ -9,7 +9,7 @@ from typing import Final, override
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.type_defs import GlobalSettings, IconNames
 from cmk.gui.wato._http_proxy import http_proxy_reference_form_spec
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -38,6 +38,8 @@ PRODUCT_USAGE_ANALYTICS_CONFIG_FILE_RELATIVE: Final = (
 ConfigVariableGroupProductUsageAnalytics = ConfigVariableGroup(
     title=_l("Product usage analytics"),
     sort_index=100,
+    icon=IconNames.custom_graph,
+    description=_l("Configures consent and config for anonymized usage"),
 )
 
 

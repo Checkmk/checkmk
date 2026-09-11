@@ -104,7 +104,7 @@ from cmk.gui.watolib.global_settings import (
     load_site_global_settings,
     make_global_settings_context,
     make_pending_changes,
-    save_global_settings_raw,
+    save_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -2155,7 +2155,13 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def _save(
-        self, tree: FolderTree, *, pprint_value: bool, use_git: bool, liveproxyd_enabled: bool
+        self,
+        tree: FolderTree,
+        *,
+        sites: SiteConfigurations,
+        pprint_value: bool,
+        use_git: bool,
+        liveproxyd_enabled: bool,
     ) -> None:
         save_site_globals(
             self._site_id,
@@ -2291,11 +2297,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
             ),
             ChangeScope.all_activation_sites(),
         )
-        save_global_settings_raw(
-            {
-                **global_settings,
-                "trusted_certificate_authorities": trusted,
-            }
+        save_global_settings(
+            {**global_settings, "trusted_certificate_authorities": trusted}, config.sites
         )
 
         flash(

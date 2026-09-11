@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import AbstractContextManager, contextmanager, ExitStack
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -21,6 +22,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
     EVENT_CONSOLE,
+    finalize_all_settings_per_site,
     GlobalSettingsContext,
     UNREGISTERED_SETTINGS,
 )
@@ -91,8 +93,8 @@ def load_configuration_settings(
 def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
     """The value in effect and whether it is the built-in default.
 
-    Writers pass the same mapping they later hand to save_global_settings_raw(), which
-    rewrites the whole file, so they need a mutable copy of it.
+    Writers pass the same mapping they later hand to save_global_settings(),
+    which rewrites the whole file, so they need a mutable copy of it.
     """
     if varname in settings:
         return settings[varname], False
@@ -155,6 +157,59 @@ def save_global_settings_raw(
             domain.save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:
             domain.save(domain_config, custom_site_path=custom_site_path)
+
+
+def save_global_settings(settings: GlobalSettings, sites: SiteConfigurations) -> None:
+    """The entry point for saving the global settings after a user manipulated them."""
+    defaults = ABCConfigDomain.get_all_default_globals()
+    site_globals = _site_globals_of(sites)
+    with _settings_change(
+        sites,
+        before=finalize_all_settings_per_site(
+            defaults, load_configuration_settings(), site_globals
+        ),
+        after=finalize_all_settings_per_site(defaults, settings, site_globals),
+    ):
+        save_global_settings_raw(settings)
+
+
+def _site_globals_of(sites: SiteConfigurations) -> Mapping[SiteId, GlobalSettings]:
+    return {site_id: site.get("globals", {}) for site_id, site in sites.items()}
+
+
+@contextmanager
+def _settings_change(
+    sites: SiteConfigurations,
+    before: Mapping[SiteId, GlobalSettings],
+    after: Mapping[SiteId, GlobalSettings],
+) -> Iterator[None]:
+    """Let every config domain wrap the write of a settings change.
+
+    See ABCConfigDomain.settings_change.
+    """
+    with ExitStack() as stack:
+        for domain in ABCConfigDomain.enabled_domains():
+            stack.enter_context(domain.settings_change(sites, before, after))
+        yield
+
+
+def site_global_settings_change(
+    sites: SiteConfigurations, site_id: SiteId, site_globals: GlobalSettings
+) -> AbstractContextManager[None]:
+    """Wraps the write of the overrides a site is about to get.
+
+    See ABCConfigDomain.settings_change.
+    """
+    defaults = ABCConfigDomain.get_all_default_globals()
+    global_settings = load_configuration_settings()
+    site_globals_before = _site_globals_of(sites)
+    return _settings_change(
+        sites,
+        before=finalize_all_settings_per_site(defaults, global_settings, site_globals_before),
+        after=finalize_all_settings_per_site(
+            defaults, global_settings, {**site_globals_before, site_id: site_globals}
+        ),
+    )
 
 
 def load_site_global_settings(custom_site_path: str | None = None) -> GlobalSettings:

@@ -89,6 +89,7 @@ from cmk.gui.watolib.config_sync import (
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     save_site_global_settings_raw,
+    site_global_settings_change,
 )
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.mode import mode_registry
@@ -1165,20 +1166,24 @@ def save_site_globals(
     use_git: bool,
     acting_user_id: UserId | None,
 ) -> None:
-    """Writes the overrides to the sites file and, for the local site, also to its own
-    site-specific config files, which are what the running site reads."""
-    sites[site_id]["globals"] = site_globals
-    site_management_registry["site_management"].save_sites(
-        tree,
-        sites,
-        activate=False,
-        pprint_value=pprint_value,
-        liveproxyd_enabled=liveproxyd_enabled,
-        use_git=use_git,
-        acting_user_id=acting_user_id,
-    )
-    if site_id == omd_site():
-        save_site_global_settings_raw(site_globals)
+    """Writes the overrides with the config domains in the loop, see save_global_settings().
+
+    They go to the sites file and, for the local site, also to its own site-specific
+    config files, which are what the running site reads.
+    """
+    with site_global_settings_change(sites, site_id, site_globals):
+        sites[site_id]["globals"] = site_globals
+        site_management_registry["site_management"].save_sites(
+            tree,
+            sites,
+            activate=False,
+            pprint_value=pprint_value,
+            liveproxyd_enabled=liveproxyd_enabled,
+            use_git=use_git,
+            acting_user_id=acting_user_id,
+        )
+        if site_id == omd_site():
+            save_site_global_settings_raw(site_globals)
 
 
 def _clear_distributed_wato_file() -> None:

@@ -11,7 +11,8 @@
 import abc
 import os
 import pprint
-from collections.abc import Callable, Generator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, Literal, NewType, override, TypedDict
@@ -198,6 +199,21 @@ class ABCConfigDomain(abc.ABC):
         self, settings: GlobalSettings, custom_site_path: str | None = None
     ) -> None:
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
+
+    @contextmanager
+    def settings_change(
+        self,
+        sites: SiteConfigurations,  # noqa: ARG002
+        before: Mapping[SiteId, GlobalSettings],  # noqa: ARG002
+        after: Mapping[SiteId, GlobalSettings],  # noqa: ARG002
+    ) -> Iterator[None]:
+        """Wrap the write of a settings change with the settings in effect for every site.
+
+        Before the yield nothing is written yet, and a domain can reject a combination it
+        cannot serve by raising MKUserError. After the yield the change is on disk, and a
+        domain reacts to it, for example by logging security events. Most domains do neither.
+        """
+        yield
 
     @abc.abstractmethod
     def default_globals(self) -> GlobalSettings:

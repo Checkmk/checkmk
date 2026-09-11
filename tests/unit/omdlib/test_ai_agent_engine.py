@@ -46,3 +46,28 @@ def test_ai_agent_engine_has_error_allows_on_when_release_flag_on(
     (tmp_path / "etc/check_mk" / CONFIG_FILENAME).write_text('{"exp_ai_assistant": true}')
 
     assert ai_agent_engine_has_error("on") is None
+
+
+def test_ai_agent_engine_conf_proxies_the_route_to_the_daemon_socket_when_enabled(
+    tmp_path: Path,
+) -> None:
+    site_home = tmp_path
+    (site_home / "etc" / "apache" / "conf.d").mkdir(parents=True)
+
+    AI_AGENT_ENGINE.activation("unit", site_home, {"AI_AGENT_ENGINE": "on"})
+
+    conf = (site_home / "etc" / "apache" / "conf.d" / "ai-agent-engine.conf").read_text()
+    sock = site_home / "tmp" / "run" / "ai-agent-engine.sock"
+    assert f'ProxyPass "/unit/check_mk/ai-agent-engine" "unix://{sock}|http://localhost:2" ' in conf
+    assert 'ProxyPassReverse "/unit/check_mk/ai-agent-engine" "http://localhost:2"\n' in conf
+
+
+def test_ai_agent_engine_conf_is_removed_when_disabled(tmp_path: Path) -> None:
+    site_home = tmp_path
+    conf_dir = site_home / "etc" / "apache" / "conf.d"
+    conf_dir.mkdir(parents=True)
+    (conf_dir / "ai-agent-engine.conf").write_text("stale")
+
+    AI_AGENT_ENGINE.activation("unit", site_home, {"AI_AGENT_ENGINE": "off"})
+
+    assert not (conf_dir / "ai-agent-engine.conf").exists()

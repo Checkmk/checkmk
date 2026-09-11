@@ -12,8 +12,7 @@ import shutil
 import signal
 import subprocess
 import traceback
-from collections.abc import Iterable, Mapping, Sequence
-from copy import deepcopy
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -47,13 +46,13 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
     DomainRequest,
-    finalize_all_settings_per_site,
     finalize_specifically_set_settings,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.certs import cert_dir, CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore, SiteCA
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
@@ -601,35 +600,15 @@ class ConfigDomainOMD(ABCConfigDomain):
         return settings
 
     @override
-    def save(
+    @contextlib.contextmanager
+    def settings_change(
         self,
-        settings: GlobalSettings,
-        site_specific: bool = False,
-        custom_site_path: str | None = None,
-    ) -> None:
-        piggyback_hub_config_var_ident = "site_piggyback_hub"
-        # custom_site_path is used for snapshot creation for activate changes, we don't reliably
-        # know for which site the settings are being stored here, but they should already be
-        # validated at this point
-        if piggyback_hub_config_var_ident in settings and not custom_site_path:
-            site_specific_settings = {
-                site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in active_config.sites.items()
-            }
-            if site_specific:
-                global_settings = self.load()
-                site_specific_settings[omd_site()] = dict(settings)
-            else:
-                global_settings = settings
-
-            validate_piggyback_hub_config(
-                active_config.sites,
-                finalize_all_settings_per_site(
-                    self.get_all_default_globals(), global_settings, site_specific_settings
-                ),
-            )
-
-        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
+        sites: SiteConfigurations,
+        before: Mapping[SiteId, GlobalSettings],
+        after: Mapping[SiteId, GlobalSettings],
+    ) -> Iterator[None]:
+        validate_piggyback_hub_config(sites, after)
+        yield
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

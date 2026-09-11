@@ -12,7 +12,6 @@ settings"""
 import abc
 import contextlib
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
-from copy import deepcopy
 from typing import Any, Final, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -71,7 +70,6 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
-    finalize_all_settings_per_site,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import (
@@ -96,10 +94,6 @@ from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
-)
-from cmk.gui.watolib.piggyback_hub import (
-    CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
-    validate_piggyback_hub_config,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
@@ -407,14 +401,6 @@ class ABCEditGlobalSettingMode(WatoMode):
             if not transactions.check_transaction(request):
                 return None
 
-            if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
-                default_settings = ABCConfigDomain.get_all_default_globals()
-                self._validate_update_piggyback_hub_config(
-                    default_settings[self._varname],
-                    default_settings,
-                    config.sites,
-                )
-
             with contextlib.suppress(KeyError):
                 del self._current_settings[self._varname]
 
@@ -425,12 +411,6 @@ class ABCEditGlobalSettingMode(WatoMode):
             new_settings: GlobalSettings = {}
         else:
             new_value = self._parse_submitted_value()
-
-            if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
-                self._validate_update_piggyback_hub_config(
-                    new_value, ABCConfigDomain.get_all_default_globals(), config.sites
-                )
-
             self._current_settings[self._varname] = new_value
             msg = HTML.with_escaping(
                 _("Changed global configuration variable %(varname)s.") % {"varname": self._varname}
@@ -473,27 +453,6 @@ class ABCEditGlobalSettingMode(WatoMode):
             return redirect(mode_url("sites"))
 
         return redirect(self._back_url())
-
-    def _validate_update_piggyback_hub_config(
-        self, new_value: bool, default_settings: GlobalSettings, site_configs: SiteConfigurations
-    ) -> None:
-        site_specific_settings = {
-            site_id: deepcopy(site_conf.get("globals", {}))
-            for site_id, site_conf in site_configs.items()
-        }
-        global_settings = dict(deepcopy(self._global_settings))
-        if (sites := self._affected_sites()) is not None:
-            for site_id in sites:
-                site_specific_settings[site_id][self._varname] = new_value
-        else:
-            global_settings[self._varname] = new_value
-
-        validate_piggyback_hub_config(
-            site_configs,
-            finalize_all_settings_per_site(
-                default_settings, global_settings, site_specific_settings
-            ),
-        )
 
     @abc.abstractmethod
     def _back_url(self) -> str:

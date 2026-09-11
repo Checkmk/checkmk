@@ -11,7 +11,6 @@
 import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
-from copy import deepcopy
 from typing import Any, assert_never, cast, overload, override
 from urllib.parse import urlparse
 
@@ -92,7 +91,6 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariableGroup,
-    finalize_all_settings_per_site,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -117,10 +115,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
-from cmk.gui.watolib.piggyback_hub import (
-    CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
-    validate_piggyback_hub_config,
-)
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
@@ -2008,20 +2002,6 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             new_value = not self._current_settings[varname]
         else:
             new_value = not def_value
-
-        if varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
-            site_specific_settings = {
-                site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in config.sites.items()
-            }
-            site_specific_settings[self._site_id][varname] = new_value
-
-            validate_piggyback_hub_config(
-                config.sites,
-                finalize_all_settings_per_site(
-                    self._default_values, self._global_settings, site_specific_settings
-                ),
-            )
 
         self._current_settings[varname] = new_value
 

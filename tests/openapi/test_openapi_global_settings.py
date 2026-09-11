@@ -30,6 +30,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
+from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
@@ -176,6 +177,17 @@ def fixture_event_console_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
         BooleanChoice(title=Title("Event Console toggle")),
         False,
     )
+
+
+@pytest.fixture(name="piggyback_hub_var")
+def fixture_piggyback_hub_var(monkeypatch: pytest.MonkeyPatch) -> str:
+    defaults = ABCConfigDomain.get_all_default_globals()
+    monkeypatch.setattr(
+        ABCConfigDomain,
+        "get_all_default_globals",
+        classmethod(lambda cls: {**defaults, CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT: False}),  # noqa: ARG005
+    )
+    return CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 
 
 @pytest.fixture(name="var_without_factory_default")
@@ -594,3 +606,29 @@ def test_an_event_console_change_reaches_the_event_console_sites_only(
 def test_global_settings_oneofschemas(schema: OneOfSchema, data: dict) -> None:  # type: ignore[misc]
     assert schema.load(data) == data
     assert schema.dump(data) == data
+
+
+def test_a_remote_site_cannot_enable_the_piggyback_hub_the_central_site_has_disabled(
+    clients: ClientRegistry, remote_site: str, piggyback_hub_var: str
+) -> None:
+    clients.GlobalSetting.update_site(
+        remote_site, piggyback_hub_var, True, expect_ok=False
+    ).assert_status_code(400)
+
+
+def test_the_central_site_cannot_disable_the_piggyback_hub_a_remote_site_runs(
+    clients: ClientRegistry, remote_site: str, piggyback_hub_var: str
+) -> None:
+    clients.GlobalSetting.update(piggyback_hub_var, True)
+    clients.GlobalSetting.update_site(remote_site, piggyback_hub_var, True)
+
+    clients.GlobalSetting.update(piggyback_hub_var, False, expect_ok=False).assert_status_code(400)
+
+
+def test_the_central_site_cannot_reset_the_piggyback_hub_a_remote_site_runs(
+    clients: ClientRegistry, remote_site: str, piggyback_hub_var: str
+) -> None:
+    clients.GlobalSetting.update(piggyback_hub_var, True)
+    clients.GlobalSetting.update_site(remote_site, piggyback_hub_var, True)
+
+    clients.GlobalSetting.delete(piggyback_hub_var, expect_ok=False).assert_status_code(400)

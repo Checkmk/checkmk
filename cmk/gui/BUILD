@@ -544,7 +544,7 @@ py_library(
         ":html_toolkit",
         ":page_toolkit",
         ":session_context",
-        "//cmk/gui/oauth",
+        "//cmk/gui/oauth:token_verification",
         "//cmk/gui/userdb",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

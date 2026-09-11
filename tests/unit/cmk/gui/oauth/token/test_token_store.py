@@ -10,8 +10,8 @@ import pytest
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.store.backend import create_schema
-from cmk.gui.oauth.store.token_store import _token_hash, TokenRecord, TokenStore, UnknownClient
+from cmk.gui.oauth.token.backend import create_schema
+from cmk.gui.oauth.token.token_store import _token_hash, TokenRecord, TokenStore, UnknownClient
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 
 _USER = UserId("cmkadmin")

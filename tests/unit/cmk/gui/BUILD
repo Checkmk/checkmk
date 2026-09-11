@@ -502,6 +502,7 @@ py_cmk_test(
         "//cmk/gui/cmkcert",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
+        "//cmk/gui/oauth",
         "//cmk/gui/pagetypes",
         "//cmk/gui/userdb",
         "//cmk/gui/utils",

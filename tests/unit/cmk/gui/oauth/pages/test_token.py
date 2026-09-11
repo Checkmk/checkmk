@@ -17,7 +17,7 @@ from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._token import OAuthTokenPage
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import format_scopes
 from cmk.utils.redis import disable_redis

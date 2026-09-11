@@ -13,7 +13,7 @@ from datetime import datetime, UTC
 from typing import NewType
 
 from cmk.ccc.resulttype import Error, OK, Result
-from cmk.gui.oauth.store.backend import Backend, connect, oauth_db_path
+from cmk.gui.oauth.token.backend import Backend, connect, oauth_db_path
 
 _MAX_REGISTERED_CLIENTS = 1000
 

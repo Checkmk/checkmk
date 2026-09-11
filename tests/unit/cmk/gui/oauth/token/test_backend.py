@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.gui.oauth.store import backend
-from cmk.gui.oauth.store.backend import (
+from cmk.gui.oauth.token import backend
+from cmk.gui.oauth.token.backend import (
     connect,
     create_schema,
     open_connection,

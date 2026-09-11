@@ -29,9 +29,9 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.oauth.active_token import active_token
-from cmk.gui.oauth.store.backend import StoreUnavailableError
-from cmk.gui.oauth.store.token_store import looks_like_token, TokenRecord
+from cmk.gui.oauth.token.active_token import active_token
+from cmk.gui.oauth.token.backend import StoreUnavailableError
+from cmk.gui.oauth.token.token_store import looks_like_token, TokenRecord
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec

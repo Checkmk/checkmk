@@ -14,7 +14,7 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.session import FileBasedSession
 from cmk.gui.type_defs import SessionInfo

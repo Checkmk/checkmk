@@ -51,17 +51,31 @@ void main() {
         }
 
         stage("Build agent updater binary for Linux") {
+            // crane fetches the toolchain image inside the genrule's own
+            // action, not via oci_pull, so auth goes through --action_env,
+            // not --repo_env. Credentials are shell-expanded only, never
+            // Groovy-interpolated into the command line.
             withNexusCredentials {
-                dir("${checkout_dir}/non-free/packages/cmk-update-agent") {
+                dir("${checkout_dir}") {
+                    /* groovylint-disable LineLength */
                     sh("""
-                        BRANCH_VERSION=${branch_version} \
-                        DOCKER_REGISTRY_NO_HTTP=${docker_registry_no_http} \
-                        ./make-agent-updater
+                        set -e
+                        docker_config_dir="\$(mktemp -d)"
+                        trap 'rm -rf "\$docker_config_dir"' EXIT
+                        (
+                            umask 077
+                            printf '{"auths":{"%s":{"username":"%s","password":"%s"}}}' \
+                                '${docker_registry_no_http}' "\$NEXUS_USERNAME" "\$NEXUS_PASSWORD" \
+                                > "\$docker_config_dir/config.json"
+                        )
+                        bazel build --action_env=DOCKER_CONFIG="\$docker_config_dir" \
+                            //non-free/packages/cmk-update-agent:cmk-update-agent_bin
                     """);
+                    /* groovylint-enable LineLength */
                 }
             }
             dir("${WORKSPACE}/build") {
-                sh("cp ${checkout_dir}/non-free/packages/cmk-update-agent/cmk-update-agent .");
+                sh("cp ${checkout_dir}/bazel-bin/non-free/packages/cmk-update-agent/cmk-update-agent-built cmk-update-agent");
             }
         }
 

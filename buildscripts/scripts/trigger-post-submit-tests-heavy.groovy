@@ -25,6 +25,7 @@ void main() {
         "test-system-gui-ultimate",
         "test-system-mk-oracle",
         "test-system-redfish",
+        "test-system-ai-features",
         "test-system-singlesite-community",
         "test-system-singlesite-cloud",
         "test-system-singlesite-pro",

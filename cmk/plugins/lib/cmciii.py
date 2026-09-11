@@ -37,9 +37,16 @@ def discover_cmciii_sensors(
 
 
 def get_item(id_: str, params: DiscoveryParams, sensor: Sensor) -> str:
-    if params.get("use_sensor_description", False):
+    if not params.get("use_sensor_description", False):
+        return id_
+    try:
         return "{}-{} {}".format(sensor["_location_"], sensor["_index_"], sensor["DescName"])
-    return id_
+    except KeyError:
+        # Some modules omit the DescName entry of a channel entirely, and the
+        # device state sensors have neither a description nor an index. Naming
+        # such a sensor after the device and the sensor type is better than
+        # failing the discovery of all the others.
+        return id_
 
 
 def get_sensor(item: str, params: CheckParams, sensors: Sensors) -> Sensor | None:

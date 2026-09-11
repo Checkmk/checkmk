@@ -15,6 +15,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 from cmk.plugins.collection.agent_based import (
     cmciii,
@@ -446,6 +447,44 @@ def test_phase_sensors() -> None:
         Service(item="Master_PDU Phase 1", parameters={"_item_key": "Master_PDU Phase 1"}),
         Service(item="Master_PDU Phase 2", parameters={"_item_key": "Master_PDU Phase 2"}),
         Service(item="Master_PDU Phase 3", parameters={"_item_key": "Master_PDU Phase 3"}),
+    ]
+
+
+def test_phase_item_uses_the_description_of_its_first_channel() -> None:
+    # A phase has no description of its own, only one per channel. The item uses
+    # the description of the channel the sensor index refers to (the voltage one
+    # at the indices 3, 6 and 9 of the cmcIIIMsgTable).
+    params = {"use_sensor_description": True}
+
+    section = cmciii.parse_cmciii(_phase_sensor())
+
+    assert list(cmciii_phase.discover_cmciii_phase(params, section)) == [
+        Service(item="1-3 L1 Voltage", parameters={"_item_key": "Master_PDU Phase 1"}),
+        Service(item="1-6 L2 Voltage", parameters={"_item_key": "Master_PDU Phase 2"}),
+        Service(item="1-9 L3 Voltage", parameters={"_item_key": "Master_PDU Phase 3"}),
+    ]
+
+
+def _sensor_without_description() -> list[StringTable]:
+    # A CMCIII-HUM module that publishes no DescName for its temperature
+    # channel, as seen on real devices.
+    return [
+        [["2", "CMCIII-HUM", "HUM RA-01-E", "2"]],
+        [
+            ["2.1", "UserDescription.DevLocation", "53", "", "0", "Temperature", "0"],
+            ["2.2", "Temperature.Value", "2", "degree C", "-100", "25.90 degree C", "2590"],
+            ["2.3", "Temperature.Status", "7", "", "0", "OK", "4"],
+        ],
+    ]  # fmt: off
+
+
+def test_item_falls_back_to_the_sensor_id_without_a_description() -> None:
+    params = {"use_sensor_description": True}
+
+    section = cmciii.parse_cmciii(_sensor_without_description())
+
+    assert list(cmciii_temp.discover_cmciii_temp(params, section)) == [
+        Service(item="Ambient HUM_RA-01-E", parameters={"_item_key": "Ambient HUM_RA-01-E"})
     ]
 
 

@@ -91,7 +91,7 @@ def load_configuration_settings(
 def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
     """The value in effect and whether it is the built-in default.
 
-    Writers pass the same mapping they later hand to save_global_settings(), which
+    Writers pass the same mapping they later hand to save_global_settings_raw(), which
     rewrites the whole file, so they need a mutable copy of it.
     """
     if varname in settings:
@@ -113,13 +113,14 @@ def effective_site_value(site_globals: Mapping[str, object], varname: str) -> tu
     return value, True
 
 
-def save_global_settings(
+def save_global_settings_raw(
     vars_: GlobalSettings,
     site_specific: bool = False,
     custom_site_path: str | None = None,
     get_global_settings_config: Callable[[], GlobalConfig] = get_global_config,
     skip_cse_edition_check: bool = False,
 ) -> None:
+    """Writes the settings without letting the configuration domains validate them."""
     if not skip_cse_edition_check and edition(paths.omd_root) is Edition.CLOUD:
         global_settings_config = get_global_settings_config().global_settings
         current_global_settings = dict(load_configuration_settings())
@@ -160,10 +161,10 @@ def load_site_global_settings(custom_site_path: str | None = None) -> GlobalSett
     return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
-def save_site_global_settings(
+def save_site_global_settings_raw(
     settings: GlobalSettings, custom_site_path: str | None = None
 ) -> None:
-    save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)
+    save_global_settings_raw(settings, site_specific=True, custom_site_path=custom_site_path)
 
 
 def make_pending_changes(

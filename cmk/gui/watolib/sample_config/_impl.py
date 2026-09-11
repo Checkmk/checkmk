@@ -39,7 +39,10 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings_raw,
+)
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
@@ -211,7 +214,7 @@ class SampleConfigGeneratorInlineSNMPBackend(SampleConfigGenerator):
 
     @override
     def generate(self, tree: FolderTree) -> None:
-        save_global_settings(
+        save_global_settings_raw(
             {
                 # Load the full config (with undefined settings), so that saving
                 # does not drop them.
@@ -235,7 +238,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
     @override
     def generate(self, tree: FolderTree) -> None:
-        save_global_settings(self._initial_global_settings(), skip_cse_edition_check=True)
+        save_global_settings_raw(self._initial_global_settings(), skip_cse_edition_check=True)
 
         self._initialize_tag_config()
 

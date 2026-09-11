@@ -12,7 +12,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
-from cmk.gui.watolib.global_settings import save_global_settings
+from cmk.gui.watolib.global_settings import save_global_settings_raw
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
@@ -191,7 +191,7 @@ def _action() -> WarnUnavailableSNMPBackend:
 
 
 def _configure_inline_backend() -> None:
-    save_global_settings(
+    save_global_settings_raw(
         {**ConfigDomainCACertificates().default_globals(), "snmp_backend_default": "inline"}
     )
 

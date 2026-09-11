@@ -20,7 +20,7 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
-    save_global_settings,
+    save_global_settings_raw,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
@@ -120,7 +120,7 @@ def _migrate_installation_wide_global_setting(logger: Logger) -> None:
         return
     # `snmp_backend_default` is not among the global settings the cloud edition
     # activates, so without `skip_cse_edition_check` the setting would be dropped.
-    save_global_settings(migrated, skip_cse_edition_check=True)
+    save_global_settings_raw(migrated, skip_cse_edition_check=True)
 
 
 def _migrate_site_specific_global_setting(logger: Logger, ui_config: Config) -> None:
@@ -132,7 +132,7 @@ def _migrate_site_specific_global_setting(logger: Logger, ui_config: Config) -> 
         migrated := migrate_global_setting(settings, "the site specific global settings", logger)
     ) is settings:
         return
-    save_global_settings(migrated, site_specific=True, skip_cse_edition_check=True)
+    save_global_settings_raw(migrated, site_specific=True, skip_cse_edition_check=True)
 
 
 def _migrate_remote_site_global_settings(logger: Logger, ui_config: Config) -> None:

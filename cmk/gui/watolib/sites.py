@@ -88,7 +88,7 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
-    save_site_global_settings,
+    save_site_global_settings_raw,
 )
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.mode import mode_registry
@@ -1178,7 +1178,7 @@ def save_site_globals(
         acting_user_id=acting_user_id,
     )
     if site_id == omd_site():
-        save_site_global_settings(site_globals)
+        save_site_global_settings_raw(site_globals)
 
 
 def _clear_distributed_wato_file() -> None:

@@ -23,8 +23,8 @@ from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
     make_global_settings_context,
-    save_global_settings,
-    save_site_global_settings,
+    save_global_settings_raw,
+    save_site_global_settings_raw,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
@@ -60,7 +60,7 @@ def _update_installation_wide_global_settings(
     ui_config: Config,
 ) -> None:
     """Update the globals.mk of the local site"""
-    save_global_settings(
+    save_global_settings_raw(
         update_global_config(
             logger,
             # Load full config (with undefined settings)
@@ -77,7 +77,7 @@ def _update_site_specific_global_settings(
     """Update the sitespecific.mk of the local site (which is a remote site)"""
     if not is_distributed_setup_remote_site(ui_config.sites):
         return
-    save_site_global_settings(
+    save_site_global_settings_raw(
         update_global_config(
             logger,
             load_site_global_settings(),

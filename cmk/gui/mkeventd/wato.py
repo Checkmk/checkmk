@@ -159,7 +159,7 @@ from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     make_global_settings_context,
     make_pending_changes,
-    save_global_settings,
+    save_global_settings_raw,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
@@ -3385,7 +3385,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             "value": self._current_settings[varname] and _("on") or _("off"),
         }
 
-        save_global_settings(self._current_settings)
+        save_global_settings_raw(self._current_settings)
 
         self._add_change(
             action_name="edit-configvar",

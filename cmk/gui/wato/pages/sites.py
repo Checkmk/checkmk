@@ -104,7 +104,7 @@ from cmk.gui.watolib.global_settings import (
     load_site_global_settings,
     make_global_settings_context,
     make_pending_changes,
-    save_global_settings,
+    save_global_settings_raw,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -2291,7 +2291,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             ),
             ChangeScope.all_activation_sites(),
         )
-        save_global_settings(
+        save_global_settings_raw(
             {
                 **global_settings,
                 "trusted_certificate_authorities": trusted,

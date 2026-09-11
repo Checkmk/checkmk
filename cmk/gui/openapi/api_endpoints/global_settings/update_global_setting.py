@@ -24,7 +24,7 @@ from cmk.gui.watolib.global_settings import (
     global_settings_diff_text,
     load_configuration_settings,
     need_write_permission,
-    save_global_settings,
+    save_global_settings_raw,
 )
 from cmk.web.utils.html import HTML
 
@@ -66,7 +66,7 @@ def update_global_setting_v1(
 
     new_value = value_from_json(form_spec, body.value)
     settings[varname] = new_value
-    save_global_settings(settings)
+    save_global_settings_raw(settings)
 
     add_global_settings_change(
         config_variable,

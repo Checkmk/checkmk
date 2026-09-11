@@ -83,7 +83,7 @@ from cmk.gui.watolib.global_settings import (
     global_settings_diff_text,
     load_configuration_settings,
     make_global_settings_context,
-    save_global_settings,
+    save_global_settings_raw,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -506,7 +506,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         use_git: bool,  # noqa: ARG002
         liveproxyd_enabled: bool,  # noqa: ARG002
     ) -> None:
-        save_global_settings(self._current_settings)
+        save_global_settings_raw(self._current_settings)
 
     @abc.abstractmethod
     def _affected_sites(self) -> Sequence[SiteId] | None:
@@ -696,7 +696,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         else:
             self._current_settings[varname] = not def_value
         msg = _("Changed global configuration variable %(varname)s.") % {"varname": varname}
-        save_global_settings(self._current_settings)
+        save_global_settings_raw(self._current_settings)
 
         add_global_settings_change(
             config_variable,

@@ -61,7 +61,7 @@ SITE_RW_PERMISSIONS = permissions.AllPerm(
 def _editable_global_setting(varname: str) -> str:
     """Accepts any variable the global settings can edit, on whichever page.
 
-    A variable the edition deactivates is rejected here; save_global_settings() would
+    A variable the edition deactivates is rejected here; the settings writer would
     otherwise drop the write and the endpoint would report a success that changed nothing.
     """
     try:

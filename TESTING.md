@@ -31,8 +31,9 @@ Every test is code to maintain. More tests are not better.
 - Do not write a test for: trivial code, third-party library internals,
   behavior already covered by another test, excessive parameter variations of
   the same behavior.
-- Verify each behavior once, at one level. If two tests cover the same
-  behavior, delete the higher-level one.
+- Verify each behavior once. If two tests cover the same behavior, keep the
+  one at the level section 3 picks: low enough to pinpoint the failure, high
+  enough to survive a restructure.
 - Doctests are executable documentation, not coverage. Never rely on one as the
   only test of any logic.
 
@@ -41,7 +42,7 @@ Every test is code to maintain. More tests are not better.
 | Level       | Scope                                                                                                                                                                                               | Setup allowed                                      | Location                                                                                                                                                                       | Runtime                            |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
 | Unit        | One function, method, or class of one package. Collaborators replaced by doubles only where necessary.                                                                                              | None. No running processes, no test-only services. | The package's `tests/` directory: `packages/<pkg>/tests/` or `non-free/packages/<pkg>/tests/`. For the not yet packaged `cmk/` tree: `tests/unit/`, mirroring the module path. | 1–10 ms per test                   |
-| Component   | One package with its real package-level collaborators wired together. May run the package's own processes; nothing from another package, no site.                                                   | In-process fixtures.                               | Same `tests/` directory. Split into `tests/unit/` and `tests/component/` only when that helps.                                                                                 | < 30 s per test, suite < 10 min    |
+| Component   | One package with its real package-level collaborators wired together. May run the package's own processes; nothing from another package, no site.                                                   | In-process fixtures.                               | Same `tests/` directory, split into `tests/unit/` and `tests/component/`.                                                                                                      | < 30 s per test, suite < 10 min    |
 | Integration | Two or more first-party packages, verifying a cross-package contract (agent controller ↔ agent receiver, check engine ↔ plugin API, REST endpoint ↔ framework). No site, no real monitored systems. | Mocks, sockets, lightweight in-process setups.     | `tests/integration/<feature>/` with its own Bazel target.                                                                                                                      | < 30 s per test, suite < 10 min    |
 | System      | The whole system through its external interfaces: GUI via Playwright, REST API via HTTP client, one or more running sites, real monitored systems. Includes E2E and site tests.                     | Running site(s), browser automation, HTTP client.  | `tests/system/<feature>/`, run via `tests/run_tests.sh test-system-<suite>`.                                                                                                   | Suite < 30 min, critical path only |
 
@@ -49,8 +50,8 @@ Every test is code to maintain. More tests are not better.
   `bazel test //packages/<pkg>/...`, `bazel test //tests/unit/<path>/...`,
   `bazel test //tests/integration/...`. Always run the tests of the packages
   you touched. Run integration tests when you touch a cross-package boundary.
-  Run system tests locally only when working on the test itself or debugging a
-  CI failure; otherwise rely on CI.
+  Run the specific system tests that cover your change, not a whole system
+  suite.
 - Organize system tests by feature, not by fixture: `tests/system/redfish/`,
   not "everything that needs Playwright". The `singlesite`, `multisite`, `gui`,
   `gui_crawl`, `update`, and `plugins` directories are transitional holding
@@ -60,12 +61,8 @@ Every test is code to maintain. More tests are not better.
   are the same kind of system test. E2E tests are system tests that almost
   always need a site.
 - Package and integration tests mirror the source layout: one test module per
-  source module, grouped by package, moving with the code. System and
-  acceptance tests are organized by feature or workflow and never tied to
-  internal APIs.
-- Acceptance tests live under an `acceptance/` path segment. Changing their
-  expected outcome requires explicit stakeholder alignment; never adjust one to
-  make your change pass.
+  source module, grouped by package, moving with the code. System tests are
+  organized by feature or workflow and never tied to internal APIs.
 - Performance tests live in `tests/performance/` and need guaranteed
   resources, so CI selects them by tag.
 - Exceeding a runtime budget is a design signal, not a reason to raise the
@@ -74,12 +71,12 @@ Every test is code to maintain. More tests are not better.
 ## 3. Pick the level by behavior, not habit
 
 First state the behavior in one sentence a non-engineer could understand. Then
-choose the lowest level that can verify it honestly: low enough to pinpoint the
-failure, high enough to survive a restructure.
+choose the level that verifies it honestly: low enough to pinpoint the failure,
+high enough to survive a restructure.
 
-- Default: the public interface of a single component. Python API → unit test
-  against that API. Web server or CLI → the running process via its REST
-  endpoints or command line.
+- Default: the public interface of a single component. Python API → a test
+  against that API in the package's suite. Web server or CLI → the running
+  process via its REST endpoints or command line.
 - Unit and component tests carry internal logic. Testing internal classes
   directly gives less confidence than testing the component's public surface.
 - System tests only for critical user paths that span several components,
@@ -293,8 +290,6 @@ implements gets a test.
   → wait for the effect with a timeout helper.
 - Skip, xfail, retry, or loosened assertion added to get past an intermittent
   failure → revert it and follow the flaky-test process.
-- Acceptance test expectation changed without stakeholder alignment → revert
-  and raise it.
 - Vue test imports `@vue/test-utils`, asserts emitted events, mock calls, CSS
   classes, or input values → rewrite with `@testing-library/vue` against roles
   and rendered text.

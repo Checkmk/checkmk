@@ -71,6 +71,7 @@ void main() {
             "minimal-ubuntu-checkmk",
             "reference-image",
             "deb-package-signer",
+            "cmk-update-agent",
         ];
     }
 

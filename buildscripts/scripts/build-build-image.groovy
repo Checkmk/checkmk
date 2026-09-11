@@ -57,6 +57,15 @@ void main() {
             "image_alias_name": "IMAGE_PYTHON_3_14",
             "docker_file_path": "buildscripts/scripts/Dockerfile",
         ],
+        // centos:6 is EOL and has no docker_image_aliases entry, hence
+        // base_image instead of image_alias_name. tag_name is fixed (not
+        // branch-suffixed): Bazel pins this image by digest at one name
+        // (see oci.MODULE.bazel).
+        "cmk-update-agent": [
+            "tag_name": "cmk-update-agent-toolchain",
+            "base_image": "${docker_registry_no_http}/centos:6",
+            "docker_file_path": "non-free/packages/cmk-update-agent/Dockerfile",
+        ],
     ];
     def tag_suffix = branch_base_folder.startsWith("Testing") ? "-testing" : "";
 
@@ -138,8 +147,12 @@ void main() {
                 }
             } else if (distro in special_image_details) {
                 def details = special_image_details[distro];
-                inside_container_minimal(safe_branch_name: safe_branch_name) {
-                    distro_base_image_id = resolve_docker_image_alias(details.image_alias_name);
+                if (details.base_image) {
+                    distro_base_image_id = details.base_image;
+                } else {
+                    inside_container_minimal(safe_branch_name: safe_branch_name) {
+                        distro_base_image_id = resolve_docker_image_alias(details.image_alias_name);
+                    }
                 }
 
                 image_name = "${details.tag_name}${tag_suffix}"

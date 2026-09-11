@@ -161,6 +161,14 @@ M_BACKUP_CATALOG where entry_type_name = 'complete data backup' AND state_name
 QUERY
 }
 
+query_sap_hana_backup_incremental() {
+    cat <<QUERY
+Select TOP 1 entry_type_name, utc_end_time, state_name, comment, message from
+M_BACKUP_CATALOG where entry_type_name = 'incremental data backup' AND state_name
+<> 'running' order by sys_start_time desc
+QUERY
+}
+
 query_sap_hana_backup_log() {
     cat <<QUERY
 Select TOP 1 entry_type_name, utc_end_time, state_name, comment, message from
@@ -642,6 +650,7 @@ get_sections() {
     echo "$tenant_name"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_snapshots)" "$credentials" "$ssloption"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_complete)" "$credentials" "$ssloption"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_incremental)" "$credentials" "$ssloption"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_log)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_data_volume:sep(59)>>>"

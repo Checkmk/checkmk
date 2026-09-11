@@ -516,6 +516,78 @@ class MyModel(WithDynamicFields):
     dynamic_fields: Mapping[str, Annotated[str, AfterValidator(...)]]
 ```
 
+### Generic models
+
+A generic model lets several endpoints share one envelope. Define the model with
+type parameters, then parameterize it where you use it.
+
+```python
+from typing import Literal
+from cmk.gui.openapi.framework.model import api_field, api_model
+
+
+@api_model
+class CollectionModel[T, D]:
+    domainType: D = api_field(description="The domain type of the objects.")
+    value: list[T] = api_field(description="The objects in the collection.")
+
+
+def handler() -> CollectionModel[HostModel, Literal["host"]]:
+    ...
+```
+
+Always parameterize a generic model fully. An unparameterized `CollectionModel`
+makes its fields accept any value, so the endpoint validation rejects it.
+
+#### Where generics are allowed
+
+Pydantic substitutes the type parameters in every field annotation, at any
+depth. All of the following work:
+
+- the request body and the response body
+- inside `TypedResponse[...]` and `ApiResponse[...]`
+- a field of another model, also within a `list`, a `dict` or a union
+- a field of a generic model that forwards its own type parameter, such as
+  `inner: Other[T]`
+- a type argument that is a union, such as
+  `CollectionModel[HostModel | ServiceModel, Literal["mixed"]]`
+- the error schemas of an `EndpointHandler`
+
+#### Where generics are not allowed
+
+A model must never inherit from a generic model. Pydantic does not apply the
+type arguments of a dataclass base. The inherited fields then accept any value,
+and their schema stays empty. The `@api_model` decorator rejects every form:
+
+```python
+class Sub(CollectionModel[HostModel, Literal["host"]]): ...  # rejected
+class Sub[T](CollectionModel[T, Literal["host"]]): ...       # rejected
+class Sub(CollectionModel): ...                              # rejected
+```
+
+If you must add fields, put them into the type argument, or give the generic
+model another type parameter. Pydantic substitutes both correctly.
+
+`WithDynamicFields` does not work on a generic model, because pydantic does not
+call the hook that collects the dynamic fields.
+
+#### Schema names
+
+Pydantic derives the schema name from the model and its type arguments, for
+example `CollectionModel_HostModel_Literal__host___`. To get a readable name,
+declare a type alias and use the alias in the handler:
+
+```python
+type HostCollection = CollectionModel[HostModel, Literal["host"]]
+
+
+def handler() -> HostCollection:
+    ...
+```
+
+The schema is then called `HostCollection`. Note that Python does not allow a
+type alias as a base class either.
+
 ## Marshmallow schema to API models
 
 This guide provides a reference for translating Marshmallow schemas to API model

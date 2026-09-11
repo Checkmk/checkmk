@@ -13,7 +13,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GlobalSettings, GraphTimerange
+from cmk.gui.type_defs import GlobalSettings, GraphTimerange, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import LogMessage, make_audit_log_change_hook
@@ -43,9 +43,13 @@ from cmk.utils.paths import log_dir, var_dir
 STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
 
 
+def may_read(config_variable: ConfigVariable) -> bool:
+    return all(user.may(permission) for permission in _read_permissions(config_variable))
+
+
 def need_read_permission(config_variable: ConfigVariable) -> None:
-    user.need_permission(config_variable.primary_domain().global_settings_permission)
-    _need_executables_permission(config_variable)
+    for permission in _read_permissions(config_variable):
+        user.need_permission(permission)
 
 
 def need_write_permission(config_variable: ConfigVariable) -> None:
@@ -63,9 +67,11 @@ def need_site_write_permission(config_variable: ConfigVariable) -> None:
     need_site_read_permission(config_variable)
 
 
-def _need_executables_permission(config_variable: ConfigVariable) -> None:
+def _read_permissions(config_variable: ConfigVariable) -> list[PermissionName]:
+    permissions = [config_variable.primary_domain().global_settings_permission]
     if config_variable.ident() == "actions":
-        user.need_permission("wato.add_or_modify_executables")
+        permissions.append("wato.add_or_modify_executables")
+    return permissions
 
 
 def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:

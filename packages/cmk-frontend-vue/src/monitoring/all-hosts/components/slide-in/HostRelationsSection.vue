@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
-import CmkStateCountBar, { type StateSegment } from 'cmk-ui-library/components/CmkStateCountBar.vue'
 import StateTag from 'cmk-ui-library/components/StateTag.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
@@ -15,11 +14,11 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
-import type { HostOverview } from '@/monitoring/shared/api/types'
+import type { HostOverview, HostRef } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
+import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
 
 type Relation = HostOverview['relations'][number]
-type ServiceCounts = HostOverview['service_counts']
 
 const props = withDefaults(
   defineProps<{
@@ -33,18 +32,6 @@ const props = withDefaults(
 )
 
 const { _t, _tn } = usei18n()
-
-// The counts of a related host are shown as they are: the views behind them belong to that
-// host's own page.
-function relationSegments(counts: ServiceCounts): StateSegment[] {
-  return [
-    { label: _t('OK'), count: counts.ok, color: 'success' },
-    { label: _t('WARN'), count: counts.warn, color: 'warning' },
-    { label: _t('CRIT'), count: counts.crit, color: 'danger' },
-    { label: _t('UNKNOWN'), count: counts.unknown, color: 'unknown' },
-    { label: _t('PENDING'), count: counts.pending, color: 'pending' }
-  ]
-}
 
 /** How many related hosts are listed before the reader has to ask for the rest. */
 const RELATION_PREVIEW_LIMIT = 5
@@ -82,6 +69,10 @@ function siteUnavailableNotice(relation: Relation): TranslatedString {
 // two relations of different kinds or by both ends of one.
 function relationKey(relation: Relation): string {
   return `${relation.site_id}/${relation.host_name}/${relation.kind}/${relation.direction}`
+}
+
+function hostRef(relation: Relation): HostRef {
+  return { site_id: relation.site_id, name: relation.host_name }
 }
 
 const section = useTemplateRef<HTMLElement>('section')
@@ -136,9 +127,11 @@ watch(
                 class="monitoring-host-relations-section__state"
               />
             </template>
-            <CmkStateCountBar
+            <ServiceSummaryBar
               v-if="relation.health"
-              :segments="relationSegments(relation.health.service_counts)"
+              :counts="relation.health.service_counts"
+              :host="hostRef(relation)"
+              size="small"
             />
             <CmkParagraph v-else class="monitoring-host-relations-section__unavailable">
               {{ siteUnavailableNotice(relation) }}

@@ -72,6 +72,8 @@ export type HostState = components['schemas']['HostStateLabel']
 
 export type ServiceState = components['schemas']['ServiceStateLabel']
 
+export type ServiceCounts = components['schemas']['ServiceCounts']
+
 export type HostsPageMeta = components['schemas']['HostsPageMeta']
 
 // --- Filter model ---------------------------------------------------------

@@ -4,20 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkStateCountBar, {
-  type StateSegment,
-  type StateTotal
-} from 'cmk-ui-library/components/CmkStateCountBar.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import type { HostOverview, HostRef, ServiceState } from '@/monitoring/shared/api/types'
+import type { HostOverview, HostRef } from '@/monitoring/shared/api/types'
+import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import { useTimeSince } from '@/monitoring/shared/useTimeSince'
 
@@ -35,58 +31,6 @@ const props = withDefaults(
 const { _t } = usei18n()
 
 const hostRef = computed<HostRef>(() => ({ site_id: props.data.site_id, name: props.data.name }))
-
-function servicesInState(state: ServiceState): string {
-  return hostServicesPageUrl(hostRef.value, [state])
-}
-
-const allServices = computed<StateTotal>(() => ({
-  label: _t('All services'),
-  href: hostServicesPageUrl(hostRef.value),
-  target: '_top'
-}))
-
-function pendingServicesUrl(): string {
-  return `view.py?host=${encodeURIComponent(props.data.name)}&view_name=host_pending`
-}
-
-const serviceSegments = computed<StateSegment[]>(() => [
-  {
-    label: _t('OK'),
-    count: props.data.service_counts.ok,
-    color: 'success',
-    href: servicesInState('OK'),
-    target: '_top'
-  },
-  {
-    label: _t('WARN'),
-    count: props.data.service_counts.warn,
-    color: 'warning',
-    href: servicesInState('WARN'),
-    target: '_top'
-  },
-  {
-    label: _t('CRIT'),
-    count: props.data.service_counts.crit,
-    color: 'danger',
-    href: servicesInState('CRIT'),
-    target: '_top'
-  },
-  {
-    label: _t('UNKNOWN'),
-    count: props.data.service_counts.unknown,
-    color: 'unknown',
-    href: servicesInState('UNKNOWN'),
-    target: '_top'
-  },
-  {
-    label: _t('PENDING'),
-    count: props.data.service_counts.pending,
-    color: 'pending',
-    href: pendingServicesUrl(),
-    target: '_top'
-  }
-])
 
 const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
@@ -154,7 +98,7 @@ const timeSince = useTimeSince()
 
     <section class="monitoring-host-overview-tab__section">
       <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
-      <CmkStateCountBar :segments="serviceSegments" :total="allServices" />
+      <ServiceSummaryBar :counts="data.service_counts" :host="hostRef" />
     </section>
     <HostRelationsSection
       :relations="data.relations"

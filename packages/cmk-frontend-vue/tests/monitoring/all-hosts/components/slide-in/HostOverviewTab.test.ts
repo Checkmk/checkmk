@@ -32,54 +32,33 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
   }
 }
 
-test('renders the service summary state-count bar from the host service counts', async () => {
+const RELATION: HostOverview['relations'][number] = {
+  host_name: 'mgmt-web-1',
+  kind: 'management',
+  direction: 'parent',
+  relation_type: 'Management board',
+  site_id: 'local',
+  health: {
+    state: 'UP',
+    service_counts: { ok: 4, warn: 0, crit: 0, unknown: 0, pending: 0, total: 4 }
+  }
+}
+
+test('summarizes the services of the host being shown', async () => {
   render(HostOverviewTab, { props: { data: makeData() } })
 
+  // Only that the host's own counts reach the bar; what it makes of them is its own business.
   const bar = await screen.findByRole('img')
   expect(bar).toHaveAttribute('aria-label', '9 OK, 2 WARN, 3 CRIT, 1 UNKNOWN')
-
-  // Non-zero states each occupy a bar segment; PENDING (0) is omitted.
-  const segments = bar.querySelectorAll('.cmk-state-count-bar__segment')
-  expect(segments).toHaveLength(4)
 })
 
-test('legend lists every state with its count, including the zero one', async () => {
-  render(HostOverviewTab, { props: { data: makeData() } })
+test('leads the counts of a relation to the related host, not to the one being shown', () => {
+  render(HostOverviewTab, { props: { data: makeData({ relations: [RELATION] }) } })
 
-  await screen.findByRole('img')
-
-  for (const entry of ['OK: 9', 'WARN: 2', 'CRIT: 3', 'UNKNOWN: 1', 'PENDING: 0']) {
-    expect(screen.getByText(entry)).toBeInTheDocument()
-  }
-})
-
-test('the summary leads with all services, linking to the unfiltered page', async () => {
-  render(HostOverviewTab, { props: { data: makeData() } })
-
-  await screen.findByRole('img')
-
-  const all = screen.getByRole('link', { name: 'All services: 15' })
-  expect(all).toHaveAttribute('target', '_top')
-  expect(all.getAttribute('href')).toContain('monitor_host_services.py')
-  expect(all.getAttribute('href')).not.toContain('CRIT')
-})
-
-test('a non-zero count opens the host services page filtered to that state', async () => {
-  render(HostOverviewTab, { props: { data: makeData() } })
-
-  await screen.findByRole('img')
-
-  const crit = screen.getByRole('link', { name: 'CRIT: 3' })
-  expect(crit).toHaveAttribute('target', '_top')
-  expect(crit.getAttribute('href')).toContain('monitor_host_services.py')
-  expect(crit.getAttribute('href')).toContain('CRIT')
-})
-
-test('a zero count is not linked', async () => {
-  render(HostOverviewTab, { props: { data: makeData() } })
-
-  await screen.findByRole('img')
-
-  expect(screen.getByText('PENDING: 0')).toBeInTheDocument()
-  expect(screen.queryByRole('link', { name: /PENDING/ })).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'All services: 15' }).getAttribute('href')).toContain(
+    'host=web-1'
+  )
+  expect(screen.getByRole('link', { name: 'OK: 4' }).getAttribute('href')).toContain(
+    'host=mgmt-web-1'
+  )
 })

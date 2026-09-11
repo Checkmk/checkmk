@@ -73,6 +73,14 @@ test('names the relation type on every related host', () => {
   expect(within(cardOf('os-web-1')).getByText('Relation type: OS host')).toBeInTheDocument()
 })
 
+test('points the service counts of a related host at its services', () => {
+  renderSection({ relations: [makeRelation()] })
+
+  expect(screen.getByRole('link', { name: 'All services: 4' }).getAttribute('href')).toContain(
+    'monitor_host_services.py?host=mgmt-web-1&site=local'
+  )
+})
+
 test('leaves the card itself unlinked', () => {
   renderSection({ relations: [makeRelation()] })
 
@@ -82,7 +90,15 @@ test('leaves the card itself unlinked', () => {
 test('counts the services of every related host without asking the reader to open it', () => {
   renderSection({ relations: [makeRelation()] })
 
-  expect(within(cardOf('mgmt-web-1')).getByText('OK: 4')).toBeInTheDocument()
+  const card = within(cardOf('mgmt-web-1'))
+  expect(card.getByText('All services: 4')).toBeInTheDocument()
+  expect(card.getByText('OK: 4')).toBeInTheDocument()
+})
+
+test('keeps the service bar of a related host slimmer than the one of the host itself', () => {
+  renderSection({ relations: [makeRelation()] })
+
+  expect(cardOf('mgmt-web-1').querySelector('.cmk-state-count-bar--size-small')).not.toBeNull()
 })
 
 test('does not claim a cut list when the host has no relations to show at all', () => {

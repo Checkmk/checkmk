@@ -1,0 +1,36 @@
+title: Kubernetes: Monitoring agent node-scraper health
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This optional cluster-host service checks one node's kubelet statistics,
+ kubelet health and system-agent payloads independently. Receipt age is {WARN}
+ at 90 seconds and {CRIT} at 120 seconds. An expected payload that is missing
+ from the cache is {CRIT}. These states have no startup grace period.
+
+ The service reports the receipt age of each payload independently. Scrape
+ durations, node-scraper versions and Git revisions are available in the
+ service details and metrics.
+
+ Missing cached data may never have arrived or may have expired. The defaults
+ accommodate a 60-second collection interval and 120-second cache retention.
+ After expiry the missing-payload state takes precedence over age thresholds.
+
+ The rule {Kubernetes agent node health} configures receipt-age thresholds,
+ missing-payload state, and version mismatch state ({OK} by default).
+ Item conditions allow different settings for different nodes. Version and
+ Git revision are shown per payload. Missing optional metadata is informational.
+ Each payload with available measurements has receipt-age and scrape-duration
+ metrics. Disabling age thresholds does not disable missing-data detection.
+
+ The cluster overview continues to evaluate the node independently using its
+ own rule. Both services can alert for the same fault. Nodes removed from the
+ section use the standard vanished-service behavior.
+
+item:
+ Kubernetes node name.
+discovery:
+ One service per reported node-scraper node when node services are enabled
+ in {Kubernetes agent health service discovery}. Also discovers nodes whose
+ payloads are absent from the cache. Services reside on the cluster host.

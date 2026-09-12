@@ -1,0 +1,57 @@
+title: Kubernetes: In-cluster monitoring agent health
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check evaluates the {kube_agent_health_v1} section on the cluster host.
+ It reports the cluster-aggregator version, the number of healthy node scrapers
+ and Kubernetes API reflectors, and up to three problems per group.
+ Details show aggregate counts and at most 20 problems per group, with the
+ most severe first and a count of additional problems not shown. Healthy
+ components are omitted. All components contribute to the service state and
+ total and affected component metrics, regardless of the display limit.
+ Use the reflector services and optional node services for full component diagnostics,
+ including versions and Git revisions where reported.
+
+ Each expected node is checked for kubelet statistics, kubelet health and
+ system-agent payloads independently. The defaults are {WARN} at 90 seconds
+ and {CRIT} at 120 seconds since receipt, and {CRIT} if an expected payload
+ is absent from the cache. Nodes are supplied by the agent based on scheduled
+ node-scraper pods, rather than all cluster nodes. No reported nodes is
+ {WARN}: this may indicate a missing or unidentified DaemonSet, or no scheduled
+ node scrapers. This section cannot distinguish these causes or detect unscheduled pods.
+
+ A missing cached payload may never have arrived or may have expired. The agent
+ defaults to a 60-second collection interval and 120-second cache retention.
+ On expiry, the missing-payload state applies regardless of age thresholds.
+ Adjust the thresholds when using different collection or retention settings.
+
+ A reflector that has not completed its first list is {WARN}. An ongoing list
+ or relist is {WARN} at 120 seconds and {CRIT} at 300 seconds. Recent
+ watch-error alerts are disabled by default. When enabled, inspect the
+ cluster-aggregator logs for the underlying Kubernetes API error. The warning
+ expires with time and does not prove the watch has recovered. Lifetime error
+ counts, completed-list age and completed-list duration are diagnostic only.
+ A long-running healthy watch need not relist. An empty reflector map is {CRIT}.
+
+ The rule {Kubernetes agent health} configures these states and thresholds,
+ and the state for differing node-scraper and cluster-aggregator versions
+ ({OK} by default). Scrape durations are diagnostic only. Unknown version or
+ scrape-duration metadata does not itself cause an alert.
+ Initialization and missing-data states have no startup grace period: the
+ section has no uptime or first-expected timestamp. Receipt ages describe the
+ snapshot, and are not measurements of when the underlying source metrics
+ were produced.
+
+ The discovery rule {Kubernetes agent health service discovery} can add node
+ services or disable reflector services on the cluster host. Those services have independent
+ check rules and graphs. They do not replace this overview or alter its
+ thresholds; a problem can alert in both the overview and a component service.
+ Missing sections and vanished discovered items use Checkmk's standard
+ missing-monitoring-data handling rather than fabricated healthy results.
+
+discovery:
+ One service is created when the section is available, including when its
+ component maps are empty. Reflector services are enabled by default; node
+ services are disabled by default.

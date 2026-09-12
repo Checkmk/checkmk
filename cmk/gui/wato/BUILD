@@ -177,13 +177,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base",
-        ":wato",
-        "//cmk/gui:core_toolkit",
         "//cmk/gui/plugins/wato",
-        "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
-        "//cmk/gui/watolib:config_infra",
     ],
 )
 

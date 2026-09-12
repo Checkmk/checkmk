@@ -5,7 +5,6 @@
 """Module to hold shared code for Setup internals and the Setup plugins"""
 
 from cmk.gui.i18n import _
-from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.valuespec import CascadingDropdown as CascadingDropdown
 from cmk.gui.valuespec import DictionaryEntry, Float, Integer, Percentage, Tuple
 from cmk.gui.valuespec import FixedValue as FixedValue
@@ -82,9 +81,6 @@ from cmk.gui.watolib.rulespecs import rulespec_registry as rulespec_registry
 from cmk.gui.watolib.rulespecs import RulespecGroup as RulespecGroup
 from cmk.gui.watolib.rulespecs import RulespecSubGroup as RulespecSubGroup
 from cmk.gui.watolib.rulespecs import TimeperiodValuespec as TimeperiodValuespec
-
-# Legacy name kept for the pre 2.1 plug-in API (see cmk.gui.wato._pre_21_plugin_api)
-is_wato_slave_site = is_distributed_setup_remote_site
 
 
 def check_icmp_params() -> list[DictionaryEntry]:

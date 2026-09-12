@@ -10,7 +10,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/inventory",
         "//cmk/gui/valuespec",

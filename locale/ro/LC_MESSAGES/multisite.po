@@ -554,9 +554,9 @@ msgstr "%(days)d zile în urmă"
 
 #, python-format
 msgid ""
-"%(description)s<br><br>This is a temporary experimental flag. It is "
-"scheduled for removal in version %(remove_after)s and must not be relied on "
-"for permanent configuration."
+"%(description)s<br><br>This is a temporary release flag. It is scheduled for "
+"removal in version %(remove_after)s and must not be relied on for permanent "
+"configuration."
 msgstr ""
 
 #, fuzzy, python-format
@@ -947,10 +947,6 @@ msgstr "%Y-%m-%d"
 
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%a, %d. %B %Y la %H:%M"
-
-#, python-format
-msgid "%d actions"
-msgstr "%d acțiuni"
 
 #, python-format
 msgid "%d locked site"
@@ -8231,6 +8227,10 @@ msgid "Assignee"
 msgstr "Atribuiți grupului"
 
 #, fuzzy
+msgid "Assignment"
+msgstr "Atribuiți grupului"
+
+#, fuzzy
 msgid "Assignment mode"
 msgstr "Atribuiți grupului"
 
@@ -8633,6 +8633,10 @@ msgstr "Autorizare"
 #, fuzzy
 msgid "Authorized user"
 msgstr "Site-uri autorizate"
+
+#, fuzzy
+msgid "Auto"
+msgstr "Automat"
 
 #, fuzzy
 msgid "Auto (default)"
@@ -19289,6 +19293,10 @@ msgstr "Actualizarea configurației serviciului personalizat"
 msgid "Custom service name"
 msgstr "Numele serviciului personalizat"
 
+#, fuzzy
+msgid "Custom services"
+msgstr "Clienți"
+
 msgid "Custom services notes"
 msgstr "Note privind serviciile personalizate"
 
@@ -21392,6 +21400,10 @@ msgstr "Șterge"
 #, fuzzy, python-format
 msgid "Deleting %(name)s..."
 msgstr "Fetching '%s'..."
+
+#, fuzzy
+msgid "Deleting a custom service is not available yet"
+msgstr "Instanțe Oracle"
 
 msgid "Delimiter for file grouping"
 msgstr "Delimitator pentru gruparea fișierelor"
@@ -24774,6 +24786,10 @@ msgstr "A fost editat %(name)s \"%(ident)s"
 msgid "Edited user profile for user %(user_id)s"
 msgstr "Profil de utilizator editat pentru utilizator %s"
 
+#, fuzzy
+msgid "Editing a custom service is not available yet"
+msgstr "Instanțe Oracle"
+
 msgid "Edition"
 msgstr "Ediție"
 
@@ -24815,10 +24831,6 @@ msgstr ""
 "Fie un nume de gazdă exact, fie o expresie regulată care corespunde exact "
 "numelui de gazdă. Exemplu: <tt>srv.*p</tt> se va potrivi cu <tt>srv4711p</"
 "tt>, dar nu și cu <tt>xsrv4711p2</tt>. "
-
-#, fuzzy
-msgid "Either containers, images, local volumes or build cache"
-msgstr "Fie containere, imagini, volume locale sau Build Cache"
 
 #, fuzzy
 msgid ""
@@ -25058,6 +25070,9 @@ msgstr "Activați replicarea"
 msgid "Enable Caching"
 msgstr "Activați Caching"
 
+msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Enable GZIP compression of the backed-up files. The tar archives created by "
@@ -25270,6 +25285,10 @@ msgstr "Activați notificările de serviciu"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Activați livrarea sincronă prin SMTP"
+
+#, fuzzy
+msgid "Enable the AI assistant"
+msgstr "Activați acest site"
 
 msgid "Enable the MCP Server"
 msgstr ""
@@ -27003,7 +27022,7 @@ msgid "Expected virtual switch name"
 msgstr "Starea așteptată a steagului"
 
 #, fuzzy
-msgid "Experimental flags"
+msgid "Experimental flags (for testing only)"
 msgstr "Caracteristici experimentale"
 
 #, fuzzy
@@ -27715,10 +27734,6 @@ msgstr ""
 msgid "Failed to render value:"
 msgstr "Nu a reușit să redea valoarea:"
 
-#, python-format
-msgid "Failed to render value: %(value)r"
-msgstr "Nu a reușit să redea valoarea: %(value)r."
-
 #, fuzzy, python-format
 msgid ""
 "Failed to search rule of rule set '%(ruleset)s' in folder '%(folder)s' "
@@ -27780,14 +27795,6 @@ msgstr "Nu a reușit să pornească lucrarea: %s."
 #, python-format
 msgid "Failed to synchronize with site: %(response)s"
 msgstr "Nu s-a reușit sincronizarea cu site-ul: %(response)s."
-
-#. weblate-flags: read-only, domain-specific
-#, python-brace-format
-msgid ""
-"Failed to upgrade the metric backend schema for every licensed feature "
-"({features}), so the service was stopped. Please check the web and ui-job-"
-"scheduler logs for details."
-msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
@@ -38974,6 +38981,10 @@ msgstr "Cerere invalidă: %r"
 msgid "Invalid request parameters."
 msgstr "Parametru de control invalid"
 
+#, fuzzy
+msgid "Invalid request."
+msgstr "Cerere invalidă: %r"
+
 #, python-format
 msgid "Invalid request: %(domains)r"
 msgstr "Cerere invalidă: %(domains)r"
@@ -38997,10 +39008,6 @@ msgstr "Regulă invalidă <tt>%(rule_config)s</tt>"
 
 #, fuzzy
 msgid "Invalid selection"
-msgstr "Acțiune invalidă"
-
-#, fuzzy
-msgid "Invalid selection."
 msgstr "Acțiune invalidă"
 
 #, python-format
@@ -39421,6 +39428,10 @@ msgstr "Acesta este încă folosit de"
 msgid "It is still in use by at least 1 rule in rule set:"
 msgstr "Acesta este încă utilizat de cel puțin o regulă din setul de reguli:"
 
+#, python-format
+msgid "It is stored in an unknown format (version %(version)d)."
+msgstr ""
+
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "Nu este permisă utilizarea unui \"!\" de început aici."
 
@@ -39456,6 +39467,22 @@ msgstr "Articole"
 
 msgid "Iterator age"
 msgstr "Iterator age"
+
+#, python-format
+msgid "Its generated rule cannot be read: %(reason)s"
+msgstr ""
+
+#, fuzzy
+msgid "Its generated rule no longer exists."
+msgstr "Acest grup nu există."
+
+#, fuzzy
+msgid "Its host assignment cannot be read."
+msgstr "Stare în cazul în care un fișier jurnal nu poate fi citit"
+
+#, fuzzy, python-format
+msgid "Its host name \"%(host_name)s\" is not valid."
+msgstr "Numele gazdei: %s"
 
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons pentru MDM (fostul MobileIron Cloud)"
@@ -44734,7 +44761,7 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Numărul maxim de puncte de acces nefuncționale"
 
-#, no-python-format
+#, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
 "This option is used to calculate the hard memory limit from the total "
@@ -44851,7 +44878,6 @@ msgstr "Vârsta maximă a buștenilor"
 msgid "Maximum long output size"
 msgstr "Dimensiunea maximă de ieșire lungă"
 
-#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -44861,7 +44887,7 @@ msgid ""
 "limit (the spike limit being equal to 250MiB)."
 msgstr ""
 
-#, no-python-format
+#, python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -44996,9 +45022,6 @@ msgstr "Număr maxim de conexiuni paralele"
 #, fuzzy
 msgid "Maximum parallel connections per source IP address"
 msgstr "Număr maxim de conexiuni paralele"
-
-msgid "Maximum possible value"
-msgstr "Valoarea maximă posibilă"
 
 #, fuzzy
 msgid "Maximum queries"
@@ -46002,9 +46025,6 @@ msgstr "Speranța de viață minimă a paginii"
 
 msgid "Minimum password length"
 msgstr "Lungimea minimă a parolei"
-
-msgid "Minimum possible value"
-msgstr "Valoarea minimă posibilă"
 
 msgid "Minimum read wait time"
 msgstr "Timp minim de așteptare pentru citire"
@@ -48321,9 +48341,6 @@ msgstr "Nu folosiți niciodată date piggyback"
 
 msgid "New"
 msgstr "Nou"
-
-msgid "New Action"
-msgstr "Acțiune nouă"
 
 msgid "New TLS connections"
 msgstr "Noi conexiuni TLS"
@@ -59232,7 +59249,7 @@ msgstr "Niveluri relative"
 msgid "Relative levels of active sessions."
 msgstr "Nivelurile relative ale sesiunilor active."
 
-#, fuzzy, no-python-format
+#, fuzzy
 msgid "Relative limit in %"
 msgstr "Umiditate relativă"
 
@@ -69474,6 +69491,10 @@ msgstr "Nu mai creați evenimente noi"
 msgid "Stop creating new events, create overflow event"
 msgstr "Nu mai creați evenimente noi, creați un eveniment de depășire"
 
+#, fuzzy, python-format
+msgid "Stop creating new events, create overflow event, %(notify)s"
+msgstr "Nu mai creați evenimente noi, creați un eveniment de depășire"
+
 msgid "Stop foreign background jobs"
 msgstr "Opriți locurile de muncă de fond străine"
 
@@ -71221,8 +71242,12 @@ msgstr "Text pentru a se potrivi"
 msgid "Text to place"
 msgstr "Text pentru a plasa"
 
-msgid "Text-body of the email to send. "
-msgstr "Corpul text al e-mailului care urmează să fie trimis. "
+#, fuzzy, python-format
+msgid ""
+"Text-body of the email to send. The following macros will be substituted by "
+"value from the actual event:%(macros)s"
+msgstr ""
+"Următoarele macrocomenzi vor fi înlocuite cu valoarea din evenimentul real:"
 
 msgid "Text/Message of the event"
 msgstr "Textul/Mesajul evenimentului"
@@ -73418,9 +73443,9 @@ msgstr "Tipul emblemei este %(type)s, dar ar trebui să fie str"
 msgid "The end date must be after the start date"
 msgstr "Data de sfârșit trebuie să fie ulterioară datei de început"
 
+#, fuzzy
 msgid ""
-"The engine IDs have to be configured as hex strings like "
-"<tt>8000000001020304</tt>."
+"The engine IDs have to be configured as hex strings like 8000000001020304."
 msgstr ""
 "ID-urile motoarelor trebuie să fie configurate ca șiruri hexazecimale, cum "
 "ar fi <tt>8000000001020304</tt>."
@@ -73704,11 +73729,6 @@ msgstr ""
 
 msgid "The following layout style is applied to the matching node"
 msgstr "Următorul stil de prezentare se aplică nodului corespunzător"
-
-msgid ""
-"The following macros will be substituted by value from the actual event:"
-msgstr ""
-"Următoarele macrocomenzi vor fi înlocuite cu valoarea din evenimentul real:"
 
 #, fuzzy
 msgid ""
@@ -74638,8 +74658,8 @@ msgid ""
 "{current_revision_id!r} is applied, but the expected revision is "
 "{head_revision_id!r}. Activation has been blocked to prevent unintended "
 "schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
-"the upgrade fails, please contact Checkmk support."
+"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
+"upgrade fails, please contact Checkmk support."
 msgstr ""
 
 #. weblate-flags: read-only, domain-specific
@@ -76905,7 +76925,7 @@ msgid "The value is not valid: '%(exception)s'"
 msgstr "Valoarea nu este validă: '%(exception)s'"
 
 #, fuzzy, python-format
-msgid "The value must be of type MetricSpec, but it has type %(type)s"
+msgid "The value must be of type MetricSelection, but it has type %(type)s"
 msgstr "Valoarea trebuie să fie de tip str, dar are tipul %s."
 
 #, python-format
@@ -78516,9 +78536,6 @@ msgstr ""
 "când eșuează și se dezactivează în cazul în care o descoperire ulterioară "
 "reușește."
 
-msgid "This information is available as environment variables"
-msgstr "Aceste informații sunt disponibile ca variabile de mediu"
-
 msgid ""
 "This interval is applied to all new checks that go beyond the number of "
 "immediately scheduled checks. Note: the maximum delay is five times the "
@@ -78581,6 +78598,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Aceasta este o regulă de nivel superior. Afișați arborele de reguli"
+
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -81557,8 +81579,11 @@ msgid "This rulset allow you to configure a SSH check for a host"
 msgstr ""
 "Acest set de reguli vă permite să configurați o verificare SSH pentru o gazdă"
 
-msgid "This script will be executed using the BASH shell. "
-msgstr "Acest script va fi executat folosind shell-ul BASH. "
+#, fuzzy, python-format
+msgid ""
+"This script will be executed using the BASH shell. This information is "
+"available as environment variables:%(variables)s"
+msgstr "Aceste informații sunt disponibile ca variabile de mediu"
 
 #, fuzzy
 msgid ""
@@ -94787,10 +94812,10 @@ msgid ""
 "and associated with the source"
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You are missing the action with the ID <b>%(action_id)s</b>, which is still "
-"used in some rules."
+"You are missing the action with the ID %(action_id)s, which is still used in "
+"some rules."
 msgstr ""
 "Vă lipsește acțiunea cu ID-ul <b>%(action_id)s</b>, care este încă utilizat "
 "în unele reguli."
@@ -97221,9 +97246,6 @@ msgstr "toți utilizatorii cu și adresa de e-mail"
 msgid "allocated"
 msgstr "alocate"
 
-msgid "allow commands"
-msgstr "permiteți comenzi"
-
 msgid "allow execution of commands and actions via TCP"
 msgstr "permit executarea de comenzi și acțiuni prin TCP"
 
@@ -98489,9 +98511,6 @@ msgstr "fără acces prin TCP"
 
 msgid "no assumed state set"
 msgstr "nu există un set de stări asumate"
-
-msgid "no commands"
-msgstr "fără comenzi"
 
 msgid "no error"
 msgstr "nicio eroare"
@@ -102360,24 +102379,6 @@ msgstr "Ștergeți utilizatorul"
 msgid "incomplete source"
 msgstr "Raport incomplet"
 
-msgid "Where"
-msgstr ""
-
-#, fuzzy
-msgid "Where: attribute filter"
-msgstr "Atributul rolului"
-
-msgid "Then consolidate by: consolidation function and lookback"
-msgstr ""
-
-#, fuzzy
-msgid "And group by"
-msgstr "grup de"
-
-#, fuzzy
-msgid "And group by: grouping function and keys"
-msgstr "Condiția de grupare"
-
 #, fuzzy
 msgid "Preview added to graph"
 msgstr "Căutări predefinite"
@@ -102426,6 +102427,24 @@ msgstr "Critic mai jos"
 #, fuzzy
 msgid "Threshold type"
 msgstr "Praguri"
+
+msgid "Where"
+msgstr ""
+
+#, fuzzy
+msgid "Where: attribute filter"
+msgstr "Atributul rolului"
+
+msgid "Then consolidate by: consolidation function and lookback"
+msgstr ""
+
+#, fuzzy
+msgid "And group by"
+msgstr "grup de"
+
+#, fuzzy
+msgid "And group by: grouping function and keys"
+msgstr "Condiția de grupare"
 
 #, fuzzy
 msgid "My custom graphs"
@@ -102523,10 +102542,6 @@ msgstr "Permisiune"
 #, fuzzy
 msgid "Rounding mode"
 msgstr "Poduri de rulare"
-
-#, fuzzy
-msgid "Auto"
-msgstr "Automat"
 
 #, fuzzy
 msgid "Strict"
@@ -102892,364 +102907,6 @@ msgstr ""
 
 msgid "Alt + k"
 msgstr ""
-
-msgid ""
-"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
-"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
-msgstr ""
-
-#, fuzzy
-msgid "Consolidation"
-msgstr "Consolidarea RRD"
-
-#, fuzzy
-msgid "Group by"
-msgstr "grup de"
-
-#, fuzzy
-msgid "Group by: grouping function and keys"
-msgstr "Condiția de grupare"
-
-#, fuzzy
-msgid "Service name template"
-msgstr "Denumirea serviciului"
-
-#, fuzzy
-msgid "Existence"
-msgstr "Ascultător"
-
-#, fuzzy
-msgid "Edit condition"
-msgstr "Editați conexiunea"
-
-#, fuzzy
-msgid "Remove condition"
-msgstr "Eliminarea condiției de etichetare"
-
-#, fuzzy
-msgid "Attribute operator"
-msgstr "Atributul de setat"
-
-#, fuzzy
-msgid "Add condition after %{key}"
-msgstr "Adăugați o condiție"
-
-#, fuzzy
-msgid "Add condition after previous condition"
-msgstr "Opțiuni adiționale"
-
-#, fuzzy
-msgid "Attribute filter"
-msgstr "Atributul de setat"
-
-#, fuzzy
-msgid "Toggle connector, currently %{connector}"
-msgstr "Conexiuni eșuate"
-
-msgid "Toggle AND / OR"
-msgstr ""
-
-#, fuzzy
-msgid "AND group of %{count} conditions"
-msgstr "Numărul de conexiuni curente"
-
-#, fuzzy
-msgid "Add condition after this group"
-msgstr "Adăugați o condiție"
-
-#, fuzzy
-msgid "contains"
-msgstr "Containere"
-
-#, fuzzy
-msgid "does not contain"
-msgstr "Denumirea containerului"
-
-#, fuzzy
-msgid "starts with"
-msgstr "Avertismentul începe cu"
-
-#, fuzzy
-msgid "does not start with"
-msgstr "nu începe cu "
-
-#, fuzzy
-msgid "ends with"
-msgstr "începe cu "
-
-#, fuzzy
-msgid "does not end with"
-msgstr "Nu se termină cu \"%s\"."
-
-#, fuzzy
-msgid "does not exist"
-msgstr "Nu există"
-
-#, fuzzy
-msgid "Resource"
-msgstr "Surse"
-
-#, fuzzy
-msgid "Data point"
-msgstr "Date trimise"
-
-#, fuzzy
-msgid "Last recorded value"
-msgstr "Raport de accident"
-
-#, fuzzy
-msgid "Avg"
-msgstr "Vârsta"
-
-msgid "Rate"
-msgstr ""
-
-msgid "Delta"
-msgstr ""
-
-#, fuzzy
-msgid "Preserve histograms"
-msgstr "Grupuri de agregare"
-
-#, fuzzy
-msgid "Count delta"
-msgstr "Doar numărătoarea"
-
-#, fuzzy
-msgid "Count rate"
-msgstr "Rata mesajelor livrate"
-
-#, fuzzy
-msgid "Sum delta"
-msgstr "Dimensiunea delta"
-
-#, fuzzy
-msgid "Sum rate"
-msgstr "%s rata"
-
-#, fuzzy
-msgid "Quantile"
-msgstr "Până la"
-
-#, fuzzy
-msgid "Fraction below"
-msgstr "Fracțiune"
-
-#, fuzzy
-msgid "Fraction between"
-msgstr "Fracțiune"
-
-#, fuzzy
-msgid "Cumulative sum field"
-msgstr "Personalizat"
-
-msgid "%{label} (raw)"
-msgstr ""
-
-#, fuzzy
-msgid "Histogram"
-msgstr "Istorie"
-
-#, fuzzy
-msgid "last"
-msgstr "Ultimul "
-
-#, fuzzy
-msgid "raw"
-msgstr "rand"
-
-#, fuzzy
-msgid "avg"
-msgstr "Etichetă"
-
-#, fuzzy
-msgid "rate"
-msgstr "%s rata"
-
-#, fuzzy
-msgid "delta"
-msgstr "Dimensiunea delta"
-
-#, fuzzy
-msgid "preserve histograms"
-msgstr "Grupuri de agregare"
-
-#, fuzzy
-msgid "count delta"
-msgstr "Numărul de documente delta"
-
-#, fuzzy
-msgid "count rate"
-msgstr "Numărul de fișiere la"
-
-#, fuzzy
-msgid "sum delta"
-msgstr "Dimensiunea delta"
-
-#, fuzzy
-msgid "sum rate"
-msgstr "%s rata"
-
-msgid "fraction <%{value}"
-msgstr ""
-
-msgid "fraction %{lower}–%{upper}"
-msgstr ""
-
-#, fuzzy
-msgctxt "Abbreviation for hours"
-msgid "h"
-msgstr "h"
-
-#, fuzzy
-msgctxt "Abbreviation for minutes"
-msgid "m"
-msgstr "m"
-
-#, fuzzy
-msgctxt "Abbreviation for seconds"
-msgid "s"
-msgstr "s"
-
-#, fuzzy
-msgid "Treat as %{type}"
-msgstr "Tipul de date"
-
-#, fuzzy
-msgid "Edit consolidation"
-msgstr "Editați conexiunea"
-
-#, fuzzy
-msgid "Quantile (0 to 1)"
-msgstr "Până la"
-
-#, fuzzy
-msgid "Lower threshold"
-msgstr "peste treshold"
-
-#, fuzzy
-msgid "Upper threshold"
-msgstr "peste treshold"
-
-#, fuzzy
-msgid "over last"
-msgstr "Ultimul "
-
-#, fuzzy
-msgid "Lookback"
-msgstr "Privind înapoi"
-
-#, fuzzy
-msgid "Clear selection"
-msgstr "Selecție de dosare"
-
-#, fuzzy
-msgid "Unknown error"
-msgstr "Utilizator necunoscut: %s."
-
-#, fuzzy
-msgid "Edit group by"
-msgstr "grup de"
-
-#, fuzzy
-msgid "Remove grouping"
-msgstr "Eliminat: %s"
-
-msgid "nothing, combine all series into one"
-msgstr ""
-
-#, fuzzy
-msgid "Grouping function"
-msgstr "Condiția de grupare"
-
-#, fuzzy
-msgid "no grouping"
-msgstr "Gruparea fișierelor"
-
-msgid "avg by"
-msgstr ""
-
-#, fuzzy
-msgid "min by"
-msgstr "Byte procesate"
-
-msgid "max by"
-msgstr ""
-
-msgid "sum by"
-msgstr ""
-
-#, fuzzy
-msgid "count by"
-msgstr "numărătoare"
-
-#, fuzzy
-msgid "percentile by"
-msgstr "percentila"
-
-#, fuzzy
-msgid "fraction below by"
-msgstr "Fracțiune"
-
-#, fuzzy
-msgid "fraction between by"
-msgstr "Fracțiune"
-
-#, fuzzy
-msgid "p%{percentile} by"
-msgstr "percentila"
-
-#, fuzzy
-msgid "fraction <%{value} by"
-msgstr "Fracțiune"
-
-#, fuzzy
-msgid "fraction %{lower}–%{upper} by"
-msgstr "Fracțiune"
-
-msgid "then"
-msgstr ""
-
-#, fuzzy
-msgid "Edit group key"
-msgstr "Editați grupul de etichete"
-
-#, fuzzy
-msgid "Remove group key"
-msgstr "Eliminat: %s"
-
-#, fuzzy
-msgid "Add group key"
-msgstr "Adăugați un grup"
-
-#, fuzzy
-msgid "Edit then step"
-msgstr "Editați această gazdă"
-
-#, fuzzy
-msgid "Remove then step"
-msgstr "Eliminați această intrare"
-
-#, fuzzy
-msgid "Add then step"
-msgstr "Adăugați o instanță la distanță"
-
-#, fuzzy
-msgid "Enter a quantile between 0 and 1"
-msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
-
-#, fuzzy
-msgid "Enter a threshold"
-msgstr "peste treshold"
-
-#, fuzzy
-msgid "Enter both thresholds"
-msgstr "peste treshold"
-
-#, fuzzy
-msgid "Lower threshold must be below the upper threshold"
-msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 #, fuzzy
 msgid "Failed to create the custom service."
@@ -104078,6 +103735,13 @@ msgid "Creating a new password is not available for your account. "
 msgstr "Noua parolă trebuie să fie diferită de cea actuală."
 
 #, fuzzy
+msgid "How are passwords created by the quick setup?"
+msgstr "Parola utilizatorului"
+
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
+#, fuzzy
 msgid "Send log messages to event console"
 msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
@@ -104095,8 +103759,8 @@ msgid "Configuration details:"
 msgstr "Fișiere de configurare"
 
 #, fuzzy
-msgid " | created"
-msgstr "Fișier creat"
+msgid " | new"
+msgstr "Adăugați un nou"
 
 #, fuzzy
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
@@ -104607,6 +104271,10 @@ msgid "Actions for selected hosts"
 msgstr "Pe gazdele selectate"
 
 #, fuzzy
+msgid "PENDING"
+msgstr "PEND"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Numărul de servicii în stat OK"
 
@@ -104649,10 +104317,6 @@ msgstr "Ștergeți gazda"
 #, fuzzy
 msgid "Back to host detail view"
 msgstr "Detalii despre gazda Ntop"
-
-#, fuzzy
-msgid "PENDING"
-msgstr "PEND"
 
 #, fuzzy
 msgid "Service summary"
@@ -105446,6 +105110,10 @@ msgid "Selected (click to clear)"
 msgstr ""
 
 #, fuzzy
+msgid "Clear selection"
+msgstr "Selecție de dosare"
+
+#, fuzzy
 msgid "Filter table..."
 msgstr "Vizualizare filtru"
 
@@ -105573,7 +105241,368 @@ msgstr ""
 msgid "No data recieved"
 msgstr "Date nete primite"
 
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Denumirea serviciului"
+
+#, fuzzy
+msgid "Consolidation"
+msgstr "Consolidarea RRD"
+
+#, fuzzy
+msgid "Group by"
+msgstr "grup de"
+
+#, fuzzy
+msgid "Group by: grouping function and keys"
+msgstr "Condiția de grupare"
+
+#, fuzzy
+msgid "Existence"
+msgstr "Ascultător"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editați conexiunea"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Eliminarea condiției de etichetare"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributul de setat"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Adăugați o condiție"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Atributul de setat"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Conexiuni eșuate"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Numărul de conexiuni curente"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Adăugați o condiție"
+
+#, fuzzy
+msgid "contains"
+msgstr "Containere"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Denumirea containerului"
+
+#, fuzzy
+msgid "starts with"
+msgstr "Avertismentul începe cu"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "nu începe cu "
+
+#, fuzzy
+msgid "ends with"
+msgstr "începe cu "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Nu se termină cu \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Nu există"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Surse"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Date trimise"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Raport de accident"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Vârsta"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Grupuri de agregare"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Doar numărătoarea"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Rata mesajelor livrate"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s rata"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Până la"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "Cumulative sum field"
+msgstr "Personalizat"
+
+msgid "%{label} (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "Histogram"
+msgstr "Istorie"
+
+#, fuzzy
+msgid "last"
+msgstr "Ultimul "
+
+#, fuzzy
+msgid "raw"
+msgstr "rand"
+
+#, fuzzy
+msgid "avg"
+msgstr "Etichetă"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s rata"
+
+#, fuzzy
+msgid "delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Grupuri de agregare"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Numărul de documente delta"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Numărul de fișiere la"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s rata"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
+
+#, fuzzy
+msgctxt "Abbreviation for hours"
+msgid "h"
+msgstr "h"
+
+#, fuzzy
+msgctxt "Abbreviation for minutes"
+msgid "m"
+msgstr "m"
+
+#, fuzzy
+msgctxt "Abbreviation for seconds"
+msgid "s"
+msgstr "s"
+
+#, fuzzy
+msgid "Treat as %{type}"
+msgstr "Tipul de date"
+
+#, fuzzy
+msgid "Edit consolidation"
+msgstr "Editați conexiunea"
+
+#, fuzzy
+msgid "Quantile (0 to 1)"
+msgstr "Până la"
+
+#, fuzzy
+msgid "Lower threshold"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "Upper threshold"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "over last"
+msgstr "Ultimul "
+
+#, fuzzy
+msgid "Lookback"
+msgstr "Privind înapoi"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Utilizator necunoscut: %s."
+
+#, fuzzy
+msgid "Edit group by"
+msgstr "grup de"
+
+#, fuzzy
+msgid "Remove grouping"
+msgstr "Eliminat: %s"
+
+msgid "nothing, combine all series into one"
+msgstr ""
+
+#, fuzzy
+msgid "Grouping function"
+msgstr "Condiția de grupare"
+
+#, fuzzy
+msgid "no grouping"
+msgstr "Gruparea fișierelor"
+
+msgid "avg by"
+msgstr ""
+
+#, fuzzy
+msgid "min by"
+msgstr "Byte procesate"
+
+msgid "max by"
+msgstr ""
+
+msgid "sum by"
+msgstr ""
+
+#, fuzzy
+msgid "count by"
+msgstr "numărătoare"
+
+#, fuzzy
+msgid "percentile by"
+msgstr "percentila"
+
+#, fuzzy
+msgid "fraction below by"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "fraction between by"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "p%{percentile} by"
+msgstr "percentila"
+
+#, fuzzy
+msgid "fraction <%{value} by"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "fraction %{lower}–%{upper} by"
+msgstr "Fracțiune"
+
+msgid "then"
+msgstr ""
+
+#, fuzzy
+msgid "Edit group key"
+msgstr "Editați grupul de etichete"
+
+#, fuzzy
+msgid "Remove group key"
+msgstr "Eliminat: %s"
+
+#, fuzzy
+msgid "Add group key"
+msgstr "Adăugați un grup"
+
+#, fuzzy
+msgid "Edit then step"
+msgstr "Editați această gazdă"
+
+#, fuzzy
+msgid "Remove then step"
+msgstr "Eliminați această intrare"
+
+#, fuzzy
+msgid "Add then step"
+msgstr "Adăugați o instanță la distanță"
+
+#, fuzzy
+msgid "Enter a quantile between 0 and 1"
+msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
+
+#, fuzzy
+msgid "Enter a threshold"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "Enter both thresholds"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "Lower threshold must be below the upper threshold"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
 msgid "Tell us how you're using this site so we can set it up correctly."
+msgstr ""
+
+#, fuzzy
+msgid "Verify your license"
+msgstr "Verificați răspunsul"
+
+msgid "Choose how to validate the license for this site."
 msgstr ""
 
 #, fuzzy
@@ -105594,6 +105623,26 @@ msgstr "Contor de creștere"
 #, fuzzy
 msgid "Verify your license to activate this site."
 msgstr "nu activați acest %s"
+
+#, fuzzy
+msgid "Verify online"
+msgstr "Verificați răspunsul"
+
+#, fuzzy
+msgid "Validate automatically against the Checkmk license server."
+msgstr "Informații hardware ale serverului Checkmk"
+
+#, fuzzy
+msgid "Verify offline"
+msgstr "Dispozitiv offline"
+
+#, fuzzy
+msgid "Upload a verification file exported from the customer portal."
+msgstr "Încărcați raportul în portalul clienților"
+
+#, fuzzy
+msgid "Verify later"
+msgstr "Verificarea certificatelor"
 
 msgid "Signed in as %{user}."
 msgstr ""
@@ -106412,6 +106461,47 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "%d actions"
+#~ msgstr "%d acțiuni"
+
+#, fuzzy
+#~ msgid "Either containers, images, local volumes or build cache"
+#~ msgstr "Fie containere, imagini, volume locale sau Build Cache"
+
+#, python-format
+#~ msgid "Failed to render value: %(value)r"
+#~ msgstr "Nu a reușit să redea valoarea: %(value)r."
+
+#, fuzzy
+#~ msgid "Invalid selection."
+#~ msgstr "Acțiune invalidă"
+
+#~ msgid "Maximum possible value"
+#~ msgstr "Valoarea maximă posibilă"
+
+#~ msgid "Minimum possible value"
+#~ msgstr "Valoarea minimă posibilă"
+
+#~ msgid "New Action"
+#~ msgstr "Acțiune nouă"
+
+#~ msgid "Text-body of the email to send. "
+#~ msgstr "Corpul text al e-mailului care urmează să fie trimis. "
+
+#~ msgid "This script will be executed using the BASH shell. "
+#~ msgstr "Acest script va fi executat folosind shell-ul BASH. "
+
+#~ msgid "allow commands"
+#~ msgstr "permiteți comenzi"
+
+#~ msgid "no commands"
+#~ msgstr "fără comenzi"
+
+#, fuzzy
+#~ msgid " | created"
+#~ msgstr "Fișier creat"
+
 #, fuzzy
 #~ msgid "The offset in s at which a WARNING state is triggered."
 #~ msgstr "Decalajul în s la care se declanșează o stare de avertizare."
@@ -107146,10 +107236,6 @@ msgstr ""
 #~ msgstr "Instanțe Oracle"
 
 #, fuzzy
-#~ msgid "Metrics backend queries are not available yet."
-#~ msgstr "Instanțe Oracle"
-
-#, fuzzy
 #~ msgid "This formula references no sources."
 #~ msgstr "Timp pentru acoperirea surselor"
 
@@ -107549,10 +107635,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "HW information"
 #~ msgstr "Informații HW"
-
-#, fuzzy
-#~ msgid "Hardware information of the Checkmk server"
-#~ msgstr "Informații hardware ale serverului Checkmk"
 
 #, fuzzy
 #~ msgid "Incompatible Werk"
@@ -109436,9 +109518,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Time until secret credentials expiration"
 #~ msgstr "Timpul până la expirarea acreditărilor"
-
-#~ msgid "Verify Certificates"
-#~ msgstr "Verificarea certificatelor"
 
 #~ msgid "Verify certificates"
 #~ msgstr "Verificarea certificatelor"

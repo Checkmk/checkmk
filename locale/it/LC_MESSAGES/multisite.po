@@ -545,9 +545,9 @@ msgstr "%(days)d giorni fa"
 
 #, python-format
 msgid ""
-"%(description)s<br><br>This is a temporary experimental flag. It is "
-"scheduled for removal in version %(remove_after)s and must not be relied on "
-"for permanent configuration."
+"%(description)s<br><br>This is a temporary release flag. It is scheduled for "
+"removal in version %(remove_after)s and must not be relied on for permanent "
+"configuration."
 msgstr ""
 
 #, fuzzy, python-format
@@ -937,10 +937,6 @@ msgstr "%Y-%m-%d"
 
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%a, %d. %B %Y a %H:%M"
-
-#, python-format
-msgid "%d actions"
-msgstr "%d azioni"
 
 #, python-format
 msgid "%d locked site"
@@ -8067,6 +8063,10 @@ msgid "Assignee"
 msgstr "Assegnare al gruppo"
 
 #, fuzzy
+msgid "Assignment"
+msgstr "Assegnare al gruppo"
+
+#, fuzzy
 msgid "Assignment mode"
 msgstr "Assegnare al gruppo"
 
@@ -8466,6 +8466,10 @@ msgstr "Autorizzazione"
 #, fuzzy
 msgid "Authorized user"
 msgstr "Siti autorizzati"
+
+#, fuzzy
+msgid "Auto"
+msgstr "Automatico"
 
 #, fuzzy
 msgid "Auto (default)"
@@ -19022,6 +19026,10 @@ msgstr "Aggiornamento della configurazione del servizio personalizzato"
 msgid "Custom service name"
 msgstr "Nome del servizio personalizzato"
 
+#, fuzzy
+msgid "Custom services"
+msgstr "Clienti"
+
 msgid "Custom services notes"
 msgstr "Note sui servizi personalizzati"
 
@@ -21109,6 +21117,10 @@ msgstr "Cancella"
 #, fuzzy, python-format
 msgid "Deleting %(name)s..."
 msgstr "Recupero di '%s'..."
+
+#, fuzzy
+msgid "Deleting a custom service is not available yet"
+msgstr "Istanze Oracle"
 
 msgid "Delimiter for file grouping"
 msgstr "Delimitatore per il raggruppamento dei file"
@@ -24515,6 +24527,10 @@ msgstr "Modificato il %(name)s '%(ident)s'"
 msgid "Edited user profile for user %(user_id)s"
 msgstr "Modificato il profilo utente per l'utente %s"
 
+#, fuzzy
+msgid "Editing a custom service is not available yet"
+msgstr "Istanze Oracle"
+
 msgid "Edition"
 msgstr "Edizione"
 
@@ -24556,10 +24572,6 @@ msgstr ""
 "O un nome esatto dell'host o un'espressione regolare che corrisponde "
 "esattamente al nome dell'host. Esempio: <tt>srv.*p</tt> corrisponderà a "
 "<tt>srv4711p</tt> ma non a <tt>xsrv4711p2</tt>. "
-
-#, fuzzy
-msgid "Either containers, images, local volumes or build cache"
-msgstr "Contenitori, immagini, volumi locali o costruire la cache"
 
 #, fuzzy
 msgid ""
@@ -24797,6 +24809,9 @@ msgstr "Abilita la replica"
 msgid "Enable Caching"
 msgstr "Abilita la cache"
 
+msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Enable GZIP compression of the backed-up files. The tar archives created by "
@@ -25006,6 +25021,10 @@ msgstr "Abilitare le notifiche di servizio"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Abilitare la consegna sincrona via SMTP"
+
+#, fuzzy
+msgid "Enable the AI assistant"
+msgstr "Attivare questo sito"
 
 msgid "Enable the MCP Server"
 msgstr ""
@@ -26719,7 +26738,7 @@ msgid "Expected virtual switch name"
 msgstr "Stato previsto della bandiera"
 
 #, fuzzy
-msgid "Experimental flags"
+msgid "Experimental flags (for testing only)"
 msgstr "Caratteristica dell'impresa"
 
 #, fuzzy
@@ -27427,10 +27446,6 @@ msgstr ""
 msgid "Failed to render value:"
 msgstr "Fallito il rendering del valore:"
 
-#, python-format
-msgid "Failed to render value: %(value)r"
-msgstr "Fallito il rendering del valore: %(value)r"
-
 #, fuzzy, python-format
 msgid ""
 "Failed to search rule of rule set '%(ruleset)s' in folder '%(folder)s' "
@@ -27493,14 +27508,6 @@ msgstr "Fallito l'avvio del lavoro: %s"
 #, python-format
 msgid "Failed to synchronize with site: %(response)s"
 msgstr "Fallita la sincronizzazione con il sito: %(response)s"
-
-#. weblate-flags: read-only, domain-specific
-#, python-brace-format
-msgid ""
-"Failed to upgrade the metric backend schema for every licensed feature "
-"({features}), so the service was stopped. Please check the web and ui-job-"
-"scheduler logs for details."
-msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 #, python-brace-format
@@ -38649,6 +38656,10 @@ msgstr "Richiesta non valida: %r"
 msgid "Invalid request parameters."
 msgstr "Parametro di controllo non valido"
 
+#, fuzzy
+msgid "Invalid request."
+msgstr "Richiesta non valida: %r"
+
 #, python-format
 msgid "Invalid request: %(domains)r"
 msgstr "Richiesta non valida: %(domains)r"
@@ -38672,10 +38683,6 @@ msgstr "Regola non valida <tt>%(rule_config)s</tt>"
 
 #, fuzzy
 msgid "Invalid selection"
-msgstr "Azione non valida"
-
-#, fuzzy
-msgid "Invalid selection."
 msgstr "Azione non valida"
 
 #, python-format
@@ -39086,6 +39093,10 @@ msgstr "È ancora in uso da"
 msgid "It is still in use by at least 1 rule in rule set:"
 msgstr "È ancora in uso da:"
 
+#, python-format
+msgid "It is stored in an unknown format (version %(version)d)."
+msgstr ""
+
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "Non è permesso usare un \"!\" iniziale qui."
 
@@ -39121,6 +39132,22 @@ msgstr "Articoli"
 
 msgid "Iterator age"
 msgstr "Età dell'iteratore"
+
+#, python-format
+msgid "Its generated rule cannot be read: %(reason)s"
+msgstr ""
+
+#, fuzzy
+msgid "Its generated rule no longer exists."
+msgstr "Questo gruppo non esiste."
+
+#, fuzzy
+msgid "Its host assignment cannot be read."
+msgstr "Stato se un file di log non può essere letto"
+
+#, fuzzy, python-format
+msgid "Its host name \"%(host_name)s\" is not valid."
+msgstr "Nome host: %s"
 
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons per MDM (Ufficialmente MobileIron Cloud)"
@@ -44391,7 +44418,7 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Quantità massima di punti di accesso non operativi"
 
-#, no-python-format
+#, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
 "This option is used to calculate the hard memory limit from the total "
@@ -44508,7 +44535,6 @@ msgstr "Età massima del tronco"
 msgid "Maximum long output size"
 msgstr "Dimensione massima dell'uscita lunga"
 
-#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -44518,7 +44544,7 @@ msgid ""
 "limit (the spike limit being equal to 250MiB)."
 msgstr ""
 
-#, no-python-format
+#, python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -44653,9 +44679,6 @@ msgstr "Massimo di connessioni parallele"
 #, fuzzy
 msgid "Maximum parallel connections per source IP address"
 msgstr "Massimo di connessioni parallele"
-
-msgid "Maximum possible value"
-msgstr "Massimo valore possibile"
 
 #, fuzzy
 msgid "Maximum queries"
@@ -45658,9 +45681,6 @@ msgstr "Durata minima della pagina"
 
 msgid "Minimum password length"
 msgstr "Lunghezza minima della password"
-
-msgid "Minimum possible value"
-msgstr "Valore minimo possibile"
 
 msgid "Minimum read wait time"
 msgstr "Tempo minimo di attesa per la lettura"
@@ -47956,9 +47976,6 @@ msgstr "Non usare mai i dati piggyback"
 
 msgid "New"
 msgstr "Nuovo"
-
-msgid "New Action"
-msgstr "Nuova azione"
 
 msgid "New TLS connections"
 msgstr "Nuove connessioni TLS"
@@ -58818,7 +58835,7 @@ msgstr "Livelli relativi"
 msgid "Relative levels of active sessions."
 msgstr "Livelli relativi di sessioni attive."
 
-#, fuzzy, no-python-format
+#, fuzzy
 msgid "Relative limit in %"
 msgstr "Umidità relativa"
 
@@ -68979,6 +68996,10 @@ msgstr "Smettere di creare nuovi eventi"
 msgid "Stop creating new events, create overflow event"
 msgstr "Smettere di creare nuovi eventi, creare un evento di overflow"
 
+#, fuzzy, python-format
+msgid "Stop creating new events, create overflow event, %(notify)s"
+msgstr "Smettere di creare nuovi eventi, creare un evento di overflow"
+
 msgid "Stop foreign background jobs"
 msgstr "Stop ai lavori in background all'estero"
 
@@ -70719,8 +70740,11 @@ msgstr "Testo da abbinare"
 msgid "Text to place"
 msgstr "Testo da posizionare"
 
-msgid "Text-body of the email to send. "
-msgstr "Testo-corpo dell'e-mail da inviare. "
+#, fuzzy, python-format
+msgid ""
+"Text-body of the email to send. The following macros will be substituted by "
+"value from the actual event:%(macros)s"
+msgstr "Le seguenti macro saranno sostituite dal valore dell'evento attuale:"
 
 msgid "Text/Message of the event"
 msgstr "Testo/messaggio dell'evento"
@@ -72911,9 +72935,9 @@ msgstr "Il tipo di emblema è %(type)s, ma dovrebbe essere str"
 msgid "The end date must be after the start date"
 msgstr "La data di fine deve essere successiva alla data di inizio"
 
+#, fuzzy
 msgid ""
-"The engine IDs have to be configured as hex strings like "
-"<tt>8000000001020304</tt>."
+"The engine IDs have to be configured as hex strings like 8000000001020304."
 msgstr ""
 "Gli ID dei motori devono essere configurati come stringhe esadecimali come "
 "<tt>8000000001020304</tt>."
@@ -73192,10 +73216,6 @@ msgstr ""
 
 msgid "The following layout style is applied to the matching node"
 msgstr "Il seguente stile di layout viene applicato al nodo corrispondente"
-
-msgid ""
-"The following macros will be substituted by value from the actual event:"
-msgstr "Le seguenti macro saranno sostituite dal valore dell'evento attuale:"
 
 #, fuzzy
 msgid ""
@@ -74130,8 +74150,8 @@ msgid ""
 "{current_revision_id!r} is applied, but the expected revision is "
 "{head_revision_id!r}. Activation has been blocked to prevent unintended "
 "schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
-"the upgrade fails, please contact Checkmk support."
+"user: `cmk-data-backend-schema-manager upgrade --config default HEAD` If the "
+"upgrade fails, please contact Checkmk support."
 msgstr ""
 
 #. weblate-flags: read-only, domain-specific
@@ -76438,7 +76458,7 @@ msgid "The value is not valid: '%(exception)s'"
 msgstr "Il valore non è valido: '%(exception)s'"
 
 #, fuzzy, python-format
-msgid "The value must be of type MetricSpec, but it has type %(type)s"
+msgid "The value must be of type MetricSelection, but it has type %(type)s"
 msgstr "Il valore deve essere di tipo str, ma ha il tipo %s"
 
 #, python-format
@@ -78022,9 +78042,6 @@ msgstr ""
 "quando fallisce e viene deselezionato nel caso in cui un rilevamento "
 "successivo abbia successo."
 
-msgid "This information is available as environment variables"
-msgstr "Queste informazioni sono disponibili come variabili d'ambiente"
-
 msgid ""
 "This interval is applied to all new checks that go beyond the number of "
 "immediately scheduled checks. Note: the maximum delay is five times the "
@@ -78085,6 +78102,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Questa è una regola di primo livello. Mostra l'albero delle regole"
+
+msgid ""
+"This is an experimental flag for testing only. It may change or be removed "
+"without notice and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom Agent "
@@ -81025,8 +81047,11 @@ msgstr "Questa regola è deprecata. Si prega di usare invece \"%s\"."
 msgid "This rulset allow you to configure a SSH check for a host"
 msgstr "Questo rulset vi permette di configurare un controllo SSH per un host"
 
-msgid "This script will be executed using the BASH shell. "
-msgstr "Questo script sarà eseguito usando la shell BASH. "
+#, fuzzy, python-format
+msgid ""
+"This script will be executed using the BASH shell. This information is "
+"available as environment variables:%(variables)s"
+msgstr "Queste informazioni sono disponibili come variabili d'ambiente"
 
 #, fuzzy
 msgid ""
@@ -94225,10 +94250,10 @@ msgid ""
 "and associated with the source"
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You are missing the action with the ID <b>%(action_id)s</b>, which is still "
-"used in some rules."
+"You are missing the action with the ID %(action_id)s, which is still used in "
+"some rules."
 msgstr ""
 "Ti manca l'azione con l'ID <b>%(action_id)s</b>, che è ancora usato in "
 "alcune regole."
@@ -96686,9 +96711,6 @@ msgstr "tutti gli utenti con un indirizzo e-mail"
 msgid "allocated"
 msgstr "assegnato"
 
-msgid "allow commands"
-msgstr "permettere i comandi"
-
 msgid "allow execution of commands and actions via TCP"
 msgstr "permettere l'esecuzione di comandi e azioni via TCP"
 
@@ -97941,9 +97963,6 @@ msgstr "nessun accesso via TCP"
 
 msgid "no assumed state set"
 msgstr "nessun set di stato presunto"
-
-msgid "no commands"
-msgstr "nessun comando"
 
 msgid "no error"
 msgstr "nessun errore"
@@ -101774,25 +101793,6 @@ msgid "incomplete source"
 msgstr "Rapporto incompleto"
 
 #, fuzzy
-msgid "Where"
-msgstr "qui"
-
-#, fuzzy
-msgid "Where: attribute filter"
-msgstr "Attributo del ruolo"
-
-msgid "Then consolidate by: consolidation function and lookback"
-msgstr ""
-
-#, fuzzy
-msgid "And group by"
-msgstr "gruppo da"
-
-#, fuzzy
-msgid "And group by: grouping function and keys"
-msgstr "Condizione di raggruppamento"
-
-#, fuzzy
 msgid "Preview added to graph"
 msgstr "Ricerche predefinite"
 
@@ -101839,6 +101839,25 @@ msgstr "Critico in basso"
 #, fuzzy
 msgid "Threshold type"
 msgstr "Soglie"
+
+#, fuzzy
+msgid "Where"
+msgstr "qui"
+
+#, fuzzy
+msgid "Where: attribute filter"
+msgstr "Attributo del ruolo"
+
+msgid "Then consolidate by: consolidation function and lookback"
+msgstr ""
+
+#, fuzzy
+msgid "And group by"
+msgstr "gruppo da"
+
+#, fuzzy
+msgid "And group by: grouping function and keys"
+msgstr "Condizione di raggruppamento"
 
 #, fuzzy
 msgid "My custom graphs"
@@ -101936,10 +101955,6 @@ msgstr "Permesso"
 #, fuzzy
 msgid "Rounding mode"
 msgstr "Baccelli in esecuzione"
-
-#, fuzzy
-msgid "Auto"
-msgstr "Automatico"
 
 #, fuzzy
 msgid "Strict"
@@ -102305,364 +102320,6 @@ msgstr ""
 
 msgid "Alt + k"
 msgstr ""
-
-msgid ""
-"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
-"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
-msgstr ""
-
-#, fuzzy
-msgid "Consolidation"
-msgstr "Consolidamento RRD"
-
-#, fuzzy
-msgid "Group by"
-msgstr "gruppo da"
-
-#, fuzzy
-msgid "Group by: grouping function and keys"
-msgstr "Condizione di raggruppamento"
-
-#, fuzzy
-msgid "Service name template"
-msgstr "Nome del servizio"
-
-#, fuzzy
-msgid "Existence"
-msgstr "Ascoltatore"
-
-#, fuzzy
-msgid "Edit condition"
-msgstr "Modifica connessione"
-
-#, fuzzy
-msgid "Remove condition"
-msgstr "Rimuovere la condizione di tag"
-
-#, fuzzy
-msgid "Attribute operator"
-msgstr "Attributo da impostare"
-
-#, fuzzy
-msgid "Add condition after %{key}"
-msgstr "Aggiungi condizione"
-
-#, fuzzy
-msgid "Add condition after previous condition"
-msgstr "Opzioni aggiuntive"
-
-#, fuzzy
-msgid "Attribute filter"
-msgstr "Attributo da impostare"
-
-#, fuzzy
-msgid "Toggle connector, currently %{connector}"
-msgstr "Connessioni fallite"
-
-msgid "Toggle AND / OR"
-msgstr ""
-
-#, fuzzy
-msgid "AND group of %{count} conditions"
-msgstr "Numero di connessioni attuali"
-
-#, fuzzy
-msgid "Add condition after this group"
-msgstr "Aggiungi condizione"
-
-#, fuzzy
-msgid "contains"
-msgstr "Contenitori"
-
-#, fuzzy
-msgid "does not contain"
-msgstr "Nome del contenitore"
-
-#, fuzzy
-msgid "starts with"
-msgstr "L'avvertimento inizia con"
-
-#, fuzzy
-msgid "does not start with"
-msgstr "non inizia con "
-
-#, fuzzy
-msgid "ends with"
-msgstr "inizia con "
-
-#, fuzzy
-msgid "does not end with"
-msgstr "Non termina con %s"
-
-#, fuzzy
-msgid "does not exist"
-msgstr "Non esiste"
-
-#, fuzzy
-msgid "Resource"
-msgstr "Fonti"
-
-#, fuzzy
-msgid "Data point"
-msgstr "Dati inviati"
-
-#, fuzzy
-msgid "Last recorded value"
-msgstr "Rapporto d'urto"
-
-#, fuzzy
-msgid "Avg"
-msgstr "Età"
-
-msgid "Rate"
-msgstr ""
-
-msgid "Delta"
-msgstr ""
-
-#, fuzzy
-msgid "Preserve histograms"
-msgstr "Gruppi di aggregazione"
-
-#, fuzzy
-msgid "Count delta"
-msgstr "Conta solo"
-
-#, fuzzy
-msgid "Count rate"
-msgstr "Tasso di messaggi consegnati"
-
-#, fuzzy
-msgid "Sum delta"
-msgstr "Dimensione delta"
-
-#, fuzzy
-msgid "Sum rate"
-msgstr "%s tasso"
-
-#, fuzzy
-msgid "Quantile"
-msgstr "Fino a"
-
-#, fuzzy
-msgid "Fraction below"
-msgstr "Frazione"
-
-#, fuzzy
-msgid "Fraction between"
-msgstr "Frazione"
-
-#, fuzzy
-msgid "Cumulative sum field"
-msgstr "personalizzato"
-
-msgid "%{label} (raw)"
-msgstr ""
-
-#, fuzzy
-msgid "Histogram"
-msgstr "Storia"
-
-#, fuzzy
-msgid "last"
-msgstr "L'ultimo "
-
-#, fuzzy
-msgid "raw"
-msgstr "riga"
-
-#, fuzzy
-msgid "avg"
-msgstr "Tag"
-
-#, fuzzy
-msgid "rate"
-msgstr "%s tasso"
-
-#, fuzzy
-msgid "delta"
-msgstr "Dimensione delta"
-
-#, fuzzy
-msgid "preserve histograms"
-msgstr "Gruppi di aggregazione"
-
-#, fuzzy
-msgid "count delta"
-msgstr "Delta del conteggio dei documenti"
-
-#, fuzzy
-msgid "count rate"
-msgstr "Conteggio dei file a"
-
-#, fuzzy
-msgid "sum delta"
-msgstr "Dimensione delta"
-
-#, fuzzy
-msgid "sum rate"
-msgstr "%s tasso"
-
-msgid "fraction <%{value}"
-msgstr ""
-
-msgid "fraction %{lower}–%{upper}"
-msgstr ""
-
-#, fuzzy
-msgctxt "Abbreviation for hours"
-msgid "h"
-msgstr "h"
-
-#, fuzzy
-msgctxt "Abbreviation for minutes"
-msgid "m"
-msgstr "m"
-
-#, fuzzy
-msgctxt "Abbreviation for seconds"
-msgid "s"
-msgstr "s"
-
-#, fuzzy
-msgid "Treat as %{type}"
-msgstr "Tipo di dati"
-
-#, fuzzy
-msgid "Edit consolidation"
-msgstr "Modifica connessione"
-
-#, fuzzy
-msgid "Quantile (0 to 1)"
-msgstr "Fino a"
-
-#, fuzzy
-msgid "Lower threshold"
-msgstr "oltre la soglia"
-
-#, fuzzy
-msgid "Upper threshold"
-msgstr "oltre la soglia"
-
-#, fuzzy
-msgid "over last"
-msgstr "L'ultimo "
-
-#, fuzzy
-msgid "Lookback"
-msgstr "Guardando indietro"
-
-#, fuzzy
-msgid "Clear selection"
-msgstr "Selezione della cartella"
-
-#, fuzzy
-msgid "Unknown error"
-msgstr "Utente sconosciuto: %s"
-
-#, fuzzy
-msgid "Edit group by"
-msgstr "gruppo da"
-
-#, fuzzy
-msgid "Remove grouping"
-msgstr "Rimosso: %s"
-
-msgid "nothing, combine all series into one"
-msgstr ""
-
-#, fuzzy
-msgid "Grouping function"
-msgstr "Condizione di raggruppamento"
-
-#, fuzzy
-msgid "no grouping"
-msgstr "Raggruppamento di file"
-
-msgid "avg by"
-msgstr ""
-
-#, fuzzy
-msgid "min by"
-msgstr "Byte processati"
-
-msgid "max by"
-msgstr ""
-
-msgid "sum by"
-msgstr ""
-
-#, fuzzy
-msgid "count by"
-msgstr "contare"
-
-#, fuzzy
-msgid "percentile by"
-msgstr "percentile"
-
-#, fuzzy
-msgid "fraction below by"
-msgstr "Frazione"
-
-#, fuzzy
-msgid "fraction between by"
-msgstr "Frazione"
-
-#, fuzzy
-msgid "p%{percentile} by"
-msgstr "percentile"
-
-#, fuzzy
-msgid "fraction <%{value} by"
-msgstr "Frazione"
-
-#, fuzzy
-msgid "fraction %{lower}–%{upper} by"
-msgstr "Frazione"
-
-msgid "then"
-msgstr ""
-
-#, fuzzy
-msgid "Edit group key"
-msgstr "Modifica gruppo di tag"
-
-#, fuzzy
-msgid "Remove group key"
-msgstr "Rimosso: %s"
-
-#, fuzzy
-msgid "Add group key"
-msgstr "Aggiungi gruppo"
-
-#, fuzzy
-msgid "Edit then step"
-msgstr "Modifica questo host"
-
-#, fuzzy
-msgid "Remove then step"
-msgstr "Rimuovi questa voce"
-
-#, fuzzy
-msgid "Add then step"
-msgstr "Aggiungere un sito remoto"
-
-#, fuzzy
-msgid "Enter a quantile between 0 and 1"
-msgstr "Il valore di %s deve essere tra %d e %d"
-
-#, fuzzy
-msgid "Enter a threshold"
-msgstr "oltre la soglia"
-
-#, fuzzy
-msgid "Enter both thresholds"
-msgstr "oltre la soglia"
-
-#, fuzzy
-msgid "Lower threshold must be below the upper threshold"
-msgstr "Il cluster deve avere almeno un nodo"
 
 #, fuzzy
 msgid "Failed to create the custom service."
@@ -103483,6 +103140,13 @@ msgid "Creating a new password is not available for your account. "
 msgstr "La nuova password deve essere diversa da quella attuale."
 
 #, fuzzy
+msgid "How are passwords created by the quick setup?"
+msgstr "Password dell'utente"
+
+msgid "When configured as part of a quick setup, only the selected password "
+msgstr ""
+
+#, fuzzy
 msgid "Send log messages to event console"
 msgstr "Invia gli eventi alla console eventi locale"
 
@@ -103500,8 +103164,8 @@ msgid "Configuration details:"
 msgstr "File di configurazione"
 
 #, fuzzy
-msgid " | created"
-msgstr "File creato"
+msgid " | new"
+msgstr "Aggiungi nuovo"
 
 #, fuzzy
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
@@ -104006,6 +103670,10 @@ msgid "Actions for selected hosts"
 msgstr "Su host selezionati"
 
 #, fuzzy
+msgid "PENDING"
+msgstr "PEND"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Numero di servizi nello stato OK"
 
@@ -104048,10 +103716,6 @@ msgstr "Cancellare gli host"
 #, fuzzy
 msgid "Back to host detail view"
 msgstr "Dettagli dell'host Ntop"
-
-#, fuzzy
-msgid "PENDING"
-msgstr "PEND"
 
 #, fuzzy
 msgid "Service summary"
@@ -104831,6 +104495,10 @@ msgid "Selected (click to clear)"
 msgstr ""
 
 #, fuzzy
+msgid "Clear selection"
+msgstr "Selezione della cartella"
+
+#, fuzzy
 msgid "Filter table..."
 msgstr "Vista del filtro"
 
@@ -104958,7 +104626,368 @@ msgstr ""
 msgid "No data recieved"
 msgstr "Dati netti ricevuti"
 
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Nome del servizio"
+
+#, fuzzy
+msgid "Consolidation"
+msgstr "Consolidamento RRD"
+
+#, fuzzy
+msgid "Group by"
+msgstr "gruppo da"
+
+#, fuzzy
+msgid "Group by: grouping function and keys"
+msgstr "Condizione di raggruppamento"
+
+#, fuzzy
+msgid "Existence"
+msgstr "Ascoltatore"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Modifica connessione"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Rimuovere la condizione di tag"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Attributo da impostare"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Aggiungi condizione"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opzioni aggiuntive"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Attributo da impostare"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Connessioni fallite"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Numero di connessioni attuali"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Aggiungi condizione"
+
+#, fuzzy
+msgid "contains"
+msgstr "Contenitori"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Nome del contenitore"
+
+#, fuzzy
+msgid "starts with"
+msgstr "L'avvertimento inizia con"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "non inizia con "
+
+#, fuzzy
+msgid "ends with"
+msgstr "inizia con "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Non termina con %s"
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Non esiste"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Fonti"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Dati inviati"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Rapporto d'urto"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Età"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Gruppi di aggregazione"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Conta solo"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Tasso di messaggi consegnati"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Dimensione delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s tasso"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Fino a"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "Cumulative sum field"
+msgstr "personalizzato"
+
+msgid "%{label} (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "Histogram"
+msgstr "Storia"
+
+#, fuzzy
+msgid "last"
+msgstr "L'ultimo "
+
+#, fuzzy
+msgid "raw"
+msgstr "riga"
+
+#, fuzzy
+msgid "avg"
+msgstr "Tag"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s tasso"
+
+#, fuzzy
+msgid "delta"
+msgstr "Dimensione delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Gruppi di aggregazione"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Delta del conteggio dei documenti"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Conteggio dei file a"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Dimensione delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s tasso"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
+
+#, fuzzy
+msgctxt "Abbreviation for hours"
+msgid "h"
+msgstr "h"
+
+#, fuzzy
+msgctxt "Abbreviation for minutes"
+msgid "m"
+msgstr "m"
+
+#, fuzzy
+msgctxt "Abbreviation for seconds"
+msgid "s"
+msgstr "s"
+
+#, fuzzy
+msgid "Treat as %{type}"
+msgstr "Tipo di dati"
+
+#, fuzzy
+msgid "Edit consolidation"
+msgstr "Modifica connessione"
+
+#, fuzzy
+msgid "Quantile (0 to 1)"
+msgstr "Fino a"
+
+#, fuzzy
+msgid "Lower threshold"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "Upper threshold"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "over last"
+msgstr "L'ultimo "
+
+#, fuzzy
+msgid "Lookback"
+msgstr "Guardando indietro"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Utente sconosciuto: %s"
+
+#, fuzzy
+msgid "Edit group by"
+msgstr "gruppo da"
+
+#, fuzzy
+msgid "Remove grouping"
+msgstr "Rimosso: %s"
+
+msgid "nothing, combine all series into one"
+msgstr ""
+
+#, fuzzy
+msgid "Grouping function"
+msgstr "Condizione di raggruppamento"
+
+#, fuzzy
+msgid "no grouping"
+msgstr "Raggruppamento di file"
+
+msgid "avg by"
+msgstr ""
+
+#, fuzzy
+msgid "min by"
+msgstr "Byte processati"
+
+msgid "max by"
+msgstr ""
+
+msgid "sum by"
+msgstr ""
+
+#, fuzzy
+msgid "count by"
+msgstr "contare"
+
+#, fuzzy
+msgid "percentile by"
+msgstr "percentile"
+
+#, fuzzy
+msgid "fraction below by"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "fraction between by"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "p%{percentile} by"
+msgstr "percentile"
+
+#, fuzzy
+msgid "fraction <%{value} by"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "fraction %{lower}–%{upper} by"
+msgstr "Frazione"
+
+msgid "then"
+msgstr ""
+
+#, fuzzy
+msgid "Edit group key"
+msgstr "Modifica gruppo di tag"
+
+#, fuzzy
+msgid "Remove group key"
+msgstr "Rimosso: %s"
+
+#, fuzzy
+msgid "Add group key"
+msgstr "Aggiungi gruppo"
+
+#, fuzzy
+msgid "Edit then step"
+msgstr "Modifica questo host"
+
+#, fuzzy
+msgid "Remove then step"
+msgstr "Rimuovi questa voce"
+
+#, fuzzy
+msgid "Add then step"
+msgstr "Aggiungere un sito remoto"
+
+#, fuzzy
+msgid "Enter a quantile between 0 and 1"
+msgstr "Il valore di %s deve essere tra %d e %d"
+
+#, fuzzy
+msgid "Enter a threshold"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "Enter both thresholds"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "Lower threshold must be below the upper threshold"
+msgstr "Il cluster deve avere almeno un nodo"
+
 msgid "Tell us how you're using this site so we can set it up correctly."
+msgstr ""
+
+#, fuzzy
+msgid "Verify your license"
+msgstr "Verifica della risposta"
+
+msgid "Choose how to validate the license for this site."
 msgstr ""
 
 #, fuzzy
@@ -104979,6 +105008,26 @@ msgstr "Contatore crescente"
 #, fuzzy
 msgid "Verify your license to activate this site."
 msgstr "non attivare questo %s"
+
+#, fuzzy
+msgid "Verify online"
+msgstr "Verifica della risposta"
+
+#, fuzzy
+msgid "Validate automatically against the Checkmk license server."
+msgstr "Informazioni sull'hardware del server Checkmk"
+
+#, fuzzy
+msgid "Verify offline"
+msgstr "Dispositivo offline"
+
+#, fuzzy
+msgid "Upload a verification file exported from the customer portal."
+msgstr "Caricare il rapporto nel portale clienti"
+
+#, fuzzy
+msgid "Verify later"
+msgstr "Verifica dei certificati"
 
 msgid "Signed in as %{user}."
 msgstr ""
@@ -105795,6 +105844,47 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "%d actions"
+#~ msgstr "%d azioni"
+
+#, fuzzy
+#~ msgid "Either containers, images, local volumes or build cache"
+#~ msgstr "Contenitori, immagini, volumi locali o costruire la cache"
+
+#, python-format
+#~ msgid "Failed to render value: %(value)r"
+#~ msgstr "Fallito il rendering del valore: %(value)r"
+
+#, fuzzy
+#~ msgid "Invalid selection."
+#~ msgstr "Azione non valida"
+
+#~ msgid "Maximum possible value"
+#~ msgstr "Massimo valore possibile"
+
+#~ msgid "Minimum possible value"
+#~ msgstr "Valore minimo possibile"
+
+#~ msgid "New Action"
+#~ msgstr "Nuova azione"
+
+#~ msgid "Text-body of the email to send. "
+#~ msgstr "Testo-corpo dell'e-mail da inviare. "
+
+#~ msgid "This script will be executed using the BASH shell. "
+#~ msgstr "Questo script sarà eseguito usando la shell BASH. "
+
+#~ msgid "allow commands"
+#~ msgstr "permettere i comandi"
+
+#~ msgid "no commands"
+#~ msgstr "nessun comando"
+
+#, fuzzy
+#~ msgid " | created"
+#~ msgstr "File creato"
+
 #, fuzzy
 #~ msgid "The offset in s at which a WARNING state is triggered."
 #~ msgstr "L'offset in s al quale viene attivato uno stato di avvertimento."
@@ -106537,10 +106627,6 @@ msgstr ""
 #~ msgstr "Istanze Oracle"
 
 #, fuzzy
-#~ msgid "Metrics backend queries are not available yet."
-#~ msgstr "Istanze Oracle"
-
-#, fuzzy
 #~ msgid "This formula references no sources."
 #~ msgstr "Tempo per la copertura delle fonti"
 
@@ -106927,10 +107013,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "HW information"
 #~ msgstr "Informazioni HW"
-
-#, fuzzy
-#~ msgid "Hardware information of the Checkmk server"
-#~ msgstr "Informazioni sull'hardware del server Checkmk"
 
 #, fuzzy
 #~ msgid "Incompatible Werk"
@@ -108833,9 +108915,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Time until secret credentials expiration"
 #~ msgstr "Tempo fino alla scadenza delle credenziali"
-
-#~ msgid "Verify Certificates"
-#~ msgstr "Verifica dei certificati"
 
 #~ msgid "Verify certificates"
 #~ msgstr "Verifica dei certificati"

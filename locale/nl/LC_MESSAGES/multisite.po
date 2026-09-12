@@ -6694,10 +6694,6 @@ msgstr "Toewijzingsmethode"
 msgid "Allow access via TCP"
 msgstr "Toegang toestaan via TCP"
 
-#, fuzzy
-msgid "Allow agent deployment as root"
-msgstr "Agent Deployment: Laatste fout"
-
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Sta alle gebruikers toe om te verwijzen naar regels in dit pakket"
 
@@ -11307,6 +11303,13 @@ msgid ""
 "you instead want to require that every currently failing component is "
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
+msgstr ""
+
+msgid ""
+"By default, agents on Linux are installed under the root account. If "
+"Synthetic Monitoring with RCC is enabled, it is strongly recommended to set "
+"a user context other than root using the Customize agent package (Linux) "
+"rule."
 msgstr ""
 
 #, python-brace-format
@@ -19688,9 +19691,6 @@ msgstr "Databank-/verzamelnaam ('[DB_NAME] [COLLECTION_NAME]')"
 msgid "Databases"
 msgstr "Databanken"
 
-msgid "Databases needing attention (unhandled, non-OK)"
-msgstr ""
-
 #, fuzzy
 msgid "Databases to monitor"
 msgstr "Instanties om te controleren"
@@ -24843,6 +24843,9 @@ msgstr "Inschakelen replicatie"
 msgid "Enable Caching"
 msgstr "Caching inschakelen"
 
+msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Enable GZIP compression of the backed-up files. The tar archives created by "
@@ -25051,6 +25054,10 @@ msgstr "Inschakelen dienst meldingen"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone levering via SMTP inschakelen"
+
+#, fuzzy
+msgid "Enable the AI assistant"
+msgstr "Deze site inschakelen"
 
 msgid "Enable the MCP Server"
 msgstr ""
@@ -28723,12 +28730,6 @@ msgid ""
 "write access to the Oracle client files."
 msgstr ""
 
-msgid ""
-"For security reasons, RCC normally requires a non-root installation. Enable "
-"this bypass only if the host is dedicated to synthetic monitoring and you "
-"specifically need a root-based setup."
-msgstr ""
-
 msgid "For specific SIDs"
 msgstr "Voor specifieke SID's"
 
@@ -30675,9 +30676,6 @@ msgstr "Gezondheidssonde status lagere niveaus"
 
 msgid "Health probe status lower levels"
 msgstr "Gezondheidssonde status lagere niveaus"
-
-msgid "Health state of each database (ORA Instance)"
-msgstr ""
 
 #, fuzzy
 msgid "Healthy"
@@ -35283,6 +35281,12 @@ msgstr ""
 "opgeven, zodat de controle het juiste formulier-element kan identificeren."
 
 msgid ""
+"If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
+"is important to set a user context other than root using the \"Customize "
+"agent package (Linux)\" rule."
+msgstr ""
+
+msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
@@ -37870,6 +37874,10 @@ msgstr "Service discovery uitvoeren"
 
 msgid "Instance error state"
 msgstr "Instance error status"
+
+#, fuzzy
+msgid "Instance health state"
+msgstr "Instantie toestand"
 
 msgid "Instance identifier"
 msgstr "Identificatie van de instantie"
@@ -57028,7 +57036,14 @@ msgstr "Gebruikte RAM"
 msgid "RAM used (averaged)"
 msgstr "Lees gemiddelde exe"
 
-msgid "RCC (non-root deployments on Linux only)"
+#, fuzzy
+msgid "RCC"
+msgstr "CMC"
+
+msgid "RCC (see important inline help on root deployments)"
+msgstr ""
+
+msgid "RCC (see important inline help regarding Linux)"
 msgstr ""
 
 #, fuzzy
@@ -63256,6 +63271,10 @@ msgid ""
 msgstr ""
 "iOS versies die overeenkomen met dit patroon zullen worden gerapporteerd als "
 "OK, anders CRIT."
+
+#, fuzzy
+msgid "Services needing attention"
+msgstr "Host configuratie"
 
 msgid "Services not being monitored due to configuration."
 msgstr "Diensten worden niet gemonitord vanwege configuratie."
@@ -91975,8 +91994,7 @@ msgid ""
 "This eliminates the need to install and configure Python and all of its "
 "library packages on the target hosts. RCC environments are created right "
 "after the scheduler gets started by the Checkmk agent and before it enters "
-"the scheduling phase. Note that on Linux systems, RCC is only supported for "
-"non-root agent deployments. See werk #19460 for details."
+"the scheduling phase."
 msgstr ""
 
 #, fuzzy
@@ -102403,6 +102421,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Allow agent deployment as root"
+#~ msgstr "Agent Deployment: Laatste fout"
+
+#, fuzzy
 #~ msgid "Release flags"
 #~ msgstr "Release pakket"
 
@@ -103036,10 +103058,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "prometheus_config_1"
 #~ msgstr "Prometheus"
-
-#, fuzzy
-#~ msgid "RCC"
-#~ msgstr "CMC"
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

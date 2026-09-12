@@ -6607,10 +6607,6 @@ msgstr "Zuordnungsmethode"
 msgid "Allow access via TCP"
 msgstr "Zugriff über TCP erlauben"
 
-#, fuzzy
-msgid "Allow agent deployment as root"
-msgstr "Agentenverteilung: letzter Fehler"
-
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Benutzern erlauben, die Regeln aus diesem Paket zu referenzieren"
 
@@ -10928,6 +10924,13 @@ msgstr ""
 "wenn Sie stattdessen verlangen möchten, dass jede aktuell ausgefallene "
 "Komponente erfasst wird – um sicherzustellen, dass kein aktiver, ungeplanter "
 "Ausfall hinter einem teilweisen Wartungsfenster unbemerkt bleibt."
+
+msgid ""
+"By default, agents on Linux are installed under the root account. If "
+"Synthetic Monitoring with RCC is enabled, it is strongly recommended to set "
+"a user context other than root using the Customize agent package (Linux) "
+"rule."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -19108,9 +19111,6 @@ msgstr "Datenbank/Kollektions Name ('[DB_NAME] [COLLECTION_NAME]')"
 msgid "Databases"
 msgstr "Datenbanken"
 
-msgid "Databases needing attention (unhandled, non-OK)"
-msgstr "Datenbanken, die Aufmerksamkeit erfordern (unbearbeitet, nicht OK)"
-
 msgid "Databases to monitor"
 msgstr "Zu überwachende Datenbanken"
 
@@ -24010,6 +24010,9 @@ msgstr "KI-basierte Erklärungen aktivieren"
 msgid "Enable Caching"
 msgstr "Caching Aktivieren"
 
+msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+msgstr ""
+
 msgid ""
 "Enable GZIP compression of the backed-up files. The tar archives created by "
 "the backup are gzipped during backup."
@@ -24206,6 +24209,10 @@ msgstr "Service-Benachrichtigungen ein"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone Zustellung per SMTP aktivieren"
+
+#, fuzzy
+msgid "Enable the AI assistant"
+msgstr "Diese Instanz aktivieren"
 
 #, fuzzy
 msgid "Enable the MCP Server"
@@ -27787,12 +27794,6 @@ msgid ""
 "write access to the Oracle client files."
 msgstr ""
 
-msgid ""
-"For security reasons, RCC normally requires a non-root installation. Enable "
-"this bypass only if the host is dedicated to synthetic monitoring and you "
-"specifically need a root-based setup."
-msgstr ""
-
 msgid "For specific SIDs"
 msgstr "Für spezifische SIDs"
 
@@ -29657,9 +29658,6 @@ msgstr "Status der Sondengesundheit"
 
 msgid "Health probe status lower levels"
 msgstr "Untergrenzen für Health probe Status"
-
-msgid "Health state of each database (ORA Instance)"
-msgstr "Gesundheitszustand jeder Datenbank (ORA-Instanz)"
 
 msgid "Healthy"
 msgstr "Gesund"
@@ -33949,6 +33947,12 @@ msgstr ""
 "dann geben Sie bitte den Namen des Formulars hier an, damit der Check es "
 "richtig identifizieren kann."
 
+msgid ""
+"If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
+"is important to set a user context other than root using the \"Customize "
+"agent package (Linux)\" rule."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
@@ -36547,6 +36551,10 @@ msgstr "Instanzerkennung"
 
 msgid "Instance error state"
 msgstr "Fehlerzustand einer Instanz"
+
+#, fuzzy
+msgid "Instance health state"
+msgstr "Zustand der Instanz"
 
 msgid "Instance identifier"
 msgstr "Instanz-Identifier"
@@ -54607,8 +54615,14 @@ msgstr "benutzter RAM"
 msgid "RAM used (averaged)"
 msgstr "benutzter RAM (gemittelt)"
 
-msgid "RCC (non-root deployments on Linux only)"
-msgstr "RCC (nur Nicht-Root-Installationen unter Linux)"
+msgid "RCC"
+msgstr "RCC"
+
+msgid "RCC (see important inline help on root deployments)"
+msgstr ""
+
+msgid "RCC (see important inline help regarding Linux)"
+msgstr ""
 
 msgid "RCC Remote server address"
 msgstr "Adresse des RCC Remote-Servers"
@@ -60545,6 +60559,10 @@ msgid ""
 msgstr ""
 "Services, die einem dieser Pattern entsprechen, werden von der Erkennung "
 "ausgeschlossen."
+
+#, fuzzy
+msgid "Services needing attention"
+msgstr "Service-Konfiguration"
 
 msgid "Services not being monitored due to configuration."
 msgstr "Services die aufgrund der Konfiguration nicht überwacht werden."
@@ -88628,6 +88646,7 @@ msgstr ""
 "folder=&mode=edit_configvar&site=&varname=metric_backend‘>Globale "
 "Einstellungen > Instanzverwaltung</a> aktivieren."
 
+#, fuzzy
 msgid ""
 "With the help of the <a href=\"https://github.com/robocorp/rcc\" "
 "target=\"_blank\">RCC</a> binary, the Robotmk scheduler can generate the "
@@ -88635,8 +88654,7 @@ msgid ""
 "This eliminates the need to install and configure Python and all of its "
 "library packages on the target hosts. RCC environments are created right "
 "after the scheduler gets started by the Checkmk agent and before it enters "
-"the scheduling phase. Note that on Linux systems, RCC is only supported for "
-"non-root agent deployments. See werk #19460 for details."
+"the scheduling phase."
 msgstr ""
 "Mit Hilfe der Binärdatei <a href=\"https://github.com/robocorp/rcc\" "
 "target=\"_blank\">RCC</a> kann der Robotmk-Planer die Python-Umgebungen "
@@ -98787,6 +98805,19 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Databases needing attention (unhandled, non-OK)"
+#~ msgstr "Datenbanken, die Aufmerksamkeit erfordern (unbearbeitet, nicht OK)"
+
+#~ msgid "Health state of each database (ORA Instance)"
+#~ msgstr "Gesundheitszustand jeder Datenbank (ORA-Instanz)"
+
+#, fuzzy
+#~ msgid "Allow agent deployment as root"
+#~ msgstr "Agentenverteilung: letzter Fehler"
+
+#~ msgid "RCC (non-root deployments on Linux only)"
+#~ msgstr "RCC (nur Nicht-Root-Installationen unter Linux)"
+
 #~ msgid "Release flags"
 #~ msgstr "Release-Flags"
 
@@ -99434,9 +99465,6 @@ msgstr ""
 
 #~ msgid "prometheus_config_1"
 #~ msgstr "prometheus_config_1"
-
-#~ msgid "RCC"
-#~ msgstr "RCC"
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

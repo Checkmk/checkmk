@@ -459,4 +459,5 @@ rule_spec_special_agent_kube = SpecialAgent(
     title=Title("Kubernetes"),
     topic=Topic.CLOUD,
     parameter_form=_valuespec_special_agents_kube,
+    is_deprecated=True,
 )

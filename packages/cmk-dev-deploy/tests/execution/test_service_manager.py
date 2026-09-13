@@ -4,11 +4,17 @@
 
 """Unit tests for cmk.dev_deploy.service_manager (resolve_services)."""
 
+import subprocess
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
-from cmk.dev_deploy.execution.service_manager import resolve_services, SERVICE_RESTART_ORDER
+from cmk.dev_deploy.execution.service_manager import (
+    resolve_services,
+    restart_services,
+    SERVICE_RESTART_ORDER,
+)
 from cmk.dev_deploy.types import (
     BazelTarget,
     BazelTargetKind,
@@ -110,6 +116,41 @@ def _patch_specs(
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        pytest.param(ServiceAction.RELOAD, id="reload"),
+        pytest.param(ServiceAction.RESTART, id="restart"),
+    ],
+)
+def test_apache_requests_search_rebuild_only_after_success(
+    monkeypatch: pytest.MonkeyPatch, action: ServiceAction
+) -> None:
+    run = Mock(
+        spec=subprocess.run,
+        return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(subprocess, "run", run)
+
+    restart_services([(Service.APACHE, action)], _site())
+
+    assert run.call_args.args[0][-1] == f"omd {action.value} apache && init-redis"
+
+
+def test_other_service_restarts_do_not_request_search_rebuild(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = Mock(
+        spec=subprocess.run,
+        return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(subprocess, "run", run)
+
+    restart_services([(Service.AUTOMATION_HELPER, ServiceAction.RESTART)], _site())
+
+    assert run.call_args.args[0][-1] == "omd restart automation-helper"
 
 
 class TestResolveServicesDefaults:

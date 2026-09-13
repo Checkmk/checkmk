@@ -249,8 +249,14 @@ def _run_omd_command(
     timeout: int = 30,
 ) -> subprocess.CompletedProcess[str]:
     """Run an omd service command as the site user (via the sudoers rule)."""
+    command = f"omd {action} {service}"
+    if service == Service.APACHE.value:
+        # Apache reloads the Python registrations, but Redis retains the old
+        # Setup search index. Request its background rebuild using the same
+        # hook as Redis startup, after Apache successfully picks up the code.
+        command += " && init-redis"
     return run_as_site_user(
         site_name,
-        f"omd {action} {service}",
+        command,
         timeout=timeout,
     )

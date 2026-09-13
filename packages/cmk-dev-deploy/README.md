@@ -339,6 +339,8 @@ Each deploy cycle follows these stages:
 
 7. **Service restart** -- Only restart services affected by the deployers that actually ran. Uses a three-tier resolution: explicit service specs > wheel convention (any wheel triggers `apache:reload`) > config spec annotations. Services are restarted in dependency order.
 
+   After a successful Apache reload or restart, `init-redis` requests a background rebuild of the Setup search index so newly deployed rulesets and menu entries become searchable. Redis keeps running. `--no-restart` skips this refresh along with the service actions.
+
 8. **State save** -- Record the current HEAD commit and per-deployer dirty file hashes for incremental tracking. Partial failures save state only for successful deployers.
 
 ## Incremental Deploy

@@ -9,7 +9,7 @@ from typing import Literal
 import pytest
 
 from cmk.agent_based.v2 import Service, StringTable
-from cmk.legacy_checks.jolokia_generic import discover_type, parse_jolokia_generic
+from cmk.plugins.jolokia.agent_based.jolokia_generic import discover_type, parse_jolokia_generic
 
 info = [
     ["PingFederate-CUK-CDI", "TotalRequests", "64790", "number"],

@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
 
 import TrialModeSelectionApp from '@/trial-mode-selection/TrialModeSelectionApp.vue'
 
@@ -33,10 +33,12 @@ function renderApp() {
   })
 }
 
-function goToVerificationStep() {
-  renderApp()
-  screen.getByText("I'm an existing customer").click()
-  return screen.findByText('Verify your license')
+async function startTrial() {
+  await userEvent.click(screen.getByText('Start a trial'))
+}
+
+async function goToLicenseVerification() {
+  await userEvent.click(screen.getByText("I'm an existing customer"))
 }
 
 function expectCustomerSelectionSaved(verificationMode?: 'online' | 'offline') {
@@ -72,85 +74,58 @@ describe('TrialModeSelectionApp', () => {
     expect(screen.getByRole('link', { name: 'Log out' })).toHaveAttribute('href', 'logout.py')
   })
 
-  it('persists the trial selection and redirects to the dashboard', async () => {
+  it('opens the trial branch without recording anything yet', async () => {
     renderApp()
-    screen.getByText('Start a trial').click()
-    await waitFor(() => {
-      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
-        selection: 'trial',
-        _csrf_token: 'the-csrf-token'
-      })
-      expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
-    })
-  })
+    await startTrial()
 
-  it('shows an error and does not redirect when saving fails', async () => {
-    mockCmkAjax.mockRejectedValue(new Error('nope'))
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    renderApp()
-    screen.getByText('Start a trial').click()
-    await waitFor(() => {
-      expect(
-        screen.getByText('Saving your selection failed. Please try again.')
-      ).toBeInTheDocument()
-    })
+    // The decision is only saved at the end of the branch, so an abandoned dialog
+    // reappears on the next admin login instead of quietly opening the gate.
+    expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+    expect(mockCmkAjax).not.toHaveBeenCalled()
     expect(mockLocationAssign).not.toHaveBeenCalled()
   })
 
-  describe('verification step', () => {
-    it('is shown when the existing customer option is picked', async () => {
-      renderApp()
-      expect(screen.queryByText('Verify your license')).not.toBeInTheDocument()
-
-      screen.getByText("I'm an existing customer").click()
-
-      expect(await screen.findByText('Verify your license')).toBeInTheDocument()
+  it('moves the focus to the heading of the screen it opens', async () => {
+    renderApp()
+    await goToLicenseVerification()
+    await waitFor(() => {
+      expect(screen.getByText('Verify your license')).toHaveFocus()
     })
 
-    it('offers both verification options once the customer step is entered', async () => {
-      await goToVerificationStep()
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => {
+      expect(screen.getByText('Welcome to your new Checkmk site')).toHaveFocus()
+    })
+  })
+
+  describe('license verification step', () => {
+    it('replaces the entry choice instead of adding to it', async () => {
+      renderApp()
+      await goToLicenseVerification()
+
       expect(
         screen.getByText('Choose how to validate the license for this site.')
       ).toBeInTheDocument()
       expect(screen.getByText('Verify online')).toBeInTheDocument()
       expect(screen.getByText('Verify offline')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Verify later' })).toBeInTheDocument()
-    })
-
-    it('replaces the mode selection instead of adding to it', async () => {
-      await goToVerificationStep()
       expect(screen.queryByText('Welcome to your new Checkmk site')).not.toBeInTheDocument()
       expect(screen.queryByText('Start a trial')).not.toBeInTheDocument()
-      expect(screen.queryByText("I'm an existing customer")).not.toBeInTheDocument()
-    })
-
-    it('moves the focus to the heading of the new step', async () => {
-      await goToVerificationStep()
-      await waitFor(() => {
-        expect(screen.getByText('Verify your license')).toHaveFocus()
-      })
-
-      screen.getByRole('button', { name: 'Back' }).click()
-      await waitFor(() => {
-        expect(screen.getByText('Welcome to your new Checkmk site')).toHaveFocus()
-      })
-    })
-
-    it('still offers logging out', async () => {
-      await goToVerificationStep()
-      expect(screen.getByRole('link', { name: 'Log out' })).toHaveAttribute('href', 'logout.py')
     })
 
     it('does not persist the selection yet', async () => {
-      await goToVerificationStep()
+      renderApp()
+      await goToLicenseVerification()
+
       expect(mockCmkAjax).not.toHaveBeenCalled()
       expect(mockLocationAssign).not.toHaveBeenCalled()
     })
 
     it('persists the selection and opens the online verification on "Verify online"', async () => {
-      await goToVerificationStep()
-      screen.getByText('Verify online').click()
+      renderApp()
+      await goToLicenseVerification()
+
+      await userEvent.click(screen.getByText('Verify online'))
+
       await waitFor(() => {
         expectCustomerSelectionSaved('online')
         expect(mockLocationAssign).toHaveBeenCalledWith(
@@ -160,8 +135,11 @@ describe('TrialModeSelectionApp', () => {
     })
 
     it('persists the selection and opens the offline verification on "Verify offline"', async () => {
-      await goToVerificationStep()
-      screen.getByText('Verify offline').click()
+      renderApp()
+      await goToLicenseVerification()
+
+      await userEvent.click(screen.getByText('Verify offline'))
+
       await waitFor(() => {
         expectCustomerSelectionSaved('offline')
         expect(mockLocationAssign).toHaveBeenCalledWith(
@@ -171,52 +149,34 @@ describe('TrialModeSelectionApp', () => {
     })
 
     it('persists the selection and returns to the dashboard on "Verify later"', async () => {
-      await goToVerificationStep()
-      screen.getByRole('button', { name: 'Verify later' }).click()
+      renderApp()
+      await goToLicenseVerification()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Verify later' }))
+
       await waitFor(() => {
         expectCustomerSelectionSaved()
         expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
       })
     })
 
-    it('returns to the undecided mode selection on "Back"', async () => {
-      await goToVerificationStep()
-      screen.getByRole('button', { name: 'Back' }).click()
-      expect(await screen.findByText('Welcome to your new Checkmk site')).toBeInTheDocument()
+    it('returns to the undecided entry choice on "Back"', async () => {
+      renderApp()
+      await goToLicenseVerification()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
       expect(screen.queryByText('Verify online')).not.toBeInTheDocument()
       expect(mockCmkAjax).not.toHaveBeenCalled()
     })
 
-    it('is not entered while another selection is still being saved', async () => {
-      let finishSaving: () => void = () => {}
-      mockCmkAjax.mockReturnValue(
-        new Promise<void>((resolve) => {
-          finishSaving = () => {
-            resolve()
-          }
-        })
-      )
-      renderApp()
-      screen.getByText('Start a trial').click()
-      await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledTimes(1)
-      })
-
-      screen.getByText("I'm an existing customer").click()
-      await nextTick()
-      expect(screen.queryByText('Verify your license')).not.toBeInTheDocument()
-
-      finishSaving()
-      await waitFor(() => {
-        expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
-      })
-    })
-
     it('blocks its buttons while a verification is still being saved', async () => {
       mockCmkAjax.mockReturnValue(new Promise(() => {}))
-      await goToVerificationStep()
+      renderApp()
+      await goToLicenseVerification()
 
-      screen.getByText('Verify online').click()
+      await userEvent.click(screen.getByText('Verify online'))
       await waitFor(() => {
         expect(mockCmkAjax).toHaveBeenCalledTimes(1)
       })
@@ -225,11 +185,32 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.getByRole('button', { name: 'Verify later' })).toBeDisabled()
     })
 
+    // The cards are not buttons: `disabled` only dims them, and keyboard activation
+    // still reaches the callback. The guard on the save is what stops a second one.
+    it('ignores a second verification while the first is still being saved', async () => {
+      mockCmkAjax.mockReturnValue(new Promise(() => {}))
+      renderApp()
+      await goToLicenseVerification()
+
+      await userEvent.click(screen.getByText('Verify online'))
+      await waitFor(() => {
+        expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+      })
+
+      await userEvent.click(screen.getByText('Verify offline'))
+
+      expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+      expectCustomerSelectionSaved('online')
+    })
+
     it('keeps the user on the step and shows an error when saving fails', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
-      await goToVerificationStep()
+      renderApp()
+      await goToLicenseVerification()
       mockCmkAjax.mockRejectedValue(new Error('nope'))
-      screen.getByText('Verify online').click()
+
+      await userEvent.click(screen.getByText('Verify online'))
+
       await waitFor(() => {
         expect(
           screen.getByText('Saving your selection failed. Please try again.')
@@ -237,6 +218,82 @@ describe('TrialModeSelectionApp', () => {
       })
       expect(screen.getByText('Verify offline')).toBeInTheDocument()
       expect(mockLocationAssign).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('email step', () => {
+    it('returns to the entry choice on Back', async () => {
+      renderApp()
+      await startTrial()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+
+      expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
+      expect(mockCmkAjax).not.toHaveBeenCalled()
+    })
+
+    it('rejects a malformed address instead of advancing', async () => {
+      renderApp()
+      await startTrial()
+
+      await userEvent.type(screen.getByLabelText('Email address'), 'jane.doe@example')
+      await userEvent.click(screen.getByRole('button', { name: 'Send code' }))
+
+      expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument()
+      expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+    })
+
+    it('clears the complaint as soon as the address is edited again', async () => {
+      renderApp()
+      await startTrial()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Send code' }))
+      expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument()
+
+      await userEvent.type(screen.getByLabelText('Email address'), 'j')
+
+      expect(screen.queryByText('Enter a valid email address.')).not.toBeInTheDocument()
+    })
+
+    it('accepts a well-formed address on Enter', async () => {
+      renderApp()
+      await startTrial()
+
+      await userEvent.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+
+      expect(screen.queryByText('Enter a valid email address.')).not.toBeInTheDocument()
+      // The code step arrives with CMK-37568's next change, so a valid address stays put
+      // here rather than navigating to a screen that has nothing to render.
+      expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+      expect(mockCmkAjax).not.toHaveBeenCalled()
+    })
+
+    it('trims the whitespace around the address', async () => {
+      renderApp()
+      await startTrial()
+
+      await userEvent.type(screen.getByLabelText('Email address'), '  jane.doe@example.com  ')
+      await userEvent.click(screen.getByRole('button', { name: 'Send code' }))
+
+      expect(screen.getByLabelText('Email address')).toHaveValue('jane.doe@example.com')
+    })
+
+    it('leaves the newsletter opt-in off, and does not toggle it from its own link', async () => {
+      renderApp()
+      await startTrial()
+
+      const optIn = screen.getByRole('checkbox')
+      expect(optIn).toHaveAttribute('aria-checked', 'false')
+
+      // The legal notice below carries an unsubscribe link of its own; this is the one
+      // inside the checkbox's label, where a plain click would activate the control as
+      // its default action.
+      const optInLink = screen.getByRole('link', {
+        name: 'unsubscribe from the newsletter by email'
+      })
+      await userEvent.click(optInLink)
+
+      expect(optIn).toHaveAttribute('aria-checked', 'false')
     })
   })
 })

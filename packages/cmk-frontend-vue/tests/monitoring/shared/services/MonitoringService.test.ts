@@ -809,6 +809,34 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
+    it('keeps the ordering and the rows when the column carrying it is hidden', async () => {
+      // Hiding a column drops neither the ordering it carries nor the listing it
+      // produced: the sort survives untouched and nothing is asked of the server,
+      // so the rows cannot silently come back in another order.
+      const rows = [
+        { id: 'b', value: 2 },
+        { id: 'a', value: 1 }
+      ]
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse(rows, 2, 2))
+      const service = new TestService(fetchBatch, {
+        columns: [{ accessorKey: 'value', header: 'Value' }]
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateSort([{ id: 'value', desc: true }])
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.updateColumnVisibility({ value: false })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.sortState.value).toEqual([{ id: 'value', desc: true }])
+      expect(service.items.value).toEqual(rows)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.stopPolling()
+    })
+
     it('refetches when a column is hidden under a search, which no longer searches it', async () => {
       const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
       const service = new TestService(fetchBatch, {

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import jolokia_jvm_garbagecollectors as jvm_gc
+from cmk.plugins.jolokia.agent_based import jolokia_jvm_garbagecollectors as jvm_gc
 
 
 def _section() -> jvm_gc.Section:

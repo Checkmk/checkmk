@@ -89,9 +89,15 @@ const hasValidationErrors = computed(() => {
         :class="{ 'cmk-checkbox__button--error': hasValidationErrors }"
         :disabled="disabled"
       >
-        <CheckboxIndicator class="cmk-checkbox__indicator">
+        <CheckboxIndicator class="cmk-checkbox__indicator" aria-hidden="true">
           <span v-if="value === 'indeterminate'" class="cmk-checkbox__dash" />
-          <svg v-else version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            v-else
+            version="1.1"
+            viewBox="0 0 18 18"
+            xmlns="http://www.w3.org/2000/svg"
+            focusable="false"
+          >
             <g transform="rotate(45,9,9)">
               <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
             </g>

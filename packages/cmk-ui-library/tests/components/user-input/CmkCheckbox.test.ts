@@ -31,6 +31,25 @@ test('CmkCheckbox sets aria-checked', async () => {
   screen.getByRole('checkbox', { checked: true })
 })
 
+test('the checkmark and dash icons are hidden from the accessibility tree', async () => {
+  const { container, rerender } = render(CmkCheckbox, {
+    props: { allowIndeterminate: true, modelValue: true }
+  })
+
+  // The state is already conveyed by aria-checked on the button; the icons are decorative
+  // and would otherwise surface as unlabelled graphics to assistive tech.
+  expect(container.querySelector('.cmk-checkbox__indicator')).toHaveAttribute('aria-hidden', 'true')
+  expect(container.querySelector('.cmk-checkbox__indicator svg')).toHaveAttribute(
+    'focusable',
+    'false'
+  )
+
+  await rerender({ modelValue: 'indeterminate' })
+
+  expect(container.querySelector('.cmk-checkbox__dash')).toBeInTheDocument()
+  expect(container.querySelector('.cmk-checkbox__indicator')).toHaveAttribute('aria-hidden', 'true')
+})
+
 test('CmkCheckbox exposes the mixed state via aria-checked when indeterminate', async () => {
   render(CmkCheckbox, {
     props: {

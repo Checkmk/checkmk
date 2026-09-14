@@ -1,40 +1,27 @@
-load("@@//bazel/rules:xcomp/foreign_cc.bzl", "configure_make")
+load("@@//bazel/rules:xcomp/cc.bzl", "cc_binary")
 
-filegroup(
-    name = "all_srcs",
-    srcs = glob(
-        ["**/*"],
-        exclude = ["bazel-*"],
-    ),
-)
-
-configure_make(
+cc_binary(
     name = "lcab",
-    args = ["-j4"],
-    env = {
-        "DESTDIR": "/",
-        "PKG_CONFIG_PATH": ":".join([
-            "/usr/lib/pkgconfig",
-            "/usr/lib64/pkgconfig",
-            "/usr/lib/x86_64-linux-gnu/pkgconfig",
-        ]),
-    },
-    install_prefix = "lcab_dir",
-    lib_source = ":all_srcs",
+    srcs = [
+        "cdata.c",
+        "cdata.h",
+        "cfile.c",
+        "cfile.h",
+        "cfolder.c",
+        "cfolder.h",
+        "cheader.c",
+        "cheader.h",
+        "checksum.c",
+        "checksum.h",
+        "cstruct.h",
+        "cwrite.c",
+        "cwrite.h",
+        "main.c",
+        "mytypes.h",
+        "warn.c",
+        "warn.h",
+    ],
     linkopts = ["-Wl,--strip-all"],
-    out_bin_dir = "bin",
-    out_binaries = [
-        "lcab",
-    ],
-    out_shared_libs = [
-    ],
     platform = "@@//bazel/platforms:x86_64-linux-gcc-hermetic",
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "lcab_bin",
-    srcs = [":lcab"],
-    output_group = "lcab",
     visibility = ["//visibility:public"],
 )

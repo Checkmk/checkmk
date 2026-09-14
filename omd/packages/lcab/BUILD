@@ -4,7 +4,7 @@ load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 set_runpath(
     name = "lcab_runpath",
-    srcs = ["@lcab//:lcab_bin"],
+    srcs = ["@lcab"],
     rpaths = ["${ORIGIN}/../lib"],
 )
 

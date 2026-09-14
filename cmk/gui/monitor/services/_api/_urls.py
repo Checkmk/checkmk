@@ -49,3 +49,7 @@ def host_view_link(view_name: str, service: ServiceOverview) -> str:
             ("host", service.host_name),
         ]
     )
+
+
+def crash_report_link(*, site_id: str, crash_id: str) -> str:
+    return "crash.py?" + urlencode([("site", site_id), ("crash_id", crash_id)])

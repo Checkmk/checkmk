@@ -14,6 +14,7 @@ logic.
 import dataclasses
 import datetime as dt
 import enum
+import re
 from collections.abc import Mapping
 from typing import assert_never, Literal, NewType, override, Self
 
@@ -25,6 +26,13 @@ type UnixTimestamp = int
 type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN", "PENDING"]
 
 type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]
+
+
+# What cmk/base/errorhandling/_crash.py appends to the output of a check that raised, and the
+# crash dump id it puts beside it. Matching on the output is how the legacy views recognise a
+# crashed check too; Livestatus offers nothing better.
+CRASH_MARKER = "check failed - please submit a crash report!"
+_CRASH_ID_PATTERN = re.compile(r"\(Crash-ID: ([^)]+)\)")
 
 
 class ServiceState(enum.IntEnum):
@@ -84,6 +92,19 @@ class Service:
     tags: dict[str, str] | None
     contacts: list[str] | None
     contact_groups: list[str] | None
+
+    @property
+    def check_crashed(self) -> bool:
+        """Whether this service's check raised instead of producing a result."""
+        return self.state is ServiceState.UNKNOWN and CRASH_MARKER in self.summary
+
+    @property
+    def crash_id(self) -> str | None:
+        """The dump identifying this crash, absent when the check crashed too early to write one."""
+        if not self.check_crashed:
+            return None
+        match = _CRASH_ID_PATTERN.search(self.summary)
+        return match.group(1) if match else None
 
     @property
     def state_label(self) -> ServiceStateLabel:

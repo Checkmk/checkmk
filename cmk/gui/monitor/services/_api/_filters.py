@@ -16,7 +16,7 @@ from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
 
-from .._models import ServiceFilter, ServiceState, ServiceStateLabel
+from .._models import CRASH_MARKER, ServiceFilter, ServiceState, ServiceStateLabel
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
 # NOTE: these models are named with a "Service" prefix (unlike their hosts counterparts) because
@@ -87,6 +87,7 @@ class ServiceBooleanCondition:
         "in_notification_period",
         "in_service_period",
         "in_check_period",
+        "check_crashed",
         "is_flapping",
         "stale",
     ] = api_field(description="Boolean service field to filter on", example="acknowledged")
@@ -311,6 +312,18 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
                         [
                             "Filter: in_check_period = 1",
                             "Filter: in_passive_check_period = 1",
+                            "And: 2",
+                        ]
+                    )
+                    if not node.value:
+                        filters.append("Negate:")
+                case "check_crashed":
+                    # Livestatus knows nothing of crashes; a crashed check is an UNKNOWN result
+                    # carrying the marker cmk.base appends, which is what the icon reads too.
+                    filters.extend(
+                        [
+                            f"Filter: state = {ServiceState.UNKNOWN}",
+                            f"Filter: plugin_output ~ {lqencode(CRASH_MARKER)}",
                             "And: 2",
                         ]
                     )

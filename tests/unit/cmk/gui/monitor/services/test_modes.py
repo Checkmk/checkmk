@@ -2,7 +2,10 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
+
 from cmk.gui.monitor.services._api._modes import build_service_modes, build_service_modes_by_id
+from cmk.gui.monitor.services._models import ServiceState
 
 from .testlib import ServiceFactory, ServiceOverviewFactory
 
@@ -23,6 +26,9 @@ _NO_MODES = {
     "in_service_period": True,
     "in_check_period": True,
     "is_flapping": False,
+    # A crash is read off the state and the output, so a plain OK keeps the crash icon away.
+    "state": ServiceState.OK,
+    "summary": "OK - everything is fine",
 }
 
 
@@ -184,3 +190,55 @@ def test_build_service_modes_flapping_is_not_a_mode() -> None:
     service = ServiceOverviewFactory.build(**_NO_MODES | {"is_flapping": True})
 
     assert build_service_modes(service) == []
+
+
+_CRASHED_OUTPUT = "UNKNOWN - check failed - please submit a crash report! (Crash-ID: abc-123)"
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_build_service_modes_by_id_crashed_check_links_to_the_dump() -> None:
+    service = ServiceFactory.build(
+        **_NO_MODES | {"state": ServiceState.UNKNOWN, "summary": _CRASHED_OUTPUT}
+    )
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [mode.icon_name for mode in modes] == ["crash"]
+    assert modes[0].link == "crash.py?site=local&crash_id=abc-123"
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_build_service_modes_by_id_crashed_check_without_a_dump_links_nowhere() -> None:
+    service = ServiceFactory.build(
+        **_NO_MODES
+        | {
+            "state": ServiceState.UNKNOWN,
+            "summary": "UNKNOWN - check failed - please submit a crash report!",
+        }
+    )
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [mode.icon_name for mode in modes] == ["crash"]
+    assert modes[0].link == ""
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_build_service_modes_by_id_crashed_check_withholds_the_dump_without_the_permission() -> (
+    None
+):
+    service = ServiceFactory.build(
+        **_NO_MODES | {"state": ServiceState.UNKNOWN, "summary": _CRASHED_OUTPUT}
+    )
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [mode.icon_name for mode in modes] == ["crash"]
+    assert modes[0].link == ""
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_build_service_modes_by_id_an_unknown_service_did_not_crash() -> None:
+    # UNKNOWN on its own is an ordinary result; only the marker cmk.base appends means a crash.
+    service = ServiceFactory.build(
+        **_NO_MODES | {"state": ServiceState.UNKNOWN, "summary": "UNKNOWN - cannot reach the API"}
+    )
+
+    assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []

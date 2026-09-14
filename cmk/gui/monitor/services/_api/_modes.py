@@ -3,10 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.i18n import _, ungettext
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 from .._models import Service, ServiceOverview
-from ._urls import host_view_link, service_view_link, service_view_link_by_id
+from ._urls import (
+    crash_report_link,
+    host_view_link,
+    service_view_link,
+    service_view_link_by_id,
+)
 
 # NOTE: named with a "Service" prefix (unlike the shape-identical hosts ``ModeInfo``) because the
 # OpenAPI spec registers component schemas by class name across every endpoint family; an
@@ -31,6 +37,41 @@ def _comment_title(count: int) -> str:
         "This service has %(count)d comments",
         count,
     ) % {"count": count}
+
+
+def _crashed_check_mode(service: Service, *, site_id: str) -> ServiceModeInfo:
+    """The crash icon, as much of it as the viewer is allowed to see.
+
+    Reading a crash dump needs a permission most users do not have, so without it the icon only
+    says the check crashed and links nowhere. A dump the check was too early to write leaves the
+    icon linkless too.
+    """
+    if not user.may("general.see_crash_reports"):
+        return ServiceModeInfo(
+            icon_name="crash",
+            link="",
+            title=_(
+                "This check crashed. Please inform a Checkmk user that is allowed to view and "
+                "submit crash reports to the development team."
+            ),
+        )
+    if (crash_id := service.crash_id) is None:
+        return ServiceModeInfo(
+            icon_name="crash",
+            link="",
+            title=_(
+                "This check crashed, but no crash dump is available, please report this to the "
+                "development team."
+            ),
+        )
+    return ServiceModeInfo(
+        icon_name="crash",
+        link=crash_report_link(site_id=site_id, crash_id=crash_id),
+        title=_(
+            "This check crashed. Please click here for more information. You can also submit a "
+            "crash report to the development team if you like."
+        ),
+    )
 
 
 def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
@@ -108,6 +149,8 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 title=_("This service is currently not being checked"),
             )
         )
+    if service.check_crashed:
+        modes.append(_crashed_check_mode(service, site_id=service.site_id))
     return modes
 
 
@@ -212,6 +255,8 @@ def build_service_modes_by_id(
                 title=_("This service is currently not being checked"),
             )
         )
+    if service.check_crashed:
+        modes.append(_crashed_check_mode(service, site_id=site_id))
     return modes
 
 

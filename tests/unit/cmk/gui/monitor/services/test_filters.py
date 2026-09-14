@@ -164,6 +164,33 @@ def test_query_builder_in_check_period_condition(value: bool, expected: str) -> 
 @pytest.mark.parametrize(
     "value, expected",
     [
+        pytest.param(
+            True,
+            "Filter: state = 3\n"
+            "Filter: plugin_output ~ check failed - please submit a crash report!\n"
+            "And: 2",
+            id="crashed",
+        ),
+        pytest.param(
+            False,
+            "Filter: state = 3\n"
+            "Filter: plugin_output ~ check failed - please submit a crash report!\n"
+            "And: 2\n"
+            "Negate:",
+            id="did not crash",
+        ),
+    ],
+)
+def test_query_builder_check_crashed_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="check_crashed", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
         (True, "Filter: comments !="),
         (False, "Filter: comments ="),
     ],

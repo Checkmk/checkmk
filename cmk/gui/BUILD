@@ -769,7 +769,6 @@ py_library(
         "//cmk/gui/visuals",
         "//cmk/gui/wato",
         "//cmk/gui/wato:base",
-        "//cmk/gui/wato:pre_21_plugin_api",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",

@@ -3,20 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from collections.abc import Iterable, Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.jolokia.agent_based.lib import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
 
-check_info = {}
+Section = Mapping[str, Mapping[str, Any]]
 
 
-def parse_jolokia_jvm_memory(string_table):
+def parse_jolokia_jvm_memory(string_table: StringTable) -> Section:
     parsed: dict[str, dict[str, dict[str, object]]] = {}
     for instance, mbean, data in parse_jolokia_json_output(string_table):
         type_ = jolokia_mbean_attribute("type", mbean)
@@ -26,10 +41,12 @@ def parse_jolokia_jvm_memory(string_table):
     return parsed
 
 
-def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
+def _jolokia_check_abs_and_perc(
+    mem_type: str, value: float, value_max: float | None, params: Mapping[str, Any]
+) -> CheckResult:
     perf_name = ("mem_%s" % mem_type) if mem_type != "total" else None
 
-    yield check_levels(
+    yield from check_levels(
         value,
         perf_name,
         params.get("abs_%s" % mem_type),
@@ -42,7 +59,7 @@ def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
         return
 
     perc_val = float(value) / float(value_max) * 100.0
-    yield check_levels(
+    yield from check_levels(
         perc_val,
         None,
         params.get("perc_%s" % mem_type),
@@ -51,11 +68,11 @@ def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
     )
 
 
-def discover_jolokia_jvm_memory(section):
-    yield from ((item, {}) for item, data in section.items() if data.get("Memory"))
+def discover_jolokia_jvm_memory(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item, data in section.items() if data.get("Memory"))
 
 
-def _iter_type_value_max(mem_data):
+def _iter_type_value_max(mem_data: Mapping[str, Any]) -> Iterable[tuple[str, float, float | None]]:
     heap_data = mem_data.get("HeapMemoryUsage", {})
     nonheap_data = mem_data.get("NonHeapMemoryUsage", {})
     heap = heap_data.get("used")
@@ -79,8 +96,8 @@ def _iter_type_value_max(mem_data):
         yield "total", heap + nonheap, totalmax
 
 
-def check_jolokia_jvm_memory(item, params, parsed):
-    if not (instance_data := parsed.get(item)):
+def check_jolokia_jvm_memory(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (instance_data := section.get(item)):
         return
     mem_data = instance_data.get("Memory", {})
 
@@ -88,9 +105,14 @@ def check_jolokia_jvm_memory(item, params, parsed):
         yield from _jolokia_check_abs_and_perc(mem_type, value, value_max, params)
 
 
-check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
+agent_section_jolokia_jvm_memory = AgentSection(
     name="jolokia_jvm_memory",
     parse_function=parse_jolokia_jvm_memory,
+)
+
+
+check_plugin_jolokia_jvm_memory = CheckPlugin(
+    name="jolokia_jvm_memory",
     service_name="JVM %s Memory",
     discovery_function=discover_jolokia_jvm_memory,
     check_function=check_jolokia_jvm_memory,
@@ -113,34 +135,36 @@ check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_jolokia_jvm_memory_pools(parsed):
-    for instance, instance_info in parsed.items():
+def discover_jolokia_jvm_memory_pools(section: Section) -> DiscoveryResult:
+    for instance, instance_info in section.items():
         for data in instance_info.get("MemoryPool", {}).values():
             pool = data.get("Name")
             if pool:
-                yield f"{instance} Memory Pool {pool}", {}
+                yield Service(item=f"{instance} Memory Pool {pool}")
 
 
-def _get_jolokia_jvm_mempool_data(item, parsed):
+def _get_jolokia_jvm_mempool_data(item: str, section: Section) -> Mapping[str, Any]:
     instance, pool_name = item.split(" Memory Pool ", 1)
-    data = parsed.get(instance, {}).get("MemoryPool", {})
+    data = section.get(instance, {}).get("MemoryPool", {})
     pools = [pool for pool in data.values() if pool.get("Name") == pool_name]
     return pools[0] if pools else {}
 
 
-def check_jolokia_jvm_memory_pools(item, params, parsed):
-    data = _get_jolokia_jvm_mempool_data(item, parsed)
+def check_jolokia_jvm_memory_pools(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    data = _get_jolokia_jvm_mempool_data(item, section)
     if not (usage := data.get("Usage")):
         return
 
     if isinstance(usage, str) and usage.startswith("ERROR"):
-        yield (
-            3,
-            (
-                f"Check received invalid data. See long output for details. \n"
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Check received invalid data. See long output for details.",
+            details=(
                 f'Error was: "{usage}". '
-                f"This could be a support case for the Jolokia API maintainers: "
-                f"https://github.com/rhuss/jolokia"
+                "This could be a support case for the Jolokia API maintainers: "
+                "https://github.com/rhuss/jolokia"
             ),
         )
         return
@@ -151,14 +175,14 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
     init = usage.get("init")
     if init is not None:
-        yield 0, "Initially: %s" % render.bytes(init)
+        yield Result(state=State.OK, summary="Initially: %s" % render.bytes(init))
 
     committed = usage.get("committed")
     if committed is not None:
-        yield 0, "Committed: %s" % render.bytes(committed)
+        yield Result(state=State.OK, summary="Committed: %s" % render.bytes(committed))
 
 
-check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
+check_plugin_jolokia_jvm_memory_pools = CheckPlugin(
     name="jolokia_jvm_memory_pools",
     service_name="JVM %s",
     sections=["jolokia_jvm_memory"],

@@ -345,28 +345,21 @@ def _get_disabled_service_ids(
     `_get_needed_plugins`), and the ruleset matches on the service name, which is
     not available without the plug-in.
     """
-    service_configurer = config_cache.make_service_configurer(
-        agent_based_plugins.check_plugins, passive_service_name_config
-    )
-    # Same arguments as `_get_needed_plugins`, so that we learn about exactly
-    # those services whose plug-ins we are about to leave out.
-    args = (
-        host_name,
-        agent_based_plugins.check_plugins,
-        service_configurer,
-        passive_service_name_config,
-        enforced_services_table,
-    )
-    return sorted(
-        set(
-            config_cache.check_table(
-                *args, filter_mode=FilterMode.INCLUDE_CLUSTERED, skip_ignored=False
-            )
-        )
-        - set(config_cache.check_table(*args, filter_mode=FilterMode.INCLUDE_CLUSTERED)),
-        # `item` is `None` for some services, so we cannot compare the IDs directly.
-        key=lambda sid: (str(sid.name), str(sid.item)),
-    )
+    return [
+        # Same table as in `_get_needed_plugins`, so that we report exactly
+        # those services whose plug-ins we are about to leave out.
+        service.id()
+        for service in config_cache.check_table(
+            host_name,
+            agent_based_plugins.check_plugins,
+            config_cache.make_service_configurer(
+                agent_based_plugins.check_plugins, passive_service_name_config
+            ),
+            passive_service_name_config,
+            enforced_services_table,
+            filter_mode=FilterMode.INCLUDE_CLUSTERED,
+        ).ignored_services
+    ]
 
 
 def _get_needed_legacy_check_files(

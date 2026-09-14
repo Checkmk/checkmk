@@ -187,6 +187,7 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         self,
         *,
         services: Iterable[ConfiguredService],
+        ignored_services: Iterable[ConfiguredService] = (),
     ) -> None:
         valid, skipped = _split_services_by_name_validity(services)
         self._data = {s.id(): s for s in valid}
@@ -195,6 +196,15 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         # them here would make the checker compute results the core does not
         # know about, rendering all services of the host stale (CMK-33390).
         self.skipped_services: Final[Sequence[ConfiguredService]] = skipped
+        # Services excluded by the "Disabled services" / "Disabled checks"
+        # rulesets. They are not part of the table either, but unlike the
+        # skipped ones they are excluded on purpose, and the nagios config
+        # generation has to know about them (see `_get_disabled_service_ids`).
+        # An id that is in the table as well is not disabled: the two can
+        # disagree when a service is both discovered and enforced.
+        self.ignored_services: Final[Sequence[ConfiguredService]] = [
+            s for s in ignored_services if s.id() not in self._data
+        ]
 
     @override
     def __repr__(self) -> str:
@@ -259,7 +269,6 @@ def _aggregate_check_table_services(
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
-    skip_ignored: bool,
     excluded_service_ids: Container[ServiceID],
     filter_mode: FilterMode,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
@@ -268,15 +277,62 @@ def _aggregate_check_table_services(
         Iterable[ConfiguredService],
     ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
-) -> Iterable[ConfiguredService]:
+) -> tuple[Sequence[ConfiguredService], Sequence[ConfiguredService]]:
+    """Return this host's services, split into the monitored and the disabled ones.
+
+    Both are needed: the disabled ones are excluded from the monitoring
+    configuration, but the nagios config generation has to pass them on to the
+    precompiled host check, which cannot determine them itself.
+    """
     sfilter = _ServiceFilter(
         host_name,
         config_cache=config_cache,
         mode=filter_mode,
-        skip_ignored=skip_ignored,
         excluded_service_ids=excluded_service_ids,
     )
 
+    monitored: list[ConfiguredService] = []
+    ignored: list[ConfiguredService] = []
+    for service in _iter_check_table_candidates(
+        host_name,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        service_name_config=service_name_config,
+        enforced_services_table=enforced_services_table,
+        filter_mode=filter_mode,
+        get_autochecks=get_autochecks,
+        configure_autochecks=configure_autochecks,
+        plugins=plugins,
+    ):
+        if not sfilter.keep(service):
+            continue
+        (ignored if sfilter.is_ignored(service) else monitored).append(service)
+
+    return monitored, ignored
+
+
+def _iter_check_table_candidates(
+    host_name: HostName,
+    *,
+    hosts_config: Hosts,
+    config_cache: ConfigCache,
+    service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
+    filter_mode: FilterMode,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]],
+        Iterable[ConfiguredService],
+    ],
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+) -> Iterable[ConfiguredService]:
+    """Yield every service that might belong to this host, unfiltered.
+
+    The order matters: enforced services come last, so that they win over a
+    discovered service with the same id when the table is built.
+    """
     is_cluster = host_name in hosts_config.clusters
 
     # process all entries that are specific to the host
@@ -284,28 +340,20 @@ def _aggregate_check_table_services(
     if not config_cache.is_ping_host(host_name):
         if is_cluster:
             # Add checks a cluster might receive from its nodes
-            yield from (
-                s
-                for s in _get_clustered_services(
-                    hosts_config,
-                    config_cache,
-                    service_name_config,
-                    host_name,
-                    get_autochecks,
-                    configure_autochecks,
-                    enforced_services_table,
-                    plugins,
-                )
-                if sfilter.keep(s)
+            yield from _get_clustered_services(
+                hosts_config,
+                config_cache,
+                service_name_config,
+                host_name,
+                get_autochecks,
+                configure_autochecks,
+                enforced_services_table,
+                plugins,
             )
         else:
-            yield from (
-                s
-                for s in configure_autochecks(host_name, get_autochecks(host_name))
-                if sfilter.keep(s)
-            )
+            yield from configure_autochecks(host_name, get_autochecks(host_name))
 
-    yield from (svc for _, svc in enforced_services_table(host_name).values() if sfilter.keep(svc))
+    yield from (svc for _, svc in enforced_services_table(host_name).values())
 
     # NOTE: as far as I can see, we only have two cases with the filter mode.
     # Either we compute services to check, or we compute services for fetching.
@@ -316,19 +364,15 @@ def _aggregate_check_table_services(
     # services than are attached to the host itself, so that we get the needed data
     # even if a failover occurred since the last discovery.
 
-    yield from (
-        s
-        for s in _get_services_from_cluster_nodes(
-            hosts_config,
-            config_cache,
-            service_name_config,
-            host_name,
-            get_autochecks,
-            configure_autochecks,
-            enforced_services_table,
-            plugins,
-        )
-        if sfilter.keep(s)
+    yield from _get_services_from_cluster_nodes(
+        hosts_config,
+        config_cache,
+        service_name_config,
+        host_name,
+        get_autochecks,
+        configure_autochecks,
+        enforced_services_table,
+        plugins,
     )
 
 
@@ -339,7 +383,6 @@ class _ServiceFilter:
         *,
         config_cache: ConfigCache,
         mode: FilterMode,
-        skip_ignored: bool,
         excluded_service_ids: Container[ServiceID],
     ) -> None:
         """Filter services for a specific host
@@ -347,27 +390,16 @@ class _ServiceFilter:
         FilterMode.NONE              -> default, returns only checks for this host
         FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
 
-        Services in `excluded_service_ids` are dropped unconditionally, see
-        :meth:`ConfigCache.__init__`.
+        Services in `excluded_service_ids` are dropped unconditionally.
         """
         self._host_name = host_name
         self._config_cache = config_cache
         self._mode = mode
-        self._skip_ignored = skip_ignored
         self._excluded_service_ids = excluded_service_ids
 
     def keep(self, service: ConfiguredService) -> bool:
+        """Determine whether this service is this host's business at all."""
         if service.id() in self._excluded_service_ids:
-            return False
-
-        if self._skip_ignored and (
-            self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
-            or self._config_cache.service_ignored(
-                self._host_name,
-                service.description,
-                service.labels,
-            )
-        ):
             return False
 
         if self._mode is FilterMode.INCLUDE_CLUSTERED:
@@ -376,6 +408,16 @@ class _ServiceFilter:
             return self.is_mine(service)
 
         return assert_never(self._mode)  # type: ignore[unreachable]
+
+    def is_ignored(self, service: ConfiguredService) -> bool:
+        """Determine whether the user disabled this service."""
+        return self._config_cache.check_plugin_ignored(
+            self._host_name, service.check_plugin_name
+        ) or self._config_cache.service_ignored(
+            self._host_name,
+            service.description,
+            service.labels,
+        )
 
     def is_mine(self, service: ConfiguredService) -> bool:
         """Determine whether a service should be displayed on this host's service overview.
@@ -1648,7 +1690,6 @@ class ConfigCache:
                         service_name_config,
                         enforced_services_table,
                         filter_mode=FilterMode.INCLUDE_CLUSTERED,
-                        skip_ignored=True,
                     ).needed_check_names()
                     if (p := agent_based_register.get_check_plugin(n, plugins.check_plugins))
                     is not None
@@ -1687,31 +1728,25 @@ class ConfigCache:
         ],
         *,
         filter_mode: FilterMode = FilterMode.NONE,
-        # `False` is only used by the nagios config generation, to determine
-        # which services the "Disabled services" ruleset excludes.  It must not
-        # be used to compute services to check or to fetch data for.
-        skip_ignored: bool = True,
     ) -> HostCheckTable:
         # we blissfully ignore the plugins parameter here
-        cache_key = (hostname, filter_mode, skip_ignored)
+        cache_key = (hostname, filter_mode)
         with contextlib.suppress(KeyError):
             return self._check_table_cache[cache_key]
 
-        host_check_table = HostCheckTable(
-            services=_aggregate_check_table_services(
-                hostname,
-                hosts_config=self._hosts_config,
-                config_cache=self,
-                service_name_config=service_name_config,
-                enforced_services_table=enforced_services_table,
-                skip_ignored=skip_ignored,
-                excluded_service_ids=self._excluded_service_ids,
-                filter_mode=filter_mode,
-                get_autochecks=self.autochecks_memoizer.read,
-                configure_autochecks=service_configurer.configure_autochecks,
-                plugins=plugins,
-            )
+        monitored, ignored = _aggregate_check_table_services(
+            hostname,
+            hosts_config=self._hosts_config,
+            config_cache=self,
+            service_name_config=service_name_config,
+            enforced_services_table=enforced_services_table,
+            excluded_service_ids=self._excluded_service_ids,
+            filter_mode=filter_mode,
+            get_autochecks=self.autochecks_memoizer.read,
+            configure_autochecks=service_configurer.configure_autochecks,
+            plugins=plugins,
         )
+        host_check_table = HostCheckTable(services=monitored, ignored_services=ignored)
 
         self._check_table_cache[cache_key] = host_check_table
 

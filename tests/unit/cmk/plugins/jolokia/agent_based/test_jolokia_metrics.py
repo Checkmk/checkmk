@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.jolokia_metrics import check_request_count
+from cmk.plugins.jolokia.agent_based.jolokia_metrics import check_request_count
 
 PARSED_SECTION = [
     ["myinstance,/manager", "requestCount", "3"],

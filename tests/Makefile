@@ -279,6 +279,10 @@ test-system-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath system/redfish) --session-timeout 1800
 
+test-system-ai-agent-engine:
+	EDITION=pro $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(realpath system/ai_agent_engine) --session-timeout 1800
+
 test-system-otel:
 	EDITION=ultimate $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath system/singlesite)/nonfree/ultimate/otel/ --session-timeout 1800

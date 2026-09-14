@@ -84,6 +84,7 @@ class ServiceBooleanCondition:
         "has_comments",
         "active_checks_disabled",
         "passive_checks_disabled",
+        "in_notification_period",
         "is_flapping",
         "stale",
     ] = api_field(description="Boolean service field to filter on", example="acknowledged")

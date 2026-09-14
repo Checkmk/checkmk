@@ -77,6 +77,7 @@ class Host:
     num_comments: int
     active_checks_disabled: bool
     passive_checks_disabled: bool
+    in_notification_period: bool
     is_flapping: bool
     stale: bool
     folder: str | None

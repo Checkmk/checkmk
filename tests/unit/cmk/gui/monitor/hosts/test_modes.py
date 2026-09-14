@@ -15,6 +15,7 @@ _NO_MODES = {
     "num_comments": 0,
     "active_checks_disabled": False,
     "passive_checks_disabled": False,
+    "in_notification_period": True,
 }
 
 
@@ -66,6 +67,12 @@ def test_build_host_modes_passive_checks_disabled() -> None:
     assert [mode.icon_name for mode in build_host_modes(host)] == ["npassive"]
 
 
+def test_build_host_modes_out_of_notification_period() -> None:
+    host = HostFactory.build(**_NO_MODES | {"in_notification_period": False})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["outofnot"]
+
+
 def test_build_host_modes_all_modes() -> None:
     host = HostFactory.build(
         in_downtime=True,
@@ -74,6 +81,7 @@ def test_build_host_modes_all_modes() -> None:
         num_comments=1,
         active_checks_disabled=True,
         passive_checks_disabled=True,
+        in_notification_period=False,
     )
 
     assert [mode.icon_name for mode in build_host_modes(host)] == [
@@ -83,4 +91,5 @@ def test_build_host_modes_all_modes() -> None:
         "comment",
         "disabled",
         "npassive",
+        "outofnot",
     ]

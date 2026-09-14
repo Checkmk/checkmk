@@ -79,6 +79,7 @@ class LiveStatusHostServicesRepository:
                 Services.modified_attributes_list,
                 Services.active_checks_enabled,
                 Services.accept_passive_checks,
+                Services.in_notification_period,
                 Services.is_flapping,
                 Services.staleness,
                 Services.last_check,
@@ -114,6 +115,7 @@ class LiveStatusHostServicesRepository:
                         passive_checks_disabled=_manually_disabled(
                             row, "passive_checks_enabled", column="accept_passive_checks"
                         ),
+                        in_notification_period=bool(row["in_notification_period"]),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         summary=row["plugin_output"],
@@ -154,6 +156,7 @@ class LiveStatusHostServicesRepository:
                 Services.modified_attributes_list,
                 Services.active_checks_enabled,
                 Services.accept_passive_checks,
+                Services.in_notification_period,
                 Services.is_flapping,
                 Services.staleness,
                 Services.host_alias,
@@ -202,6 +205,7 @@ class LiveStatusHostServicesRepository:
             passive_checks_disabled=_manually_disabled(
                 row, "passive_checks_enabled", column="accept_passive_checks"
             ),
+            in_notification_period=bool(row["in_notification_period"]),
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             host_alias=row["host_alias"],

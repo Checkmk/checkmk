@@ -77,4 +77,12 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 title=_("Passive checks have been manually disabled for this host"),
             )
         )
+    if not host.in_notification_period:
+        modes.append(
+            ModeInfo(
+                icon_name="outofnot",
+                link=host_view_link("host", host),
+                title=_("Out of notification period"),
+            )
+        )
     return modes

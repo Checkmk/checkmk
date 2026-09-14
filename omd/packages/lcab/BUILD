@@ -1,10 +1,17 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:xcomp/transition_wrapper.bzl", "platform_transitioned_target")
+
+platform_transitioned_target(
+    name = "hermetic_lcab",
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    target = "@lcab",
+)
 
 set_runpath(
     name = "lcab_runpath",
-    srcs = ["@lcab"],
+    srcs = [":hermetic_lcab"],
     rpaths = ["${ORIGIN}/../lib"],
 )
 

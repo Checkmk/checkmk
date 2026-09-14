@@ -1,4 +1,4 @@
-load("@@//bazel/rules:xcomp/cc.bzl", "cc_binary")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 
 cc_binary(
     name = "lcab",
@@ -22,6 +22,5 @@ cc_binary(
         "warn.h",
     ],
     linkopts = ["-Wl,--strip-all"],
-    platform = "@@//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//visibility:public"],
 )

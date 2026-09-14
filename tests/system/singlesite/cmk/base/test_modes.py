@@ -500,10 +500,10 @@ def test_inventory_verbose(execute: Execute) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def test_check_discovery_unknown_host(execute: Execute) -> None:
+def test_check_discovery_host(execute: Execute) -> None:
     p = execute(["cmk", "--check-discovery", "xyz."])
-    assert p.returncode == 3, on_failure(p)
-    assert p.stdout.startswith("Unknown host: xyz.")
+    assert p.returncode == 2, on_failure(p)
+    assert p.stdout.startswith("Failed to lookup IPv4 address")
     assert p.stderr == ""
 
 
@@ -523,16 +523,7 @@ def test_check_discovery(execute: Execute) -> None:
 #   |                 \__,_|_|___/\___\___/ \_/ \___|_|                    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def test_discover_unknown_host(execute: Execute) -> None:
-    p = execute(["cmk", "-I", "xyz."])
-    assert p.returncode == 3, on_failure(p)
-    assert p.stdout == ""
-    assert p.stderr == "[ERROR] Host name or tag specification 'xyz.' does not match any host.\n"
-
-
-# TODO: add tests for the discovery of known hosts
+# TODO
 
 # .
 #   .--check---------------------------------------------------------------.

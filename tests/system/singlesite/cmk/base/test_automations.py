@@ -338,7 +338,12 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
         site,
         "service-discovery-preview",
         args=["xxx-not-existing-host."],
-        expect_stderr_pattern=r"Unknown host: xxx-not-existing-host\.\n",
+        expect_stderr_pattern=(
+            r"Failed to lookup IPv4 address of xxx-not-existing-host. "
+            r"via DNS: (\[Errno -2\] Name or service not known"
+            r"|\[Errno -3\] Temporary failure in name resolution"
+            r"|\[Errno -5\] No address associated with hostname)\n"
+        ),
         expect_stdout="",
         expect_exit_code=1,
         parse_data=False,

@@ -749,20 +749,6 @@ class BuiltinTagConfig(TagConfig):
                 "id": TagGroupID("address_family"),
                 "title": _("IP address family"),
                 "topic": "Address",
-                "help": _(
-                    "Which IP protocol family Checkmk uses to contact this host. "
-                    "Choosing one of the IP options asserts that the host <i>has</i> an "
-                    "address of that family: Checkmk resolves the host name via DNS "
-                    "unless an explicit IP address is configured. If neither is "
-                    "available, service discovery and monitoring of this host will "
-                    "fail.<br><br><b>No IP:</b><br>The host has no network address at "
-                    "all. Choose this for hosts that are monitored without being "
-                    "contacted directly, for example via piggyback data from another "
-                    "host, a push agent, an individual program call, or a special agent "
-                    "that authenticates against an external API. No name resolution is "
-                    "attempted for such a host, and its host check reports UP by "
-                    "default."
-                ),
                 "tags": [
                     {
                         "id": TagID("ip-v4-only"),

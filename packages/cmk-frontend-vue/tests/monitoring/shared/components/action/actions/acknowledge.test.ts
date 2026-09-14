@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { getLocalTimeZone, now } from '@internationalized/date'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import type { AcknowledgeValues } from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
@@ -19,12 +20,12 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function action(defaults: AcknowledgeDefaults) {
+function action(defaults: AcknowledgeDefaults, acknowledge = async () => 0) {
   return createAcknowledgeAction<string>({
     targetKind: 'host',
     links: NO_LINKS,
     defaults,
-    acknowledge: async () => 0,
+    acknowledge,
     successMessage: () => 'done' as never
   })
 }
@@ -86,4 +87,20 @@ test('the payload is read as it arrives, snake_case and all', () => {
   expect(
     acknowledgeDefaults({ sticky: true, persistent: false, notify: false, expire_seconds: 7200 })
   ).toEqual({ sticky: true, persistent: false, notify: false, expireSeconds: 7200 })
+})
+
+test('a refused acknowledgement comes back as an error naming the reason', async () => {
+  const built = action(
+    { sticky: false, persistent: false, notify: true, expireSeconds: 3600 },
+    async () => {
+      throw new CmkApiError('Forbidden: you may not acknowledge', null, '', 403)
+    }
+  )
+
+  const feedback = await built.perform(['host-1'], built.defaultValues())
+
+  expect(feedback).toEqual({
+    variant: 'error',
+    message: 'Could not acknowledge the problems: Forbidden: you may not acknowledge'
+  })
 })

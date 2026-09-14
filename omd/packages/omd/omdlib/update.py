@@ -199,6 +199,7 @@ HOOK_RELPATHS = [
     "etc/apache/apache/listen-port.conf",
     "etc/apache/conf.d/ai-agent-engine.conf",
     "etc/apache/conf.d/cookie_auth.conf",
+    "etc/apache/conf.d/mcp.conf",
     "etc/apache/conf.d/nagios.conf",
     "etc/apache/conf.d/pnp4nagios.conf",
     "etc/check_mk/conf.d/microcore.mk",

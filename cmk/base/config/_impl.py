@@ -402,12 +402,11 @@ class _ServiceFilter:
         if service.id() in self._excluded_service_ids:
             return False
 
-        if self._mode is FilterMode.INCLUDE_CLUSTERED:
-            return True
-        if self._mode is FilterMode.NONE:
-            return self.is_mine(service)
-
-        return assert_never(self._mode)  # type: ignore[unreachable]
+        match self._mode:
+            case FilterMode.INCLUDE_CLUSTERED:
+                return True
+            case FilterMode.NONE:
+                return self.is_mine(service)
 
     def is_ignored(self, service: ConfiguredService) -> bool:
         """Determine whether the user disabled this service."""

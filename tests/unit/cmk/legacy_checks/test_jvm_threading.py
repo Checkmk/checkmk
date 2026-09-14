@@ -8,12 +8,12 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckResult
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks import jolokia_jvm_threading as jvm_threading
 
 Section = Mapping[str, object]
@@ -61,7 +61,7 @@ def _section_main() -> Section:
 def test_discover_jolokia_jvm_threading() -> None:
     """Test discovery for main check"""
     assert list(jvm_threading.discover_jolokia_jvm_threading(_section_main())) == [
-        ("JIRA", {}),
+        Service(item="JIRA"),
     ]
 
 
@@ -81,23 +81,18 @@ def test_check_jolokia_jvm_threading_basic(  # type: ignore[misc]
         )
     )
 
-    expected = [
-        (0, "Count: 131", [("ThreadCount", 131, None, None)]),
-        (0, "Rate: 0.00", [("ThreadRate", 0.0, None, None)]),
-        (
-            2,
-            "Daemon threads: 115 (warn/crit at 90/100)",
-            [("DaemonThreadCount", 115, 90, 100)],
-        ),
-        (0, "Peak count: 142", [("PeakThreadCount", 142, None, None)]),
-        (
-            0,
-            "Total started: 3506",
-            [("TotalStartedThreadCount", 3506, None, None)],
-        ),
+    assert result == [
+        Result(state=State.OK, summary="Count: 131"),
+        Metric("ThreadCount", 131.0),
+        Result(state=State.OK, summary="Rate: 0.00"),
+        Metric("ThreadRate", 0.0),
+        Result(state=State.CRIT, summary="Daemon threads: 115 (warn/crit at 90/100)"),
+        Metric("DaemonThreadCount", 115.0, levels=(90.0, 100.0)),
+        Result(state=State.OK, summary="Peak count: 142"),
+        Metric("PeakThreadCount", 142.0),
+        Result(state=State.OK, summary="Total started: 3506"),
+        Metric("TotalStartedThreadCount", 3506.0),
     ]
-
-    assert result == expected
 
 
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
@@ -112,10 +107,8 @@ def test_check_jolokia_jvm_threading_no_daemon_levels(  # type: ignore[misc]
     result = list(jvm_threading.check_jolokia_jvm_threading("JIRA", {}, _section_main()))
 
     # Should have daemon thread count without levels
-    daemon_result = [r for r in result if "Daemon threads" in str(r)]
-    assert len(daemon_result) == 1
-    assert daemon_result[0][0] == 0  # No warning/critical status
-    assert "115" in daemon_result[0][1]  # Contains the count
+    daemon_result = [r for r in result if isinstance(r, Result) and "Daemon threads" in r.summary]
+    assert daemon_result == [Result(state=State.OK, summary="Daemon threads: 115")]
 
 
 # Tests for jolokia_jvm_threading_pool check
@@ -124,15 +117,15 @@ def test_check_jolokia_jvm_threading_no_daemon_levels(  # type: ignore[misc]
 def test_discover_jolokia_jvm_threading_pool() -> None:
     """Test discovery for pool check"""
     assert list(jvm_threading.discover_jolokia_jvm_threading_pool(_section_pool())) == [
-        ("a02a-www-susa001 ThreadPool ajp-nio-127.0.0.1-10032", {}),
-        ("a02a-www-susa001 ThreadPool ajp-nio-127.0.0.1-10031", {}),
+        Service(item="a02a-www-susa001 ThreadPool ajp-nio-127.0.0.1-10032"),
+        Service(item="a02a-www-susa001 ThreadPool ajp-nio-127.0.0.1-10031"),
     ]
 
 
 def test_discover_jolokia_jvm_threading_pool_with_main_data() -> None:
     """Test pool discovery with data from main check regression test"""
     assert list(jvm_threading.discover_jolokia_jvm_threading_pool(_section_main())) == [
-        ("JIRA ThreadPool http-nio-8080", {}),
+        Service(item="JIRA ThreadPool http-nio-8080"),
     ]
 
 
@@ -144,7 +137,7 @@ def test_discover_jolokia_jvm_threading_pool_with_main_data() -> None:
             {
                 "currentThreadsBusy": ("percentage", (80, 90)),
             },
-            [(0, "Maximum threads: not set (unlimited)")],
+            [Result(state=State.OK, summary="Maximum threads: not set (unlimited)")],
             id="No maxThreads",
         ),
         pytest.param(
@@ -153,13 +146,11 @@ def test_discover_jolokia_jvm_threading_pool_with_main_data() -> None:
                 "currentThreadsBusy": ("percentage", (80, 90)),
             },
             [
-                (0, "Maximum threads: 30"),
-                (
-                    2,
-                    "Busy: 27 (warn/crit at 24/27)",
-                    [("currentThreadsBusy", 27, 24.0, 27.0, None, 30)],
-                ),
-                (0, "Total: 28", [("currentThreadCount", 28, None, None, None, 30)]),
+                Result(state=State.OK, summary="Maximum threads: 30"),
+                Result(state=State.CRIT, summary="Busy: 27 (warn/crit at 24/27)"),
+                Metric("currentThreadsBusy", 27.0, levels=(24.0, 27.0), boundaries=(None, 30.0)),
+                Result(state=State.OK, summary="Total: 28"),
+                Metric("currentThreadCount", 28.0, boundaries=(None, 30.0)),
             ],
             id="CRIT on currentThreadsBusy - percentage",
         ),
@@ -169,17 +160,11 @@ def test_discover_jolokia_jvm_threading_pool_with_main_data() -> None:
                 "currentThreadCount": ("absolute", (25, 29)),
             },
             [
-                (0, "Maximum threads: 30"),
-                (
-                    0,
-                    "Busy: 27",
-                    [("currentThreadsBusy", 27, None, None, None, 30)],
-                ),
-                (
-                    1,
-                    "Total: 28 (warn/crit at 25/29)",
-                    [("currentThreadCount", 28, 25, 29, None, 30)],
-                ),
+                Result(state=State.OK, summary="Maximum threads: 30"),
+                Result(state=State.OK, summary="Busy: 27"),
+                Metric("currentThreadsBusy", 27.0, boundaries=(None, 30.0)),
+                Result(state=State.WARN, summary="Total: 28 (warn/crit at 25/29)"),
+                Metric("currentThreadCount", 28.0, levels=(25.0, 29.0), boundaries=(None, 30.0)),
             ],
             id="WARN on currentThreadCount - absolute",
         ),
@@ -189,13 +174,11 @@ def test_discover_jolokia_jvm_threading_pool_with_main_data() -> None:
                 "currentThreadsBusy": ("absolute", (8, 135)),
             },
             [
-                (0, "Maximum threads: 150"),
-                (
-                    1,
-                    "Busy: 12 (warn/crit at 8/135)",
-                    [("currentThreadsBusy", 12, 8, 135, None, 150)],
-                ),
-                (0, "Total: 25", [("currentThreadCount", 25, None, None, None, 150)]),
+                Result(state=State.OK, summary="Maximum threads: 150"),
+                Result(state=State.WARN, summary="Busy: 12 (warn/crit at 8/135)"),
+                Metric("currentThreadsBusy", 12.0, levels=(8.0, 135.0), boundaries=(None, 150.0)),
+                Result(state=State.OK, summary="Total: 25"),
+                Metric("currentThreadCount", 25.0, boundaries=(None, 150.0)),
             ],
             id="Main data - WARN on currentThreadsBusy absolute",
         ),
@@ -204,7 +187,7 @@ def test_discover_jolokia_jvm_threading_pool_with_main_data() -> None:
 def test_check(
     item: str,
     params: dict[str, tuple[str, tuple[int, int]]],
-    expected_result: LegacyCheckResult,
+    expected_result: Sequence[object],
 ) -> None:
     """Test pool check with various parameters"""
     section = _section_main() if "JIRA" in item else _section_pool()

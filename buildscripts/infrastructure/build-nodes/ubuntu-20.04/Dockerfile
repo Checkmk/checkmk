@@ -216,9 +216,6 @@ RUN /opt/install-gnu-toolchain.sh link-only
 COPY scripts/install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
-COPY scripts/install-packer.sh /opt/
-RUN /opt/install-packer.sh
-
 COPY scripts/install-aws-cli.sh /opt/
 RUN /opt/install-aws-cli.sh
 

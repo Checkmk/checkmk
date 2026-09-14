@@ -15018,7 +15018,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('wmic_process', [])
 
 static_checks['wmic_process'] = [
-{'id': '3e5670da-2bfb-4baa-a147-9c3386fa18cc', 'value': ('wmic_process', 'example', ('example.exe', 0, 0, 0, 0, 0.0, 0.0)), 'condition': {}, 'options': {'disabled': False}},
+{'id': '3e5670da-2bfb-4baa-a147-9c3386fa18cc', 'value': ('wmic_process', 'example', {'name': 'example.exe', 'mem_levels': ('no_levels', None), 'page_levels': ('no_levels', None), 'cpu_levels': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['wmic_process']
 
 

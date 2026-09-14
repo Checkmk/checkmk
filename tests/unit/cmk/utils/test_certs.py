@@ -209,7 +209,7 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert _rsa_private_keys_equal(loaded.private_key, ca.private_key)
 
 
-def test_sign_csr_with_local_ca() -> None:
+def test_sign_csr_with_local_ca(tmp_path: Path) -> None:
     # To test that 'sign_csr' sets the issuer correctly (regression), make a longer chain:
     # "peters_mom" -> "peter" (RootCA instance) -> "peters_daughter" (via sign_csr)
     #
@@ -251,6 +251,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
             subject_alternative_names=alt_names,
             expiry=relativedelta(days=100),
             key_size=1024,
+            cert_log=tmp_path / "issued.jsonl",
         )
 
     assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41+00:00"

@@ -47,6 +47,7 @@ from cmk.ccc.site import SiteId
 
 from . import MKCryptoException
 from .hash import HashAlgorithm
+from .issued_certificates import IssuedCertificateEntry
 from .keys import (
     EncryptedPrivateKeyPEM,
     InvalidSignatureError,
@@ -181,6 +182,7 @@ class CertificateWithPrivateKey(NamedTuple):
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         is_ca: bool = False,
+        cert_log: Path,
     ) -> CertificateWithPrivateKey:
         """Create a new certificate signed by this certificate's private key."""
 
@@ -205,6 +207,8 @@ class CertificateWithPrivateKey(NamedTuple):
             issuer_name=self.certificate.subject,
         )
 
+        IssuedCertificateEntry.from_certificate(issued_certificate, "issued").append_to(cert_log)
+
         return CertificateWithPrivateKey(issued_certificate, issued_key)
 
     def sign_csr(
@@ -212,6 +216,8 @@ class CertificateWithPrivateKey(NamedTuple):
         csr: CertificateSigningRequest,
         expiry: relativedelta,
         subject_alternative_names: SubjectAlternativeNames | None = None,
+        *,
+        cert_log: Path,
     ) -> Certificate:
         """
         Create a certificate by signing a certificate signing request.
@@ -232,7 +238,7 @@ class CertificateWithPrivateKey(NamedTuple):
 
         effective_sans = subject_alternative_names or csr.subject_alternative_names
 
-        return Certificate.create(
+        signed = Certificate.create(
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
             subject_alternative_names=effective_sans,
@@ -242,6 +248,10 @@ class CertificateWithPrivateKey(NamedTuple):
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
         )
+
+        IssuedCertificateEntry.from_certificate(signed, "issued").append_to(cert_log)
+
+        return signed
 
 
 class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
@@ -496,6 +506,19 @@ class Certificate:
     @property
     def issuer(self) -> X509Name:
         return X509Name(self._cert.issuer)
+
+    @property
+    def authority_key_identifier(self) -> bytes | None:
+        """The issuing CA's key ID, taken from the authority key identifier extension.
+
+        Returns None if the extension is not present or does not contain a key identifier.
+        """
+        try:
+            return self.get_extension_for_class(
+                pyca_x509.AuthorityKeyIdentifier
+            ).value.key_identifier
+        except pyca_x509.ExtensionNotFound:
+            return None
 
     @property
     def common_name(self) -> str | None:

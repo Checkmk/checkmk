@@ -32,7 +32,14 @@ from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
+from cmk.utils.certs import (
+    agent_root_ca_path,
+    cert_dir,
+    CertManagementEvent,
+    issued_certificates_path,
+    RootCA,
+    SiteCA,
+)
 from cmk.utils.paths import omd_root
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils import permission_verification as permissions
@@ -77,6 +84,7 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
             months=config.active_config.agent_controller_certificates["lifetime_in_months"]
         ),
         subject_alternative_names=SubjectAlternativeNames([SAN.dns_name(csr_.subject.common_name)]),
+        cert_log=issued_certificates_path(omd_root, "agents"),
     )
     log_security_event(
         CertManagementEvent(

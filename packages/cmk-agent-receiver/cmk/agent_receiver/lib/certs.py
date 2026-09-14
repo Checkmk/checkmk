@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from functools import cache
+from pathlib import Path
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -28,10 +29,14 @@ def sign_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
     keypair: CertificateWithPrivateKey,
+    cert_log: Path,
 ) -> Certificate:
     expiry = relativedelta(months=lifetime_in_months)
     return keypair.sign_csr(
-        csr, expiry, SubjectAlternativeNames([SAN.dns_name(extract_cn_from_csr(csr))])
+        csr,
+        expiry,
+        SubjectAlternativeNames([SAN.dns_name(extract_cn_from_csr(csr))]),
+        cert_log=cert_log,
     )
 
 

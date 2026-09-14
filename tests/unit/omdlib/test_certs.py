@@ -21,7 +21,7 @@ SITE_ID = SiteId("test_site")
 
 @pytest.fixture(name="ca")
 def fixture_ca(tmp_path: Path) -> SiteCA:
-    ca_path = tmp_path / "ca"
+    ca_path = tmp_path / "site" / "etc" / "ssl"
     return SiteCA.load_or_create(
         site_id=SITE_ID,
         certificate_directory=ca_path,
@@ -43,7 +43,9 @@ def test_create_site_certificate(ca: SiteCA) -> None:
     assert not ca.site_certificate_exists(ca.cert_dir, SITE_ID)
 
     ca.create_site_certificate(
-        SITE_ID, additional_sans=["checkmk.testing.local", "127.0.0.1"], key_size=1024
+        SITE_ID,
+        additional_sans=["checkmk.testing.local", "127.0.0.1"],
+        key_size=1024,
     )
     assert ca.site_certificate_exists(ca.cert_dir, SITE_ID)
     assert _file_permissions_is_660(ca.site_certificate_path(ca.cert_dir, SITE_ID))

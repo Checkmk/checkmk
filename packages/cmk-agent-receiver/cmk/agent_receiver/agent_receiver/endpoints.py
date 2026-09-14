@@ -106,6 +106,7 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
             internal_credentials(),
         ).lifetime_in_months,
         agent_root_ca(),
+        get_config().agents_issued_certificates_path,
     )
 
 

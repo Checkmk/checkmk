@@ -31,7 +31,7 @@ def test_sign_csr() -> None:
     root_ca = agent_root_ca()
     key, csr = generate_csr_pair("peter")
     before = datetime.datetime.now(tz=UTC).replace(microsecond=0)
-    cert = sign_csr(csr, 12, root_ca)
+    cert = sign_csr(csr, 12, root_ca, cert_log=get_config().agents_issued_certificates_path)
 
     assert cert.subject.common_name == "peter"
     assert before <= cert.not_valid_before <= datetime.datetime.now(tz=UTC)

@@ -46,7 +46,11 @@ def initialize_site_ca(
     if not ca.site_certificate_exists(ca.cert_dir, site_id):
         # Additional subject alternative names can be configured in the UI later, but not on first
         # init for now.
-        ca.create_site_certificate(site_id, additional_sans=[], key_size=site_key_size)
+        ca.create_site_certificate(
+            site_id,
+            additional_sans=[],
+            key_size=site_key_size,
+        )
 
 
 def initialize_agent_ca(site: SiteContext) -> None:

@@ -25,6 +25,10 @@ from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
 )
+from cmk.crypto.issued_certificates import (
+    issued_certificates_file,
+    IssuedCertificatesComponent,
+)
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 from cmk.utils.security_event import log_security_event, SecurityEvent
@@ -170,6 +174,10 @@ def agent_root_ca_path(site_root_dir: Path) -> Path:
 
 def agent_ca_exists(site_root_dir: Path) -> bool:
     return agent_root_ca_path(site_root_dir).exists()
+
+
+def issued_certificates_path(site_root_dir: Path, component: IssuedCertificatesComponent) -> Path:
+    return issued_certificates_file(site_root_dir / "var" / "log", component)
 
 
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
@@ -331,6 +339,7 @@ class SiteCA:
             subject_alternative_names=sans,
             expiry=expiry,
             key_size=key_size,
+            cert_log=issued_certificates_path(self.cert_dir.parent.parent, "sites"),
         )
 
         self._save_combined_pem(
@@ -440,6 +449,8 @@ class SiteBrokerCertificate:
         issuer: CertificateWithPrivateKey,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
+        *,
+        cert_log: Path,
     ) -> CertificateWithPrivateKey:
         """Have the site's certificate issued by the given CA.
 
@@ -455,6 +466,7 @@ class SiteBrokerCertificate:
             expiry=expiry,
             key_size=key_size,
             is_ca=is_ca,
+            cert_log=cert_log,
         )
 
     def persist(self, cert_bundle: CertificateWithPrivateKey) -> None:

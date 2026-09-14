@@ -53,7 +53,13 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 from cmk.livestatus_client import SiteConfigurations
-from cmk.utils.certs import cert_dir, CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore, SiteCA
+from cmk.utils.certs import (
+    cert_dir,
+    CertManagementEvent,
+    CN_TEMPLATE,
+    RemoteSiteCertsStore,
+    SiteCA,
+)
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.security_event import log_security_event

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import ssl
 import uuid
 from http import HTTPStatus
@@ -99,6 +100,7 @@ def paired_keypair_fixture(
                 csr,
                 relativedelta(months=12),
                 SubjectAlternativeNames([SAN.dns_name(uuid_)]),
+                cert_log=Path(os.devnull),
             )
             .dump_pem()
             .str

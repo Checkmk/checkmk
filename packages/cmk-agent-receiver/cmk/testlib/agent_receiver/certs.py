@@ -15,6 +15,7 @@ from cmk.crypto.certificate import (
     CertificateSigningRequest,
     CertificateWithPrivateKey,
 )
+from cmk.crypto.issued_certificates import issued_certificates_file
 from cmk.crypto.keys import PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 
@@ -77,6 +78,7 @@ def set_up_site_certs(config: Config) -> None:
         subject_alternative_names=SubjectAlternativeNames(
             [SAN.ip_address(IPv4Address("127.0.0.1"))]
         ),
+        cert_log=issued_certificates_file(config.omd_root / "var/log", "sites"),
     )
     config.site_cert_path.parent.mkdir(parents=True, exist_ok=True)
     config.site_cert_path.write_bytes(

@@ -10,6 +10,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from cmk.crypto.issued_certificates import issued_certificates_file
+
 CONFIG_FILE = "agent_receiver_config.json"
 
 
@@ -75,6 +77,14 @@ class Config(BaseModel):
     @property
     def relay_ca_path(self) -> Path:
         return self.omd_root / "etc/ssl/relays/ca.pem"
+
+    @property
+    def agents_issued_certificates_path(self) -> Path:
+        return issued_certificates_file(self.omd_root / "var/log", "agents")
+
+    @property
+    def relays_issued_certificates_path(self) -> Path:
+        return issued_certificates_file(self.omd_root / "var/log", "relays")
 
     @property
     def agent_cert_store_path(self) -> Path:

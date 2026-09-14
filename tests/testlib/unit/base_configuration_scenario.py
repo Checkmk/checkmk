@@ -9,7 +9,7 @@ ensuring a controlled environment for testing.
 """
 
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import asdict, replace
 from typing import Any, override
 
@@ -23,7 +23,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
 from cmk.checkengine.discovery import AutochecksMemoizer
-from cmk.checkengine.plugins import AutocheckEntry
+from cmk.checkengine.plugins import AutocheckEntry, ServiceID
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.utils import get_standard_linux_agent_output
@@ -53,10 +53,17 @@ class Scenario:
                 **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
             ),
             self.get_builtin_host_labels,
+            excluded_service_ids=self._excluded_service_ids,
         )
 
-    def __init__(self, site_id: str = "unit") -> None:
+    def __init__(
+        self,
+        site_id: str = "unit",
+        excluded_service_ids: Container[ServiceID] = frozenset(),
+    ) -> None:
         super().__init__()
+
+        self._excluded_service_ids = excluded_service_ids
 
         self.get_builtin_host_labels = make_app(
             edition(cmk.utils.paths.omd_root)

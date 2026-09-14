@@ -24,6 +24,7 @@ from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
     load_selected_plugins,
 )
+from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.discover_plugins import PluginLocation
 from cmk.fetchers import StoredSecrets
 from cmk.server_side_calls_backend import load_secrets_file
@@ -37,6 +38,7 @@ CONFIG = HostCheckConfig(
     verify_site_python=False,
     locations=[PluginLocation("dummy.callsite.of.plugin.location", "dummy_name")],
     checks_to_load=[],
+    disabled_service_ids=[ServiceID(CheckPluginName("dummy_plugin"), None)],
     ipaddresses={HostName("somehost"): HostAddress("::")},
     ipv6addresses={},
     hostname=HostName("somehost"),
@@ -102,6 +104,7 @@ def main() -> int:
             active_config_path,
             discovery_rulesets=extract_known_discovery_rulesets(plugins),
             get_builtin_host_labels=app.get_builtin_host_labels,
+            excluded_service_ids=frozenset(CONFIG.disabled_service_ids),
         )
 
         config.ipaddresses = CONFIG.ipaddresses

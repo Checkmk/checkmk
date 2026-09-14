@@ -1455,6 +1455,12 @@ class Site:
 
     @tracer.instrument("Site.stop")
     def stop(self) -> None:
+        """Stop the site and wait until all of its services are down.
+
+        Raises:
+            TimeoutError: If the site is still (partially) running once the wait is over. The
+                services and processes keeping it alive are attached to the error.
+        """
         if self.is_stopped():
             return  # Nothing to do
         logger.info("Stopping site")
@@ -1480,13 +1486,8 @@ class Site:
             self.wait_for_status_update(1, timeout=120)
         except TimeoutError as excp:
             # Last resort: report what the site claims about itself before giving up.
-            status = self.omd("status")
-            logger.exception(
-                "omd status %(site_id)s stdout: %(stdout)s\nomd status %(site_id)s stderr:"
-                " %(stderr)s",
-                {"site_id": self.id, "stdout": status.stdout, "stderr": status.stderr},
-            )
-            raise RuntimeError("Could not stop site %s" % self.id) from excp
+            excp.add_note(self._still_running_details())
+            raise
 
         # let's ensure, that no more processes for the site are running (CMK-21668)
         # all site processes will be for some file below /omd/sites/<site_id>
@@ -1513,6 +1514,29 @@ class Site:
                 "Site '%s' has still %d processes running after stopping!"
                 % (self.id, len(site_procs))
             )
+
+    def _still_running_details(self) -> str:
+        """Describe what keeps the site from stopping: its running services and the site
+        user's processes."""
+        try:
+            services = ", ".join(
+                sorted(
+                    service
+                    for service, status in self.get_omd_service_names_and_statuses().items()
+                    if status == 0
+                )
+            )
+        except (RuntimeError, ValueError) as excp:
+            services = f"<unknown: {excp}>"
+        try:
+            processes = check_output(["ps", "-fwwu", str(self.id)], timeout=30)
+        except (subprocess.SubprocessError, OSError) as excp:
+            processes = f"<unavailable: {excp}>"
+        return (
+            f"Site {self.id} did not stop.\n"
+            f"Still running: {services}\n"
+            f"Processes of user {self.id}:\n{processes}"
+        )
 
     def exists(self) -> bool:
         return os.path.exists("/omd/sites/%s" % self.id)

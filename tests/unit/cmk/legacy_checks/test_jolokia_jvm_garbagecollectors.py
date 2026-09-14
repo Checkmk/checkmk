@@ -3,18 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Mapping
-
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks import jolokia_jvm_garbagecollectors as jvm_gc
 
-Section = Mapping  # sorry. no better typing in plugin
 
-
-def _section() -> Section:
+def _section() -> jvm_gc.Section:
     return jvm_gc.parse_jolokia_jvm_garbagecollectors(
         [
             [
@@ -32,7 +25,7 @@ def _section() -> Section:
 
 def test_discovery() -> None:
     assert list(jvm_gc.discover_jolokia_jvm_garbagecollectors(_section())) == [
-        ("MyJIRA GC MyName", {}),
+        Service(item="MyJIRA GC MyName"),
     ]
 
 
@@ -52,14 +45,14 @@ def test_check() -> None:
             60,
         )
     ) == [
-        (
-            1,
-            "Garbage collections: 420.00/s (warn/crit at 400.00/s/500.00/s)",
-            [("jvm_garbage_collection_count", 420.0, 400.0, 500.0)],
+        Result(
+            state=State.WARN,
+            summary="Garbage collections: 420.00/s (warn/crit at 400.00/s/500.00/s)",
         ),
-        (
-            1,
-            "Time spent collecting garbage: 23.0% (warn/crit at 22.0%/24.0%)",
-            [("jvm_garbage_collection_time", 23.0, 22.0, 24.0)],
+        Metric("jvm_garbage_collection_count", 420.0, levels=(400.0, 500.0)),
+        Result(
+            state=State.WARN,
+            summary="Time spent collecting garbage: 23.0% (warn/crit at 22.0%/24.0%)",
         ),
+        Metric("jvm_garbage_collection_time", 23.0, levels=(22.0, 24.0)),
     ]

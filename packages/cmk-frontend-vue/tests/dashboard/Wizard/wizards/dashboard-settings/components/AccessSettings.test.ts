@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, within } from '@testing-library/vue'
-import { CmkFetchError } from 'cmk-ui-library/lib/cmkFetch'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -145,19 +145,19 @@ describe('AccessSettings', () => {
 
   describe('API error handling', () => {
     it('disables contact groups option on 403 from getContactGroups', async () => {
-      mockGetContactGroups.mockRejectedValueOnce(new CmkFetchError('Forbidden', null, '', 403))
+      mockGetContactGroups.mockRejectedValueOnce(new CmkApiError('Forbidden', null, '', 403))
       await renderAccessSettings()
       expect(getToggleButton('Members of contact groups')).toBeDisabled()
     })
 
     it('disables contact groups option on 401 from getContactGroups', async () => {
-      mockGetContactGroups.mockRejectedValueOnce(new CmkFetchError('Unauthorized', null, '', 401))
+      mockGetContactGroups.mockRejectedValueOnce(new CmkApiError('Unauthorized', null, '', 401))
       await renderAccessSettings()
       expect(getToggleButton('Members of contact groups')).toBeDisabled()
     })
 
     it('clears available elements on 403 from getSites during loadAvailableElements', async () => {
-      mockGetSites.mockRejectedValueOnce(new CmkFetchError('Forbidden', null, '', 403))
+      mockGetSites.mockRejectedValueOnce(new CmkApiError('Forbidden', null, '', 403))
       await renderAccessSettings({ type: 'with_sites', sites: [] })
       const dualList = screen.getByRole('group', { name: 'Visual information' })
       expect(within(dualList).queryByText('Site 1')).not.toBeInTheDocument()

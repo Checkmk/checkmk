@@ -18,8 +18,7 @@ import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
-from cmk.checkengine.specs.checkresults import ServiceCheckResult, ServiceState
-from cmk.utils.metrics import MetricTuple
+from cmk.checkengine.specs.checkresults import MetricTuple, ServiceCheckResult, ServiceState
 from cmk.utils.servicename import ServiceName
 
 logger = logging.getLogger(__name__)

@@ -28,6 +28,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
+from cmk.checkengine.specs.checkresults import MetricTuple
 from cmk.gui.logged_in import user
 from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -49,7 +50,6 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import ServiceName
 
 _TEST_PENDING_CHANGES: PendingChanges = PendingChanges(

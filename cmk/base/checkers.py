@@ -97,6 +97,7 @@ from cmk.checkengine.source_abc import (
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.specs.checkresults import (
     ActiveCheckResult,
+    MetricTuple,
     ServiceCheckResult,
     ServiceState,
     state_markers,
@@ -115,7 +116,6 @@ from cmk.utils.ip_lookup import (
     IPStackConfig,
     is_fallback_ip,
 )
-from cmk.utils.metrics import MetricTuple
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.servicename import ServiceName
 

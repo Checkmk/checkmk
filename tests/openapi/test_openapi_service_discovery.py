@@ -22,6 +22,7 @@ from cmk.automations.results import (
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
+from cmk.checkengine.specs.checkresults import MetricTuple
 from cmk.gui.openapi.api_endpoints.service_discovery._utils import SERVICE_DISCOVERY_PHASES
 from cmk.gui.openapi.api_endpoints.service_discovery.models.request_models import (
     UpdateDiscoveryPhaseModel,
@@ -29,7 +30,6 @@ from cmk.gui.openapi.api_endpoints.service_discovery.models.request_models impor
 from cmk.gui.watolib.services import ServiceDiscoveryBackgroundJob
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.automation_config import LocalAutomationConfig
-from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import ServiceName
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 from tests.testlib.rest_api_client import ClientRegistry

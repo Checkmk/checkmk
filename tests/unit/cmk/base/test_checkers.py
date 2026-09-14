@@ -40,6 +40,7 @@ from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, S
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, FinalCheckResult
 from cmk.checkengine.specs.checkresults import (
+    MetricTuple,
     ServiceCheckResult,
     SubmittableServiceCheckResult,
 )
@@ -48,7 +49,6 @@ from cmk.checkengine.specs.parameters import TimespecificParameters, Timespecifi
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.base_configuration_scenario import Scenario
 

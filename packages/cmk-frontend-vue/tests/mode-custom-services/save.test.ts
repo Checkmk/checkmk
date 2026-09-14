@@ -10,26 +10,10 @@ import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consoli
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest'
 
 import { createCustomService } from '@/mode-custom-services/save'
 import { emptyService } from '@/mode-custom-services/types'
-
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const CREATE_URL = `${API_BASE}/domain-types/custom_service/collections/all`

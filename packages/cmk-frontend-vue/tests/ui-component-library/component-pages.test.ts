@@ -70,22 +70,6 @@ vi.mock('msw/browser', () => ({
   setupWorker: () => ({ start: () => Promise.resolve(), stop: () => {} })
 }))
 
-// The REST API client singleton captures globalThis.fetch at import time, before any
-// msw/node server patches it. Re-create it with a lazy fetch so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
-
 function componentPreview() {
   return screen.getByRole('region', { name: 'component preview' })
 }

@@ -71,7 +71,10 @@ export function createClient({ baseUrl }: { baseUrl: string }) {
     credentials: 'include',
     headers: {
       Accept: 'application/json'
-    }
+    },
+    // Look `fetch` up per request instead of capturing it when this module is
+    // evaluated, so a later replacement of the global is picked up.
+    fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
   })
 }
 

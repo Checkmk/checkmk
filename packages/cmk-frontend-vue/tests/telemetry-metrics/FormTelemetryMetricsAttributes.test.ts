@@ -13,22 +13,6 @@ import { defineComponent, ref } from 'vue'
 import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMetricsAttributes.vue'
 import { KEY_IDENTS, VALUE_IDENTS } from '@/telemetry-metrics/attributeFilterAdapter'
 
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
-
 // Keys the backend offers under each attribute-kind key autocompleter, keyed by its ident.
 const KEY_SUGGESTIONS: Record<string, string[]> = {
   [KEY_IDENTS.resource]: ['service.name'],

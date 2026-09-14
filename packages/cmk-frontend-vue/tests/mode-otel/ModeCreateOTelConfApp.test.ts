@@ -10,22 +10,6 @@ import { setupServer } from 'msw/node'
 import ModeCreateOTelConfApp from '@/mode-otel/ModeCreateOTelConfApp.vue'
 import { _resetCaches } from '@/mode-otel/otel-configuration-steps/ConfigureGeneralProperties.vue'
 
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
-
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
 const server = setupServer()

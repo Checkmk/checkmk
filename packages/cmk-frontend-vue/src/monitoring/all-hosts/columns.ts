@@ -73,7 +73,12 @@ const OPTIONAL_FIELD_COLUMNS = [
 const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer'] as const
 
 /** The boolean host fields the Mode column renders as icons and offers as filters. */
-type HostModeField = 'in_downtime' | 'acknowledged' | 'notifications_enabled' | 'has_comments'
+type HostModeField =
+  | 'in_downtime'
+  | 'acknowledged'
+  | 'notifications_enabled'
+  | 'has_comments'
+  | 'active_checks_disabled'
 
 /** Picks a column filter offers before it refuses more, per the views-table design. */
 const MAX_FILTER_CHOICES = 8
@@ -246,7 +251,8 @@ export function buildHostColumns({
       { field: 'in_downtime', title: _t('In downtime') },
       { field: 'acknowledged', title: _t('Acknowledged') },
       { field: 'notifications_enabled', title: _t('Notifications enabled') },
-      { field: 'has_comments', title: _t('Has comments') }
+      { field: 'has_comments', title: _t('Has comments') },
+      { field: 'active_checks_disabled', title: _t('Active checks disabled') }
     ]
   }
 

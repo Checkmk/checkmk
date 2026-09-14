@@ -169,6 +169,8 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "scheduled_downtime_depth": 0,
         "notifications_enabled": 1,
         "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
         "is_flapping": 0,
         "staleness": staleness,
     }
@@ -184,3 +186,44 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
             )
 
     assert [host.stale for host in hosts] == [expected_stale]
+
+
+@pytest.mark.parametrize(
+    "active_checks_enabled, modified_attributes_list, expected",
+    [
+        pytest.param(0, ["active_checks_enabled"], True, id="a user switched them off"),
+        pytest.param(0, [], False, id="never on, so nobody switched them off"),
+        pytest.param(1, ["active_checks_enabled"], False, id="a user switched them back on"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
+    active_checks_enabled: int, modified_attributes_list: list[str], expected: bool
+) -> None:
+    row = {
+        "name": "some-host",
+        "state": 0,
+        "has_been_checked": 1,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": modified_attributes_list,
+        "active_checks_enabled": active_checks_enabled,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+    }
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [host.active_checks_disabled for host in hosts] == [expected]

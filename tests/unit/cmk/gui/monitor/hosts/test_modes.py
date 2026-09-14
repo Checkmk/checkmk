@@ -13,6 +13,7 @@ _NO_MODES = {
     "acknowledged": False,
     "notifications_enabled": True,
     "num_comments": 0,
+    "active_checks_disabled": False,
 }
 
 
@@ -52,9 +53,19 @@ def test_build_host_modes_comments() -> None:
     assert modes[0].title == "This host has 2 comments"
 
 
+def test_build_host_modes_active_checks_disabled() -> None:
+    host = HostFactory.build(**_NO_MODES | {"active_checks_disabled": True})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["disabled"]
+
+
 def test_build_host_modes_all_modes() -> None:
     host = HostFactory.build(
-        in_downtime=True, acknowledged=True, notifications_enabled=False, num_comments=1
+        in_downtime=True,
+        acknowledged=True,
+        notifications_enabled=False,
+        num_comments=1,
+        active_checks_disabled=True,
     )
 
     assert [mode.icon_name for mode in build_host_modes(host)] == [
@@ -62,4 +73,5 @@ def test_build_host_modes_all_modes() -> None:
         "ack",
         "notif-disabled",
         "comment",
+        "disabled",
     ]

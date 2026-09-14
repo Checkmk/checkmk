@@ -61,4 +61,12 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 % {"count": host.num_comments},
             )
         )
+    if host.active_checks_disabled:
+        modes.append(
+            ModeInfo(
+                icon_name="disabled",
+                link=host_view_link("host", host),
+                title=_("Active checks have been manually disabled for this host"),
+            )
+        )
     return modes

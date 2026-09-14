@@ -68,6 +68,14 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 title=_comment_title(service.num_comments),
             )
         )
+    if service.active_checks_disabled:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="disabled",
+                link=service_view_link("service", service),
+                title=_("Active checks have been manually disabled for this service"),
+            )
+        )
     return modes
 
 
@@ -120,6 +128,16 @@ def build_service_modes_by_id(
                     service_name=service.name,
                 ),
                 title=_comment_title(service.num_comments),
+            )
+        )
+    if service.active_checks_disabled:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="disabled",
+                link=service_view_link_by_id(
+                    "service", site_id=site_id, hostname=hostname, service_name=service.name
+                ),
+                title=_("Active checks have been manually disabled for this service"),
             )
         )
     return modes

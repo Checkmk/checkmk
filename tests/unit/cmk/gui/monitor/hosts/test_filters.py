@@ -186,6 +186,33 @@ def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
 @pytest.mark.parametrize(
     "value, expected",
     [
+        pytest.param(
+            True,
+            "Filter: modified_attributes_list >= active_checks_enabled\n"
+            "Filter: active_checks_enabled = 0\n"
+            "And: 2",
+            id="manually disabled",
+        ),
+        pytest.param(
+            False,
+            "Filter: modified_attributes_list >= active_checks_enabled\n"
+            "Filter: active_checks_enabled = 0\n"
+            "And: 2\n"
+            "Negate:",
+            id="not manually disabled",
+        ),
+    ],
+)
+def test_query_builder_active_checks_disabled_condition(value: bool, expected: str) -> None:
+    condition = BooleanCondition(
+        type="condition", field="active_checks_disabled", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
         (True, "Filter: comments !="),
         (False, "Filter: comments ="),
     ],

@@ -10,7 +10,8 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Callable, Mapping, Sequence, Set
+from collections.abc import Callable, Collection, Mapping, Sequence, Set
+from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -86,6 +87,8 @@ class LiveStatusHostRepository:
                 Hosts.scheduled_downtime_depth,
                 Hosts.notifications_enabled,
                 Hosts.comments,
+                Hosts.modified_attributes_list,
+                Hosts.active_checks_enabled,
                 Hosts.is_flapping,
                 Hosts.staleness,
                 *(
@@ -117,6 +120,7 @@ class LiveStatusHostRepository:
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
                         num_comments=len(row["comments"]),
+                        active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         last_check=_timestamp(row.get("last_check")),
@@ -160,6 +164,8 @@ class LiveStatusHostRepository:
                 Hosts.scheduled_downtime_depth,
                 Hosts.notifications_enabled,
                 Hosts.comments,
+                Hosts.modified_attributes_list,
+                Hosts.active_checks_enabled,
                 Hosts.is_flapping,
                 Hosts.staleness,
                 Hosts.last_check,
@@ -194,6 +200,7 @@ class LiveStatusHostRepository:
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
             num_comments=len(row["comments"]),
+            active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             last_check=int(row["last_check"]),
@@ -385,6 +392,16 @@ def _columns_to_read(
     return set(fields) | {
         field for sorter in sorters if (field := _SORT_COLUMN_FIELDS.get(sorter.column)) is not None
     }
+
+
+def _manually_disabled(row: Mapping[str, object], attribute: str) -> bool:
+    """Whether a check setting was turned off by a user rather than left off by configuration.
+
+    Livestatus reports the setting alone, which is also 0 for everything a plugin never
+    enables; only a mention in ``modified_attributes_list`` says a user switched it off.
+    """
+    modified = cast(Collection[str], row["modified_attributes_list"])
+    return attribute in modified and not row[attribute]
 
 
 def _timestamp(value: float | None) -> UnixTimestamp | None:

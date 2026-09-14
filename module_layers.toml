@@ -1565,6 +1565,9 @@ allows = [
   "cmk.checkengine.snmplib",
 ]
 
+[components."cmk.testlib.agent_engine"]
+allows = ["cmk.agent_engine"]
+
 [components."cmk.testlib.agent_receiver"]
 allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]
 

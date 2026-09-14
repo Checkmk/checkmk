@@ -3,11 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { CmkFetchResponse } from 'cmk-ui-library/lib/cmkFetch.ts'
 import { type Ref, readonly, ref } from 'vue'
 
 type LoaderOptions<T> = {
-  fetcher: () => Promise<CmkFetchResponse>
+  fetcher: () => Promise<T>
   initial?: T | null
 }
 
@@ -43,8 +42,7 @@ export function useAPILoader<T>({ fetcher, initial = null }: LoaderOptions<T>) {
     _error.value = null
 
     try {
-      const resp = await fetcher()
-      _state.value = await resp.json()
+      _state.value = await fetcher()
       _lastLoadedAt.value = Date.now()
     } catch (e: unknown) {
       _error.value = getErrorMessage(e)

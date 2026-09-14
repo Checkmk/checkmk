@@ -3,20 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { computed } from 'vue'
 
 import type { ViewCollectionModel, ViewModel } from '@/dashboard/types/api'
 
 import { useAPILoader } from './useAPILoader'
 
-const API = 'api/internal/domain-types/view/collections/all'
-
 export type UseViewsCollection = ReturnType<typeof useViewsCollection>
 
 export function useViewsCollection() {
   const loader = useAPILoader<ViewCollectionModel>({
-    fetcher: () => fetchRestAPIDeprecated(API, 'GET')
+    fetcher: async () => unwrap(await client.GET('/domain-types/view/collections/all'))
   })
 
   const list = computed<ViewModel[]>(() => {

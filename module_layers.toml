@@ -663,7 +663,6 @@ allows = [
   "cmk.utils.everythingtype",
   "cmk.ruleset_matcher",
   "cmk.utils.log",
-  "cmk.utils.metrics",
   "cmk.utils.paths",
   "cmk.utils.servicename",
   "cmk.utils.timeperiod",
@@ -1003,7 +1002,6 @@ allows = [
   "cmk.utils.log",
   "cmk.utils.macros",
   "cmk.utils.mail",
-  "cmk.utils.metrics",
   "cmk.utils.misc",
   "cmk.utils.nonfree.pro",
   "cmk.utils.password_store",
@@ -1053,7 +1051,6 @@ allows = [
   "cmk.utils.global_ident_type",
   "cmk.ruleset_matcher",
   "cmk.utils.macros",
-  "cmk.utils.metrics",
   "cmk.utils.nonfree.pro",
   "cmk.utils.password_store",
   "cmk.utils.paths",
@@ -1185,7 +1182,6 @@ allows = [
   "cmk.utils.macros",
   "cmk.utils.mail",
   "cmk.utils.man_pages",
-  "cmk.utils.metrics",
   "cmk.utils.misc",
   "cmk.utils.ms_teams_constants",
   "cmk.events",
@@ -1751,9 +1747,6 @@ allows = ["cmk.ccc.store", "cmk.ccc.version", "cmk.utils.paths"]
 
 [components."cmk.utils.man_pages"]
 allows = ["cmk.ccc.debug", "cmk.ccc.exceptions", "cmk.ccc.i18n", "cmk.ccc.tty"]
-
-[components."cmk.utils.metrics"]
-allows = []
 
 [components."cmk.utils.misc"]
 allows = []

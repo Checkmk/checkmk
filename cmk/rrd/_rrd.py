@@ -32,7 +32,6 @@ import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
 from ._config import RRDConfig, RRDObjectConfig
@@ -112,7 +111,7 @@ def _get_rrd_conf(
     return rrd_format, rra_config, _Seconds(step), _RRDHeartbeat(RRD_HEARTBEAT)
 
 
-def _read_existing_metrics(info_file_path: Path) -> list[MetricName]:
+def _read_existing_metrics(info_file_path: Path) -> list[str]:
     metrics = _parse_cmc_rrd_info(info_file_path)["metrics"]
     if not isinstance(metrics, list):
         raise TypeError
@@ -574,7 +573,7 @@ class RRDConverter:
         old_rrd_path: Path,
         *,
         new_rrd_path: Path,
-        old_ds_name: MetricName,
+        old_ds_name: str,
         new_rrdconf: _RRDFileConfig,
     ) -> bool | None:
         if not os.path.exists(old_rrd_path):
@@ -618,9 +617,7 @@ class RRDConverter:
             raise Exception(f"Error on running rrdtool create {' '.join(args)}: {e}")
         return True
 
-    def _get_old_rrd_config(
-        self, rrd_file_path: Path, old_ds_name: MetricName
-    ) -> _RRDFileConfig | None:
+    def _get_old_rrd_config(self, rrd_file_path: Path, old_ds_name: str) -> _RRDFileConfig | None:
         old_config_raw = self._rrd_interface.info(str(rrd_file_path))
         rra_defs: dict = {}
         heartbeat = None

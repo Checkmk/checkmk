@@ -25,7 +25,6 @@ from cmk.graphing_engine import (
     TimeSeries,
 )
 from cmk.gui import sites
-from cmk.utils.metrics import MetricName as CoreMetricName
 from cmk.utils.prediction import estimate_levels, PredictionData
 from cmk.utils.servicename import ServiceName as CoreServiceName
 
@@ -149,7 +148,7 @@ class _LivestatusPredictionSource:
             try:
                 if key.metric_name not in available:
                     available[key.metric_name] = list(
-                        querier.query_available_predictions(CoreMetricName(str(key.metric_name)))
+                        querier.query_available_predictions(key.metric_name)
                     )
                 by_key[key] = {
                     info.direction: _LoadedPrediction(

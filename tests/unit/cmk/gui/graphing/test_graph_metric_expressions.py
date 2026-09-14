@@ -5,12 +5,11 @@
 
 
 from cmk.gui.graphing import GaugeLast, QueryDataKey
-from cmk.utils.metrics import MetricName
 
 
 def _query_data_key(aggregator: dict[str, object] | None) -> QueryDataKey:
     return QueryDataKey(
-        metric_name=MetricName("m"),
+        metric_name="m",
         consolidation_function=GaugeLast(lookback_seconds=60.0),
         attribute_filter={},
         aggregator=aggregator,

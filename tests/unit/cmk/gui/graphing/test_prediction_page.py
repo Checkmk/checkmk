@@ -14,7 +14,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.graphing._prediction_page import _predictions_of, _selected_title
 from cmk.gui.graphing._prediction_source import Direction
 from cmk.gui.http import request as request_
-from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import PredictionData
 
 _VALID_FROM = 1700000000
@@ -54,7 +53,7 @@ class _FakePredictions:
 def test_a_metric_predicted_in_both_directions_becomes_one_graph() -> None:
     querier = _FakePredictions([_info("util", "upper"), _info("util", "lower")])
 
-    predictions = _predictions_of(querier, [MetricName("util")])
+    predictions = _predictions_of(querier, ["util"])
 
     assert len(predictions) == 1
 
@@ -67,7 +66,7 @@ def test_two_hourly_predictions_of_one_day_stay_separate_graphs() -> None:
         ]
     )
 
-    predictions = _predictions_of(querier, [MetricName("util")])
+    predictions = _predictions_of(querier, ["util"])
 
     assert len(predictions) == 2
 
@@ -75,7 +74,7 @@ def test_two_hourly_predictions_of_one_day_stay_separate_graphs() -> None:
 def test_a_graph_knows_which_directions_it_has_levels_for() -> None:
     querier = _FakePredictions([_info("util", "upper"), _info("util", "lower")])
 
-    [prediction] = _predictions_of(querier, [MetricName("util")])
+    [prediction] = _predictions_of(querier, ["util"])
 
     assert list(prediction.directions) == ["lower", "upper"]
 
@@ -83,7 +82,7 @@ def test_a_graph_knows_which_directions_it_has_levels_for() -> None:
 def test_a_metric_predicted_in_one_direction_only_says_so() -> None:
     querier = _FakePredictions([_info("util", "upper")])
 
-    [prediction] = _predictions_of(querier, [MetricName("util")])
+    [prediction] = _predictions_of(querier, ["util"])
 
     assert list(prediction.directions) == ["upper"]
 
@@ -91,9 +90,7 @@ def test_a_metric_predicted_in_one_direction_only_says_so() -> None:
 def test_every_predicted_metric_of_the_service_gets_its_own_graph() -> None:
     querier = _FakePredictions([_info("util", "upper"), _info("load", "upper")])
 
-    predictions = _predictions_of(
-        querier, [MetricName(name) for name in querier.query_predicted_metrics()]
-    )
+    predictions = _predictions_of(querier, list(querier.query_predicted_metrics()))
 
     assert [str(prediction.metric_name) for prediction in predictions] == ["load", "util"]
 
@@ -101,7 +98,7 @@ def test_every_predicted_metric_of_the_service_gets_its_own_graph() -> None:
 def test_a_graph_is_drawn_over_the_day_its_prediction_is_valid_for() -> None:
     querier = _FakePredictions([_info("util", "upper")])
 
-    [prediction] = _predictions_of(querier, [MetricName("util")])
+    [prediction] = _predictions_of(querier, ["util"])
 
     assert (prediction.valid_from, prediction.valid_until) == (_VALID_FROM, _VALID_UNTIL)
 
@@ -111,7 +108,7 @@ def test_each_stored_day_is_offered_separately() -> None:
         [_info("util", "upper"), _info("util", "upper", valid_from=_ANOTHER_DAY)]
     )
 
-    predictions = _predictions_of(querier, [MetricName("util")])
+    predictions = _predictions_of(querier, ["util"])
 
     assert len({prediction.title for prediction in predictions}) == 2
 

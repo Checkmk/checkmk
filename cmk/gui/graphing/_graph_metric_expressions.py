@@ -16,7 +16,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import TimeSeries
-from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
@@ -208,7 +207,7 @@ def canonical_mapping_key(mapping: Mapping[str, object] | None) -> str:
 
 @dataclass(frozen=True)
 class QueryDataKey:
-    metric_name: MetricName
+    metric_name: str
     consolidation_function: ConsolidationFunction
     attribute_filter: Mapping[str, object]
     aggregator: Mapping[str, object] | None = None
@@ -330,7 +329,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
     site_id: SiteId
     host_name: AnnotatedHostName
     service_name: ServiceName
-    metric_name: MetricName
+    metric_name: str
     consolidation_func_name: GraphConsolidationFunction | None
     scale: float
 

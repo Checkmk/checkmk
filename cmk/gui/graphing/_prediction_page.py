@@ -27,7 +27,6 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.cmk_time_series_graph import Size
-from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._frontend import STATIC_INTERACTION, to_cmk_time_series_graph
@@ -65,7 +64,7 @@ class _Window:
 @dataclass(frozen=True)
 class _Prediction:
     title: str
-    metric_name: MetricName
+    metric_name: str
     period: str
     valid_from: int
     valid_until: int
@@ -94,7 +93,7 @@ def _make_prediction_title(meta: PredictionInfo) -> str:
 
 
 def _available_predictions(
-    querier: PredictionQuerierProtocol, metric_name: MetricName
+    querier: PredictionQuerierProtocol, metric_name: str
 ) -> Mapping[_Window, Mapping[Literal["upper", "lower"], PredictionInfo]]:
     available: dict[_Window, dict[Literal["upper", "lower"], PredictionInfo]] = {}
     for meta in sorted(
@@ -106,7 +105,7 @@ def _available_predictions(
 
 
 def _predictions_of(
-    querier: PredictionQuerierProtocol, metric_names: Sequence[MetricName]
+    querier: PredictionQuerierProtocol, metric_names: Sequence[str]
 ) -> Sequence[_Prediction]:
     predictions = []
     for metric_name in metric_names:
@@ -226,9 +225,7 @@ class PredictionPage:
             service_name=service_name,
         )
         metric_names = (
-            [MetricName(requested_metric)]
-            if requested_metric
-            else [MetricName(name) for name in querier.query_predicted_metrics()]
+            [requested_metric] if requested_metric else list(querier.query_predicted_metrics())
         )
         predictions = _predictions_of(querier, metric_names)
 

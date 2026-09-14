@@ -37,7 +37,6 @@ from cmk.inventory.structured_data import SDPath
 from cmk.ruleset_matcher.labels import Labels
 from cmk.shared_typing.icon import IconNames as IconNames
 from cmk.shared_typing.icon import IconSizes as IconSizes
-from cmk.utils.metrics import MetricName
 from cmk.utils.password_store import PasswordId
 
 _ContactgroupName = str
@@ -459,7 +458,7 @@ class PainterParameters(TypedDict, total=False):
     # "rel_pop" levels are relative to the column maximum. Their choice is no longer offered,
     # but views stored before it was withdrawn still carry them.
     color_levels: (
-        tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+        tuple[Literal["abs_vals"], tuple[str, tuple[float, float]]]
         | tuple[Literal["rel_pop"], tuple[float, float]]
     )
     # From historic metric painters
@@ -763,8 +762,8 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 @dataclass(frozen=True, kw_only=True)
 class PerfDataTuple:
-    metric_name: MetricName
-    lookup_metric_name: MetricName
+    metric_name: str
+    lookup_metric_name: str
     value: float | int
     unit_name: str
     warn: float | None = None

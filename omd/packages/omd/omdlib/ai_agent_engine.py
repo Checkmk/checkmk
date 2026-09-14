@@ -7,13 +7,13 @@ from pathlib import Path
 
 from omdlib.config_api import Config, Error, Hook
 
-from cmk.flags import load_release_flags
+from cmk.flags import load_experimental_flags
 
 
 def ai_agent_engine_has_error(value: str) -> None | Error:
     if value not in ("on", "off"):
         return Error("Allowed are: on, off")
-    if value == "on" and not load_release_flags(Path("etc/check_mk")).exp_ai_assistant:
+    if value == "on" and not load_experimental_flags(Path("etc/check_mk")).exp_ai_assistant:
         return Error("This experimental testing feature is not enabled.")
     return None
 

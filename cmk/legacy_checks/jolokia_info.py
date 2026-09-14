@@ -3,46 +3,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, list[list[str]]]
 
 
-def parse_jolokia_info(string_table):
+def parse_jolokia_info(string_table: StringTable) -> Section:
     parsed: dict[str, list[list[str]]] = {}
     for line in string_table:
         parsed.setdefault(line[0], []).append(line[1:])
     return parsed
 
 
-def check_jolokia_info(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def check_jolokia_info(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     line = data[0]
     # Inform user of non-working agent plugin, eg. missing json library
     if item == "Error:":
-        yield 3, " ".join(line)
+        yield Result(state=State.UNKNOWN, summary=" ".join(line))
         return
 
     if line[0] == "ERROR" or len(line) < 3:
-        yield 2, " ".join(line) or "Unknown error in plug-in"
+        yield Result(state=State.CRIT, summary=" ".join(line) or "Unknown error in plug-in")
         return
 
     product = line[0]
     jolokia_version = line[-1]
     version = " ".join(line[1:-1])
-    yield 0, f"{product.title()} {version} (Jolokia version {jolokia_version})"
+    yield Result(
+        state=State.OK, summary=f"{product.title()} {version} (Jolokia version {jolokia_version})"
+    )
 
 
-def discover_jolokia_info(section):
-    yield from ((item, {}) for item in section)
+def discover_jolokia_info(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["jolokia_info"] = LegacyCheckDefinition(
+agent_section_jolokia_info = AgentSection(
     name="jolokia_info",
     parse_function=parse_jolokia_info,
+)
+
+
+check_plugin_jolokia_info = CheckPlugin(
+    name="jolokia_info",
     service_name="JVM %s",
     discovery_function=discover_jolokia_info,
     check_function=check_jolokia_info,

@@ -222,6 +222,7 @@ def finalize_site(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         apache_reload,
         verbose=verbose,
     )

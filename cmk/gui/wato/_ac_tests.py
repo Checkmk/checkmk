@@ -447,8 +447,11 @@ class ACTestHTTPSecured(ACTest):
             )
             + " "
             + _(
-                'Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "https"</tt> in '
-                "your system Apache configuration to tell the Checkmk GUI about the SSL setup."
+                "Checkmk's system Apache configuration sets the X-Forwarded-Proto/-Ssl headers "
+                "that tell the GUI about the SSL setup automatically. Only if "
+                "<tt>APACHE_FORWARDED_HEADERS</tt> is set to <tt>manual</tt> (e.g. because "
+                "another proxy or load balancer terminates TLS in front of this Apache) do you "
+                "have to set them yourself in the system Apache configuration."
             )
         )
 

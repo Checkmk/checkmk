@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.jolokia_jvm_memory import (
+from cmk.plugins.jolokia.agent_based.jolokia_jvm_memory import (
     check_jolokia_jvm_memory,
     discover_jolokia_jvm_memory,
     parse_jolokia_jvm_memory,

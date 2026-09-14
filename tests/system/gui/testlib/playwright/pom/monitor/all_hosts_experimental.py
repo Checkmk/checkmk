@@ -121,6 +121,15 @@ class AllHostsExperimental(CmkPage):
         """Clear the search box (the clear button re-submits an empty `q`)."""
         self.search_input.locator(".cmk-search-input__clear").click()
 
+    def quick_filter(self, label: str) -> Locator:
+        """A quick-filter chip in the toolbar above the table, by its label.
+
+        ``QuickFilterChip`` renders a ``CmkChip`` with ``type="button"``, so the
+        chip is found by its accessible name rather than by a class that says
+        nothing about which filter it offers.
+        """
+        return self.main_area.locator().get_by_role("button", name=label, exact=True)
+
     def rows(self) -> Locator:
         """All host data rows of the table.
 

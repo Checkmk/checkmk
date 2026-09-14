@@ -835,6 +835,153 @@ describe('createOTelBundleAction', () => {
   })
 })
 
+describe('createDCDConnectorAction', () => {
+  const FOLDER_COLLECTION = '/domain-types/folder_config/collections/all'
+  const DCD_COLLECTION = '/domain-types/dcd_telemetry_metrics/collections/all'
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function dcdAction() {
+    return POST_SAVE_ACTIONS.find((a) => a.key === 'createDCDConnector')!
+  }
+
+  test('creates the telemetry folder before the connector that stores hosts in it', async () => {
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
+
+    const result = await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(true)
+    expect(postSpy.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+      FOLDER_COLLECTION,
+      DCD_COLLECTION
+    ])
+  })
+
+  test('creates the telemetry folder at the root', async () => {
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
+
+    await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(postSpy).toHaveBeenCalledWith(FOLDER_COLLECTION, {
+      params: { header: JSON_HEADER },
+      body: { title: 'Telemetry', parent: '/', name: 'telemetry' }
+    })
+  })
+
+  test('sends the connector tuning the backend would otherwise default to', async () => {
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
+
+    await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(postSpy).toHaveBeenCalledWith(DCD_COLLECTION, {
+      params: { header: JSON_HEADER },
+      body: {
+        title: 'my-cfg',
+        comment: '',
+        documentation_url: '',
+        disabled: false,
+        site: 'prod',
+        dcd_id: 'quick_setup_my-cfg',
+        connector: {
+          connector_type: 'telemetry_metrics',
+          interval: 60,
+          discover_on_creation: true,
+          validity_period: 3600,
+          maximum_number_of_hosts: 500,
+          host_name_lookup_rules: [{ host_name_template: '$RESOURCE_ATTR.service.name$' }],
+          creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
+        }
+      }
+    })
+  })
+
+  test('rolls the connector back before the folder it stores hosts in', async () => {
+    spyOnClient('POST').mockResolvedValue(makeOk({}))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValue(makeNoContent())
+
+    const result = await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      await result.rollback!()
+      expect(deleteSpy.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+        '/objects/dcd_telemetry_metrics/{dcd_id}',
+        '/objects/folder_config/{folder}'
+      ])
+    }
+  })
+
+  test('keeps a pre-existing telemetry folder out of the rollback', async () => {
+    spyOnClient('POST')
+      .mockResolvedValueOnce(makeError(400, { title: 'Conflict', detail: 'exists' }))
+      .mockResolvedValueOnce(makeOk({}))
+    spyOnClient('GET').mockResolvedValue(makeOk({ id: 'telemetry' }))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValue(makeNoContent())
+
+    const result = await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      await result.rollback!()
+      expect(deleteSpy.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+        '/objects/dcd_telemetry_metrics/{dcd_id}'
+      ])
+    }
+  })
+
+  test('treats an existing connector as success without a rollback for it', async () => {
+    spyOnClient('POST')
+      .mockResolvedValueOnce(makeOk({}))
+      .mockResolvedValueOnce(makeError(409, { title: 'Conflict', detail: 'dcd exists' }))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValue(makeNoContent())
+
+    const result = await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      await result.rollback!()
+      expect(deleteSpy.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+        '/objects/folder_config/{folder}'
+      ])
+    }
+  })
+
+  test('removes the folder it just created when the connector cannot be created', async () => {
+    spyOnClient('POST')
+      .mockResolvedValueOnce(makeOk({}))
+      .mockResolvedValueOnce(makeError(400, { title: 'Bad request', detail: 'no such site' }))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValue(makeNoContent())
+
+    const result = await dcdAction().execute({ siteId: 'ghost', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error.title).toBe('Could not create the telemetry metrics connector')
+      expect(result.error.detail).toBe('no such site')
+    }
+    expect(deleteSpy.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+      '/objects/folder_config/{folder}'
+    ])
+  })
+
+  test('reports the folder failure and never reaches the connector', async () => {
+    const postSpy = spyOnClient('POST').mockResolvedValue(
+      makeError(400, { title: 'Bad request', detail: 'folder rejected' })
+    )
+    spyOnClient('GET').mockResolvedValue(makeError(404, { title: 'Not found', detail: 'nope' }))
+
+    const result = await dcdAction().execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error.title).toBe('Could not create the Telemetry hosts folder')
+    }
+    expect(postSpy.mock.calls.map((call: unknown[]) => call[0])).toEqual([FOLDER_COLLECTION])
+  })
+})
+
 describe('buildPrometheusFinalizeActions', () => {
   test('returns the expected action order', () => {
     const actions = buildPrometheusFinalizeActions({

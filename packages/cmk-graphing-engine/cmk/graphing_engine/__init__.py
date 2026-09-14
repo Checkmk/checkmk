@@ -36,7 +36,6 @@ from ._graph_evaluate import (
     EvaluatedVerticalRange,
     VerticalRangeKind,
 )
-from ._graph_from_api import QuantityBuilderProtocol
 from ._graph_matching import (
     build_matched_graphs,
 )
@@ -148,7 +147,6 @@ __all__ = [
     "PredictionCurveKind",
     "PredictionMetric",
     "Product",
-    "QuantityBuilderProtocol",
     "QuantityProtocol",
     "RRDMetric",
     "Region",

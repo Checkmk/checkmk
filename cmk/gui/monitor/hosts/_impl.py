@@ -91,6 +91,7 @@ class LiveStatusHostRepository:
                 Hosts.active_checks_enabled,
                 Hosts.accept_passive_checks,
                 Hosts.in_notification_period,
+                Hosts.in_service_period,
                 Hosts.is_flapping,
                 Hosts.staleness,
                 *(
@@ -127,6 +128,7 @@ class LiveStatusHostRepository:
                             row, "passive_checks_enabled", column="accept_passive_checks"
                         ),
                         in_notification_period=bool(row["in_notification_period"]),
+                        in_service_period=bool(row["in_service_period"]),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         last_check=_timestamp(row.get("last_check")),
@@ -174,6 +176,7 @@ class LiveStatusHostRepository:
                 Hosts.active_checks_enabled,
                 Hosts.accept_passive_checks,
                 Hosts.in_notification_period,
+                Hosts.in_service_period,
                 Hosts.is_flapping,
                 Hosts.staleness,
                 Hosts.last_check,
@@ -213,6 +216,7 @@ class LiveStatusHostRepository:
                 row, "passive_checks_enabled", column="accept_passive_checks"
             ),
             in_notification_period=bool(row["in_notification_period"]),
+            in_service_period=bool(row["in_service_period"]),
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             last_check=int(row["last_check"]),

@@ -232,7 +232,8 @@ test('the mode column filter no longer offers flapping, which moved to the state
       { field: 'has_comments', title: 'Has comments' },
       { field: 'active_checks_disabled', title: 'Active checks disabled' },
       { field: 'passive_checks_disabled', title: 'Passive checks disabled' },
-      { field: 'in_notification_period', title: 'In notification period' }
+      { field: 'in_notification_period', title: 'In notification period' },
+      { field: 'in_service_period', title: 'In service period' }
     ]
   })
 })

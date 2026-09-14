@@ -20,6 +20,7 @@ _NO_MODES = {
     "active_checks_disabled": False,
     "passive_checks_disabled": False,
     "in_notification_period": True,
+    "in_service_period": True,
     "is_flapping": False,
 }
 
@@ -91,6 +92,15 @@ def test_build_service_modes_by_id_out_of_notification_period() -> None:
     ] == ["outofnot"]
 
 
+def test_build_service_modes_by_id_out_of_service_period() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"in_service_period": False})
+
+    assert [
+        mode.icon_name
+        for mode in build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+    ] == ["outof-serviceperiod"]
+
+
 def test_build_service_modes_by_id_flapping_is_not_a_mode() -> None:
     # Flapping is shown in the state column instead, not as a mode icon.
     service = ServiceFactory.build(**_NO_MODES | {"is_flapping": True})
@@ -107,6 +117,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         active_checks_disabled=True,
         passive_checks_disabled=True,
         in_notification_period=False,
+        in_service_period=False,
         is_flapping=True,
     )
 
@@ -121,6 +132,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         "disabled",
         "npassive",
         "outofnot",
+        "outof-serviceperiod",
     ]
 
 
@@ -137,6 +149,7 @@ def test_build_service_modes_all_modes() -> None:
         active_checks_disabled=True,
         passive_checks_disabled=True,
         in_notification_period=False,
+        in_service_period=False,
         is_flapping=True,
     )
 
@@ -148,6 +161,7 @@ def test_build_service_modes_all_modes() -> None:
         "disabled",
         "npassive",
         "outofnot",
+        "outof-serviceperiod",
     ]
 
 

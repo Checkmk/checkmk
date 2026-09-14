@@ -1032,6 +1032,7 @@ class TestMonitorHostOverview:
                     "active_checks_enabled": 1,
                     "accept_passive_checks": 1,
                     "in_notification_period": 1,
+                    "in_service_period": 1,
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "last_check": time.time() - 30,
@@ -1111,6 +1112,7 @@ class TestMonitorHostOverview:
                     "active_checks_enabled": 1,
                     "accept_passive_checks": 1,
                     "in_notification_period": 1,
+                    "in_service_period": 1,
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "last_check": time.time(),
@@ -1252,6 +1254,7 @@ _HOSTS = [
         "active_checks_enabled": 1,
         "accept_passive_checks": 1,
         "in_notification_period": 1,
+        "in_service_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
         "last_check": 1700000000,
@@ -1283,6 +1286,7 @@ _HOSTS = [
         "active_checks_enabled": 1,
         "accept_passive_checks": 1,
         "in_notification_period": 1,
+        "in_service_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
         "last_check": 1700000100,
@@ -1314,6 +1318,7 @@ _HOSTS = [
         "active_checks_enabled": 1,
         "accept_passive_checks": 1,
         "in_notification_period": 1,
+        "in_service_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
         "last_check": 1700000200,
@@ -1341,6 +1346,7 @@ _MANDATORY_COLUMNS = (
     "active_checks_enabled",
     "accept_passive_checks",
     "in_notification_period",
+    "in_service_period",
     "is_flapping",
     "staleness",
 )
@@ -1383,4 +1389,4 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"
+_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"

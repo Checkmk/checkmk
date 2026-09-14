@@ -85,4 +85,12 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 title=_("Out of notification period"),
             )
         )
+    if not host.in_service_period:
+        modes.append(
+            ModeInfo(
+                icon_name="outof-serviceperiod",
+                link=host_view_link("host", host),
+                title=_("Out of service period"),
+            )
+        )
     return modes

@@ -2506,9 +2506,9 @@ reportlab==4.1.0 \
     --hash=sha256:28a40d5000afbd8ccae15a47f7abe2841768461354bede1a9d42841132997c98 \
     --hash=sha256:3a99faf412691159c068b3ff01c15307ce2fd2cf6b860199434874e002040a84
     # via -r _requirements_runtime.txt
-requests==2.32.4 \
-    --hash=sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c \
-    --hash=sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422
+requests==2.34.2 \
+    --hash=sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0 \
+    --hash=sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt

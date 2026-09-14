@@ -9,7 +9,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.jolokia_jvm_runtime import (
+from cmk.plugins.jolokia.agent_based.jolokia_jvm_runtime import (
     check_jolokia_jvm_runtime_uptime,
     discover_jolokia_jvm_runtime,
     parse_jolokia_jvm_runtime,

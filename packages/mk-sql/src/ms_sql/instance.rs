@@ -18,7 +18,7 @@ use crate::config::{
 };
 use crate::emit;
 #[cfg(windows)]
-use crate::ms_sql::client::update_edition;
+use crate::ms_sql::client::apply_edition;
 use crate::ms_sql::client::ManageEdition;
 use crate::ms_sql::query::{
     obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
@@ -438,7 +438,9 @@ impl SqlInstance {
         // if yes - call generate_section with database parameter
         // else - call generate_section without database parameter
         log::trace!("{:?} @ {:?}", self, self.endpoint);
-        let body = match self.create_client(&self.endpoint, None).await {
+        // First connection to the instance: the edition is not known yet and
+        // has to be probed. Every later connection reuses what it found.
+        let body = match self.create_client(&self.endpoint, None, None).await {
             Ok(mut client) => {
                 let real_name = obtain_instance_name(&mut client)
                     .await
@@ -562,10 +564,15 @@ impl SqlInstance {
     }
 
     /// Create a client for an Instance based on Config
+    ///
+    /// `known_edition` is the edition of an already established connection to
+    /// the same instance, if there is one: passing it saves a
+    /// `SERVERPROPERTY('Edition')` round trip per connection.
     pub async fn create_client(
         &self,
         endpoint: &Endpoint,
         database: Option<String>,
+        known_edition: Option<&Edition>,
     ) -> Result<UniClient> {
         log::info!(
             "Create client {} TCP:{} user:{} host:{}",
@@ -575,9 +582,16 @@ impl SqlInstance {
             endpoint.conn().hostname()
         );
         if self.tcp {
-            create_tcp_client(endpoint, database, self.port()).await
+            create_tcp_client(endpoint, database, self.port(), known_edition).await
         } else {
-            create_odbc_client(endpoint, self.cluster_name.as_ref(), &self.name, database).await
+            create_odbc_client(
+                endpoint,
+                self.cluster_name.as_ref(),
+                &self.name,
+                database,
+                known_edition,
+            )
+            .await
         }
     }
 
@@ -661,7 +675,7 @@ impl SqlInstance {
                 | names::TABLE_SPACES
                 | names::DATAFILES
                 | names::CLUSTERS => self.generate_database_indexed_section_threading(
-                    databases, endpoint, section, &query, sep,
+                    databases, endpoint, section, &query, sep, &edition,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     if client.get_edition() == Edition::Azure && section.name() == names::JOBS {
@@ -672,7 +686,7 @@ impl SqlInstance {
                     }
                 }
                 _ => self
-                    .generate_custom_section(endpoint, section)
+                    .generate_custom_section(endpoint, section, &edition)
                     .await
                     .unwrap_or_else(|| {
                         format!(
@@ -812,9 +826,10 @@ impl SqlInstance {
         databases: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         let tasks = databases.iter().map(move |database| {
-            self.generate_table_spaces_section_database(endpoint, database, query, sep)
+            self.generate_table_spaces_section_database(endpoint, database, query, sep, edition)
         });
 
         let results = stream::iter(tasks)
@@ -840,9 +855,10 @@ impl SqlInstance {
         database: &str,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         match self
-            .create_client(endpoint, Some(database.to_owned()))
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
             .await
         {
             Ok(mut c) => match run_custom_query(&mut c, query).await {
@@ -949,6 +965,7 @@ impl SqlInstance {
         section: &Section,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         if databases.is_empty() {
             log::warn!("No active databases, skip section {}", section.name());
@@ -987,6 +1004,7 @@ impl SqlInstance {
                                     &accessible,
                                     query,
                                     sep,
+                                    edition,
                                 ))
                             }
                             names::TABLE_SPACES => rt.block_on(self.generate_table_spaces_section(
@@ -994,12 +1012,14 @@ impl SqlInstance {
                                 &accessible,
                                 query,
                                 sep,
+                                edition,
                             )),
                             names::DATAFILES => rt.block_on(self.generate_datafiles_section(
                                 endpoint,
                                 &accessible,
                                 query,
                                 sep,
+                                edition,
                             )),
                             // Unlike above, CLUSTERS handles its own simulated
                             // entries internally (needs live is_clustered state).
@@ -1010,6 +1030,7 @@ impl SqlInstance {
                                 &inaccessible,
                                 query,
                                 sep,
+                                edition,
                             )),
                             _ => format!("{} not implemented\n", section.name()),
                         };
@@ -1030,9 +1051,10 @@ impl SqlInstance {
         databases: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         let tasks = databases.iter().map(move |database| {
-            self.generate_transaction_logs_section_database(endpoint, database, query, sep)
+            self.generate_transaction_logs_section_database(endpoint, database, query, sep, edition)
         });
 
         let results = stream::iter(tasks)
@@ -1048,9 +1070,10 @@ impl SqlInstance {
         database: &str,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         match self
-            .create_client(endpoint, Some(database.to_owned()))
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
             .await
         {
             Ok(mut c) => run_custom_query(&mut c, query)
@@ -1077,9 +1100,10 @@ impl SqlInstance {
         databases: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         let tasks = databases.iter().map(move |database| {
-            self.generate_datafiles_section_database(endpoint, database, query, sep)
+            self.generate_datafiles_section_database(endpoint, database, query, sep, edition)
         });
 
         let results = stream::iter(tasks)
@@ -1096,9 +1120,10 @@ impl SqlInstance {
         database: &str,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         match self
-            .create_client(endpoint, Some(database.to_owned()))
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
             .await
         {
             Ok(mut c) => run_custom_query(&mut c, query)
@@ -1169,11 +1194,12 @@ impl SqlInstance {
         inaccessible: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         if accessible.is_empty() && inaccessible.is_empty() {
             return String::new();
         }
-        match self.discover_cluster_status(endpoint, query).await {
+        match self.discover_cluster_status(endpoint, query, edition).await {
             Ok((is_clustered, node_info)) => {
                 let real: String = match &node_info {
                     Some((active_node, nodes)) => accessible
@@ -1219,8 +1245,9 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         query: &str,
+        edition: &Edition,
     ) -> Result<(bool, Option<(String, String)>)> {
-        let mut client = self.create_client(endpoint, None).await?;
+        let mut client = self.create_client(endpoint, None, Some(edition)).await?;
         if !self.is_database_clustered(&mut client).await? {
             return Ok((false, None));
         }
@@ -1301,7 +1328,10 @@ impl SqlInstance {
         query: Option<&str>,
         edition: &Edition,
     ) -> String {
-        match self.create_client(endpoint, section.main_db(edition)).await {
+        match self
+            .create_client(endpoint, section.main_db(edition), Some(edition))
+            .await
+        {
             Ok(mut c) => {
                 let q = query.map(|q| q.to_owned()).unwrap_or_else(|| {
                     section
@@ -1328,8 +1358,9 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         section: &Section,
+        edition: &Edition,
     ) -> Option<String> {
-        match self.create_client(endpoint, None).await {
+        match self.create_client(endpoint, None, Some(edition)).await {
             Ok(mut c) => {
                 if let Some(query) =
                     section.find_provided_query(get_sql_dir(), self.version_major())
@@ -1528,6 +1559,7 @@ pub async fn create_tcp_client(
     endpoint: &Endpoint,
     database: Option<String>,
     port: Option<Port>,
+    known_edition: Option<&Edition>,
 ) -> Result<UniClient> {
     let (auth, conn) = endpoint.split();
     let client = match auth.auth_type() {
@@ -1548,7 +1580,7 @@ pub async fn create_tcp_client(
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
-    client.build().await
+    client.edition(known_edition.cloned()).build().await
 }
 
 pub async fn create_odbc_client(
@@ -1556,16 +1588,20 @@ pub async fn create_odbc_client(
     cluster_name: Option<&ClusterName>,
     instance_name: &InstanceName,
     database: Option<String>,
+    known_edition: Option<&Edition>,
 ) -> Result<UniClient> {
     let hostname = endpoint.conn().hostname();
     #[cfg(unix)]
-    anyhow::bail!(
-        "ODBC Not supported `{}` `{}` cluster:`{:?}` db:`{:?}`",
-        hostname,
-        instance_name,
-        cluster_name,
-        database
-    );
+    {
+        let _ = known_edition; // ODBC is Windows-only, nothing to apply here
+        anyhow::bail!(
+            "ODBC Not supported `{}` `{}` cluster:`{:?}` db:`{:?}`",
+            hostname,
+            instance_name,
+            cluster_name,
+            database
+        );
+    }
     #[cfg(windows)]
     {
         let connection_string = odbc::make_connection_string(
@@ -1577,7 +1613,7 @@ pub async fn create_odbc_client(
             endpoint,
         );
         let mut client = UniClient::Odbc(OdbcClient::new(connection_string));
-        update_edition(&mut client).await;
+        apply_edition(&mut client, known_edition).await;
         Ok(client)
     }
 }
@@ -2427,8 +2463,15 @@ async fn get_custom_instance_builder(
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
         log::debug!("Trying to connect to `{instance_name}` using ODBC");
-        if let Ok(mut client) =
-            create_odbc_client(endpoint, builder.cluster_name.as_ref(), instance_name, None).await
+        // Discovery: no earlier connection to this instance, edition unknown.
+        if let Ok(mut client) = create_odbc_client(
+            endpoint,
+            builder.cluster_name.as_ref(),
+            instance_name,
+            None,
+            None,
+        )
+        .await
         {
             log::debug!("Connected to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)

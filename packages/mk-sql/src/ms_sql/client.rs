@@ -140,6 +140,7 @@ pub struct ClientBuilder<'a> {
     database: Option<String>,
     certificate: Option<CertPath>,
     trust_server_certificate: bool,
+    known_edition: Option<Edition>,
 }
 
 impl Default for ClientBuilder<'_> {
@@ -149,6 +150,7 @@ impl Default for ClientBuilder<'_> {
             database: None,
             certificate: None,
             trust_server_certificate: config::defines::defaults::TRUST_SERVER_CERTIFICATE,
+            known_edition: None,
         }
     }
 }
@@ -236,6 +238,17 @@ impl<'a> ClientBuilder<'a> {
         self
     }
 
+    /// The edition of the server this connection goes to, when it is already
+    /// known from an earlier connection to the same instance.
+    ///
+    /// Every connection otherwise costs an extra `SERVERPROPERTY('Edition')`
+    /// round trip, and the answer is the same for every database of an
+    /// instance. Passing it here skips that probe.
+    pub fn edition(mut self, edition: Option<Edition>) -> Self {
+        self.known_edition = edition;
+        self
+    }
+
     pub fn make_config(&self) -> Result<Config> {
         let mut config = Config::new();
         if let Some(db) = &self.database {
@@ -297,12 +310,19 @@ impl<'a> ClientBuilder<'a> {
 
     pub async fn build(self) -> Result<UniClient> {
         let tiberius_config = self.make_config()?;
-        match self.client_connection {
-            Some(ClientConnection::Remote(_)) => create_remote_client(tiberius_config).await,
+        let known_edition = self.known_edition.as_ref();
+        match &self.client_connection {
+            Some(ClientConnection::Remote(_)) => {
+                create_remote_client(tiberius_config, known_edition).await
+            }
             #[cfg(windows)]
-            Some(ClientConnection::Named(_)) => create_named_instance_client(tiberius_config).await,
+            Some(ClientConnection::Named(_)) => {
+                create_named_instance_client(tiberius_config, known_edition).await
+            }
             #[cfg(windows)]
-            Some(ClientConnection::Local(_)) => connect_via_tcp(tiberius_config).await,
+            Some(ClientConnection::Local(_)) => {
+                connect_via_tcp(tiberius_config, known_edition).await
+            }
             _ => anyhow::bail!("No client connection provided"),
         }
     }
@@ -446,10 +466,13 @@ pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Optio
 }
 
 /// Create client for remote MS SQL
-async fn create_remote_client(tiberius_config: Config) -> Result<UniClient> {
+async fn create_remote_client(
+    tiberius_config: Config,
+    known_edition: Option<&Edition>,
+) -> Result<UniClient> {
     let mut config = tiberius_config.clone();
     config.encryption(tiberius::EncryptionLevel::Required);
-    match connect_via_tcp(config).await {
+    match connect_via_tcp(config, known_edition).await {
         Ok(client) => Ok(client),
         #[cfg(unix)]
         Err(err) => {
@@ -459,7 +482,7 @@ async fn create_remote_client(tiberius_config: Config) -> Result<UniClient> {
             );
             let mut config = tiberius_config.clone();
             config.encryption(tiberius::EncryptionLevel::NotSupported);
-            Ok(connect_via_tcp(config).await?)
+            Ok(connect_via_tcp(config, known_edition).await?)
         }
         #[cfg(windows)]
         Err(err) => {
@@ -474,7 +497,10 @@ async fn create_remote_client(tiberius_config: Config) -> Result<UniClient> {
 
 /// Create client for `named` MS SQL `instance`
 #[cfg(windows)]
-async fn create_named_instance_client(config: Config) -> anyhow::Result<UniClient> {
+async fn create_named_instance_client(
+    config: Config,
+    known_edition: Option<&Edition>,
+) -> anyhow::Result<UniClient> {
     log::info!("Named connection to addr {}", config.get_addr());
 
     // This will create a new `TcpStream` from `async-std`, connected to the
@@ -489,11 +515,11 @@ async fn create_named_instance_client(config: Config) -> anyhow::Result<UniClien
         .await
         .map_err(|e| anyhow::anyhow!("Failed to access SQL Browser {}", e))
         .map(|c| UniClient::Std(Box::new(StdClient::new(c))))?;
-    update_edition(&mut client).await;
+    apply_edition(&mut client, known_edition).await;
     Ok(client)
 }
 
-async fn connect_via_tcp(config: Config) -> Result<UniClient> {
+async fn connect_via_tcp(config: Config, known_edition: Option<&Edition>) -> Result<UniClient> {
     log::info!("Connecting to addr '{}'...", config.get_addr());
     let tcp = TcpStream::connect(config.get_addr()).await.map_err(|e| {
         anyhow::anyhow!(
@@ -523,8 +549,19 @@ async fn connect_via_tcp(config: Config) -> Result<UniClient> {
             edition: Edition::Normal,
         }))
     })?;
-    update_edition(&mut client).await;
+    apply_edition(&mut client, known_edition).await;
     Ok(client)
+}
+
+/// Set the edition of a freshly opened connection.
+///
+/// Probing costs a round trip, so it is only done when no edition is known yet:
+/// every database of an instance reports the same one.
+pub async fn apply_edition(client: &mut UniClient, known_edition: Option<&Edition>) {
+    match known_edition {
+        Some(edition) => client.set_edition(edition.clone()),
+        None => update_edition(client).await,
+    }
 }
 
 pub async fn update_edition(client: &mut UniClient) {
@@ -624,6 +661,34 @@ mssql:
         let mut client = UniClient::Odbc(OdbcClient::new("DSN=missing"));
         update_edition(&mut client).await;
         assert_eq!(client.get_edition(), Edition::Normal);
+    }
+
+    /// A known edition is taken as is: the server is never asked for it.
+    /// `DSN=missing` can not answer a query, so probing would yield `Normal`.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_apply_edition_uses_known_edition() {
+        let mut client = UniClient::Odbc(OdbcClient::new("DSN=missing"));
+        apply_edition(&mut client, Some(&Edition::Azure)).await;
+        assert_eq!(client.get_edition(), Edition::Azure);
+    }
+
+    /// Without a known edition the server is probed, as before.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_apply_edition_probes_when_unknown() {
+        let mut client = UniClient::Odbc(OdbcClient::new("DSN=missing"));
+        apply_edition(&mut client, None).await;
+        assert_eq!(client.get_edition(), Edition::Normal);
+    }
+
+    #[test]
+    fn test_client_builder_edition_defaults_to_unknown() {
+        assert_eq!(ClientBuilder::new().known_edition, None);
+        assert_eq!(
+            ClientBuilder::new()
+                .edition(Some(Edition::Azure))
+                .known_edition,
+            Some(Edition::Azure)
+        );
     }
 
     /// Port 0 is never valid and must be replaced by the standard port.

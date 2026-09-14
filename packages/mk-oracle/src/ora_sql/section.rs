@@ -484,10 +484,8 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
                     return Some(min_version.parse::<u32>().unwrap_or(0));
                 }
             }
-            [stem] => {
-                if stem.to_lowercase() == section_name.to_lowercase() {
-                    return Some(0);
-                }
+            [stem] if stem.to_lowercase() == section_name.to_lowercase() => {
+                return Some(0);
             }
             _ => {}
         }

@@ -864,12 +864,12 @@ def _format_log_output(content: bytes) -> HTML:
     )
 
 
-def _show_output_box(title: str, content: bytes) -> None:
+def _show_output_box(title: str, content: str) -> None:
     html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write_html(
         HTML.without_escaping(
-            escaping.escape_attribute(content.decode(errors="surrogateescape"))
+            escaping.escape_attribute(content.encode(errors="replace").decode())
             .replace("\n", "<br>")
             .replace(" ", "&nbsp;")
         )
@@ -880,7 +880,7 @@ def _show_output_box(title: str, content: bytes) -> None:
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
     if agent_output:
-        _show_output_box(_("Agent output"), agent_output.encode())
+        _show_output_box(_("Agent output"), agent_output)
 
 
 class PageDownloadCrashReport(Page):

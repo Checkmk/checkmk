@@ -179,7 +179,6 @@ def test_report_renderer_javascript_show_details_without_details() -> None:
     assert rendered == ""
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 3818: UnicodeEncodeError")
 @pytest.mark.usefixtures("request_context")
 def test_agent_output_with_undecodable_bytes_is_rendered() -> None:
     # Crash group 3818: a Windows agent sent output that is not valid UTF-8, so

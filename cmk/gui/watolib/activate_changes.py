@@ -117,7 +117,9 @@ from cmk.gui.watolib.broker_certificates import (
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
     ConfigDomainName,
+    DomainRequest,
     DomainRequests,
     get_always_activate_domains,
     get_config_domain,
@@ -3086,14 +3088,21 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
 def execute_activate_changes(
     domain_requests: DomainRequests, is_remote_site: bool
 ) -> ConfigWarnings:
-    domain_names = [x.name for x in domain_requests]
+    # A site a major version behind still names a domain by its pre-rename ident.
+    local_requests = [
+        DomainRequest(
+            config_domain_registry.renamed_ident(request.name) or request.name, request.settings
+        )
+        for request in domain_requests
+    ]
+    domain_names = [x.name for x in local_requests]
 
     all_domain_requests = [
         domain.get_domain_request([])
         for domain in get_always_activate_domains()
         if domain.ident() not in domain_names
     ]
-    all_domain_requests.extend(domain_requests)
+    all_domain_requests.extend(local_requests)
     all_domain_requests.sort(key=lambda x: x.name)
 
     results: ConfigWarnings = {}

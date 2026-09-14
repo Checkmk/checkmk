@@ -98,6 +98,15 @@ class ABCConfigDomain(abc.ABC):
     def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
+    def previous_idents(cls) -> Sequence[ConfigDomainName]:
+        """Idents this domain has been registered under before.
+
+        Activation uses the idents on the wire, not just in the payload. This means idents are not
+        affected by `cmk-update-config`. We translate these old identifiers on the fly, since they
+        may still be sent by the central site."""
+        return ()
+
+    @classmethod
     def enabled_domains(cls) -> Sequence[ABCConfigDomain]:
         return [d for d in config_domain_registry.values() if d.enabled()]
 
@@ -228,6 +237,13 @@ class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[ABCConfigDomain]):
     @override
     def plugin_name(self, instance: ABCConfigDomain) -> str:
         return instance.ident()
+
+    def renamed_ident(self, previous_ident: ConfigDomainName) -> ConfigDomainName | None:
+        """The current ident of the domain formerly registered under the given one."""
+        for domain in self.values():
+            if previous_ident in domain.previous_idents():
+                return domain.ident()
+        return None
 
 
 config_domain_registry = ConfigDomainRegistry()

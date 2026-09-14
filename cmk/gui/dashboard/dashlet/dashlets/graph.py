@@ -30,7 +30,6 @@ from cmk.gui.graphing import (
     DiscoveredGraphs,
     evaluate_built_graphs,
     get_graph_plugin_choices,
-    get_metric_spec,
     get_template_graph_specification,
     graph_choices,
     GraphChoices,
@@ -39,7 +38,6 @@ from cmk.gui.graphing import (
     GraphPluginChoice,
     graphs_from_api,
     GraphSpecification,
-    metrics_from_api,
     registered_metrics,
     registered_translations,
     resolve_graph_id_from_index,
@@ -57,7 +55,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
-    DropdownChoiceWithHostAndServiceHints,
     Timerange,
 )
 from cmk.gui.visuals import (
@@ -65,7 +62,6 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
 )
 from cmk.utils.servicename import ServiceName
-from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 
 from ..base import (
     Dashlet,
@@ -75,70 +71,6 @@ from ..base import (
 )
 
 GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
-
-
-class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
-    """Factory of a Dropdown menu from all graph templates"""
-
-    _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
-
-    def __init__(self, **kwargs: Any) -> None:
-        kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": ["ajax-vals"],
-            "hint_label": _("graph"),
-            "title": _("Graph"),
-            "help": _(
-                "Select the graph to be displayed by this element. In case the current selection "
-                "displays 'Deprecated choice, please re-select', this element was created before "
-                "the release of version 2.0. Before this version, the graph selection was based on "
-                "a single number indexing the output of the corresponding service. Such elements "
-                "will continue to work, however, if you want to re-edit them, you have to re-"
-                "select the graph. To check which graph is currently selected, look at the title "
-                "of the element in the dashboard.",
-            ),
-            "autocompleter": ContextAutocompleterConfig(
-                ident=GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
-                strict=True,
-                show_independent_of_context=True,
-                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
-            ),
-            **kwargs,
-        }
-        super().__init__(**kwargs_with_defaults)
-
-    @override
-    def _validate_value(self, value: str | None, varprefix: str) -> None:
-        if not value or value == self._MARKER_DEPRECATED_CHOICE:
-            raise MKUserError(varprefix, _("Please select a graph."))
-
-    @override
-    def _choices_from_value(self, value: str | None) -> Choices:
-        if not value:
-            return list(self.choices())
-        return [
-            next(
-                (
-                    (c.id, c.title)
-                    for c in get_graph_plugin_choices(graphs_from_api)
-                    if c.id == value
-                ),
-                (
-                    value,
-                    (
-                        _("Deprecated choice, please re-select")
-                        if value == self._MARKER_DEPRECATED_CHOICE
-                        else str(get_metric_spec(value, metrics_from_api).title)
-                    ),
-                ),
-            )
-        ]
-
-    @override
-    def render_input(self, varprefix: str, value: str | None) -> None:
-        return super().render_input(
-            varprefix,
-            self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,  # type: ignore[redundant-expr]
-        )
 
 
 class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):

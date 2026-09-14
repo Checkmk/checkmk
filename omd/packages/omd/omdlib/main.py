@@ -1984,6 +1984,7 @@ def init_site(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         apache_reload,
         verbose=global_opts.verbose,
     )
@@ -2145,6 +2146,7 @@ def main_enable(
         site_name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         False,
         verbose=global_opts.verbose,
     )
@@ -2166,6 +2168,7 @@ def main_update_apache_config(
             site_name,
             config["APACHE_TCP_ADDR"],
             config["APACHE_TCP_PORT"],
+            config["APACHE_FORWARDED_HEADERS"],
             True,
             verbose=global_opts.verbose,
         )
@@ -2326,6 +2329,7 @@ def main_mv_or_cp(
         new_site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -2907,7 +2911,9 @@ def main_config(
             error = Error(f"No such command '{command}'")
 
     if (
-        set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"})
+        set(set_hooks).intersection(
+            {"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE", "APACHE_FORWARDED_HEADERS"}
+        )
         and not is_containerized()
     ):
         sys.stdout.write(
@@ -3077,6 +3083,7 @@ def _restore_backup_from_tar_root(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )

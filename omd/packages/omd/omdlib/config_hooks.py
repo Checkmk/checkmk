@@ -56,6 +56,7 @@ from omdlib.rabbitmq import (
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
 from omdlib.system_apache import (
+    APACHE_FORWARDED_HEADERS,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,
@@ -147,6 +148,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     ADMIN_MAIL,
     AGENT_RECEIVER,
     AGENT_RECEIVER_PORT,
+    APACHE_FORWARDED_HEADERS,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,

@@ -14,6 +14,7 @@ from tests.testlib.system.site import Site
 def test_hooks(site: Site) -> None:
     hooks = [
         "ADMIN_MAIL",
+        "APACHE_FORWARDED_HEADERS",
         "APACHE_MODE",
         "APACHE_TCP_ADDR",
         "APACHE_TCP_PORT",

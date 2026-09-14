@@ -33,6 +33,18 @@ STATE_NAMES = {
     False: ("standby", "active 1", "active 2", "active"),
 }
 
+# The parameter key each failover status is configured under, indexed by the status code
+# the device reports. See cmk/plugins/f5_bigip/rulesets/cluster_status.py.
+V11_2_STATE_KEYS = ("unknown", "offline", "forced_offline", "standby", "active")
+
+_V11_2_DEFAULT_STATES = (
+    State.UNKNOWN.value,
+    State.CRIT.value,
+    State.CRIT.value,
+    State.OK.value,
+    State.OK.value,
+)
+
 
 def parse_f5_bigip_cluster_status(
     string_table: Sequence[StringTable],
@@ -60,8 +72,11 @@ def _node_result(
     >>> _node_result("", 3, False, {'type': 'active_standby'})
     Result(state=<State.OK: 0>, summary='Node is active')
     """
-    state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {}).items()}
-    state_mapping = {0: 3, 1: 2, 2: 2, 3: 0, 4: 0, **state_mapping_from_params}
+    configured = params.get("v11_2_states", {})
+    state_mapping = {
+        code: configured.get(key, default)
+        for code, (key, default) in enumerate(zip(V11_2_STATE_KEYS, _V11_2_DEFAULT_STATES))
+    }
     return Result(
         state=State(state_mapping[node_state] if is_gt_v11_2 else 0),
         summary="Node %sis %s"

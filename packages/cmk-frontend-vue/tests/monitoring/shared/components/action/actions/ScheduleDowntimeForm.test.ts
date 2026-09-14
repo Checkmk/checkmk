@@ -5,7 +5,7 @@
  */
 import { parseAbsolute, toZoned } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
@@ -246,6 +246,15 @@ test('hides the durations past the cap behind the dropdown', async () => {
   expect(screen.getAllByRole('option').map((option) => option.textContent?.trim())).toEqual([
     '10 days'
   ])
+})
+
+test('the ad hoc duration names its two inputs and the span they belong to', () => {
+  mountForm({ selection: 'adhoc' })
+
+  const span = screen.getByRole('group', { name: 'From now, for' })
+
+  expect(within(span).getByRole('spinbutton', { name: 'Hours' })).toBeInTheDocument()
+  expect(within(span).getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
 })
 
 describe('isScheduleDowntimeValid', () => {

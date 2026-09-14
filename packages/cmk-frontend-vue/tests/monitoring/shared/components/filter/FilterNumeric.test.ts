@@ -31,6 +31,12 @@ function renderFilter(initial: ColumnFilterNode<'num_services'> | undefined = un
   return { model }
 }
 
+test('the option group is reachable by name', () => {
+  renderFilter()
+
+  expect(screen.getByRole('radiogroup', { name: 'Value range' })).toBeInTheDocument()
+})
+
 test('selecting "Any (>0)" applies a lone lower bound of 1', async () => {
   const { model } = renderFilter()
 

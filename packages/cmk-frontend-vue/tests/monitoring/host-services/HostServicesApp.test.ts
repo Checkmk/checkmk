@@ -300,7 +300,11 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
   let panel = screen.getByRole('group', { name: 'Filter Mode' })
-  await userEvent.click(within(panel).getByLabelText('Acknowledged'))
+  await userEvent.click(
+    within(within(panel).getByRole('radiogroup', { name: 'Acknowledged' })).getByLabelText(
+      'Acknowledged'
+    )
+  )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
   await userEvent.click(screen.getByRole('button', { name: 'Filter Mode' }))
@@ -467,7 +471,9 @@ test('requests services in a picked state that are also flapping', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
   const panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(within(panel).getByLabelText('CRIT'))
-  await userEvent.click(within(panel).getByLabelText('Flapping'))
+  await userEvent.click(
+    within(within(panel).getByRole('radiogroup', { name: 'Flapping' })).getByLabelText('Flapping')
+  )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
   expect(postSpy).toHaveBeenLastCalledWith(
@@ -494,7 +500,9 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
   let panel = screen.getByRole('group', { name: 'Filter State' })
-  await userEvent.click(within(panel).getByLabelText('Stale'))
+  await userEvent.click(
+    within(within(panel).getByRole('radiogroup', { name: 'Stale' })).getByLabelText('Stale')
+  )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
   await userEvent.click(screen.getByRole('button', { name: 'Filter State' }))

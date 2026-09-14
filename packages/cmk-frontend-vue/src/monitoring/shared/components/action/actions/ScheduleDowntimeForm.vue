@@ -191,6 +191,7 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import { usePresetOverflow } from '@/lib/usePresetOverflow'
@@ -221,6 +222,7 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+const adhocLabelId = useId()
 
 const timeZone = getLocalTimeZone()
 
@@ -429,19 +431,23 @@ function selectOverflow(id: string | null): void {
         <div
           v-else-if="model.selection === 'adhoc'"
           class="monitoring-schedule-downtime-form__adhoc"
+          role="group"
+          :aria-labelledby="adhocLabelId"
         >
-          <span>{{ _t('From now, for') }}</span>
+          <span :id="adhocLabelId">{{ _t('From now, for') }}</span>
           <CmkInput
             v-model="model.adhocHours"
             type="number"
             field-size="small"
             :unit="_t('hours')"
+            :aria-label="_t('Hours')"
           />
           <CmkInput
             v-model="model.adhocMinutes"
             type="number"
             field-size="small"
             :unit="_t('minutes')"
+            :aria-label="_t('Minutes')"
           />
         </div>
         <p v-else-if="untilEndDate" class="monitoring-schedule-downtime-form__preset-hint">

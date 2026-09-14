@@ -26,7 +26,7 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils.automation_config import RemoteAutomationConfig
-from tests.testlib.unit.gui.config_sync_test_helper import (
+from tests.unit.cmk.gui.helpers.config_sync_test_helper import (
     create_sync_snapshot,
     get_activation_manager,
 )

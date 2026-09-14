@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.update_config.plugins.actions import global_settings
 from tests.testlib.unit.fake_site import edition as edition_from_env
-from tests.testlib.unit.gui.config_variable_form_data_test_helper import (
+from tests.unit.cmk.gui.helpers.config_variable_form_data_test_helper import (
     make_global_settings_context,
     validate_disk_value,
 )

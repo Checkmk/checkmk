@@ -34,6 +34,10 @@ from tests.testlib.unit.gui.web_test_app import (
     WebTestAppForCMK,
 )
 
+# The shared test bodies assert on behalf of the tests that call them and are imported
+# by the test modules of every edition, so they need the rewrite the test modules get.
+pytest.register_assert_rewrite("tests.unit.cmk.gui.helpers")
+
 
 @pytest.fixture()
 def flask_app(

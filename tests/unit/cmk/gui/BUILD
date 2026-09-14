@@ -30,6 +30,39 @@ py_library(
 )
 
 py_library(
+    name = "helpers",
+    testonly = True,
+    srcs = glob(["helpers/**/*.py"]),
+    imports = ["../../../.."],
+    tags = [
+        "deballast-keep=//cmk/base/config",  # provides cmk.base.default_config, whose own target is private to cmk/base
+    ],
+    visibility = [
+        "//tests/unit/cmk/gui:__subpackages__",
+        "//tests/unit/cmk/update_config:__subpackages__",  # FIXME
+    ],
+    deps = [
+        "//cmk/base/config",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui/form_specs",
+        "//cmk/gui/mkeventd",
+        "//cmk/gui/nodevis:utils",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//packages/cmk-inventory:inventory",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-messaging",
+        "//tests/testlib/common",
+        "//tests/testlib/unit",
+        requirement("flask"),
+        requirement("pytest-mock"),
+        requirement("pytest"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_library(
     name = "compare_html",
     testonly = True,
     srcs = ["compare_html.py"],
@@ -150,6 +183,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
+        ":helpers",
         ":init_py",
         "//cmk/gui:auth_core",
         "//cmk/gui:customer",
@@ -299,6 +333,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
+        ":helpers",
         ":init_py",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",

@@ -15,7 +15,7 @@ from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.rulesets.v1 import Help, Title
-from tests.testlib.unit.gui.host_attributes_test_helper import BASE_EXPECTED_ATTRIBUTES
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import BASE_EXPECTED_ATTRIBUTES
 
 
 @pytest.mark.usefixtures("load_config")

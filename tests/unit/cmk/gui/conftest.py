@@ -51,6 +51,10 @@ from tests.testlib.unit.gui.web_test_app import (
 )
 from tests.testlib.unit.rest_api_client import ClientRegistry, get_client_registry
 
+# The shared test bodies assert on behalf of the tests that call them and are imported
+# by the test modules of every edition, so they need the rewrite the test modules get.
+pytest.register_assert_rewrite("tests.unit.cmk.gui.helpers")
+
 
 @pytest.fixture
 def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:

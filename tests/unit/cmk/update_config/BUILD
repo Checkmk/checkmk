@@ -42,6 +42,7 @@ py_cmk_test(
         "//packages/cmk-wsgi",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
+        "//tests/unit/cmk/gui:helpers",
         requirement("flask"),
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),

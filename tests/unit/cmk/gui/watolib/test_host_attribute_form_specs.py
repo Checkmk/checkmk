@@ -13,7 +13,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     all_host_attributes,
 )
-from tests.testlib.unit.gui.host_attributes_test_helper import (
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import (
     assert_cases_cover_form_spec_attributes,
     assert_form_spec_attribute_lifecycle,
     assert_form_spec_attribute_rejects,

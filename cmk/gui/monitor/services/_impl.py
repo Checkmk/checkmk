@@ -10,7 +10,7 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Collection, Mapping, Sequence, Set
+from collections.abc import Callable, Collection, Mapping, Sequence, Set
 from typing import cast
 
 from cmk.ccc.hostaddress import HostName
@@ -96,7 +96,7 @@ class LiveStatusHostServicesRepository:
                     for column in columns
                 ),
             ],
-            filter_expr=_build_host_services_filter(hostname, _sanitize_query(query)),
+            filter_expr=_build_host_services_filter(hostname, _sanitize_query(query), fields),
             extra_headers=extra_headers,
         )
 
@@ -239,15 +239,27 @@ class LiveStatusHostServicesRepository:
     def count_total(self, hostname: str) -> int:
         return self._count_services(hostname)
 
-    def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
+    def count_matched(
+        self,
+        hostname: str,
+        *,
+        query: str,
+        filters: ServiceFilter,
+        fields: Set[ServiceOptionalField],
+    ) -> int:
         # A filtered total can't be read from the ``status`` table, so the matches are counted
         # server-side via ``Stats`` instead of transferring and counting every matching row.
-        return self._count_services(hostname, query=query, filters=filters)
+        return self._count_services(hostname, query=query, filters=filters, fields=fields)
 
     def _count_services(
-        self, hostname: str, *, query: str = "", filters: ServiceFilter = ServiceFilter("")
+        self,
+        hostname: str,
+        *,
+        query: str = "",
+        filters: ServiceFilter = ServiceFilter(""),
+        fields: Set[ServiceOptionalField] = frozenset(),
     ) -> int:
-        filter_expr = _build_host_services_filter(hostname, _sanitize_query(query))
+        filter_expr = _build_host_services_filter(hostname, _sanitize_query(query), fields)
         stats_query = "\n".join(
             (
                 f"GET {Services.__tablename__}",
@@ -346,15 +358,36 @@ def _split_filter_lines(filters: ServiceFilter) -> list[str]:
     return filters.split("\n") if filters else []
 
 
-def _build_query_filter(query: str) -> QueryExpression:
+_SEARCHED_FIELDS: Mapping[ServiceOptionalField, Callable[[str], QueryExpression]] = {
+    ServiceOptionalField.LABELS: lambda query: Or(
+        Services.label_names.contains(query, ignore_case=True),
+        Services.label_values.contains(query, ignore_case=True),
+    ),
+    ServiceOptionalField.TAGS: lambda query: Or(
+        Services.tag_names.contains(query, ignore_case=True),
+        Services.tag_values.contains(query, ignore_case=True),
+    ),
+    ServiceOptionalField.CONTACTS: lambda query: Services.contacts.contains(
+        query, ignore_case=True
+    ),
+    ServiceOptionalField.CONTACT_GROUPS: lambda query: Services.contact_groups.contains(
+        query, ignore_case=True
+    ),
+}
+
+
+def _build_query_filter(query: str, fields: Set[ServiceOptionalField]) -> QueryExpression:
     if not query:
         return NothingExpression()
 
     return Or(
         Services.description.contains(query, ignore_case=True),
         Services.plugin_output.contains(query, ignore_case=True),
+        *(build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields),
     )
 
 
-def _build_host_services_filter(hostname: str, query: str) -> QueryExpression:
-    return And(Services.host_name == hostname, _build_query_filter(query))
+def _build_host_services_filter(
+    hostname: str, query: str, fields: Set[ServiceOptionalField]
+) -> QueryExpression:
+    return And(Services.host_name == hostname, _build_query_filter(query, fields))

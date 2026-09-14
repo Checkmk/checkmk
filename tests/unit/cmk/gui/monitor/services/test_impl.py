@@ -146,7 +146,12 @@ def test_count_matched_query_shape() -> None:
         "Filter: description ~~ CPU\nFilter: plugin_output ~~ CPU\nOr: 2\nAnd: 2",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        assert repo.count_matched(_UNKNOWN_HOSTNAME, query="CPU", filters=ServiceFilter("")) == 0
+        assert (
+            repo.count_matched(
+                _UNKNOWN_HOSTNAME, query="CPU", filters=ServiceFilter(""), fields=frozenset()
+            )
+            == 0
+        )
 
 
 def test_count_matched_applies_filters() -> None:
@@ -156,7 +161,12 @@ def test_count_matched_applies_filters() -> None:
         "Filter: state = 1",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.count_matched(_UNKNOWN_HOSTNAME, query="", filters=ServiceFilter("Filter: state = 1"))
+        repo.count_matched(
+            _UNKNOWN_HOSTNAME,
+            query="",
+            filters=ServiceFilter("Filter: state = 1"),
+            fields=frozenset(),
+        )
 
 
 def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
@@ -171,7 +181,10 @@ def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
         repo.count_matched(
-            _UNKNOWN_HOSTNAME, query="", filters=ServiceFilter("Filter: state = evil\rmore")
+            _UNKNOWN_HOSTNAME,
+            query="",
+            filters=ServiceFilter("Filter: state = evil\rmore"),
+            fields=frozenset(),
         )
 
 
@@ -248,14 +261,58 @@ def test_every_optional_field_names_the_columns_it_needs() -> None:
 
 
 def test_build_query_filter_without_a_query_matches_everything() -> None:
-    assert _build_query_filter("").render() == []
+    assert _build_query_filter("", frozenset(ServiceOptionalField)).render() == []
 
 
 def test_build_query_filter_searches_the_name_and_the_summary() -> None:
-    assert _build_query_filter("CPU").render() == [
+    assert _build_query_filter("CPU", frozenset()).render() == [
         ("Filter", "description ~~ CPU"),
         ("Filter", "plugin_output ~~ CPU"),
         ("Or", "2"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "field, expected",
+    [
+        pytest.param(
+            ServiceOptionalField.LABELS,
+            [
+                ("Filter", "label_names ~~ CPU"),
+                ("Filter", "label_values ~~ CPU"),
+                ("Or", "2"),
+            ],
+            id="labels match by name or by value",
+        ),
+        pytest.param(
+            ServiceOptionalField.TAGS,
+            [
+                ("Filter", "tag_names ~~ CPU"),
+                ("Filter", "tag_values ~~ CPU"),
+                ("Or", "2"),
+            ],
+            id="tags match by name or by value",
+        ),
+        pytest.param(
+            ServiceOptionalField.CONTACTS,
+            [("Filter", "contacts ~~ CPU")],
+            id="contacts",
+        ),
+        pytest.param(
+            ServiceOptionalField.CONTACT_GROUPS,
+            [("Filter", "contact_groups ~~ CPU")],
+            id="contact groups",
+        ),
+    ],
+)
+def test_build_query_filter_searches_a_shown_list_column(
+    field: ServiceOptionalField, expected: list[tuple[str, str]]
+) -> None:
+    assert _build_query_filter("CPU", frozenset({field})).render() == [
+        ("Filter", "description ~~ CPU"),
+        ("Filter", "plugin_output ~~ CPU"),
+        *expected,
+        ("Or", "3"),
     ]
 
 

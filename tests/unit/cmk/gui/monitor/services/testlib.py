@@ -83,7 +83,14 @@ def get_fake_host_services_repository(
         def count_total(self, hostname: str) -> int:  # noqa: ARG002
             return len(self._services)
 
-        def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:  # noqa: ARG002
+        def count_matched(
+            self,
+            hostname: str,  # noqa: ARG002
+            *,
+            query: str,
+            filters: ServiceFilter,  # noqa: ARG002
+            fields: Set[ServiceOptionalField] = frozenset(),  # noqa: ARG002
+        ) -> int:
             # Not implementing filter matching as we don't need to test a fake implementation of
             # this.
             return len([s for s in self._services if query.lower() in s.name.lower()])

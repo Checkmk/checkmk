@@ -203,8 +203,9 @@ class ServicesRequestBody:
         PlainValidator(func=parse_service_search_query, json_schema_input_type=str),
     ] = api_field(
         description=(
-            "Search text, matched against the service name and its summary. Omit or pass empty "
-            "string to return all services."
+            "Search text, matched against the service name, its summary, and every text field "
+            "asked for through `fields` (labels, tags, contacts, contact_groups). Omit or pass "
+            "empty string to return all services."
         ),
         example="CPU",
         default_factory=ApiOmitted,
@@ -295,7 +296,7 @@ def _handle_list_services(
         matched_service_count = len(services)
     elif query or filters:
         matched_service_count = host_services_repo.count_matched(
-            hostname, query=query, filters=filters
+            hostname, query=query, filters=filters, fields=fields
         )
     else:
         matched_service_count = total_service_count

@@ -40,6 +40,7 @@ py_cmk_test(
         "//packages/cmk-plugins/cmk/plugins/lib",
         "//packages/cmk-werks:site",
         "//packages/cmk-wsgi",
+        "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("flask"),
         requirement("pytest-asyncio"),

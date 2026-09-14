@@ -29,7 +29,7 @@ from tests.testlib.gui.web_test_app import SetConfig
 _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
-    "scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period is_flapping staleness last_check "
+    "scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check "
     "last_state_change perf_data check_command"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
@@ -269,6 +269,8 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "accept_passive_checks": 1,
         "in_notification_period": 1,
         "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
         "is_flapping": 0,
         "staleness": staleness,
         "last_check": 0,
@@ -338,3 +340,53 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
         )
 
     assert [service.active_checks_disabled for service in services] == [expected]
+
+
+@pytest.mark.parametrize(
+    "in_check_period, in_passive_check_period, expected",
+    [
+        pytest.param(1, 1, True, id="inside both periods"),
+        pytest.param(0, 1, False, id="outside the active check period"),
+        pytest.param(1, 0, False, id="outside the passive check period"),
+        pytest.param(0, 0, False, id="outside both periods"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
+    in_check_period: int, in_passive_check_period: int, expected: bool
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "OK",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": in_check_period,
+        "in_passive_check_period": in_passive_check_period,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": 0,
+        "perf_data": "",
+        "check_command": "check_cpu",
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.in_check_period for service in services] == [expected]

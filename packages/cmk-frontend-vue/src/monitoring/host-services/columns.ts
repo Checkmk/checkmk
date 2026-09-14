@@ -77,6 +77,7 @@ type ServiceModeField =
   | 'passive_checks_disabled'
   | 'in_notification_period'
   | 'in_service_period'
+  | 'in_check_period'
 
 export function useHostServicesColumns({
   includeSelect
@@ -160,7 +161,8 @@ export function useHostServicesColumns({
       { field: 'active_checks_disabled', title: _t('Active checks disabled') },
       { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
       { field: 'in_notification_period', title: _t('In notification period') },
-      { field: 'in_service_period', title: _t('In service period') }
+      { field: 'in_service_period', title: _t('In service period') },
+      { field: 'in_check_period', title: _t('In check period') }
     ]
   }
 

@@ -166,6 +166,7 @@ class BooleanCondition:
         "passive_checks_disabled",
         "in_notification_period",
         "in_service_period",
+        "in_check_period",
         "is_flapping",
         "stale",
     ] = api_field(description="Host boolean field to filter on", example="acknowledged")

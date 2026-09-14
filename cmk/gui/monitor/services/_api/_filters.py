@@ -86,6 +86,7 @@ class ServiceBooleanCondition:
         "passive_checks_disabled",
         "in_notification_period",
         "in_service_period",
+        "in_check_period",
         "is_flapping",
         "stale",
     ] = api_field(description="Boolean service field to filter on", example="acknowledged")
@@ -300,6 +301,18 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
                         _manually_disabled_filters(
                             "passive_checks_enabled", column="accept_passive_checks"
                         )
+                    )
+                    if not node.value:
+                        filters.append("Negate:")
+                case "in_check_period":
+                    # A service has one period per check kind and is checked only inside both,
+                    # which is what the icon reports, so the filter has to ask for both too.
+                    filters.extend(
+                        [
+                            "Filter: in_check_period = 1",
+                            "Filter: in_passive_check_period = 1",
+                            "And: 2",
+                        ]
                     )
                     if not node.value:
                         filters.append("Negate:")

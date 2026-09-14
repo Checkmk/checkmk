@@ -79,6 +79,7 @@ class Host:
     passive_checks_disabled: bool
     in_notification_period: bool
     in_service_period: bool
+    in_check_period: bool
     is_flapping: bool
     stale: bool
     folder: str | None

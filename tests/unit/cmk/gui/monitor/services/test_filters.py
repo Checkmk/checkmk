@@ -142,6 +142,28 @@ def test_query_builder_passive_checks_disabled_condition(value: bool, expected: 
 @pytest.mark.parametrize(
     "value, expected",
     [
+        pytest.param(
+            True,
+            "Filter: in_check_period = 1\nFilter: in_passive_check_period = 1\nAnd: 2",
+            id="inside both check periods",
+        ),
+        pytest.param(
+            False,
+            "Filter: in_check_period = 1\nFilter: in_passive_check_period = 1\nAnd: 2\nNegate:",
+            id="outside at least one check period",
+        ),
+    ],
+)
+def test_query_builder_in_check_period_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="in_check_period", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
         (True, "Filter: comments !="),
         (False, "Filter: comments ="),
     ],

@@ -81,6 +81,8 @@ class LiveStatusHostServicesRepository:
                 Services.accept_passive_checks,
                 Services.in_notification_period,
                 Services.in_service_period,
+                Services.in_check_period,
+                Services.in_passive_check_period,
                 Services.is_flapping,
                 Services.staleness,
                 Services.last_check,
@@ -118,6 +120,7 @@ class LiveStatusHostServicesRepository:
                         ),
                         in_notification_period=bool(row["in_notification_period"]),
                         in_service_period=bool(row["in_service_period"]),
+                        in_check_period=_in_check_period(row),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         summary=row["plugin_output"],
@@ -160,6 +163,8 @@ class LiveStatusHostServicesRepository:
                 Services.accept_passive_checks,
                 Services.in_notification_period,
                 Services.in_service_period,
+                Services.in_check_period,
+                Services.in_passive_check_period,
                 Services.is_flapping,
                 Services.staleness,
                 Services.host_alias,
@@ -210,6 +215,7 @@ class LiveStatusHostServicesRepository:
             ),
             in_notification_period=bool(row["in_notification_period"]),
             in_service_period=bool(row["in_service_period"]),
+            in_check_period=_in_check_period(row),
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             host_alias=row["host_alias"],
@@ -306,6 +312,15 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     natural_sort_flag = " natural" if primary.column.natural_sort else ""
 
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"
+
+
+def _in_check_period(row: Mapping[str, object]) -> bool:
+    """Whether a service is currently being checked at all.
+
+    A service has two periods, one per check kind, and leaving either of them stops the checks
+    it governs - so it counts as checked only while inside both.
+    """
+    return bool(row["in_check_period"]) and bool(row["in_passive_check_period"])
 
 
 def _manually_disabled(

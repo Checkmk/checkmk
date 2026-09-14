@@ -17,6 +17,7 @@ _NO_MODES = {
     "passive_checks_disabled": False,
     "in_notification_period": True,
     "in_service_period": True,
+    "in_check_period": True,
 }
 
 
@@ -80,6 +81,12 @@ def test_build_host_modes_out_of_service_period() -> None:
     assert [mode.icon_name for mode in build_host_modes(host)] == ["outof-serviceperiod"]
 
 
+def test_build_host_modes_not_currently_checked() -> None:
+    host = HostFactory.build(**_NO_MODES | {"in_check_period": False})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["pause"]
+
+
 def test_build_host_modes_all_modes() -> None:
     host = HostFactory.build(
         in_downtime=True,
@@ -90,6 +97,7 @@ def test_build_host_modes_all_modes() -> None:
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
+        in_check_period=False,
     )
 
     assert [mode.icon_name for mode in build_host_modes(host)] == [
@@ -101,4 +109,5 @@ def test_build_host_modes_all_modes() -> None:
         "npassive",
         "outofnot",
         "outof-serviceperiod",
+        "pause",
     ]

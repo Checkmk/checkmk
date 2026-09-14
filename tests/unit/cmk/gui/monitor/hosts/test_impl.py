@@ -174,6 +174,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "accept_passive_checks": 1,
         "in_notification_period": 1,
         "in_service_period": 1,
+        "in_check_period": 1,
         "is_flapping": 0,
         "staleness": staleness,
     }

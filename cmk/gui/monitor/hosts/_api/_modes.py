@@ -93,4 +93,12 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 title=_("Out of service period"),
             )
         )
+    if not host.in_check_period:
+        modes.append(
+            ModeInfo(
+                icon_name="pause",
+                link=host_view_link("host", host),
+                title=_("This host is currently not being checked"),
+            )
+        )
     return modes

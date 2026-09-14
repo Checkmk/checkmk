@@ -59,6 +59,7 @@ function storedConsolidation(stored: MetricBackendCustomQuery): WireConsolidatio
     case 'histogram_sum_rate':
     case 'histogram_sum_delta':
     case 'histogram_sum_raw':
+    case 'histogram_count_raw':
       return { type: 'histogram', function: fn, lookback_seconds: lookbackSeconds }
     case 'histogram_quantile':
       return {

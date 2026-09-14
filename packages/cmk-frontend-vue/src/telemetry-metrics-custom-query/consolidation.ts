@@ -94,6 +94,12 @@ export function buildConsolidationFunction(
         function: 'histogram_sum_raw',
         lookback_seconds: lookbackSeconds
       }
+    case 'histogram_count_raw':
+      return {
+        type: 'histogram',
+        function: 'histogram_count_raw',
+        lookback_seconds: lookbackSeconds
+      }
     case 'histogram_fraction_below':
       return {
         type: 'histogram',

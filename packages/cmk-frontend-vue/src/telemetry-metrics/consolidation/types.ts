@@ -27,6 +27,7 @@ export type HistogramFunction =
   | 'histogram_fraction_below'
   | 'histogram_fraction_between'
   | 'histogram_sum_raw'
+  | 'histogram_count_raw'
 
 type FunctionsByType = {
   gauge: GaugeFunction
@@ -78,7 +79,8 @@ export const CONSOLIDATION_CATALOG: {
     { fn: 'histogram_sum_rate', raw: false, output: 'float' },
     { fn: 'histogram_fraction_below', raw: false, output: 'float' },
     { fn: 'histogram_fraction_between', raw: false, output: 'float' },
-    { fn: 'histogram_sum_raw', raw: true, output: 'float' }
+    { fn: 'histogram_sum_raw', raw: true, output: 'float' },
+    { fn: 'histogram_count_raw', raw: true, output: 'float' }
   ]
 }
 

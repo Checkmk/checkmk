@@ -30,6 +30,7 @@
         "histogram_sum_rate",
         "histogram_sum_delta",
         "histogram_sum_raw",
+        "histogram_count_raw",
         "histogram_fraction_below",
         "histogram_fraction_between"
       ]
@@ -87,7 +88,8 @@
             "histogram_count_rate",
             "histogram_sum_rate",
             "histogram_sum_delta",
-            "histogram_sum_raw"
+            "histogram_sum_raw",
+            "histogram_count_raw"
           ]
         },
         "lookback_seconds": { "type": "number" }

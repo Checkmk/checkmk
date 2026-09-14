@@ -25,6 +25,7 @@ export type DesignerConsolidationFunction =
         | 'histogram_sum_rate'
         | 'histogram_sum_delta'
         | 'histogram_sum_raw'
+        | 'histogram_count_raw'
       lookback_seconds: number
     }
   | { type: 'histogram_quantile'; lookback_seconds: number; percentile: number }
@@ -70,6 +71,7 @@ export function consolidationFromWire(
         case 'histogram_sum_rate':
         case 'histogram_sum_delta':
         case 'histogram_sum_raw':
+        case 'histogram_count_raw':
           return { type: wire.function, lookback_seconds: lookbackSeconds }
         case 'histogram_quantile':
           return {
@@ -141,6 +143,7 @@ export function consolidationToWire(
     case 'histogram_sum_rate':
     case 'histogram_sum_delta':
     case 'histogram_sum_raw':
+    case 'histogram_count_raw':
       return { type: 'histogram', function: consolidation.type, lookback_seconds: lookbackSeconds }
     case 'histogram_quantile':
       return {

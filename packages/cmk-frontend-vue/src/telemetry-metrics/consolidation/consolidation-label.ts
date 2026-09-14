@@ -42,7 +42,8 @@ function functionLabels(): Record<
       histogram_quantile: _t('Quantile'),
       histogram_fraction_below: _t('Fraction below'),
       histogram_fraction_between: _t('Fraction between'),
-      histogram_sum_raw: _t('Cumulative sum field')
+      histogram_sum_raw: _t('Cumulative sum field'),
+      histogram_count_raw: _t('Cumulative count field')
     }
   }
 }
@@ -82,6 +83,7 @@ export function compactFunction(model: ConsolidationModel): string {
       return _t('last')
     case 'sum_last_raw':
     case 'histogram_sum_raw':
+    case 'histogram_count_raw':
       return _t('raw')
     case 'gauge_avg':
       return _t('avg')

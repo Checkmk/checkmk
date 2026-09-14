@@ -132,6 +132,12 @@ class HistogramSumRaw:
 
 
 @dataclass(frozen=True, kw_only=True)
+class HistogramCountRaw:
+    lookback_seconds: float
+    type_: Literal["histogram_count_raw"] = "histogram_count_raw"
+
+
+@dataclass(frozen=True, kw_only=True)
 class HistogramFractionBelow:
     lookback_seconds: float
     threshold: float
@@ -185,6 +191,7 @@ type ConsolidationFunction = (
     | HistogramSumRate
     | HistogramSumDelta
     | HistogramSumRaw
+    | HistogramCountRaw
     | HistogramFractionBelow
     | HistogramFractionBetween
     | HistogramPreserveQuantile

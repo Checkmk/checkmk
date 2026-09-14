@@ -45,8 +45,25 @@ function renderDropdown(initial: ColumnFilterNode<FilterField> | undefined = und
             }
           },
           {
-            trigger: ({ toggle }: { toggle: () => void }) =>
-              h('button', { type: 'button', onClick: toggle }, 'Open')
+            trigger: ({
+              toggle,
+              isOpen,
+              panelId
+            }: {
+              toggle: () => void
+              isOpen: boolean
+              panelId: string
+            }) =>
+              h(
+                'button',
+                {
+                  type: 'button',
+                  onClick: toggle,
+                  'aria-expanded': isOpen,
+                  'aria-controls': panelId
+                },
+                'Open'
+              )
           }
         )
     }
@@ -122,4 +139,19 @@ test('a click that unmounts its own target does not close the funnel', async () 
   await nextTick()
 
   expect(screen.queryByRole('group', { name: 'Filter State' })).not.toBeNull()
+})
+
+test('the trigger points at the panel it expands', async () => {
+  const user = userEvent.setup()
+  renderDropdown()
+
+  const trigger = screen.getByRole('button', { name: 'Open' })
+  expect(trigger).toHaveAttribute('aria-expanded', 'false')
+
+  await user.click(trigger)
+
+  expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  const panel = screen.getByRole('group', { name: 'Filter State' })
+  expect(trigger.getAttribute('aria-controls')).toBe(panel.id)
+  expect(panel.id).not.toBe('')
 })

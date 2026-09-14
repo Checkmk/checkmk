@@ -24,6 +24,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
+import useId from 'cmk-ui-library/lib/useId'
 import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
@@ -62,6 +63,7 @@ const props = defineProps<{
 const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
 
 const { _t } = usei18n()
+const panelId = useId()
 
 const vClickOutside = useClickOutside()
 const shortcuts = getKeyShortcutServiceInstance()
@@ -294,10 +296,17 @@ onBeforeUnmount(() => {
 
 <template>
   <span ref="trigger" class="monitoring-filter-dropdown">
-    <slot name="trigger" :toggle="toggle" :is-open="isOpen" :is-active="isActive" />
+    <slot
+      name="trigger"
+      :toggle="toggle"
+      :is-open="isOpen"
+      :is-active="isActive"
+      :panel-id="panelId"
+    />
 
     <div
       v-if="isOpen"
+      :id="panelId"
       ref="panel"
       v-click-outside="onClickOutside"
       class="monitoring-filter-dropdown__panel"

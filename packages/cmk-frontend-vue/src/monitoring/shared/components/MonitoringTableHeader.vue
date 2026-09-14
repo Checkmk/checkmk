@@ -266,7 +266,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             :model-value="filterValue(header.column)"
             @update:model-value="setFilterValue(header.column, $event)"
           >
-            <template #trigger="{ toggle, isOpen, isActive }">
+            <template #trigger="{ toggle, isOpen, isActive, panelId }">
               <button
                 type="button"
                 class="monitoring-table-header__filter-button"
@@ -279,8 +279,8 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
                 :aria-label="
                   `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
                 "
-                aria-haspopup="true"
                 :aria-expanded="isOpen"
+                :aria-controls="panelId"
                 @click="toggle"
               >
                 <CmkIconEmblem :emblem="isActive ? 'warning' : undefined">

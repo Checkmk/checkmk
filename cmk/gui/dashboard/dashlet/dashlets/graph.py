@@ -141,7 +141,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         )
 
 
-class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](Dashlet[T]):
+class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
     @classmethod
     @override
     def has_context(cls) -> bool:
@@ -174,9 +174,6 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
                 )
 
     @abc.abstractmethod
-    def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
-
-    @abc.abstractmethod
     def discover_graphs(
         self, *, debug: bool, user_permissions: UserPermissions
     ) -> DiscoveredGraphs:
@@ -199,27 +196,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         if "timerange" not in self._dashlet_spec:
             self._dashlet_spec["timerange"] = "25h"  # type: ignore[unreachable]
 
-        self._graph_resolved = False
-        self._cached_graph_specification: TGraphSpec | None = None
-        self._resolve_exception: Exception | None = None
         self._cached_display_title: str | None = None
-
-    def _resolve_graph(self) -> None:
-        """Build the specification once, recording rather than raising a failure."""
-        if self._graph_resolved:
-            return
-        self._graph_resolved = True
-        try:
-            self._cached_graph_specification = self.build_graph_specification(
-                self.context if self.has_context() else {}
-            )
-        except Exception as e:
-            self._resolve_exception = e
-
-    def graph_specification(self) -> TGraphSpec | None:
-        """The resolved specification, or None when it could not be built."""
-        self._resolve_graph()
-        return self._cached_graph_specification
 
     @override
     def default_display_title(self) -> str:
@@ -249,6 +226,40 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         return evaluated.graphs[0].title if evaluated.graphs else self.title()
 
 
+class ABCGraphSpecificationDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
+    ABCGraphDashlet[T]
+):
+    @abc.abstractmethod
+    def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
+
+    def __init__(
+        self,
+        dashlet: T,
+        base_context: VisualContext | None = None,
+    ) -> None:
+        super().__init__(dashlet=dashlet, base_context=base_context)
+        self._graph_resolved = False
+        self._cached_graph_specification: TGraphSpec | None = None
+        self._resolve_exception: Exception | None = None
+
+    def _resolve_graph(self) -> None:
+        """Build the specification once, recording rather than raising a failure."""
+        if self._graph_resolved:
+            return
+        self._graph_resolved = True
+        try:
+            self._cached_graph_specification = self.build_graph_specification(
+                self.context if self.has_context() else {}
+            )
+        except Exception as e:
+            self._resolve_exception = e
+
+    def graph_specification(self) -> TGraphSpec | None:
+        """The resolved specification, or None when it could not be built."""
+        self._resolve_graph()
+        return self._cached_graph_specification
+
+
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     # Legacy 1-based graph index. Present only in pre-CMK-7308 configs.
     source: NotRequired[int]
@@ -256,7 +267,9 @@ class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     graph_id: NotRequired[str]
 
 
-class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]):
+class TemplateGraphDashlet(
+    ABCGraphSpecificationDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]
+):
     """Dashlet for rendering a single performance graph"""
 
     @classmethod

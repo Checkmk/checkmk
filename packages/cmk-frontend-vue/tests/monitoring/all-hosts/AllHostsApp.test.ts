@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type {
   MonitoringAction,
@@ -13,6 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import AllHostsApp from '@/monitoring/all-hosts/AllHostsApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -23,6 +25,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.restoreAllMocks()
   localStorage.clear()
   window.history.replaceState(null, '', '/monitor_all_hosts.py')
@@ -135,4 +138,95 @@ test('offers row selection once one action is permitted', async () => {
 
   expect(await screen.findByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
   expect(screen.getByRole('toolbar', { name: 'Actions for selected hosts' })).toBeInTheDocument()
+})
+
+/*
+ * What a command's outcome does to the listing. The refresh mechanism itself is covered on the
+ * service; what is covered here is which outcome arms it.
+ */
+
+const RESCHEDULE: MonitoringAction = {
+  ident: 'reschedule',
+  title: 'Reschedule active checks',
+  icon: 'reload'
+}
+
+const LISTING = '/monitor/hosts'
+const RESCHEDULE_COMMAND = '/monitor/hosts/actions/reschedule'
+
+/** Answers the two endpoints this flow touches; any other is a wiring mistake, not a test case. */
+function mockBackend(commandFails: boolean): void {
+  postSpy.mockImplementation((path: string) => {
+    if (path === LISTING) {
+      return Promise.resolve({
+        data: {
+          hosts: [makeHost()],
+          meta: { limit: 1000, matched: 1, total: 1, fields: [] }
+        },
+        error: undefined,
+        response: new Response()
+      })
+    }
+    if (path === RESCHEDULE_COMMAND) {
+      return commandFails
+        ? Promise.resolve({
+            data: undefined,
+            error: {},
+            response: new Response('', { status: 403, statusText: 'Forbidden' })
+          })
+        : Promise.resolve({
+            data: { rescheduled: 1 },
+            error: undefined,
+            response: new Response()
+          })
+    }
+    throw new Error(`unexpected POST to ${path}`)
+  })
+}
+
+function listingReads(): number {
+  return postSpy.mock.calls.filter(([path]: [string]) => path === LISTING).length
+}
+
+/*
+ * Loads one host, selects it and runs the reschedule command on it. Reschedule is the one command
+ * that runs on click, so this reaches an outcome without a form.
+ *
+ * The clock is faked to hold the deferred refresh still, which rules out every testing-library
+ * waiter: they advance a faked clock themselves and would fire the very timer under test.
+ */
+async function rescheduleTheOnlyHost(commandFails: boolean): Promise<void> {
+  vi.useFakeTimers()
+  const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+  mockBackend(commandFails)
+
+  renderApp('community', { actions: [RESCHEDULE] })
+  await vi.advanceTimersByTimeAsync(0)
+
+  await user.click(screen.getByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: RESCHEDULE.title }))
+  await vi.advanceTimersByTimeAsync(0)
+}
+
+test('re-reads the listing a moment after a command the site accepted', async () => {
+  await rescheduleTheOnlyHost(false)
+
+  expect(screen.getByText('Rescheduled 1 check')).toBeInTheDocument()
+  expect(listingReads()).toBe(1)
+
+  await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+  expect(listingReads()).toBe(2)
+})
+
+test('leaves the listing alone after a command the site refused', async () => {
+  await rescheduleTheOnlyHost(true)
+
+  expect(
+    screen.getByText('Could not reschedule the checks for the selected hosts.')
+  ).toBeInTheDocument()
+
+  await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+  expect(listingReads()).toBe(1)
 })

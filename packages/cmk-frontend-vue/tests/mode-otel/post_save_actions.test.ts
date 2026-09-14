@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import * as cmkFetch from 'cmk-ui-library/lib/cmkFetch'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
 import type { Mock } from 'vitest'
 
 import { configEntityAPI } from '@/form'
@@ -28,23 +28,33 @@ function makePasswordConfig(id: string, title = id): PasswordConfig {
   }
 }
 
-function makeFetchResponse(status: number, body: unknown = null): cmkFetch.CmkFetchResponse {
-  return {
-    status,
-    raiseForStatus: vi.fn(async () => {
-      if (status >= 200 && status <= 299) {
-        return
-      }
-      // Mirror production: a non-2xx response raises a CmkFetchError whose
-      // message is `"${httpStatusPhrase}: ${apiDetail}"`.
-      const message =
-        typeof body === 'object' && body !== null && 'title' in body && 'detail' in body
-          ? `${(body as { title: string }).title}: ${(body as { detail: string }).detail}`
-          : `HTTP ${status}`
-      throw new cmkFetch.CmkFetchError(message, null, '', status)
-    }),
-    json: vi.fn().mockResolvedValue(body)
-  } as unknown as cmkFetch.CmkFetchResponse
+const IF_MATCH = { 'If-Match': '*' }
+const JSON_HEADER = { 'Content-Type': 'application/json' }
+
+type ClientResult = { data?: unknown; error?: unknown; response: Response }
+
+/** A 2xx client result carrying `body` as the parsed payload. */
+function makeOk(body: unknown = null, status = 200): ClientResult {
+  return { data: body, error: undefined, response: new Response(null, { status }) }
+}
+
+/** A 204 client result, as returned by the update and delete endpoints. */
+function makeNoContent(): ClientResult {
+  return { data: undefined, error: undefined, response: new Response(null, { status: 204 }) }
+}
+
+/**
+ * A non-2xx client result. `unwrap` turns a `{ title, detail }` error body into
+ * a CmkApiError whose message is `"${title}: ${detail}"`, which is what
+ * errorFromUnknown parses the detail back out of.
+ */
+function makeError(status: number, body: unknown = {}): ClientResult {
+  return { data: undefined, error: body, response: new Response(null, { status }) }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function spyOnClient(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'): any {
+  return vi.spyOn(client, method)
 }
 
 describe('POST_SAVE_ACTIONS', () => {
@@ -65,26 +75,22 @@ describe('POST_SAVE_ACTIONS', () => {
 
   describe('enableCollector.execute', () => {
     test('PUTs to the collector update endpoint with the selected site', async () => {
-      const spy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValueOnce(makeFetchResponse(200, { activation: { mode: 'disabled' } }))
-        .mockResolvedValueOnce(makeFetchResponse(204))
+      spyOnClient('GET').mockResolvedValueOnce(makeOk({ activation: { mode: 'disabled' } }))
+      const putSpy = spyOnClient('PUT').mockResolvedValueOnce(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
-      expect(spy).toHaveBeenCalledWith(
-        'api/internal/domain-types/otel_collector/actions/update/invoke',
-        'PUT',
-        { site_id: 'prod', activation: { mode: 'enabled' } }
-      )
+      expect(putSpy).toHaveBeenCalledWith('/domain-types/otel_collector/actions/update/invoke', {
+        params: { header: JSON_HEADER },
+        body: { site_id: 'prod', activation: { mode: 'enabled' } }
+      })
     })
 
     test('returns no rollback when the collector was already enabled', async () => {
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValueOnce(makeFetchResponse(200, { activation: { mode: 'enabled' } }))
-        .mockResolvedValueOnce(makeFetchResponse(204))
+      spyOnClient('GET').mockResolvedValueOnce(makeOk({ activation: { mode: 'enabled' } }))
+      spyOnClient('PUT').mockResolvedValueOnce(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -96,11 +102,8 @@ describe('POST_SAVE_ACTIONS', () => {
     })
 
     test('returns a rollback that disables the collector when it was previously disabled', async () => {
-      const spy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValueOnce(makeFetchResponse(200, { activation: { mode: 'disabled' } }))
-        .mockResolvedValueOnce(makeFetchResponse(204))
-        .mockResolvedValueOnce(makeFetchResponse(204))
+      spyOnClient('GET').mockResolvedValueOnce(makeOk({ activation: { mode: 'disabled' } }))
+      const putSpy = spyOnClient('PUT').mockResolvedValue(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -109,17 +112,19 @@ describe('POST_SAVE_ACTIONS', () => {
       if (result.ok) {
         expect(result.rollback).toBeDefined()
         await result.rollback!()
-        expect(spy).toHaveBeenLastCalledWith(
-          'api/internal/domain-types/otel_collector/actions/update/invoke',
-          'PUT',
-          { site_id: 'prod', activation: { mode: 'disabled' } }
+        expect(putSpy).toHaveBeenLastCalledWith(
+          '/domain-types/otel_collector/actions/update/invoke',
+          {
+            params: { header: JSON_HEADER },
+            body: { site_id: 'prod', activation: { mode: 'disabled' } }
+          }
         )
       }
     })
 
     test('returns a structured error when the endpoint returns a REST problem', async () => {
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValue(
-        makeFetchResponse(400, { title: 'Bad request', detail: 'Site does not exist' })
+      spyOnClient('GET').mockResolvedValue(
+        makeError(400, { title: 'Bad request', detail: 'Site does not exist' })
       )
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
@@ -134,14 +139,14 @@ describe('POST_SAVE_ACTIONS', () => {
     })
 
     test('returns a generic error for unexpected failures', async () => {
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network down'))
+      spyOnClient('GET').mockRejectedValue(new Error('Network down'))
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        // Non-CmkFetchError (network throw) surfaces no noisy detail.
+        // A non-CmkApiError (network throw) surfaces no noisy detail.
         expect(result.error.title).toBe('Could not enable the OpenTelemetry Collector')
         expect(result.error.detail).toBe('')
       }
@@ -150,26 +155,22 @@ describe('POST_SAVE_ACTIONS', () => {
 
   describe('enableDataBackend.execute', () => {
     test('PATCHes the data backend update endpoint with the selected site', async () => {
-      const spy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
-        .mockResolvedValueOnce(makeFetchResponse(204))
+      spyOnClient('GET').mockResolvedValueOnce(makeOk({ type: 'disabled' }))
+      const patchSpy = spyOnClient('PATCH').mockResolvedValueOnce(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
-      expect(spy).toHaveBeenCalledWith(
-        'api/internal/domain-types/data_backend/actions/update/invoke',
-        'PATCH',
-        { site_id: 'prod', config: { type: 'enabled' } }
-      )
+      expect(patchSpy).toHaveBeenCalledWith('/domain-types/data_backend/actions/update/invoke', {
+        params: { header: JSON_HEADER },
+        body: { site_id: 'prod', config: { type: 'enabled' } }
+      })
     })
 
     test('returns no rollback when the data backend was already enabled', async () => {
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValueOnce(makeFetchResponse(200, { type: 'enabled' }))
-        .mockResolvedValueOnce(makeFetchResponse(204))
+      spyOnClient('GET').mockResolvedValueOnce(makeOk({ type: 'enabled' }))
+      spyOnClient('PATCH').mockResolvedValueOnce(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -181,11 +182,8 @@ describe('POST_SAVE_ACTIONS', () => {
     })
 
     test('returns a rollback that disables the data backend when it was previously disabled', async () => {
-      const spy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
-        .mockResolvedValueOnce(makeFetchResponse(204))
-        .mockResolvedValueOnce(makeFetchResponse(204))
+      spyOnClient('GET').mockResolvedValueOnce(makeOk({ type: 'disabled' }))
+      const patchSpy = spyOnClient('PATCH').mockResolvedValue(makeNoContent())
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -194,17 +192,19 @@ describe('POST_SAVE_ACTIONS', () => {
       if (result.ok) {
         expect(result.rollback).toBeDefined()
         await result.rollback!()
-        expect(spy).toHaveBeenLastCalledWith(
-          'api/internal/domain-types/data_backend/actions/update/invoke',
-          'PATCH',
-          { site_id: 'prod', config: { type: 'disabled' } }
+        expect(patchSpy).toHaveBeenLastCalledWith(
+          '/domain-types/data_backend/actions/update/invoke',
+          {
+            params: { header: JSON_HEADER },
+            body: { site_id: 'prod', config: { type: 'disabled' } }
+          }
         )
       }
     })
 
     test('returns a structured error when the endpoint returns a REST problem', async () => {
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValue(
-        makeFetchResponse(400, { title: 'Bad request', detail: 'Site does not exist' })
+      spyOnClient('GET').mockResolvedValue(
+        makeError(400, { title: 'Bad request', detail: 'Site does not exist' })
       )
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
@@ -218,7 +218,7 @@ describe('POST_SAVE_ACTIONS', () => {
     })
 
     test('returns a generic error for unexpected failures', async () => {
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network down'))
+      spyOnClient('GET').mockRejectedValue(new Error('Network down'))
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableDataBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -233,8 +233,6 @@ describe('POST_SAVE_ACTIONS', () => {
 })
 
 describe('createOTelReceiverConfigAction', () => {
-  const OTEL_URL = 'api/internal/domain-types/otel_collector_config_receivers/collections/all'
-
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -252,9 +250,7 @@ describe('createOTelReceiverConfigAction', () => {
   })
 
   test('omits both receiver protocols when neither is configured', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(200, {}))
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
 
     const action = createOTelReceiverConfigAction({
       id: 'cfg1',
@@ -266,18 +262,22 @@ describe('createOTelReceiverConfigAction', () => {
     const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
     expect(result.ok).toBe(true)
-    expect(spy).toHaveBeenCalledWith(OTEL_URL, 'POST', {
-      id: 'cfg1',
-      title: 'cfg1',
-      disabled: false,
-      site: ['prod']
-    })
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/otel_collector_config_receivers/collections/all',
+      {
+        params: { header: JSON_HEADER },
+        body: {
+          id: 'cfg1',
+          title: 'cfg1',
+          disabled: false,
+          site: ['prod']
+        }
+      }
+    )
   })
 
   test('sends the cloud body shape when extended options are absent', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(200, {}))
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
 
     const action = createOTelReceiverConfigAction({
       id: 'cloud_cfg',
@@ -290,26 +290,30 @@ describe('createOTelReceiverConfigAction', () => {
     })
     await action.execute({ siteId: 'prod', configName: 'test-config' })
 
-    expect(spy).toHaveBeenCalledWith(OTEL_URL, 'POST', {
-      id: 'cloud_cfg',
-      title: 'cloud_cfg',
-      disabled: false,
-      site: ['prod'],
-      receiver_protocol_grpc: {
-        endpoint: {
-          auth: {
-            type: 'basicauth',
-            userlist: [{ username: 'alice', password: { type: 'store', value: 'pw_id_a' } }]
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/otel_collector_config_receivers/collections/all',
+      {
+        params: { header: JSON_HEADER },
+        body: {
+          id: 'cloud_cfg',
+          title: 'cloud_cfg',
+          disabled: false,
+          site: ['prod'],
+          receiver_protocol_grpc: {
+            endpoint: {
+              auth: {
+                type: 'basicauth',
+                userlist: [{ username: 'alice', password: { type: 'store', value: 'pw_id_a' } }]
+              }
+            }
           }
         }
       }
-    })
+    )
   })
 
   test('sends the ultimate body shape with custom socket address, encryption and event console', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(200, {}))
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
 
     const action = createOTelReceiverConfigAction({
       id: 'ult_cfg',
@@ -334,37 +338,41 @@ describe('createOTelReceiverConfigAction', () => {
     })
     await action.execute({ siteId: 'prod', configName: 'test-config' })
 
-    expect(spy).toHaveBeenCalledWith(OTEL_URL, 'POST', {
-      id: 'ult_cfg',
-      title: 'ult_cfg',
-      disabled: false,
-      site: ['prod'],
-      receiver_protocol_grpc: {
-        endpoint: {
-          auth: { type: 'none' },
-          socket_address: { type: 'custom', address: '0.0.0.0', port: 4317 },
-          encryption: false,
-          event_console: null
-        }
-      },
-      receiver_protocol_http: {
-        endpoint: {
-          auth: {
-            type: 'basicauth',
-            userlist: [{ username: 'bob', password: { type: 'store', value: 'pw_id_b' } }]
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/otel_collector_config_receivers/collections/all',
+      {
+        params: { header: JSON_HEADER },
+        body: {
+          id: 'ult_cfg',
+          title: 'ult_cfg',
+          disabled: false,
+          site: ['prod'],
+          receiver_protocol_grpc: {
+            endpoint: {
+              auth: { type: 'none' },
+              socket_address: { type: 'custom', address: '0.0.0.0', port: 4317 },
+              encryption: false,
+              event_console: null
+            }
           },
-          socket_address: { type: 'custom', address: '0.0.0.0', port: 4318 },
-          encryption: true,
-          event_console: { host_name_resource_attribute_key: 'host.name' }
+          receiver_protocol_http: {
+            endpoint: {
+              auth: {
+                type: 'basicauth',
+                userlist: [{ username: 'bob', password: { type: 'store', value: 'pw_id_b' } }]
+              },
+              socket_address: { type: 'custom', address: '0.0.0.0', port: 4318 },
+              encryption: true,
+              event_console: { host_name_resource_attribute_key: 'host.name' }
+            }
+          }
         }
       }
-    })
+    )
   })
 
   test('sends the default-IPv4 socket address as a marker without address or port', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(200, {}))
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
 
     const action = createOTelReceiverConfigAction({
       id: 'ult_cfg',
@@ -382,26 +390,30 @@ describe('createOTelReceiverConfigAction', () => {
     })
     await action.execute({ siteId: 'prod', configName: 'test-config' })
 
-    expect(spy).toHaveBeenCalledWith(OTEL_URL, 'POST', {
-      id: 'ult_cfg',
-      title: 'ult_cfg',
-      disabled: false,
-      site: ['prod'],
-      receiver_protocol_grpc: {
-        endpoint: {
-          auth: { type: 'none' },
-          socket_address: { type: 'default_ipv4' },
-          encryption: false,
-          event_console: null
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/otel_collector_config_receivers/collections/all',
+      {
+        params: { header: JSON_HEADER },
+        body: {
+          id: 'ult_cfg',
+          title: 'ult_cfg',
+          disabled: false,
+          site: ['prod'],
+          receiver_protocol_grpc: {
+            endpoint: {
+              auth: { type: 'none' },
+              socket_address: { type: 'default_ipv4' },
+              encryption: false,
+              event_console: null
+            }
+          }
         }
       }
-    })
+    )
   })
 
   test('sends the default-IPv6 socket address as a marker without address or port', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(200, {}))
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
 
     const action = createOTelReceiverConfigAction({
       id: 'ult_cfg',
@@ -419,25 +431,31 @@ describe('createOTelReceiverConfigAction', () => {
     })
     await action.execute({ siteId: 'prod', configName: 'test-config' })
 
-    expect(spy).toHaveBeenCalledWith(OTEL_URL, 'POST', {
-      id: 'ult_cfg',
-      title: 'ult_cfg',
-      disabled: false,
-      site: ['prod'],
-      receiver_protocol_http: {
-        endpoint: {
-          auth: { type: 'none' },
-          socket_address: { type: 'default_ipv6' },
-          encryption: true,
-          event_console: null
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/otel_collector_config_receivers/collections/all',
+      {
+        params: { header: JSON_HEADER },
+        body: {
+          id: 'ult_cfg',
+          title: 'ult_cfg',
+          disabled: false,
+          site: ['prod'],
+          receiver_protocol_http: {
+            endpoint: {
+              auth: { type: 'none' },
+              socket_address: { type: 'default_ipv6' },
+              encryption: true,
+              event_console: null
+            }
+          }
         }
       }
-    })
+    )
   })
 
   test('returns a structured error when the endpoint returns a REST problem', async () => {
-    vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValue(
-      makeFetchResponse(409, { title: 'Object already exists', detail: 'ID cfg1 in use' })
+    spyOnClient('POST').mockResolvedValue(
+      makeError(409, { title: 'Object already exists', detail: 'ID cfg1 in use' })
     )
 
     const action = createOTelReceiverConfigAction({
@@ -457,7 +475,7 @@ describe('createOTelReceiverConfigAction', () => {
   })
 
   test('returns a generic error for unexpected failures', async () => {
-    vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network down'))
+    spyOnClient('POST').mockRejectedValue(new Error('Network down'))
 
     const action = createOTelReceiverConfigAction({
       id: 'cfg1',
@@ -476,10 +494,8 @@ describe('createOTelReceiverConfigAction', () => {
   })
 
   test('returns a rollback that DELETEs the receiver config on success', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValueOnce(makeFetchResponse(200, {}))
-      .mockResolvedValueOnce(makeFetchResponse(204))
+    spyOnClient('POST').mockResolvedValueOnce(makeOk({}))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValueOnce(makeNoContent())
 
     const action = createOTelReceiverConfigAction({
       id: 'cfg1',
@@ -495,11 +511,9 @@ describe('createOTelReceiverConfigAction', () => {
       expect(result.rollback).toBeDefined()
       await result.rollback!()
       // The receiver DELETE must carry If-Match — the endpoint enforces ETag locking.
-      expect(spy).toHaveBeenLastCalledWith(
-        'api/internal/objects/otel_collector_config_receivers/cfg1',
-        'DELETE',
-        undefined,
-        { 'If-Match': '*' }
+      expect(deleteSpy).toHaveBeenLastCalledWith(
+        '/objects/otel_collector_config_receivers/{config_id}',
+        { params: { header: IF_MATCH, path: { config_id: 'cfg1' } } }
       )
     }
   })
@@ -508,9 +522,8 @@ describe('createOTelReceiverConfigAction', () => {
     // Simulates the user's scenario: the receiver config (incl. passwords)
     // succeeds, then a later step (e.g. the DCD connector) fails and the
     // FinalizeConfiguration state machine invokes this action's rollback.
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(204))
+    spyOnClient('POST').mockResolvedValue(makeOk({}))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValue(makeNoContent())
     vi.spyOn(configEntityAPI, 'createEntity').mockResolvedValue({
       type: 'success',
       entity: { ident: 'pw_id_a', description: 'My password', hide_edit: false }
@@ -531,17 +544,15 @@ describe('createOTelReceiverConfigAction', () => {
       await result.rollback!()
       // The password DELETE must carry If-Match — the endpoint enforces ETag
       // locking and silently rejects the delete otherwise.
-      expect(spy).toHaveBeenCalledWith('api/1.0/objects/password/pw_id_a', 'DELETE', undefined, {
-        'If-Match': '*'
+      expect(deleteSpy).toHaveBeenCalledWith('/objects/password/{name}', {
+        params: { header: IF_MATCH, path: { name: 'pw_id_a' } }
       })
     }
   })
 
   describe('password store handling', () => {
     test('persists each pending password before the receiver POST', async () => {
-      const fetchSpy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValue(makeFetchResponse(200, {}))
+      const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
       const createSpy = vi.spyOn(configEntityAPI, 'createEntity').mockResolvedValue({
         type: 'success',
         entity: { ident: 'pw_id_a', description: 'My password', hide_edit: false }
@@ -567,14 +578,12 @@ describe('createOTelReceiverConfigAction', () => {
       )
       // Password creation precedes the receiver POST.
       const createOrder = (createSpy as Mock).mock.invocationCallOrder[0]!
-      const fetchOrder = (fetchSpy as Mock).mock.invocationCallOrder[0]!
+      const fetchOrder = (postSpy as Mock).mock.invocationCallOrder[0]!
       expect(createOrder).toBeLessThan(fetchOrder)
     })
 
     test('skips the receiver POST when a password fails and surfaces a password-specific error', async () => {
-      const fetchSpy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValue(makeFetchResponse(200, {}))
+      const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
       vi.spyOn(configEntityAPI, 'createEntity').mockResolvedValue({
         type: 'error',
         validationMessages: [
@@ -602,13 +611,12 @@ describe('createOTelReceiverConfigAction', () => {
         expect(result.error.title).toBe('Could not save password "My password"')
         expect(result.error.detail).toBe('Too short')
       }
-      expect(fetchSpy).not.toHaveBeenCalled()
+      expect(postSpy).not.toHaveBeenCalled()
     })
 
     test('rolls back already-created passwords and returns an error when a later password throws', async () => {
-      const fetchSpy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValue(makeFetchResponse(200, {}))
+      const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
+      const deleteSpy = spyOnClient('DELETE').mockResolvedValue(makeNoContent())
       // First password saves; the second throws (e.g. network / 5xx, which
       // `createEntity` surfaces as a throw rather than a `type: 'error'`).
       vi.spyOn(configEntityAPI, 'createEntity')
@@ -630,25 +638,17 @@ describe('createOTelReceiverConfigAction', () => {
       expect(result.ok).toBe(false)
       // The first password was deleted with an If-Match header (the password
       // endpoint enforces ETag locking); the receiver POST never ran.
-      expect(fetchSpy).toHaveBeenCalledWith(
-        'api/1.0/objects/password/pw_id_a',
-        'DELETE',
-        undefined,
-        {
-          'If-Match': '*'
-        }
-      )
-      expect(fetchSpy).not.toHaveBeenCalledWith(
-        'api/internal/domain-types/otel_collector_config_receivers/collections/all',
-        'POST',
-        expect.anything()
+      expect(deleteSpy).toHaveBeenCalledWith('/objects/password/{name}', {
+        params: { header: IF_MATCH, path: { name: 'pw_id_a' } }
+      })
+      expect(postSpy).not.toHaveBeenCalledWith(
+        '/domain-types/otel_collector_config_receivers/collections/all',
+        { params: { header: JSON_HEADER }, body: expect.anything() }
       )
     })
 
     test('runs the receiver POST normally when there are no pending passwords', async () => {
-      const fetchSpy = vi
-        .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-        .mockResolvedValue(makeFetchResponse(200, {}))
+      const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
       const createSpy = vi.spyOn(configEntityAPI, 'createEntity')
 
       const action = createOTelReceiverConfigAction({
@@ -662,14 +662,12 @@ describe('createOTelReceiverConfigAction', () => {
 
       expect(result.ok).toBe(true)
       expect(createSpy).not.toHaveBeenCalled()
-      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      expect(postSpy).toHaveBeenCalledTimes(1)
     })
   })
 })
 
 describe('createPrometheusScrapeConfigAction', () => {
-  const PROM_URL = 'api/internal/domain-types/otel_collector_config_prom_scrape/collections/all'
-
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -689,9 +687,7 @@ describe('createPrometheusScrapeConfigAction', () => {
   })
 
   test('POSTs the prom-scrape body with a default scrape_interval of 60s', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValue(makeFetchResponse(200, {}))
+    const postSpy = spyOnClient('POST').mockResolvedValue(makeOk({}))
 
     const action = createPrometheusScrapeConfigAction({
       id: 'p1',
@@ -704,28 +700,34 @@ describe('createPrometheusScrapeConfigAction', () => {
     })
     await action.execute({ siteId: 'prod', configName: 'test-config' })
 
-    expect(spy).toHaveBeenCalledWith(PROM_URL, 'POST', {
-      id: 'p1',
-      title: 'p1',
-      disabled: false,
-      site: ['prod'],
-      prometheus_scrape_configs: [
-        {
-          job_name: 'node',
-          scrape_interval: 60,
-          metrics_path: '/metrics',
-          targets: [{ address: '10.0.0.1', port: 9090 }],
-          encryption: true
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/otel_collector_config_prom_scrape/collections/all',
+      {
+        params: { header: JSON_HEADER },
+        body: {
+          id: 'p1',
+          comment: null,
+          docu_url: null,
+          title: 'p1',
+          disabled: false,
+          site: ['prod'],
+          prometheus_scrape_configs: [
+            {
+              job_name: 'node',
+              scrape_interval: 60,
+              metrics_path: '/metrics',
+              targets: [{ address: '10.0.0.1', port: 9090 }],
+              encryption: true
+            }
+          ]
         }
-      ]
-    })
+      }
+    )
   })
 
   test('returns a rollback that DELETEs the prom-scrape config with an If-Match header', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValueOnce(makeFetchResponse(200, {}))
-      .mockResolvedValueOnce(makeFetchResponse(204))
+    spyOnClient('POST').mockResolvedValueOnce(makeOk({}))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValueOnce(makeNoContent())
 
     const action = createPrometheusScrapeConfigAction({
       id: 'p1',
@@ -743,18 +745,16 @@ describe('createPrometheusScrapeConfigAction', () => {
       expect(result.rollback).toBeDefined()
       await result.rollback!()
       // The prom-scrape DELETE must carry If-Match — the endpoint enforces ETag locking.
-      expect(spy).toHaveBeenLastCalledWith(
-        'api/internal/objects/otel_collector_config_prom_scrape/p1',
-        'DELETE',
-        undefined,
-        { 'If-Match': '*' }
+      expect(deleteSpy).toHaveBeenLastCalledWith(
+        '/objects/otel_collector_config_prom_scrape/{config_id}',
+        { params: { header: IF_MATCH, path: { config_id: 'p1' } } }
       )
     }
   })
 
   test('returns a structured error when the endpoint returns a REST problem', async () => {
-    vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValue(
-      makeFetchResponse(400, { title: 'Site conflict', detail: 'already configured' })
+    spyOnClient('POST').mockResolvedValue(
+      makeError(400, { title: 'Site conflict', detail: 'already configured' })
     )
 
     const action = createPrometheusScrapeConfigAction({
@@ -776,7 +776,7 @@ describe('createPrometheusScrapeConfigAction', () => {
   })
 
   test('returns a generic error for unexpected failures', async () => {
-    vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network down'))
+    spyOnClient('POST').mockRejectedValue(new Error('Network down'))
 
     const action = createPrometheusScrapeConfigAction({
       id: 'p1',
@@ -803,10 +803,8 @@ describe('createOTelBundleAction', () => {
   })
 
   test('returns a rollback that DELETEs the bundle when the response contains a bundle_id', async () => {
-    const spy = vi
-      .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
-      .mockResolvedValueOnce(makeFetchResponse(200, { extensions: { bundle_id: 'bnd-42' } }))
-      .mockResolvedValueOnce(makeFetchResponse(204))
+    spyOnClient('POST').mockResolvedValueOnce(makeOk({ extensions: { bundle_id: 'bnd-42' } }))
+    const deleteSpy = spyOnClient('DELETE').mockResolvedValueOnce(makeNoContent())
 
     const action = createOTelBundleAction({ configName: 'my-cfg', siteId: 'prod', passwordIds: [] })
     const result = await action.execute({ siteId: 'prod', configName: 'my-cfg' })
@@ -815,15 +813,17 @@ describe('createOTelBundleAction', () => {
     if (result.ok) {
       expect(result.rollback).toBeDefined()
       await result.rollback!()
-      expect(spy).toHaveBeenLastCalledWith(
-        'api/internal/objects/otel_collector_config_bundles/bnd-42',
-        'DELETE'
+      expect(deleteSpy).toHaveBeenLastCalledWith(
+        '/objects/otel_collector_config_bundles/{bundle_id}',
+        { params: { path: { bundle_id: 'bnd-42' } } }
       )
     }
   })
 
-  test('returns no rollback when the response does not contain a bundle_id', async () => {
-    vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValueOnce(makeFetchResponse(200, {}))
+  test('returns no rollback when the response carries an empty bundle_id', async () => {
+    // bundle_id is non-optional in the spec, so the "missing" case is an empty
+    // string rather than an absent key.
+    spyOnClient('POST').mockResolvedValueOnce(makeOk({ extensions: { bundle_id: '' } }))
 
     const action = createOTelBundleAction({ configName: 'my-cfg', siteId: 'prod', passwordIds: [] })
     const result = await action.execute({ siteId: 'prod', configName: 'my-cfg' })

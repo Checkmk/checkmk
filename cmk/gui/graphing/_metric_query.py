@@ -7,35 +7,11 @@
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, assert_never, Literal, override
+from typing import Literal, override
 
-from pydantic import PlainValidator
-
-from cmk.ccc.hostaddress import HostName
 from cmk.graphing_engine import TimeSeries
 
-GraphConsolidationFunction = Literal["max", "min", "average"]
-LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
-type DrawnLineType = Literal["line", "area", "stack"]
 type AttributeGroup = Literal["resource", "scope", "data_point"]
-
-
-def line_type_mirror(line_type: LineType) -> LineType:
-    match line_type:
-        case "line":
-            return "-line"
-        case "-line":
-            return "line"
-        case "area":
-            return "-area"
-        case "-area":
-            return "area"
-        case "stack":
-            return "-stack"
-        case "-stack":
-            return "stack"
-        case other:
-            assert_never(other)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -244,6 +220,3 @@ type QueryData = Mapping[QueryDataKey, QueryDataValue]
 class QueryDataError:
     keys: Sequence[QueryDataKey]
     exception: Exception
-
-
-AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]

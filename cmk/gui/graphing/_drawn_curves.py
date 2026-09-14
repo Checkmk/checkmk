@@ -11,7 +11,7 @@ from typing import Protocol
 from cmk.graphing_engine import EvaluatedCurve, EvaluatedGraph
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 
-from ._graph_metric_expressions import DrawnLineType, line_type_mirror, LineType
+from ._line_types import DrawnLineType, line_type_mirror, LineType
 
 
 @dataclass(frozen=True, kw_only=True)

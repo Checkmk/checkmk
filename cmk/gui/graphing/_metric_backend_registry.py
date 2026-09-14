@@ -11,7 +11,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.resulttype import Result
 from cmk.graphing_engine import QuantityProtocol
 
-from ._graph_metric_expressions import (
+from ._metric_query import (
     ConsolidationFunction,
     QueryData,
     QueryDataError,

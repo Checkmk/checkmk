@@ -6,21 +6,25 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import final, override
+from typing import Annotated, final, override
 
 from pydantic import (
     BaseModel,
     computed_field,
     field_validator,
+    PlainValidator,
     SerializeAsAny,
 )
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 
-from ._graph_metric_expressions import GraphConsolidationFunction
+from ._line_types import GraphConsolidationFunction
+
+AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException): ...

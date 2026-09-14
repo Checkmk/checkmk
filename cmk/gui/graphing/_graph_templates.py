@@ -40,10 +40,8 @@ from ._graph_dispatch import (
     GraphDispatcher,
     legacy_graph_id,
 )
-from ._graph_metric_expressions import (
-    AnnotatedHostName,
-)
 from ._graph_specification import (
+    AnnotatedHostName,
     graph_specification_registry,
     GraphSpecification,
 )

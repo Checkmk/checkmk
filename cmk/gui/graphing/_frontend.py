@@ -51,9 +51,10 @@ from ._drawn_curves import DrawnCurve, line_type_with_mirroring, serialize_drawn
 from ._graph_choices import BuiltGraph
 from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
-from ._graph_metric_expressions import AttributeGroup, LineType
 from ._graph_specification import GraphSpecification
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
+from ._line_types import LineType
+from ._metric_query import AttributeGroup
 from ._source import RRDFetchMetricNames
 from ._unit_format import unit_from_curves
 

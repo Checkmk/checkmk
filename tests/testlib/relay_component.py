@@ -196,7 +196,8 @@ def assert_executable(
 ) -> None:
     """Assert *path* exists and is executable inside *container*."""
     exit_code, output = _exec(container, ["test", "-x", path])
-    assert exit_code == 0, f"{path} is not executable in the relay image: {output!r}"
+    if exit_code != 0:
+        raise AssertionError(f"{path} is not executable in the relay image: {output!r}")
 
 
 def assert_ldd_resolves(
@@ -205,9 +206,11 @@ def assert_ldd_resolves(
 ) -> None:
     """Assert every shared library *path* links against resolves in the image."""
     exit_code, output = _exec(container, [_DYNAMIC_LOADER, "--list", path])
-    assert exit_code == 0, f"listing shared libraries of {path} failed: {output}"
+    if exit_code != 0:
+        raise AssertionError(f"listing shared libraries of {path} failed: {output}")
     missing = [line.strip() for line in output.splitlines() if "not found" in line]
-    assert not missing, f"unresolved shared libraries for {path}: {missing}"
+    if missing:
+        raise AssertionError(f"unresolved shared libraries for {path}: {missing}")
 
 
 @contextmanager
@@ -245,7 +248,8 @@ def start_tls_server(
             "/CN=cert-mock",
         ],
     )
-    assert exit_code == 0, f"self-signed cert generation failed: {output}"
+    if exit_code != 0:
+        raise RuntimeError(f"self-signed cert generation failed: {output}")
     # Record the server PID (exec-into-place keeps it) so we can stop it on exit.
     container.exec_run(
         [
@@ -280,7 +284,8 @@ def run_via_checkhelper(
     """
     stdin = f"{host}\n{command}\n{timeout}\n"
     exit_code, raw = _exec(container, ["sh", "-c", f"printf '%s' '{stdin}' | {RELAY_CHECKHELPER}"])
-    assert exit_code == 0, f"checkhelper process failed (exit {exit_code}): {raw!r}"
+    if exit_code != 0:
+        raise RuntimeError(f"checkhelper process failed (exit {exit_code}): {raw!r}")
     return_code, _size, payload = raw.split("\n", 2)
     _host, _, output = payload.partition("\t")
     return CheckResult(exit_code=int(return_code), output=output)

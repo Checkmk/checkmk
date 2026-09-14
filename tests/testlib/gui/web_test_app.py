@@ -140,13 +140,13 @@ class WebTestAppForCMK(FlaskClient):
                 url, headers=headers, follow_redirects=follow_redirects, **kw
             )
 
-        if status:
-            assert resp.status_code == status, (
-                f"Expected response code: {status}!\nResponse:\n{resp.text}"
+        if status and resp.status_code != status:
+            raise AssertionError(
+                f"Expected response code: {status}, got {resp.status_code}!\nResponse:\n{resp.text}"
             )
 
-        if not expect_errors:
-            assert (errors := resp.request.environ.get("wsgi.errors", [])), (
+        if not expect_errors and not (errors := resp.request.environ.get("wsgi.errors", [])):
+            raise AssertionError(
                 "Found `wsgi.errors` arising from the request!\n"
                 f"Status code:\n{resp.status_code}\n"
                 f"Response:\n{str(resp)}\n"
@@ -275,7 +275,8 @@ class CmkTestResponse(TestResponse):
 
     def assert_rest_api_crash(self) -> typing.Self:
         """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        assert self.status_code == 500
+        if self.status_code != 500:
+            raise AssertionError(f"Expected a crash report (500), got {self.status_code}")
         assert_and_delete_rest_crash_report(self.json["ext"]["id"])
         return self
 

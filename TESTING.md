@@ -93,6 +93,11 @@ high enough to survive a restructure.
   algorithm are the rare exception, not the default.
 - Assert on inputs, outputs, and visible side effects. Never on internal call
   sequences.
+- Only tests assert. A helper in `tests/testlib` or `non-free/tests/testlib`
+  raises instead: `AssertionError`
+  with a message when it checks something on behalf of the test, `RuntimeError`
+  when its own setup fails. The library is not assert-rewritten, so a bare
+  `assert` there would fail without saying why.
 - When a test is hard to write, treat it as a structure problem: name it and
   fix or propose the structural change. Do not force the test through with
   patches and mocks.

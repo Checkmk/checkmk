@@ -396,9 +396,10 @@ def daemon(
                 _terminate_daemon(daemon_proc, termination_mode, sudo)
             stdout, _stderr = daemon_proc.communicate(timeout=5)
             logger.info("Output from %s daemon:\n%s", name_for_logging, stdout)
-            assert daemon_rc is None, (
-                f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
-            )
+            if daemon_rc is not None:
+                raise RuntimeError(
+                    f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
+                )
 
 
 def _terminate_daemon(
@@ -550,9 +551,8 @@ def restart_httpd() -> None:
     """
 
     almalinux_prefix = "almalinux"
-    assert any(
-        distro for distro in get_supported_distros() if distro.startswith(almalinux_prefix)
-    ), "We dropped support for almalinux, please adapt the code below."
+    if not any(distro.startswith(almalinux_prefix) for distro in get_supported_distros()):
+        raise RuntimeError("We dropped support for almalinux, please adapt the code below.")
 
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO", "").startswith(almalinux_prefix):
@@ -637,9 +637,11 @@ def get_supported_distros() -> list[str]:
 def check_permissions(file_path: Path, expected_permissions: str) -> None:
     """Check if the file has the expected permissions."""
     actual_permissions = filemode(file_path.stat().st_mode)
-    assert actual_permissions == expected_permissions, (
-        f"Unexpected permissions for {file_path}: {actual_permissions}"
-    )
+    if actual_permissions != expected_permissions:
+        raise AssertionError(
+            f"Unexpected permissions for {file_path}: {actual_permissions}, "
+            f"expected {expected_permissions}"
+        )
 
 
 def is_cleanup_enabled() -> bool:

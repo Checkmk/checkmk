@@ -56,8 +56,8 @@ class WatchLog:
     def __exit__(self, *exc_info: object) -> None:
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
-                if c.name() == "tail":
-                    assert self._site.execute(["kill", str(c.pid)]).wait() == 0
+                if c.name() == "tail" and self._site.execute(["kill", str(c.pid)]).wait() != 0:
+                    raise RuntimeError(f"Failed to kill tail process {c.pid}")
             self._tail_process.wait()
             self._tail_process = None
 

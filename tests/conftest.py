@@ -19,29 +19,25 @@ import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped,unused-ignore]
 
-# TODO: Can we somehow push some of the registrations below to the subdirectories?
-# Needs to be executed before the import of those modules
-pytest.register_assert_rewrite("tests.testlib")
-
-from tests.testlib.common.repo import (  # noqa: E402
+from tests.testlib.common.repo import (
     current_base_branch_name,
 )
-from tests.testlib.common.utils2 import (  # noqa: E402
+from tests.testlib.common.utils2 import (
     is_containerized,
     run,
     verbose_called_process_error,
 )
-from tests.testlib.pytest_helpers.sharding import (  # noqa: E402
+from tests.testlib.pytest_helpers.sharding import (
     Durations,
     fetch_durations,
     plan,
     select_for_shard,
 )
-from tests.testlib.pytest_helpers.timeouts import (  # noqa: E402
+from tests.testlib.pytest_helpers.timeouts import (
     MonitorTimeout,
     SessionTimeoutError,
 )
-from tests.testlib.version import (  # noqa: E402
+from tests.testlib.version import (
     CMKEdition,
     CMKVersion,
     edition_from_env,

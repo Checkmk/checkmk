@@ -26,14 +26,8 @@ from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
+from tests.testlib import fake_site
 from tests.unit.mocks_and_helpers import DummyLicensingHandler
-
-# TODO: Can we somehow push some of the registrations below to the subdirectories?
-# Needs to be executed before the import of those modules
-pytest.register_assert_rewrite("tests.testlib")
-
-
-from tests.testlib import fake_site  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.getLogger("faker").setLevel(logging.ERROR)

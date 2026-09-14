@@ -19,13 +19,10 @@ import pytest
 
 import cmk.ccc.version as cmk_version
 
-# NOTE: register_assert_rewrite + fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
+# NOTE: fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
 # Modules like cmk/gui/userdb/store.py capture `cmk.utils.paths.var_dir` at import time; patching
 # after those imports is too late and yields relative paths at runtime.
-pytest.register_assert_rewrite("tests.testlib")
-
-
-from tests.testlib import fake_site  # noqa: E402
+from tests.testlib import fake_site
 
 fake_site.fake_paths()
 

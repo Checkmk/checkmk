@@ -309,14 +309,16 @@ def injected_ping_rrds(
 
 def ping_graph_internal(site: Site, host_name: str) -> Mapping[str, object]:
     discovered = site.openapi.graph.discover_template_graphs(host_name, PING_SERVICE)
-    assert discovered["graphs"], (
-        f"No graph discovered for {host_name}/{PING_SERVICE}: {discovered['no_data_message']}"
-    )
+    if not discovered["graphs"]:
+        raise AssertionError(
+            f"No graph discovered for {host_name}/{PING_SERVICE}: {discovered['no_data_message']}"
+        )
     internal: Mapping[str, object] = json.loads(discovered["graphs"][0]["internal"])
     return internal
 
 
 def data_points_of_every_metric(response: Mapping[str, object]) -> Sequence[Sequence[float | None]]:
     metrics = response["metrics"]
-    assert isinstance(metrics, list) and metrics, f"No series in the graph data: {response}"
+    if not isinstance(metrics, list) or not metrics:
+        raise AssertionError(f"No series in the graph data: {response}")
     return [metric["data_points"] for metric in metrics]

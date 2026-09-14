@@ -87,7 +87,8 @@ class MockHandler(BaseHTTPRequestHandler):
         request_headers = dict(self.headers.items())
         if response.request_validator is not None:
             try:
-                assert response.request_validator(request_headers, request_body)
+                if not response.request_validator(request_headers, request_body):
+                    raise AssertionError("Request validation failed")
             except AssertionError as excp:
                 self.send_response(400, "Request Validation Failed")
                 self.end_headers()

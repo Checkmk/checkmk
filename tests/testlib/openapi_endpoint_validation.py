@@ -42,9 +42,10 @@ def assert_registered_endpoints_valid(
     register_edition_into_empty_registries(edition, monkeypatch)
 
     versioned_endpoints = list(versioned_endpoint_registry)
-    assert versioned_endpoints, (
-        f"slim registration for edition {edition.long!r} left the versioned registry empty"
-    )
+    if not versioned_endpoints:
+        raise AssertionError(
+            f"slim registration for edition {edition.long!r} left the versioned registry empty"
+        )
 
     for endpoint in versioned_endpoints:
         validate_endpoint_definition(endpoint)
@@ -53,7 +54,8 @@ def assert_registered_endpoints_valid(
         seen_endpoints: set[tuple[str, str]] = set()
         for endpoint in versioned_endpoint_registry.specified_endpoints(version):
             endpoint_key = (endpoint.family.name, endpoint.metadata.link_relation)
-            assert endpoint_key not in seen_endpoints, (
-                f"Duplicate endpoint detected in version {version.value}: {endpoint_key}"
-            )
+            if endpoint_key in seen_endpoints:
+                raise AssertionError(
+                    f"Duplicate endpoint detected in version {version.value}: {endpoint_key}"
+                )
             seen_endpoints.add(endpoint_key)

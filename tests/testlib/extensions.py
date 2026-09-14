@@ -84,7 +84,8 @@ def compatible_extensions(parsed_version: int, timeout: int = 10) -> Iterator[Ex
     response = requests.get("https://exchange.checkmk.com/api/packages/all", timeout=timeout)
     response.raise_for_status()
     all_packages_response = ExchangeResponseAllPackages.model_validate(response.json())
-    assert all_packages_response.success, "Querying packages from Checkmk exchange unsuccessful"
+    if not all_packages_response.success:
+        raise RuntimeError("Querying packages from Checkmk exchange unsuccessful")
     for extension in all_packages_response.data.packages:
         try:
             min_version = parse_check_mk_version(extension.latest_version.min_version)

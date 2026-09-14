@@ -75,7 +75,11 @@ class Response:
     headers: Mapping[str, str]  # TODO: Use werkzeug.datastructures.Headers?
 
     def assert_status_code(self, status_code: int) -> Response:
-        assert self.status_code == status_code
+        if self.status_code != status_code:
+            raise AssertionError(
+                f"Expected status code {status_code}, got {self.status_code}. "
+                f"Body: {self.body.decode('utf-8', errors='replace') if self.body else None}"
+            )
         return self
 
     @property
@@ -85,7 +89,7 @@ class Response:
 
     def assert_rest_api_crash(self) -> Self:
         """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        assert self.status_code == 500
+        self.assert_status_code(500)
         assert_and_delete_rest_crash_report(self.json["ext"]["id"])
         return self
 
@@ -93,7 +97,8 @@ class Response:
 def assert_and_delete_rest_crash_report(crash_id: str) -> None:
     """Assert that the REST API crash report with the given ID exists and delete it."""
     crash_file = make_crash_report_base_path(paths.omd_root) / "rest_api" / crash_id / "crash.info"
-    assert crash_file.exists()
+    if not crash_file.exists():
+        raise AssertionError(f"No REST API crash report {crash_id!r} at {crash_file}")
     crash_file.unlink()
 
 

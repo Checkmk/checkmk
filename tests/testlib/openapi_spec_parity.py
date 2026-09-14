@@ -61,8 +61,10 @@ def assert_slim_registration_matches_app(
     app_legacy = _legacy_keys()
     app_families = _family_keys()
 
-    assert app_versioned, "app registration left versioned registry empty"
-    assert app_families, "app registration left family registry empty"
+    if not app_versioned:
+        raise RuntimeError("app registration left versioned registry empty")
+    if not app_families:
+        raise RuntimeError("app registration left family registry empty")
 
     register_edition_into_empty_registries(edition, monkeypatch)
 
@@ -70,21 +72,15 @@ def assert_slim_registration_matches_app(
     slim_legacy = _legacy_keys()
     slim_families = _family_keys()
 
-    assert slim_versioned == app_versioned, (
-        f"Slim spec-generator registration for edition {edition.long!r} is out of "
-        f"sync with the app registration for versioned endpoints. "
-        f"Missing from slim: {sorted(app_versioned - slim_versioned)}. "
-        f"Extra in slim: {sorted(slim_versioned - app_versioned)}."
-    )
-    assert slim_legacy == app_legacy, (
-        f"Slim spec-generator registration for edition {edition.long!r} is out of "
-        f"sync with the app registration for legacy endpoints. "
-        f"Missing from slim: {sorted(app_legacy - slim_legacy)}. "
-        f"Extra in slim: {sorted(slim_legacy - app_legacy)}."
-    )
-    assert slim_families == app_families, (
-        f"Slim spec-generator registration for edition {edition.long!r} is out of "
-        f"sync with the app registration for endpoint families. "
-        f"Missing from slim: {sorted(app_families - slim_families)}. "
-        f"Extra in slim: {sorted(slim_families - app_families)}."
-    )
+    for what, slim, app in (
+        ("versioned endpoints", slim_versioned, app_versioned),
+        ("legacy endpoints", slim_legacy, app_legacy),
+        ("endpoint families", slim_families, app_families),
+    ):
+        if slim != app:
+            raise AssertionError(
+                f"Slim spec-generator registration for edition {edition.long!r} is out of "
+                f"sync with the app registration for {what}. "
+                f"Missing from slim: {sorted(app - slim)}. "
+                f"Extra in slim: {sorted(slim - app)}."
+            )

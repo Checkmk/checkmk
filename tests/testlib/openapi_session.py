@@ -466,7 +466,8 @@ class ChangesAPI(BaseAPI):
     def get_pending(self) -> list[dict[str, Any]]:
         """Returns a list of all changes currently pending."""
         response = self.session.get("/domain-types/activation_run/collections/pending_changes")
-        assert response.status_code == 200
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
@@ -527,23 +528,19 @@ class ChangesAPI(BaseAPI):
         # Mypy issue: https://github.com/python/mypy/issues/8766
         pending_changes_after = self.get_pending()  # type: ignore[unreachable]
         if strict:
-            assert not pending_changes_after, (
-                f"There are pending changes after activation: {pending_changes_after}"
-            )
+            if pending_changes_after:
+                raise AssertionError(
+                    f"There are pending changes after activation: {pending_changes_after}"
+                )
         else:
             pending_changes_intersection_ids = {
                 _.get("id") for _ in pending_changes_after
             }.intersection(pending_changes_ids_before)
-            assert not pending_changes_intersection_ids, (
-                f"There are pending changes that were not activated: "
-                f"{
-                    (
-                        _
-                        for _ in pending_changes_after
-                        if _.get('id') in pending_changes_intersection_ids
-                    )
-                }"
-            )
+            if pending_changes_intersection_ids:
+                raise AssertionError(
+                    "There are pending changes that were not activated: "
+                    f"{[_ for _ in pending_changes_after if _.get('id') in pending_changes_intersection_ids]}"
+                )
 
         return True
 
@@ -900,14 +897,12 @@ class HostsAPI(BaseAPI):
         )
         with self.session.wait_for_completion(timeout, "get", "rename_host"):
             self.rename(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
-            assert self.get(hostname_new) is not None, (
-                'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
-            )
+            if self.get(hostname_new) is None:
+                raise AssertionError(f'Failed to rename host "{hostname_old}" to "{hostname_new}"!')
 
         response = self.session.background_jobs.show("rename-hosts")
-        assert response["extensions"]["status"]["state"] == "finished", (
-            f"Rename job failed: {response}"
-        )
+        if response["extensions"]["status"]["state"] != "finished":
+            raise AssertionError(f"Rename job failed: {response}")
 
 
 class HostGroupsAPI(BaseAPI):
@@ -1100,9 +1095,8 @@ class ServiceDiscoveryAPI(BaseAPI):
             self.run_discovery(hostname, mode)
 
         discovery_status = self.get_discovery_status(hostname)
-        assert discovery_status == "finished", (
-            f"Unexpected service discovery status: {discovery_status}"
-        )
+        if discovery_status != "finished":
+            raise AssertionError(f"Unexpected service discovery status: {discovery_status}")
 
     def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
         response = self.session.get(f"/objects/service_discovery/{hostname}")

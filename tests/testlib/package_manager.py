@@ -220,12 +220,16 @@ class ABCPackageManager(abc.ABC):
         """Compare the SHA256 hash calculated for a package to the one from a hash file."""
         with open(hash_path) as f:
             expected_hash, expected_file = f.readline().split()
-        assert expected_file == package_path.name
+        if expected_file != package_path.name:
+            raise RuntimeError(
+                f"Hash file {hash_path} is for {expected_file!r}, not for {package_path.name!r}"
+            )
 
         package_hash = _sha256_file(package_path)
-        assert package_hash == expected_hash, (
-            f"Hash of '{package_path}' is {package_hash!r}, not the expected {expected_hash!r}"
-        )
+        if package_hash != expected_hash:
+            raise RuntimeError(
+                f"Hash of '{package_path}' is {package_hash!r}, not the expected {expected_hash!r}"
+            )
 
     def package_url_public(self, version: str, package_name: str) -> PackageUrl:
         return PackageUrl(f"https://download.checkmk.com/checkmk/{version}/{package_name}")

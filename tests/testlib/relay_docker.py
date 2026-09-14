@@ -80,9 +80,10 @@ class DockerSnmpHost:
             ["snmpwalk", "-v2c", "-c", "public", "127.0.0.1", "1.3.6.1.2.1.2.2.1.1"],
         )
         assert isinstance(output, bytes)  # stream/socket/demux not used above
-        assert exit_code == 0, (
-            f"snmpwalk failed (exit {exit_code}): {output.decode(errors='replace')}"
-        )
+        if exit_code != 0:
+            raise RuntimeError(
+                f"snmpwalk failed (exit {exit_code}): {output.decode(errors='replace')}"
+            )
         lines = output.decode().strip().splitlines()
         return len([line for line in lines if line.strip()])
 

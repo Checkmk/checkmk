@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.jolokia_info import (
+from cmk.plugins.jolokia.agent_based.jolokia_info import (
     check_jolokia_info,
     discover_jolokia_info,
     parse_jolokia_info,

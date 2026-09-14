@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import jolokia_jvm_threading as jvm_threading
+from cmk.plugins.jolokia.agent_based import jolokia_jvm_threading as jvm_threading
 
 Section = Mapping[str, object]
 
@@ -65,8 +65,8 @@ def test_discover_jolokia_jvm_threading() -> None:
     ]
 
 
-@patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
-@patch("cmk.legacy_checks.jolokia_jvm_threading.get_rate")
+@patch("cmk.plugins.jolokia.agent_based.jolokia_jvm_threading.get_value_store")
+@patch("cmk.plugins.jolokia.agent_based.jolokia_jvm_threading.get_rate")
 def test_check_jolokia_jvm_threading_basic(  # type: ignore[misc]
     mock_get_rate: MagicMock, mock_get_value_store: MagicMock
 ) -> None:
@@ -95,8 +95,8 @@ def test_check_jolokia_jvm_threading_basic(  # type: ignore[misc]
     ]
 
 
-@patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
-@patch("cmk.legacy_checks.jolokia_jvm_threading.get_rate")
+@patch("cmk.plugins.jolokia.agent_based.jolokia_jvm_threading.get_value_store")
+@patch("cmk.plugins.jolokia.agent_based.jolokia_jvm_threading.get_rate")
 def test_check_jolokia_jvm_threading_no_daemon_levels(  # type: ignore[misc]
     mock_get_rate: MagicMock, mock_get_value_store: MagicMock
 ) -> None:

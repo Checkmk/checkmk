@@ -4,28 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
-    check_levels as check_levels_v2,
-)
-from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_rate,
     get_value_store,
     GetRateError,
     IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
     StringTable,
+)
+from cmk.agent_based.v2 import (
+    check_levels as check_levels_v2,
 )
 from cmk.plugins.jolokia.agent_based.lib import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
 )
-
-check_info = {}
 
 # Example output from agent:
 # <<<jolokia_metrics>>>
@@ -58,7 +66,7 @@ def parse_jolokia_metrics(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["jolokia_metrics"] = LegacyCheckDefinition(
+agent_section_jolokia_metrics = AgentSection(
     name="jolokia_metrics",
     parse_function=parse_jolokia_metrics,
 )
@@ -113,8 +121,8 @@ def jolokia_metrics_serv(info, split_item):
 #   '----------------------------------------------------------------------'
 
 
-def discover_jolokia_metrics_serv(info):
-    parsed = jolokia_metrics_parse(info)
+def discover_jolokia_metrics_serv(section: StringTable) -> DiscoveryResult:
+    parsed = jolokia_metrics_parse(section)
     needed_key = "Requests"
     for inst, vals in parsed.items():
         if vals is None:
@@ -122,11 +130,13 @@ def discover_jolokia_metrics_serv(info):
         for app, val in vals.get("apps", {}).items():
             for serv, servinfo in val.get("servlets", {}).items():
                 if needed_key in servinfo:
-                    yield f"{inst} {app} {serv}", {}
+                    yield Service(item=f"{inst} {app} {serv}")
 
 
-def check_jolokia_metrics_serv_req(item, params, info):
-    serv = jolokia_metrics_serv(info, item.split())
+def check_jolokia_metrics_serv_req(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    serv = jolokia_metrics_serv(section, item.split())
     if not serv or "Requests" not in serv:
         return
 
@@ -154,7 +164,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
     )
 
 
-check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_serv_req = CheckPlugin(
     name="jolokia_metrics_serv_req",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
@@ -178,9 +188,9 @@ check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_jolokia_metrics_app_state(item, _no_params, info):
+def check_jolokia_metrics_app_state(item: str, section: StringTable) -> CheckResult:
     app_state = 3
-    app = jolokia_metrics_app(info, item.split())
+    app = jolokia_metrics_app(section, item.split())
 
     # FIXME: this could be nicer.
     if app and "Running" in app:
@@ -189,16 +199,20 @@ def check_jolokia_metrics_app_state(item, _no_params, info):
     elif app and "stateName" in app:
         app_state = 0 if app["stateName"] == "STARTED" else 2
     if app_state == 3:
-        return 3, "data not found in agent output"
+        yield Result(state=State.UNKNOWN, summary="data not found in agent output")
+        return
     if app_state == 0:
-        return 0, "application is running"
+        yield Result(state=State.OK, summary="application is running")
+        return
     if app_state == 2:
-        return 2, "application is not running (Running: %s)"
+        yield Result(state=State.CRIT, summary="application is not running (Running: %s)")
+        return
 
-    return 3, "error in agent output"
+    yield Result(state=State.UNKNOWN, summary="error in agent output")
+    return
 
 
-check_info["jolokia_metrics.app_state"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_app_state = CheckPlugin(
     name="jolokia_metrics_app_state",
     service_name="JVM %s State",
     sections=["jolokia_metrics"],
@@ -219,11 +233,13 @@ check_info["jolokia_metrics.app_state"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_jolokia_metrics_app_sess(item, params, info):
+def check_jolokia_metrics_app_sess(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     if len(item.split()) == 3:
-        app = jolokia_metrics_serv(info, item.split())
+        app = jolokia_metrics_serv(section, item.split())
     elif len(item.split()) == 2:
-        app = jolokia_metrics_app(info, item.split())
+        app = jolokia_metrics_app(section, item.split())
     if not app:  # type: ignore[possibly-undefined]
         return
 
@@ -246,13 +262,15 @@ def check_jolokia_metrics_app_sess(item, params, info):
     )
 
     if maxActive and maxActive > 0:
-        yield 0, f"Maximum active sessions: {maxActive}"
+        yield Result(state=State.OK, summary=f"Maximum active sessions: {maxActive}")
 
 
-def check_jolokia_metrics_bea_queue(item, params, info):
-    app = jolokia_metrics_app(info, item.split())
+def check_jolokia_metrics_bea_queue(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    app = jolokia_metrics_app(section, item.split())
     if not app:
-        yield 3, "application not found"
+        yield Result(state=State.UNKNOWN, summary="application not found")
         return
 
     if (length := app.get("QueueLength")) is None:
@@ -290,22 +308,25 @@ def check_request_count(item, info, value_store):
             int(completed_request_count),
             raise_overflow=True,
         )
-        yield 0, "%.2f requests/sec" % rate, [("rate", rate)]
+        yield Result(state=State.OK, summary="%.2f requests/sec" % rate)
+        yield Metric("rate", rate)
 
     elif (request_count := app.get("requestCount")) is not None:
-        yield 0, "%.2f requests/sec" % int(request_count), [("rate", int(request_count))]
+        yield Result(state=State.OK, summary="%.2f requests/sec" % int(request_count))
+        yield Metric("rate", int(request_count))
 
 
-def check_jolokia_metrics_bea_requests(item, _no_params, info):
-    yield from check_request_count(item, info, get_value_store())
+def check_jolokia_metrics_bea_requests(item: str, section: StringTable) -> CheckResult:
+    yield from check_request_count(item, section, get_value_store())
 
 
-def check_jolokia_metrics_bea_threads(item, _no_params, info):
-    app = jolokia_metrics_app(info, item.split())
+def check_jolokia_metrics_bea_threads(item: str, section: StringTable) -> CheckResult:
+    app = jolokia_metrics_app(section, item.split())
     if not app:
-        return (3, "data not found in agent output")
+        yield Result(state=State.UNKNOWN, summary="data not found in agent output")
+        return
 
-    perfdata = []
+    metrics = []
     infos = []
     for varname, title in [
         ("ExecuteThreadTotalCount", "total"),
@@ -317,16 +338,18 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
             continue
 
         value = int(app[varname])
-        perfdata.append((varname, value))
+        metrics.append(Metric(varname, value))
         infos.append("%s: %d" % (title, value))
 
     if not infos:
-        return (3, "no metrics found in the data")
+        yield Result(state=State.UNKNOWN, summary="no metrics found in the data")
+        return
 
-    return (0, ", ".join(infos), perfdata)
+    yield Result(state=State.OK, summary=", ".join(infos))
+    yield from metrics
 
 
-check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_app_sess = CheckPlugin(
     name="jolokia_metrics_app_sess",
     service_name="JVM %s Sessions",
     sections=["jolokia_metrics"],
@@ -341,7 +364,8 @@ check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
     },
 )
 
-check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
+
+check_plugin_jolokia_metrics_requests = CheckPlugin(
     name="jolokia_metrics_requests",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
@@ -349,8 +373,8 @@ check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_bea_requests,
 )
 
-# Stuff found on BEA Weblogic
-check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
+
+check_plugin_jolokia_metrics_bea_queue = CheckPlugin(
     name="jolokia_metrics_bea_queue",
     service_name="JVM %s Queue",
     sections=["jolokia_metrics"],
@@ -362,7 +386,8 @@ check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
     },
 )
 
-check_info["jolokia_metrics.bea_requests"] = LegacyCheckDefinition(
+
+check_plugin_jolokia_metrics_bea_requests = CheckPlugin(
     name="jolokia_metrics_bea_requests",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
@@ -372,7 +397,8 @@ check_info["jolokia_metrics.bea_requests"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_bea_requests,
 )
 
-check_info["jolokia_metrics.bea_threads"] = LegacyCheckDefinition(
+
+check_plugin_jolokia_metrics_bea_threads = CheckPlugin(
     name="jolokia_metrics_bea_threads",
     service_name="JVM %s Threads",
     sections=["jolokia_metrics"],
@@ -382,7 +408,8 @@ check_info["jolokia_metrics.bea_threads"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_bea_threads,
 )
 
-check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
+
+check_plugin_jolokia_metrics_bea_sess = CheckPlugin(
     name="jolokia_metrics_bea_sess",
     service_name="JVM %s Sessions",
     sections=["jolokia_metrics"],
@@ -435,30 +462,34 @@ def check_jolokia_metrics_cache(metrics, totals, item, info):
                 # were all 0, so this float is 0/0, we want to display it as 1 as to not cause
                 # an alert
                 val = 1.0 * scale
-            yield 0, ("%s: " + format_str) % (metric, val), [(metric, val)]
+            yield Result(state=State.OK, summary=("%s: " + format_str) % (metric, val))
+            yield Metric(metric, val)
 
         for total in totals:
             type_, scale, format_str = type_map.get(total, (int, 1, "%d"))
             val = type_(parsed[inst]["CacheStatistics"][cache][total]) * scale
-            yield 0, ("%s: " + format_str) % (total, val), []
+            yield Result(state=State.OK, summary=("%s: " + format_str) % (total, val))
     except KeyError:
         # some element of the item was missing
         pass
 
 
-def discover_jolokia_metrics_cache_hits(info):
-    return inventory_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
+def discover_jolokia_metrics_cache_hits(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_jolokia_metrics_cache(
+            ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], section
+        )
+    ]
+
+
+def check_jolokia_metrics_cache_hits(item: str, section: StringTable) -> CheckResult:
+    yield from check_jolokia_metrics_cache(
+        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, section
     )
 
 
-def check_jolokia_metrics_cache_hits(item, _no_params, parsed):
-    return check_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
-    )
-
-
-check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_cache_hits = CheckPlugin(
     name="jolokia_metrics_cache_hits",
     service_name="JVM %s Cache Usage",
     sections=["jolokia_metrics"],
@@ -467,23 +498,26 @@ check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
 )
 
 
-def discover_jolokia_metrics_in_memory(info):
-    return inventory_jolokia_metrics_cache(
-        ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
-        info,
-    )
+def discover_jolokia_metrics_in_memory(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_jolokia_metrics_cache(
+            ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
+            section,
+        )
+    ]
 
 
-def check_jolokia_metrics_in_memory(item, _no_params, parsed):
-    return check_jolokia_metrics_cache(
+def check_jolokia_metrics_in_memory(item: str, section: StringTable) -> CheckResult:
+    yield from check_jolokia_metrics_cache(
         ["InMemoryHitPercentage", "MemoryStoreObjectCount"],
         ["InMemoryHits", "InMemoryMisses"],
         item,
-        parsed,
+        section,
     )
 
 
-check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_in_memory = CheckPlugin(
     name="jolokia_metrics_in_memory",
     service_name="JVM %s In Memory",
     sections=["jolokia_metrics"],
@@ -492,23 +526,26 @@ check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
 )
 
 
-def discover_jolokia_metrics_on_disk(info):
-    return inventory_jolokia_metrics_cache(
-        ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
-        info,
-    )
+def discover_jolokia_metrics_on_disk(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_jolokia_metrics_cache(
+            ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
+            section,
+        )
+    ]
 
 
-def check_jolokia_metrics_on_disk(item, _no_params, parsed):
-    return check_jolokia_metrics_cache(
+def check_jolokia_metrics_on_disk(item: str, section: StringTable) -> CheckResult:
+    yield from check_jolokia_metrics_cache(
         ["OnDiskHitPercentage", "DiskStoreObjectCount"],
         ["OnDiskHits", "OnDiskMisses"],
         item,
-        parsed,
+        section,
     )
 
 
-check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_on_disk = CheckPlugin(
     name="jolokia_metrics_on_disk",
     service_name="JVM %s On Disk",
     sections=["jolokia_metrics"],
@@ -517,23 +554,26 @@ check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
 )
 
 
-def discover_jolokia_metrics_off_heap(info):
-    return inventory_jolokia_metrics_cache(
-        ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
-        info,
-    )
+def discover_jolokia_metrics_off_heap(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_jolokia_metrics_cache(
+            ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
+            section,
+        )
+    ]
 
 
-def check_jolokia_metrics_off_heap(item, _no_params, parsed):
-    return check_jolokia_metrics_cache(
+def check_jolokia_metrics_off_heap(item: str, section: StringTable) -> CheckResult:
+    yield from check_jolokia_metrics_cache(
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount"],
         ["OffHeapHits", "OffHeapMisses"],
         item,
-        parsed,
+        section,
     )
 
 
-check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_off_heap = CheckPlugin(
     name="jolokia_metrics_off_heap",
     service_name="JVM %s Off Heap",
     sections=["jolokia_metrics"],
@@ -542,17 +582,22 @@ check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
 )
 
 
-def discover_jolokia_metrics_writer(info):
-    return inventory_jolokia_metrics_cache(["WriterQueueLength", "WriterMaxQueueSize"], info)
+def discover_jolokia_metrics_writer(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_jolokia_metrics_cache(
+            ["WriterQueueLength", "WriterMaxQueueSize"], section
+        )
+    ]
 
 
-def check_jolokia_metrics_writer(item, _no_params, parsed):
-    return check_jolokia_metrics_cache(
-        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, parsed
+def check_jolokia_metrics_writer(item: str, section: StringTable) -> CheckResult:
+    yield from check_jolokia_metrics_cache(
+        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, section
     )
 
 
-check_info["jolokia_metrics.writer"] = LegacyCheckDefinition(
+check_plugin_jolokia_metrics_writer = CheckPlugin(
     name="jolokia_metrics_writer",
     service_name="JVM %s Cache Writer",
     sections=["jolokia_metrics"],

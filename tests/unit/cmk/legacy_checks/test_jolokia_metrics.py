@@ -9,6 +9,7 @@
 import pytest
 import time_machine
 
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks.jolokia_metrics import check_request_count
 
 PARSED_SECTION = [
@@ -22,7 +23,10 @@ PARSED_SECTION = [
     [
         pytest.param(
             "myinstance /manager",
-            [(0, "3.00 requests/sec", [("rate", 3)])],
+            [
+                Result(state=State.OK, summary="3.00 requests/sec"),
+                Metric("rate", 3.0),
+            ],
             id="requestCount present",
         ),
         pytest.param(
@@ -32,7 +36,10 @@ PARSED_SECTION = [
         ),
         pytest.param(
             "myinstance /weblogic",
-            [(0, "1.00 requests/sec", [("rate", 1.0)])],
+            [
+                Result(state=State.OK, summary="1.00 requests/sec"),
+                Metric("rate", 1.0),
+            ],
             id="CompletedRequestCount rate",
         ),
     ],

@@ -58,6 +58,8 @@ class NagiosCorePluginImport:
                 f"{self.omd_root}/share/check_mk/checks/kernel",
                 f"{self.omd_root}/share/check_mk/checks/mem_linux",
             ],
+            # This host check loads all plug-ins, so there is nothing to exclude.
+            disabled_service_ids=[],
             ipaddresses={self.host_name: self.host_ip},
             ipv6addresses={},
             hostname=self.host_name,

@@ -3129,6 +3129,79 @@ def test_check_table_cluster_merging_enforced_and_discovered(
     )
 
 
+def _check_table_of(
+    loading_result: config.LoadingResult, host_name: HostName
+) -> config.HostCheckTable:
+    config_cache = loading_result.config_cache
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
+    return config_cache.check_table(
+        host_name,
+        {},
+        config_cache.make_service_configurer({}, service_name_config),
+        service_name_config,
+        EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loading_result.loaded_config.static_checks,
+                config_cache.ruleset_matcher,
+                config_cache.label_manager.labels_of_host,
+            ),
+            service_name_config,
+            {},
+            config_cache.label_manager.labels_of_service,
+        ),
+    )
+
+
+def test_excluded_discovered_service_is_dropped_from_the_check_table(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario(excluded_service_ids=[ServiceID(CheckPluginName("check1"), "excluded")])
+    ts.add_host(HN := HostName("host"))
+    ts.set_autochecks(
+        HN,
+        [
+            AutocheckEntry(CheckPluginName("check1"), "excluded", {}, {}),
+            AutocheckEntry(CheckPluginName("check1"), "kept", {}, {}),
+        ],
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    assert set(_check_table_of(loading_result, HN)) == {
+        ServiceID(CheckPluginName("check1"), "kept")
+    }
+
+
+def test_excluded_enforced_service_is_dropped_from_the_check_table(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario(excluded_service_ids=[ServiceID(CheckPluginName("check1"), "excluded")])
+    ts.add_host(HN := HostName("host"))
+    ts.set_ruleset_bundle(
+        "static_checks",
+        {
+            "rule_name": [
+                {
+                    "id": "01",
+                    "condition": {},
+                    "value": ("check1", "excluded", {}),
+                },
+                {
+                    "id": "02",
+                    "condition": {},
+                    "value": ("check1", "kept", {}),
+                },
+            ]
+        },
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    assert set(_check_table_of(loading_result, HN)) == {
+        ServiceID(CheckPluginName("check1"), "kept")
+    }
+
+
 def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset_bundle(

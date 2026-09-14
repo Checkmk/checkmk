@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.plugins import ServiceID
 from cmk.discover_plugins import PluginLocation
 
 
@@ -17,6 +18,11 @@ class HostCheckConfig:
     verify_site_python: bool
     locations: list[PluginLocation]
     checks_to_load: list[str]
+    # Services excluded from the core configuration by the "Disabled services"
+    # ruleset.  The host check cannot determine these itself: it only loads the
+    # plug-ins of the services it is supposed to check, and without the plug-in
+    # there is no service name to match the ruleset against (CMK-37190).
+    disabled_service_ids: list[ServiceID]
     ipaddresses: dict[HostName, HostAddress]
     ipv6addresses: dict[HostName, HostAddress]
     hostname: HostName

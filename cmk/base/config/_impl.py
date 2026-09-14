@@ -260,6 +260,7 @@ def _aggregate_check_table_services(
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
     skip_ignored: bool,
+    excluded_service_ids: Container[ServiceID],
     filter_mode: FilterMode,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
@@ -273,6 +274,7 @@ def _aggregate_check_table_services(
         config_cache=config_cache,
         mode=filter_mode,
         skip_ignored=skip_ignored,
+        excluded_service_ids=excluded_service_ids,
     )
 
     is_cluster = host_name in hosts_config.clusters
@@ -338,18 +340,26 @@ class _ServiceFilter:
         config_cache: ConfigCache,
         mode: FilterMode,
         skip_ignored: bool,
+        excluded_service_ids: Container[ServiceID],
     ) -> None:
         """Filter services for a specific host
 
         FilterMode.NONE              -> default, returns only checks for this host
         FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
+
+        Services in `excluded_service_ids` are dropped unconditionally, see
+        :meth:`ConfigCache.__init__`.
         """
         self._host_name = host_name
         self._config_cache = config_cache
         self._mode = mode
         self._skip_ignored = skip_ignored
+        self._excluded_service_ids = excluded_service_ids
 
     def keep(self, service: ConfiguredService) -> bool:
+        if service.id() in self._excluded_service_ids:
+            return False
+
         if self._skip_ignored and (
             self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
             or self._config_cache.service_ignored(
@@ -608,6 +618,7 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
+    excluded_service_ids: Container[ServiceID] = frozenset(),
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     return make_loading_result(
@@ -617,6 +628,7 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
+        excluded_service_ids=excluded_service_ids,
     )
 
 
@@ -626,6 +638,7 @@ def make_loading_result(
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
+    excluded_service_ids: Container[ServiceID] = frozenset(),
 ) -> LoadingResult:
     """Derive everything below the BaseConfig.
 
@@ -650,6 +663,7 @@ def make_loading_result(
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
+            excluded_service_ids=excluded_service_ids,
         ),
     )
 
@@ -1271,11 +1285,24 @@ class ConfigCache:
         autochecks_dir: Path,
         discovered_host_labels_dir: Path,
         builtin_host_labels_file: Path,
+        excluded_service_ids: Container[ServiceID] = frozenset(),
     ) -> None:
+        """Hold the configuration and derive the check tables from it.
+
+        Services in `excluded_service_ids` are omitted from every check table.
+        This is how the precompiled nagios host checks are told which services
+        the config generation left out of the core configuration: they only load
+        the plug-ins needed for the services they are supposed to check, so they
+        cannot re-evaluate the "Disabled services" ruleset themselves (the
+        service name is not available without the plug-in).  Computing results
+        for services the core does not know about makes nagios log warnings
+        about check results it cannot assign (CMK-37190).
+        """
         super().__init__()
         self._loaded_config: Final = loaded_config
         self._hosts_config = hosts_config
         self._host_tags = host_tags
+        self._excluded_service_ids: Final = excluded_service_ids
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1660,11 +1687,10 @@ class ConfigCache:
         ],
         *,
         filter_mode: FilterMode = FilterMode.NONE,
-        # This was last set to `False` when computing the precompiled host
-        # checks for nagios in Checkmk 2.4.
-        # Let's keep this code around in the 2.5 branch in case changing that
-        # was a mistake.
-        skip_ignored: Literal[True] = True,
+        # `False` is only used by the nagios config generation, to determine
+        # which services the "Disabled services" ruleset excludes.  It must not
+        # be used to compute services to check or to fetch data for.
+        skip_ignored: bool = True,
     ) -> HostCheckTable:
         # we blissfully ignore the plugins parameter here
         cache_key = (hostname, filter_mode, skip_ignored)
@@ -1679,6 +1705,7 @@ class ConfigCache:
                 service_name_config=service_name_config,
                 enforced_services_table=enforced_services_table,
                 skip_ignored=skip_ignored,
+                excluded_service_ids=self._excluded_service_ids,
                 filter_mode=filter_mode,
                 get_autochecks=self.autochecks_memoizer.read,
                 configure_autochecks=service_configurer.configure_autochecks,

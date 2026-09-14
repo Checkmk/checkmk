@@ -221,6 +221,13 @@ def dump_precompiled_hostcheck(
         verify_site_python=verify_site_python,
         locations=locations,
         checks_to_load=legacy_checks_to_load,
+        disabled_service_ids=_get_disabled_service_ids(
+            config_cache,
+            passive_service_name_config,
+            enforced_services_table,
+            hostname,
+            plugins,
+        ),
         ipaddresses=needed_ipaddresses,
         ipv6addresses=needed_ipv6addresses,
         hostname=hostname,
@@ -318,6 +325,48 @@ def _get_needed_plugins(
             else ()
         ),
     ]
+
+
+def _get_disabled_service_ids(
+    config_cache: ConfigCache,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
+    host_name: HostName,
+    agent_based_plugins: AgentBasedPlugins,
+) -> list[ServiceID]:
+    """Determine the services excluded by the "Disabled services" ruleset.
+
+    The host check must not compute results for these: they have no counterpart
+    in the core configuration, so nagios would log a warning for every result it
+    cannot assign.  It cannot determine them itself, because we only ship the
+    plug-ins needed for the services it is supposed to check (see
+    `_get_needed_plugins`), and the ruleset matches on the service name, which is
+    not available without the plug-in.
+    """
+    service_configurer = config_cache.make_service_configurer(
+        agent_based_plugins.check_plugins, passive_service_name_config
+    )
+    # Same arguments as `_get_needed_plugins`, so that we learn about exactly
+    # those services whose plug-ins we are about to leave out.
+    args = (
+        host_name,
+        agent_based_plugins.check_plugins,
+        service_configurer,
+        passive_service_name_config,
+        enforced_services_table,
+    )
+    return sorted(
+        set(
+            config_cache.check_table(
+                *args, filter_mode=FilterMode.INCLUDE_CLUSTERED, skip_ignored=False
+            )
+        )
+        - set(config_cache.check_table(*args, filter_mode=FilterMode.INCLUDE_CLUSTERED)),
+        # `item` is `None` for some services, so we cannot compare the IDs directly.
+        key=lambda sid: (str(sid.name), str(sid.item)),
+    )
 
 
 def _get_needed_legacy_check_files(

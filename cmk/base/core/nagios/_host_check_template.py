@@ -25,6 +25,7 @@ from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.checkengine.plugin_backend import (
     load_selected_plugins,
 )
+from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.paths import omd_root
@@ -37,6 +38,7 @@ CONFIG = HostCheckConfig(
     verify_site_python=False,
     locations=[PluginLocation("dummy.callsite.of.plugin.location", "dummy_name")],
     checks_to_load=[],
+    disabled_service_ids=[ServiceID(CheckPluginName("dummy_plugin"), None)],
     ipaddresses={HostName("somehost"): HostAddress("::")},
     ipv6addresses={},
     hostname=HostName("somehost"),
@@ -116,6 +118,7 @@ def main() -> int:
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+            excluded_service_ids=frozenset(CONFIG.disabled_service_ids),
         )
 
         secrets = load_secrets_file(

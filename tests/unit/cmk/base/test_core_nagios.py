@@ -30,6 +30,7 @@ import cmk.utils.paths
 from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
+from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.core.nagios._create_config import (
     _format_nagios_object,
     create_nagios_config_commands,
@@ -44,7 +45,13 @@ from cmk.base.core.nagios._precompile_host_checks import (
 )
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    AutocheckEntry,
+    CheckPlugin,
+    CheckPluginName,
+    ServiceID,
+)
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
@@ -506,6 +513,89 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path)
         exec(host_check)
     except Exception as e:
         assert False, f"Execution failed with error: {e}"
+
+
+def _instantiated_config(host_check: str) -> HostCheckConfig:
+    namespace: dict[str, object] = {"__name__": "precompiled_host_check"}
+    exec(host_check, namespace)
+    config = namespace["CONFIG"]
+    assert isinstance(config, HostCheckConfig)
+    return config
+
+
+def test_service_disabled_by_rule_is_reported_to_the_precompiled_host_check(
+    monkeypatch: MonkeyPatch, config_path: Path
+) -> None:
+    """The plug-in of a disabled service is not shipped with the host check.
+
+    Without the plug-in the host check cannot compute the service name, so it
+    cannot match the "Disabled services" ruleset itself. It has to be told which
+    services to leave alone, or it submits results nagios cannot assign to any
+    service (CMK-37190).
+    """
+    hostname = HostName("localhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_autochecks(
+        hostname,
+        [AutocheckEntry(CheckPluginName("uptime"), None, {}, {})],
+    )
+    ts.set_ruleset(
+        "ignored_services",
+        [
+            {
+                "id": "01",
+                "condition": {"service_description": [{"$regex": "Uptime"}]},
+                "value": True,
+            }
+        ],
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    host_check = dump_precompiled_hostcheck(
+        loading_result.hosts_config,
+        loading_result.config_cache,
+        passive_service_name_config=lambda *a: "Uptime",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
+        config_path=config_path,
+        hostname=hostname,
+        get_ip_stack_config=lambda *a: ip_lookup.IPStackConfig.IPv4,  # noqa: ARG005
+        plugins=_make_plugins_for_test(),
+        precompile_mode=PrecompileMode.INSTANT,
+        ip_address_of=lambda *a: HostAddress("1.2.3.4"),  # noqa: ARG005
+    )
+
+    assert _instantiated_config(host_check).disabled_service_ids == [
+        ServiceID(CheckPluginName("uptime"), None)
+    ]
+
+
+def test_enabled_service_is_not_reported_as_disabled_to_the_precompiled_host_check(
+    monkeypatch: MonkeyPatch, config_path: Path
+) -> None:
+    hostname = HostName("localhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_autochecks(
+        hostname,
+        [AutocheckEntry(CheckPluginName("uptime"), None, {}, {})],
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    host_check = dump_precompiled_hostcheck(
+        loading_result.hosts_config,
+        loading_result.config_cache,
+        passive_service_name_config=lambda *a: "Uptime",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
+        config_path=config_path,
+        hostname=hostname,
+        get_ip_stack_config=lambda *a: ip_lookup.IPStackConfig.IPv4,  # noqa: ARG005
+        plugins=_make_plugins_for_test(),
+        precompile_mode=PrecompileMode.INSTANT,
+        ip_address_of=lambda *a: HostAddress("1.2.3.4"),  # noqa: ARG005
+    )
+
+    assert not _instantiated_config(host_check).disabled_service_ids
 
 
 MOCK_PLUGIN = ActiveCheckConfig(

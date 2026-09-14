@@ -11,6 +11,29 @@ ENV \
     LANG=C.UTF-8 \
     PATH="/opt/bin:${PATH}"
 
+ARG ARTIFACT_STORAGE
+ARG BULLSEYE_SNAPSHOT=20260901T000000Z
+
+# Debian 11 left LTS on 2026-08-31: the bullseye pool has been withdrawn from
+# deb.debian.org and has not (yet) appeared on archive.debian.org, so the stock
+# sources 404 on every package. Use a snapshot.debian.org mirror pinned to the
+# final bullseye state, proxied and cached by Nexus. See CMK-39156.
+RUN printf '%s\n' \
+    "deb [check-valid-until=no] ${ARTIFACT_STORAGE}/repository/debian-bullseye-${BULLSEYE_SNAPSHOT} bullseye main" \
+    "deb [check-valid-until=no] ${ARTIFACT_STORAGE}/repository/debian-bullseye-updates-${BULLSEYE_SNAPSHOT} bullseye-updates main" \
+    "deb [check-valid-until=no] ${ARTIFACT_STORAGE}/repository/debian-bullseye-security-${BULLSEYE_SNAPSHOT} bullseye-security main" \
+    > /etc/apt/sources.list
+
+# This image ships no CA bundle, and ca-certificates can only come from the
+# mirror configured above, so TLS verification has to be disabled until it is
+# installed. Package integrity is unaffected throughout: apt still verifies the
+# proxied Debian archive signatures.
+RUN APT_HOST="${ARTIFACT_STORAGE#*://}" \
+    && echo "Acquire::https::${APT_HOST%%/*}::Verify-Peer \"false\";" > /etc/apt/apt.conf.d/99no-ca-bootstrap \
+    && apt-get update \
+    && apt-get install -y ca-certificates \
+    && rm -f /etc/apt/apt.conf.d/99no-ca-bootstrap
+
 RUN apt-get update \
     && apt-get install -y \
     git \

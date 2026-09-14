@@ -15,6 +15,7 @@ def monitoring_plugins_workspace():
         strip_prefix = "monitoring-plugins-" + version_str,
         patches = [
             "//omd/packages/monitoring-plugins:patches/0001-check-icmp-allows-pl-of-101.dif",
+            "//omd/packages/monitoring-plugins:patches/0002-check-icmp-validate-reply-source-address.dif",
             "//omd/packages/monitoring-plugins:patches/0003-cmk-password-store.dif",
             "//omd/packages/monitoring-plugins:patches/0006-check_mysql-define-own-mysql-port.dif",
             "//omd/packages/monitoring-plugins:patches/0009-check_dns-case-insensitive.dif",

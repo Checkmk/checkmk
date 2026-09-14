@@ -73,6 +73,7 @@ class Host:
     service_counts: ServiceCounts | None
     acknowledged: bool
     in_downtime: bool
+    notifications_enabled: bool
     is_flapping: bool
     stale: bool
     folder: str | None

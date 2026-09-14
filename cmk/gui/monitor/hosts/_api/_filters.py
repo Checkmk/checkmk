@@ -157,9 +157,9 @@ class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["acknowledged", "in_downtime", "is_flapping", "stale"] = api_field(
-        description="Host boolean field to filter on", example="acknowledged"
-    )
+    field: Literal[
+        "acknowledged", "in_downtime", "notifications_enabled", "is_flapping", "stale"
+    ] = api_field(description="Host boolean field to filter on", example="acknowledged")
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
     value: bool = api_field(description="Boolean value to compare against", example=False)
 

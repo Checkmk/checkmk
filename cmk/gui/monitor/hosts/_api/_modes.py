@@ -40,4 +40,12 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 title=_("Problem acknowledged"),
             )
         )
+    if not host.notifications_enabled:
+        modes.append(
+            ModeInfo(
+                icon_name="notif-disabled",
+                link=host_view_link("host", host),
+                title=_("Notifications are disabled for this host"),
+            )
+        )
     return modes

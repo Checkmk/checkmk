@@ -7,6 +7,7 @@
 
 import time
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from cmk.agent_based.legacy.conversion import (
@@ -27,21 +28,36 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.jolokia.agent_based.lib import jolokia_basic_split
 
-Section = Mapping[str, Mapping[str, float | str]]
+
+@dataclass(frozen=True)
+class StringValue:
+    type_: str
+    value: str
+
+
+@dataclass(frozen=True)
+class NumericValue:
+    type_: str
+    value: float
+
+
+Section = Mapping[str, StringValue | NumericValue]
 
 
 def parse_jolokia_generic(string_table: StringTable) -> Section:
-    value: str | float
-    parsed = {}
+    parsed: dict[str, StringValue | NumericValue] = {}
     for line in string_table:
         try:
             instance, mbean, value, type_ = jolokia_basic_split(line, 4)
-            if type_ in ("rate", "number"):
-                value = float(value)
+            entry: StringValue | NumericValue = (
+                NumericValue(type_=type_, value=float(value))
+                if type_ in ("rate", "number")
+                else StringValue(type_=type_, value=value)
+            )
         except ValueError:
             continue
         item = f"{instance} MBean {mbean}"
-        parsed[item] = {"value": value, "type": type_}
+        parsed[item] = entry
 
     return parsed
 
@@ -50,9 +66,7 @@ def discover_type(
     type_: Literal["string", "rate", "number"],
 ) -> Callable[[Section], DiscoveryResult]:
     def _discover_bound_type(section: Section) -> DiscoveryResult:
-        yield from (
-            Service(item=item) for item, data in section.items() if data.get("type") == type_
-        )
+        yield from (Service(item=item) for item, data in section.items() if data.type_ == type_)
 
     return _discover_bound_type
 
@@ -71,9 +85,9 @@ def discover_type(
 def check_jolokia_generic_string(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    if not (data := section.get(item)):
+    if not isinstance(data := section.get(item), StringValue):
         return
-    value = str(data["value"])
+    value = data.value
 
     search_strings = params.get("match_strings", [])
     for search_string, status in search_strings:
@@ -108,9 +122,9 @@ check_plugin_jolokia_generic_string = CheckPlugin(
 def check_jolokia_generic_rate(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    if not (data := section.get(item)):
+    if not isinstance(data := section.get(item), NumericValue):
         return
-    rate = get_rate(get_value_store(), item, time.time(), float(data["value"]), raise_overflow=True)
+    rate = get_rate(get_value_store(), item, time.time(), data.value, raise_overflow=True)
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
     yield from check_levels(rate, "generic_rate", levels)
 
@@ -137,10 +151,10 @@ check_plugin_jolokia_generic_rate = CheckPlugin(
 
 
 def check_jolokia_generic(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not (data := section.get(item)):
+    if not isinstance(data := section.get(item), NumericValue):
         return
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    yield from check_levels(float(data["value"]), "generic_number", levels)
+    yield from check_levels(data.value, "generic_number", levels)
 
 
 agent_section_jolokia_generic = AgentSection(

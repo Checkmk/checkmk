@@ -3,44 +3,36 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type {
   Autocompleter,
   AutocompleterData
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ErrorResponse, Response, WarningResponse } from 'cmk-ui-library/components/CmkSuggestions'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch'
 import type { CmkError } from 'cmk-ui-library/lib/error'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { API_ROOT } from 'cmk-ui-library/lib/rest-api-client/constants'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-const AUTOCOMPLETER_API = `${API_ROOT}/objects/autocomplete/{autocompleter}`
-
-type RestAutocompleterChoice = {
-  id: string | null
-  value: string
-}
-export type RestAutocompleterResponse = {
-  choices: RestAutocompleterChoice[]
-  warning?: string
-}
+export type RestAutocompleterResponse = components['schemas']['AutocompleteResponseModel']
 
 export async function fetchtData(
   value: string,
   data: AutocompleterData
 ): Promise<RestAutocompleterResponse> {
-  const payload = {
-    value,
-    parameters: data.params
-  }
-
-  const url = AUTOCOMPLETER_API.replace('{autocompleter}', data.ident)
-
-  const response = await fetchRestAPIDeprecated(url, 'POST', payload)
-
-  await response.raiseForStatus()
-  const ajaxResponse = (await response.json()) as RestAutocompleterResponse
-
-  return ajaxResponse
+  return unwrap(
+    await client.POST('/objects/autocomplete/{autocomplete_id}', {
+      params: {
+        header: { 'Content-Type': 'application/json' },
+        path: { autocomplete_id: data.ident }
+      },
+      body: {
+        value,
+        // spread: AutocompleterParams is an interface, which TypeScript will not
+        // assign to the generated open `parameters` record
+        parameters: { ...data.params }
+      }
+    })
+  )
 }
 
 export async function fetchSuggestions(

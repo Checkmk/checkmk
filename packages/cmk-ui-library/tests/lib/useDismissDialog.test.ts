@@ -4,14 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
-import { afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import type { DismissableWarning } from 'cmk-ui-library/lib/userConfig'
+import { type MockInstance, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 
-const DISMISS_ENDPOINT = 'api/1.0/domain-types/user_config/actions/dismiss-warning/invoke'
+const DISMISS_ENDPOINT = '/domain-types/user_config/actions/dismiss-warning/invoke'
 
 const mockCookie = vi.fn()
-let fetchMock: ReturnType<typeof vi.fn>
+let postSpy: MockInstance<typeof client.POST>
 
 beforeAll(() => {
   Object.defineProperty(document, 'cookie', { get: mockCookie, configurable: true })
@@ -20,12 +22,16 @@ beforeAll(() => {
 beforeEach(() => {
   sessionStorage.clear()
   mockCookie.mockReturnValue('')
-  fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 })
-  vi.stubGlobal('fetch', fetchMock)
+  postSpy = vi.spyOn(client, 'POST')
+  postSpy.mockResolvedValue({
+    data: undefined,
+    error: undefined,
+    response: new Response(null, { status: 204 })
+  })
 })
 
 afterEach(() => {
-  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 function cookieWithDismissed(...warnings: string[]): string {
@@ -33,7 +39,7 @@ function cookieWithDismissed(...warnings: string[]): string {
   return `user_frontend_config=${value}`
 }
 
-function renderDismissDialog(key: string | undefined) {
+function renderDismissDialog(key: DismissableWarning | undefined) {
   let api!: ReturnType<typeof useDismissDialog>
   const component = defineComponent({
     setup() {
@@ -66,11 +72,11 @@ test('dismiss() hides the dialog and persists the dismissal to the server', asyn
   await dismiss()
 
   expect(isShown.value).toBe(false)
-  expect(fetchMock).toHaveBeenCalledOnce()
-  const [url, init] = fetchMock.mock.calls[0]! as [string, RequestInit]
-  expect(url).toBe(DISMISS_ENDPOINT)
-  expect(init.method).toBe('POST')
-  expect(init.body).toBe(JSON.stringify({ warning: 'changes-info' }))
+  expect(postSpy).toHaveBeenCalledOnce()
+  expect(postSpy).toHaveBeenCalledWith(DISMISS_ENDPOINT, {
+    params: { header: { 'Content-Type': 'application/json' } },
+    body: { warning: 'changes-info' }
+  })
 })
 
 test('persists isShown semantics (not inverted) to sessionStorage on dismiss', async () => {
@@ -103,5 +109,5 @@ test('always shown and never persisted when no key is provided', async () => {
   await dismiss()
 
   expect(isShown.value).toBe(false)
-  expect(fetchMock).not.toHaveBeenCalled()
+  expect(postSpy).not.toHaveBeenCalled()
 })

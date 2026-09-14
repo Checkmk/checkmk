@@ -14,6 +14,10 @@ defineProps<{ screenshotMode: boolean }>()
 
 const { _t } = usei18n()
 
+// This demo key is deliberately not one of the warnings the server knows, so
+// the dismissal it sends is a no-op the backend rejects. A real key would
+// dismiss that warning in the user config of whoever opens the library.
+// @ts-expect-error demo-only key, not a DismissableWarning
 const { isShown: mode1Shown, dismiss: dismissMode1 } = useDismissDialog('ucl_cmk_alert_box_demo')
 function resetMode1() {
   mode1Shown.value = true

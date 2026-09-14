@@ -11,6 +11,22 @@ import type { KeySection } from '@/telemetry-metrics/attribute-kind'
 import { KEY_IDENTS, buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/telemetry-metrics/attributeKeySuggestions'
 
+// The default client singleton captures `globalThis.fetch` at import time, before
+// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
+vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
+  const mod = await importOriginal<Record<string, unknown>>()
+  const createClientImpl = (await import('openapi-fetch')).default
+  return {
+    ...mod,
+    default: createClientImpl({
+      baseUrl: `${location.protocol}//${location.host}/api/internal`,
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
+    })
+  }
+})
+
 // "shared" is a real key under two kinds, "only.resource" under one. Key backends do not echo
 // the typed text, so a kind lists a key only when it truly offers it.
 const KEYS_BY_KIND: Record<string, string[]> = {
@@ -19,7 +35,7 @@ const KEYS_BY_KIND: Record<string, string[]> = {
   [KEY_IDENTS.data_point]: ['http.method']
 }
 
-const API_BASE = `${location.protocol}//${location.host}/api/1.0`
+const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
 const server = setupServer(
   http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {

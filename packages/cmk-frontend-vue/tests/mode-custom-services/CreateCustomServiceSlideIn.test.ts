@@ -29,7 +29,7 @@ vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
 })
 
 const CREATE_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/collections/all`
-const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/1.0/objects/autocomplete/:ident`
+const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/internal/objects/autocomplete/:ident`
 
 let createRequests = 0
 let lastBody: unknown = null

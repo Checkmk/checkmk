@@ -140,6 +140,49 @@ def test_build_query_filter_leaves_out_the_folder_no_title_carries() -> None:
     ).render() == [("Filter", "name ~~ no such folder")]
 
 
+@pytest.mark.parametrize(
+    "field, expected",
+    [
+        pytest.param(
+            HostOptionalField.LABELS,
+            [
+                ("Filter", "label_names ~~ web"),
+                ("Filter", "label_values ~~ web"),
+                ("Or", "2"),
+            ],
+            id="labels match by name or by value",
+        ),
+        pytest.param(
+            HostOptionalField.TAGS,
+            [
+                ("Filter", "tag_names ~~ web"),
+                ("Filter", "tag_values ~~ web"),
+                ("Or", "2"),
+            ],
+            id="tags match by name or by value",
+        ),
+        pytest.param(
+            HostOptionalField.CONTACTS,
+            [("Filter", "contacts ~~ web")],
+            id="contacts",
+        ),
+        pytest.param(
+            HostOptionalField.CONTACT_GROUPS,
+            [("Filter", "contact_groups ~~ web")],
+            id="contact groups",
+        ),
+    ],
+)
+def test_build_query_filter_searches_a_shown_list_column(
+    field: HostOptionalField, expected: list[tuple[str, str]]
+) -> None:
+    assert _build_query_filter("web", frozenset({field}), _folders()).render() == [
+        ("Filter", "name ~~ web"),
+        *expected,
+        ("Or", "2"),
+    ]
+
+
 def test_build_query_filter_leaves_out_a_hidden_field() -> None:
     assert _build_query_filter(
         "web", frozenset({HostOptionalField.ALIAS}), _folders()

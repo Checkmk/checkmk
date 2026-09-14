@@ -336,6 +336,18 @@ def _split_filter_lines(filters: HostFilter) -> list[str]:
 _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] = {
     HostOptionalField.ALIAS: lambda query: Hosts.alias.contains(query, ignore_case=True),
     HostOptionalField.ADDRESS: lambda query: Hosts.address.contains(query, ignore_case=True),
+    HostOptionalField.LABELS: lambda query: Or(
+        Hosts.label_names.contains(query, ignore_case=True),
+        Hosts.label_values.contains(query, ignore_case=True),
+    ),
+    HostOptionalField.TAGS: lambda query: Or(
+        Hosts.tag_names.contains(query, ignore_case=True),
+        Hosts.tag_values.contains(query, ignore_case=True),
+    ),
+    HostOptionalField.CONTACTS: lambda query: Hosts.contacts.contains(query, ignore_case=True),
+    HostOptionalField.CONTACT_GROUPS: lambda query: Hosts.contact_groups.contains(
+        query, ignore_case=True
+    ),
 }
 
 

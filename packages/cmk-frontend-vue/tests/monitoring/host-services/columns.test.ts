@@ -18,7 +18,8 @@ import {
   MonitoringService,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
-import { columnId } from '@/monitoring/shared/tableState/schema'
+import { buildTableStateSchema, columnId } from '@/monitoring/shared/tableState/schema'
+import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
 
 import { makeKeyShortcutService, makeResponse } from '../shared/services/testHelpers'
 
@@ -40,6 +41,15 @@ function makeService() {
   const service = new ServiceColumnService(serviceColumns(), makeKeyShortcutService())
   service.stopPolling()
   return service
+}
+
+/** The display vocabulary the picker and the URL codec read off the columns. */
+function schemaOf(includeSelect: boolean): TableStateSchema {
+  return buildTableStateSchema({
+    columns: serviceColumns(includeSelect),
+    limitTiers: [1000],
+    mayRemoveLimit: false
+  })
 }
 
 beforeEach(() => {
@@ -152,4 +162,20 @@ test('the hidden columns stay on offer in the picker', () => {
   expect(makeService().toggleableColumns.map((column) => column.id)).toEqual(
     expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups'])
   )
+})
+
+test('the select column adds itself without disturbing the other columns', () => {
+  // Two users of the same table, one permitted to act on a selection and one not,
+  // must see tables that differ in nothing but that column.
+  const ids = (includeSelect: boolean) =>
+    serviceColumns(includeSelect).map((column) => columnId(column as ColumnDef<never>))
+
+  expect(ids(true).filter((id) => id !== 'select')).toEqual(ids(false))
+  expect(schemaOf(true).hideable).toEqual(schemaOf(false).hideable)
+  expect(schemaOf(true).sortable).toEqual(schemaOf(false).sortable)
+})
+
+test('the select column is never on offer in the picker', () => {
+  expect(schemaOf(true).hideable).not.toContain('select')
+  expect(makeService().toggleableColumns.map((column) => column.id)).not.toContain('select')
 })

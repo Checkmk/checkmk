@@ -9,7 +9,6 @@ from ._drawn_curves import (
     line_type_with_mirroring,
     serialize_drawn_curves,
 )
-from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
     graphs_from_api,
@@ -124,10 +123,8 @@ from ._graph_specification import (
     graph_specification_registry,
     GraphEnvironment,
     GraphExportRequest,
-    GraphMetric,
     GraphRanges,
     GraphSpecification,
-    HorizontalRule,
     MKCombinedGraphLimitExceededError,
     parse_graph_specification,
 )
@@ -255,7 +252,6 @@ __all__ = [
     "evaluated_to_graph_spec",
     "EvaluatedGraphs",
     "EvaluatedMetric",
-    "ExplicitGraphSpecification",
     "FetchDataWithDiagnosticsProtocol",
     "FetchDiagnostics",
     "FetchTimeSeriesProtocol",
@@ -290,7 +286,6 @@ __all__ = [
     "graphing_plugins",
     "GraphingPlugins",
     "GraphLineGroupByKey",
-    "GraphMetric",
     "GraphMetricConstant",
     "GraphMetricConstantNA",
     "GraphMetricExpression",
@@ -315,7 +310,6 @@ __all__ = [
     "HistogramSumDelta",
     "HistogramSumRate",
     "HistogramSumRaw",
-    "HorizontalRule",
     "HOST_PSEUDO_SERVICE",
     "HTML_SIZE_PER_EX",
     "id_from_unit_spec",

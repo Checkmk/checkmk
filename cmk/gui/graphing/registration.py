@@ -10,7 +10,6 @@ from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import monitored_metrics_autocompleter
-from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_codec import community_graph_codec, GraphCodec
 from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_images import AjaxGraphImagesForNotifications
@@ -61,7 +60,6 @@ def register(
     graph_metric_expression_registry.register(GraphMetricOperation)
     graph_metric_expression_registry.register(GraphMetricRRDSource)
 
-    graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
 
     _register_graph_dispatchers(graph_dispatcher_registry, community_graph_codec())

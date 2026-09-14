@@ -6,13 +6,12 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Annotated, final, override
+from typing import final, override
 
 from pydantic import (
     BaseModel,
     computed_field,
     field_validator,
-    PlainValidator,
     SerializeAsAny,
 )
 
@@ -21,13 +20,7 @@ from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 
-from ._graph_metric_expressions import (
-    GraphConsolidationFunction,
-    GraphMetricExpression,
-    LineType,
-    parse_graph_metric_expression,
-)
-from ._unit import ConvertibleUnitSpecification
+from ._graph_metric_expressions import GraphConsolidationFunction
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException): ...
@@ -37,23 +30,6 @@ class MKCombinedGraphLimitExceededError(MKHTTPException): ...
 class GraphEnvironment:
     user_permissions: UserPermissions
     debug: bool = False
-
-
-class HorizontalRule(BaseModel, frozen=True):
-    value: float
-    rendered_value: str
-    color: str
-    title: str
-
-
-class GraphMetric(BaseModel, frozen=True):
-    title: str
-    line_type: LineType
-    operation: Annotated[
-        SerializeAsAny[GraphMetricExpression], PlainValidator(parse_graph_metric_expression)
-    ]
-    unit: ConvertibleUnitSpecification
-    color: str
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):

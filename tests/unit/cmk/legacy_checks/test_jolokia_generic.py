@@ -8,7 +8,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Service, StringTable
 from cmk.legacy_checks.jolokia_generic import discover_type, parse_jolokia_generic
 
 info = [
@@ -20,13 +20,13 @@ info = [
 @pytest.mark.parametrize(
     "type_,lines,expected_result",
     [
-        ("number", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
-        ("rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
+        ("number", info, [Service(item="PingFederate-CUK-CDI MBean TotalRequests")]),
+        ("rate", info, [Service(item="PingFederate-CUK-CDI MBean MaxRequestTime")]),
     ],
 )
 def test_jolokia_generic_discovery(
     type_: Literal["number", "rate"],
     lines: StringTable,
-    expected_result: Sequence[tuple[str, dict[str, object]]],
+    expected_result: Sequence[Service],
 ) -> None:
     assert list(discover_type(type_)(parse_jolokia_generic(lines))) == expected_result

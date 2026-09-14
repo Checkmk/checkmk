@@ -5,7 +5,7 @@
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
-import * as cmkFetch from 'cmk-ui-library/lib/cmkFetch'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { defineComponent, ref } from 'vue'
 
 import ConfigureCollector from '@/mode-otel/otel-configuration-steps/ConfigureCollector.vue'
@@ -17,14 +17,15 @@ import type {
 import type { PasswordConfig } from '@/mode-otel/otel-configuration-steps/password_store_password.types.ts'
 
 function mockPasswordsResponse(passwords: { id: string; title: string }[] = []) {
-  return vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValue({
-    raiseForStatus: vi.fn().mockResolvedValue(undefined),
-    json: vi.fn().mockResolvedValue({ value: passwords })
-  } as unknown as cmkFetch.CmkFetchResponse)
+  return vi.spyOn(client, 'GET').mockResolvedValue({
+    data: { value: passwords },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
 }
 
 function mockPasswordsError() {
-  vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network error'))
+  vi.spyOn(client, 'GET').mockRejectedValue(new Error('Network error'))
 }
 
 function renderComponent(

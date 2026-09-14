@@ -6,6 +6,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -16,7 +17,7 @@ import { isValid } from '@/graphing/designer/validation'
 
 import { constantItem, filterDefinitions, telemetryMetricsItem } from '../fixtures'
 
-const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn(), fetchRestAPIDeprecated: vi.fn() }))
+const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn() }))
 
 vi.mock(
   import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
@@ -26,21 +27,17 @@ vi.mock(
   }
 )
 
-vi.mock(import('cmk-ui-library/lib/cmkFetch'), async (importOriginal) => {
-  const mod = await importOriginal()
-  return { ...mod, fetchRestAPIDeprecated: mocks.fetchRestAPIDeprecated }
-})
-
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
   mocks.fetchSuggestions.mockResolvedValue(new Response([]))
-  mocks.fetchRestAPIDeprecated.mockResolvedValue({
-    raiseForStatus: async () => {},
-    json: async () => ({ choices: [] })
-  })
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    data: { choices: [] },
+    error: undefined,
+    response: new globalThis.Response(null, { status: 200 })
+  } as never)
 })
 
 afterEach(() => {

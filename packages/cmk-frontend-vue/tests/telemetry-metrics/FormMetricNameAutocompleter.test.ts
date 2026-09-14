@@ -8,10 +8,26 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { HttpResponse, delay, http } from 'msw'
 import { setupServer } from 'msw/node'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import FormMetricNameAutocompleter from '@/telemetry-metrics/FormMetricNameAutocompleter.vue'
+
+// The default client singleton captures `globalThis.fetch` at import time, before
+// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
+vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
+  const mod = await importOriginal<Record<string, unknown>>()
+  const createClientImpl = (await import('openapi-fetch')).default
+  return {
+    ...mod,
+    default: createClientImpl({
+      baseUrl: `${location.protocol}//${location.host}/api/internal`,
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
+    })
+  }
+})
 
 const METRIC_NAMES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 

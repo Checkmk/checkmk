@@ -1,0 +1,46 @@
+diff --git a/plugins-root/check_icmp.c b/plugins-root/check_icmp.c
+index 923c2df..a6108eb 100644
+--- a/plugins-root/check_icmp.c
++++ b/plugins-root/check_icmp.c
+@@ -887,6 +887,7 @@ static int
+ wait_for_reply(int sock, u_int t)
+ {
+ 	int n, hlen;
++	int addr_mismatch;
+ 	static unsigned char buf[65536];
+ 	struct sockaddr_storage resp_addr;
+ 	union ip_hdr *ip;
+@@ -1003,6 +1004,8 @@ wait_for_reply(int sock, u_int t)
+ 					(unsigned long)sizeof(data), ntohs(packet.icp->icmp_id),
+ 					ntohs(packet.icp->icmp_seq), packet.icp->icmp_cksum);
+ 			host = table[ntohs(packet.icp->icmp_seq)/packets];
++			addr_mismatch = ((struct sockaddr_in *)&host->saddr_in)->sin_addr.s_addr
++				!= ((struct sockaddr_in *)&resp_addr)->sin_addr.s_addr;
+ 		} else {
+ 			memcpy(&data, &packet.icp6->icmp6_dataun.icmp6_un_data8[4], sizeof(data));
+ 			if (debug > 2)
+@@ -1010,6 +1013,24 @@ wait_for_reply(int sock, u_int t)
+ 					(unsigned long)sizeof(data), ntohs(packet.icp6->icmp6_id),
+ 					ntohs(packet.icp6->icmp6_seq), packet.icp6->icmp6_cksum);
+ 			host = table[ntohs(packet.icp6->icmp6_seq)/packets];
++			addr_mismatch = memcmp(&((struct sockaddr_in6 *)&host->saddr_in)->sin6_addr,
++					       &((struct sockaddr_in6 *)&resp_addr)->sin6_addr,
++					       sizeof(struct in6_addr)) != 0;
++		}
++
++		/* The reply matches our icmp_id, but that id is only the low 16 bits
++		 * of our PID. With pid_max > 65536 a concurrently running pinger
++		 * (another check_icmp or some other ping tool) may use the same id,
++		 * and every raw ICMP socket on the machine receives a copy of all
++		 * echo replies. So drop the reply unless it actually comes from the
++		 * host we pinged, otherwise it would be counted for the wrong target. */
++		if (addr_mismatch) {
++			if (debug) {
++				char address[INET6_ADDRSTRLEN];
++				parse_address(&resp_addr, address, sizeof(address));
++				printf("dropping reply with our icmp_id from unexpected address %s\n", address);
++			}
++			continue;
+ 		}
+ 
+ 		tdiff = get_timevaldiff(&data.stime, &now);

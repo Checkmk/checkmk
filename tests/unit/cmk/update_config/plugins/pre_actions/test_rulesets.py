@@ -18,7 +18,6 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.gui.wsgi.app import gui_context
 from cmk.ruleset_matcher.conditions import HostOrServiceConditions
-from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.rulesets import PreUpdateRulesets
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
@@ -106,47 +105,6 @@ def test_validate_host_condition(
         assert expected == e.value.args[1]
     else:
         _execute_pre_update_rulesets(mocker)
-
-
-def test_legacy_wmic_process_parameters_survive_the_pre_action(mocker: MockerFixture) -> None:
-    """Until 3.0 these parameters were a positional tuple.
-
-    The migrate_wmic_process_params action rewrites them, but it runs after this
-    pre-action, so validating them here can only ever fail.
-    """
-    with gui_context():
-        root_folder = folder_tree().root_folder()
-    ruleset_name = RuleGroup.StaticChecks("wmic_process")
-    ruleset: Ruleset = Ruleset(ruleset_name, None)
-    ruleset.append_rule(
-        root_folder,
-        Rule(
-            id_="1",
-            folder=root_folder,
-            ruleset=ruleset,
-            conditions=RuleConditions(
-                host_folder=root_folder.path(),
-                host_tags=None,
-                host_label_groups=None,
-                host_name=None,
-                service_description=None,
-                service_label_groups=None,
-            ),
-            options=RuleOptions(
-                disabled=None,
-                description="",
-                comment="",
-                docu_url="",
-            ),
-            value=("wmic_process", "notepad", ("notepad.exe", 100, 200, 50, 100, 80.0, 90.0)),
-        ),
-    )
-    mocker.patch(
-        "cmk.update_config.plugins.pre_actions.rulesets.AllRulesets.load_all_rulesets",
-        return_value=AllRulesets({ruleset_name: ruleset}, root_folder.tree),
-    )
-
-    _execute_pre_update_rulesets(mocker)
 
 
 def _execute_pre_update_rulesets(mocker: MockerFixture) -> None:

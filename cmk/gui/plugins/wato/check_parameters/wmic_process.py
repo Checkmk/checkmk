@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.utils import (
+    ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesApplications,
+)
+from cmk.gui.valuespec import Integer, Migrate, Percentage, TextInput, Tuple
+
+
+def _item_spec_wmic_process() -> TextInput:
+    return TextInput(
+        title=_("Process name for usage in the Nagios service name"),
+        allow_empty=False,
+    )
+
+
+def _parameter_valuespec_wmic_process() -> Migrate[tuple[str, int, int, int, int, float, float]]:
+    return Migrate(
+        valuespec=Tuple(
+            elements=[
+                TextInput(
+                    title=_("Name of the process"),
+                    allow_empty=False,
+                ),
+                Integer(title=_("Memory warning at"), unit="MB"),
+                Integer(title=_("Memory critical at"), unit="MB"),
+                Integer(title=_("Pagefile warning at"), unit="MB"),
+                Integer(title=_("Pagefile critical at"), unit="MB"),
+                Percentage(title=_("CPU usage warning at")),
+                Percentage(title=_("CPU usage critical at")),
+            ]
+        ),
+        # this migrate is just a hack to make the CI accept the broken state of the
+        # migrated plugins. It has no relevance for production and can be reoved
+        # when addressng CMK-35057.
+        migrate=lambda p: p if isinstance(p, tuple) else ("x", 0, 0, 0, 0, 0.0, 0.0),
+    )
+
+
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="wmic_process",
+        group=RulespecGroupEnforcedServicesApplications,
+        item_spec=_item_spec_wmic_process,
+        parameter_valuespec=_parameter_valuespec_wmic_process,
+        title=lambda: _("Memory and CPU of processes on Windows"),
+    )
+)

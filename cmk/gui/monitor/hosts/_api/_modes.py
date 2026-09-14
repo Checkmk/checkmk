@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.openapi.framework.model._api_field import api_field
 from cmk.gui.openapi.framework.model._api_model import api_model
 
@@ -46,6 +46,19 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 icon_name="notif-disabled",
                 link=host_view_link("host", host),
                 title=_("Notifications are disabled for this host"),
+            )
+        )
+    if host.num_comments:
+        modes.append(
+            ModeInfo(
+                icon_name="comment",
+                link=host_view_link("comments_of_host", host),
+                title=ungettext(
+                    "This host has %(count)d comment",
+                    "This host has %(count)d comments",
+                    host.num_comments,
+                )
+                % {"count": host.num_comments},
             )
         )
     return modes

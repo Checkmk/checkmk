@@ -29,7 +29,7 @@ from tests.testlib.gui.web_test_app import SetConfig
 _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
-    "scheduled_downtime_depth notifications_enabled is_flapping staleness last_check "
+    "scheduled_downtime_depth notifications_enabled comments is_flapping staleness last_check "
     "last_state_change perf_data check_command"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
@@ -263,6 +263,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
         "notifications_enabled": 1,
+        "comments": [],
         "is_flapping": 0,
         "staleness": staleness,
         "last_check": 0,

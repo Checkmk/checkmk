@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 from .._models import Service, ServiceOverview
@@ -23,6 +23,14 @@ class ServiceModeInfo:
     title: str = api_field(
         description="Tooltip shown for the mode icon", example="In scheduled downtime"
     )
+
+
+def _comment_title(count: int) -> str:
+    return ungettext(
+        "This service has %(count)d comment",
+        "This service has %(count)d comments",
+        count,
+    ) % {"count": count}
 
 
 def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
@@ -50,6 +58,14 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 icon_name="notif-disabled",
                 link=service_view_link("service", service),
                 title=_("Notifications are disabled for this service"),
+            )
+        )
+    if service.num_comments:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="comment",
+                link=service_view_link("comments_of_service", service),
+                title=_comment_title(service.num_comments),
             )
         )
     return modes
@@ -91,6 +107,19 @@ def build_service_modes_by_id(
                     "service", site_id=site_id, hostname=hostname, service_name=service.name
                 ),
                 title=_("Notifications are disabled for this service"),
+            )
+        )
+    if service.num_comments:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="comment",
+                link=service_view_link_by_id(
+                    "comments_of_service",
+                    site_id=site_id,
+                    hostname=hostname,
+                    service_name=service.name,
+                ),
+                title=_comment_title(service.num_comments),
             )
         )
     return modes

@@ -6,14 +6,22 @@ from cmk.gui.monitor.hosts._api._modes import build_host_modes
 
 from .testlib import HostFactory
 
+# The factory randomises every field, so a test that asserts on one mode has to pin all the
+# others to the value that keeps their icon away.
+_NO_MODES = {
+    "in_downtime": False,
+    "acknowledged": False,
+    "notifications_enabled": True,
+    "num_comments": 0,
+}
+
 
 def test_build_host_modes_none() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=False, notifications_enabled=True)
-    assert build_host_modes(host) == []
+    assert build_host_modes(HostFactory.build(**_NO_MODES)) == []
 
 
 def test_build_host_modes_downtime() -> None:
-    host = HostFactory.build(in_downtime=True, acknowledged=False, notifications_enabled=True)
+    host = HostFactory.build(**_NO_MODES | {"in_downtime": True})
     modes = build_host_modes(host)
 
     assert [mode.icon_name for mode in modes] == ["downtime"]
@@ -22,24 +30,36 @@ def test_build_host_modes_downtime() -> None:
 
 
 def test_build_host_modes_acknowledged() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=True, notifications_enabled=True)
+    host = HostFactory.build(**_NO_MODES | {"acknowledged": True})
 
     assert [mode.icon_name for mode in build_host_modes(host)] == ["ack"]
 
 
 def test_build_host_modes_notifications_disabled() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=False, notifications_enabled=False)
+    host = HostFactory.build(**_NO_MODES | {"notifications_enabled": False})
     modes = build_host_modes(host)
 
     assert [mode.icon_name for mode in modes] == ["notif-disabled"]
     assert modes[0].link.startswith("view.py?")
 
 
+def test_build_host_modes_comments() -> None:
+    host = HostFactory.build(**_NO_MODES | {"num_comments": 2})
+    modes = build_host_modes(host)
+
+    assert [mode.icon_name for mode in modes] == ["comment"]
+    assert "comments_of_host" in modes[0].link
+    assert modes[0].title == "This host has 2 comments"
+
+
 def test_build_host_modes_all_modes() -> None:
-    host = HostFactory.build(in_downtime=True, acknowledged=True, notifications_enabled=False)
+    host = HostFactory.build(
+        in_downtime=True, acknowledged=True, notifications_enabled=False, num_comments=1
+    )
 
     assert [mode.icon_name for mode in build_host_modes(host)] == [
         "downtime",
         "ack",
         "notif-disabled",
+        "comment",
     ]

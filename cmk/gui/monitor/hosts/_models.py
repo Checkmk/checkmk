@@ -74,6 +74,7 @@ class Host:
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
+    num_comments: int
     is_flapping: bool
     stale: bool
     folder: str | None

@@ -228,7 +228,8 @@ test('the mode column filter no longer offers flapping, which moved to the state
     groups: [
       { field: 'in_downtime', title: 'In downtime' },
       { field: 'acknowledged', title: 'Acknowledged' },
-      { field: 'notifications_enabled', title: 'Notifications enabled' }
+      { field: 'notifications_enabled', title: 'Notifications enabled' },
+      { field: 'has_comments', title: 'Has comments' }
     ]
   })
 })

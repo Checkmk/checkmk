@@ -186,6 +186,18 @@ def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
 @pytest.mark.parametrize(
     "value, expected",
     [
+        (True, "Filter: comments !="),
+        (False, "Filter: comments ="),
+    ],
+)
+def test_query_builder_has_comments_condition(value: bool, expected: str) -> None:
+    condition = BooleanCondition(type="condition", field="has_comments", op="eq", value=value)
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
         (True, "Filter: staleness >= 3.5"),
         (False, "Filter: staleness < 3.5"),
     ],

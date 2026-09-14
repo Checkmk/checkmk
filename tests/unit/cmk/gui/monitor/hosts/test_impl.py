@@ -168,6 +168,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
         "notifications_enabled": 1,
+        "comments": [],
         "is_flapping": 0,
         "staleness": staleness,
     }

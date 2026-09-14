@@ -68,7 +68,7 @@ export function buildHostServicesColumnPinning({
 /** Picks a column filter offers before it refuses more, per the views-table design. */
 const MAX_FILTER_CHOICES = 8
 
-type ServiceModeField = 'in_downtime' | 'acknowledged' | 'notifications_enabled'
+type ServiceModeField = 'in_downtime' | 'acknowledged' | 'notifications_enabled' | 'has_comments'
 
 export function useHostServicesColumns({
   includeSelect
@@ -147,7 +147,8 @@ export function useHostServicesColumns({
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
       { field: 'acknowledged', title: _t('Acknowledged') },
-      { field: 'notifications_enabled', title: _t('Notifications enabled') }
+      { field: 'notifications_enabled', title: _t('Notifications enabled') },
+      { field: 'has_comments', title: _t('Has comments') }
     ]
   }
 

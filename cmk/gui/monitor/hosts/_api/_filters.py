@@ -158,7 +158,12 @@ class BooleanCondition:
         description="Node type discriminator", example="condition"
     )
     field: Literal[
-        "acknowledged", "in_downtime", "notifications_enabled", "is_flapping", "stale"
+        "acknowledged",
+        "in_downtime",
+        "notifications_enabled",
+        "has_comments",
+        "is_flapping",
+        "stale",
     ] = api_field(description="Host boolean field to filter on", example="acknowledged")
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
     value: bool = api_field(description="Boolean value to compare against", example=False)
@@ -419,6 +424,11 @@ def _accumulate_filters(
                     # downtime when scheduled_downtime_depth is greater than zero.
                     op = ">" if node.value else "="
                     filters.append(f"Filter: scheduled_downtime_depth {op} 0")
+                case "has_comments":
+                    # Livestatus has no comment count; the comment id list is filterable for
+                    # emptiness alone, which is exactly the question the icon answers.
+                    op = "!=" if node.value else "="
+                    filters.append(f"Filter: comments {op}")
                 case "stale":
                     # Livestatus has no boolean stale column; a host is stale when its
                     # staleness exceeds the configured threshold.

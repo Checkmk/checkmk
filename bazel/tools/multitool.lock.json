@@ -26,8 +26,8 @@
     "binaries": [
       {
         "kind": "archive",
-        "url": "https://github.com/astral-sh/ruff/releases/download/0.16.5/ruff-x86_64-unknown-linux-gnu.tar.gz",
-        "sha256": "65b8bae7e43f12a91b71036a52176012b3aefb725d5ae263e2771474110a0983",
+        "url": "https://github.com/astral-sh/ruff/releases/download/0.16.7/ruff-x86_64-unknown-linux-gnu.tar.gz",
+        "sha256": "73894c7b7c9a53fd66ed715eb3a1ec65077f316328e377057a98bdb7fcba0326",
         "file": "ruff-x86_64-unknown-linux-gnu/ruff",
         "os": "linux",
         "cpu": "x86_64"

@@ -340,7 +340,7 @@ async function onSaveClick(): Promise<void> {
           v-model:config-name="configName"
           v-model:site-id="siteId"
           config-name-prefix="opentelemetry_config_"
-          config-list-endpoint="api/internal/domain-types/otel_collector_config_receivers/collections/all"
+          config-kind="receivers"
           :already-configured-error="
             _t(
               'OpenTelemetry is already configured for this site. Select another site or update the existing configuration.'

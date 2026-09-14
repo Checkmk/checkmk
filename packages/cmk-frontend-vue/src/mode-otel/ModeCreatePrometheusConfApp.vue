@@ -177,7 +177,7 @@ async function onSaveClick(): Promise<void> {
           v-model:config-name="configName"
           v-model:site-id="siteId"
           config-name-prefix="prometheus_config_"
-          config-list-endpoint="api/internal/domain-types/otel_collector_config_prom_scrape/collections/all"
+          config-kind="prom_scrape"
           :already-configured-error="
             _t(
               'Prometheus is already configured for this site. Select another site or update the existing configuration.'

@@ -5,15 +5,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script lang="ts">
-export type RawSite = { id: string; title: string; extensions?: { logged_in?: boolean } }
+export type RawSite = components['schemas']['SiteConnectionModel']
 
+/**
+ * Which OTel configuration collection the step validates against. The two
+ * wizards share this step but list different configurations.
+ */
+export type ConfigKind = 'receivers' | 'prom_scrape'
+
+/** The fields both OTel configuration collections share. */
 type OTelConfigEntry = {
   id?: string
-  extensions?: { site?: string[] }
+  extensions: { site: string[] }
 }
 
 let cachedSites: RawSite[] | null = null
-let cachedConfigs: { endpoint: string; entries: OTelConfigEntry[] } | null = null
+let cachedConfigs: { kind: ConfigKind; entries: OTelConfigEntry[] } | null = null
 
 /** Exposed for testing only — resets the module-level caches. */
 export function _resetCaches(): void {
@@ -36,18 +43,17 @@ export function nextAvailableConfigName(existingIds: string[], prefix: string): 
 </script>
 
 <script setup lang="ts">
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch.ts'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, onMounted, ref } from 'vue'
-
-const API_ROOT = 'api/v1'
 
 const { _t } = usei18n()
 
@@ -56,7 +62,7 @@ const siteDropdownId = useId()
 
 const props = defineProps<{
   configNamePrefix: string
-  configListEndpoint: string
+  configKind: ConfigKind
   alreadyConfiguredError: string
 }>()
 
@@ -71,13 +77,13 @@ const isLoading = ref(false)
 
 function applySites(rawSites: RawSite[]) {
   siteOptions.value = rawSites.map((s) => ({
-    name: s.id,
+    name: s.id!,
     title: untranslated(`${s.id} - ${s.title}`)
   }))
-  // Pre-select the local site (no `logged_in` key in extensions) or first entry.
+  // Pre-select the local site (no `logged_in` in extensions) or first entry.
   // Only set when siteId has not been set yet so navigating back preserves the value.
   if (siteId.value === null) {
-    const localSite = rawSites.find((s) => !('logged_in' in (s.extensions ?? {})))
+    const localSite = rawSites.find((s) => s.extensions.logged_in === undefined)
     siteId.value = localSite?.id ?? rawSites[0]?.id ?? null
   }
 }
@@ -90,13 +96,7 @@ async function loadSites(): Promise<void> {
 
   isLoading.value = true
   try {
-    const response = await fetchRestAPIDeprecated(
-      `${API_ROOT}/domain-types/site_connection/collections/all`,
-      'GET'
-    )
-    await response.raiseForStatus()
-    const data = await response.json()
-    cachedSites = data.value as RawSite[]
+    cachedSites = unwrap(await client.GET('/domain-types/site_connection/collections/all')).value
     applySites(cachedSites)
   } catch {
     loadError.value = _t('Failed to load sites. Please try again.')
@@ -105,15 +105,21 @@ async function loadSites(): Promise<void> {
   }
 }
 
+async function loadConfigList(kind: ConfigKind): Promise<OTelConfigEntry[]> {
+  if (kind === 'receivers') {
+    return unwrap(await client.GET('/domain-types/otel_collector_config_receivers/collections/all'))
+      .value
+  }
+  return unwrap(await client.GET('/domain-types/otel_collector_config_prom_scrape/collections/all'))
+    .value
+}
+
 async function fetchConfigList(skipCache = false): Promise<OTelConfigEntry[]> {
-  if (!skipCache && cachedConfigs?.endpoint === props.configListEndpoint) {
+  if (!skipCache && cachedConfigs?.kind === props.configKind) {
     return cachedConfigs.entries
   }
-  const response = await fetchRestAPIDeprecated(props.configListEndpoint, 'GET')
-  await response.raiseForStatus()
-  const data = await response.json()
-  const entries = data.value as OTelConfigEntry[]
-  cachedConfigs = { endpoint: props.configListEndpoint, entries }
+  const entries = await loadConfigList(props.configKind)
+  cachedConfigs = { kind: props.configKind, entries }
   return entries
 }
 
@@ -184,7 +190,7 @@ function checkSiteAlreadyConfigured(configs: OTelConfigEntry[]): string[] {
   if (!siteId.value) {
     return []
   }
-  if (configs.some((config) => config.extensions?.site?.includes(siteId.value!))) {
+  if (configs.some((config) => config.extensions.site.includes(siteId.value!))) {
     return [props.alreadyConfiguredError]
   }
   return []

@@ -83,6 +83,7 @@ class ServiceBooleanCondition:
         "notifications_enabled",
         "has_comments",
         "active_checks_disabled",
+        "passive_checks_disabled",
         "is_flapping",
         "stale",
     ] = api_field(description="Boolean service field to filter on", example="acknowledged")
@@ -244,15 +245,16 @@ def _name_choice_filters(field: str, names: list[str]) -> list[str]:
     ]
 
 
-def _manually_disabled_filters(attribute: str) -> list[str]:
+def _manually_disabled_filters(attribute: str, *, column: str | None = None) -> list[str]:
     """Match objects whose ``attribute`` a user switched off, not ones that never had it on.
 
     Mirrors the repository's own derivation: the setting being 0 is not enough, the attribute
-    also has to appear in the modified-attributes list.
+    also has to appear in the modified-attributes list. Pass ``column`` where the setting's own
+    column is named differently from the modified attribute.
     """
     return [
         f"Filter: modified_attributes_list >= {attribute}",
-        f"Filter: {attribute} = 0",
+        f"Filter: {column or attribute} = 0",
         "And: 2",
     ]
 
@@ -289,6 +291,14 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
                     filters.append(f"Filter: comments {op}")
                 case "active_checks_disabled":
                     filters.extend(_manually_disabled_filters("active_checks_enabled"))
+                    if not node.value:
+                        filters.append("Negate:")
+                case "passive_checks_disabled":
+                    filters.extend(
+                        _manually_disabled_filters(
+                            "passive_checks_enabled", column="accept_passive_checks"
+                        )
+                    )
                     if not node.value:
                         filters.append("Negate:")
                 case "stale":

@@ -69,4 +69,12 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
                 title=_("Active checks have been manually disabled for this host"),
             )
         )
+    if host.passive_checks_disabled:
+        modes.append(
+            ModeInfo(
+                icon_name="npassive",
+                link=host_view_link("host", host),
+                title=_("Passive checks have been manually disabled for this host"),
+            )
+        )
     return modes

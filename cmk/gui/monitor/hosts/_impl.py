@@ -89,6 +89,7 @@ class LiveStatusHostRepository:
                 Hosts.comments,
                 Hosts.modified_attributes_list,
                 Hosts.active_checks_enabled,
+                Hosts.accept_passive_checks,
                 Hosts.is_flapping,
                 Hosts.staleness,
                 *(
@@ -121,6 +122,9 @@ class LiveStatusHostRepository:
                         notifications_enabled=bool(row["notifications_enabled"]),
                         num_comments=len(row["comments"]),
                         active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        passive_checks_disabled=_manually_disabled(
+                            row, "passive_checks_enabled", column="accept_passive_checks"
+                        ),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         last_check=_timestamp(row.get("last_check")),
@@ -166,6 +170,7 @@ class LiveStatusHostRepository:
                 Hosts.comments,
                 Hosts.modified_attributes_list,
                 Hosts.active_checks_enabled,
+                Hosts.accept_passive_checks,
                 Hosts.is_flapping,
                 Hosts.staleness,
                 Hosts.last_check,
@@ -201,6 +206,9 @@ class LiveStatusHostRepository:
             notifications_enabled=bool(row["notifications_enabled"]),
             num_comments=len(row["comments"]),
             active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            passive_checks_disabled=_manually_disabled(
+                row, "passive_checks_enabled", column="accept_passive_checks"
+            ),
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             last_check=int(row["last_check"]),
@@ -394,14 +402,17 @@ def _columns_to_read(
     }
 
 
-def _manually_disabled(row: Mapping[str, object], attribute: str) -> bool:
+def _manually_disabled(
+    row: Mapping[str, object], attribute: str, *, column: str | None = None
+) -> bool:
     """Whether a check setting was turned off by a user rather than left off by configuration.
 
     Livestatus reports the setting alone, which is also 0 for everything a plugin never
-    enables; only a mention in ``modified_attributes_list`` says a user switched it off.
+    enables; only a mention in ``modified_attributes_list`` says a user switched it off. Pass
+    ``column`` where the setting's own column is named differently from the modified attribute.
     """
     modified = cast(Collection[str], row["modified_attributes_list"])
-    return attribute in modified and not row[attribute]
+    return attribute in modified and not row[column or attribute]
 
 
 def _timestamp(value: float | None) -> UnixTimestamp | None:

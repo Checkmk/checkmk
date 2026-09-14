@@ -115,6 +115,33 @@ def test_query_builder_active_checks_disabled_condition(value: bool, expected: s
 @pytest.mark.parametrize(
     "value, expected",
     [
+        pytest.param(
+            True,
+            "Filter: modified_attributes_list >= passive_checks_enabled\n"
+            "Filter: accept_passive_checks = 0\n"
+            "And: 2",
+            id="manually disabled",
+        ),
+        pytest.param(
+            False,
+            "Filter: modified_attributes_list >= passive_checks_enabled\n"
+            "Filter: accept_passive_checks = 0\n"
+            "And: 2\n"
+            "Negate:",
+            id="not manually disabled",
+        ),
+    ],
+)
+def test_query_builder_passive_checks_disabled_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="passive_checks_disabled", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
         (True, "Filter: comments !="),
         (False, "Filter: comments ="),
     ],

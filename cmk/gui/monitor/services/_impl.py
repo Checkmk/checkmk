@@ -78,6 +78,7 @@ class LiveStatusHostServicesRepository:
                 Services.comments,
                 Services.modified_attributes_list,
                 Services.active_checks_enabled,
+                Services.accept_passive_checks,
                 Services.is_flapping,
                 Services.staleness,
                 Services.last_check,
@@ -110,6 +111,9 @@ class LiveStatusHostServicesRepository:
                         notifications_enabled=bool(row["notifications_enabled"]),
                         num_comments=len(row["comments"]),
                         active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        passive_checks_disabled=_manually_disabled(
+                            row, "passive_checks_enabled", column="accept_passive_checks"
+                        ),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         summary=row["plugin_output"],
@@ -149,6 +153,7 @@ class LiveStatusHostServicesRepository:
                 Services.comments,
                 Services.modified_attributes_list,
                 Services.active_checks_enabled,
+                Services.accept_passive_checks,
                 Services.is_flapping,
                 Services.staleness,
                 Services.host_alias,
@@ -194,6 +199,9 @@ class LiveStatusHostServicesRepository:
             notifications_enabled=bool(row["notifications_enabled"]),
             num_comments=len(row["comments"]),
             active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            passive_checks_disabled=_manually_disabled(
+                row, "passive_checks_enabled", column="accept_passive_checks"
+            ),
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             host_alias=row["host_alias"],
@@ -292,14 +300,17 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"
 
 
-def _manually_disabled(row: Mapping[str, object], attribute: str) -> bool:
+def _manually_disabled(
+    row: Mapping[str, object], attribute: str, *, column: str | None = None
+) -> bool:
     """Whether a check setting was turned off by a user rather than left off by configuration.
 
     Livestatus reports the setting alone, which is also 0 for everything a plugin never
-    enables; only a mention in ``modified_attributes_list`` says a user switched it off.
+    enables; only a mention in ``modified_attributes_list`` says a user switched it off. Pass
+    ``column`` where the setting's own column is named differently from the modified attribute.
     """
     modified = cast(Collection[str], row["modified_attributes_list"])
-    return attribute in modified and not row[attribute]
+    return attribute in modified and not row[column or attribute]
 
 
 def _sanitize_query(q: str) -> str:

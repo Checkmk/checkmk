@@ -79,6 +79,7 @@ type HostModeField =
   | 'notifications_enabled'
   | 'has_comments'
   | 'active_checks_disabled'
+  | 'passive_checks_disabled'
 
 /** Picks a column filter offers before it refuses more, per the views-table design. */
 const MAX_FILTER_CHOICES = 8
@@ -252,7 +253,8 @@ export function buildHostColumns({
       { field: 'acknowledged', title: _t('Acknowledged') },
       { field: 'notifications_enabled', title: _t('Notifications enabled') },
       { field: 'has_comments', title: _t('Has comments') },
-      { field: 'active_checks_disabled', title: _t('Active checks disabled') }
+      { field: 'active_checks_disabled', title: _t('Active checks disabled') },
+      { field: 'passive_checks_disabled', title: _t('Passive checks disabled') }
     ]
   }
 

@@ -18,6 +18,7 @@ _NO_MODES = {
     "notifications_enabled": True,
     "num_comments": 0,
     "active_checks_disabled": False,
+    "passive_checks_disabled": False,
     "is_flapping": False,
 }
 
@@ -71,6 +72,15 @@ def test_build_service_modes_by_id_active_checks_disabled() -> None:
     ] == ["disabled"]
 
 
+def test_build_service_modes_by_id_passive_checks_disabled() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"passive_checks_disabled": True})
+
+    assert [
+        mode.icon_name
+        for mode in build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+    ] == ["npassive"]
+
+
 def test_build_service_modes_by_id_flapping_is_not_a_mode() -> None:
     # Flapping is shown in the state column instead, not as a mode icon.
     service = ServiceFactory.build(**_NO_MODES | {"is_flapping": True})
@@ -85,13 +95,14 @@ def test_build_service_modes_by_id_all_modes() -> None:
         notifications_enabled=False,
         num_comments=3,
         active_checks_disabled=True,
+        passive_checks_disabled=True,
         is_flapping=True,
     )
 
     assert [
         mode.icon_name
         for mode in build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
-    ] == ["downtime", "ack", "notif-disabled", "comment", "disabled"]
+    ] == ["downtime", "ack", "notif-disabled", "comment", "disabled", "npassive"]
 
 
 def test_build_service_modes_none() -> None:
@@ -105,6 +116,7 @@ def test_build_service_modes_all_modes() -> None:
         notifications_enabled=False,
         num_comments=3,
         active_checks_disabled=True,
+        passive_checks_disabled=True,
         is_flapping=True,
     )
 
@@ -114,6 +126,7 @@ def test_build_service_modes_all_modes() -> None:
         "notif-disabled",
         "comment",
         "disabled",
+        "npassive",
     ]
 
 

@@ -6,15 +6,23 @@
 # mypy: disable-error-code="explicit-any"
 
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
 from cmk.plugins.jolokia.agent_based.lib import parse_jolokia_json_output
-
-check_info = {}
 
 Section = Mapping[str, Any]
 
@@ -27,35 +35,41 @@ def parse_jolokia_jvm_runtime(string_table: StringTable) -> Section:
 
 
 def check_jolokia_jvm_runtime_uptime(
-    item: str, params: Mapping[str, Any], parsed: Section
-) -> Iterator[tuple[int, str] | tuple[int, str, list[Any]]]:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     milli_uptime = data.get("Uptime")
     if milli_uptime is None:
         return
     uptime_sec = milli_uptime / 1000.0
 
-    params = params.get("max", (None, None)) + params.get("min", (None, None))
-    yield check_levels(
+    levels = params.get("max", (None, None)) + params.get("min", (None, None))
+    yield from check_levels(
         uptime_sec,
         "uptime",
-        params,
+        levels,
         human_readable_func=lambda x: timedelta(seconds=int(x)),
         infoname="Up since %s, uptime"
         % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
     )
 
 
-def discover_jolokia_jvm_runtime(section: Section) -> Iterator[tuple[str, Mapping[str, Any]]]:
-    yield from ((item, {}) for item in section)
+def discover_jolokia_jvm_runtime(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["jolokia_jvm_runtime"] = LegacyCheckDefinition(
+agent_section_jolokia_jvm_runtime = AgentSection(
     name="jolokia_jvm_runtime",
     parse_function=parse_jolokia_jvm_runtime,
+)
+
+
+check_plugin_jolokia_jvm_runtime = CheckPlugin(
+    name="jolokia_jvm_runtime",
     service_name="JVM %s Uptime",
     discovery_function=discover_jolokia_jvm_runtime,
     check_function=check_jolokia_jvm_runtime_uptime,
     check_ruleset_name="jvm_uptime",
+    check_default_parameters={},
 )

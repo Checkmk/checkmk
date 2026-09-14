@@ -13,13 +13,6 @@ from ._autocompleter import monitored_metrics_autocompleter
 from ._graph_codec import community_graph_codec, GraphCodec
 from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_images import AjaxGraphImagesForNotifications
-from ._graph_metric_expressions import (
-    graph_metric_expression_registry,
-    GraphMetricConstant,
-    GraphMetricConstantNA,
-    GraphMetricOperation,
-    GraphMetricRRDSource,
-)
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import template_graph_dispatcher, TemplateGraphSpecification
 from ._metric_backend_registry import (
@@ -54,11 +47,6 @@ def register(
     autocompleter_registry.register_autocompleter(
         "monitored_metrics", monitored_metrics_autocompleter(livestatus_query)
     )
-
-    graph_metric_expression_registry.register(GraphMetricConstant)
-    graph_metric_expression_registry.register(GraphMetricConstantNA)
-    graph_metric_expression_registry.register(GraphMetricOperation)
-    graph_metric_expression_registry.register(GraphMetricRRDSource)
 
     graph_specification_registry.register(TemplateGraphSpecification)
 

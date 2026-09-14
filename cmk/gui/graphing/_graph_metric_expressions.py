@@ -5,18 +5,14 @@
 
 
 import json
-from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, assert_never, final, Literal, override
+from typing import Annotated, assert_never, Literal, override
 
-from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
+from pydantic import PlainValidator
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import SiteId
 from cmk.graphing_engine import TimeSeries
-from cmk.utils.servicename import ServiceName
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
@@ -40,9 +36,6 @@ def line_type_mirror(line_type: LineType) -> LineType:
             return "stack"
         case other:
             assert_never(other)
-
-
-Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -253,87 +246,4 @@ class QueryDataError:
     exception: Exception
 
 
-class GraphMetricExpression(BaseModel, ABC, frozen=True):
-    @staticmethod
-    @abstractmethod
-    def expression_name() -> str: ...
-
-    # mypy does not support other decorators on top of @property:
-    # https://github.com/python/mypy/issues/14461
-    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    @final
-    def ident(self) -> str:
-        return self.expression_name()
-
-
-class GraphMetricExpressionRegistry(Registry[type[GraphMetricExpression]]):
-    @override
-    def plugin_name(self, instance: type[GraphMetricExpression]) -> str:
-        return instance.expression_name()
-
-
-graph_metric_expression_registry = GraphMetricExpressionRegistry()
-
-
-def parse_graph_metric_expression(raw: object) -> GraphMetricExpression:
-    match raw:
-        case GraphMetricExpression():
-            return raw
-        case {"ident": str(ident), **rest}:
-            return graph_metric_expression_registry[ident].model_validate(rest)
-        case dict():
-            raise ValueError("Missing 'ident' key in metric operation")
-        case _:
-            raise TypeError(raw)
-
-
-class GraphMetricConstant(GraphMetricExpression, frozen=True):
-    value: float
-
-    @staticmethod
-    @override
-    def expression_name() -> Literal["constant"]:
-        return "constant"
-
-
-class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
-    @staticmethod
-    @override
-    def expression_name() -> Literal["constant_na"]:
-        return "constant_na"
-
-
-class GraphMetricOperation(GraphMetricExpression, frozen=True):
-    operator_name: Operators
-    operands: Sequence[
-        Annotated[
-            SerializeAsAny[GraphMetricExpression], PlainValidator(parse_graph_metric_expression)
-        ]
-    ] = []
-
-    @staticmethod
-    @override
-    def expression_name() -> Literal["operator"]:
-        return "operator"
-
-
-GraphMetricOperation.model_rebuild()
-
-
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
-
-
-class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
-    site_id: SiteId
-    host_name: AnnotatedHostName
-    service_name: ServiceName
-    metric_name: str
-    consolidation_func_name: GraphConsolidationFunction | None
-    scale: float
-
-    @staticmethod
-    @override
-    def expression_name() -> Literal["rrd"]:
-        return "rrd"

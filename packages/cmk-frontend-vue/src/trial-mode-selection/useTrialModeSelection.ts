@@ -18,8 +18,7 @@ const RESEND_COOLDOWN_SECONDS = 60
 
 /**
  * Screens the gate dialog can show. The customer branch is a single step, asking how the
- * license is verified; the trial branch walks choice -> email -> code -> success, and
- * the last step arrives with the rest of CMK-37568.
+ * license is verified; the trial branch walks choice -> email -> code -> success.
  */
 export type TrialModeScreen = 'choice' | 'verification' | 'email' | 'code' | 'success'
 
@@ -138,6 +137,10 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     }
   }
 
+  function recordTrial(): Promise<void> {
+    return persistAndLeave({ selection: 'trial' }, 'index.py')
+  }
+
   function verifyNow(mode: VerificationMode): Promise<void> {
     return persistAndLeave(
       { selection: 'customer', verification_mode: mode },
@@ -158,6 +161,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     sendCode,
     resendCode: armResendCooldown,
     goTo,
+    recordTrial,
     verifyNow,
     verifyLater
   }

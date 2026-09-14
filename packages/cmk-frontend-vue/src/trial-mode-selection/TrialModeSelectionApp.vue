@@ -14,6 +14,7 @@ import TrialModeSelectionCodeEntry from './screens/TrialModeSelectionCodeEntry.v
 import TrialModeSelectionEmailEntry from './screens/TrialModeSelectionEmailEntry.vue'
 import TrialModeSelectionEntryChoice from './screens/TrialModeSelectionEntryChoice.vue'
 import TrialModeSelectionLicenseVerification from './screens/TrialModeSelectionLicenseVerification.vue'
+import TrialModeSelectionTrialVerified from './screens/TrialModeSelectionTrialVerified.vue'
 import { useTrialModeSelection } from './useTrialModeSelection'
 
 const { _t } = usei18n()
@@ -29,6 +30,7 @@ const {
   sendCode,
   resendCode,
   goTo,
+  recordTrial,
   verifyNow,
   verifyLater
 } = useTrialModeSelection(props)
@@ -70,6 +72,16 @@ const {
       @back="goTo('email')"
       @resend="resendCode"
       @verified="goTo('success')"
+    />
+
+    <TrialModeSelectionTrialVerified
+      v-else-if="screen === 'success'"
+      :email="email"
+      :edition-title="props.edition_title"
+      :trial-end-timestamp="props.trial_end_timestamp"
+      :trial-length-days="props.trial_length_days"
+      :saving="saving"
+      @start-monitoring="recordTrial"
     />
 
     <CmkParagraph class="trial-mode-selection-app__footer">

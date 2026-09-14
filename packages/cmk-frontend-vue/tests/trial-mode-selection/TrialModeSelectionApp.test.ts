@@ -3,11 +3,22 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type * as intl from '@internationalized/date'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TrialModeSelectionApp from '@/trial-mode-selection/TrialModeSelectionApp.vue'
+
+// The success screen renders the trial end in the browser's zone. Pinning it keeps the
+// expected calendar day machine-independent, and lets a test move the browser elsewhere.
+const zone = vi.hoisted(() => ({ current: 'UTC' }))
+
+vi.mock('@internationalized/date', async (importOriginal) => {
+  const actual = await importOriginal<typeof intl>()
+  return { ...actual, getLocalTimeZone: () => zone.current }
+})
 
 const mockCmkAjax = vi.hoisted(() => vi.fn().mockResolvedValue({}))
 
@@ -19,7 +30,7 @@ const mockLocationAssign = vi.fn()
 
 let user: UserEvent
 
-function renderApp() {
+function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
   return render(TrialModeSelectionApp, {
     props: {
       save_url: 'ajax_save_trial_mode_selection.py',
@@ -30,7 +41,8 @@ function renderApp() {
       edition_title: 'Checkmk Ultimate',
       // 2026-08-13 12:00:00 UTC
       trial_end_timestamp: 1786622400,
-      trial_length_days: 30
+      trial_length_days: 30,
+      ...overrides
     }
   })
 }
@@ -73,6 +85,10 @@ function expectCustomerSelectionSaved(verificationMode?: 'online' | 'offline') {
 describe('TrialModeSelectionApp', () => {
   beforeEach(() => {
     user = userEvent.setup()
+    zone.current = 'UTC'
+    // Without this the long date below follows the machine's locale - 'August 13, 2026'
+    // on one agent, '13 August 2026' on the next. The zone is pinned separately, above.
+    vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
     mockCmkAjax.mockClear()
     mockCmkAjax.mockResolvedValue({})
     mockLocationAssign.mockClear()
@@ -339,7 +355,7 @@ describe('TrialModeSelectionApp', () => {
 
       await user.type(codeDigits()[0]!, '424242')
 
-      expect(screen.queryByText('Enter your verification code')).not.toBeInTheDocument()
+      expect(screen.getByText('Trial verified')).toBeInTheDocument()
     })
 
     it('keeps Verify out of reach until the code is complete', async () => {
@@ -372,7 +388,7 @@ describe('TrialModeSelectionApp', () => {
 
       await user.type(screen.getByRole('textbox', { name: 'Digit 6 of 6' }), '{Enter}')
 
-      expect(screen.queryByText('Enter your verification code')).not.toBeInTheDocument()
+      expect(screen.getByText('Trial verified')).toBeInTheDocument()
     })
 
     it('puts the cursor in the first box, so the code can be typed straight away', async () => {
@@ -481,6 +497,83 @@ describe('TrialModeSelectionApp', () => {
       await user.click(resendButton())
 
       expect(digits()).toEqual(['', '', '', '', '', ''])
+    })
+  })
+
+  describe('success step', () => {
+    async function verifyTrial() {
+      await reachCodeStep()
+      await user.type(codeDigits()[0]!, '424242')
+    }
+
+    it('names the address, the edition and the end date', async () => {
+      renderApp()
+      await verifyTrial()
+
+      expect(screen.getByText('Trial verified')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'This site is now linked to jane.doe@example.com. Your 30-day trial of Checkmk Ultimate runs until August 13, 2026 — after that, the site reverts to the free edition unless you add a license.'
+        )
+      ).toBeInTheDocument()
+    })
+
+    it('names the edition the page was given, not one of its own', async () => {
+      renderApp({ edition_title: 'Checkmk Cloud' })
+      await verifyTrial()
+
+      expect(screen.getByText(/30-day trial of Checkmk Cloud/)).toBeInTheDocument()
+    })
+
+    // Noon UTC on the 13th is already the 14th in Auckland: the day belongs to whoever
+    // is reading the dialog, not to the site.
+    it('names the end date in the timezone of the browser showing it', async () => {
+      zone.current = 'Pacific/Auckland'
+      renderApp()
+      await verifyTrial()
+
+      expect(screen.getByText(/runs until August 14, 2026/)).toBeInTheDocument()
+    })
+
+    it('offers no way back, the branch being done', async () => {
+      renderApp()
+      await verifyTrial()
+
+      expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
+    })
+
+    it('records the trial and leaves for the dashboard on Start monitoring', async () => {
+      renderApp()
+      await verifyTrial()
+
+      await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
+
+      await waitFor(() => {
+        expect(mockCmkAjax).toHaveBeenCalledExactlyOnceWith('ajax_save_trial_mode_selection.py', {
+          selection: 'trial',
+          _csrf_token: 'the-csrf-token'
+        })
+        expect(mockLocationAssign).toHaveBeenCalledWith('index.py')
+      })
+    })
+
+    it('stays put and complains when recording the trial fails', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      renderApp()
+      await verifyTrial()
+      mockCmkAjax.mockRejectedValue(new Error('nope'))
+
+      await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Saving your selection failed. Please try again.')
+        ).toBeInTheDocument()
+      })
+      // Leaving for a dashboard that would only bounce the user back here is worse than
+      // staying on a screen with a retryable button.
+      expect(mockLocationAssign).not.toHaveBeenCalled()
+      expect(screen.getByRole('button', { name: 'Start monitoring' })).toBeInTheDocument()
     })
   })
 })

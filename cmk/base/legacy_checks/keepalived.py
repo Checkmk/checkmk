@@ -5,10 +5,10 @@
 
 
 import ipaddress
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+from cmk.agent_based.v2 import all_of, contains, exists, OIDEnd, SNMPTree, StringTable
 
 check_info = {}
 
@@ -25,13 +25,12 @@ def hex2ip(hexstr):
     return str(ipaddress.ip_address(bytes.fromhex(hexstr.replace(" ", ""))))
 
 
-def inventory_keepalived(info):
-    for entry in info[0]:
-        vrrp_id = entry[0]
+def inventory_keepalived(section):
+    for vrrp_id in section:
         yield vrrp_id, None
 
 
-def check_keepalived(item, params, info):
+def check_keepalived(item, params, section):
     map_state = {
         "0": "init",
         "1": "backup",
@@ -39,20 +38,39 @@ def check_keepalived(item, params, info):
         "3": "fault",
         "4": "unknown",
     }
-    status = 3
-    infotext = "Item not found in output"
-    for id_, entry in enumerate(info[0]):
-        vrrp_id = entry[0]
-        address = info[1][id_][0]
+    if item not in section:
+        yield 3, "Item not found in output"
+        return
+
+    state, addresses = section[item]
+    state_name = map_state[state]
+    infotext = f"This node is {state_name}."
+    if addresses:
+        infotext += f" IP Address: {', '.join(addresses)}"
+    yield params[state_name], infotext
+
+
+def parse_keepalived(string_table: Sequence[StringTable]) -> Mapping[str, tuple[str, list[str]]]:
+    """Map each VRRP instance id to its state and configured virtual IP addresses.
+
+    The instance table (vrrpInstanceTable) and the address table (vrrpAddressTable) are
+    indexed independently in the keepalived MIB: an instance can have zero, one, or several
+    addresses. They are correlated here via the instance index (OIDEnd), not by row position,
+    since a vrrp_instance without any configured VIP leaves the address table without a
+    matching row for it.
+    """
+    instance_table, address_table = string_table
+
+    addresses_by_instance: dict[str, list[str]] = {}
+    for oid_end, address in address_table:
+        instance_index = oid_end.split(".")[0]
         hexaddr = address.encode("latin-1").hex()
-        if vrrp_id == item:
-            status = params[map_state[str(entry[1])]]
-            infotext = f"This node is {map_state[str(entry[1])]}. IP Address: {hex2ip(hexaddr)}"
-    yield status, infotext
+        addresses_by_instance.setdefault(instance_index, []).append(hex2ip(hexaddr))
 
-
-def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+    return {
+        vrrp_id: (state, addresses_by_instance.get(instance_index, []))
+        for vrrp_id, state, instance_index in instance_table
+    }
 
 
 check_info["keepalived"] = LegacyCheckDefinition(
@@ -62,11 +80,11 @@ check_info["keepalived"] = LegacyCheckDefinition(
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9586.100.5.2.3.1",
-            oids=["2", "4"],
+            oids=["2", "4", OIDEnd()],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.9586.100.5.2.6.1",
-            oids=["3"],
+            oids=[OIDEnd(), "3"],
         ),
     ],
     service_name="VRRP Instance %s",

@@ -208,3 +208,18 @@ def test_without_a_legacy_source_only_native_commands_are_offered() -> None:
     commands = _commands(native=[_native(ident="native_only")])
 
     assert _idents(commands, {"action.test"}, ["native_only", "acknowledge"]) == ["native_only"]
+
+
+def test_a_service_action_is_offered_with_its_ident_title_and_icon() -> None:
+    """What the services page copies into the payload it hands the frontend."""
+    source = _LegacySource(
+        [_LegacyCommand(ident="acknowledge", title="Acknowledge problems", icon_name="ack")]
+    )
+
+    offered = _commands(source).permitted_actions(
+        cast(LoggedInUser, _StubUser({"general.act", "action.test"})), "service", ["acknowledge"]
+    )
+
+    assert [(command.ident, str(command.title), command.icon) for command in offered] == [
+        ("acknowledge", "Acknowledge problems", "ack")
+    ]

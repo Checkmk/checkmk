@@ -16,6 +16,7 @@ from livestatus import OnlySites
 
 from cmk.crash import AggregatedCrashInfo
 from cmk.gui.crash_reporting.pages import (
+    _show_agent_output,
     _show_automatic_upload_hint,
     CrashReport,
     CrashReportRow,
@@ -176,3 +177,18 @@ def test_report_renderer_javascript_show_details_without_details() -> None:
         rendered = "".join(output_funnel.drain())
 
     assert rendered == ""
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 3818: UnicodeEncodeError")
+@pytest.mark.usefixtures("request_context")
+def test_agent_output_with_undecodable_bytes_is_rendered() -> None:
+    # Crash group 3818: a Windows agent sent output that is not valid UTF-8, so
+    # the crash report page could not render it and replaced the page the user
+    # opened to investigate the crash with a second crash.
+    row: CrashReportRow = {"agent_output": "<<<check_mk>>>\nHostname: IS\udcff48186\n"}
+
+    with output_funnel.plugged():
+        _show_agent_output(row)
+        rendered = "".join(output_funnel.drain())
+
+    assert "check_mk" in rendered

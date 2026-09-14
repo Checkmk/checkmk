@@ -128,33 +128,3 @@ export async function cmkFetch(
   const response = await fetch(url, options)
   return new CmkFetchResponse(response, options)
 }
-
-/**
- * @deprecated Use the typed REST API client in `cmk-ui-library/lib/rest-api-client/client.ts` instead.
- *
- * This function is a thin wrapper around `cmkFetch` that pre-fills REST API
- * headers. It predates the typed OpenAPI-based client and should not be used
- * in new code. Existing callers have been kept for backwards-compatibility but
- * no new calls should be added.
- */
-export async function fetchRestAPIDeprecated<Payload>(
-  url: string,
-  method: string,
-  body?: Payload,
-  headers?: Record<string, string>
-) {
-  const params: RequestInit = {
-    method,
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...headers
-    }
-  }
-  if (body) {
-    params.body = JSON.stringify(body)
-  }
-  const response = await cmkFetch(url, params)
-  return response
-}

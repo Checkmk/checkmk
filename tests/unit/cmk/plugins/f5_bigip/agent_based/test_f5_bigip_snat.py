@@ -9,7 +9,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.f5_bigip_snat import (
+from cmk.plugins.f5_bigip.agent_based.f5_bigip_snat import (
     check_f5_bigip_snat,
     discover_f5_bigip_snat,
     parse_f5_bigip_snat,

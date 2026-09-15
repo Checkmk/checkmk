@@ -345,8 +345,8 @@
     "https://bcr.bazel.build/modules/rules_python/2.0.1/MODULE.bazel": "294fbfe4dc3b24a925172e5487e1e8d3c2927cf4fba1eaddd7bad0ce50701da1",
     "https://bcr.bazel.build/modules/rules_python/2.0.1/source.json": "f2bacc75d3fc496dfd3e6a5986200b10e70169aaaf4ee5f1cea573c8d347e7c4",
     "https://bcr.bazel.build/modules/rules_rust/0.67.0/MODULE.bazel": "87c3816c4321352dcfd9e9e26b58e84efc5b21351ae3ef8fb5d0d57bde7237f5",
-    "https://bcr.bazel.build/modules/rules_rust/0.70.0/MODULE.bazel": "5b1407b11c305bc2522e204e7f170faf8399e836e49b6afef9074dfe532e6c3f",
-    "https://bcr.bazel.build/modules/rules_rust/0.70.0/source.json": "24ae6d23425359db1c3148aa22c389970fce9a06102b2b3a329a2800f9569de2",
+    "https://bcr.bazel.build/modules/rules_rust/0.74.0/MODULE.bazel": "6e6fa04d7c8202f9cd63205ec9f96da39382a4ac971ee1d7a900fe8e1f68be17",
+    "https://bcr.bazel.build/modules/rules_rust/0.74.0/source.json": "04eac31b4536eb23dd8e8e8ca7e079d3c1c4ac99934d38aa54bbae36917c7507",
     "https://bcr.bazel.build/modules/rules_shell/0.2.0/MODULE.bazel": "fda8a652ab3c7d8fee214de05e7a9916d8b28082234e8d2c0094505c5268ed3c",
     "https://bcr.bazel.build/modules/rules_shell/0.3.0/MODULE.bazel": "de4402cd12f4cc8fda2354fce179fdb068c0b9ca1ec2d2b17b3e21b24c1a937b",
     "https://bcr.bazel.build/modules/rules_shell/0.4.1/MODULE.bazel": "00e501db01bbf4e3e1dd1595959092c2fadf2087b2852d3f553b5370f5633592",
@@ -2452,8 +2452,8 @@
     },
     "@@rules_rust+//crate_universe/private:internal_extensions.bzl%cu_nr": {
       "general": {
-        "bzlTransitiveDigest": "XYcqfHmcIRueOETyXoVlnygggCBgpAhI9up3X3iDp4I=",
-        "usagesDigest": "ZmL90WEq2B6/NJ8rtHAqdnDPn+/9xG/GWR5K4UU4tyo=",
+        "bzlTransitiveDigest": "xLaB/WxehDUJn2OSqmuMcpB7BwGbbA2+MfnuZjSbpPk=",
+        "usagesDigest": "McimNXAztVHDzspa1Kng94T+YeyY/44zx9FkNqIMn2s=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -2471,6 +2471,7 @@
                 "@@rules_rust+//crate_universe:src/cli/splice.rs",
                 "@@rules_rust+//crate_universe:src/cli/vendor.rs",
                 "@@rules_rust+//crate_universe:src/config.rs",
+                "@@rules_rust+//crate_universe:src/config/label_injection.rs",
                 "@@rules_rust+//crate_universe:src/context.rs",
                 "@@rules_rust+//crate_universe:src/context/crate_context.rs",
                 "@@rules_rust+//crate_universe:src/context/platforms.rs",
@@ -2486,13 +2487,13 @@
                 "@@rules_rust+//crate_universe:src/metadata/metadata_annotation.rs",
                 "@@rules_rust+//crate_universe:src/rendering.rs",
                 "@@rules_rust+//crate_universe:src/rendering/template_engine.rs",
+                "@@rules_rust+//crate_universe:src/rendering/templates/defs_bzl_shim.j2",
                 "@@rules_rust+//crate_universe:src/rendering/templates/module_bzl.j2",
                 "@@rules_rust+//crate_universe:src/rendering/templates/partials/header.j2",
                 "@@rules_rust+//crate_universe:src/rendering/templates/partials/module/aliases_map.j2",
                 "@@rules_rust+//crate_universe:src/rendering/templates/partials/module/deps_map.j2",
                 "@@rules_rust+//crate_universe:src/rendering/templates/partials/module/repo_git.j2",
                 "@@rules_rust+//crate_universe:src/rendering/templates/partials/module/repo_http.j2",
-                "@@rules_rust+//crate_universe:src/rendering/templates/vendor_module.j2",
                 "@@rules_rust+//crate_universe:src/rendering/verbatim/alias_rules.bzl",
                 "@@rules_rust+//crate_universe:src/select.rs",
                 "@@rules_rust+//crate_universe:src/splicing.rs",
@@ -2517,11 +2518,11 @@
               "binary": "cargo-bazel",
               "cargo_lockfile": "@@rules_rust+//crate_universe:Cargo.lock",
               "cargo_toml": "@@rules_rust+//crate_universe:Cargo.toml",
-              "version": "1.95.0",
-              "timeout": 900,
+              "version": "1.98.0",
               "rust_toolchain_cargo_template": "@rust_host_tools//:bin/{tool}",
               "rust_toolchain_rustc_template": "@rust_host_tools//:bin/{tool}",
-              "compressed_windows_toolchain_names": false
+              "compressed_windows_toolchain_names": false,
+              "timeout": 900
             }
           }
         },
@@ -2534,6 +2535,11 @@
           "reproducible": false
         },
         "recordedRepoMappingEntries": [
+          [
+            "apple_support+",
+            "bazel_skylib",
+            "bazel_skylib+"
+          ],
           [
             "bazel_features+",
             "bazel_features_globals",
@@ -2563,6 +2569,11 @@
             "rules_cc++compatibility_proxy+cc_compatibility_proxy",
             "rules_cc",
             "rules_cc+"
+          ],
+          [
+            "rules_rust+",
+            "apple_support",
+            "apple_support+"
           ],
           [
             "rules_rust+",

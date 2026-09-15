@@ -307,8 +307,8 @@ use_repo(apt, "relay_base_image")
 # Configure apt for the ReviewMK job image
 apt.install(
     name = "reviewmk_job_image",
-    lock = "//non-free/packages/dev-ai:deploy/job-image/distro_packages.lock.json",
-    manifest = "//non-free/packages/dev-ai:deploy/job-image/distro_packages.yaml",
+    lock = "//non-free/packages/cmk-dev-ai:deploy/job-image/distro_packages.lock.json",
+    manifest = "//non-free/packages/cmk-dev-ai:deploy/job-image/distro_packages.yaml",
 )
 use_repo(apt, "reviewmk_job_image")
 

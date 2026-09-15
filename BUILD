@@ -303,8 +303,6 @@ write_file(
             "add_packages(repo_path.joinpath('non-free'))",
             # needed for composition tests: they want to 'import cmk_update_agent' via the .venv
             "sys.path.insert(0, str(repo_path.joinpath('non-free/packages/cmk-update-agent')))",
-            # dev-ai ships the top-level 'reviewmk' package instead of a cmk/ namespace
-            "sys.path.insert(0, str(repo_path.joinpath('non-free/packages/dev-ai')))",
         ],
         "@//:gpl_repo": [],
     }),

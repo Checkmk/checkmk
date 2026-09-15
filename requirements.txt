@@ -1067,8 +1067,8 @@ cryptography==50.0.1 \
     --hash=sha256:ff838d62ec1bfce4f9ba7fa16f4a7b554cd8d0c299e6be37502161a660c84eef
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r non-free/packages/dev-ai/requirements.in
     #   -r packages/cmk-crypto/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-relay-protocols/requirements.in
@@ -1273,7 +1273,7 @@ fastapi==0.141.1 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-agent-engine/requirements.in
-    #   -r non-free/packages/dev-ai/requirements.in
+    #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -1835,9 +1835,9 @@ httpx2==2.12.0 \
     --hash=sha256:cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36
     # via
     #   -r non-free/packages/cmk-agent-engine/dev-requirements.in
+    #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r non-free/packages/dev-ai/dev-requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
 hypothesis==6.168.0 \
@@ -4136,6 +4136,7 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-core-helpers/requirements.in
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
+    #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r non-free/packages/cmk-liveproxyd/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
@@ -4144,7 +4145,6 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r non-free/packages/cmk-robotmk/requirements.in
     #   -r non-free/packages/cmk-telemetry/requirements.in
-    #   -r non-free/packages/dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-events/requirements.in
@@ -4580,6 +4580,7 @@ pytest==9.1.1 \
     #   -r non-free/packages/cmk-core-helpers/dev-requirements.in
     #   -r non-free/packages/cmk-data-backend/dev-requirements.in
     #   -r non-free/packages/cmk-dcd/dev-requirements.in
+    #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-licensing-nonfree/dev-requirements.in
     #   -r non-free/packages/cmk-liveproxyd/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
@@ -4592,7 +4593,6 @@ pytest==9.1.1 \
     #   -r non-free/packages/cmk-robotmk/dev-requirements.in
     #   -r non-free/packages/cmk-telemetry/dev-requirements.in
     #   -r non-free/packages/cmk-update-agent/dev-requirements.in
-    #   -r non-free/packages/dev-ai/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-backup/dev-requirements.in
     #   -r packages/cmk-ccc/dev-requirements.in
@@ -4641,9 +4641,9 @@ pytest-asyncio==1.4.0 \
     --hash=sha256:933ca923a23075a87fb7070c0ec272a6848489824d887c85c812670932835aa1 \
     --hash=sha256:c6c0d2259945122819f171a32ecea2c349ead889ee28176caaf492143424be42
     # via
+    #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
-    #   -r non-free/packages/dev-ai/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-plugins/dev-requirements.in
     #   -r tests/dev-requirements.in
@@ -4699,9 +4699,9 @@ pytest-random-order==1.2.0 \
     --hash=sha256:78d1d6f346222cdf26a7302c502d2f1cab19454529af960b8b9e1427a99ab277
     # via
     #   -r non-free/packages/cmk-agent-engine/dev-requirements.in
+    #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
-    #   -r non-free/packages/dev-ai/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r tests/dev-requirements.in
 pytest-recording==0.13.4 \
@@ -4721,9 +4721,9 @@ pytest-socket==0.8.1 \
     --hash=sha256:f9846bed1dcd96eed459e5e14795bbaf96715cf4e827891fe70773817ecb8ed4
     # via
     #   -r non-free/packages/cmk-agent-engine/dev-requirements.in
+    #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
-    #   -r non-free/packages/dev-ai/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
@@ -6179,8 +6179,8 @@ uvicorn==0.53.0 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-agent-engine/requirements.in
+    #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
-    #   -r non-free/packages/dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
     #   uvicorn-worker

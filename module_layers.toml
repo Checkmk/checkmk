@@ -1590,6 +1590,9 @@ allows = [
   "cmk.checkengine.snmplib",
 ]
 
+[components."cmk.reviewmk"]
+allows = []
+
 [components."cmk.testlib.agent_engine"]
 allows = ["cmk.agent_engine"]
 

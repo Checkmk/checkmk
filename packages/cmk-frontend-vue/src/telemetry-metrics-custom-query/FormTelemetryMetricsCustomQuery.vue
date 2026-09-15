@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
-import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { TelemetryMetricsCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
@@ -76,7 +76,7 @@ immediateWatch(
         return
       }
       metricNameValidation.value.push(untranslated(message.message))
-      metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
+      metricName.value = (message.replacement_value as TelemetryMetricsCustomQuery).metric_name
     })
   }
 )

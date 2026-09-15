@@ -29,7 +29,6 @@ import type {
   LegacyValuespec,
   List,
   ListOfStrings,
-  MetricBackendCustomQuery,
   MultilineText,
   MultipleChoiceElement,
   Oauth2ConnectionSetup,
@@ -38,6 +37,7 @@ import type {
   SingleChoice,
   SingleChoiceElement,
   StaticText,
+  TelemetryMetricsCustomQuery,
   TimeSpan,
   TimeSpecific,
   Tuple,
@@ -183,9 +183,9 @@ function _renderForm(
       return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
     case 'file_upload':
       return renderFileUpload(formSpec as FileUpload, value as FileUploadData)
-    case 'metric_backend_custom_query':
-      return renderTelemetryMetricsCustomQuery(value as MetricBackendCustomQuery)
-    case 'dcd_metric_backend_filter':
+    case 'telemetry_metrics_custom_query':
+      return renderTelemetryMetricsCustomQuery(value as TelemetryMetricsCustomQuery)
+    case 'dcd_telemetry_metrics_filter':
       return h('div', 'DCD Metric Backend Filter does not support readonly')
     case 'oauth2_connection_setup':
       return renderOAuth2ConnectionSetup(formSpec as Oauth2ConnectionSetup, value)
@@ -221,7 +221,7 @@ function renderOAuth2ConnectionSetup(formSpec: Oauth2ConnectionSetup, value: unk
 }
 
 function consolidationParams(
-  value: MetricBackendCustomQuery,
+  value: TelemetryMetricsCustomQuery,
   fn: ConsolidationFunction
 ): ConsolidationParams {
   switch (fn.function) {
@@ -239,7 +239,7 @@ function consolidationParams(
   }
 }
 
-function preserveGroupByModel(value: MetricBackendCustomQuery): GroupByModel | null {
+function preserveGroupByModel(value: TelemetryMetricsCustomQuery): GroupByModel | null {
   switch (value.consolidation_function) {
     case 'histogram_preserve_quantile':
       return percentileGroupBy({
@@ -262,7 +262,7 @@ function preserveGroupByModel(value: MetricBackendCustomQuery): GroupByModel | n
   }
 }
 
-function renderTelemetryMetricsCustomQuery(value: MetricBackendCustomQuery): VNode {
+function renderTelemetryMetricsCustomQuery(value: TelemetryMetricsCustomQuery): VNode {
   const rows: VNode[] = []
   const row = (label: string, text: string): VNode =>
     h('tr', [h('td', { class: 'dict_title' }, [label]), h('td', [text])])

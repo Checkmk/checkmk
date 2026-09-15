@@ -5,15 +5,15 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { TelemetryMetricsCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { defineComponent, ref } from 'vue'
 
 import type { ValidationMessages } from '@/form'
 
 import FormSpecTelemetryMetricsCustomQuery from '@/telemetry-metrics-custom-query/FormSpecTelemetryMetricsCustomQuery.vue'
 
-const SPEC: MetricBackendCustomQuery = {
-  type: 'metric_backend_custom_query',
+const SPEC: TelemetryMetricsCustomQuery = {
+  type: 'telemetry_metrics_custom_query',
   title: '',
   help: '',
   validators: [],
@@ -59,7 +59,7 @@ test('picking preserve histograms stores its wire spelling', async () => {
   )
   await userEvent.click(screen.getByRole('option', { name: 'Preserve histograms' }))
 
-  const updates = emitted<[MetricBackendCustomQuery]>('update:data')
+  const updates = emitted<[TelemetryMetricsCustomQuery]>('update:data')
   const stored = updates[updates.length - 1]![0]
   // The default grouping of "preserve histograms" is the percentile.
   expect(stored.consolidation_function).toBe('histogram_preserve_quantile')
@@ -67,7 +67,7 @@ test('picking preserve histograms stores its wire spelling', async () => {
 })
 
 test('picking preserve lands both the function and the cleared aggregator', async () => {
-  const value = ref<MetricBackendCustomQuery>({
+  const value = ref<TelemetryMetricsCustomQuery>({
     ...SPEC,
     consolidation_function: 'histogram_quantile',
     aggregator: {
@@ -130,7 +130,7 @@ test('adding a then step persists a second aggregator stage', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Add then step' }))
 
   await waitFor(() => {
-    const updates = emitted<[MetricBackendCustomQuery]>('update:data')
+    const updates = emitted<[TelemetryMetricsCustomQuery]>('update:data')
     const stored = updates[updates.length - 1]![0]
     expect(stored.aggregator).toEqual({
       stages: [
@@ -162,7 +162,7 @@ test('switching from preserve to a scalar histogram function clears the grouping
   await waitFor(() => expect(screen.getByRole('option', { name: 'Quantile' })).toBeVisible())
   await userEvent.click(screen.getByRole('option', { name: 'Quantile' }))
 
-  const updates = emitted<[MetricBackendCustomQuery]>('update:data')
+  const updates = emitted<[TelemetryMetricsCustomQuery]>('update:data')
   const stored = updates[updates.length - 1]![0]
   expect(stored.consolidation_function).toBe('histogram_quantile')
   expect(stored.aggregation_histogram_group_by).toEqual([])
@@ -186,7 +186,7 @@ test('switching from preserve to a gauge function clears the grouping', async ()
   await waitFor(() => expect(screen.getByRole('option', { name: 'Max' })).toBeVisible())
   await userEvent.click(screen.getByRole('option', { name: 'Max' }))
 
-  const updates = emitted<[MetricBackendCustomQuery]>('update:data')
+  const updates = emitted<[TelemetryMetricsCustomQuery]>('update:data')
   const stored = updates[updates.length - 1]![0]
   expect(stored.consolidation_function).toBe('gauge_max')
   expect(stored.aggregation_histogram_group_by).toEqual([])

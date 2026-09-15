@@ -13,7 +13,7 @@ import { defineComponent, h, ref } from 'vue'
 
 import FormMetricNameAutocompleter from '@/telemetry-metrics/FormMetricNameAutocompleter.vue'
 
-const METRIC_NAMES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/metric_backend/actions/names_with_types/invoke`
+const METRIC_NAMES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 
 const server = setupServer()
 

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { DcdMetricBackendFilter } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { DcdTelemetryMetricsFilter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
@@ -14,13 +14,13 @@ import { type ValidationMessages } from '@/form'
 import FormTelemetryMetricsAttributes from './FormTelemetryMetricsAttributes.vue'
 
 defineProps<{
-  spec: DcdMetricBackendFilter
+  spec: DcdTelemetryMetricsFilter
   backendValidation: ValidationMessages
 }>()
 
 const { _t } = usei18n()
 
-const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
+const data = defineModel<DcdTelemetryMetricsFilter>('data', { required: true })
 
 const attributesComponent = ref<InstanceType<typeof FormTelemetryMetricsAttributes> | null>(null)
 const validation = ref<ValidationMessages>([])

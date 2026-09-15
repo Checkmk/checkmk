@@ -50,9 +50,9 @@ type FormSpecComponents = Record<Components['type'], Component>
 // Explicitly call out components owned by features to statically ensure
 // base components are exhaustively registered.
 type FeatureOwnedComponents =
-  | 'metric_backend_custom_query'
+  | 'telemetry_metrics_custom_query'
   | 'oauth2_connection_setup'
-  | 'dcd_metric_backend_filter'
+  | 'dcd_telemetry_metrics_filter'
 
 type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 

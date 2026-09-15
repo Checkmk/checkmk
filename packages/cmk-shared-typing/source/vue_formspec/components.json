@@ -1011,8 +1011,8 @@
       },
       "required": ["authority_url", "display_name"]
     },
-    "metric_backend_group_by_key": {
-      "id": "metric_backend_group_by_key",
+    "telemetry_metrics_group_by_key": {
+      "id": "telemetry_metrics_group_by_key",
       "type": "object",
       "properties": {
         "kind": {
@@ -1025,8 +1025,8 @@
       },
       "required": ["kind", "key"]
     },
-    "metric_backend_custom_query": {
-      "id": "metric_backend_custom_query",
+    "telemetry_metrics_custom_query": {
+      "id": "telemetry_metrics_custom_query",
       "type": "object",
       "allOf": [
         {
@@ -1036,8 +1036,8 @@
           "type": "object",
           "properties": {
             "type": {
-              "const": "metric_backend_custom_query",
-              "default": "metric_backend_custom_query"
+              "const": "telemetry_metrics_custom_query",
+              "default": "telemetry_metrics_custom_query"
             },
             "metric_name": {
               "oneOf": [
@@ -1061,7 +1061,7 @@
             "aggregation_histogram_group_by": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/metric_backend_group_by_key"
+                "$ref": "#/$defs/telemetry_metrics_group_by_key"
               },
               "default": []
             },
@@ -1107,8 +1107,8 @@
         }
       ]
     },
-    "dcd_metric_backend_filter": {
-      "id": "dcd_metric_backend_filter",
+    "dcd_telemetry_metrics_filter": {
+      "id": "dcd_telemetry_metrics_filter",
       "allOf": [
         {
           "$ref": "#/$defs/form_spec"
@@ -1117,8 +1117,8 @@
           "type": "object",
           "properties": {
             "type": {
-              "const": "dcd_metric_backend_filter",
-              "default": "dcd_metric_backend_filter"
+              "const": "dcd_telemetry_metrics_filter",
+              "default": "dcd_telemetry_metrics_filter"
             },
             "attribute_filter": {
               "$ref": "../attribute_filter.json"
@@ -1923,10 +1923,10 @@
           "$ref": "#/$defs/time_span"
         },
         {
-          "$ref": "#/$defs/metric_backend_custom_query"
+          "$ref": "#/$defs/telemetry_metrics_custom_query"
         },
         {
-          "$ref": "#/$defs/dcd_metric_backend_filter"
+          "$ref": "#/$defs/dcd_telemetry_metrics_filter"
         },
         {
           "$ref": "#/$defs/oauth2_connection_setup"

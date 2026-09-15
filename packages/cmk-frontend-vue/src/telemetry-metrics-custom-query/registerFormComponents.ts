@@ -9,6 +9,6 @@ import FormSpecTelemetryMetricsCustomQuery from './FormSpecTelemetryMetricsCusto
 
 export function registerCustomQueryFormComponents(): void {
   registerFormComponents({
-    metric_backend_custom_query: FormSpecTelemetryMetricsCustomQuery
+    telemetry_metrics_custom_query: FormSpecTelemetryMetricsCustomQuery
   })
 }

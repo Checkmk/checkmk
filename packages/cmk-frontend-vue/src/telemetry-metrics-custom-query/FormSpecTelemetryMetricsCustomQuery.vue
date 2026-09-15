@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
-import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { TelemetryMetricsCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -27,11 +27,11 @@ import { telemetryMetricsMacroHelp } from './constants'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  spec: MetricBackendCustomQuery
+  spec: TelemetryMetricsCustomQuery
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<MetricBackendCustomQuery>('data', { required: true })
+const data = defineModel<TelemetryMetricsCustomQuery>('data', { required: true })
 
 const serviceNameTemplateErrors = computed<string[]>(() =>
   props.backendValidation
@@ -41,7 +41,7 @@ const serviceNameTemplateErrors = computed<string[]>(() =>
 
 const componentId = useId()
 
-function storedConsolidation(stored: MetricBackendCustomQuery): WireConsolidationFunction {
+function storedConsolidation(stored: TelemetryMetricsCustomQuery): WireConsolidationFunction {
   const fn = stored.consolidation_function
   const lookbackSeconds = stored.aggregation_lookback
   switch (fn) {
@@ -117,7 +117,7 @@ function storedConsolidation(stored: MetricBackendCustomQuery): WireConsolidatio
 // A bound defineModel reflects a write only after the parent's prop flows back (next
 // flush), so same-tick writes (e.g. consolidation + aggregator on one picker change)
 // would each spread a stale data.value. This mirror gives them a synchronous view.
-const local = ref<MetricBackendCustomQuery>({ ...data.value })
+const local = ref<TelemetryMetricsCustomQuery>({ ...data.value })
 
 watch(data, (incoming) => {
   if (incoming !== local.value) {
@@ -125,12 +125,12 @@ watch(data, (incoming) => {
   }
 })
 
-function commit(next: MetricBackendCustomQuery): void {
+function commit(next: TelemetryMetricsCustomQuery): void {
   local.value = next
   data.value = next
 }
 
-function update(patch: Partial<MetricBackendCustomQuery>): void {
+function update(patch: Partial<TelemetryMetricsCustomQuery>): void {
   commit({ ...local.value, ...patch })
 }
 

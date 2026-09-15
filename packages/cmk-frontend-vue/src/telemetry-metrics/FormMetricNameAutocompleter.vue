@@ -22,7 +22,8 @@ import DropdownClearButton from './DropdownClearButton.vue'
 
 const { _t } = usei18n()
 
-const METRIC_NAMES_API = 'api/internal/domain-types/metric_backend/actions/names_with_types/invoke'
+const METRIC_NAMES_API =
+  'api/internal/domain-types/telemetry_metrics/actions/names_with_types/invoke'
 
 interface MetricNameChoice {
   name: string

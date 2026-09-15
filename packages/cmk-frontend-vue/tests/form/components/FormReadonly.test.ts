@@ -400,8 +400,8 @@ test.each(['dual_list_choice', 'checkbox_list_choice'] as const)(
   }
 )
 
-const telemetryMetricsCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
-  type: 'metric_backend_custom_query',
+const telemetryMetricsCustomQuerySpec: FormSpec.TelemetryMetricsCustomQuery = {
+  type: 'telemetry_metrics_custom_query',
   title: 'mbTitle',
   help: 'mbHelp',
   validators: [],

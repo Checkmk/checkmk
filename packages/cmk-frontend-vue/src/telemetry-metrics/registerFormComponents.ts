@@ -9,6 +9,6 @@ import FormDCDTelemetryMetricsFilter from './FormDCDTelemetryMetricsFilter.vue'
 
 export function registerTelemetryMetricsFormComponents(): void {
   registerFormComponents({
-    dcd_metric_backend_filter: FormDCDTelemetryMetricsFilter
+    dcd_telemetry_metrics_filter: FormDCDTelemetryMetricsFilter
   })
 }

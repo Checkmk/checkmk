@@ -179,10 +179,14 @@ NetworkFlowKpiStatCardMetric = Literal[
 ]
 
 
+NetworkFlowKpiStatCardSparkHeightMode = Literal["band", "full"]
+
+
 class NetworkFlowKpiStatCardDashletConfig(DashletConfig):
     metric: NetworkFlowKpiStatCardMetric
     accent: NetworkFlowAccent
     show_delta: bool
+    spark_height_mode: NotRequired[NetworkFlowKpiStatCardSparkHeightMode]
 
 
 NetworkFlowTrendChartDimension = Literal["applications", "autonomous_systems", "total_bandwidth"]

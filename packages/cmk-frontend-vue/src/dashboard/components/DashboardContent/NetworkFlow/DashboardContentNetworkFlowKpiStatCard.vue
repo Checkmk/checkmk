@@ -145,7 +145,7 @@ const deltaConfig = computed<KpiDeltaConfig>(() => ({
         :format-value="formatValue"
         :series="data.series"
         :color="chartColorCss(content.accent)"
-        spark-height-mode="band"
+        :spark-height-mode="content.spark_height_mode"
       />
     </div>
   </DashboardContentContainer>

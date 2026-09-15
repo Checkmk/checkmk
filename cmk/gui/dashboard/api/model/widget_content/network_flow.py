@@ -11,6 +11,7 @@ from cmk.gui.dashboard.type_defs import (
     NetworkFlowDonutLegendMode,
     NetworkFlowKpiStatCardDashletConfig,
     NetworkFlowKpiStatCardMetric,
+    NetworkFlowKpiStatCardSparkHeightMode,
     NetworkFlowTopTableDashletConfig,
     NetworkFlowTopTableDimension,
     NetworkFlowTrendChartDashletConfig,
@@ -120,6 +121,10 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
     show_delta: bool = api_field(
         description="Whether to show the change versus the previous period."
     )
+    spark_height_mode: NetworkFlowKpiStatCardSparkHeightMode = api_field(
+        description="Whether the sparkline runs the full height of the card, behind the "
+        "value, or as a band strictly below it."
+    )
 
     @classmethod
     @override
@@ -133,6 +138,7 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
             metric=config["metric"],
             accent=config["accent"],
             show_delta=config["show_delta"],
+            spark_height_mode=config.get("spark_height_mode", "band"),
         )
 
     @override
@@ -142,6 +148,7 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
             metric=self.metric,
             accent=self.accent,
             show_delta=self.show_delta,
+            spark_height_mode=self.spark_height_mode,
         )
 
 

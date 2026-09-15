@@ -73,7 +73,6 @@ def test_inv_aix_baselevel(raw_section: StringTable, expected_result: InventoryR
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SUP-30463: KeyError on unexpected tunnelLinkPriority")
 def test_inv_checkpoint_vpn_tunnels_unexpected_link_priority() -> None:
     # Tunnels spanning several interfaces report tunnelLinkPriority as
     # 4294967295 (0xFFFFFFFF) instead of one of the documented 0/1/2 values.

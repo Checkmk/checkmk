@@ -15,14 +15,14 @@ from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_images import AjaxGraphImagesForNotifications
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import template_graph_dispatcher, TemplateGraphSpecification
-from ._metric_backend_registry import (
-    metric_backend_registry,
-    MetricBackend,
-)
 from ._metric_visitor import MetricVisitor
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._prediction_page import PredictionPage, ServiceBreadcrumbFunc
 from ._settings import ConfigVariableGraphTimeranges
+from ._telemetry_metrics_registry import (
+    metric_backend_registry,
+    MetricBackend,
+)
 from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
 

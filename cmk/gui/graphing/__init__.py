@@ -98,13 +98,6 @@ from ._graph_templates import (
 )
 from ._graphs_order import sort_registered_graph_plugins
 from ._line_types import DrawnLineType, GraphConsolidationFunction, LineType
-from ._metric_backend_registry import (
-    BackendQueryBuilderProtocol,
-    FetchTimeSeriesProtocol,
-    METRIC_BACKEND_KEY,
-    metric_backend_registry,
-    MetricBackend,
-)
 from ._metric_data import (
     evaluated_metrics,
     EvaluatedMetric,
@@ -176,6 +169,13 @@ from ._source import (
     RRDFetchData,
     RRDFetchMetricNames,
     RRDFetchTimeSeries,
+)
+from ._telemetry_metrics_registry import (
+    BackendQueryBuilderProtocol,
+    FetchTimeSeriesProtocol,
+    METRIC_BACKEND_KEY,
+    metric_backend_registry,
+    MetricBackend,
 )
 from ._unit import (
     ConvertibleUnitSpecification,

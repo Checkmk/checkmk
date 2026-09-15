@@ -70,6 +70,7 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
+import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
@@ -614,6 +615,8 @@ const reviewFilters = () => {
   openDashboardShareDialog.value = false
   openDashboardFilterSettings.value = true
 }
+
+const { range } = useGlobalTimePickerRange(props.global_time_picker.default_time_range)
 </script>
 
 <template>
@@ -628,6 +631,7 @@ const reviewFilters = () => {
         />
         <DashboardMenuHeader
           v-model:is-edit-mode="isDashboardEditingMode"
+          v-model:range="range"
           :selected-dashboard="selectedDashboard"
           :is-dashboard-loading="
             isDashboardLoading ||
@@ -642,6 +646,7 @@ const reviewFilters = () => {
           :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
           :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
           :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+          :global-time-picker="global_time_picker"
           @open-runtime-filter="openRuntimeFilters"
           @open-filter-settings="openFilterSettings"
           @open-settings="openDashboardSettings = true"

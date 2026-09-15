@@ -27,8 +27,9 @@ const props = withDefaults(
     serverTimeZone: GlobalTimePickerProps['server_time_zone']
     firstDayOfWeek: GlobalTimePickerProps['first_day_of_week']
     variant?: 'extended' | 'condensed'
+    disabled?: boolean
   }>(),
-  { variant: 'extended' }
+  { variant: 'extended', disabled: false }
 )
 
 const range = defineModel<DateTimeRange>({ required: true })
@@ -63,19 +64,32 @@ watch(activePresetId, (value) => {
 </script>
 
 <template>
-  <div class="graphing-global-time-picker">
+  <div
+    class="graphing-global-time-picker"
+    :class="{ 'graphing-global-time-picker--disabled': props.disabled }"
+  >
     <CmkTimeRangePicker
       v-model="range"
       v-model:open="isFlyoutOpen"
       :presets="staticRangePresets"
       :server-time-zone="props.serverTimeZone"
       :settings="pickerSettings"
+      :disabled="props.disabled"
     >
-      <template #trigger="{ aria, triggerRef, fields, settings: triggerSettings }">
+      <template
+        #trigger="{
+          aria,
+          triggerRef,
+          fields,
+          settings: triggerSettings,
+          disabled: triggerDisabled
+        }"
+      >
         <button
           :ref="triggerRef"
           type="button"
           class="graphing-global-time-picker__trigger"
+          :disabled="triggerDisabled"
           v-bind="aria"
         >
           <CmkTimeRangeDisplay :from="fields.from" :to="fields.to" :settings="triggerSettings" />
@@ -112,7 +126,7 @@ watch(activePresetId, (value) => {
         :presets="customPresets"
         :active-preset-id="activePresetId"
         :include-custom-entry="!isExtendedVariant"
-        @apply="applyPreset"
+        @apply="(preset) => !props.disabled && applyPreset(preset)"
       >
         <template v-if="$slots.trailing" #trailing>
           <slot name="trailing" />
@@ -155,6 +169,10 @@ watch(activePresetId, (value) => {
   outline: revert;
 }
 
+.graphing-global-time-picker__trigger:disabled {
+  cursor: not-allowed;
+}
+
 /* the trigger's From/To rows are 32px high, align to them */
 .graphing-global-time-picker__trigger-chip {
   display: flex;
@@ -192,6 +210,12 @@ watch(activePresetId, (value) => {
 
   /* align with the trigger's bottom padding */
   margin-bottom: var(--dimension-7);
+}
+
+.graphing-global-time-picker--disabled .graphing-global-time-picker__band {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .graphing-global-time-picker__aside {

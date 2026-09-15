@@ -46,7 +46,7 @@ function renderForm(seed: DraftTelemetryMetricsItem) {
     setup() {
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
-        return item?.type === 'metric_backend'
+        return item?.type === 'telemetry_metrics'
           ? h(TelemetryMetricsForm, {
               item,
               store,
@@ -93,7 +93,7 @@ const SUM_BY_SERVICE: Aggregator = {
 
 function storedItem(store: ReturnType<typeof renderForm>): DraftTelemetryMetricsItem {
   const item = store.items.value.find((candidate) => candidate.id === 'A')
-  if (item?.type !== 'metric_backend') {
+  if (item?.type !== 'telemetry_metrics') {
     throw new Error('OpenTelemetry metrics item went missing')
   }
   return item

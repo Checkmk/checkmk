@@ -111,7 +111,7 @@ function formulaSource(id: string, ast: unknown): unknown {
   }
 }
 
-// A metric_backend source in the API's nested wire shape, not the designer's flat one.
+// A telemetry_metrics source in the API's nested wire shape, not the designer's flat one.
 function telemetryMetricsSource(
   id: string,
   consolidationFunction: unknown = {
@@ -122,7 +122,7 @@ function telemetryMetricsSource(
   }
 ): unknown {
   return {
-    type: 'metric_backend',
+    type: 'telemetry_metrics',
     id,
     title: id,
     line_type: 'line',

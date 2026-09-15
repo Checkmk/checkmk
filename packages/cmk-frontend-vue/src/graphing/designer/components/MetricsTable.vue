@@ -155,13 +155,13 @@ const selectedIds = computed<ItemId[]>(() => {
 
 /**
  * The addable source types and their dropdown titles; rrd_query is reached via the in-form toggle
- * and metric_backend only appears when the feature is available in this edition.
+ * and telemetry_metrics only appears when the feature is available in this edition.
  */
 const addSourceSuggestions = computed(() => {
   const suggestions = [
     { name: 'rrd_metric', title: _t('Checkmk RRD') },
     ...(telemetryMetricsAvailable
-      ? [{ name: 'metric_backend', title: _t('Metrics backend') }]
+      ? [{ name: 'telemetry_metrics', title: _t('Metrics backend') }]
       : []),
     { name: 'scalar', title: _t('Service reference line') },
     { name: 'constant', title: _t('Constant line') }
@@ -178,7 +178,7 @@ function onAddSource(value: string): void {
         return newConstantDraft(assigned, store.nextColor.value)
       case 'scalar':
         return newScalarDraft(assigned, scalarColor('warning', store.nextColor.value, thresholds))
-      case 'metric_backend':
+      case 'telemetry_metrics':
         return newTelemetryMetricsDraft(assigned)
       default:
         throw new Error(`Unknown source type: ${value}`)
@@ -203,7 +203,7 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
   if (
     telemetryMetricsAvailable &&
     createServicesAvailable &&
-    row.type === 'metric_backend' &&
+    row.type === 'telemetry_metrics' &&
     isValid(row)
   ) {
     return [
@@ -232,7 +232,7 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
     rowDelete.request([row.id])
   } else if (
     action.id === 'create-custom-service' &&
-    row.type === 'metric_backend' &&
+    row.type === 'telemetry_metrics' &&
     isValid(row)
   ) {
     customServiceModel.value = customServiceModelFor(row, telemetryMetricsDefaultTitle)

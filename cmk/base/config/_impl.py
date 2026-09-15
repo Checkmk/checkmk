@@ -2016,10 +2016,10 @@ class ConfigCache:
             or cds.is_tcp
             or self.is_piggyback_host(host_name)
             or self.has_management_board(host_name)
-            or self._has_metric_backend(host_name)
+            or self._has_telemetry_metrics(host_name)
         )
 
-    def _has_metric_backend(self, host_name: HostName) -> bool:
+    def _has_telemetry_metrics(self, host_name: HostName) -> bool:
         return self.metrics_association(host_name) is not None
 
     def metrics_association(self, host_name: HostName) -> str | None:

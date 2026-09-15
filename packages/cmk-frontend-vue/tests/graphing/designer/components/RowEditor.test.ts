@@ -85,7 +85,10 @@ function constantValue(store: ReturnType<typeof useGraphItems>): number | null {
 
 function percentile(store: ReturnType<typeof useGraphItems>): number {
   const row = store.items.value[0]
-  if (row?.type !== 'metric_backend' || row.consolidation_function.type !== 'histogram_quantile') {
+  if (
+    row?.type !== 'telemetry_metrics' ||
+    row.consolidation_function.type !== 'histogram_quantile'
+  ) {
     throw new Error(`expected a quantile-aggregated OpenTelemetry metrics source, got ${row?.type}`)
   }
   return row.consolidation_function.percentile

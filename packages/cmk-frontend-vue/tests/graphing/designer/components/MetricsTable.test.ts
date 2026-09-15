@@ -303,7 +303,7 @@ test('a formula row expands to the read-only formula form', async () => {
   expect(await screen.findByText(/= 5/)).toBeInTheDocument()
 })
 
-test('a metric_backend row expands to the metric backend form', async () => {
+test('a telemetry_metrics row expands to the metric backend form', async () => {
   renderTable([telemetryMetricsItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
@@ -320,7 +320,7 @@ test('adding a metric backend source opens its form', async () => {
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   await fireEvent.click(await screen.findByRole('option', { name: 'Metrics backend' }))
 
-  expect(store.items.value[0]).toMatchObject({ type: 'metric_backend', metric_name: null })
+  expect(store.items.value[0]).toMatchObject({ type: 'telemetry_metrics', metric_name: null })
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
@@ -332,17 +332,17 @@ test('the title column header exposes the rendered macro help', async () => {
   expect(tooltip).toHaveTextContent('Checkmk RRD (single): $DEFAULT_TITLE$, $METRIC_NAME$')
 })
 
-test('a complete metric_backend row offers the create-custom-service action', () => {
+test('a complete telemetry_metrics row offers the create-custom-service action', () => {
   renderTable([telemetryMetricsItem('A')])
   expect(screen.getByRole('button', { name: CREATE_SERVICE_LABEL })).toBeInTheDocument()
 })
 
-test('the create-custom-service action is absent on non metric_backend rows', () => {
+test('the create-custom-service action is absent on non telemetry_metrics rows', () => {
   renderTable([rrdMetricItem('A')])
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the create-custom-service action is absent while the metric_backend query is incomplete', () => {
+test('the create-custom-service action is absent while the telemetry_metrics query is incomplete', () => {
   renderTable([newTelemetryMetricsDraft('A')])
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
@@ -493,7 +493,7 @@ function previewMetric(name: string): Metric {
   }
 }
 
-test('an expanded metric_backend row previews the series its query resolved to', async () => {
+test('an expanded telemetry_metrics row previews the series its query resolved to', async () => {
   renderTable([telemetryMetricsItem('A')], true, true, {
     metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
   })
@@ -505,7 +505,7 @@ test('an expanded metric_backend row previews the series its query resolved to',
   expect(screen.getByText('second')).toBeInTheDocument()
 })
 
-test('a metric_backend row whose query resolved to nothing shows no preview', async () => {
+test('a telemetry_metrics row whose query resolved to nothing shows no preview', async () => {
   renderTable([telemetryMetricsItem('A')])
 
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))

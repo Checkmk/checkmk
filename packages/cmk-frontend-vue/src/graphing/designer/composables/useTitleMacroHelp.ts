@@ -26,7 +26,7 @@ const HELP_SOURCE_ORDER = everySourceType([
   'constant',
   'scalar',
   'rrd_formula',
-  'metric_backend'
+  'telemetry_metrics'
 ])
 
 export interface TitleMacroHelp {

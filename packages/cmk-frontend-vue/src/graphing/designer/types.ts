@@ -56,10 +56,10 @@ export function parseLineType(value: string | null): LineType | undefined {
 }
 
 /** The tab a type belongs to. Drives list filtering and the "cannot mix" rule. */
-export type Domain = 'rrd' | 'metric_backend'
+export type Domain = 'rrd' | 'telemetry_metrics'
 
 /** The single source for which item kinds produce N lines instead of one. */
-const MULTI_LINE_TYPES = ['rrd_query', 'metric_backend'] as const
+const MULTI_LINE_TYPES = ['rrd_query', 'telemetry_metrics'] as const
 type MultiLineType = (typeof MULTI_LINE_TYPES)[number]
 
 /** Items that produce exactly one line and therefore carry a `color`. */
@@ -68,7 +68,7 @@ export type SingleLineItem = Exclude<GraphItem, { type: MultiLineType }>
 export type FormulaDraft = { type: 'rrd_formula'; ast: Formula; title: string; color: string }
 
 export function domainOf(type: ItemType): Domain {
-  return type === 'metric_backend' ? 'metric_backend' : 'rrd'
+  return type === 'telemetry_metrics' ? 'telemetry_metrics' : 'rrd'
 }
 
 /** Dynamic items (RRD queries) yield N series and must be consolidated before use in a formula. */

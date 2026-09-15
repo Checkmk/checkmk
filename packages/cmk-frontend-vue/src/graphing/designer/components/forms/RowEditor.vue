@@ -127,7 +127,7 @@ function messagesFor(field: RowField): TranslatedString[] {
         :service-name-errors="messagesFor('service_name')"
         :metric-name-errors="messagesFor('metric_name')"
       />
-      <template v-else-if="row.type === 'metric_backend'">
+      <template v-else-if="row.type === 'telemetry_metrics'">
         <TelemetryMetricsForm
           :item="row"
           :store="formStore"

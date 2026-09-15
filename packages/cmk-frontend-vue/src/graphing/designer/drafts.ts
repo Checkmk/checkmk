@@ -46,7 +46,7 @@ export function fromApiDataSource(source: ApiDataSourceInput): GraphItem {
   switch (source.type) {
     case 'rrd_formula':
       return { ...source, ast: fromApiAst(source.ast) }
-    case 'metric_backend':
+    case 'telemetry_metrics':
       return {
         ...source,
         consolidation_function: consolidationFromWire(source.consolidation_function)
@@ -60,7 +60,7 @@ function toApiDataSource(item: GraphItem): ApiDataSource {
   if (isFormula(item)) {
     return { ...item, ast: toApiAst(item.ast) }
   }
-  if (item.type === 'metric_backend') {
+  if (item.type === 'telemetry_metrics') {
     return { ...item, consolidation_function: consolidationToWire(item.consolidation_function) }
   }
   return item
@@ -124,7 +124,7 @@ export function newRrdQueryDraft(id: ItemId): DraftRRDQueryItem {
 export function newTelemetryMetricsDraft(id: ItemId): DraftTelemetryMetricsItem {
   return {
     id,
-    type: 'metric_backend',
+    type: 'telemetry_metrics',
     title: DEFAULT_TITLE_MACRO,
     line_type: 'line',
     mirrored: false,

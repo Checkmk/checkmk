@@ -18,7 +18,7 @@ from ._metric_query import (
     QueryDataKey,
 )
 
-TELEMETRY_METRICS_KEY = "metric_backend"
+TELEMETRY_METRICS_KEY = "telemetry_metrics"
 
 
 class FetchTimeSeriesProtocol(Protocol):

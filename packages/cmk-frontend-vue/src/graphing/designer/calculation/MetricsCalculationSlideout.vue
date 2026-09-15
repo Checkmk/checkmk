@@ -34,13 +34,13 @@ const emit = defineEmits<{
   close: []
 }>()
 
-type Tab = 'rrd' | 'metric_backend'
+type Tab = 'rrd' | 'telemetry_metrics'
 const activeTab = ref<Tab>('rrd')
 
 const rrdTabRef = ref<InstanceType<typeof RrdTab> | null>(null)
 
 function onTabChange(value: string | number): void {
-  if (value === 'rrd' || value === 'metric_backend') {
+  if (value === 'rrd' || value === 'telemetry_metrics') {
     activeTab.value = value
   }
 }

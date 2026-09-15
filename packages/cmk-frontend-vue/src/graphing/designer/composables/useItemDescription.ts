@@ -61,7 +61,7 @@ export function useItemDescription() {
         return untranslated(`${_t('Host filter')} > ${_t('Service filter')} > ${item.metric_name}`)
       case 'constant':
         return untranslated(`${_t('Constant')} ${item.value}`)
-      case 'metric_backend':
+      case 'telemetry_metrics':
         return untranslated(item.metric_name)
       case 'rrd_formula':
         return item.ast.op === 'percentile'

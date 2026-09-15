@@ -55,7 +55,7 @@ function requiredFieldStates(item: DesignerItem): [RequiredField, boolean][] {
         ['metric_name', isFilled(item.metric_name)]
       ]
     case 'rrd_query':
-    case 'metric_backend':
+    case 'telemetry_metrics':
       return [['metric_name', isFilled(item.metric_name)]]
     case 'constant':
       return [['value', isEntered(item.value)]]
@@ -86,7 +86,7 @@ function missingQueryFilters(
 
 function consolidationIssues(
   id: ItemId,
-  consolidation: Extract<DesignerItem, { type: 'metric_backend' }>['consolidation_function']
+  consolidation: Extract<DesignerItem, { type: 'telemetry_metrics' }>['consolidation_function']
 ): RowIssue[] {
   const issues: RowIssue[] = []
   // Negated comparisons so a NaN, which loses every comparison, still counts as out of range.
@@ -135,7 +135,7 @@ export function validateRow(
   ) {
     issues.push({ id: item.id, field: 'value', code: 'not-finite' })
   }
-  if (item.type === 'metric_backend') {
+  if (item.type === 'telemetry_metrics') {
     issues.push(...consolidationIssues(item.id, item.consolidation_function))
   }
   return issues

@@ -26,8 +26,8 @@ test('accepts a valid RRD formula', () => {
   expect(check('A + B')).toEqual([])
 })
 
-test('accepts a valid OpenTelemetry metrics formula in the metric_backend domain', () => {
-  expect(check('E + 1', 'metric_backend')).toEqual([])
+test('accepts a valid OpenTelemetry metrics formula in the telemetry_metrics domain', () => {
+  expect(check('E + 1', 'telemetry_metrics')).toEqual([])
 })
 
 test('flags an unknown reference (E2)', () => {

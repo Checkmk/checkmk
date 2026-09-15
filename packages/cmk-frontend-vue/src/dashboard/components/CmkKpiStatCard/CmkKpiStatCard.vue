@@ -713,6 +713,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 .db-cmk-kpi-stat-card__delta-percent {
   flex-shrink: 0;
   font-weight: var(--font-weight-bold);
+  color: var(--font-color);
 }
 
 /* The comparison text ("vs. 47.1% avg. (6h)") is the part most likely to be

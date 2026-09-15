@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Supported Oracle Releases](#supported-oracle-releases)
+- [Architecture and Execution Model](#architecture-and-execution-model)
 - [Oracle Instant Client Download and Installation](#oracle-instant-client-download-and-installation)
   - [Linux](#linux)
   - [Windows](#windows)
@@ -34,6 +35,73 @@ Older releases are not supported and are not accommodated. The queries name
 `V$PDBS.RECOVERY_STATUS`, which arrived with 12.1.0.2. An older instance
 therefore fails with `ORA-00904` while its version is being established, and
 reports that error in the `oracle_instance` section instead of being monitored.
+
+## Architecture and Execution Model
+
+The plugin is one binary plus thin wrapper scripts. All paths are the same on
+Linux, AIX, Solaris and Windows (`.exe` / `.ps1` there); ARM hosts are not supported.
+
+| Component                                                                      | Location                                   | Role                                                                                                       |
+| ------------------------------------------------------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `mk-oracle-v2`                                                                 | `$MK_LIBDIR/plugins/libexec/mk-oracle-v2/` | The plugin: reads the configuration, connects to the instances, emits the agent sections                   |
+| `mk-oracle-v2_sync`, `mk-oracle-v2_async`, `mk-oracle-v2_async_custom_metrics` | agent plugins directory                    | Wrappers the bakery deploys; each calls the binary with `--filter sync`, `async` or `async-custom-metrics` |
+| `mk-oracle.yml`, `mk-oracle.user.yml`                                          | `$MK_CONFDIR`, plugin directory            | Bakery and user configuration, merged at start (see [User Configuration File](#user-configuration-file))   |
+| `orasql/`                                                                      | `$MK_CONFDIR`, plugin directory            | Custom SQL files (see [External SQL files](#external-sql-files-path))                                      |
+| `oic/`                                                                         | plugin directory                           | Oracle Instant Client bundled with the agent, when deployed                                                |
+
+One run of the binary:
+
+1. **Configuration.** The bakery file is read, the user file is merged on top.
+2. **Oracle client.** The client directory is chosen according to `use_host_client`
+   (see [Options](#options)), its ownership is validated (`permissions_check`), and
+   the `ORACLE_HOME` that belongs to it is determined. No usable client is a fatal
+   error, reported as `<SID>|FAILURE|<reason>` rows under `<<<oracle_instance:sep(124)>>>`.
+3. **Re-execution.** The library search path is read by the dynamic loader once, at
+   process start, so the binary exports `LD_LIBRARY_PATH` (`PATH` on Windows) and
+   `ORACLE_HOME` and runs itself again with `--runtime-ready`. It does so once per
+   `ORACLE_HOME` of the locally installed instances - that child takes the targets
+   bound to its home: SIDs using a wallet and the aliases of the home's `tnsnames.ora` -
+   plus once for every other target. The children run one after another and share
+   the standard output.
+4. **Per instance.** The child connects, reads version and container type, resolves
+   the query of every section (bundled, or the `path:` override with the matching
+   version variant) and emits the sections. With `options.threads` > 1 the sections
+   of one instance run on several connections in parallel.
+5. **Errors.** A failed connection is reported as `<SID>|FAILURE|<reason>` under
+   `<<<oracle_instance:sep(124)>>>`; a failed statement as the same row in place of its
+   result, inside the section - for a custom metric inside its `[[[<SID>|<item>]]]`
+   subsection. The text carries the `ORA-xxxxx` code.
+
+### Synchronous and Asynchronous Execution
+
+Every section is either synchronous (queried every agent cycle) or asynchronous
+(queried by a cached wrapper, result reused until the cache age expires). The
+`--filter` option selects the view a wrapper emits:
+
+| Wrapper                             | `--filter`             | Emits                                                                                          | Interval                   |
+| ----------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------- | -------------------------- |
+| `mk-oracle-v2_sync`                 | `sync`                 | Sync built-in sections and sync custom metrics                                                 | every cycle                |
+| `mk-oracle-v2_async`                | `async`                | Async built-in sections; the async custom metrics too when both cache ages are equal           | `cache_age`                |
+| `mk-oracle-v2_async_custom_metrics` | `async-custom-metrics` | Async custom metrics; deployed by the bakery only when `custom_metrics_cache_age != cache_age` | `custom_metrics_cache_age` |
+
+Asynchronous output carries the `cached(<since>,<age>)` marker - on the section
+header, for `oracle_sql` on the `[[[<SID>|<item>|cached(...)]]]` line. Without
+`--filter` everything is emitted; `--no-spool` additionally drops the markers, so
+a manual run prints the complete, uncached output.
+
+### Running the Plugin Manually
+
+```bash
+mk-oracle-v2 -c /etc/check_mk/mk-oracle.yml --no-spool -l -v   # complete output, log on stderr
+mk-oracle-v2 -c /etc/check_mk/mk-oracle.yml --find-runtime     # client directory and ORACLE_HOME it would use
+mk-oracle-v2 --detect-sids                                     # local instances from oratab / registry
+```
+
+`-l` sends the log to stderr, `-v` / `-vv` select `DEBUG` / `TRACE` for this run.
+At `DEBUG` the log names every resolved SQL file and every executed statement
+(`Executing query: ...`) and times connections, sections and queries. Otherwise the
+level comes from `system.logging.level`, and the log file is `mk-oracle.log` in
+`MK_LOGDIR`.
 
 ## Oracle Instant Client Download and Installation
 
@@ -122,6 +190,9 @@ Choose one of the following options:
   it instead by setting `use_host_client: always` (see [Options](#options)). Verify the installation
   with `ldconfig -p | grep libclntsh` and check `/etc/ld.so.conf.d/` for the registered path.
 
+- You may use the `ORACLE_INSTANT_CLIENT` environment variable to point to the directory
+  that contains the Instant Client libraries.
+
 - You may use the `ORACLE_HOME` environment variable to point to the location of your Oracle Instant Client installation.
   Typically, you would set it to the database location like this:
   `export ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1`
@@ -157,17 +228,19 @@ system:
 
 All Oracle-specific configuration lives under `oracle.main`. It contains the following subsections:
 
-| Subsection          | Required    | Description                                                                    |
-| ------------------- | ----------- | ------------------------------------------------------------------------------ |
-| `authentication`    | Yes         | Credentials and authentication method                                          |
-| `connection`        | No          | Hostname, port, timeouts, and TNS configuration                                |
-| `instances`         | Conditional | Explicit list of databases to monitor (required if `discovery` is not enabled) |
-| `discovery`         | No          | Automatic instance detection                                                   |
-| `options`           | No          | Connection pool limits and OCI client behavior                                 |
-| `sections`          | No          | Which monitoring sections to collect and their settings                        |
-| `excluded_sections` | No          | Sections that individual targets do not collect                                |
-| `cache_age`         | No          | Cache lifetime for async sections (default: `600` seconds)                     |
-| `piggyback_host`    | No          | Piggyback hostname for forwarding data to another host                         |
+| Subsection                 | Required    | Description                                                                    |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `authentication`           | Yes         | Credentials and authentication method                                          |
+| `connection`               | No          | Hostname, port, timeouts, and TNS configuration                                |
+| `instances`                | Conditional | Explicit list of databases to monitor (required if `discovery` is not enabled) |
+| `discovery`                | No          | Automatic instance detection                                                   |
+| `options`                  | No          | Connection pool limits and OCI client behavior                                 |
+| `sections`                 | No          | Which monitoring sections to collect and their settings                        |
+| `excluded_sections`        | No          | Sections that individual targets do not collect                                |
+| `custom_metrics`           | No          | User-defined SQL queries emitted under `oracle_sql`                            |
+| `cache_age`                | No          | Cache lifetime for async sections (default: `600` seconds)                     |
+| `custom_metrics_cache_age` | No          | Cache lifetime for async custom metrics (default: `600` seconds)               |
+| `piggyback_host`           | No          | Piggyback hostname for forwarding data to another host                         |
 
 ### Authentication
 
@@ -186,6 +259,21 @@ authentication:
 ```
 
 Set `type: wallet` to use Oracle Wallet authentication instead of username/password (see [Oracle Wallet Authentication](#oracle-wallet-authentication) below).
+
+#### Environment Variable References
+
+`username` and `password` may name an environment variable instead of holding the
+value: a value starting with `$` is replaced by the content of that variable when the
+configuration is read. An unset variable leaves the value as written.
+
+```yaml
+authentication:
+  username: '$ORA_MON_USER'
+  password: '$ORA_MON_PASSWORD'
+```
+
+A variable holding a complete endpoint of the form `host:user:password:port:instance:role[:service_name:sid]`
+is accepted as well; the user and the password are then taken from their fields.
 
 #### ASM Authentication
 
@@ -464,6 +552,12 @@ discovery:
 - If both `include` and `exclude` are specified, `include` takes precedence and
   `exclude` is ignored. This matches the legacy `ONLY_SIDS` and `SKIP_SIDS`
   priorities.
+- Names are compared literally and case-insensitively; regular expressions are not
+  supported. Targets addressed by `alias` or by `service_name` alone are never filtered.
+- `oratab` (`/etc/oratab`, `/var/opt/oracle/oratab`) plays no part in discovery; the
+  plugin reads it to find the Oracle homes and their client library. `mk-oracle-v2 --detect-sids`
+  lists the instances of `oratab` or the registry with their `ORACLE_HOME` and whether a
+  PMON process is running.
 - `instances` is required when `discovery` is not enabled. When discovery is enabled, `instances` can still be specified to add additional databases that are not discoverable locally.
 
 ### Options
@@ -472,15 +566,22 @@ Fine-tunes plugin runtime behavior.
 
 ```yaml
 options:
-  max_queries: 16 # optional, reserved for future use
   use_host_client: never # optional, default: "auto"
   IGNORE_DB_NAME: 0 # optional, default: 0
   threads: 1 # optional, default: 1, parallel worker threads (range 1–8)
   permissions_check: yes # optional, default: yes
   permissions_safe_entries: [] # optional, default: none
+  max_connections: 6 # optional, accepted for compatibility, currently without effect
 ```
 
-- `use_host_client` controls whether the plugin uses the OCI library installed on the host or the one bundled with the plugin. Values: `auto`, `never`, `always`, or a path to the directory containing the OCI library. When that path is the `lib` directory of a full Oracle installation (an `oracore` directory exists next to it), the plugin also derives `ORACLE_HOME` from its parent and exports it, so that OCI finds its message and timezone files (prevents `ORA-01804`). An Oracle Instant Client directory is used as is; it needs no `ORACLE_HOME`.
+- `use_host_client` controls whether the plugin uses the OCI library installed on the host or the one bundled with the plugin. Values: `auto`, `never`, `always`, or a path to the directory containing the OCI library. A candidate counts only if it contains the client library (`libclntsh.so*`, `oci.dll`).
+  - `auto`: the client bundled in `oic/`, then the host installation, then the Grid home named by `oracle_local_registry`.
+  - `never`: the bundled client only.
+  - `always`: the host installation, then the Grid home.
+  - The host installation is the `lib` directory (`bin` on Windows) of the first home of `oratab` / the registry that ships the library; without local instances `$ORACLE_INSTANT_CLIENT` and then `$ORACLE_HOME/lib` are tried.
+
+  When the configured path is the `lib` directory of a full Oracle installation (an `oracore` directory exists next to it), the plugin also derives `ORACLE_HOME` from its parent and exports it, so that OCI finds its message and timezone files (prevents `ORA-01804`). An Oracle Instant Client directory is used as is; it needs no `ORACLE_HOME`.
+
 - `IGNORE_DB_NAME`: when set to `1`, the plugin will not verify that the database name matches the instance name.
 - `threads`: number of worker threads used to process instances in parallel. Default is `1`, meaning sequential execution. The supported range is `1` to `8`. Higher values are clamped down to `8`.
 - `permissions_check` controls whether the permissions of the OCI runtime are validated before its library is loaded. Loading a library as a privileged user executes whoever may write it with those privileges. The validation only ever applies to a privileged run: as an unprivileged user the library runs with the privileges the user already has, and the check is skipped. Set to `no` to load the runtime as the privileged user regardless — the last resort when the permissions cannot be corrected.
@@ -651,7 +752,8 @@ Resolution rules:
 - **Absolute vs. relative.** Absolute paths are used as-is. Relative paths are searched first in **`MK_LIBDIR/plugins/libexec/mk-oracle-v2/orasql/`** and then in **`MK_CONFDIR/orasql/`**. When the same relative path resolves in both, the **`MK_LIBDIR/plugins/libexec/mk-oracle-v2/orasql/`** copy wins.
 - **File vs. directory.** A `path:` may point at a file (with or without the `.sql` extension) or at a directory. In the directory case the file name is derived from the **item name** for `custom_metrics`, or from the **section name** for predefined `sections`.
 - **Version variants.** Alongside the base `<stem>.sql`, you may provide Oracle-version-specific variants named `<stem>@<min_version>.sql` (e.g. `sessions@19000000.sql`). The plugin picks the file with the highest `min_version` that is still less than or equal to the connected instance's version. The version is the 8-digit numeric form `MMmmRRSSSS` (major / minor / release / patch), e.g. `12.1.0.2` → `12010002`.
-- **Fallback chain.** Resolution order for a section is: `path:` → inline `sql:` → bundled (for predefined sections only). If `path:` is set but no file matches the instance version and no inline `sql:` is provided, the section yields no output.
+- **Ownership check.** A resolved file must pass the same ownership validation as the Oracle client (`permissions_check`, `permissions_safe_entries` under [Options](#options)). A file that fails it is skipped with a warning and never executed.
+- **Fallback chain.** Resolution order for a section is: `path:` → inline `sql:` → bundled (for predefined sections only). If `path:` is set but no file matches the instance version and no inline `sql:` is provided, a custom metric yields no output and a predefined section falls back to its bundled query.
 
 Example layout on Linux:
 
@@ -786,7 +888,7 @@ The plugin merges configuration from **two** files:
 | Bakery config | `$MK_CONFDIR/mk-oracle.yml`                                  |
 | User config   | `$MK_LIBDIR/plugins/libexec/mk-oracle-v2/mk-oracle.user.yml` |
 
-The user file lets an user extend or override the configuration without
+The user file lets a user extend or override the configuration without
 editing the bakery file, and conversely lets the bakery redeploy
 its file without clobbering the user's changes.
 The path is the same on Linux and Windows.
@@ -1027,4 +1129,12 @@ This workflow is useful when you have an existing Oracle configuration setup tha
 
 ## Migration from the Legacy `mk_oracle` Plugin
 
-Please see [MIGRATION.md](MIGRATION.md) for full details on how to migrate legacy configuration files or legacy bakery rules.
+Two tools cover the two places a legacy configuration lives:
+
+- `mk-oracle-v2 --migrate-config <mk_oracle.cfg> [--migrate-subdir <mk_oracle.d>] [--migrate-output <mk-oracle.yml>]`
+  converts a legacy agent configuration on the monitored host, `mk_oracle.d` fragments included.
+- `cmk-migrate-oracle-rulesets --dry-run | --apply [--enable-migrated-rules]` converts legacy
+  bakery rules on the central site.
+
+Both report every legacy setting the new plugin does not support as a warning. See
+[MIGRATION.md](MIGRATION.md) for the details.

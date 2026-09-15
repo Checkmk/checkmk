@@ -364,7 +364,7 @@ defineExpose({ focus })
 
   &:hover,
   &:focus-visible {
-    background: var(--ux-theme-3);
+    background: var(--cmk-chip-autocomplete-hover-bg-color);
     outline: none;
   }
 
@@ -400,6 +400,11 @@ defineExpose({ focus })
 }
 
 body[data-theme='facelift'] .cmk-chip-autocomplete {
+  --cmk-chip-autocomplete-hover-bg-color: var(--color-conference-grey-10);
   --chip-outline-bg-color: var(--color-daylight-grey-60);
+}
+
+body[data-theme='modern-dark'] .cmk-chip-autocomplete {
+  --cmk-chip-autocomplete-hover-bg-color: var(--color-white-10);
 }
 </style>

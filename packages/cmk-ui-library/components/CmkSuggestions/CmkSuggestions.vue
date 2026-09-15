@@ -547,7 +547,10 @@ defineExpose({
 
       &:hover {
         color: var(--cmk-suggestions-item-active-color, var(--default-select-hover-color));
-        background-color: var(--cmk-suggestions-item-hover-background, transparent);
+        background-color: var(
+          --cmk-suggestions-item-hover-background,
+          var(--cmk-suggestions-item-hover-default)
+        );
       }
     }
 
@@ -589,6 +592,14 @@ defineExpose({
 .cmk-suggestions--error,
 .cmk-suggestions--warning {
   width: fit-content;
+}
+
+body[data-theme='facelift'] .cmk-suggestions {
+  --cmk-suggestions-item-hover-default: var(--color-conference-grey-10);
+}
+
+body[data-theme='modern-dark'] .cmk-suggestions {
+  --cmk-suggestions-item-hover-default: var(--color-white-10);
 }
 
 /* checkmark-bare ships a dark stroke with no dark-theme variant; tint it so it reads as

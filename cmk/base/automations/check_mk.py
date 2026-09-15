@@ -910,6 +910,7 @@ def _execute_discovery(
             value_store_manager,
             clusters=hosts_config.clusters,
             rtc_package=None,
+            omd_root=cmk.utils.paths.omd_root,
         )
         passive_check_preview = get_check_preview(
             host_name,

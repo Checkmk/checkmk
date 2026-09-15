@@ -117,6 +117,7 @@ from cmk.utils.ip_lookup import (
     is_fallback_ip,
 )
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
+from cmk.utils.prediction import Paths as PredictionPaths
 from cmk.utils.servicename import ServiceName
 
 __all__ = [
@@ -627,12 +628,14 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         *,
         clusters: Container[HostName],
         rtc_package: AgentRawData | None,
+        omd_root: Path,
     ):
         self.config: Final = config
         self.value_store_manager: Final = value_store_manager
         self.clusters: Final = clusters
         self.rtc_package: Final = rtc_package
         self.check_plugins: Final = check_plugins
+        self.omd_root: Final = omd_root
 
     @override
     def __getitem__(self, __key: CheckPluginName) -> CheckerPlugin:
@@ -669,7 +672,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
                 get_effective_host=self.config.effective_host,
                 snmp_backend=self.config.get_snmp_backend(host_name),
                 parameters=_compute_final_check_parameters(
-                    host_name, service, self.config, is_preview
+                    host_name, service, self.config, is_preview, self.omd_root
                 ),
             )
 
@@ -764,6 +767,7 @@ def _compute_final_check_parameters(
     service: ConfiguredService,
     checker_config: CheckerConfig,
     is_preview: bool,
+    omd_root: Path,
 ) -> Parameters:
     params = service.parameters.evaluate(checker_config.timeperiods_active.get)
 
@@ -779,7 +783,9 @@ def _compute_final_check_parameters(
     # We delay every computation until needed.
 
     def make_prediction() -> InjectedParameters:
-        prediction_store = PredictionStore(host_name=host_name, service_name=service.description)
+        prediction_store = PredictionStore(
+            PredictionPaths(omd_root).service_dir(host_name, service.description)
+        )
         # In the past the creation of predictions (and the livestatus query needed)
         # was performed inside the check plug-ins context.
         # We should consider moving this side effect even further up the stack

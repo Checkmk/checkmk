@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Iterator
+from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -16,6 +18,17 @@ _NAME_TEMPLATE: Final = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class PredictionFiles:
+    info: Path
+    data: Path
+
+    def unlink(self) -> None:
+        for path in (self.info, self.data):
+            with suppress(OSError):
+                path.unlink()
+
+
 def relative_data_file(meta: PredictionInfo) -> Path:
     return Path(_NAME_TEMPLATE.format(meta=meta)).with_suffix(_DATA_FILE_SUFFIX)
 
@@ -25,13 +38,13 @@ def meta_file_template(directory: Path) -> str:
     return f"{safe_directory}/{_NAME_TEMPLATE}{_INFO_FILE_SUFFIX}"
 
 
-def iter_info_and_data_files(directory: Path) -> Iterator[tuple[Path, Path]]:
+def iter_prediction_files(directory: Path) -> Iterator[PredictionFiles]:
     if not directory.exists():
         return
     for info_file in directory.rglob(f"*{_INFO_FILE_SUFFIX}"):
         if info_file.is_dir():
             continue
-        yield info_file, info_file.with_suffix(_DATA_FILE_SUFFIX)
+        yield PredictionFiles(info=info_file, data=info_file.with_suffix(_DATA_FILE_SUFFIX))
 
 
 def iter_complete_info_files(metric: str, prediction_files: Iterable[Path]) -> Iterator[Path]:

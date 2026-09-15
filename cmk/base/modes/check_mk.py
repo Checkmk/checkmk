@@ -3109,6 +3109,7 @@ def run_checking(
             value_store_manager,
             clusters=hosts_config.clusters,
             rtc_package=None,
+            omd_root=cmk.utils.paths.omd_root,
         )
         with CPUTracker(console.debug) as tracker:
             checks_result = execute_checkmk_checks(

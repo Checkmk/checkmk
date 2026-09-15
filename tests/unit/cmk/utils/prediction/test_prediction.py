@@ -14,7 +14,6 @@ import pytest
 
 from livestatus import RRDResponse
 
-from cmk.ccc.hostaddress import HostName
 from cmk.utils.prediction import _prediction, DataStat, PredictionStore
 from tests.testlib.common.repo import repo_path
 
@@ -306,9 +305,7 @@ class TestPredictionStore:
         (too_old_minute := _make_f("minute", 4)).touch()
         (stillok_minute := _make_f("minute", 2)).touch()
 
-        store = PredictionStore(HostName("foo"), "bar")
-        store.path = tmp_path
-        store.remove_outdated_predictions(now)
+        PredictionStore(tmp_path).remove_outdated_predictions(now)
 
         assert not too_old_day.exists()
         assert stillok_day.exists()
@@ -323,8 +320,6 @@ class TestPredictionStore:
         now = int(time.time())
         (unknown_period := tmp_path / f"epoch-{now - 999 * 86400}-upper.info").touch()
 
-        store = PredictionStore(HostName("foo"), "bar")
-        store.path = tmp_path
-        store.remove_outdated_predictions(now)
+        PredictionStore(tmp_path).remove_outdated_predictions(now)
 
         assert unknown_period.exists()

@@ -5,23 +5,27 @@
 
 import math
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
 from cmk.agent_based.prediction_backend import PredictionInfo
-from cmk.ccc.hostaddress import HostName
-from cmk.utils.misc import pnp_cleanup
-from cmk.utils.paths import predictions_dir
-from cmk.utils.servicename import ServiceName
 
-from ._file_layout import iter_info_and_data_files, meta_file_template, relative_data_file
+from ._file_layout import iter_prediction_files, meta_file_template, relative_data_file
 from ._grouping import parse_period_name, PeriodName, time_slices
 
 _DAY = 86400
 
 _RRD_CONSOLIDATION_FUNCTION: Final = "max"
+
+_RETENTION: Final[Mapping[PeriodName, int]] = {
+    "wday": 7 * _DAY,
+    "day": 31 * _DAY,
+    "hour": 3 * _DAY,
+    "minute": 3 * _DAY,
+}
 
 
 class MetricRecord(Protocol):
@@ -62,21 +66,9 @@ class PredictionData(BaseModel, frozen=True):
         return self.points[unbound_index % len(self.points)]
 
 
+@dataclass(frozen=True)
 class PredictionStore:
-    RETENTION: Final[Mapping[PeriodName, int]] = {
-        "wday": 7 * _DAY,
-        "day": 31 * _DAY,
-        "hour": 3 * _DAY,
-        "minute": 3 * _DAY,
-    }
-
-    def __init__(
-        self,
-        host_name: HostName,
-        service_name: ServiceName,
-    ) -> None:
-        # Watch out. The CMC has to agree on the path.
-        self.path: Path = predictions_dir / host_name / pnp_cleanup(service_name)
+    path: Path
 
     @property
     def meta_file_path_template(self) -> str:
@@ -88,21 +80,20 @@ class PredictionStore:
         data_file.write_text(prediction.model_dump_json())
 
     def remove_outdated_predictions(self, now: float) -> None:
-        for info_path, data_path in iter_info_and_data_files(self.path):
-            period, start_time_str = info_path.name.split("-")[:2]
+        for files in iter_prediction_files(self.path):
+            period, start_time_str = files.info.name.split("-")[:2]
             if (period_name := parse_period_name(period)) is None:
                 continue
 
-            if (now - float(start_time_str)) > self.RETENTION[period_name]:
-                info_path.unlink(missing_ok=True)
-                data_path.unlink(missing_ok=True)
+            if (now - float(start_time_str)) > _RETENTION[period_name]:
+                files.unlink()
 
     def iter_all_valid_predictions(
         self, now: float
     ) -> Iterator[tuple[PredictionInfo, PredictionData | None]]:
-        for info_path, data_path in iter_info_and_data_files(self.path):
+        for files in iter_prediction_files(self.path):
             try:
-                meta = PredictionInfo.model_validate_json(info_path.read_text())
+                meta = PredictionInfo.model_validate_json(files.info.read_text())
             except FileNotFoundError:
                 continue
 
@@ -110,8 +101,8 @@ class PredictionStore:
                 continue
 
             try:
-                if info_path.stat().st_mtime <= data_path.stat().st_mtime:
-                    yield meta, PredictionData.model_validate_json(data_path.read_text())
+                if files.info.stat().st_mtime <= files.data.stat().st_mtime:
+                    yield meta, PredictionData.model_validate_json(files.data.read_text())
                     continue
             except FileNotFoundError:
                 pass

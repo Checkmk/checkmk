@@ -1085,29 +1085,7 @@ class TestMonitorHostOverview:
             "hosts",
             [
                 {
-                    "name": "heute",
-                    "alias": "Today",
-                    "address": "127.0.0.1",
-                    "state": 0,
-                    "has_been_checked": 1,
-                    "num_services": 10,
-                    "num_services_ok": 10,
-                    "num_services_warn": 0,
-                    "num_services_crit": 0,
-                    "num_services_unknown": 0,
-                    "num_services_pending": 0,
-                    "acknowledged": 0,
-                    "scheduled_downtime_depth": 0,
-                    "notifications_enabled": 1,
-                    "comments": [],
-                    "modified_attributes_list": [],
-                    "active_checks_enabled": 1,
-                    "accept_passive_checks": 1,
-                    "in_notification_period": 1,
-                    "in_service_period": 1,
-                    "in_check_period": 1,
-                    "is_flapping": 0,
-                    "staleness": 0.0,
+                    **_OVERVIEW_HOST,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "tags": {"criticality": "prod"},
@@ -1154,10 +1132,12 @@ class TestMonitorHostOverview:
             "tags": {"criticality": "prod"},
             "labels": {"cmk/os_family": {"value": "linux", "source": "discovered"}},
             "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
+            "relations": [],
+            "more_relations": False,
         }
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
-    def test_get_host_overview_without_multi_tenancy_has_no_customer(
+    def test_get_host_overview_reads_the_state_of_every_related_host(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
@@ -1166,39 +1146,112 @@ class TestMonitorHostOverview:
             "hosts",
             [
                 {
-                    "name": "heute",
-                    "alias": "Today",
-                    "address": "127.0.0.1",
-                    "state": 0,
-                    "has_been_checked": 1,
-                    "num_services": 0,
-                    "num_services_ok": 0,
-                    "num_services_warn": 0,
-                    "num_services_crit": 0,
-                    "num_services_unknown": 0,
-                    "num_services_pending": 0,
-                    "acknowledged": 0,
-                    "scheduled_downtime_depth": 0,
-                    "notifications_enabled": 1,
-                    "comments": [],
-                    "modified_attributes_list": [],
-                    "active_checks_enabled": 1,
-                    "accept_passive_checks": 1,
-                    "in_notification_period": 1,
-                    "in_service_period": 1,
-                    "in_check_period": 1,
-                    "is_flapping": 0,
-                    "staleness": 0.0,
-                    "last_check": time.time(),
-                    "last_state_change": time.time(),
-                    "contact_groups": [],
-                    "tags": {},
-                    "labels": {},
-                    "label_sources": {},
-                    "filename": "",
-                }
+                    **_OVERVIEW_HOST,
+                    "custom_variables": {
+                        "RELATIONS": json.dumps(
+                            [
+                                # The card names the end the related host sits at in return.
+                                {
+                                    "kind": "management",
+                                    "direction": "child",
+                                    "host": "mgmt-heute",
+                                    "site": _SITE_ID,
+                                },
+                                {
+                                    "kind": "management",
+                                    "direction": "child",
+                                    "host": "gone",
+                                    "site": _SITE_ID,
+                                },
+                            ]
+                        )
+                    },
+                    "custom_variable_names": ["RELATIONS"],
+                },
+                {
+                    **_OVERVIEW_HOST,
+                    "name": "mgmt-heute",
+                    "state": 1,
+                    "num_services": 4,
+                    "num_services_ok": 3,
+                    "num_services_crit": 1,
+                    "last_check": 1783942680,
+                    "custom_variables": {
+                        "RELATIONS": json.dumps(
+                            [
+                                {
+                                    "kind": "management",
+                                    "direction": "parent",
+                                    "host": "heute",
+                                    "site": _SITE_ID,
+                                }
+                            ]
+                        )
+                    },
+                    "custom_variable_names": ["RELATIONS"],
+                },
             ],
         )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_OVERVIEW_COLUMNS}",
+                "Filter: name = heute",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                (
+                    "Columns: name state has_been_checked num_services num_services_ok "
+                    "num_services_warn num_services_crit num_services_unknown "
+                    "num_services_pending"
+                ),
+                "Filter: name = mgmt-heute",
+                "Filter: name = gone",
+                "Or: 2",
+                # Both ends carry the macro, so a host that does not is not the counterpart.
+                "Filter: custom_variable_names >= RELATIONS",
+                "And: 2",
+            ],
+            # The export resolved where the related hosts live, so only their site is asked.
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get(hostname="heute", site_id=_SITE_ID)
+
+        # The relation to "gone" names a host no site knows, so no card is built for it.
+        assert resp.json["relations"] == [
+            {
+                "host_name": "mgmt-heute",
+                "kind": "management",
+                "direction": "parent",
+                # Worded by the server, so the frontend keeps no label map of its own.
+                "relation_type": "Management board",
+                "site_id": "NO_SITE",
+                "health": {
+                    "state": "DOWN",
+                    "service_counts": {
+                        "total": 4,
+                        "ok": 3,
+                        "warn": 0,
+                        "crit": 1,
+                        "unknown": 0,
+                        "pending": 0,
+                    },
+                },
+            }
+        ]
+
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_get_host_overview_without_multi_tenancy_has_no_customer(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [_OVERVIEW_HOST])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -1504,4 +1557,38 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"
+_OVERVIEW_HOST: dict[str, object] = {
+    "name": "heute",
+    "alias": "Today",
+    "address": "127.0.0.1",
+    "state": 0,
+    "has_been_checked": 1,
+    "num_services": 10,
+    "num_services_ok": 10,
+    "num_services_warn": 0,
+    "num_services_crit": 0,
+    "num_services_unknown": 0,
+    "num_services_pending": 0,
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "last_check": 0,
+    "last_state_change": 0,
+    "contact_groups": [],
+    "tags": {},
+    "labels": {},
+    "label_sources": {},
+    "filename": "",
+    "custom_variables": {},
+}
+
+_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename custom_variables"

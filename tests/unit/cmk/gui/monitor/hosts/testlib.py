@@ -6,6 +6,7 @@
 from collections.abc import Iterator, Sequence, Set
 from contextlib import contextmanager
 
+from polyfactory.decorators import post_generated
 from polyfactory.factories import DataclassFactory
 
 from cmk.ccc.user import UserId
@@ -16,13 +17,37 @@ from cmk.gui.monitor.hosts._models import (
     HostFilter,
     HostOptionalField,
     HostSort,
+    RelatedHost,
     UnixTimestamp,
 )
 from cmk.gui.monitor.hosts._repositories import EventRepository, HostRepository
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import BuiltInUserRole
 from cmk.gui.session_context import UserContext
+from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
+from cmk.gui.utils.host_relations import RelationDirection
 from cmk.gui.utils.roles import UserPermissions
+
+
+class RelatedHostFactory(DataclassFactory[RelatedHost]):
+    """A relation whoever reads it can place.
+
+    ``kind`` is a plain string on the domain object - a core may report one of a later version -
+    but a host built here stands for one this version resolved, and only such a relation has an
+    end to name it by.
+    """
+
+    __check_model__ = False
+    __set_as_default_factory_for_type__ = True
+
+    @classmethod
+    def kind(cls) -> str:
+        return cls.__random__.choice(list(RELATION_KINDS))
+
+    @post_generated
+    @classmethod
+    def direction(cls, kind: str) -> RelationDirection:
+        return cls.__random__.choice(list(RELATION_KINDS[kind].directions()))
 
 
 class HostFactory(DataclassFactory[Host]):

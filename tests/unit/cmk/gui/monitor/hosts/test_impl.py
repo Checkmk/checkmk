@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import pytest
 
@@ -19,17 +20,23 @@ from cmk.gui.monitor.hosts._impl import (
     _OPTIONAL_COLUMNS,
     _SORT_COLUMN_FIELDS,
     LiveStatusHostRepository,
+    unavailable_sites,
 )
 from cmk.gui.monitor.hosts._models import (
+    Host,
     HostFilter,
     HostOptionalField,
     HostSort,
     HostSortColumn,
     HostSortDirection,
+    MAX_RESOLVED_RELATIONS,
 )
 from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
+from cmk.gui.sites import SiteStates, SiteStatus
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import SetConfig
+
+SiteState = Literal["online", "disabled", "down", "unreach", "dead", "waiting"]
 
 
 @pytest.mark.parametrize(
@@ -359,41 +366,55 @@ _BOTH_COUNTERPARTS = frozenset({("central", "a"), ("remote", "b")})
 
 
 @pytest.mark.parametrize(
-    "raw, visible, expected",
+    "raw, visible, unavailable, expected",
     [
-        pytest.param(None, _BOTH_COUNTERPARTS, 0, id="host without the macro"),
+        pytest.param(None, _BOTH_COUNTERPARTS, frozenset(), 0, id="host without the macro"),
         pytest.param(
             '[{"kind": "management", "direction": "child", "host": "a", "site": "central"}]',
             _BOTH_COUNTERPARTS,
+            frozenset(),
             1,
             id="one relation",
         ),
-        pytest.param(_TWO_RELATIONS, _BOTH_COUNTERPARTS, 2, id="both ends counted"),
+        pytest.param(_TWO_RELATIONS, _BOTH_COUNTERPARTS, frozenset(), 2, id="both ends counted"),
         pytest.param(
             '[{"kind": "peering", "direction": "symmetric", "host": "a", "site": "central"}]',
             _BOTH_COUNTERPARTS,
+            frozenset(),
             0,
-            id="a relation of a later version is not counted - no card would be shown for it",
+            id="a relation of a later version is not counted - no card would be rendered for it",
         ),
         pytest.param(
             _TWO_RELATIONS,
             frozenset({("central", "a")}),
+            frozenset(),
             1,
             id="a counterpart the reader may not see is left out",
         ),
         pytest.param(
+            '[{"kind": "management", "direction": "child", "host": "a", "site": "remote"}]',
+            frozenset(),
+            frozenset({"remote"}),
+            1,
+            id="a counterpart on an unavailable site is kept, like its card in the details",
+        ),
+        pytest.param(
             '[{"kind": "management", "direction": "child", "host": "a", "site": "central"}]',
             frozenset({("remote", "a")}),
+            frozenset(),
             0,
             id="the same name on another site is not the counterpart",
         ),
     ],
 )
 def test_count_relations(
-    raw: str | None, visible: frozenset[tuple[str, str]], expected: int
+    raw: str | None,
+    visible: frozenset[tuple[str, str]],
+    unavailable: frozenset[str],
+    expected: int,
 ) -> None:
     """The malformed cases are covered where the value is parsed, in test_host_relations.py."""
-    assert _count_relations(raw, visible) == expected
+    assert _count_relations(raw, visible, unavailable) == expected
 
 
 def test_has_any_relations_asks_the_core_for_one_host_carrying_the_macro() -> None:
@@ -517,6 +538,157 @@ def _fetch_relation_counts() -> Sequence[int | None]:
             visible_relations=visible_relations,
         )
     ]
+
+
+def _expect_overview_query(mock_livestatus: MockLiveStatusConnection) -> None:
+    """The query reading the host itself, which every overview starts with."""
+    mock_livestatus.expect_query(
+        ["GET hosts", "Filter: name = board"], match_type="loose", sites=["NO_SITE"]
+    )
+
+
+def _get_overview(
+    mock_livestatus: MockLiveStatusConnection, *, unavailable: frozenset[str] = frozenset()
+) -> Host:
+    with mock_livestatus(expect_status_query=True):
+        return LiveStatusHostRepository(
+            connection=sites.live(), read_unavailable_sites=lambda: unavailable
+        ).get_overview(hostname="board", site_id="NO_SITE")
+
+
+@pytest.mark.parametrize(
+    "related_count, more_expected",
+    [
+        pytest.param(1, False, id="all of them shown"),
+        pytest.param(MAX_RESOLVED_RELATIONS + 1, True, id="cut at the cap"),
+    ],
+)
+def test_get_overview_stops_resolving_at_the_relation_cap(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+    related_count: int,
+    more_expected: bool,
+) -> None:
+    """Cut before the counterparts are read, so the query naming them stays bounded too."""
+    shown = min(related_count, MAX_RESOLVED_RELATIONS)
+    relations = [
+        {"kind": "management", "direction": "parent", "host": f"os-{index}", "site": "NO_SITE"}
+        for index in range(related_count)
+    ]
+    back = [{"kind": "management", "direction": "child", "host": "board", "site": "NO_SITE"}]
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            _overview_row("board", relations),
+            *(_overview_row(f"os-{index}", back) for index in range(related_count)),
+        ],
+    )
+    _expect_overview_query(mock_livestatus)
+    mock_livestatus.expect_query(
+        ["GET hosts", *(f"Filter: name = os-{index}" for index in range(shown))],
+        match_type="loose",
+        sites=["NO_SITE"],
+    )
+
+    host = _get_overview(mock_livestatus)
+
+    assert len(host.relations) == shown
+    assert host.more_relations is more_expected
+
+
+def test_get_overview_keeps_a_counterpart_whose_site_did_not_answer(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """ "The site is unreachable" and "the host is gone" look the same to the query, so the site
+    states decide."""
+    relations = [
+        {"kind": "management", "direction": "parent", "host": "os-here", "site": "NO_SITE"},
+        {"kind": "management", "direction": "parent", "host": "os-away", "site": "remote"},
+        {"kind": "management", "direction": "parent", "host": "os-gone", "site": "NO_SITE"},
+    ]
+    back = [{"kind": "management", "direction": "child", "host": "board", "site": "NO_SITE"}]
+    mock_livestatus.add_table(
+        "hosts", [_overview_row("board", relations), _overview_row("os-here", back)]
+    )
+    _expect_overview_query(mock_livestatus)
+    mock_livestatus.expect_query(
+        ["GET hosts", "Or: 3"], match_type="loose", sites=["NO_SITE", "remote"]
+    )
+
+    host = _get_overview(mock_livestatus, unavailable=frozenset({"remote"}))
+
+    assert [(related.name, related.health is None) for related in host.relations] == [
+        ("os-here", False),
+        ("os-away", True),
+    ]
+
+
+def test_get_overview_leaves_out_a_counterpart_that_does_not_carry_the_macro(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """What a site that has not activated the relation yet looks like; the relation count asks the
+    same of a counterpart."""
+    relations = [{"kind": "management", "direction": "parent", "host": "os-1", "site": "NO_SITE"}]
+    mock_livestatus.add_table(
+        "hosts", [_overview_row("board", relations), _overview_row("os-1", [])]
+    )
+    _expect_overview_query(mock_livestatus)
+    mock_livestatus.expect_query(
+        ["GET hosts", "Filter: name = os-1"], match_type="loose", sites=["NO_SITE"]
+    )
+
+    host = _get_overview(mock_livestatus)
+
+    assert host.relations == ()
+
+
+def test_get_overview_leaves_out_a_relation_of_a_kind_this_version_does_not_know(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """The card could not be worded, and the count leaves it out for the same reason."""
+    relations = [
+        {"kind": "peering", "direction": "symmetric", "host": "peer", "site": "NO_SITE"},
+        {"kind": "management", "direction": "parent", "host": "os-1", "site": "NO_SITE"},
+    ]
+    back = [{"kind": "management", "direction": "child", "host": "board", "site": "NO_SITE"}]
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            _overview_row("board", relations),
+            _overview_row("peer", back),
+            _overview_row("os-1", back),
+        ],
+    )
+    _expect_overview_query(mock_livestatus)
+    mock_livestatus.expect_query(
+        ["GET hosts", "Filter: name = os-1"], match_type="loose", sites=["NO_SITE"]
+    )
+
+    host = _get_overview(mock_livestatus)
+
+    assert [related.name for related in host.relations] == ["os-1"]
+
+
+@pytest.mark.parametrize(
+    "state, expected_unavailable",
+    [
+        pytest.param("online", False, id="answered"),
+        pytest.param("disabled", False, id="the reader switched this site off themselves"),
+        pytest.param("dead", True, id="dead"),
+        pytest.param("unreach", True, id="unreachable"),
+        pytest.param("waiting", True, id="waiting for its status host"),
+    ],
+)
+def test_unavailable_sites(state: SiteState, expected_unavailable: bool) -> None:
+    """A site the reader deselected is not one that could not be reached: saying so would be
+    untrue, and would show a host whose site was never asked - and so never filtered by
+    ``AuthUser`` - to someone who may not be its contact."""
+    site_states = SiteStates({SiteId("remote"): SiteStatus(state=state)})
+
+    assert (SiteId("remote") in unavailable_sites(site_states)) is expected_unavailable
 
 
 def test_visible_relation_hosts_asks_nothing_when_no_relation_count_is_shown(

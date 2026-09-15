@@ -26,6 +26,8 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
     last_check: 1784023200,
     last_state_change: 1784019600,
     legacy_host_status_link: '/check_mk/index.py',
+    relations: [],
+    more_relations: false,
     ...overrides
   }
 }

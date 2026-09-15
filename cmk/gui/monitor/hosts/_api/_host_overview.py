@@ -23,6 +23,8 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
+from cmk.gui.utils.host_relations import RelationDirection
 from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
@@ -33,6 +35,9 @@ from .._models import (
     Host,
     HostLabelValue,
     HostStateLabel,
+    MAX_RESOLVED_RELATIONS,
+    RelatedHost,
+    RelatedHostHealth,
     ServiceCounts,
     UnixTimestamp,
 )
@@ -40,6 +45,78 @@ from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
 from ._modes import build_host_modes, ModeInfo
 from ._urls import host_view_link
+
+
+@api_model
+class RelatedHostHealthInfo:
+    """What the monitoring knows about a related host."""
+
+    state: HostStateLabel = api_field(description="State of the related host", example="UP")
+    service_counts: ServiceCounts = api_field(
+        description="Service counts of the related host",
+        example=ServiceCounts(total=48, ok=42, warn=3, crit=1, unknown=0, pending=2),
+    )
+
+    @classmethod
+    def from_domain(cls, health: RelatedHostHealth) -> Self:
+        return cls(
+            state=health.state_label,
+            service_counts=health.service_counts,
+        )
+
+
+@api_model
+class RelatedHostInfo:
+    """A host the shown host is related to, with everything its card renders."""
+
+    host_name: str = api_field(description="Name of the related host", example="mgmt-web-server-01")
+    kind: str = api_field(
+        description="Id of the kind of relation the two hosts have.",
+        example="management",
+    )
+    direction: RelationDirection = api_field(
+        description=(
+            "The end of the relation the related host sits at, seen from the shown host. Kept "
+            "next to the translated label so a client can tell two relations apart without "
+            "reading words."
+        ),
+        example="parent",
+    )
+    relation_type: str = api_field(
+        description=(
+            "What the related host is to the shown host, in the user's language - its management "
+            "board, for instance, or one of its OS hosts."
+        ),
+        example="Management board",
+    )
+    site_id: str = api_field(
+        description="Site the related host is monitored on", example="remote-1"
+    )
+    health: RelatedHostHealthInfo | None = api_field(
+        description=(
+            "State, service counts and last check of the related host. Null when its site is "
+            "not available, i.e. nothing about the host could be read - which is not the same as "
+            "the host being gone, and is why it is still listed."
+        ),
+        example=None,
+    )
+
+    @classmethod
+    def from_domain(cls, related: RelatedHost) -> Self:
+        return cls(
+            host_name=related.name,
+            kind=related.kind,
+            direction=related.direction,
+            # A KeyError is impossible: a relation of a kind this version does not know never
+            # reaches the domain (see cmk.gui.monitor.hosts._impl).
+            relation_type=str(RELATION_KINDS[related.kind].end(related.direction).noun),
+            site_id=related.site_id,
+            health=(
+                None
+                if related.health is None
+                else RelatedHostHealthInfo.from_domain(related.health)
+            ),
+        )
 
 
 @api_model
@@ -107,6 +184,23 @@ class HostOverviewResponse:
         description="URL to legacy host status view",
         example="view.py?view_name=hoststatus&host=web-server-01&site=local",
     )
+    relations: list[RelatedHostInfo] = api_field(
+        description=(
+            "The hosts this host is related to via the Setup 'Relations' feature, in the order "
+            "they were resolved. Empty when the host has no relations, or when the user may see "
+            f"none of the related hosts. At most {MAX_RESOLVED_RELATIONS} of them are listed, "
+            "see 'more_relations'."
+        ),
+        example=[],
+    )
+    more_relations: bool = api_field(
+        description=(
+            f"Whether the host has more relations than the {MAX_RESOLVED_RELATIONS} listed "
+            "above. A host reaching that many is related to far more hosts than the details are "
+            "meant to show, so they are cut rather than read and sent in full."
+        ),
+        example=False,
+    )
 
     @classmethod
     def from_domain(cls, host: Host, *, site_alias: str, customer: str | None) -> Self:
@@ -133,6 +227,8 @@ class HostOverviewResponse:
             tags=read(host.tags, "tags"),
             labels=read(host.labels, "labels"),
             legacy_host_status_link=host_view_link("hoststatus", host),
+            relations=[RelatedHostInfo.from_domain(related) for related in host.relations],
+            more_relations=host.more_relations,
         )
 
 

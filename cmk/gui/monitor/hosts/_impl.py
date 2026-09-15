@@ -10,17 +10,20 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Callable, Collection, Mapping, Sequence, Set
+from collections.abc import Callable, Collection, Container, Mapping, Sequence, Set
 from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui import sites
 from cmk.gui.config import active_config
+from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
 from cmk.gui.utils.host_relations import (
     parse_resolved_relations,
     RELATIONS_CUSTOM_VARIABLE,
     ResolvedRelation,
+    reverse_direction,
 )
 from cmk.livestatus_client import (
     LivestatusClient,
@@ -28,7 +31,7 @@ from cmk.livestatus_client import (
     ScheduleForcedHostCheck,
 )
 from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
-from cmk.livestatus_client.queries import detailed_connection, Query
+from cmk.livestatus_client.queries import detailed_connection, Query, ResultRow
 from cmk.livestatus_client.tables import Hosts, Log
 from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
@@ -45,12 +48,35 @@ from ._models import (
     HostSort,
     HostSortColumn,
     HostState,
+    MAX_RESOLVED_RELATIONS,
+    RelatedHost,
+    RelatedHostHealth,
     RescheduleTarget,
     ServiceCounts,
     UnixTimestamp,
 )
 from ._site import MonitorSites
 from ._sorting import host_sorter
+
+
+def _site_states() -> SiteStates:
+    # Read through a function: the repository's own ``sites`` argument shadows the module.
+    return sites.states()
+
+
+def unavailable_sites(site_states: SiteStates) -> frozenset[str]:
+    """The sites whose answer is missing rather than empty.
+
+    A host on such a site is unknown, not absent, so relations to it are kept and shown as
+    "cannot be read right now". "disabled" is the reader's own site selection instead of a site
+    that could not be reached - and a host there was never queried, so the ``AuthUser`` filter
+    never applied to it.
+    """
+    return frozenset(
+        site_id
+        for site_id, status in site_states.items()
+        if status.get("state") not in ("online", "disabled")
+    )
 
 
 class LiveStatusHostRepository:
@@ -60,12 +86,16 @@ class LiveStatusHostRepository:
         connection: MultiSiteConnection,
         folders: MonitorFolders | None = None,
         sites: MonitorSites | None = None,
+        read_unavailable_sites: Callable[[], frozenset[str]] = lambda: unavailable_sites(
+            _site_states()
+        ),
     ) -> None:
         self._connection = connection
         # A folder is shown and searched by its Setup title, which Livestatus does not have. A
         # caller reading no folder needs none, hence the default that knows no titles.
         self._folders = folders if folders is not None else MonitorFolders()
         self._sites = sites if sites is not None else MonitorSites()
+        self._read_unavailable_sites = read_unavailable_sites
 
     def host_exists(self, hostname: str) -> bool:
         q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
@@ -120,6 +150,12 @@ class LiveStatusHostRepository:
             _build_query_filter(query_, fields, self._folders, self._sites),
             extra_headers=extra_headers,
         )
+        # Only the relation count has to tell a site that did not answer from one that answered
+        # nothing.
+        unavailable = (
+            frozenset[str]() if visible_relations is None else self._read_unavailable_sites()
+        )
+
         with detailed_connection(self._connection) as conn:
             return sorted(
                 [
@@ -127,13 +163,9 @@ class LiveStatusHostRepository:
                         name=row["name"],
                         alias=row.get("alias"),
                         address=row.get("address"),
-                        state=(
-                            HostState.PENDING
-                            if row["has_been_checked"] == 0
-                            else HostState(row["state"])
-                        ),
+                        state=_host_state(row),
                         site_id=row["site"],
-                        service_counts=_service_counts(row),
+                        service_counts=_optional_service_counts(row),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
@@ -170,6 +202,7 @@ class LiveStatusHostRepository:
                             else _count_relations(
                                 row["custom_variables"].get(RELATIONS_CUSTOM_VARIABLE),
                                 visible_relations,
+                                unavailable,
                             )
                         ),
                     )
@@ -186,12 +219,7 @@ class LiveStatusHostRepository:
                 Hosts.address,
                 Hosts.state,
                 Hosts.has_been_checked,
-                Hosts.num_services,
-                Hosts.num_services_ok,
-                Hosts.num_services_warn,
-                Hosts.num_services_crit,
-                Hosts.num_services_unknown,
-                Hosts.num_services_pending,
+                *_SERVICE_COUNT_COLUMNS,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
                 Hosts.notifications_enabled,
@@ -211,6 +239,7 @@ class LiveStatusHostRepository:
                 Hosts.labels,
                 Hosts.label_sources,
                 Hosts.filename,
+                Hosts.custom_variables,
             ],
             Hosts.name == hostname,
         )
@@ -218,20 +247,14 @@ class LiveStatusHostRepository:
             row = q.fetchone(self._connection, True, only_site=SiteId(site_id))
         except ValueError:
             raise HostNotFoundError(f"Host {hostname!r} not found on site {site_id!r}") from None
+        links = _known_relations(row["custom_variables"].get(RELATIONS_CUSTOM_VARIABLE))
         return Host(
             name=row["name"],
             alias=row["alias"],
             address=row["address"],
-            state=(HostState.PENDING if row["has_been_checked"] == 0 else HostState(row["state"])),
+            state=_host_state(row),
             site_id=row["site"],
-            service_counts=ServiceCounts(
-                total=row["num_services"],
-                ok=row["num_services_ok"],
-                warn=row["num_services_warn"],
-                crit=row["num_services_crit"],
-                unknown=row["num_services_unknown"],
-                pending=row["num_services_pending"],
-            ),
+            service_counts=_service_counts(row),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
@@ -253,6 +276,59 @@ class LiveStatusHostRepository:
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],
             labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
+            # Cut before the counterparts are read, so the query reading them is bounded too.
+            relations=self._fetch_related_hosts(links[:MAX_RESOLVED_RELATIONS]),
+            more_relations=len(links) > MAX_RESOLVED_RELATIONS,
+        )
+
+    def _fetch_related_hosts(self, links: Sequence[ResolvedRelation]) -> tuple[RelatedHost, ...]:
+        """Read the state of the hosts a host is related to, in the order they were resolved.
+
+        One query for all of them, asking only the sites the relations name - the export resolved
+        every counterpart's site. Which of them reach the reader is :func:`_relation_is_shown`,
+        the same rule the listing's relation count answers with.
+        """
+        if not links:
+            return ()
+        names = list(dict.fromkeys(link.host for link in links))
+        q = Query(
+            [
+                Hosts.name,
+                Hosts.state,
+                Hosts.has_been_checked,
+                *_SERVICE_COUNT_COLUMNS,
+            ],
+            And(
+                Or(*(Hosts.name == name for name in names)),
+                # The same criterion the relation count uses, so the two cannot come apart: a
+                # host not carrying the variable is not anyone's counterpart as far as its own
+                # core is concerned - what a site that has not activated the relation looks like.
+                Hosts.custom_variable_names == RELATIONS_CUSTOM_VARIABLE,
+            ),
+        )
+        # A name can exist on more than one site, so the site decides which host is meant.
+        rows = {
+            (row["site"], row["name"]): row
+            for row in q.fetchall(
+                self._connection, True, list(dict.fromkeys(SiteId(link.site) for link in links))
+            )
+        }
+        unavailable = self._read_unavailable_sites()
+        return tuple(
+            RelatedHost(
+                name=link.host,
+                kind=link.kind,
+                # The card names the other host, so it shows the end that host sits at in return.
+                direction=reverse_direction(link.direction),
+                site_id=link.site,
+                health=(
+                    None
+                    if (row := rows.get((link.site, link.host))) is None
+                    else _related_host_health(row)
+                ),
+            )
+            for link in links
+            if _relation_is_shown(link, known=rows, unavailable=unavailable)
         )
 
     def visible_relation_hosts(
@@ -380,8 +456,8 @@ class LiveStatusHostActions:
 def _known_relations(raw: str | None) -> list[ResolvedRelation]:
     """The relations a core reported that this version can place, in the resolved order.
 
-    A relation of a kind only a later version knows has no wording here, so it is left out -
-    counting it would promise something the host details cannot show.
+    Both reading sites go through here - the cards and the count - so a relation of a kind only a
+    later version knows cannot make the number promise a card that is never rendered.
     """
     return [
         relation
@@ -390,11 +466,39 @@ def _known_relations(raw: str | None) -> list[ResolvedRelation]:
     ]
 
 
-def _count_relations(raw: str | None, visible: frozenset[tuple[str, str]]) -> int:
-    """Count the relations of a listed host, bounded to the counterparts the host details show as
-    a card - so the number in the column and the cards there always agree.
+def _relation_is_shown(
+    link: ResolvedRelation, *, known: Container[tuple[str, str]], unavailable: Container[str]
+) -> bool:
+    """Whether a relation reaches the reader at all.
+
+    The one rule the relation count and the host details both answer with, so the number cannot
+    promise cards that are not there: a counterpart a core answered for is shown, and so is one
+    whose site could not be reached - the reader learns it exists. One the reader may not see, or
+    that no site knows any more, is left out of both.
     """
-    return sum(1 for link in _known_relations(raw) if (link.site, link.host) in visible)
+    return (link.site, link.host) in known or link.site in unavailable
+
+
+def _count_relations(
+    raw: str | None, visible: frozenset[tuple[str, str]], unavailable: frozenset[str]
+) -> int:
+    """Count the relations of a host that reach the reader.
+
+    The details stop rendering cards at ``MAX_RESOLVED_RELATIONS`` and say so; this number does
+    not, so it stays the count of what the host is related to.
+    """
+    return sum(
+        1
+        for link in _known_relations(raw)
+        if _relation_is_shown(link, known=visible, unavailable=unavailable)
+    )
+
+
+def _related_host_health(row: ResultRow) -> RelatedHostHealth:
+    return RelatedHostHealth(
+        state=_host_state(row),
+        service_counts=_service_counts(row),
+    )
 
 
 def _sanitize_query(q: str) -> str:
@@ -539,10 +643,28 @@ def _timestamp(value: float | None) -> UnixTimestamp | None:
     return None if value is None else int(value)
 
 
-def _service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
+def _optional_service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
     """The counts are read as a block, so one missing column means none were asked for."""
-    if "num_services" not in row:
-        return None
+    return _service_counts(row) if "num_services" in row else None
+
+
+#: Every column :func:`_service_counts` reads, for the queries that want them.
+_SERVICE_COUNT_COLUMNS: tuple[Column, ...] = (
+    Hosts.num_services,
+    Hosts.num_services_ok,
+    Hosts.num_services_warn,
+    Hosts.num_services_crit,
+    Hosts.num_services_unknown,
+    Hosts.num_services_pending,
+)
+
+
+def _host_state(row: ResultRow) -> HostState:
+    """A host that has never been checked has no state of its own yet."""
+    return HostState.PENDING if row["has_been_checked"] == 0 else HostState(row["state"])
+
+
+def _service_counts(row: Mapping[str, object]) -> ServiceCounts:
     return ServiceCounts(
         total=int(row["num_services"]),  # type: ignore[call-overload]
         ok=int(row["num_services_ok"]),  # type: ignore[call-overload]

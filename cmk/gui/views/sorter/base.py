@@ -10,8 +10,8 @@ from typing import NamedTuple, Protocol
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Dictionary
+from cmk.web.utils.speaklater import LazyString
 
 
 class SorterProtocol(Protocol):

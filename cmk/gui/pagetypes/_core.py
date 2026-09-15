@@ -93,7 +93,6 @@ from cmk.gui.type_defs import (
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
@@ -125,6 +124,7 @@ from cmk.shared_typing.main_menu import (
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyString
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 SubPagesSpec = list[tuple[str, str, StaticIcon]]

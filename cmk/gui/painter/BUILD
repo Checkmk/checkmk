@@ -17,8 +17,8 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:painter_options",
-        "//cmk/gui/utils:base",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

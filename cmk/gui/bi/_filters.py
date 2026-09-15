@@ -13,7 +13,6 @@ from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals.filter import Filter, FilterOption, FilterRegistry
 from cmk.gui.visuals.filter.components import (
@@ -24,6 +23,7 @@ from cmk.gui.visuals.filter.components import (
     HorizontalGroup,
     TextInput,
 )
+from cmk.web.utils.speaklater import LazyString
 
 from ._compiler import is_part_of_aggregation
 from ._packs import aggregation_group_choices, get_aggregation_group_trees

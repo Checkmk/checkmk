@@ -10,7 +10,6 @@ py_library(
     name = "base",
     srcs = [
         "images.py",
-        "speaklater.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -88,7 +87,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base",
         ":middle",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",

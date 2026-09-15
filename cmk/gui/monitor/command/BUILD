@@ -13,7 +13,6 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/livestatus_utils/commands",
-        "//cmk/gui/utils:base",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-web/cmk/web/utils",
     ],

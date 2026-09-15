@@ -22,7 +22,6 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     DualListFilter,
@@ -44,6 +43,7 @@ from cmk.gui.visuals.filter.components import (
 )
 from cmk.inventory.structured_data import SDValue
 from cmk.inventory_ui.v1_unstable import Comparable
+from cmk.web.utils.speaklater import LazyString
 
 from ._tree import InventoryPath
 

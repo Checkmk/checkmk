@@ -22,7 +22,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.regex import validate_regex
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString
 
 from .components import (
     Checkbox,

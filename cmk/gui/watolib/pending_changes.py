@@ -15,10 +15,10 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.search import index as search_index
 from cmk.gui.utils.misc import gen_id
-from cmk.gui.utils.speaklater import LazyString
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyString
 
 from .config_domain_name import ConfigDomainName, SerializedSettings
 from .objref import ObjectRef

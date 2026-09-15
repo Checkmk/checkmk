@@ -32,12 +32,12 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDPath
 from cmk.ruleset_matcher.labels import Labels
 from cmk.shared_typing.icon import IconNames as IconNames
 from cmk.shared_typing.icon import IconSizes as IconSizes
 from cmk.utils.password_store import PasswordId
+from cmk.web.utils.speaklater import LazyString
 
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)

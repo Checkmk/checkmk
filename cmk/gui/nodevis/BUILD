@@ -41,7 +41,6 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui/data_source",
         "//cmk/gui/pagetypes",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/views",
         "//cmk/gui/views:components",
@@ -54,6 +53,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

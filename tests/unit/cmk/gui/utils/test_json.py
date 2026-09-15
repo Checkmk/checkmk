@@ -11,6 +11,7 @@ import pytest
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.utils.json import CustomObjectJSONEncoder
+from cmk.web.utils.speaklater import LazyString
 
 
 def test_json_dumps_prevent_close_tag_attack_via_onclick_attribute() -> None:
@@ -62,3 +63,9 @@ def test_custom_object_json_encoder_non_callable() -> None:
 
     with pytest.raises(TypeError, match="not JSON serializable"):
         assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'
+
+
+def test_custom_object_json_encoder_lazy_string() -> None:
+    assert json.dumps(LazyString(lambda a: "xxx" + a, "yyy"), cls=CustomObjectJSONEncoder) == (
+        '"xxxyyy"'
+    )

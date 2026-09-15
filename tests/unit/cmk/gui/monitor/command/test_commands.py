@@ -13,7 +13,7 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     MonitorObjectType,
 )
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString
 
 
 class _LegacyPermission:

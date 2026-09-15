@@ -203,7 +203,6 @@ py_library(
         ":html_toolkit",
         ":main_navigation",
         "//cmk/gui/utils",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/utils",
         "//cmk/utils:paths",

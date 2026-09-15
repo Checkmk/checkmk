@@ -14,8 +14,8 @@ import cmk.ccc.plugin_registry
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.view_utils import CellSpec
+from cmk.web.utils.speaklater import LazyString
 
 
 @dataclass(frozen=True)

@@ -10,7 +10,7 @@ from typing import override
 
 import cmk.ccc.plugin_registry
 from cmk.gui.type_defs import PermissionName, RoleName
-from cmk.gui.utils.speaklater import LazyString, LazyText
+from cmk.web.utils.speaklater import LazyString, LazyText
 
 
 @dataclass(frozen=True, kw_only=True)

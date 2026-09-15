@@ -81,7 +81,7 @@ def fixture_browser_storage_stage() -> StorageState:
     return StorageState()
 
 
-@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(scope="session")
 def get_new_page(pytestconfig: pytest.Config) -> PageGetter:
     """Return a callable that creates a new page with the specified timeout."""
     timeout_value = pytestconfig.getoption(CLI_ARGUMENT_GUI_TIMEOUT) * 1000

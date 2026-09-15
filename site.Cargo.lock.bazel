@@ -1,5 +1,5 @@
 {
-  "checksum": "faeec0a819f5631b82cb0faa24c1a0f188b8fa16062e7d1135254a4b49ef49f8",
+  "checksum": "4ed5701d43339e2ab95782763dfc88714d73093843e715b5f96e2f4e9cd1bb46",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -2833,6 +2833,61 @@
       ],
       "license_file": "LICENSE"
     },
+    "chacha20 0.10.2": {
+      "name": "chacha20",
+      "version": "0.10.2",
+      "package_url": "https://github.com/RustCrypto/stream-ciphers",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/chacha20/0.10.2/download",
+          "sha256": "65c35e4b699c7e15ccbe7ee35c005e4fc0a278d22238a2857e6ce2dadeda1b06"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "chacha20",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "chacha20",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.3",
+              "target": "cfg_if"
+            }
+          ],
+          "selects": {
+            "cfg(any(target_arch = \"x86_64\", target_arch = \"x86\"))": [
+              {
+                "id": "cpufeatures 0.3.1",
+                "target": "cpufeatures"
+              }
+            ]
+          }
+        },
+        "edition": "2024",
+        "version": "0.10.2"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
     "check-cert 0.1.0": {
       "name": "check-cert",
       "version": "0.1.0",
@@ -4156,6 +4211,74 @@
         },
         "edition": "2018",
         "version": "0.2.17"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "cpufeatures 0.3.1": {
+      "name": "cpufeatures",
+      "version": "0.3.1",
+      "package_url": "https://github.com/RustCrypto/utils",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/cpufeatures/0.3.1/download",
+          "sha256": "5ca28b0ae3115b884660db4118d803791fd6756b6e88f39c0f3f7859060d7566"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cpufeatures",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cpufeatures",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [],
+          "selects": {
+            "cfg(all(target_arch = \"aarch64\", target_os = \"android\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(all(target_arch = \"aarch64\", target_vendor = \"apple\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ]
+          }
+        },
+        "edition": "2024",
+        "version": "0.3.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7853,6 +7976,136 @@
         },
         "edition": "2021",
         "version": "0.3.3"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "getrandom 0.4.3": {
+      "name": "getrandom",
+      "version": "0.4.3",
+      "package_url": "https://github.com/rust-random/getrandom",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/getrandom/0.4.3/download",
+          "sha256": "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "getrandom",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "getrandom",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.3",
+              "target": "cfg_if"
+            },
+            {
+              "id": "getrandom 0.4.3",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {
+            "cfg(all(any(target_os = \"linux\", target_os = \"android\"), not(any(all(target_os = \"linux\", target_env = \"\"), getrandom_backend = \"custom\", getrandom_backend = \"linux_raw\", getrandom_backend = \"rdrand\", getrandom_backend = \"rndr\"))))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(all(target_os = \"uefi\", getrandom_backend = \"efi_rng\"))": [
+              {
+                "id": "r-efi 6.0.0",
+                "target": "r_efi"
+              }
+            ],
+            "cfg(any(target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"hurd\", target_os = \"illumos\", target_os = \"cygwin\", all(target_os = \"horizon\", target_arch = \"arm\")))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(any(target_os = \"haiku\", target_os = \"redox\", target_os = \"nto\", target_os = \"aix\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(any(target_os = \"ios\", target_os = \"visionos\", target_os = \"watchos\", target_os = \"tvos\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(any(target_os = \"macos\", target_os = \"openbsd\", target_os = \"vita\", target_os = \"emscripten\"))": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(target_os = \"netbsd\")": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(target_os = \"solaris\")": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(target_os = \"vxworks\")": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ]
+          }
+        },
+        "edition": "2024",
+        "version": "0.4.3"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -17009,7 +17262,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "quinn-proto 0.11.12",
+              "id": "quinn-proto 0.11.18",
               "target": "quinn_proto",
               "alias": "proto"
             },
@@ -17080,14 +17333,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "quinn-proto 0.11.12": {
+    "quinn-proto 0.11.18": {
       "name": "quinn-proto",
-      "version": "0.11.12",
+      "version": "0.11.18",
       "package_url": "https://github.com/quinn-rs/quinn",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/quinn-proto/0.11.12/download",
-          "sha256": "49df843a9161c85bb8aae55f101bc0bac8bcafd637a620d9122fd7e0b2f7422e"
+          "url": "https://static.crates.io/crates/quinn-proto/0.11.18/download",
+          "sha256": "a9746dbde176634f4f2f1faf2404e30a31b2bc1e9cafb5329c95d8177a18c9fc"
         }
       },
       "targets": [
@@ -17120,8 +17373,12 @@
               "target": "lru_slab"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.10.2",
               "target": "rand"
+            },
+            {
+              "id": "rand_pcg 0.10.2",
+              "target": "rand_pcg"
             },
             {
               "id": "rustc-hash 2.1.1",
@@ -17147,7 +17404,7 @@
           "selects": {
             "cfg(all(target_family = \"wasm\", target_os = \"unknown\"))": [
               {
-                "id": "getrandom 0.3.3",
+                "id": "getrandom 0.4.3",
                 "target": "getrandom"
               },
               {
@@ -17166,7 +17423,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.11.12"
+        "version": "0.11.18"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -17371,6 +17628,46 @@
       ],
       "license_file": null
     },
+    "r-efi 6.0.0": {
+      "name": "r-efi",
+      "version": "6.0.0",
+      "package_url": "https://github.com/r-efi/r-efi",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/r-efi/6.0.0/download",
+          "sha256": "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "r_efi",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "r_efi",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "6.0.0"
+      },
+      "license": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "license_ids": [
+        "Apache-2.0",
+        "LGPL-2.1",
+        "MIT"
+      ],
+      "license_file": null
+    },
     "rand 0.7.3": {
       "name": "rand",
       "version": "0.7.3",
@@ -17500,14 +17797,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rand 0.9.2": {
+    "rand 0.10.2": {
       "name": "rand",
-      "version": "0.9.2",
+      "version": "0.10.2",
       "package_url": "https://github.com/rust-random/rand",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rand/0.9.2/download",
-          "sha256": "6db2770f06117d490610c7488547d543617b21bfa07796d7a12f6f1bd53850d1"
+          "url": "https://static.crates.io/crates/rand/0.10.2/download",
+          "sha256": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80"
         }
       },
       "targets": [
@@ -17532,14 +17829,14 @@
         "deps": {
           "common": [
             {
-              "id": "rand_core 0.9.3",
+              "id": "rand_core 0.10.1",
               "target": "rand_core"
             }
           ],
           "selects": {}
         },
-        "edition": "2021",
-        "version": "0.9.2"
+        "edition": "2024",
+        "version": "0.10.2"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -17658,58 +17955,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rand_chacha 0.9.0": {
-      "name": "rand_chacha",
-      "version": "0.9.0",
-      "package_url": "https://github.com/rust-random/rand",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/rand_chacha/0.9.0/download",
-          "sha256": "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rand_chacha",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "rand_chacha",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ppv-lite86 0.2.21",
-              "target": "ppv_lite86"
-            },
-            {
-              "id": "rand_core 0.9.3",
-              "target": "rand_core"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "rand_core 0.5.1": {
       "name": "rand_core",
       "version": "0.5.1",
@@ -17805,14 +18050,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rand_core 0.9.3": {
+    "rand_core 0.10.1": {
       "name": "rand_core",
-      "version": "0.9.3",
-      "package_url": "https://github.com/rust-random/rand",
+      "version": "0.10.1",
+      "package_url": "https://github.com/rust-random/rand_core",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rand_core/0.9.3/download",
-          "sha256": "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
+          "url": "https://static.crates.io/crates/rand_core/0.10.1/download",
+          "sha256": "63b8176103e19a2643978565ca18b50549f6101881c443590420e4dc998a3c69"
         }
       },
       "targets": [
@@ -17834,8 +18079,8 @@
         "compile_data_glob": [
           "**"
         ],
-        "edition": "2021",
-        "version": "0.9.3"
+        "edition": "2024",
+        "version": "0.10.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -17886,6 +18131,54 @@
         "version": "0.2.0"
       },
       "license": "MIT/Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "rand_pcg 0.10.2": {
+      "name": "rand_pcg",
+      "version": "0.10.2",
+      "package_url": "https://github.com/rust-random/rngs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rand_pcg/0.10.2/download",
+          "sha256": "caa0f4137e1c0a72f4c651489402276c8e8e1cf081f3b0ba156d2cbeef09e86a"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rand_pcg",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "rand_pcg",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rand_core 0.10.1",
+              "target": "rand_core"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.10.2"
+      },
+      "license": "MIT OR Apache-2.0",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -31196,6 +31489,7 @@
     "cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = \"linux\", any(target_endian = \"little\", any(target_arch = \"s390x\", target_arch = \"powerpc\")), any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc\"), all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"s390x\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [],
     "cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = \"linux\", any(target_endian = \"little\", target_arch = \"s390x\"), any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"s390x\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [],
     "cfg(all(target_arch = \"aarch64\", target_env = \"msvc\", not(windows_raw_dylib)))": [],
+    "cfg(all(target_arch = \"aarch64\", target_os = \"android\"))": [],
     "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [],
     "cfg(all(target_arch = \"aarch64\", target_vendor = \"apple\"))": [],
     "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [],
@@ -31220,6 +31514,9 @@
     ],
     "cfg(any())": [],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"x86_64\", target_arch = \"x86\"))": [
+      "x86_64-unknown-linux-gnu"
+    ],
+    "cfg(any(target_arch = \"x86_64\", target_arch = \"x86\"))": [
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(any(target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"hurd\", target_os = \"illumos\", target_os = \"cygwin\", all(target_os = \"horizon\", target_arch = \"arm\")))": [],

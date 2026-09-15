@@ -6,25 +6,11 @@
 
 import pytest
 
-from cmk.agent_based.v2 import (
-    CheckResult,
-    Result,
-    Service,
-    State,
-    StringTable,
-)
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.cisco_sma.agent_based.resource_conservation import (
     _check_resource_conservation,
-    _discover_resource_conservation,
     _parse_resource_conservation,
-    ResourceConservation,
 )
-
-
-def test_discover_resource_conservation() -> None:
-    assert list(_discover_resource_conservation(None)) == [Service()]
-    assert list(_discover_resource_conservation(ResourceConservation.OFF)) == [Service()]
-    assert list(_discover_resource_conservation(ResourceConservation.UNKNOWN)) == [Service()]
 
 
 @pytest.mark.parametrize(

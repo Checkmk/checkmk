@@ -8,12 +8,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.api import NodeConnectionError
 from cmk.plugins.kube.schemata.section import KubeletInfo
 
@@ -43,14 +42,10 @@ def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
     yield Result(state=State.OK, summary=f"Version {section.version}")
 
 
-def discover_kube_node_kubelet(section: KubeletInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_kube_node_kubelet = CheckPlugin(
     name="kube_node_kubelet",
     sections=["kube_node_kubelet"],
-    discovery_function=discover_kube_node_kubelet,
+    discovery_function=discover_one_service,
     check_function=check_kube_node_kubelet,
     service_name="Kubelet",
 )

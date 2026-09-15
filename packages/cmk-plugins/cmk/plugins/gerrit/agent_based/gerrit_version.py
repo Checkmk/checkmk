@@ -11,12 +11,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.gerrit.lib.schema import LatestVersion
 
 
@@ -36,10 +35,6 @@ def parse_gerrit_version(string_table: StringTable) -> VersionInfo | None:
             return VersionInfo.model_validate_json(payload)
         case _:
             return None
-
-
-def discover_gerrit_version(section: VersionInfo | None) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 class CheckParams(TypedDict):
@@ -95,7 +90,7 @@ agent_section_gerrit_version = AgentSection(
 check_plugin_gerrit_version = CheckPlugin(
     name="gerrit_version",
     service_name="Gerrit Version",
-    discovery_function=discover_gerrit_version,
+    discovery_function=discover_one_service,
     check_function=check_gerrit_version,
     check_ruleset_name="gerrit_version",
     check_default_parameters=CheckParams(

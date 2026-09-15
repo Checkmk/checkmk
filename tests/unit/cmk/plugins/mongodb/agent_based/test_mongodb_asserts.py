@@ -7,13 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, LevelsT, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, LevelsT, Metric, Result, State
 from cmk.plugins.mongodb.agent_based import asserts
-from cmk.plugins.mongodb.agent_based.asserts import (
-    _check_mongodb_asserts,
-    discover_mongodb_asserts,
-    parse_mongodb_asserts,
-)
+from cmk.plugins.mongodb.agent_based.asserts import _check_mongodb_asserts, parse_mongodb_asserts
 
 _STRING_TABLE = [
     ["msg", "2000000000"],
@@ -22,10 +18,6 @@ _STRING_TABLE = [
     ["warning", "2000000000"],
     ["user", "2000000000"],
 ]
-
-
-def test_discover_mongodb_asserts() -> None:
-    assert list(discover_mongodb_asserts(parse_mongodb_asserts(_STRING_TABLE))) == [Service()]
 
 
 @pytest.mark.parametrize(

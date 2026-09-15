@@ -9,14 +9,13 @@ from typing import TypedDict
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.apc.lib_ats import DETECT
 
 # .1.3.6.1.4.1.318.1.1.13.3.1.2.1.3.1 Power Source B Failure
@@ -29,10 +28,6 @@ class Section(TypedDict, total=True):
 
 def parse_apc_inrow_system_events(string_table: StringTable) -> Section:
     return {"events": tuple(first_word for first_word, *_rest in string_table)}
-
-
-def discover_apc_inrow_system_events(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_apc_inrow_system_events(params: Mapping[str, int], section: Section) -> CheckResult:
@@ -52,7 +47,7 @@ snmp_section_apc_inrow_system_events = SimpleSNMPSection(
 
 check_plugin_apc_inrow_system_events = CheckPlugin(
     name="apc_inrow_system_events",
-    discovery_function=discover_apc_inrow_system_events,
+    discovery_function=discover_one_service,
     check_function=check_apc_inrow_system_events,
     check_default_parameters={"state": 2},
     service_name="System events",

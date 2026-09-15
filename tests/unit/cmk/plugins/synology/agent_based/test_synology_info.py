@@ -17,13 +17,6 @@ def test_parsing() -> None:
     )
 
 
-def test_discovery() -> None:
-    section = synology_info.parse(SECTION_TABLE)
-    assert section is not None
-    services = list(synology_info.discovery(section))
-    assert len(services) == 1
-
-
 def test_result_state() -> None:
     section = synology_info.parse(SECTION_TABLE)
     assert section is not None

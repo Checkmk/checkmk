@@ -7,11 +7,10 @@ import json
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.bazel.agent_based.bazel_cache_status import (
     CacheSection,
     check_bazel_cache_status,
-    discover_bazel_cache_status,
     parse_bazel_cache_status,
 )
 
@@ -29,10 +28,6 @@ def _section() -> CacheSection:
         "uncompressed_size": 666901065728,
     }
     return parse_bazel_cache_status([[json.dumps(payload)]])
-
-
-def test_discover_bazel_cache_status(section: CacheSection) -> None:
-    assert list(discover_bazel_cache_status(section)) == [Service()]
 
 
 def test_check_bazel_cache_status(section: CacheSection) -> None:

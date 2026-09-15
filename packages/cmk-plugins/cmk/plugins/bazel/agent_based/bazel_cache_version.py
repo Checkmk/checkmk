@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -31,10 +30,6 @@ def parse_bazel_cache_version(string_table: StringTable) -> VersionSection | Non
     if "current" not in section:
         return None
     return VersionSection(section["current"], section.get("latest"))
-
-
-def discover_bazel_cache_version(section: VersionSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 agent_section_bazel_cache_version = AgentSection(
@@ -70,7 +65,7 @@ check_plugin_bazel_cache_version = CheckPlugin(
     name="bazel_cache_version",
     service_name="Bazel Cache Version",
     check_ruleset_name="bazel_version",
-    discovery_function=discover_bazel_cache_version,
+    discovery_function=discover_one_service,
     check_function=check_bazel_cache_version,
     check_default_parameters=CheckParams(
         major=State.WARN.value,

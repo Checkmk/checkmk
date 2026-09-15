@@ -11,16 +11,15 @@ from typing import Any, NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 
 
@@ -34,10 +33,6 @@ def parse_juniper_trpz_flash(string_table: StringTable) -> Section | None:
         return None
     used, total = string_table[0]
     return Section(used=float(used), total=float(total))
-
-
-def discover_juniper_trpz_flash(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_juniper_trpz_flash(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -85,7 +80,7 @@ snmp_section_juniper_trpz_flash = SimpleSNMPSection(
 check_plugin_juniper_trpz_flash = CheckPlugin(
     name="juniper_trpz_flash",
     service_name="Flash",
-    discovery_function=discover_juniper_trpz_flash,
+    discovery_function=discover_one_service,
     check_function=check_juniper_trpz_flash,
     check_ruleset_name="general_flash_usage",
     check_default_parameters={"levels": (90.0, 95.0)},

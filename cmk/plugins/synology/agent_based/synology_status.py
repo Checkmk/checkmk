@@ -9,14 +9,13 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.synology import lib as synology
 
 
@@ -54,10 +53,6 @@ snmp_section_synology_status = SimpleSNMPSection(
 )
 
 
-def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check(section: Section) -> CheckResult:
     if section.system != 1:
         yield Result(state=State.CRIT, summary="System Failure")
@@ -73,6 +68,6 @@ check_plugin_synology_status = CheckPlugin(
     name="synology_status",
     sections=["synology_status"],
     service_name="Status",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
 )

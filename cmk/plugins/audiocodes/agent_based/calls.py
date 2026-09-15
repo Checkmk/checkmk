@@ -12,15 +12,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     NoLevelsT,
     render,
-    Service,
     SNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import DETECT_AUDIOCODES
 
@@ -81,10 +80,6 @@ snmp_section_audiocodes_alarms = SNMPSection(
     ],
     parse_function=parse_audiocodes_calls,
 )
-
-
-def discover_audiocodes_calls(section: Calls) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_audiocodes_calls(
@@ -179,7 +174,7 @@ def check_audiocodes_calls_testable(
 check_plugin_audiocodes_calls = CheckPlugin(
     name="audiocodes_calls",
     service_name="SBC calls",
-    discovery_function=discover_audiocodes_calls,
+    discovery_function=discover_one_service,
     check_function=check_audiocodes_calls,
     check_ruleset_name="audiocodes_calls",
     check_default_parameters={

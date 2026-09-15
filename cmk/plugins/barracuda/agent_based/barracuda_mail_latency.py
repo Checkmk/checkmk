@@ -15,18 +15,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.barracuda.lib import DETECT_BARRACUDA
-
-
-def discover_barracuda_mail_latency(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_barracuda_mail_latency(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -60,7 +55,7 @@ snmp_section_barracuda_mail_latency = SimpleSNMPSection(
 check_plugin_barracuda_mail_latency = CheckPlugin(
     name="barracuda_mail_latency",
     service_name="Mail Latency",
-    discovery_function=discover_barracuda_mail_latency,
+    discovery_function=discover_one_service,
     check_function=check_barracuda_mail_latency,
     check_ruleset_name="mail_latency",
     check_default_parameters={

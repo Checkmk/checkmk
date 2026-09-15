@@ -3,20 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    Result,
-    Service,
-    State,
-)
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.cisco.agent_based.cisco_ucs_fault_section import Section
 from cmk.plugins.cisco.lib_ucs import check_cisco_fault
-
-
-def discover_cisco_ucs_faults(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cisco_ucs_faults(section: Section) -> CheckResult:
@@ -32,6 +22,6 @@ check_plugin_cisco_ucs_faults = CheckPlugin(
     name="cisco_ucs_faults",
     sections=["cisco_ucs_fault"],
     service_name="Cisco UCS Faults",
-    discovery_function=discover_cisco_ucs_faults,
+    discovery_function=discover_one_service,
     check_function=check_cisco_ucs_faults,
 )

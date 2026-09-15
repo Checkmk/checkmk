@@ -7,11 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.palo_alto.agent_based.palo_alto_state import (
     _STATE_MAPPING_DEFAULT,
     check,
-    discover,
     parse,
     SectionPaloAlto,
 )
@@ -45,10 +44,6 @@ _Section4 = SectionPaloAlto(
 def test_parse() -> None:
     info: StringTable = [["5.0.6", "suspended", "unknown", "active-active"]]
     assert parse(info) == _Section
-
-
-def test_discover() -> None:
-    assert list(discover(_Section)) == [Service()]
 
 
 @pytest.mark.parametrize(

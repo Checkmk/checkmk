@@ -10,10 +10,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.jenkins.agent_based.jenkins_queue import (
     check_jenkins_queue,
-    discover_jenkins_queue,
     JenkinsQueue,
     ParamsDict,
     parse_jenkins_queue,
@@ -51,10 +50,6 @@ def _section() -> JenkinsQueue:
             ]
         ]
     )
-
-
-def test_discovery(section: JenkinsQueue) -> None:
-    assert list(discover_jenkins_queue(section)) == [Service()]
 
 
 @time_machine.travel(TEST_TIME_2019)

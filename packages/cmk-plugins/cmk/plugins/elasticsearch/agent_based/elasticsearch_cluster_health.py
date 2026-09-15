@@ -34,13 +34,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 cluster_info = {
     "status": "Status",
@@ -100,10 +99,6 @@ def parse_elasticsearch_cluster_health(string_table: StringTable) -> dict[str, A
     return parsed
 
 
-def discover_elasticsearch_cluster_health(section: dict[str, Any]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_elasticsearch_cluster_health(
     params: Mapping[str, Any], section: dict[str, Any]
 ) -> CheckResult:
@@ -143,7 +138,7 @@ agent_section_elasticsearch_cluster_health = AgentSection(
 check_plugin_elasticsearch_cluster_health = CheckPlugin(
     name="elasticsearch_cluster_health",
     service_name="Elasticsearch Cluster Health",
-    discovery_function=discover_elasticsearch_cluster_health,
+    discovery_function=discover_one_service,
     check_function=check_elasticsearch_cluster_health,
     check_ruleset_name="elasticsearch_cluster_health",
     check_default_parameters={},
@@ -191,7 +186,7 @@ check_plugin_elasticsearch_cluster_health_shards = CheckPlugin(
     name="elasticsearch_cluster_health_shards",
     service_name="Elasticsearch Cluster Shards",
     sections=["elasticsearch_cluster_health"],
-    discovery_function=discover_elasticsearch_cluster_health,
+    discovery_function=discover_one_service,
     check_function=check_elasticsearch_cluster_health_shards,
     check_ruleset_name="elasticsearch_cluster_shards",
     check_default_parameters={"active_shards_percent_as_number": (100.0, 50.0)},
@@ -221,7 +216,7 @@ check_plugin_elasticsearch_cluster_health_tasks = CheckPlugin(
     name="elasticsearch_cluster_health_tasks",
     service_name="Elasticsearch Cluster Tasks",
     sections=["elasticsearch_cluster_health"],
-    discovery_function=discover_elasticsearch_cluster_health,
+    discovery_function=discover_one_service,
     check_function=check_elasticsearch_cluster_health_tasks,
     check_ruleset_name="elasticsearch_cluster_tasks",
     check_default_parameters={},

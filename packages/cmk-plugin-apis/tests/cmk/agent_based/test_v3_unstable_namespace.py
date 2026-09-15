@@ -83,6 +83,7 @@ def test_v3_unstable() -> None:
         "LevelsT",
         "clusterize",
         "contains",
+        "discover_one_service",
         "endswith",
         "equals",
         "exists",

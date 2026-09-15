@@ -14,13 +14,12 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     render,
     Result,
-    Service,
     State,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.mobileiron.lib import SourceHostSection
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
@@ -59,14 +58,10 @@ def check_mobileiron_sourcehost(params: Params, section: SourceHostSection) -> C
     )
 
 
-def discover_single(section: SourceHostSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_mobileiron_statistics = CheckPlugin(
     name="mobileiron_statistics",
     service_name="Mobileiron source host statistics",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_mobileiron_sourcehost,
     check_ruleset_name="mobileiron_statistics",
     check_default_parameters=Params(non_compliant_summary_levels=("fixed", (10.0, 20.0))),

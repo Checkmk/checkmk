@@ -6,18 +6,11 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.audiocodes.agent_based.overall_operational_state import (
     check_audiocodes_overall_operational_state,
-    discover_audiocodes_overall_operational_state,
     parse_audiocodes_overall_operational_state,
 )
-
-
-def test_discovery_function() -> None:
-    section = parse_audiocodes_overall_operational_state([["2", "0", "", "0"]])
-    assert section is not None
-    assert list(discover_audiocodes_overall_operational_state(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

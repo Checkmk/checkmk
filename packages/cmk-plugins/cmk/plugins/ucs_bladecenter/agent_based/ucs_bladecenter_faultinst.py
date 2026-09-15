@@ -12,21 +12,16 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 
 # <<<ucs_bladecenter_faultinst:sep(9)>>>
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 2 missing on server 2/3    Severity info
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 1 missing on server 2/3    Severity info
 # faultInst   Dn sys/chassis-1/bl...ault-F1256 Descr Local disk 2 missing on server 1/3    Severity info
-
-
-def discover_ucs_bladecenter_faultinst(section: ucs_bladecenter.GenericSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_ucs_bladecenter_faultinst(
@@ -73,7 +68,7 @@ agent_section_ucs_bladecenter_faultinst = AgentSection(
 check_plugin_ucs_bladecenter_faultinst = CheckPlugin(
     name="ucs_bladecenter_faultinst",
     service_name="Fault Instances Blade",
-    discovery_function=discover_ucs_bladecenter_faultinst,
+    discovery_function=discover_one_service,
     check_function=check_ucs_bladecenter_faultinst,
     check_ruleset_name="ucs_bladecenter_faultinst",
     check_default_parameters={},

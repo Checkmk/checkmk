@@ -11,6 +11,7 @@ from typing import get_args
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
 from cmk.agent_based.v1.register import RuleSetType
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
@@ -128,6 +129,12 @@ def _validate_kwargs(
         discovery_default_parameters,
     )
     validate_ruleset_type(discovery_ruleset_type)
+    if requires_item and discovery_function is discover_one_service:
+        # The service it discovers has no item, which _filter_discovery would only
+        # notice during discovery.
+        raise TypeError(
+            f"discover_one_service must not be used if the service name contains {ITEM_VARIABLE!r}"
+        )
     validate_function_arguments(
         type_label="discovery",
         function=discovery_function,

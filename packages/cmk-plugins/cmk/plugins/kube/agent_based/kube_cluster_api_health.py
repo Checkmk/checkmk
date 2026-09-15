@@ -7,21 +7,16 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import ClusterDetails
 
 
 def parse(string_table: StringTable) -> ClusterDetails:
     return ClusterDetails.model_validate_json(string_table[0][0])
-
-
-def discovery(section: ClusterDetails) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check(section: ClusterDetails) -> CheckResult:
@@ -50,6 +45,6 @@ agent_section_kube_cluster_details_v1 = AgentSection(
 check_plugin_kube_cluster_api_health = CheckPlugin(
     name="kube_cluster_api_health",
     service_name="Kubernetes API",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
 )

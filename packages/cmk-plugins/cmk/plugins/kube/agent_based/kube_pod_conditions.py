@@ -11,13 +11,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import (
     condition_detailed_description,
     condition_short_description,
@@ -31,10 +30,6 @@ from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 def parse(string_table: StringTable) -> PodConditions:
     """Parses `string_table` into a PodConditions instance"""
     return PodConditions.model_validate_json(string_table[0][0])
-
-
-def discovery(section: PodConditions) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_condition(
@@ -166,7 +161,7 @@ agent_section_kube_pod_conditions_v1 = AgentSection(
 check_plugin_kube_pod_conditions = CheckPlugin(
     name="kube_pod_conditions",
     service_name="Condition",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
     check_default_parameters={
         "scheduled": "no_levels",

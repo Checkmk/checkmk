@@ -9,14 +9,13 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.juniper.lib import DETECT_JUNIPER
 
 
@@ -74,10 +73,6 @@ snmp_section_juniper_alarm = SimpleSNMPSection(
 )
 
 
-def discover_juniper_alarm(section: JuniperAlarm) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_juniper_alarm(params: Mapping[str, int], section: JuniperAlarm) -> CheckResult:
     state_value = params.get(section.state_formatted, 3)
     summary = _STATE_MAP.get(section.state_formatted, f"unhandled alarm type '{section.state}'")
@@ -87,7 +82,7 @@ def check_juniper_alarm(params: Mapping[str, int], section: JuniperAlarm) -> Che
 check_plugin_juniper_alarm = CheckPlugin(
     name="juniper_alarm",
     service_name="Chassis",
-    discovery_function=discover_juniper_alarm,
+    discovery_function=discover_one_service,
     check_function=check_juniper_alarm,
     check_default_parameters=CHECK_DEFAULT_PARAMS,
     check_ruleset_name="juniper_alarms",

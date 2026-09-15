@@ -7,10 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.sophos.agent_based.sophos_memory import (
     check_sophos_memory,
-    discover_sophos_memory,
     Params,
     parse_sophos_memory,
 )
@@ -27,10 +26,6 @@ from cmk.plugins.sophos.agent_based.sophos_memory import (
 )
 def test_parse_sophos_memory(string_table: StringTable, expected: int | None) -> None:
     assert parse_sophos_memory(string_table) == expected
-
-
-def test_discover_sophos_memory_yields_single_service() -> None:
-    assert list(discover_sophos_memory(27)) == [Service()]
 
 
 @pytest.mark.parametrize(

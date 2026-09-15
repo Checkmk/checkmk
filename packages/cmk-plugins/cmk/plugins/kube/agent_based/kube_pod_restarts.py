@@ -11,15 +11,12 @@ from collections.abc import MutableMapping
 from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, get_value_store, Service
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, get_value_store
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import PodContainers
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
-
-
-def discovery(section: PodContainers) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 VSResultInteger = tuple[Literal["levels"], tuple[int, int]] | Literal["no_levels"]
@@ -86,7 +83,7 @@ check_plugin_kube_pod_restarts = CheckPlugin(
     name="kube_pod_restarts",
     service_name="Restarts",
     sections=["kube_pod_containers"],
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check_kube_pod_restarts,
     check_default_parameters=_DEFAULT_PARAMS,
     check_ruleset_name="kube_pod_restarts",

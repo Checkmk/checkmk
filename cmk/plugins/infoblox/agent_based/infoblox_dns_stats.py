@@ -6,12 +6,11 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.infoblox.lib import check_infoblox_statistics, DETECT_INFOBLOX
 
 
@@ -28,10 +27,6 @@ snmp_section_infoblox_dns_stats = SimpleSNMPSection(
         oids=["2", "3", "4", "5", "6", "7"],
     ),
 )
-
-
-def discover_infoblox_dns_stats(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _saveint(value: str) -> int:
@@ -65,6 +60,6 @@ def check_infoblox_dns_stats(section: StringTable) -> CheckResult:
 check_plugin_infoblox_dns_stats = CheckPlugin(
     name="infoblox_dns_stats",
     service_name="DNS statistics",
-    discovery_function=discover_infoblox_dns_stats,
+    discovery_function=discover_one_service,
     check_function=check_infoblox_dns_stats,
 )

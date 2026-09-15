@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.juniper.agent_based.juniper_trpz_flash import (
     check_juniper_trpz_flash,
-    discover_juniper_trpz_flash,
     parse_juniper_trpz_flash,
     Section,
 )
@@ -20,12 +19,6 @@ def test_parse_juniper_trpz_flash_returns_section() -> None:
     assert parse_juniper_trpz_flash([["51439616", "62900224"]]) == Section(
         used=51439616.0, total=62900224.0
     )
-
-
-def test_discover_juniper_trpz_flash() -> None:
-    assert list(discover_juniper_trpz_flash(Section(used=51439616.0, total=62900224.0))) == [
-        Service()
-    ]
 
 
 def test_check_juniper_trpz_flash_ok() -> None:

@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 from cmk.plugins.ucs_bladecenter.agent_based.ucs_bladecenter_faultinst import (
     check_ucs_bladecenter_faultinst,
-    discover_ucs_bladecenter_faultinst,
 )
 
 # Some real output to work with would be nice here instead of reverse engineering what it looks like
@@ -32,13 +31,6 @@ TABLE = [
         "Descr baz",
     ],
 ]
-
-
-def test_inventory_ucs_bladecenter_faultinst() -> None:
-    """Test discovery function for ucs_bladecenter_faultinst check."""
-    parsed = ucs_bladecenter.generic_parse(TABLE)
-    result = list(discover_ucs_bladecenter_faultinst(parsed))
-    assert result == [Service()]
 
 
 def test_check_ucs_bladecenter_faultinst() -> None:

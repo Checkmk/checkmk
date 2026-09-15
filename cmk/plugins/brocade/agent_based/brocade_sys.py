@@ -14,16 +14,15 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     equals,
     get_value_store,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 Section = Mapping[str, int]
@@ -53,10 +52,6 @@ snmp_section_brocade_sys = SimpleSNMPSection(
 )
 
 
-def discover_brocade_sys_mem(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_brocade_sys_mem(params: Mapping[str, Any], section: Section) -> CheckResult:
     levels = params["levels"]
     yield from check_levels(
@@ -71,15 +66,11 @@ check_plugin_brocade_sys_mem = CheckPlugin(
     name="brocade_sys_mem",
     service_name="Memory",
     sections=["brocade_sys"],
-    discovery_function=discover_brocade_sys_mem,
+    discovery_function=discover_one_service,
     check_function=check_brocade_sys_mem,
     check_ruleset_name="memory_relative",
     check_default_parameters={"levels": None},
 )
-
-
-def discover_brocade_sys(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_brocade_sys(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -94,7 +85,7 @@ def check_brocade_sys(params: Mapping[str, Any], section: Section) -> CheckResul
 check_plugin_brocade_sys = CheckPlugin(
     name="brocade_sys",
     service_name="CPU utilization",
-    discovery_function=discover_brocade_sys,
+    discovery_function=discover_one_service,
     check_function=check_brocade_sys,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={},

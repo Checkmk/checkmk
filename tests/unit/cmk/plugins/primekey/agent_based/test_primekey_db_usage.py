@@ -4,16 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.primekey.agent_based.primekey_db_usage import _Section, check, discover, parse
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.primekey.agent_based.primekey_db_usage import _Section, check, parse
 
 
 def test_parse() -> None:
     assert parse([["85.3"]]) == _Section(85.3)
-
-
-def test_discover() -> None:
-    assert list(discover(section=_Section(85.3))) == [Service()]
 
 
 def test_check() -> None:

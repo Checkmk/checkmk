@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.ibm.agent_based.ibm_svc_eventlog import (
     check_ibm_svc_eventlog,
-    discover_ibm_svc_eventlog,
     parse_ibm_svc_eventlog,
 )
 
@@ -72,18 +71,6 @@ _STRING_TABLE_ONE_MESSAGE = [
 ]
 
 _STRING_TABLE_EMPTY: list[list[str]] = []
-
-
-def test_discover_ibm_svc_eventlog_with_messages() -> None:
-    assert list(discover_ibm_svc_eventlog(parse_ibm_svc_eventlog(_STRING_TABLE_WITH_MESSAGES))) == [
-        Service()
-    ]
-
-
-def test_discover_ibm_svc_eventlog_empty() -> None:
-    assert list(discover_ibm_svc_eventlog(parse_ibm_svc_eventlog(_STRING_TABLE_EMPTY))) == [
-        Service()
-    ]
 
 
 def test_check_ibm_svc_eventlog_no_messages() -> None:

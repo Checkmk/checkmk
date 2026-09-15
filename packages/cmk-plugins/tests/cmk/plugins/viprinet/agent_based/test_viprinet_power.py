@@ -5,14 +5,11 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.viprinet.agent_based.viprinet_power import (
     check_viprinet_power,
-    discover_viprinet_power,
     parse_viprinet_power,
 )
-
-_STRING_TABLE = [["0"]]
 
 
 @pytest.mark.parametrize(
@@ -24,12 +21,6 @@ _STRING_TABLE = [["0"]]
 )
 def test_parse_viprinet_power_empty_values(string_table: StringTable) -> None:
     assert parse_viprinet_power(string_table) is None
-
-
-def test_discover_viprinet_power() -> None:
-    section = parse_viprinet_power(_STRING_TABLE)
-    assert section is not None
-    assert list(discover_viprinet_power(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

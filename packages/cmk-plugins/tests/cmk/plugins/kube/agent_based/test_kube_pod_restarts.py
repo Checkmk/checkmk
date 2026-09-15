@@ -116,10 +116,6 @@ def value_store(
     return {"restart_count_list": restart_count_list}
 
 
-def test_discovery_returns_single_service(section: PodContainers) -> None:
-    assert len(list(kube_pod_restarts.discovery(section))) == 1
-
-
 def test_check_yields_two_results(check_result: CheckResult) -> None:
     assert len([r for r in check_result if isinstance(r, Result)]) == 2
 

@@ -13,22 +13,16 @@ from cmk.agent_based.v2 import (
     any_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     equals,
     exists,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
-
-
-def discover_brocade_vdx_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
+from cmk.agent_based.v3_unstable import discover_one_service
 
 _VDX_STATUS_MAP = {
     1: State.OK,
@@ -75,6 +69,6 @@ snmp_section_brocade_vdx_status = SimpleSNMPSection(
 check_plugin_brocade_vdx_status = CheckPlugin(
     name="brocade_vdx_status",
     service_name="Status",
-    discovery_function=discover_brocade_vdx_status,
+    discovery_function=discover_one_service,
     check_function=check_brocade_vdx_status,
 )

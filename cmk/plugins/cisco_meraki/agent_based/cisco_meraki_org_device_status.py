@@ -23,6 +23,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
@@ -68,10 +69,6 @@ agent_section_cisco_meraki_org_device_status = AgentSection(
 )
 
 
-def discover_device_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 class CheckParamsDeviceStatus(TypedDict):
     status_map: Mapping[str, int]
     last_reported_upper_levels: SimpleLevelsConfigModel[int]
@@ -106,7 +103,7 @@ def check_device_status(params: CheckParamsDeviceStatus, section: Section) -> Ch
 check_plugin_cisco_meraki_org_device_status = CheckPlugin(
     name="cisco_meraki_org_device_status",
     service_name="Device Status",
-    discovery_function=discover_device_status,
+    discovery_function=discover_one_service,
     check_function=check_device_status,
     check_default_parameters=CheckParamsDeviceStatus(
         status_map=_DEFAULT_STATUS_MAP,

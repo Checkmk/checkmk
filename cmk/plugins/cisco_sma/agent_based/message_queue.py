@@ -14,15 +14,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 from .detect import DETECT_CISCO_SMA
@@ -119,14 +118,10 @@ def _check_message_queue(params: Params, section: Queue) -> CheckResult:
     )
 
 
-def _discover_message_queue(section: Queue) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_message_queue = CheckPlugin(
     name="cisco_sma_message_queue",
     service_name="Queue",
-    discovery_function=_discover_message_queue,
+    discovery_function=discover_one_service,
     check_function=_check_message_queue,
     check_ruleset_name="cisco_sma_message_queue",
     check_default_parameters=Params(

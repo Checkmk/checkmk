@@ -5,22 +5,13 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.cisco_sma.agent_based.mail_transfer_memory import (
     _check_mail_transfer_memory,
-    _discover_mail_transfer_memory,
     _parse_mail_transfer_memory,
     MailTransferMemoryStatus,
     Params,
 )
-
-
-def test_discover_mail_transfer_memory() -> None:
-    assert list(
-        _discover_mail_transfer_memory(
-            MailTransferMemoryStatus.memory_available,
-        )
-    ) == [Service()]
 
 
 @pytest.mark.parametrize(

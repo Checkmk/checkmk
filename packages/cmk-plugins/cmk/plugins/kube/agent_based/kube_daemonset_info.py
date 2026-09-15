@@ -8,10 +8,9 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import check_with_time
 from cmk.plugins.kube.kube_info import check_info, host_labels
 from cmk.plugins.kube.schemata.section import DaemonSetInfo
@@ -44,10 +43,6 @@ agent_section_kube_daemonset_info_v1 = AgentSection[DaemonSetInfo](
 )
 
 
-def discovery(section: DaemonSetInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_kube_daemonset_info(now: float, section: DaemonSetInfo) -> CheckResult:
     yield from check_info(
         {
@@ -61,6 +56,6 @@ def check_kube_daemonset_info(now: float, section: DaemonSetInfo) -> CheckResult
 check_plugin_kube_daemonset_info = CheckPlugin(
     name="kube_daemonset_info",
     service_name="Info",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check_with_time(check_kube_daemonset_info),
 )

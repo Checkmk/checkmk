@@ -9,12 +9,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 _Section = Mapping[str, object]
 
@@ -65,10 +64,6 @@ agent_section_sshd_config = AgentSection(
     name="sshd_config",
     parse_function=parse_sshd_config,
 )
-
-
-def discover_sshd_config(section: _Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 _OPTIONS_TO_HUMAN_READABLE = {
@@ -141,7 +136,7 @@ def check_sshd_config(params: Mapping[str, object], section: _Section) -> CheckR
 check_plugin_sshd_config = CheckPlugin(
     name="sshd_config",
     service_name="SSH daemon configuration",
-    discovery_function=discover_sshd_config,
+    discovery_function=discover_one_service,
     check_function=check_sshd_config,
     check_ruleset_name="sshd_config",
     check_default_parameters={},

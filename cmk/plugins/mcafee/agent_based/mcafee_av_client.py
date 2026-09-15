@@ -14,11 +14,10 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_mcafee_av_client(string_table: StringTable) -> float:
@@ -45,10 +44,6 @@ agent_section_mcafee_av_client = AgentSection(
 )
 
 
-def discover_mcafee_av_client(section: float) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_mcafee_av_client(params: Mapping[str, Any], section: float) -> CheckResult:
     yield from check_levels_v1(
         time.time() - section,
@@ -61,7 +56,7 @@ def check_mcafee_av_client(params: Mapping[str, Any], section: float) -> CheckRe
 check_plugin_mcafee_av_client = CheckPlugin(
     name="mcafee_av_client",
     service_name="McAfee AV",
-    discovery_function=discover_mcafee_av_client,
+    discovery_function=discover_one_service,
     check_function=check_mcafee_av_client,
     check_ruleset_name="mcafee_av_client",
     check_default_parameters={

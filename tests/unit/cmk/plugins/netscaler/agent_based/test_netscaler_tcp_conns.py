@@ -4,16 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.netscaler.agent_based.netscaler_tcp_conns import check, discover, parse, Section
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.netscaler.agent_based.netscaler_tcp_conns import check, parse, Section
 
 
 def test_parse() -> None:
     assert Section(server_conns=39, client_conns=22) == parse([["39", "22"]])
-
-
-def test_discover() -> None:
-    assert [Service()] == list(discover(Section(server_conns=39, client_conns=22)))
 
 
 def test_check() -> None:

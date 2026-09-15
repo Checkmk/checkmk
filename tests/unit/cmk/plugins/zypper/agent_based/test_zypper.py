@@ -6,15 +6,8 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.zypper.agent_based import zypper
-
-
-@pytest.mark.parametrize("string_table", [None])
-def test_zypper_discover(string_table: zypper.Section) -> None:
-    services = list(zypper.discover_zypper(string_table))
-    assert len(services) == 1
-    assert services[0] == Service()
 
 
 @pytest.mark.parametrize(

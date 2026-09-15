@@ -13,10 +13,9 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_sansymphony_alerts(string_table: StringTable) -> StringTable:
@@ -27,10 +26,6 @@ agent_section_sansymphony_alerts = AgentSection(
     name="sansymphony_alerts",
     parse_function=parse_sansymphony_alerts,
 )
-
-
-def discover_sansymphony_alerts(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_sansymphony_alerts(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -48,7 +43,7 @@ def check_sansymphony_alerts(params: Mapping[str, Any], section: StringTable) ->
 check_plugin_sansymphony_alerts = CheckPlugin(
     name="sansymphony_alerts",
     service_name="sansymphony Alerts",
-    discovery_function=discover_sansymphony_alerts,
+    discovery_function=discover_one_service,
     check_function=check_sansymphony_alerts,
     check_ruleset_name="sansymphony_alerts",
     check_default_parameters={

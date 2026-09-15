@@ -10,28 +10,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.time.agent_based.systemtime import (
-    check_systemtime,
-    discover_systemtime,
-    Params,
-    parse_systemtime,
-)
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        ([["1593509210"]], [Service()]),
-    ],
-)
-def test_discover_systemtime(
-    string_table: StringTable, expected_discoveries: Sequence[Service]
-) -> None:
-    """Test discovery function for systemtime check."""
-    parsed = parse_systemtime(string_table)
-    result = list(discover_systemtime(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.plugins.time.agent_based.systemtime import check_systemtime, Params, parse_systemtime
 
 
 @pytest.mark.parametrize(

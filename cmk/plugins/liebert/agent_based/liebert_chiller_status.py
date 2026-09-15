@@ -6,19 +6,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
-
-
-def discover_liebert_chiller_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_liebert_chiller_status(section: StringTable) -> CheckResult:
@@ -45,6 +40,6 @@ snmp_section_liebert_chiller_status = SimpleSNMPSection(
 check_plugin_liebert_chiller_status = CheckPlugin(
     name="liebert_chiller_status",
     service_name="Chiller status",
-    discovery_function=discover_liebert_chiller_status,
+    discovery_function=discover_one_service,
     check_function=check_liebert_chiller_status,
 )

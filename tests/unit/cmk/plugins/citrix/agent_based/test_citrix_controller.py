@@ -14,7 +14,6 @@ from cmk.plugins.citrix.agent_based.citrix_controller import (
     check_citrix_controller_sessions,
     DesktopParams,
     discovery_citrix_controller,
-    discovery_citrix_controller_licensing,
     discovery_citrix_controller_registered,
     discovery_citrix_controller_services,
     discovery_citrix_controller_sessions,
@@ -116,10 +115,6 @@ def fixture_section(request: pytest.FixtureRequest) -> Section:
 
 def test_discovery_controller(section: Section) -> None:
     assert list(discovery_citrix_controller(section))
-
-
-def test_discovery_controller_licensing(section: Section) -> None:
-    assert list(discovery_citrix_controller_licensing(section))
 
 
 def test_discovery_controller_registered(section: Section) -> None:

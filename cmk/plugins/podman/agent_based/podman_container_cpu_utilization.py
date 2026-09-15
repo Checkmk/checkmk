@@ -7,22 +7,11 @@
 import time
 from collections.abc import Mapping, MutableMapping
 
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    get_value_store,
-    Service,
-)
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, get_value_store
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 from .lib import SectionPodmanContainerStats
-
-
-def discover_podman_container_cpu_utilization(
-    section: SectionPodmanContainerStats,  # noqa: ARG001
-) -> DiscoveryResult:
-    yield Service()
 
 
 def check_podman_container_cpu_utilization(
@@ -54,7 +43,7 @@ check_plugin_podman_container_cpu_utilization = CheckPlugin(
     name="podman_container_cpu_utilization",
     service_name="CPU utilization",
     sections=["podman_container_stats"],
-    discovery_function=discover_podman_container_cpu_utilization,
+    discovery_function=discover_one_service,
     check_function=check_podman_container_cpu_utilization,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={

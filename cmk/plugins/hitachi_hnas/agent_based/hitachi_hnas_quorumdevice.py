@@ -6,14 +6,13 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.hitachi_hnas.lib import DETECT
 
 _STATUS_MAP = (
@@ -30,10 +29,6 @@ _STATUS_MAP = (
 
 def parse_hitachi_hnas_quorumdevice(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_hitachi_hnas_quorumdevice(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_hitachi_hnas_quorumdevice(section: StringTable) -> CheckResult:
@@ -64,6 +59,6 @@ snmp_section_hitachi_hnas_quorumdevice = SimpleSNMPSection(
 check_plugin_hitachi_hnas_quorumdevice = CheckPlugin(
     name="hitachi_hnas_quorumdevice",
     service_name="Quorum Device",
-    discovery_function=discover_hitachi_hnas_quorumdevice,
+    discovery_function=discover_one_service,
     check_function=check_hitachi_hnas_quorumdevice,
 )

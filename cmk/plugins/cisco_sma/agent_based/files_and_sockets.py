@@ -10,12 +10,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 from .detect import DETECT_CISCO_SMA
@@ -37,14 +36,10 @@ def _check_files_and_sockets(params: Params, section: int) -> CheckResult:
     )
 
 
-def _discover_files_and_sockets(section: int) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_files_and_sockets = CheckPlugin(
     name="cisco_sma_files_and_sockets",
     service_name="Files and sockets",
-    discovery_function=_discover_files_and_sockets,
+    discovery_function=discover_one_service,
     check_function=_check_files_and_sockets,
     check_ruleset_name="cisco_sma_files_and_sockets",
     check_default_parameters=Params(

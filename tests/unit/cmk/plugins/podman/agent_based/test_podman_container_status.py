@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Result, State
 from cmk.plugins.podman.agent_based.lib import (
     ContainerHealth,
     ContainerHealthcheck,
@@ -19,7 +19,6 @@ from cmk.plugins.podman.agent_based.lib import (
 from cmk.plugins.podman.agent_based.podman_container_status import (
     check_podman_container_status,
     DEFAULT_CHECK_PARAMETERS,
-    discover_podman_container_status,
     Params,
 )
 
@@ -86,10 +85,6 @@ SECTION_EXITED_WITH_NON_ZERO = SectionPodmanContainerInspect(
     RestartCount=5,
     Pod="Pod1",
 )
-
-
-def test_discover_podman_container_status() -> None:
-    assert list(discover_podman_container_status(SECTION_RUNNING)) == [Service()]
 
 
 @pytest.mark.parametrize(

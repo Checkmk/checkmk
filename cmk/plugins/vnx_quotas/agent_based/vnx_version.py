@@ -7,12 +7,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_vnx_version(string_table: StringTable) -> StringTable:
@@ -25,10 +24,6 @@ agent_section_vnx_version = AgentSection(
 )
 
 
-def discover_vnx_version(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_vnx_version(section: StringTable) -> CheckResult:
     for line in section:
         yield Result(state=State.OK, summary=f"{line[0]}: {line[1]}")
@@ -37,6 +32,6 @@ def check_vnx_version(section: StringTable) -> CheckResult:
 check_plugin_vnx_version = CheckPlugin(
     name="vnx_version",
     service_name="VNX Version",
-    discovery_function=discover_vnx_version,
+    discovery_function=discover_one_service,
     check_function=check_vnx_version,
 )

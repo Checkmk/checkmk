@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -38,10 +37,6 @@ def parse(string_table: StringTable) -> _ExceptionSection:
 
 
 agent_section_gcp_exceptions = AgentSection(name="gcp_exceptions", parse_function=parse)
-
-
-def discover(section: _ExceptionSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _parse_gcp_links(links_message: str) -> Sequence[str]:
@@ -98,6 +93,6 @@ def check(section: _ExceptionSection) -> CheckResult:
 check_plugin_gcp_exceptions = CheckPlugin(
     name="gcp_exceptions",
     service_name="Exceptions",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
 )

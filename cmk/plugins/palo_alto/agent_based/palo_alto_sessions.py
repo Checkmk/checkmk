@@ -8,20 +8,15 @@ from collections.abc import Mapping
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
-
-
-def discover_palo_alto_sessions(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_palo_alto_sessions(
@@ -74,7 +69,7 @@ snmp_section_palo_alto_sessions = SimpleSNMPSection(
 check_plugin_palo_alto_sessions = CheckPlugin(
     name="palo_alto_sessions",
     service_name="Palo Alto Sessions",
-    discovery_function=discover_palo_alto_sessions,
+    discovery_function=discover_one_service,
     check_function=check_palo_alto_sessions,
     check_ruleset_name="palo_alto_sessions",
     check_default_parameters={

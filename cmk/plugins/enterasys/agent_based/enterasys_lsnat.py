@@ -13,14 +13,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def _saveint(i: str) -> int:
@@ -38,10 +37,6 @@ def _saveint(i: str) -> int:
 
 def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_enterasys_lsnat(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_enterasys_lsnat(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -75,7 +70,7 @@ snmp_section_enterasys_lsnat = SimpleSNMPSection(
 check_plugin_enterasys_lsnat = CheckPlugin(
     name="enterasys_lsnat",
     service_name="LSNAT Bindings",
-    discovery_function=discover_enterasys_lsnat,
+    discovery_function=discover_one_service,
     check_function=check_enterasys_lsnat,
     check_ruleset_name="lsnat",
     check_default_parameters={

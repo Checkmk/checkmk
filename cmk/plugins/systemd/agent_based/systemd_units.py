@@ -28,6 +28,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 # <<<systemd_units>>>
 #   UNIT                                   LOAD   ACTIVE SUB    DESCRIPTION
@@ -848,14 +849,6 @@ check_plugin_systemd_units_sockets = CheckPlugin(
 )
 
 
-def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
-def discovery_systemd_units_sockets_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def _services_split(
     services: Iterable[UnitEntry], blacklist: Sequence[str]
 ) -> Mapping[str, list[UnitEntry]]:
@@ -1008,7 +1001,7 @@ CHECK_DEFAULT_PARAMETERS_SUMMARY = {
 check_plugin_systemd_units_services_summary = CheckPlugin(
     name="systemd_units_services_summary",
     sections=["systemd_units"],
-    discovery_function=discovery_systemd_units_services_summary,
+    discovery_function=discover_one_service,
     check_function=check_systemd_units_services_summary,
     check_ruleset_name="systemd_services_summary",
     service_name="Systemd Service Summary",
@@ -1018,7 +1011,7 @@ check_plugin_systemd_units_services_summary = CheckPlugin(
 check_plugin_systemd_units_sockets_summary = CheckPlugin(
     name="systemd_units_sockets_summary",
     sections=["systemd_units"],
-    discovery_function=discovery_systemd_units_sockets_summary,
+    discovery_function=discover_one_service,
     check_function=check_systemd_units_sockets_summary,
     check_ruleset_name="systemd_sockets_summary",
     service_name="Systemd Socket Summary",

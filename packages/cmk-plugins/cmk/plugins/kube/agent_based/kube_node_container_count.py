@@ -11,10 +11,9 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import ContainerCount
 
 OptionalLevels = Literal["no_levels"] | tuple[Literal["levels"], tuple[int, int]]
@@ -25,10 +24,6 @@ CountName = Literal["running", "waiting", "terminated", "total"]
 def parse(string_table: StringTable) -> ContainerCount:
     """Parses running, waiting and terminated containers into ContainerCount"""
     return ContainerCount.model_validate_json(string_table[0][0])
-
-
-def discovery(section: ContainerCount) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check(params: KubeContainersLevelsUpperLower, section: ContainerCount) -> CheckResult:
@@ -67,7 +62,7 @@ agent_section_kube_node_container_count_v1 = AgentSection(
 check_plugin_kube_node_container_count = CheckPlugin(
     name="kube_node_container_count",
     service_name="Containers",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
     check_ruleset_name="kube_node_container_count",
     check_default_parameters={},

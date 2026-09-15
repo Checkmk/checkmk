@@ -10,14 +10,13 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD_CLUSTER
 
 sync_name_mapping = {
@@ -33,10 +32,6 @@ sync_status_mapping = {
     "-1": State.UNKNOWN,
     "": State.UNKNOWN,
 }
-
-
-def discover_stormshield_cluster(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_stormshield_cluster(section: StringTable) -> CheckResult:
@@ -76,6 +71,6 @@ snmp_section_stormshield_cluster = SimpleSNMPSection(
 check_plugin_stormshield_cluster = CheckPlugin(
     name="stormshield_cluster",
     service_name="HA Status",
-    discovery_function=discover_stormshield_cluster,
+    discovery_function=discover_one_service,
     check_function=check_stormshield_cluster,
 )

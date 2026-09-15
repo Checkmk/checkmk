@@ -31,6 +31,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.vsphere.lib.esx_vsphere_objects import (
     ObjectCountParamsMapping,
     ObjectDiscoveryParams,
@@ -127,10 +128,6 @@ check_plugin_esx_vsphere_objects = CheckPlugin(
 )
 
 
-def discovery_esx_vsphere_objects_count(section: ParsedSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_esx_vsphere_objects_count(
     params: ObjectCountParamsMapping, section: ParsedSection
 ) -> CheckResult:
@@ -169,7 +166,7 @@ check_plugin_esx_vsphere_objects_count = CheckPlugin(
     name="esx_vsphere_objects_count",
     service_name="Object count",
     sections=["esx_vsphere_objects"],
-    discovery_function=discovery_esx_vsphere_objects_count,
+    discovery_function=discover_one_service,
     check_function=check_esx_vsphere_objects_count,
     check_ruleset_name="esx_vsphere_objects_count",
     check_default_parameters={

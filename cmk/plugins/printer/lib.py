@@ -9,16 +9,7 @@
 """
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import (
-    all_of,
-    any_of,
-    CheckResult,
-    contains,
-    DiscoveryResult,
-    exists,
-    Service,
-    startswith,
-)
+from cmk.agent_based.v2 import all_of, any_of, CheckResult, contains, exists, startswith
 
 Section = dict[str, int]
 
@@ -133,10 +124,6 @@ PRINTER_PAGES_TYPES = {
     "pages_color_a3": "color A3",
     "pages_bw_a3": "b/w A3",
 }
-
-
-def discovery_printer_pages(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_printer_pages_types(section: Section) -> CheckResult:

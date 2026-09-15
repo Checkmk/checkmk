@@ -15,17 +15,16 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class Section(NamedTuple):
@@ -61,10 +60,6 @@ snmp_section_globalprotect_utilization = SimpleSNMPSection(
         ],
     ),
 )
-
-
-def discover_globalprotect_utilization(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_levels(
@@ -119,7 +114,7 @@ def check_globalprotect_utilization(params: Mapping[str, Any], section: Section)
 check_plugin_globalprotect_utilization = CheckPlugin(
     name="globalprotect_utilization",
     service_name="GlobalProtect Gateway Utilization",
-    discovery_function=discover_globalprotect_utilization,
+    discovery_function=discover_one_service,
     check_function=check_globalprotect_utilization,
     check_ruleset_name="globalprotect_utilization",
     check_default_parameters={},

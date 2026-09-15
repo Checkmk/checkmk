@@ -7,6 +7,7 @@ import typing
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.citrix.lib_controller import Error, Section, Session
 
 
@@ -33,10 +34,6 @@ check_plugin_citrix_controller = CheckPlugin(
     check_function=check_citrix_controller,
     service_name="Citrix Controller State",
 )
-
-
-def discovery_citrix_controller_licensing(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 SERVER_STATES: typing.Final = {
@@ -72,7 +69,7 @@ def check_citrix_controller_licensing(section: Section) -> CheckResult:
 check_plugin_citrix_controller_licensing = CheckPlugin(
     name="citrix_controller_licensing",
     sections=["citrix_controller"],
-    discovery_function=discovery_citrix_controller_licensing,
+    discovery_function=discover_one_service,
     check_function=check_citrix_controller_licensing,
     service_name="Citrix Controller Licensing",
 )

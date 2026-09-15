@@ -12,13 +12,12 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fortinet.lib import DETECT_FORTISANDBOX
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
@@ -35,10 +34,6 @@ def parse_fortisandbox_cpu_util(string_table: StringTable) -> Section | None:
         return int(string_table[0][0])
     except IndexError, ValueError:
         return None
-
-
-def discover_fortisandbox_cpu_util(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortisandbox_cpu_util(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -64,7 +59,7 @@ snmp_section_fortisandbox_cpu_util = SimpleSNMPSection(
 check_plugin_fortisandbox_cpu_util = CheckPlugin(
     name="fortisandbox_cpu_util",
     service_name="CPU utilization",
-    discovery_function=discover_fortisandbox_cpu_util,
+    discovery_function=discover_one_service,
     check_function=check_fortisandbox_cpu_util,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={},

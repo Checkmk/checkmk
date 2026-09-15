@@ -7,7 +7,7 @@
 import pytest
 
 import cmk.plugins.fireeye.agent_based.fireeye_sys_status as fss
-from cmk.agent_based.v2 import Attributes, Result, Service, State
+from cmk.agent_based.v2 import Attributes, Result, State
 
 
 @pytest.fixture(name="section", scope="module")
@@ -19,10 +19,6 @@ def _get_section() -> fss.Section:
 
 def test_parse_nothing() -> None:
     assert fss.parse_fireeye_sys_status([]) is None
-
-
-def test_discovery(section: fss.Section) -> None:
-    assert list(fss.discover_fireeye_sys_status(section)) == [Service()]
 
 
 def test_check_ok(section: fss.Section) -> None:

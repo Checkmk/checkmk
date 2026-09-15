@@ -5,10 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.pure_storage_fa.agent_based.pure_storage_fa_alerts import (
     check_internal_alerts,
-    discover_internal_alerts,
     InternalAlerts,
     parse_alerts,
 )
@@ -45,21 +44,6 @@ ALERTS = InternalAlerts(
 )
 def test_parse_alerts(string_table: StringTable, expected_section: InternalAlerts) -> None:
     assert parse_alerts(string_table) == expected_section
-
-
-@pytest.mark.parametrize(
-    "section, expected_services",
-    [
-        (
-            ALERTS,
-            [Service()],
-        )
-    ],
-)
-def test_discover_internal_alerts(
-    section: InternalAlerts, expected_services: DiscoveryResult
-) -> None:
-    assert list(discover_internal_alerts(section)) == expected_services
 
 
 @pytest.mark.parametrize(

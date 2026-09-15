@@ -13,17 +13,16 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib import ucd_hr_detection
 from cmk.plugins.lib.cpu_util import check_cpu_util_unix, CPUInfo
 
@@ -90,10 +89,6 @@ def parse_ucd_cpu_util(string_table: StringTable) -> Section | None:
     return Section(error=error or None, cpu_ticks=cpu_ticks, io=io)
 
 
-def discover_ucd_cpu_util(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_ucd_cpu_util(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from check_ucd_cpu_util_with_context(params, section, time.time(), get_value_store())
 
@@ -136,7 +131,7 @@ snmp_section_ucd_cpu_util = SimpleSNMPSection(
 check_plugin_ucd_cpu_util = CheckPlugin(
     name="ucd_cpu_util",
     service_name="CPU utilization",
-    discovery_function=discover_ucd_cpu_util,
+    discovery_function=discover_one_service,
     check_function=check_ucd_cpu_util,
     check_ruleset_name="cpu_iowait",
     check_default_parameters={},

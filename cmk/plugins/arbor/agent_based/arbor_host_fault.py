@@ -6,14 +6,13 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import DETECT_PEAKFLOW_TMS, DETECT_PRAVAIL
 
@@ -44,10 +43,6 @@ snmp_section_arbor_pravail_host_fault = SimpleSNMPSection(
 )
 
 
-def discover_arbor_host_fault(section: str) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_arbor_host_fault(section: str) -> CheckResult:
     yield Result(state=State.OK if section == "No Fault" else State.CRIT, summary=section)
 
@@ -55,7 +50,7 @@ def check_arbor_host_fault(section: str) -> CheckResult:
 check_plugin_arbor_peakflow_tms_host_fault = CheckPlugin(
     name="arbor_peakflow_tms_host_fault",
     service_name="Host Fault",
-    discovery_function=discover_arbor_host_fault,
+    discovery_function=discover_one_service,
     check_function=check_arbor_host_fault,
 )
 
@@ -63,6 +58,6 @@ check_plugin_arbor_peakflow_tms_host_fault = CheckPlugin(
 check_plugin_arbor_pravail_host_fault = CheckPlugin(
     name="arbor_pravail_host_fault",
     service_name="Host Fault",
-    discovery_function=discover_arbor_host_fault,
+    discovery_function=discover_one_service,
     check_function=check_arbor_host_fault,
 )

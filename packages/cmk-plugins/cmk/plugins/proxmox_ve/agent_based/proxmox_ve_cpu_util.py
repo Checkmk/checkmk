@@ -15,14 +15,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_average,
     get_value_store,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
@@ -41,10 +40,6 @@ def parse_proxmox_ve_cpu_util(string_table: StringTable) -> Section:
         cpu=float(data["cpu"]),
         uptime=int(data["uptime"]),
     )
-
-
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_proxmox_ve_cpu_util(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -95,7 +90,7 @@ agent_section_proxmox_ve_cpu_util = AgentSection(
 check_plugin_proxmox_ve_cpu_util = CheckPlugin(
     name="proxmox_ve_cpu_util",
     service_name="Proxmox VE CPU Utilization",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_cpu_util,
     check_ruleset_name="proxmox_ve_cpu_util",
     check_default_parameters={"util": ("fixed", (90.0, 95.0))},

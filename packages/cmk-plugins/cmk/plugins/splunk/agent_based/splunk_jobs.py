@@ -18,14 +18,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 FAILED_DISPATCH_STATE = "FAILED"
 """The dispatch state that determines whether a job failed."""
@@ -103,11 +102,6 @@ def parse_splunk_jobs(string_table: StringTable) -> JobsInfo:
     return JobsInfo(jobs=tuple(jobs), meta=JobsMetaInfo.from_jobs(jobs))
 
 
-def discover_splunk_jobs(section: JobsInfo) -> DiscoveryResult:  # noqa: ARG001
-    """Runs empty discovery since there is only a single service."""
-    yield Service()
-
-
 type IntLevels = FixedLevelsT[int]
 """Fixed warn and critical integer threshold."""
 
@@ -163,7 +157,7 @@ agent_section_splunk_jobs = AgentSection(
 check_plugin_splunk_jobs = CheckPlugin(
     name="splunk_jobs",
     service_name="Splunk Jobs",
-    discovery_function=discover_splunk_jobs,
+    discovery_function=discover_one_service,
     check_function=check_splunk_jobs,
     check_ruleset_name="splunk_jobs",
     check_default_parameters=CheckParams(),

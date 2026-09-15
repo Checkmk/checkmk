@@ -6,18 +6,13 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     IgnoreResultsError,
     Metric,
     Result,
-    Service,
     State,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.vsphere.lib import esx_vsphere
-
-
-def discover_cpu(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cpu(section: esx_vsphere.SectionESXVm) -> CheckResult:
@@ -35,6 +30,6 @@ check_plugin_esx_vsphere_vm_cpu = CheckPlugin(
     name="esx_vsphere_vm_cpu",
     sections=["esx_vsphere_vm"],
     service_name="ESX CPU",
-    discovery_function=discover_cpu,
+    discovery_function=discover_one_service,
     check_function=check_cpu,
 )

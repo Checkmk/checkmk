@@ -25,6 +25,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # <<<siemens_plc>>>
@@ -312,10 +313,6 @@ check_plugin_siemens_plc_info = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_cpu_state(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_siemens_plc_cpu_state(section: StringTable) -> CheckResult:
     try:
         state = section[0][0]
@@ -344,6 +341,6 @@ agent_section_siemens_plc_cpu_state = AgentSection(
 check_plugin_siemens_plc_cpu_state = CheckPlugin(
     name="siemens_plc_cpu_state",
     service_name="CPU state",
-    discovery_function=discover_siemens_plc_cpu_state,
+    discovery_function=discover_one_service,
     check_function=check_siemens_plc_cpu_state,
 )

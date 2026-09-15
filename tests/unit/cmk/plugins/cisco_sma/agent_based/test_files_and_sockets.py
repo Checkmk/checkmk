@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.cisco_sma.agent_based.files_and_sockets import (
     _check_files_and_sockets,
-    _discover_files_and_sockets,
     _parse_files_and_sockets,
     Params,
 )
-
-
-def test_discover_files_and_sockets() -> None:
-    assert list(_discover_files_and_sockets(100)) == [Service()]
 
 
 def test_check_files_and_sockets_with_no_levels() -> None:

@@ -9,11 +9,10 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 _AWS_CLOUDWATCH_ALARM_STATES: Final[Mapping[str, State]] = {
@@ -29,10 +28,6 @@ _AWS_CLOUDWATCH_ALARM_TEXTS: Final[Mapping[str, str]] = {
     "alarm": "alarm",
     "insufficient_data": "insufficient data",
 }
-
-
-def discover_aws_cloudwatch_alarms(section: GenericAWSSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _make_result(alarm_state: str, alarm_name: str) -> Result:
@@ -58,6 +53,6 @@ agent_section_aws_cloudwatch_alarms = AgentSection(
 check_plugin_aws_cloudwatch_alarms = CheckPlugin(
     name="aws_cloudwatch_alarms",
     service_name="AWS/CloudWatch Alarms",
-    discovery_function=discover_aws_cloudwatch_alarms,
+    discovery_function=discover_one_service,
     check_function=check_aws_cloudwatch_alarms,
 )

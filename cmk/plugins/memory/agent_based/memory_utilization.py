@@ -4,14 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import TypedDict
 
-from cmk.agent_based.v2 import (
-    check_levels,
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    render,
-    Service,
-)
+from cmk.agent_based.v2 import check_levels, CheckPlugin, CheckResult, render
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
@@ -29,14 +23,10 @@ def _check_memory_utilization(params: Params, section: float) -> CheckResult:
     )
 
 
-def _discover_memory_utilization(section: float) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_memory_utilization = CheckPlugin(
     name="memory_utilization",
     service_name="Memory",
-    discovery_function=_discover_memory_utilization,
+    discovery_function=discover_one_service,
     check_function=_check_memory_utilization,
     check_ruleset_name="memory_percentage_used",
     check_default_parameters=Params(levels=("fixed", (70.0, 80.0))),

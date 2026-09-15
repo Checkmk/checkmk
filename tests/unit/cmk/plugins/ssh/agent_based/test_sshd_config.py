@@ -7,12 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.ssh.agent_based.sshd_config import (
-    check_sshd_config,
-    discover_sshd_config,
-    parse_sshd_config,
-)
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
+from cmk.plugins.ssh.agent_based.sshd_config import check_sshd_config, parse_sshd_config
 
 _STRING_TABLE_UP_TO_DATE = [
     ["port", "22"],
@@ -190,17 +186,6 @@ _STRING_TABLE_DEPRECATED = [
     ["PermitUserEnvironment", "yes"],
     ["Ciphers", "aes128-ctr,aes192-ctr,aes256-ctr"],
 ]
-
-
-@pytest.mark.parametrize(
-    ["string_table"],
-    [
-        pytest.param(_STRING_TABLE_UP_TO_DATE),
-        pytest.param(_STRING_TABLE_DEPRECATED),
-    ],
-)
-def test_discovery(string_table: StringTable) -> None:
-    assert list(discover_sshd_config(parse_sshd_config(string_table))) == [Service()]
 
 
 @pytest.mark.parametrize(

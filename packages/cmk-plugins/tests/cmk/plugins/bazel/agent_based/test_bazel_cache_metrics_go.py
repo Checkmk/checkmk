@@ -10,10 +10,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.bazel.agent_based.bazel_cache_metrics_go import (
     check_bazel_cache_go,
-    discover_bazel_cache,
     parse_bazel_cache_go,
     Section,
 )
@@ -61,10 +60,6 @@ def _section() -> Section:
         "go_threads": "205",
     }
     return parse_bazel_cache_go([[json.dumps(payload)]])
-
-
-def test_discover_bazel_cache(section: Section) -> None:
-    assert list(discover_bazel_cache(section)) == [Service()]
 
 
 @time_machine.travel(TEST_TIME_2024)

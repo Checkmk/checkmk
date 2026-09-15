@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     render,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
 # <<<graylog_jvm>>>
@@ -51,10 +50,6 @@ def parse_graylog_jvm(string_table: StringTable) -> GraylogJvmSection | None:
             return None
 
 
-def discover_graylog_jvm(section: GraylogJvmSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_graylog_jvm(params: GraylogJvmParams, section: GraylogJvmSection) -> CheckResult:
     for key, value, metric_name, levels_upper in [
         ("used", section.used, "mem_heap", params["used"]),
@@ -78,7 +73,7 @@ agent_section_graylog_jvm = AgentSection(
 check_plugin_graylog_jvm = CheckPlugin(
     name="graylog_jvm",
     service_name="Graylog JVM",
-    discovery_function=discover_graylog_jvm,
+    discovery_function=discover_one_service,
     check_function=check_graylog_jvm,
     check_ruleset_name="graylog_jvm",
     check_default_parameters={

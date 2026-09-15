@@ -13,11 +13,10 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 Utilization = NewType("Utilization", int)
@@ -29,10 +28,6 @@ def parse_innovaphone_cpu(string_table: StringTable) -> Utilization | None:
             return Utilization(int(value))
         case _:
             return None
-
-
-def discover_innovaphone_cpu(section: Utilization) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_innovaphone_cpu(params: Mapping[str, Any], section: Utilization) -> CheckResult:
@@ -53,7 +48,7 @@ agent_section_innovaphone_cpu = AgentSection(
 check_plugin_innovaphone_cpu = CheckPlugin(
     name="innovaphone_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_innovaphone_cpu,
+    discovery_function=discover_one_service,
     check_function=check_innovaphone_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},

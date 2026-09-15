@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class Param(TypedDict):
@@ -65,10 +64,6 @@ def parse_zypper(string_table: StringTable) -> Section:
     return ZypperUpdates(patch_types=patch_types, locks=locks)
 
 
-def discover_zypper(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_zypper(params: Param, section: Section) -> CheckResult:
     if isinstance(section, Error):
         yield Result(state=State.UNKNOWN, summary=section)
@@ -90,7 +85,7 @@ agent_section_zypper = AgentSection(
 check_plugin_zypper = CheckPlugin(
     name="zypper",
     service_name="Zypper Updates",
-    discovery_function=discover_zypper,
+    discovery_function=discover_one_service,
     check_function=check_zypper,
     check_ruleset_name="zypper",
     check_default_parameters=DEFAULT_PARAMS,

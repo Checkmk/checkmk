@@ -14,16 +14,15 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     exists,
     get_value_store,
     not_exists,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 Section = StringTable
@@ -31,10 +30,6 @@ Section = StringTable
 
 def parse_fortigate_cpu(string_table: StringTable) -> Section | None:
     return string_table or None
-
-
-def discover_fortigate_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortigate_cpu(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -72,7 +67,7 @@ snmp_section_fortigate_cpu_base = SimpleSNMPSection(
 check_plugin_fortigate_cpu_base = CheckPlugin(
     name="fortigate_cpu_base",
     service_name="CPU utilization",
-    discovery_function=discover_fortigate_cpu,
+    discovery_function=discover_one_service,
     check_function=check_fortigate_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
@@ -98,7 +93,7 @@ snmp_section_fortigate_cpu = SimpleSNMPSection(
 check_plugin_fortigate_cpu = CheckPlugin(
     name="fortigate_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_fortigate_cpu,
+    discovery_function=discover_one_service,
     check_function=check_fortigate_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

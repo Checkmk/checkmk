@@ -19,18 +19,13 @@ from cmk.agent_based.legacy.conversion import (
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
-
-
-def discover_cisco_sys_mem(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_cisco_sys_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -65,7 +60,7 @@ snmp_section_cisco_sys_mem = SimpleSNMPSection(
 check_plugin_cisco_sys_mem = CheckPlugin(
     name="cisco_sys_mem",
     service_name="Supervisor Mem Used",
-    discovery_function=discover_cisco_sys_mem,
+    discovery_function=discover_one_service,
     check_function=check_cisco_sys_mem,
     check_ruleset_name="cisco_supervisor_mem",
     check_default_parameters={"levels": (80.0, 90.0)},

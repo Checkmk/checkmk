@@ -7,10 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.netapp.agent_based.netapp_ontap_agent_info import (
     check_netapp_ontap_agent_info,
-    discover_netapp_ontap_agent_info,
     parse_netapp_ontap_agent_info,
     Section,
 )
@@ -45,10 +44,6 @@ from cmk.plugins.netapp.models import AgentInfoModel
 )
 def test_parse_netapp_ontap_errors(string_table: StringTable, expected: Section) -> None:
     assert parse_netapp_ontap_agent_info(string_table) == expected
-
-
-def test_discover_netapp_ontap_errors() -> None:
-    assert list(discover_netapp_ontap_agent_info([])) == [Service()]
 
 
 @pytest.mark.parametrize(

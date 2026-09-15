@@ -23,12 +23,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 type _Section = StringTable
 
@@ -39,10 +38,6 @@ _SENSOR_STATES: Final = {
     "red": State.CRIT,
     "unknown": State.UNKNOWN,
 }
-
-
-def discover_esx_vsphere_sensors(section: _Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_esx_vsphere_sensors(params: Mapping[str, Any], section: _Section) -> CheckResult:
@@ -95,7 +90,7 @@ agent_section_esx_vsphere_sensors = AgentSection(
 check_plugin_esx_vsphere_sensors = CheckPlugin(
     name="esx_vsphere_sensors",
     service_name="Hardware Sensors",
-    discovery_function=discover_esx_vsphere_sensors,
+    discovery_function=discover_one_service,
     check_function=check_esx_vsphere_sensors,
     check_ruleset_name="hostsystem_sensors",
     check_default_parameters={"rules": []},

@@ -15,13 +15,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.vsphere.lib import esx_vsphere
 
 
@@ -57,10 +56,6 @@ agent_section_esx_vsphere_snapshots_summary = AgentSection(
     name="esx_vsphere_snapshots_summary",
     parse_function=parse_esx_vsphere_snapshots,
 )
-
-
-def discover_snapshots_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _get_snapshot_name(snapshot: Snapshot) -> str:
@@ -131,15 +126,11 @@ check_plugin_esx_vsphere_vm_snapshots_summary = CheckPlugin(
     name="esx_vsphere_vm_snapshots_summary",
     sections=["esx_vsphere_snapshots_summary"],
     service_name="ESX Snapshots Summary",
-    discovery_function=discover_snapshots_summary,
+    discovery_function=discover_one_service,
     check_function=check_snapshots_summary,
     check_default_parameters={},
     check_ruleset_name="vm_snapshots",
 )
-
-
-def discover_snapshots(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm) -> CheckResult:
@@ -165,7 +156,7 @@ check_plugin_esx_vsphere_vm_snapshots = CheckPlugin(
     name="esx_vsphere_vm_snapshots",
     sections=["esx_vsphere_vm"],
     service_name="ESX Snapshots",
-    discovery_function=discover_snapshots,
+    discovery_function=discover_one_service,
     check_function=check_snapshots,
     check_default_parameters={},
     check_ruleset_name="vm_snapshots",

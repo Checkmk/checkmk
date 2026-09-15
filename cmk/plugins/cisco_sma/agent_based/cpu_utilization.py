@@ -9,13 +9,12 @@ from collections.abc import Mapping, MutableMapping
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 from .detect import DETECT_CISCO_SMA
@@ -35,10 +34,6 @@ snmp_section_cpu_utilization = SimpleSNMPSection(
     parse_function=_parse_cpu_utilization,
     supersedes=["hr_cpu"],
 )
-
-
-def _discover_cpu_utilization(section: float) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_cpu_utilization(params: Mapping[str, object], section: float) -> CheckResult:
@@ -67,7 +62,7 @@ def _check_cpu_utilization_testable(
 check_plugin_cpu_utilization = CheckPlugin(
     name="cisco_sma_cpu_utilization",
     service_name="CPU utilization",
-    discovery_function=_discover_cpu_utilization,
+    discovery_function=discover_one_service,
     check_function=_check_cpu_utilization,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={

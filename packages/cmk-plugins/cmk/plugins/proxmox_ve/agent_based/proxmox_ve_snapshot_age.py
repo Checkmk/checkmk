@@ -16,13 +16,12 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class SectionSnapshots(BaseModel, frozen=True):
@@ -31,10 +30,6 @@ class SectionSnapshots(BaseModel, frozen=True):
 
 def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots:
     return SectionSnapshots.model_validate_json(string_table[0][0])
-
-
-def discover_single(section: SectionSnapshots) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_proxmox_ve_snapshot_age_testable(
@@ -87,7 +82,7 @@ agent_section_proxmox_ve_vm_snapshot_age = AgentSection(
 check_plugin_proxmox_ve_vm_snapshot_age = CheckPlugin(
     name="proxmox_ve_vm_snapshot_age",
     service_name="Proxmox VE VM Snapshot age",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_snapshot_age,
     check_ruleset_name="proxmox_ve_vm_snapshot_age",
     check_default_parameters={

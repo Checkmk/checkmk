@@ -7,16 +7,15 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     not_matches,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 # snmp_scan_function
 # .1.3.6.1.2.1.1.4.0 = STRING: x.name@green-cooling.de < green-cooling match
@@ -30,10 +29,6 @@ from cmk.agent_based.v2 import (
 # .1.3.6.1.4.1.9839.2.1.2.6.0 = INTEGER:  246 < Humidifier: Relative Humidity
 
 DETECT_NEVER = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
-
-
-def discover_carel_uniflair_cooling(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_carel_uniflair_cooling(section: StringTable) -> CheckResult:
@@ -77,6 +72,6 @@ snmp_section_carel_uniflair_cooling = SimpleSNMPSection(
 check_plugin_carel_uniflair_cooling = CheckPlugin(
     name="carel_uniflair_cooling",
     service_name="Carel uniflair cooling",
-    discovery_function=discover_carel_uniflair_cooling,
+    discovery_function=discover_one_service,
     check_function=check_carel_uniflair_cooling,
 )

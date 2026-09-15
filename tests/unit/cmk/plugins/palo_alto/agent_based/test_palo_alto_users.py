@@ -7,22 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.palo_alto.agent_based.palo_alto_users import (
-    check,
-    cluster_check,
-    discover,
-    parse,
-    Section,
-)
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.plugins.palo_alto.agent_based.palo_alto_users import check, cluster_check, parse, Section
 
 
 def test_parse() -> None:
     assert Section(num_users=40, max_users=2048) == parse([["2048", "40"]])
-
-
-def test_discover() -> None:
-    assert [Service()] == list(discover(Section(num_users=41, max_users=2048)))
 
 
 @pytest.mark.parametrize(

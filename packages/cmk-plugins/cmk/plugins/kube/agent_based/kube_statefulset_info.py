@@ -8,10 +8,9 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import check_with_time
 from cmk.plugins.kube.kube_info import check_info, host_labels
 from cmk.plugins.kube.schemata.section import StatefulSetInfo
@@ -44,10 +43,6 @@ agent_section_kube_statefulset_info_v1 = AgentSection(
 )
 
 
-def discovery(section: StatefulSetInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_kube_statefulset_info(now: float, section: StatefulSetInfo) -> CheckResult:
     yield from check_info(
         {
@@ -61,6 +56,6 @@ def check_kube_statefulset_info(now: float, section: StatefulSetInfo) -> CheckRe
 check_plugin_kube_statefulset_info = CheckPlugin(
     name="kube_statefulset_info",
     service_name="Info",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check_with_time(check_kube_statefulset_info),
 )

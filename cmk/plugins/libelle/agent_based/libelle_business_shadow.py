@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 
 #   .--Example output from agent-------------------------------------------.
@@ -287,10 +288,6 @@ def check_libelle_business_shadow_parse(info: StringTable) -> dict[str, Any]:
 #   '----------------------------------------------------------------------'
 
 
-def discover_libelle_business_shadow_info(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_libelle_business_shadow_info(section: StringTable) -> CheckResult:
     parsed = check_libelle_business_shadow_parse(section)
     message = "Libelle Business Shadow"
@@ -308,7 +305,7 @@ check_plugin_libelle_business_shadow_info = CheckPlugin(
     name="libelle_business_shadow_info",
     service_name="Libelle Business Shadow Info",
     sections=["libelle_business_shadow"],
-    discovery_function=discover_libelle_business_shadow_info,
+    discovery_function=discover_one_service,
     check_function=check_libelle_business_shadow_info,
 )
 

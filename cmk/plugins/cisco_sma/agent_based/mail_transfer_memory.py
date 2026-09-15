@@ -9,14 +9,13 @@ from typing import assert_never, TypedDict
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .detect import DETECT_CISCO_SMA
 
@@ -52,14 +51,10 @@ def _check_mail_transfer_memory(params: Params, section: MailTransferMemoryStatu
             assert_never(section)
 
 
-def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_check_mail_transfer_memory = CheckPlugin(
     name="cisco_sma_mail_transfer_memory",
     service_name="Mail transfer memory",
-    discovery_function=_discover_mail_transfer_memory,
+    discovery_function=discover_one_service,
     check_function=_check_mail_transfer_memory,
     check_ruleset_name="cisco_sma_mail_transfer_memory",
     check_default_parameters=Params(

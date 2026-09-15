@@ -8,20 +8,12 @@ from collections.abc import Mapping, Sequence
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.avaya.agent_based import avaya_88xx_cpu as avaya_88xx_cpu_module
-from cmk.plugins.avaya.agent_based.avaya_88xx_cpu import (
-    check_avaya_88xx_cpu,
-    discover_avaya_88xx_cpu,
-    parse_avaya_88xx_cpu,
-)
+from cmk.plugins.avaya.agent_based.avaya_88xx_cpu import check_avaya_88xx_cpu, parse_avaya_88xx_cpu
 
 _SECTION_30: StringTable = [["30"]]
 _SECTION_99: StringTable = [["99"]]
-
-
-def test_discover_avaya_88xx_cpu() -> None:
-    assert list(discover_avaya_88xx_cpu(_SECTION_30)) == [Service()]
 
 
 def test_parse_avaya_88xx_cpu_empty_returns_none() -> None:

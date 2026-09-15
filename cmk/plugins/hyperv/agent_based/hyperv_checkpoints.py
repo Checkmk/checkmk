@@ -22,17 +22,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
-
-
-def discover_hyperv_checkpoints(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_hyperv_checkpoints(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -82,7 +77,7 @@ agent_section_hyperv_checkpoints = AgentSection(
 check_plugin_hyperv_checkpoints = CheckPlugin(
     name="hyperv_checkpoints",
     service_name="HyperV Checkpoints",
-    discovery_function=discover_hyperv_checkpoints,
+    discovery_function=discover_one_service,
     check_function=check_hyperv_checkpoints,
     check_ruleset_name="vm_snapshots",
     check_default_parameters={},

@@ -81,12 +81,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -95,10 +94,6 @@ class System:
     location: str | None
     code_level: str | None
     email_contact_location: str | None
-
-
-def discover_ibm_svc_system(section: System) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_ibm_svc_system(section: System) -> CheckResult:
@@ -134,6 +129,6 @@ agent_section_ibm_svc_system = AgentSection(
 check_plugin_ibm_svc_system = CheckPlugin(
     name="ibm_svc_system",
     service_name="Info",
-    discovery_function=discover_ibm_svc_system,
+    discovery_function=discover_one_service,
     check_function=check_ibm_svc_system,
 )

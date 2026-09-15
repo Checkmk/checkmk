@@ -6,11 +6,10 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.podman.agent_based.podman_pods import (
     check_podman_pods,
     DEFAULT_PARAMS,
-    discover_podman_pods,
     Params,
     parse_podman_pods,
 )
@@ -23,14 +22,6 @@ _STRING_TABLE = [
         '[{"Cgroup": "user.slice", "Containers": [{"Id": "65803698cd3515379fe2a18c8eb9ce12b4be5d637ae0e9110443da3165eecd08", "Names": "4cbae6c3a925-infra", "Status": "created", "RestartCount": 0}], "Created": "2025-07-20T20:05:37.21292926+02:00", "Id": "4cbae6c3a925717948e84b337afd8130432339d604e215fa191e7c6b72ebaf3d", "InfraId": "65803698cd3515379fe2a18c8eb9ce12b4be5d637ae0e9110443da3165eecd08", "Name": "mypod", "Namespace": "", "Networks": [], "Status": "Dead", "Labels": {}}]'
     ],
 ]
-
-
-def test_discover_podman_pods() -> None:
-    assert list(discover_podman_pods(parse_podman_pods(_STRING_TABLE))) == [Service()]
-
-
-def test_discover_podman_pods_empty_table() -> None:
-    assert list(discover_podman_pods(parse_podman_pods([[]]))) == [Service()]
 
 
 @pytest.mark.parametrize(

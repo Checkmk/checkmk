@@ -13,13 +13,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.prism.lib import load_json
 
 Section = Sequence[Mapping[Any, Any]]
@@ -62,12 +61,6 @@ def severity(name: str) -> tuple[int, int]:
     }.get(name, (2, 3))
 
 
-def discovery_prism_alerts(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    """We cannot guess items from alerts, since an empty list of alerts does not mean there are
-    no items to monitor"""
-    yield Service()
-
-
 def to_string(timestamp: str) -> str:
     """Turn a textual timestamp in microseconds into a readable format"""
     return render.datetime(int(timestamp) / 1000000.0)
@@ -108,7 +101,9 @@ def check_prism_alerts(params: StringMap, section: Section) -> CheckResult:
 check_plugin_prism_alerts = CheckPlugin(
     name="prism_alerts",
     service_name="NTNX Alerts",
-    discovery_function=discovery_prism_alerts,
+    # We cannot guess items from alerts, since an empty list of alerts does not mean there are
+    # no items to monitor.
+    discovery_function=discover_one_service,
     check_function=check_prism_alerts,
     check_ruleset_name="prism_alerts",
     check_default_parameters={

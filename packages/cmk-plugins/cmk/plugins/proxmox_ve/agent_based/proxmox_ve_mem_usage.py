@@ -13,10 +13,9 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.memory import check_element
 
 Section = Mapping[str, float]
@@ -24,10 +23,6 @@ Section = Mapping[str, float]
 
 def parse_proxmox_ve_mem_usage(string_table: StringTable) -> Section:
     return {key: float(value) for key, value in json.loads(string_table[0][0]).items()}
-
-
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_proxmox_ve_mem_usage(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -59,7 +54,7 @@ agent_section_proxmox_ve_mem_usage = AgentSection(
 check_plugin_proxmox_ve_mem_usage = CheckPlugin(
     name="proxmox_ve_mem_usage",
     service_name="Proxmox VE Memory Usage",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_mem_usage,
     check_ruleset_name="proxmox_ve_mem_usage",
     check_default_parameters={"levels": ("fixed", (80.0, 90.0))},

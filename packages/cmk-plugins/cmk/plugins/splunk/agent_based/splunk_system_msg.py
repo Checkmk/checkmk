@@ -8,12 +8,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass
@@ -45,10 +44,6 @@ def parse(string_table: StringTable) -> Section:
 agent_section_splunk_system_msg = AgentSection(name="splunk_system_msg", parse_function=parse)
 
 
-def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check(section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.OK, summary="No open messages")
@@ -77,6 +72,6 @@ def _handle_severity(severity: str) -> State:
 check_plugin_splunk_system_msg = CheckPlugin(
     name="splunk_system_msg",
     service_name="Splunk System Messages",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
 )

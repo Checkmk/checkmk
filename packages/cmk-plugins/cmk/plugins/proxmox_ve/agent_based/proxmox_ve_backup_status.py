@@ -15,13 +15,12 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class BackupData(TypedDict, total=False):
@@ -87,10 +86,6 @@ def parse_proxmox_ve_vm_backup_status(
     if "error" in backup_data:
         result["error"] = str(backup_data["error"])
     return {"last_backup": result}
-
-
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_proxmox_ve_vm_backup_status(
@@ -196,7 +191,7 @@ def check_proxmox_ve_vm_backup_status_unpure(
 check_plugin_proxmox_ve_vm_backup_status = CheckPlugin(
     name="proxmox_ve_vm_backup_status",
     service_name="Proxmox VE VM Backup Status",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_vm_backup_status_unpure,
     check_ruleset_name="proxmox_ve_vm_backup_status",
     check_default_parameters={

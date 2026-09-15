@@ -5,16 +5,10 @@
 
 import pytest
 
-from cmk.agent_based.v2 import (
-    Result,
-    Service,
-    State,
-    StringTable,
-)
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.azure_v2.agent_based.azure_agent_info import (
     check_azure_agent_info,
     DEFAULT_PARAMS,
-    discover_azure_agent_info,
     parse_azure_agent_info,
 )
 
@@ -68,12 +62,6 @@ def test_parse_azure_agent_info(
     result = parse_azure_agent_info(string_table)
     assert result.issues == issues
     assert result.agent_bailouts == agent_bailouts
-
-
-def test_discover() -> None:
-    parsed = parse_azure_agent_info(STRING_TABLE_WITH_BAILOUT)
-    result = list(discover_azure_agent_info(parsed))
-    assert result == [Service()]
 
 
 @pytest.mark.usefixtures("empty_value_store")

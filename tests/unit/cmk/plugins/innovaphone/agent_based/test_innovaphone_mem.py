@@ -5,11 +5,10 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.innovaphone.agent_based.innovaphone_mem import (
     check_innovaphone_mem,
     CheckParams,
-    discover_innovaphone_mem,
     parse_innovaphone_mem,
     Utilization,
 )
@@ -29,11 +28,6 @@ def test_parse_innovaphone_mem_empty_data(string_table: StringTable) -> None:
 
 def test_parse_innovaphone_mem_success() -> None:
     assert parse_innovaphone_mem([["MEM", "55"]]) == Utilization(55)
-
-
-def test_discover_innovaphone_mem() -> None:
-    section = Utilization(55)
-    assert list(discover_innovaphone_mem(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

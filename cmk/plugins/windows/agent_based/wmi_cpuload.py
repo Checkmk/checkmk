@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_average,
     get_value_store,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu import Load, ProcessorType
 from cmk.plugins.lib.cpu import Section as CPUSection
 from cmk.plugins.lib.cpu_load import check_cpu_load, CPULoadParams
@@ -83,10 +82,6 @@ agent_section_wmi_cpuload = AgentSection(
 )
 
 
-def discover_wmi_cpuload(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def _handle_time_counter_resets(
     value_store: MutableMapping[str, Any],
     current_timestamp: float,
@@ -147,7 +142,7 @@ def check_wmi_cpuload(
 
 check_plugin_wmi_cpuload = CheckPlugin(
     name="wmi_cpuload",
-    discovery_function=discover_wmi_cpuload,
+    discovery_function=discover_one_service,
     check_function=check_wmi_cpuload,
     service_name="Processor Queue",
     check_default_parameters={

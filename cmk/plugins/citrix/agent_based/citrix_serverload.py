@@ -17,21 +17,16 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_citrix_serverload(string_table: StringTable) -> StringTable:
     return string_table
-
-
-def discover_citrix_serverload(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_citrix_serverload(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -62,7 +57,7 @@ agent_section_citrix_serverload = AgentSection(
 check_plugin_citrix_serverload = CheckPlugin(
     name="citrix_serverload",
     service_name="Citrix Serverload",
-    discovery_function=discover_citrix_serverload,
+    discovery_function=discover_one_service,
     check_function=check_citrix_serverload,
     check_ruleset_name="citrix_load",
     check_default_parameters={

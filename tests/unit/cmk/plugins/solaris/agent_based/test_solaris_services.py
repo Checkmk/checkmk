@@ -12,7 +12,6 @@ from cmk.plugins.solaris.agent_based.solaris_services import (
     check_solaris_services_summary,
     DISCOVER_NOTHING,
     discover_solaris_services,
-    discover_solaris_services_summary,
     parse_solaris_services,
     Section,
 )
@@ -47,10 +46,6 @@ def test_discovery_match_description(section: Section) -> None:
         Service(item="svc1:/cat1/name1:inst1"),
         Service(item="svc2:/cat2/name2:inst2"),
     ]
-
-
-def test_discovery_summary(section: Section) -> None:
-    assert list(discover_solaris_services_summary(section)) == [Service()]
 
 
 def check_item_not_found(section: Section) -> None:

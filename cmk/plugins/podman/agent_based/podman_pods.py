@@ -17,14 +17,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     NoLevelsT,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 type Params = Mapping[
     str,
@@ -73,10 +72,6 @@ agent_section_podman_pods: AgentSection = AgentSection(
 )
 
 
-def discover_podman_pods(section: PodsStateCounts) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_podman_pods(params: Params, section: PodsStateCounts) -> CheckResult:
     if section.total == 0:
         yield Result(state=State.OK, summary="No pods found")
@@ -97,7 +92,7 @@ def check_podman_pods(params: Params, section: PodsStateCounts) -> CheckResult:
 check_plugin_podman_pods = CheckPlugin(
     name="podman_pods",
     service_name="Podman pods",
-    discovery_function=discover_podman_pods,
+    discovery_function=discover_one_service,
     check_function=check_podman_pods,
     check_ruleset_name="podman_pods",
     check_default_parameters=DEFAULT_PARAMS,

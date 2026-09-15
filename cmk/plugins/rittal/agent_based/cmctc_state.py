@@ -7,22 +7,17 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.rittal.lib.cmctc import DETECT_CMCTC
 
 # .1.3.6.1.4.1.2606.4.2.1.0 2
 # .1.3.6.1.4.1.2606.4.2.2.0 1
-
-
-def discover_cmctc_state(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cmctc_state(section: StringTable) -> CheckResult:
@@ -52,6 +47,6 @@ snmp_section_cmctc_state = SimpleSNMPSection(
 check_plugin_cmctc_state = CheckPlugin(
     name="cmctc_state",
     service_name="TC unit state",
-    discovery_function=discover_cmctc_state,
+    discovery_function=discover_one_service,
     check_function=check_cmctc_state,
 )

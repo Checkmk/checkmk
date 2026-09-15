@@ -7,21 +7,16 @@ from collections.abc import MutableMapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.podman.agent_based.lib import (
     SectionPodmanContainerInspect,
 )
 from cmk.plugins.podman.agent_based.podman_container_restarts import (
     _check_podman_container_restarts,
-    discover_podman_container_restarts,
     Params,
 )
 
 from .lib import SECTION_RUNNING
-
-
-def test_discover_podman_container_restarts() -> None:
-    assert list(discover_podman_container_restarts(SECTION_RUNNING)) == [Service()]
 
 
 @pytest.mark.parametrize(

@@ -9,12 +9,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fortinet.lib import DETECT_FORTIAUTHENTICATOR
 
 Section = Mapping[str, int]
@@ -26,14 +25,6 @@ def parse_fortiauthenticator_auth_fail(string_table: Sequence[StringTable]) -> S
     {'auth_fails': 3}
     """
     return {"auth_fails": int(string_table[0][0][0])} if all(string_table) else None
-
-
-def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    """
-    >>> list(discover_fortiauthenticator_auth_fail({"auth_fails": 3}))
-    [Service()]
-    """
-    yield Service()
 
 
 def check_fortiauthenticator_auth_fail(
@@ -72,7 +63,7 @@ snmp_section_fortiauthenticator_auth_fail = SNMPSection(
 check_plugin_fortiauthenticator_auth_fail = CheckPlugin(
     name="fortiauthenticator_auth_fail",
     service_name="Authentication Failures",
-    discovery_function=discover_fortiauthenticator_auth_fail,
+    discovery_function=discover_one_service,
     check_function=check_fortiauthenticator_auth_fail,
     check_default_parameters={"auth_fails": (100, 200)},
     check_ruleset_name="fortiauthenticator_auth_fail",

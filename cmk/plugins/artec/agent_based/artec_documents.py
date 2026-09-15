@@ -11,17 +11,16 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     equals,
     get_rate,
     get_value_store,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.48 Amount Documents Count --> ARTEC-MIB::artecDocumentsName.1.48
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.49 Replicate Count        --> ARTEC-MIB::artecDocumentsName.1.49
@@ -29,10 +28,6 @@ from cmk.agent_based.v2 import (
 # .1.3.6.1.4.1.31560.0.0.3.1.1.1.48 8861531                --> ARTEC-MIB::artecDocumentsValues.1.48
 # .1.3.6.1.4.1.31560.0.0.3.1.1.1.49 1653573                --> ARTEC-MIB::artecDocumentsValues.1.49
 # .1.3.6.1.4.1.31560.0.0.3.1.1.1.50 8861118                --> ARTEC-MIB::artecDocumentsValues.1.50
-
-
-def discover_artec_documents(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_artec_documents(section: StringTable) -> CheckResult:
@@ -65,6 +60,6 @@ snmp_section_artec_documents = SimpleSNMPSection(
 check_plugin_artec_documents = CheckPlugin(
     name="artec_documents",
     service_name="Documents",
-    discovery_function=discover_artec_documents,
+    discovery_function=discover_one_service,
     check_function=check_artec_documents,
 )

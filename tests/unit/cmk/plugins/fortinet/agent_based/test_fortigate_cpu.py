@@ -7,13 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.fortinet.agent_based import fortigate_cpu
-from cmk.plugins.fortinet.agent_based.fortigate_cpu import (
-    check_fortigate_cpu,
-    discover_fortigate_cpu,
-    parse_fortigate_cpu,
-)
+from cmk.plugins.fortinet.agent_based.fortigate_cpu import check_fortigate_cpu, parse_fortigate_cpu
 
 
 @pytest.fixture(name="empty_value_store")
@@ -28,10 +24,6 @@ def test_parse_fortigate_cpu_keeps_stringtable() -> None:
 
 def test_parse_fortigate_cpu_empty_returns_none() -> None:
     assert parse_fortigate_cpu([]) is None
-
-
-def test_discover_fortigate_cpu() -> None:
-    assert list(discover_fortigate_cpu([["25"], ["31"]])) == [Service()]
 
 
 @pytest.mark.usefixtures("empty_value_store")

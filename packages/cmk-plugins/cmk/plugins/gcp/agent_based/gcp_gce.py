@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.lib import interfaces, uptime
 
@@ -61,10 +62,6 @@ agent_section_gcp_service_gce_cpu = AgentSection(
 )
 
 
-def discover_default(section: gcp.PiggyBackSection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> CheckResult:
     metrics = {
         "util": gcp.MetricSpec(
@@ -86,7 +83,7 @@ def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> Check
 check_plugin_gcp_gce_cpu = CheckPlugin(
     name="gcp_gce_cpu",
     service_name="GCP/GCE CPU utilization",
-    discovery_function=discover_default,
+    discovery_function=discover_one_service,
     check_function=check_cpu,
     check_ruleset_name="gcp_gce_cpu",
     check_default_parameters={"util": (80.0, 90.0), "vcores": None},
@@ -194,7 +191,7 @@ check_plugin_gcp_gce_disk_summary = CheckPlugin(
     name="gcp_gce_disk_summary",
     sections=["gcp_gce_disk"],
     service_name="GCP/GCE Disk IO Summary",
-    discovery_function=discover_default,
+    discovery_function=discover_one_service,
     check_ruleset_name="gcp_gce_disk",
     check_default_parameters={
         "disk_read_throughput": None,

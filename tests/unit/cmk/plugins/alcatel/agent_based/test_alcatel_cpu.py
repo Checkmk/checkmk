@@ -6,16 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.plugins.alcatel.agent_based.alcatel_cpu import (
-    check_alcatel_cpu,
-    discover_alcatel_cpu,
-    parse_alcatel_cpu,
-)
-
-
-def test_discovery_function() -> None:
-    assert (parsed := parse_alcatel_cpu([["0"]])) is not None
-    assert list(discover_alcatel_cpu(parsed))
+from cmk.plugins.alcatel.agent_based.alcatel_cpu import check_alcatel_cpu, parse_alcatel_cpu
 
 
 @pytest.mark.parametrize(

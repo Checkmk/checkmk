@@ -8,14 +8,13 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import (
     DETECT_AUDIOCODES,
@@ -79,12 +78,6 @@ snmp_section_audiocodes_overall_operational_state = SimpleSNMPSection(
 )
 
 
-def discover_audiocodes_overall_operational_state(
-    section: OperationalState,  # noqa: ARG001
-) -> DiscoveryResult:
-    yield Service()
-
-
 def check_audiocodes_overall_operational_state(
     section: OperationalState,
 ) -> CheckResult:
@@ -106,6 +99,6 @@ def check_audiocodes_overall_operational_state(
 check_plugin_audiocodes_overall_operational_state = CheckPlugin(
     name="audiocodes_overall_operational_state",
     service_name="Operational state",
-    discovery_function=discover_audiocodes_overall_operational_state,
+    discovery_function=discover_one_service,
     check_function=check_audiocodes_overall_operational_state,
 )

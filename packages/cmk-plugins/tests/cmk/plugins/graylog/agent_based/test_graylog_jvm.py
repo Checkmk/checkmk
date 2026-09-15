@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.graylog.agent_based.graylog_jvm import (
     check_graylog_jvm,
-    discover_graylog_jvm,
     GraylogJvmParams,
     parse_graylog_jvm,
 )
@@ -22,12 +21,6 @@ _SECTION = [
         '{"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 461934992, "jvm.memory.heap.max": 1020067840, "jvm.memory.heap.committed": 1020067840, "jvm.memory.heap.usage": 0.45284732435050595}'
     ]
 ]
-
-
-def test_discover_graylog_jvm() -> None:
-    parsed = parse_graylog_jvm(_SECTION)
-    assert parsed is not None
-    assert list(discover_graylog_jvm(parsed)) == [Service()]
 
 
 def test_check_graylog_jvm() -> None:

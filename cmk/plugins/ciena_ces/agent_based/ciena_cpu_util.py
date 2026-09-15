@@ -10,14 +10,13 @@ from typing import NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
     OIDEnd,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.ciena_ces.lib import DETECT_CIENA_5142, DETECT_CIENA_5171
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
@@ -88,10 +87,6 @@ snmp_section_ciena_cpu_util_5171 = SimpleSNMPSection(
 )
 
 
-def discover_ciena_cpu_util(section: Section5171 | Section5142) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_ciena_cpu_util_5142(
     params: Mapping[str, object],
     section: Section5142,
@@ -120,7 +115,7 @@ def check_ciena_cpu_util_5171(
 check_plugin_ciena_cpu_util_5142 = CheckPlugin(
     name="ciena_cpu_util_5142",
     service_name="CPU utilization",
-    discovery_function=discover_ciena_cpu_util,
+    discovery_function=discover_one_service,
     check_function=check_ciena_cpu_util_5142,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={
@@ -131,7 +126,7 @@ check_plugin_ciena_cpu_util_5142 = CheckPlugin(
 check_plugin_ciena_cpu_util_5171 = CheckPlugin(
     name="ciena_cpu_util_5171",
     service_name="CPU utilization",
-    discovery_function=discover_ciena_cpu_util,
+    discovery_function=discover_one_service,
     check_function=check_ciena_cpu_util_5171,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={

@@ -14,24 +14,19 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = Mapping[str, float]
 
 
 def parse_proxmox_ve_disk_usage(string_table: StringTable) -> Section:
     return {key: float(value) for key, value in json.loads(string_table[0][0]).items()}
-
-
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 # TODO: this is exactly the same as df, except in bytes
@@ -102,7 +97,7 @@ agent_section_proxmox_ve_disk_usage = AgentSection(
 check_plugin_proxmox_ve_disk_usage = CheckPlugin(
     name="proxmox_ve_disk_usage",
     service_name="Proxmox VE Disk Usage",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_disk_usage,
     check_ruleset_name="proxmox_ve_disk_percentage_used",
     check_default_parameters={"levels": ("fixed", (80.0, 90.0))},

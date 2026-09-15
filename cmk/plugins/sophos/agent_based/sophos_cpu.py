@@ -12,13 +12,12 @@ from cmk.agent_based.legacy.conversion import (
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.sophos.lib import DETECT_SOPHOS
 
 
@@ -31,10 +30,6 @@ def parse_sophos_cpu(string_table: StringTable) -> int | None:
         return int(string_table[0][0])
     except ValueError, IndexError:
         return None
-
-
-def discover_sophos_cpu(section: int) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_sophos_cpu(params: Params, section: int) -> CheckResult:
@@ -62,7 +57,7 @@ snmp_section_sophos_cpu = SimpleSNMPSection(
 check_plugin_sophos_cpu = CheckPlugin(
     name="sophos_cpu",
     service_name="CPU usage",
-    discovery_function=discover_sophos_cpu,
+    discovery_function=discover_one_service,
     check_function=check_sophos_cpu,
     check_ruleset_name="sophos_cpu",
     check_default_parameters=Params(),

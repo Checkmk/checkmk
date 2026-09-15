@@ -11,13 +11,12 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.primekey.lib import DETECT_PRIMEKEY
 
 
@@ -42,10 +41,6 @@ snmp_section_primekey_db_usage = SimpleSNMPSection(
 )
 
 
-def discover(section: _Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check(
     params: Mapping[str, tuple[float, float]],
     section: _Section,
@@ -62,7 +57,7 @@ def check(
 check_plugin_primekey_db_usage = CheckPlugin(
     name="primekey_db_usage",
     service_name="PrimeKey DB Usage",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
     check_default_parameters={"levels": (80.0, 90.0)},
     check_ruleset_name="db_usage",

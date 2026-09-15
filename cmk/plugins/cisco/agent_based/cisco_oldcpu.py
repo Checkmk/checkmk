@@ -14,15 +14,14 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
@@ -31,10 +30,6 @@ from cmk.plugins.lib.cpu_util import check_cpu_util
 @dataclass(frozen=True)
 class Section:
     cpu_perc: float
-
-
-def discover_cisco_oldcpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cisco_oldcpu(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -70,7 +65,7 @@ snmp_section_cisco_oldcpu = SimpleSNMPSection(
 check_plugin_cisco_oldcpu = CheckPlugin(
     name="cisco_oldcpu",
     service_name="CPU utilization",
-    discovery_function=discover_cisco_oldcpu,
+    discovery_function=discover_one_service,
     check_function=check_cisco_oldcpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

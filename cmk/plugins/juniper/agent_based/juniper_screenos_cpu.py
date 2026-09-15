@@ -10,14 +10,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 
 
@@ -31,10 +30,6 @@ def _migrate_levels(levels: object) -> LevelsT[float] | None:
     if isinstance(levels, tuple) and len(levels) == 2 and isinstance(levels[0], float):
         return ("fixed", levels)
     return levels  # type: ignore[return-value]
-
-
-def discover_juniper_screenos_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_juniper_screenos_cpu(params: Mapping[str, object], section: Section) -> CheckResult:
@@ -73,7 +68,7 @@ snmp_section_juniper_screenos_cpu = SimpleSNMPSection(
 check_plugin_juniper_screenos_cpu = CheckPlugin(
     name="juniper_screenos_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_juniper_screenos_cpu,
+    discovery_function=discover_one_service,
     check_function=check_juniper_screenos_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

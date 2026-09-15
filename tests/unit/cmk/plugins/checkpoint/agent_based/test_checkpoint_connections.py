@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.checkpoint.agent_based import checkpoint_connections
 from cmk.plugins.checkpoint.agent_based.checkpoint_connections import Params
 
@@ -23,12 +23,6 @@ def test_parse_reads_the_current_connection_count() -> None:
 
 def test_parse_of_an_empty_section() -> None:
     assert checkpoint_connections.parse_checkpoint_connections([]) is None
-
-
-def test_discover_always_yields_one_service() -> None:
-    section = checkpoint_connections.parse_checkpoint_connections(STRING_TABLE)
-    assert section is not None
-    assert list(checkpoint_connections.discover_checkpoint_connections(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

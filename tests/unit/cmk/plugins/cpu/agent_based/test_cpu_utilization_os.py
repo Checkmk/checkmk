@@ -11,18 +11,11 @@ import pytest
 
 import cmk.plugins.cpu.agent_based.cpu_utilization_os as cpu_utilization_os_plugin
 from cmk.agent_based.v1 import GetRateError
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.cpu.agent_based.cpu_utilization_os import (
-    check_cpu_utilization_os,
-    discover_cpu_utilization_os,
-)
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.plugins.cpu.agent_based.cpu_utilization_os import check_cpu_utilization_os
 from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
 
 _SECTION = SectionCpuUtilizationOs(time_base=100.0, num_cpus=4, time_cpu=10.0)
-
-
-def test_discover_cpu_utilization_os() -> None:
-    assert list(discover_cpu_utilization_os(_SECTION)) == [Service()]
 
 
 def test_check_cpu_utilization_os_first_call_raises(monkeypatch: pytest.MonkeyPatch) -> None:

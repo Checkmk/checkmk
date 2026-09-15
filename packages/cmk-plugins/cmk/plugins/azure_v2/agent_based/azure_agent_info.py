@@ -15,13 +15,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.azure_v2.agent_based.lib import AZURE_AGENT_SEPARATOR
 
 
@@ -61,10 +60,6 @@ def parse_azure_agent_info(string_table: StringTable) -> AgentInfo:
             info.agent_bailouts.append(tuple(value))
 
     return info
-
-
-def discover_azure_agent_info(section: AgentInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_agent_bailouts(bailouts: list[tuple[int, str]]) -> CheckResult:
@@ -129,7 +124,7 @@ agent_section_azure_v2_agent_info = AgentSection(
 check_plugin_azure_v2_agent_info = CheckPlugin(
     name="azure_v2_agent_info",
     service_name="Azure agent info",
-    discovery_function=discover_azure_agent_info,
+    discovery_function=discover_one_service,
     check_function=check_azure_agent_info,
     check_ruleset_name="azure_v2_agent_info",
     check_default_parameters=DEFAULT_PARAMS,

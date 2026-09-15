@@ -14,7 +14,6 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     get_value_store,
     HostLabel,
@@ -23,10 +22,10 @@ from cmk.agent_based.v2 import (
     NoLevelsT,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.uptime import check as check_uptime_seconds
 from cmk.plugins.lib.uptime import Section as UptimeSection
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
@@ -61,10 +60,6 @@ def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:
         yield HostLabel("cmk/pve/cluster", section.cluster)
     for tag in section.tags:
         yield HostLabel(f"cmk/pve/tag/{tag}", "yes")
-
-
-def discover_single(section: SectionVMInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _get_lock_duration(
@@ -179,7 +174,7 @@ agent_section_proxmox_ve_vm_info = AgentSection(
 check_plugin_proxmox_ve_vm_info = CheckPlugin(
     name="proxmox_ve_vm_info",
     service_name="Proxmox VE VM Info",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_vm_info,
     check_ruleset_name="proxmox_ve_vm_info",
     check_default_parameters={

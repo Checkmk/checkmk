@@ -7,18 +7,13 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.knuerr.lib import DETECT_KNUERR
 from cmk.plugins.lib.humidity import check_humidity, CheckParams
-
-
-def discover_knuerr_rms_humidity(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_knuerr_rms_humidity(params: CheckParams, section: StringTable) -> CheckResult:
@@ -44,7 +39,7 @@ snmp_section_knuerr_rms_humidity = SimpleSNMPSection(
 check_plugin_knuerr_rms_humidity = CheckPlugin(
     name="knuerr_rms_humidity",
     service_name="Humidity",
-    discovery_function=discover_knuerr_rms_humidity,
+    discovery_function=discover_one_service,
     check_function=check_knuerr_rms_humidity,
     check_ruleset_name="single_humidity",
     check_default_parameters={

@@ -10,14 +10,13 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
 
 
@@ -47,10 +46,6 @@ snmp_section_palo_alto = SimpleSNMPSection(
         ],
     ),
 )
-
-
-def discover(section: SectionPaloAlto) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 _STATE_MAPPING_DEFAULT: Mapping[str, int] = {
@@ -114,7 +109,7 @@ def check(
 check_plugin_palo_alto = CheckPlugin(
     name="palo_alto",
     service_name="Palo Alto State",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
     check_default_parameters=_STATE_MAPPING_DEFAULT,
     check_ruleset_name="palo_alto",

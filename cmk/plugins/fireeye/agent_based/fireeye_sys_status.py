@@ -9,16 +9,15 @@ from cmk.agent_based.v2 import (
     Attributes,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     InventoryPlugin,
     InventoryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fireeye import lib as fireeye
 
 
@@ -49,10 +48,6 @@ snmp_section_fireeye_sys_status = SimpleSNMPSection(
 )
 
 
-def discover_fireeye_sys_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_fireeye_sys_status(section: Section) -> CheckResult:
     yield Result(
         state=State.OK if section.status.lower() in {"good", "ok"} else State.CRIT,
@@ -63,7 +58,7 @@ def check_fireeye_sys_status(section: Section) -> CheckResult:
 check_plugin_fireeye_sys_status = CheckPlugin(
     name="fireeye_sys_status",
     service_name="System status",
-    discovery_function=discover_fireeye_sys_status,
+    discovery_function=discover_one_service,
     check_function=check_fireeye_sys_status,
 )
 

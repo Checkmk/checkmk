@@ -19,12 +19,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = Mapping[str, int]
 
@@ -59,10 +58,6 @@ def check_zorp_connections(params: Mapping[str, Any], section: Section) -> Check
     )
 
 
-def discover_zorp_connections(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 agent_section_zorp_connections = AgentSection(
     name="zorp_connections",
     parse_function=parse_zorp_connections,
@@ -71,7 +66,7 @@ agent_section_zorp_connections = AgentSection(
 check_plugin_zorp_connections = CheckPlugin(
     name="zorp_connections",
     service_name="Zorp Connections",
-    discovery_function=discover_zorp_connections,
+    discovery_function=discover_one_service,
     check_function=check_zorp_connections,
     check_ruleset_name="zorp_connections",
     check_default_parameters={

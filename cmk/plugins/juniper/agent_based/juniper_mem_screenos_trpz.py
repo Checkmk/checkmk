@@ -12,12 +12,11 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS, DETECT_JUNIPER_TRPZ
 from cmk.plugins.lib import memory
 
@@ -34,10 +33,6 @@ def parse_juniper_trpz_mem(string_table: StringTable) -> Section | None:
         if string_table
         else None
     )
-
-
-def discover_juniper_mem_generic(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_juniper_mem_generic(
@@ -66,7 +61,7 @@ snmp_section_juniper_trpz_mem = SimpleSNMPSection(
 check_plugin_juniper_trpz_mem = CheckPlugin(
     name="juniper_trpz_mem",
     service_name="Memory",
-    discovery_function=discover_juniper_mem_generic,
+    discovery_function=discover_one_service,
     check_function=check_juniper_mem_generic,
     check_ruleset_name="juniper_mem",
     check_default_parameters={
@@ -96,7 +91,7 @@ snmp_section_juniper_screenos_mem = SimpleSNMPSection(
 check_plugin_juniper_screenos_mem = CheckPlugin(
     name="juniper_screenos_mem",
     service_name="Memory",
-    discovery_function=discover_juniper_mem_generic,
+    discovery_function=discover_one_service,
     check_function=check_juniper_mem_generic,
     check_ruleset_name="juniper_mem",
     check_default_parameters={

@@ -4,16 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.memory.agent_based.memory_utilization import (
-    _check_memory_utilization,
-    _discover_memory_utilization,
-    Params,
-)
-
-
-def test_discovery() -> None:
-    assert list(_discover_memory_utilization(12.34)) == [Service()]
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.memory.agent_based.memory_utilization import _check_memory_utilization, Params
 
 
 def test_check() -> None:

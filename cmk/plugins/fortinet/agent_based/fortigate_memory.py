@@ -14,16 +14,15 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     exists,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = int
 
@@ -33,10 +32,6 @@ def parse_fortigate_memory(string_table: StringTable) -> Section | None:
         return int(string_table[0][0])
     except ValueError, IndexError:
         return None
-
-
-def discover_fortigate_memory(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortigate_memory(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -74,7 +69,7 @@ snmp_section_fortigate_memory = SimpleSNMPSection(
 check_plugin_fortigate_memory = CheckPlugin(
     name="fortigate_memory",
     service_name="Memory",
-    discovery_function=discover_fortigate_memory,
+    discovery_function=discover_one_service,
     check_function=check_fortigate_memory,
     check_ruleset_name="memory",
     check_default_parameters={"levels": (70.0, 80.0)},

@@ -11,14 +11,13 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.bluecat.lib import DETECT_BLUECAT
 
 _OPER_STATE_MAP = {
@@ -32,10 +31,6 @@ _OPER_STATE_MAP = {
 
 def parse_bluecat_command_server(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_bluecat_command_server(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_bluecat_command_server(
@@ -64,7 +59,7 @@ snmp_section_bluecat_command_server = SimpleSNMPSection(
 check_plugin_bluecat_command_server = CheckPlugin(
     name="bluecat_command_server",
     service_name="Command Server",
-    discovery_function=discover_bluecat_command_server,
+    discovery_function=discover_one_service,
     check_function=check_bluecat_command_server,
     check_ruleset_name="bluecat_command_server",
     check_default_parameters={

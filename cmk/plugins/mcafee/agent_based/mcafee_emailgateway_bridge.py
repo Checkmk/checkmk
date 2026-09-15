@@ -10,16 +10,15 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
 
 Params = Mapping[str, tuple[float, float]]
@@ -27,10 +26,6 @@ Params = Mapping[str, tuple[float, float]]
 
 def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_mcafee_emailgateway_bridge(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_mcafee_emailgateway_bridge(params: Params, section: StringTable) -> CheckResult:
@@ -82,7 +77,7 @@ snmp_section_mcafee_emailgateway_bridge = SimpleSNMPSection(
 check_plugin_mcafee_emailgateway_bridge = CheckPlugin(
     name="mcafee_emailgateway_bridge",
     service_name="Bridge",
-    discovery_function=discover_mcafee_emailgateway_bridge,
+    discovery_function=discover_one_service,
     check_function=check_mcafee_emailgateway_bridge,
     check_ruleset_name="mcafee_emailgateway_bridge",
     check_default_parameters={},

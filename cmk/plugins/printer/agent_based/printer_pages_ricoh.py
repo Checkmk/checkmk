@@ -6,12 +6,8 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import CheckPlugin, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.printer.lib import (
-    check_printer_pages_types,
-    DETECT_RICOH,
-    discovery_printer_pages,
-    Section,
-)
+from cmk.agent_based.v3_unstable import discover_one_service
+from cmk.plugins.printer.lib import check_printer_pages_types, DETECT_RICOH, Section
 
 METRIC_NAMES = {
     "Counter: Machine Total": "pages_total",
@@ -58,6 +54,6 @@ snmp_section_printer_pages_ricoh = SNMPSection(
 check_plugin_printer_pages_ricoh = CheckPlugin(
     name="printer_pages_ricoh",
     service_name="Pages",
-    discovery_function=discovery_printer_pages,
+    discovery_function=discover_one_service,
     check_function=check_printer_pages_types,
 )

@@ -10,10 +10,9 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.innovaphone.agent_based.innovaphone_licenses import (
     check_innovaphone_licenses,
-    discover_innovaphone_licenses,
     LicenseUsage,
     parse_innovaphone_licenses,
 )
@@ -44,11 +43,6 @@ def test_parse_innovaphone_licenses_invalid_input(string_table: StringTable) -> 
 )
 def test_parse_innovaphone_licenses(string_table: StringTable, expected: LicenseUsage) -> None:
     assert parse_innovaphone_licenses(string_table) == expected
-
-
-def test_discover_innovaphone_licenses() -> None:
-    section = LicenseUsage(used=5, total=10)
-    assert list(discover_innovaphone_licenses(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

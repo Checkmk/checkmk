@@ -13,16 +13,15 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
 
 LEVEL_TYPE = tuple[float, float] | None
@@ -54,10 +53,6 @@ snmp_section_palo_alto_users = SimpleSNMPSection(
         ],
     ),
 )
-
-
-def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
@@ -121,7 +116,7 @@ def cluster_check(
 check_plugin_palo_alto_users = CheckPlugin(
     name="palo_alto_users",
     service_name="Palo Alto Users",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
     cluster_check_function=cluster_check,
     check_ruleset_name="palo_alto_users_rule",

@@ -11,12 +11,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -80,10 +79,6 @@ agent_section_mongodb_replica = AgentSection(
 )
 
 
-def discover_mongodb_replica(section: ReplicaSet) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
     yield (
         Result(
@@ -128,6 +123,6 @@ def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
 check_plugin_mongodb_replica = CheckPlugin(
     name="mongodb_replica",
     service_name="MongoDB Replica Set Status",
-    discovery_function=discover_mongodb_replica,
+    discovery_function=discover_one_service,
     check_function=check_mongodb_replica,
 )

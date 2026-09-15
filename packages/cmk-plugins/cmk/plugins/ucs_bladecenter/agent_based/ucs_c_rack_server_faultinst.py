@@ -18,12 +18,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 
 
@@ -94,13 +93,9 @@ def check_ucs_c_rack_server_faultinst(section: Mapping[str, Sequence[str]]) -> C
         start_str = ""
 
 
-def discover_ucs_c_rack_server_faultinst(section: Mapping[str, Sequence[str]]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_ucs_c_rack_server_faultinst = CheckPlugin(
     name="ucs_c_rack_server_faultinst",
     service_name="Fault Instances Rack",
-    discovery_function=discover_ucs_c_rack_server_faultinst,
+    discovery_function=discover_one_service,
     check_function=check_ucs_c_rack_server_faultinst,
 )

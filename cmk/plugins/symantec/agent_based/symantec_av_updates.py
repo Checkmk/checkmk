@@ -24,15 +24,10 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     StringTable,
 )
-
-
-def discover_symantec_av_updates(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_symantec_av_updates(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -69,7 +64,7 @@ agent_section_symantec_av_updates = AgentSection(
 check_plugin_symantec_av_updates = CheckPlugin(
     name="symantec_av_updates",
     service_name="AV Update Status",
-    discovery_function=discover_symantec_av_updates,
+    discovery_function=discover_one_service,
     check_function=check_symantec_av_updates,
     check_ruleset_name="antivir_update_age",
     check_default_parameters={

@@ -6,32 +6,12 @@
 
 import pytest
 
-from cmk.agent_based.v2 import (
-    CheckResult,
-    Metric,
-    Result,
-    Service,
-    State,
-    StringTable,
-)
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.cisco_sma.agent_based.message_queue import (
     _check_message_queue,
-    _discover_message_queue,
     _parse_message_queue,
     Params,
 )
-
-
-@pytest.mark.parametrize(
-    "string_table",
-    [
-        ([["10", "2", "30", "40"]]),
-    ],
-)
-def test_discover_message_queue(string_table: StringTable) -> None:
-    queue = _parse_message_queue(string_table)
-    assert queue is not None
-    assert list(_discover_message_queue(queue)) == [Service()]
 
 
 @pytest.mark.parametrize(

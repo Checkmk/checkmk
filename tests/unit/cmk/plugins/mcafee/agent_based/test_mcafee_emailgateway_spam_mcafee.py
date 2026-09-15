@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.mcafee.agent_based.mcafee_emailgateway_spam_mcafee import (
     check_mcafee_emailgateway_spam_mcafee,
-    discover_mcafee_emailgateway_spam_mcafee,
 )
 
 _STRING_TABLE: StringTable = [["3.0.0", "20260101"]]
-
-
-def test_discover() -> None:
-    assert list(discover_mcafee_emailgateway_spam_mcafee(_STRING_TABLE)) == [Service()]
 
 
 def test_check() -> None:

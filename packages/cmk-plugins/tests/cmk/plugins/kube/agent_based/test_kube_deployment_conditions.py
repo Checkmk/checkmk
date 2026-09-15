@@ -156,11 +156,6 @@ def test_parse(string_table: StringTable) -> None:
     assert len(section.model_dump()) == 3
 
 
-def test_discovery(section: DeploymentConditions) -> None:
-    discovered_services = list(kube_deployment_conditions.discovery(section))
-    assert len(discovered_services) == 1
-
-
 def test_all_ok_check_result(check_result: CheckResult) -> None:
     assert len(list(check_result)) == 1
 

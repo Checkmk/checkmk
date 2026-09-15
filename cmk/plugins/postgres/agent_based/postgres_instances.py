@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 VersionSection = Mapping[str, str]
 
@@ -123,10 +124,6 @@ check_plugin_postgres_instances = CheckPlugin(
 )
 
 
-def discover_postgres_processes(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_postgres_processes(section: Section) -> CheckResult:
     count = len(section.all_pids)
     if count == 0:
@@ -141,6 +138,6 @@ check_plugin_postgres_processes = CheckPlugin(
     name="postgres_processes",
     sections=["postgres_instances"],
     service_name="PostgreSQL Process Count",
-    discovery_function=discover_postgres_processes,
+    discovery_function=discover_one_service,
     check_function=check_postgres_processes,
 )

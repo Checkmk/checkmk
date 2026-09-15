@@ -8,15 +8,14 @@ from typing import NewType
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 MemoryUsedInBytes = NewType("MemoryUsedInBytes", int)
@@ -28,10 +27,6 @@ def parse_viprinet_mem(string_table: StringTable) -> MemoryUsedInBytes | None:
             return MemoryUsedInBytes(int(value))
         case _:
             return None
-
-
-def discover_viprinet_mem(section: MemoryUsedInBytes) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_viprinet_mem(section: MemoryUsedInBytes) -> CheckResult:
@@ -52,6 +47,6 @@ snmp_section_viprinet_mem = SimpleSNMPSection(
 check_plugin_viprinet_mem = CheckPlugin(
     name="viprinet_mem",
     service_name="Memory",
-    discovery_function=discover_viprinet_mem,
+    discovery_function=discover_one_service,
     check_function=check_viprinet_mem,
 )

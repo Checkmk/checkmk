@@ -11,12 +11,11 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fortinet.lib import DETECT_FORTIGATE
 from cmk.plugins.lib.memory import check_element, get_levels_mode_from_value, MemoryLevels
 
@@ -30,10 +29,6 @@ def parse_fortigate_memory_base(string_table: StringTable) -> Section | None:
     except IndexError, ValueError:
         return None
     return used, total
-
-
-def discover_fortigate_memory_base(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortigate_memory_base(
@@ -66,7 +61,7 @@ snmp_section_fortigate_memory_base = SimpleSNMPSection(
 check_plugin_fortigate_memory_base = CheckPlugin(
     name="fortigate_memory_base",
     service_name="Memory",
-    discovery_function=discover_fortigate_memory_base,
+    discovery_function=discover_one_service,
     check_function=check_fortigate_memory_base,
     check_ruleset_name="memory",
     check_default_parameters={"levels": (70.0, 80.0)},

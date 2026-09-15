@@ -9,15 +9,14 @@ from typing import NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kentix.lib import DETECT_KENTIX
 
 
@@ -39,10 +38,6 @@ def parse_kentix_humidity(string_table: Sequence[StringTable]) -> Section | None
         upper_warn=float(upper_warn),
         text=text,
     )
-
-
-def discover_kentix_humidity(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_kentix_humidity(section: Section) -> CheckResult:
@@ -76,6 +71,6 @@ snmp_section_kentix_humidity = SNMPSection(
 check_plugin_kentix_humidity = CheckPlugin(
     name="kentix_humidity",
     service_name="Humidity",
-    discovery_function=discover_kentix_humidity,
+    discovery_function=discover_one_service,
     check_function=check_kentix_humidity,
 )

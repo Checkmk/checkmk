@@ -7,11 +7,10 @@ from collections.abc import Mapping
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.bluecat.lib import (
     check_bluecat_operational_state,
     CHECK_DEFAULT_PARAMETERS,
@@ -33,14 +32,6 @@ snmp_section_bluecat_dns = SimpleSNMPSection(
     ),
     detect=DETECT_BLUECAT,
 )
-
-
-def discover_bluecat_dns(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    """
-    >>> list(discover_bluecat_dns({'oper_state': 1}))
-    [Service()]
-    """
-    yield Service()
 
 
 def check_bluecat_dns(
@@ -66,7 +57,7 @@ def cluster_check_bluecat_dns(
 check_plugin_bluecat_dns = CheckPlugin(
     name="bluecat_dns",
     service_name="DNS",
-    discovery_function=discover_bluecat_dns,
+    discovery_function=discover_one_service,
     check_ruleset_name="bluecat_dns",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_bluecat_dns,

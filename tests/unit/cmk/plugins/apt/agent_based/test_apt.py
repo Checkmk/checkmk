@@ -7,14 +7,8 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.apt.agent_based.apt import (
-    _data_is_valid,
-    check_apt,
-    discover_apt,
-    parse_apt,
-    Section,
-)
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.plugins.apt.agent_based.apt import _data_is_valid, check_apt, parse_apt, Section
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],
@@ -244,10 +238,6 @@ def test_parse_apt(
     expected_result: Section | None,
 ) -> None:
     assert parse_apt(string_table) == expected_result
-
-
-def test_apt_discovery() -> None:
-    assert list(discover_apt(Section([], [], []))) == [Service()]
 
 
 @pytest.mark.parametrize(

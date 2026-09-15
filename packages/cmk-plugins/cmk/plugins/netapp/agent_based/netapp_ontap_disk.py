@@ -14,17 +14,16 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     InventoryPlugin,
     InventoryResult,
     Metric,
     render,
     Result,
-    Service,
     State,
     StringTable,
     TableRow,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.netapp import models
 
 Section = Sequence[models.DiskModel]
@@ -76,10 +75,6 @@ inventory_plugin_netapp_ontap_disk = InventoryPlugin(
     name="netapp_ontap_disk",
     inventory_function=inventorize_netapp_ontap_disk,
 )
-
-
-def discovery_netapp_ontap_disk_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -240,7 +235,7 @@ check_plugin_netapp_ontap_disk_summary = CheckPlugin(
     name="netapp_ontap_disk_summary",
     service_name="NetApp Disks Summary",
     sections=["netapp_ontap_disk"],
-    discovery_function=discovery_netapp_ontap_disk_summary,
+    discovery_function=discover_one_service,
     check_function=check_netapp_ontap_disk_summary,
     check_ruleset_name="netapp_disks",
     check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,

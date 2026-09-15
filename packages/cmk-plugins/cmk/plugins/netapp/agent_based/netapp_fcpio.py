@@ -17,17 +17,16 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     get_rate,
     get_value_store,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_netapp_fcpio(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -61,10 +60,6 @@ def parse_netapp_fcpio(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_netapp_fcpio(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 snmp_section_netapp_fcpio = SimpleSNMPSection(
     name="netapp_fcpio",
     detect=all_of(
@@ -81,7 +76,7 @@ snmp_section_netapp_fcpio = SimpleSNMPSection(
 check_plugin_netapp_fcpio = CheckPlugin(
     name="netapp_fcpio",
     service_name="FCP I/O",
-    discovery_function=discover_netapp_fcpio,
+    discovery_function=discover_one_service,
     check_function=check_netapp_fcpio,
     check_ruleset_name="netapp_fcportio",
     check_default_parameters={},

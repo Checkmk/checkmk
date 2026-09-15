@@ -6,15 +6,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 _STATUS_VALUES = {
     0: (State.OK, "Array in normal status"),
@@ -40,10 +39,6 @@ _STATUS_VALUES = {
 
 def parse_hitachi_hus_status(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_hitachi_hus_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_hitachi_hus_status(section: StringTable) -> CheckResult:
@@ -73,6 +68,6 @@ snmp_section_hitachi_hus_status = SimpleSNMPSection(
 check_plugin_hitachi_hus_status = CheckPlugin(
     name="hitachi_hus_status",
     service_name="Status",
-    discovery_function=discover_hitachi_hus_status,
+    discovery_function=discover_one_service,
     check_function=check_hitachi_hus_status,
 )

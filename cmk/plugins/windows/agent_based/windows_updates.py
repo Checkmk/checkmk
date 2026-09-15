@@ -14,13 +14,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 # todo(sk): Replace this ugly named tuple with dataclass
@@ -85,11 +84,6 @@ agent_section_windows_updates = AgentSection(
 )
 
 
-# NOTE: section can't be renamed to _section due to creative logic
-def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckResult:
     if section.failed:
         yield Result(state=State.CRIT, notice=f"({section.failed})")
@@ -145,7 +139,7 @@ check_plugin_windows_updates = CheckPlugin(
     name="windows_updates",
     service_name="System Updates",
     check_ruleset_name="windows_updates",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check_windows_updates,
     check_default_parameters={
         "levels_important": (1, 1),

@@ -7,24 +7,12 @@ import json
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_appliance_performance import (
     check_appliance_performance,
     CheckParams,
-    discover_appliance_performance,
     parse_appliance_performance,
 )
-
-
-def test_discover_appliance_performance() -> None:
-    string_table = [[f"[{json.dumps({'perfScore': '20.0'})}]"]]
-    section = parse_appliance_performance(string_table)
-    assert section
-
-    value = list(discover_appliance_performance(section))
-    expected = [Service()]
-
-    assert value == expected
 
 
 @pytest.fixture

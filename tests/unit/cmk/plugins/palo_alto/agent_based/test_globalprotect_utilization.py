@@ -7,10 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.palo_alto.agent_based.globalprotect_utilization import (
     check_globalprotect_utilization,
-    discover_globalprotect_utilization,
     parse_globalprotect_utilization,
     Section,
 )
@@ -25,17 +24,6 @@ def test_parse_globalprotect_utilization(
 ) -> None:
     section = parse_globalprotect_utilization(string_table)
     assert section == expected_result
-
-
-@pytest.mark.parametrize(
-    "section, expected_result",
-    [(Section(utilization=3, max_tunnels=250, active_tunnels=8), [Service()])],
-)
-def test_discover_globalprotect_utilization(
-    section: Section, expected_result: list[Service]
-) -> None:
-    services = list(discover_globalprotect_utilization(section))
-    assert services == expected_result
 
 
 @pytest.mark.parametrize(

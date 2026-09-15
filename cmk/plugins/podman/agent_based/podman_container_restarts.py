@@ -13,12 +13,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     get_value_store,
     NoLevelsT,
-    Service,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import SectionPodmanContainerInspect
 
@@ -26,12 +25,6 @@ from .lib import SectionPodmanContainerInspect
 class Params(TypedDict):
     restarts_total: NoLevelsT | FixedLevelsT[int]
     restarts_last_hour: NoLevelsT | FixedLevelsT[int]
-
-
-def discover_podman_container_restarts(
-    section: SectionPodmanContainerInspect,  # noqa: ARG001
-) -> DiscoveryResult:
-    yield Service()
 
 
 def _calculate_restarts_last_hour(
@@ -94,7 +87,7 @@ check_plugin_podman_container_restarts = CheckPlugin(
     name="podman_container_restarts",
     service_name="Restarts",
     sections=["podman_container_inspect"],
-    discovery_function=discover_podman_container_restarts,
+    discovery_function=discover_one_service,
     check_function=check_podman_container_restarts,
     check_ruleset_name="podman_container_restarts",
     check_default_parameters={},

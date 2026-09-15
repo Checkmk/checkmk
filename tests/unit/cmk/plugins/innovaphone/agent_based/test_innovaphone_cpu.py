@@ -10,11 +10,10 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.innovaphone.agent_based import innovaphone_cpu as innovaphone_cpu_module
 from cmk.plugins.innovaphone.agent_based.innovaphone_cpu import (
     check_innovaphone_cpu,
-    discover_innovaphone_cpu,
     parse_innovaphone_cpu,
     Utilization,
 )
@@ -34,11 +33,6 @@ def test_parse_innovaphone_cpu_empty_data(string_table: StringTable) -> None:
 
 def test_parse_innovaphone_cpu_success() -> None:
     assert parse_innovaphone_cpu([["CPU", "55"]]) == Utilization(55)
-
-
-def test_discover_innovaphone_cpu() -> None:
-    section = Utilization(55)
-    assert list(discover_innovaphone_cpu(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

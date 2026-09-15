@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 
 import time_machine
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.liebert.agent_based.liebert_maintenance import (
     check_plugin_liebert_maintenance,
     Section,
@@ -28,10 +28,6 @@ def _section() -> Section:
         )
     ) is not None
     return section
-
-
-def test_discovery() -> None:
-    assert list(check_plugin_liebert_maintenance.discovery_function(_section())) == [Service()]
 
 
 def test_check() -> None:

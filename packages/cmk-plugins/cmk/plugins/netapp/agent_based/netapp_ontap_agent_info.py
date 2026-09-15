@@ -9,12 +9,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.netapp import models
 
 Section = Sequence[models.AgentInfoModel]
@@ -22,10 +21,6 @@ Section = Sequence[models.AgentInfoModel]
 
 def parse_netapp_ontap_agent_info(string_table: StringTable) -> Section:
     return [models.AgentInfoModel.model_validate_json(line[0]) for line in string_table]
-
-
-def discover_netapp_ontap_agent_info(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_netapp_ontap_agent_info(section: Section) -> CheckResult:
@@ -48,6 +43,6 @@ agent_section_netapp_ontap_agent_info = AgentSection(
 check_plugin_netapp_ontap_agent_info = CheckPlugin(
     name="netapp_ontap_agent_info",
     service_name="NetApp ONTAP Agent info",
-    discovery_function=discover_netapp_ontap_agent_info,
+    discovery_function=discover_one_service,
     check_function=check_netapp_ontap_agent_info,
 )

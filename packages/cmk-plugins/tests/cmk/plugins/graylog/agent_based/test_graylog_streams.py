@@ -68,10 +68,6 @@ def _get_section() -> gs.Section:
     return gs.parse_graylog_streams(STRING_TABLE)
 
 
-def test_discover_no_streams_discovers(section_no_streams: gs.Section) -> None:
-    assert list(gs.discovery_graylog_streams(section_no_streams))
-
-
 def test_check_no_streams(section_no_streams: gs.Section) -> None:
     assert list(gs.check_graylog_streams(_PARAMS, section_no_streams)) == [
         Result(state=State.WARN, summary="Number of streams: 0"),

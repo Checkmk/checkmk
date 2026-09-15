@@ -21,12 +21,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -35,10 +34,6 @@ class EventLogEntry:
 
 
 Section = Sequence[EventLogEntry]
-
-
-def discover_ibm_svc_eventlog(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_ibm_svc_eventlog(section: Section) -> CheckResult:
@@ -72,6 +67,6 @@ agent_section_ibm_svc_eventlog = AgentSection(
 check_plugin_ibm_svc_eventlog = CheckPlugin(
     name="ibm_svc_eventlog",
     service_name="Eventlog",
-    discovery_function=discover_ibm_svc_eventlog,
+    discovery_function=discover_one_service,
     check_function=check_ibm_svc_eventlog,
 )

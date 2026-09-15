@@ -10,17 +10,16 @@ from cmk.agent_based.v2 import (
     Attributes,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     InventoryPlugin,
     InventoryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.device_types import get_device_type_label
 
 HAS_SYSDESC = exists(".1.3.6.1.2.1.1.1.0")
@@ -57,10 +56,6 @@ snmp_section_snmp_info = SimpleSNMPSection(
 )
 
 
-def discover_snmp_info(section: SNMPInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_snmp_info(section: SNMPInfo) -> CheckResult:
     yield Result(
         state=State.OK,
@@ -71,7 +66,7 @@ def check_snmp_info(section: SNMPInfo) -> CheckResult:
 check_plugin_snmp_info = CheckPlugin(
     name="snmp_info",
     service_name="SNMP Info",
-    discovery_function=discover_snmp_info,
+    discovery_function=discover_one_service,
     check_function=check_snmp_info,
 )
 

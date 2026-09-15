@@ -11,7 +11,7 @@ import cmk.utils.paths
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.utils.prediction import PredictionData, PredictionStore
+from cmk.utils.prediction import iter_info_and_data_files, PredictionData
 
 
 class RemoveUnreadablePredictions(UpdateAction):
@@ -29,12 +29,7 @@ class RemoveUnreadablePredictions(UpdateAction):
 
     @staticmethod
     def cleanup_unreadable_files(path: Path) -> None:
-        for info_file in path.rglob(f"*{PredictionStore.INFO_FILE_SUFFIX}"):
-            # It may happen that e.g. hostnames have a ".info" suffix, too. This leads to
-            # directories match the pattern. We have to skip those.
-            if info_file.is_dir():
-                continue
-            data_file = info_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
+        for info_file, data_file in iter_info_and_data_files(path):
             try:
                 _ = PredictionInfo.model_validate_json(info_file.read_text())
                 _ = PredictionData.model_validate_json(data_file.read_text())

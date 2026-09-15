@@ -16,6 +16,7 @@ from cmk.utils.misc import pnp_cleanup
 from cmk.utils.paths import predictions_dir
 from cmk.utils.servicename import ServiceName
 
+from ._file_layout import iter_info_and_data_files, meta_file_template, relative_data_file
 from ._grouping import parse_period_name, PeriodName, time_slices
 
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
@@ -65,9 +66,6 @@ class PredictionData(BaseModel, frozen=True):
 
 
 class PredictionStore:
-    DATA_FILE_SUFFIX = ""
-    INFO_FILE_SUFFIX = ".info"
-    NAME_TEMPLATE = "{meta.metric}/{meta.params.period}-{meta.valid_interval[0]}-{meta.direction}"
     RETENTION: Final[Mapping[PeriodName, int]] = {
         "wday": 7 * _DAY,
         "day": 31 * _DAY,
@@ -85,52 +83,27 @@ class PredictionStore:
 
     @property
     def meta_file_path_template(self) -> str:
-        # make base dir safe for .format call
-        safe_template = str(self.path).replace("{", "{{").replace("}", "}}")
-        return safe_template + f"/{self.NAME_TEMPLATE}{self.INFO_FILE_SUFFIX}"
-
-    @classmethod
-    def relative_data_file(cls, meta: PredictionInfo) -> Path:
-        return Path(cls.NAME_TEMPLATE.format(meta=meta)).with_suffix(cls.DATA_FILE_SUFFIX)
-
-    def _data_file(self, meta: PredictionInfo) -> Path:
-        return self.path / self.relative_data_file(meta=meta)
-
-    @staticmethod
-    def filter_prediction_files_by_metric(
-        metric: str, prediction_files: Iterable[Path]
-    ) -> Iterator[Path]:
-        yield from (
-            prediction_file
-            for prediction_file in prediction_files
-            # note that a metric name cannot have a '/' in it.
-            if metric in prediction_file.parts
-        )
+        return meta_file_template(self.path)
 
     def save_prediction(self, meta: PredictionInfo, prediction: PredictionData) -> None:
-        data_file = self._data_file(meta)
+        data_file = self.path / relative_data_file(meta)
         data_file.parent.mkdir(exist_ok=True, parents=True)
         data_file.write_text(prediction.model_dump_json())
 
-    def iter_all_metadata_files(self) -> Iterable[Path]:
-        if not self.path.exists():
-            return ()
-        return self.path.rglob(f"*{self.INFO_FILE_SUFFIX}")
-
     def remove_outdated_predictions(self, now: float) -> None:
-        for info_path in self.iter_all_metadata_files():
+        for info_path, data_path in iter_info_and_data_files(self.path):
             period, start_time_str = info_path.name.split("-")[:2]
             if (period_name := parse_period_name(period)) is None:
                 continue
 
             if (now - float(start_time_str)) > self.RETENTION[period_name]:
                 info_path.unlink(missing_ok=True)
-                info_path.with_suffix(self.DATA_FILE_SUFFIX).unlink(missing_ok=True)
+                data_path.unlink(missing_ok=True)
 
     def iter_all_valid_predictions(
         self, now: float
     ) -> Iterator[tuple[PredictionInfo, PredictionData | None]]:
-        for info_path in self.iter_all_metadata_files():
+        for info_path, data_path in iter_info_and_data_files(self.path):
             try:
                 meta = PredictionInfo.model_validate_json(info_path.read_text())
             except FileNotFoundError:
@@ -138,8 +111,6 @@ class PredictionStore:
 
             if not meta.valid_interval[0] <= now < meta.valid_interval[1]:
                 continue
-
-            data_path = info_path.with_suffix(self.DATA_FILE_SUFFIX)
 
             try:
                 if info_path.stat().st_mtime <= data_path.stat().st_mtime:

@@ -15,7 +15,11 @@ from cmk.livestatus_client import SingleSiteConnection
 from cmk.livestatus_client.expressions import And, LqSafe
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.services import Services
-from cmk.utils.prediction import PredictionData, PredictionStore
+from cmk.utils.prediction import (
+    iter_complete_info_files,
+    PredictionData,
+    relative_data_file,
+)
 from cmk.utils.servicename import ServiceName
 
 
@@ -34,15 +38,9 @@ class PredictionQuerier:
     service_name: ServiceName
 
     def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]:
-        available_prediction_files = frozenset(
-            PredictionStore.filter_prediction_files_by_metric(metric, self._prediction_files)
-        )
         yield from (
-            PredictionInfo.model_validate_json(self._query_prediction_file_content(prediction_file))
-            for prediction_file in available_prediction_files
-            if prediction_file.suffix == PredictionStore.INFO_FILE_SUFFIX
-            and prediction_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
-            in available_prediction_files
+            PredictionInfo.model_validate_json(self._query_prediction_file_content(info_file))
+            for info_file in iter_complete_info_files(metric, self._prediction_files)
         )
 
     def query_predicted_metrics(self) -> Sequence[str]:
@@ -55,7 +53,7 @@ class PredictionQuerier:
         )
 
     def query_prediction_data(self, meta: PredictionInfo) -> PredictionData:
-        rel_filename = PredictionStore.relative_data_file(meta)
+        rel_filename = relative_data_file(meta)
         return PredictionData.model_validate_json(self._query_prediction_file_content(rel_filename))
 
     def _service_filter(self) -> And:

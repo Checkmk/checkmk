@@ -280,7 +280,7 @@ py_cmk_test(
 )
 
 # Views & visuals test suite: views, visuals, painter, data_source, sidebar,
-# dashboard.
+# dashboard, welcome.
 py_cmk_test(
     name = "views_tests",
     srcs = glob([
@@ -290,6 +290,7 @@ py_cmk_test(
         "sidebar/**/*.py",
         "views/**/*.py",
         "visuals/**/*.py",
+        "welcome/**/*.py",
     ]),
     args = [
         "tests/unit/cmk/gui/dashboard",
@@ -298,6 +299,7 @@ py_cmk_test(
         "tests/unit/cmk/gui/sidebar",
         "tests/unit/cmk/gui/views",
         "tests/unit/cmk/gui/visuals",
+        "tests/unit/cmk/gui/welcome",
     ],
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
@@ -326,11 +328,15 @@ py_cmk_test(
         "//cmk/gui/views:components",
         "//cmk/gui/visuals",
         "//cmk/gui/wato",
+        "//cmk/gui/welcome",
         "//cmk/utils",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
         "//packages/cmk-livestatus-client:livestatus-api",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         "//tests/testlib:rest_api_client",
+        "//tests/testlib/gui",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("flask"),

@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     equals,
     exists,
+    OIDCached,
     Result,
     Service,
     SNMPSection,
@@ -88,8 +89,8 @@ snmp_section_brocade_info = SNMPSection(
     ),
     fetch=[
         SNMPTree(
-            base=".1.3.6.1.2.1.47.1.1.1.1.2",
-            oids=["1"],
+            base=".1.3.6.1.2.1.47.1.1.1.1",
+            oids=[OIDCached("2")],  # entPhysicalDescr
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.1588.2.1.1.1.1",

@@ -265,6 +265,12 @@ def test_legacy_selection() -> None:
     assert host == "my_server"
 
 
+def test_legacy_metric_backend_option_selects_data_backend_plugin() -> None:
+    parameters = diagnostics.deserialize_cl_parameters(["metric-backend"])
+    selected, _host = diagnostics._legacy_selection(parameters)  # noqa: SLF001
+    assert "data_backend_state" in selected
+
+
 @pytest.mark.parametrize(
     "cl_parameters, expected_parameters",
     [
@@ -275,13 +281,13 @@ def test_legacy_selection() -> None:
                 "local-files",
                 "omd-config",
                 "checkmk-crashes",
-                "metric-backend",
+                "data-backend",
             ],
             {
                 "local-files": True,
                 "omd-config": True,
                 "checkmk-crashes": True,
-                "metric-backend": True,
+                "data-backend": True,
             },
         ),
         # files

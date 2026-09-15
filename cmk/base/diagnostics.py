@@ -459,7 +459,9 @@ OPT_CHECKMK_OVERVIEW = "checkmk-overview"
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
 OPT_PERFORMANCE_GRAPHS = "performance-graphs"
-OPT_COMP_METRIC_BACKEND = "metric-backend"
+OPT_COMP_DATA_BACKEND = "data-backend"
+# Legacy spelling of OPT_COMP_DATA_BACKEND, still sent by older central sites
+_LEGACY_OPT_COMP_METRIC_BACKEND = "metric-backend"
 
 _OPTS_WITH_HOST = [
     OPT_PERFORMANCE_GRAPHS,
@@ -470,7 +472,8 @@ _BOOLEAN_CONFIG_OPTS = [
     OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CRASH_REPORTS,
-    OPT_COMP_METRIC_BACKEND,
+    OPT_COMP_DATA_BACKEND,
+    _LEGACY_OPT_COMP_METRIC_BACKEND,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
 ]
@@ -521,7 +524,8 @@ _LEGACY_BOOLEAN_OPT_TO_PLUGIN: Final = {
     OPT_APACHE_CONFIG: "apache_config",
     OPT_CHECKMK_CRASH_REPORTS: "latest_crash_reports",
     OPT_BI_RUNTIME_DATA: "bi_runtime_data",
-    OPT_COMP_METRIC_BACKEND: "metric_backend_state",
+    OPT_COMP_DATA_BACKEND: "data_backend_state",
+    _LEGACY_OPT_COMP_METRIC_BACKEND: "data_backend_state",
 }
 
 # Legacy options carrying the Checkmk server host and the plugin name they select

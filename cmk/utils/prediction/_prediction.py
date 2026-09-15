@@ -6,7 +6,7 @@
 import math
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
-from typing import Literal, NamedTuple, Protocol, Self
+from typing import Final, Literal, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
@@ -22,6 +22,8 @@ LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]
 
 
 _DAY = 86400
+
+_RRD_CONSOLIDATION_FUNCTION: Final = "max"
 
 
 class MetricRecord(Protocol):
@@ -159,6 +161,7 @@ def compute_prediction(
     )
 
     from_time = time_windows[0][0]
+    rpn = f"{info.metric}.{_RRD_CONSOLIDATION_FUNCTION}"
     raw_slices = [
         (
             response.window,
@@ -166,7 +169,7 @@ def compute_prediction(
             from_time - start,
         )
         for start, end in time_windows
-        if (response := get_recorded_data(f"{info.metric}.max", start, end))
+        if (response := get_recorded_data(rpn, start, end))
     ]
 
     return (

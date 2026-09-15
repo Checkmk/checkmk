@@ -88,6 +88,15 @@ AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
     ["elapsed", ""],
 ]
 
+AGENT_OUTPUT_EMPTY_LONG = [
+    ["[[[yoble1|NBA SESSIONS]]]"],
+    ["details", " 0 keine Job sind auf Fehler gelaufen!"],
+    ["exit", " 0"],
+    ["perfdata", " job_count=0"],
+    ["long", ""],
+    ["elapsed", ".31431"],
+]
+
 
 @pytest.mark.parametrize(
     "info,expected",
@@ -318,6 +327,20 @@ def test_oracle_sql_discovery(info, expected):
 def test_oracle_sql_check(info, item, expected):
     result = list(check_oracle_sql(item, {}, parse_oracle_sql(info)))
     assert result == expected
+
+
+def test_oracle_sql_check_empty_long() -> None:
+    with pytest.raises(ValueError):
+        result = list(
+            check_oracle_sql(
+                "YOBLE1 SQL NBA SESSIONS", {}, parse_oracle_sql(AGENT_OUTPUT_EMPTY_LONG)
+            )
+        )
+        assert result == [
+            Result(state=State.OK, summary="0 keine Job sind auf Fehler gelaufen!"),
+            Metric("job_count", 0.0),
+            Metric("elapsed_time", 0.31431),
+        ]
 
 
 def test_check_oracle_sql_cached() -> None:

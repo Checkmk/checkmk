@@ -101,6 +101,21 @@
       }
     }
 
+    &.ai_assistant {
+      &:not(.delayed):hover,
+      &.active {
+        border-left-color: $font-color-purple;
+      }
+
+      a.popup_trigger div {
+        letter-spacing: 0;
+      }
+
+      &.active a.popup_trigger {
+        color: $font-color-purple;
+      }
+    }
+
     @mixin small-menu {
       top: inherit;
       bottom: 0;

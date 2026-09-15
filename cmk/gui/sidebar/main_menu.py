@@ -30,6 +30,7 @@ from cmk.gui.main_menu_types import (
     MainMenuVueApp,
     RenderTopics,
     RenderVueApp,
+    RunJavaScript,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics_popup
@@ -56,6 +57,7 @@ class MainMenuPopupTrigger(NamedTuple):
     icon: DynamicIcon
     sort_index: int
     onopen: str | None
+    onclick: str | None = None
 
 
 def render_direct_link_instead_of_changes_slideout(popup_trigger: MainMenuPopupTrigger) -> None:
@@ -146,6 +148,31 @@ class MainMenuRenderer:
         self, user_permissions: UserPermissions, popup_triggers: list[MainMenuPopupTrigger]
     ) -> None:
         for popup_trigger in popup_triggers:
+            # TODO: those active icons should be defined explicitly in the MainMenuPopupTrigger
+            if isinstance(popup_trigger.icon, dict):
+                active_icon: DynamicIcon = {
+                    "icon": DynamicIconName(popup_trigger.icon["icon"] + "_active"),
+                    "emblem": popup_trigger.icon["emblem"],
+                }
+            else:
+                active_icon = DynamicIconName(popup_trigger.icon + "_active")
+
+            if (onclick := popup_trigger.onclick) is not None:
+                html.open_li()
+                html.open_div(
+                    class_=["popup_trigger", popup_trigger.name],
+                    id_=f"popup_trigger_main_menu_{popup_trigger.name}",
+                )
+                html.a(
+                    self._get_popup_trigger_content(active_icon, popup_trigger),
+                    href="javascript:void(0);",
+                    class_="popup_trigger",
+                    onclick=onclick,
+                )
+                html.close_div()
+                html.close_li()
+                continue
+
             if (
                 user.id is not None
                 and popup_trigger.name == "changes"
@@ -158,15 +185,6 @@ class MainMenuRenderer:
             ):
                 render_direct_link_instead_of_changes_slideout(popup_trigger)
                 continue
-
-            # TODO: those active icons should be defined explicitly in the MainMenuPopupTrigger
-            if isinstance(popup_trigger.icon, dict):
-                active_icon: DynamicIcon = {
-                    "icon": DynamicIconName(popup_trigger.icon["icon"] + "_active"),
-                    "emblem": popup_trigger.icon["emblem"],
-                }
-            else:
-                active_icon = DynamicIconName(popup_trigger.icon + "_active")
 
             html.open_li()
             html.popup_trigger(
@@ -233,6 +251,9 @@ class MainMenuRenderer:
                     icon=icon,
                     sort_index=menu.sort_index,
                     onopen=onopen,
+                    onclick=(
+                        menu.action.onclick if isinstance(menu.action, RunJavaScript) else None
+                    ),
                 )
             )
         return items, search_item
@@ -265,6 +286,10 @@ class MainMenuRenderer:
                     )
                 case RenderTopics():
                     MainMenuPopupRenderer().show(menu, action, user_permissions)
+                case RunJavaScript():
+                    raise RuntimeError(
+                        f"Main menu '{menu.name}' runs JavaScript and has no popup content"
+                    )
             html.close_div()
             return output_funnel.drain()
 

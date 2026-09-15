@@ -76,7 +76,12 @@ class RenderVueApp:
     vue_app: MainMenuVueApp
 
 
-MainMenuAction = RenderTopics | RenderVueApp
+@dataclass(frozen=True)
+class RunJavaScript:
+    onclick: str
+
+
+MainMenuAction = RenderTopics | RenderVueApp | RunJavaScript
 
 
 class MainMenu(NamedTuple):

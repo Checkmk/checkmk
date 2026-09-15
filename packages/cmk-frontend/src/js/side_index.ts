@@ -6,6 +6,7 @@
 import $ from 'jquery'
 
 /* eslint-disable import/no-namespace -- Needed for exports */
+import * as aiAssistant from './modules/aiAssistant'
 import * as ajax from './modules/ajax'
 import * as foldable_container from './modules/foldable_container'
 import './modules/forms'
@@ -22,6 +23,7 @@ $(() => {
   const keyShortcuts = getKeyShortcutServiceInstance(document.getElementsByTagName('iframe'))
 
   main_menu_shortcut_handler.register_shortcuts(keyShortcuts)
+  aiAssistant.initialize()
 })
 
 export const cmk_export = {
@@ -35,6 +37,7 @@ export const cmk_export = {
     visibility_detection: visibility_detection,
     valuespecs: valuespecs,
     popup_menu: popup_menu,
+    aiAssistant: aiAssistant,
     handle_main_menu: main_menu_shortcut_handler.handle_main_menu
   }
 }

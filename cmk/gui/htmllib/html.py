@@ -54,7 +54,7 @@ from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import requested_file_name
 
-from .generator import HTMLWriter
+from .generator import ClickAction, HTMLWriter
 from .tag_rendering import (
     HTMLContent,
     HTMLTagAttributes,
@@ -977,6 +977,7 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec | None = None,
         href: str = "javascript:void(0)",
         onclick: str | None = None,
+        click_action: ClickAction | None = None,
     ) -> None:
         class_ = [] if class_ is None else class_
         class_ += ["toggle_switch"]
@@ -986,6 +987,7 @@ class HTMLGenerator(HTMLWriter):
             title=help_txt,
             icon=StaticIcon(IconNames.toggle_on if enabled else IconNames.toggle_off),
             onclick=onclick,
+            click_action=click_action,
             class_=class_,
         )
 
@@ -1468,6 +1470,7 @@ class HTMLGenerator(HTMLWriter):
         # The first step was to only change call sites from painters.
         theme: Theme = theme,  # noqa: ARG004
         download: str | None = None,
+        click_action: ClickAction | None = None,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1475,7 +1478,7 @@ class HTMLGenerator(HTMLWriter):
         elif class_ is not None:
             classes.append(class_)  # type: ignore[unreachable]
 
-        href = url if not onclick else "javascript:void(0)"
+        href = url if not (onclick or click_action) else "javascript:void(0)"
         assert href is not None
 
         if isinstance(icon, StaticIcon):
@@ -1493,6 +1496,7 @@ class HTMLGenerator(HTMLWriter):
             target=target if target else "",
             onclick=onclick,
             download=download,
+            **(click_action.data_attributes() if click_action else {}),
         )
 
     def icon_loading_button(
@@ -1533,6 +1537,7 @@ class HTMLGenerator(HTMLWriter):
         # The first step was to only change call sites from painters.
         theme: Theme = theme,
         download: str | None = None,
+        click_action: ClickAction | None = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
@@ -1547,6 +1552,7 @@ class HTMLGenerator(HTMLWriter):
                 class_,
                 theme=theme,
                 download=download,
+                click_action=click_action,
             )
         )
 

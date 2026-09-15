@@ -12,7 +12,7 @@ from typing import assert_never, get_args, Literal, NamedTuple, TypeGuard
 from cmk.ccc.site import SiteId, url_prefix
 from cmk.gui import pagetypes
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.icon_helpers import migrate_to_dynamic_icon, migrate_to_static_icon
@@ -61,6 +61,7 @@ def render_link(
     target: str | None = None,
     onclick: str | None = None,
     title: str | None = None,
+    click_action: ClickAction | None = None,
 ) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
@@ -76,6 +77,7 @@ def render_link(
         target=target or "",
         onclick=onclick or None,
         title=title,
+        **(click_action.data_attributes() if click_action else {}),
     )
 
 
@@ -85,8 +87,13 @@ def link(
     target: str | None = None,
     onclick: str | None = None,
     title: str | None = None,
+    click_action: ClickAction | None = None,
 ) -> None:
-    html.write_html(render_link(text, url, target=target, onclick=onclick, title=title))
+    html.write_html(
+        render_link(
+            text, url, target=target, onclick=onclick, title=title, click_action=click_action
+        )
+    )
 
 
 def bulletlink(

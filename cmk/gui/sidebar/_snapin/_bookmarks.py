@@ -17,6 +17,7 @@ from cmk.gui import pagetypes
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -328,7 +329,7 @@ class Bookmarks(SidebarSnapin):
         link(
             _("Add bookmark"),
             "javascript:void(0)",
-            onclick="cmk.sidebar.add_bookmark()",
+            click_action=ClickAction(action="add_bookmark"),
         )
         link(_("Edit"), "bookmark_lists.py")
         end_footnote_links()

@@ -273,7 +273,7 @@ def test_show_renders_a_foldable_topic_per_bookmark_topic(
     assert "Mine" in rendered
     assert "Other" in rendered
     assert "All hosts" in rendered
-    assert "cmk.sidebar.add_bookmark()" in rendered
+    assert 'data-cmk_on_click="add_bookmark"' in rendered
     assert "bookmark_lists.py" in rendered
 
 

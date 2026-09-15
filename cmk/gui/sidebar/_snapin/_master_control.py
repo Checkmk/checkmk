@@ -13,6 +13,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui import site_config, sites, user_sites
 from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -167,14 +168,6 @@ class MasterControlSnapin(SidebarSnapin):
                 ],
                 filename="switch_master_state.py",
             )
-            onclick = (
-                """cmk.ajax.call_ajax('%s', {
-            method: "POST",
-            response_handler: cmk.sidebar.update_vue_snapin_contents,
-            handler_data: 'snapin_master_control',
-            })"""
-                % url
-            )
 
             html.open_tr()
             html.td(title, class_="left")
@@ -183,7 +176,7 @@ class MasterControlSnapin(SidebarSnapin):
                 enabled=colvalue,
                 help_txt=_("Switch '%(title)s' to '%(state)s'")
                 % {"title": title, "state": _("off") if colvalue else _("on")},
-                onclick=onclick,
+                click_action=ClickAction(action="switch_master_state", arguments={"url": url}),
                 class_=["large"],
             )
             html.close_td()

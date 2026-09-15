@@ -11,6 +11,7 @@ import * as d3Sankey from 'd3-sankey'
 import $ from 'jquery'
 
 import * as callable_functions from '@/modules/callable_functions'
+import * as click_actions from '@/modules/click_actions'
 
 import * as activation from './modules/activation'
 import * as ajax from './modules/ajax'
@@ -67,6 +68,9 @@ $(() => {
 
   // add a confirmation popup for each for that has a valid confirmation text
   callable_functions.init_callable_ts_functions(document)
+
+  // CSP-compatible replacement for inline onclick handlers
+  click_actions.init_click_action_dispatcher()
 
   document
     .querySelectorAll<HTMLFormElement>('form[data-cmk_form_confirmation]')

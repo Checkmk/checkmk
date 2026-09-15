@@ -200,7 +200,7 @@ def test_show_site_links_each_toggle_to_the_opposite_state(
 
     assert "state=0&amp;switch=enable_notifications" in rendered
     assert "state=1&amp;switch=execute_service_checks" in rendered
-    assert "cmk.sidebar.update_vue_snapin_contents" in rendered
+    assert 'data-cmk_on_click="switch_master_state"' in rendered
 
 
 @pytest.mark.usefixtures("patch_theme")

@@ -23,7 +23,7 @@ def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
 GEN_ID_COUNT = {"c": 0}
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     GEN_ID_COUNT["c"] = 0
 
@@ -55,6 +55,7 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
         ("clustered_services", True, True),
     ],
 )
+@pytest.mark.usefixtures("fixture_gen_id")
 def test_rule_from_ruleset_defaults(
     ruleset_name: str, default_value: RuleValue, is_binary: bool
 ) -> None:

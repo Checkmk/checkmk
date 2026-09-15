@@ -2,11 +2,17 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""agent_rustik
+"""agent_kube_v2
 
-Checkmk special agent for the Kubernetes 3.0 pull-mode backend ("rustik"): a thin
-HTTP client that connects to the rustik endpoint and prints the sections it returns
-to stdout. It lives alongside the classic agent_kube and shares the same check plugins.
+Checkmk special agent for the Checkmk Kubernetes Agent pull-mode.
+
+More about the in-cluster agent including its source code can be found here:
+https://github.com/Checkmk/checkmk-kubernetes-agent
+
+This special agent is a thin HTTP client that connects to the agent's pull
+endpoint and simply returns the pre-generated sections received from the agent.
+
+It lives shares the same check plugins as the legacy agent_kube special agent.
 """
 
 import argparse
@@ -22,13 +28,13 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
-AGENT = "rustik"
+AGENT = "kube_v2"
 
 SECRET_OPTION = "secret"
 
 USER_AGENT = f"checkmk-special-{AGENT}-{__version__}"
 
-LOGGER = logging.getLogger("agent_rustik")
+LOGGER = logging.getLogger("agent_kube_v2")
 
 
 def _to_requests_proxies(raw: str) -> MutableMapping[str, str]:
@@ -42,12 +48,12 @@ def _to_requests_proxies(raw: str) -> MutableMapping[str, str]:
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    prog, description = __doc__.split("\n\n")
+    prog, description = __doc__.split("\n\n", 1)
     parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Log the communication path to rustik and raise Python exceptions.",
+        help="Log the communication path to the agent and raise Python exceptions.",
     )
     parser.add_argument(
         "--vcrtrace",
@@ -60,7 +66,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--proxy",
         default="FROM_ENVIRONMENT",
         help=(
-            "HTTP proxy used to connect to rustik. If not set, the environment settings "
+            "HTTP proxy used to connect to the agent. If not set, the environment settings "
             "will be used."
         ),
     )
@@ -79,21 +85,19 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--no-cert-check",
         action="store_true",
-        help=(
-            "Disable SSL certificate verification (certificate verification is enabled by default)."
-        ),
+        help="Disable SSL certificate verification (certificate verification is enabled by default).",
     )
     parser_add_secret_option(
         parser,
         short="-s",
         long=f"--{SECRET_OPTION}",
-        help="Shared secret for authenticating against rustik.",
+        help="Shared secret for authenticating to the agent.",
         required=False,
     )
     parser.add_argument(
         "url",
         metavar="URL",
-        help="The base URL of the rustik agent. /pull/sections is appended automatically.",
+        help="The base URL of the in-cluster agent. The endpoint /pull/sections is appended automatically.",
     )
     return parser.parse_args(argv)
 
@@ -121,11 +125,11 @@ def main() -> int:
 
     headers = {"User-Agent": USER_AGENT}
     if args.secret is not None or args.secret_id is not None:
-        # Bearer token, as accepted by rustik's pull endpoint (and matching agent_kube).
+        # Bearer token, as accepted by the agent's pull endpoint (and matching agent_kube).
         headers["Authorization"] = f"Bearer {resolve_secret_option(args, SECRET_OPTION).reveal()}"
 
     url = f"{args.url.rstrip('/')}/pull/sections"
-    LOGGER.info("Fetching sections from rustik at %(url)s", {"url": url})
+    LOGGER.info("Fetching sections from the agent at %(url)s", {"url": url})
 
     try:
         response = requests.get(
@@ -137,13 +141,13 @@ def main() -> int:
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as error:
-        sys.stderr.write(f"Error fetching data from rustik: {error}\n")
+        sys.stderr.write(f"Error fetching data from the in-cluster agent: {error}\n")
         if args.debug:
             raise
         return 1
 
     LOGGER.info(
-        "rustik responded with %(status)s %(reason)s (%(bytes)d bytes in %(seconds).3fs)",
+        "the in-cluster agent responded with %(status)s %(reason)s (%(bytes)d bytes in %(seconds).3fs)",
         {
             "status": response.status_code,
             "reason": response.reason,
@@ -152,7 +156,6 @@ def main() -> int:
         },
     )
 
-    # For now we print rustik's response body as-is.
     sys.stdout.write(response.text)
     return 0
 

@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.kube.server_side_calls.special_agent_rustik import special_agent_rustik
+from cmk.plugins.kube.server_side_calls.special_agent_kube_v2 import special_agent_kube_v2
 from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
@@ -28,7 +28,7 @@ MINIMAL_PARAMS: Mapping[str, object] = {"url": URL, "shared_secret": SECRET, "ve
 def _arguments(
     params: Mapping[str, object], host_config: HostConfig = HOST_CONFIG
 ) -> Sequence[str | Secret]:
-    (command,) = special_agent_rustik(params, host_config)
+    (command,) = special_agent_kube_v2(params, host_config)
     return command.command_arguments
 
 

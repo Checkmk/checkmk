@@ -195,7 +195,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_redfish"),
     SpecialAgent("agent_redfish_power"),
     SpecialAgent("agent_ruckus_spot"),
-    SpecialAgent("agent_rustik"),
+    SpecialAgent("agent_kube_v2"),
     SpecialAgent("agent_salesforce"),
     SpecialAgent("agent_siemens_plc"),
     SpecialAgent("agent_smb_share"),

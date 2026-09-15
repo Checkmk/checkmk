@@ -49,12 +49,14 @@ def _tcp_timeouts() -> Dictionary:
 
 def _parameter_form() -> Dictionary:
     return Dictionary(
-        title=Title("Kubernetes pull mode"),
+        title=Title("Kubernetes"),
         help_text=Help(
-            "Monitor a Kubernetes cluster in pull mode. Checkmk connects to an agent that runs "
-            "inside the cluster, which gathers the data and returns it on request. This rule only "
-            "configures how to reach that agent. What is monitored is configured in the cluster "
-            "itself, so there are no Kubernetes-specific settings here."
+            "Monitor a Kubernetes cluster using the in-cluster agent via pull mode. "
+            "Checkmk connects to an agent that runs inside the cluster, which gathers the data "
+            "and returns it on request. This rule configures how to reach that agent. "
+            "What is returned by the agent (and therefore what is monitored) is configured in "
+            "the cluster itself via the agent's Helm chart. Thus, there are no Kubernetes-specific "
+            "settings here."
         ),
         elements={
             "url": DictElement(
@@ -120,9 +122,9 @@ def _parameter_form() -> Dictionary:
     )
 
 
-rule_spec_special_agent_rustik = SpecialAgent(
-    name="rustik",
-    title=Title("Kubernetes pull mode"),
+rule_spec_special_agent_kube_v2 = SpecialAgent(
+    name="kube_v2",
+    title=Title("Kubernetes"),
     topic=Topic.CLOUD,
     parameter_form=_parameter_form,
 )

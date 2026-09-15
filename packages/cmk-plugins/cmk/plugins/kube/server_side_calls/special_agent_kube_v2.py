@@ -59,8 +59,8 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterator[Speci
     yield SpecialAgentCommand(command_arguments=args)
 
 
-special_agent_rustik = SpecialAgentConfig(
-    name="rustik",
+special_agent_kube_v2 = SpecialAgentConfig(
+    name="kube_v2",
     parameter_parser=Params.model_validate,
     commands_function=commands_function,
 )

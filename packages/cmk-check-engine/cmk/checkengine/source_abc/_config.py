@@ -16,6 +16,7 @@ from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugin_backend import sections_needing_redetection
 from cmk.checkengine.plugins import AgentBasedPlugins, make_plugin_store
 from cmk.checkengine.snmplib import SNMPHostConfig, SNMPPluginStore, SNMPSectionName
+from cmk.ruleset_matcher.labels import Labels
 
 __all__ = ["SourceConfig"]
 
@@ -36,6 +37,7 @@ class SourceConfig:
     def __init__(
         self,
         *,
+        labels_of_host: Callable[[HostName], Labels],
         snmp_config: Callable[[HostName, _AddressFamily, HostAddress, SourceType], SNMPHostConfig],
         checking_sections: Callable[[AgentBasedPlugins, HostName], frozenset[SNMPSectionName]],
         snmp_exclude_sections: Callable[[HostName], Sequence[Mapping[str, Sequence[str]]]],
@@ -50,6 +52,7 @@ class SourceConfig:
         uuid_lookup_dir: Path,
     ) -> None:
         # Pure pass-through callbacks are exposed directly as attributes.
+        self.labels_of_host: Final = labels_of_host
         self.snmp_config: Final = snmp_config
         self.snmp_status_data_inventory: Final = status_data_inventory
         self.program_commandline: Final = program_commandline

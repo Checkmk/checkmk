@@ -1476,6 +1476,7 @@ class ConfigCache:
         them to construct their own fetchers.
         """
         return SourceConfig(
+            labels_of_host=self.label_manager.labels_of_host,
             snmp_config=lambda host_name, host_ip_family, ip_address, source_type: (
                 self.make_snmp_config(
                     host_name,

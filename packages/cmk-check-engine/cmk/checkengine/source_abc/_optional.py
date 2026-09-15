@@ -12,6 +12,7 @@ from typing import Self
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.filecache import MaxAge
+from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import ComputedDataSources
 
 from ._abc import Source
@@ -27,6 +28,7 @@ class SourceContext:
     """
 
     host_name: HostName
+    host_labels: Labels
     ipaddress: HostAddress | None
     computed_datasources: ComputedDataSources
     max_age_agent: MaxAge

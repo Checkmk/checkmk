@@ -18,12 +18,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import cmk.ccc.version as cmk_version
+from tests.testlib.pytest_helpers import ide, registration
+from tests.testlib.unit import fake_site
 
 # NOTE: fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
 # Modules like cmk/gui/userdb/store.py capture `cmk.utils.paths.var_dir` at import time; patching
 # after those imports is too late and yields relative paths at runtime.
-from tests.testlib.unit import fake_site
-
 fake_site.fake_paths()
 
 
@@ -119,25 +119,9 @@ class DummyLicensingHandler(LicensingHandler):
 
 logger = logging.getLogger(__name__)
 
-# This allows exceptions to be handled by IDEs (rather than just printing the results)
-# when pytest based tests are being run from inside the IDE
-# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
-PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_exception_interact(
-    node: pytest.Item | pytest.Collector,
-    call: pytest.CallInfo[object],
-    report: pytest.CollectReport | pytest.TestReport,
-) -> None:
-    if not (excinfo := call.excinfo):
-        return
-
-    excp_ = excinfo.value
-    report.longrepr = node.repr_failure(excinfo)
-    if PYTEST_RAISE:
-        raise excp_
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, ide)
 
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]

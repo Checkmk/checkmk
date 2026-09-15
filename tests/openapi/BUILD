@@ -24,6 +24,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client:py_livestatus",
+        "//tests/testlib/pytest_helpers",
         "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),

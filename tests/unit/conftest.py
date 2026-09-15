@@ -26,15 +26,15 @@ from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
+from tests.testlib.pytest_helpers import ide, registration
 from tests.testlib.unit import fake_site
 from tests.unit.mocks_and_helpers import DummyLicensingHandler
 
 logger = logging.getLogger(__name__)
 
-# This allows exceptions to be handled by IDEs (rather than just printing the results)
-# when pytest based tests are being run from inside the IDE
-# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
-PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, ide)
 
 
 # Cleanup temporary directory created above
@@ -76,21 +76,6 @@ def fixture_fake_site(
 ) -> None:
     """Wrapper of multiple fixtures to immitate a site environment for testing"""
     return
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_exception_interact(  # type: ignore[misc]
-    node: pytest.Item | pytest.Collector,
-    call: pytest.CallInfo,
-    report: pytest.CollectReport | pytest.TestReport,
-) -> None:
-    if not (excinfo := call.excinfo):
-        return
-
-    excp_ = excinfo.value
-    report.longrepr = node.repr_failure(excinfo)
-    if PYTEST_RAISE:
-        raise excp_
 
 
 @pytest.fixture

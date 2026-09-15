@@ -19,8 +19,6 @@ from ._prediction import (
     PredictionStore,
 )
 
-EstimatedLevels = tuple[tuple[float, float] | None, tuple[float, float] | None]
-
 logger = logging.getLogger("cmk.prediction")
 
 

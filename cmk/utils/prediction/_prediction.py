@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 import math
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
@@ -18,9 +17,6 @@ from ..misc import pnp_cleanup
 from ..paths import predictions_dir
 from ..servicename import ServiceName
 from ._grouping import time_slices
-
-logger = logging.getLogger("cmk.prediction")
-
 
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
 

@@ -1607,7 +1607,7 @@ class DcdAPI(BaseAPI):
                 "title": title,
                 "site": site if site else self.session.site,
                 "connector": {
-                    "connector_type": "metric_backend",
+                    "connector_type": "telemetry_metrics",
                     "interval": interval,
                     "host_name_lookup_rules": [
                         {

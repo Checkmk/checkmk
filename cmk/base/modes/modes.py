@@ -450,7 +450,17 @@ def print_(txt: str) -> None:
         sys.stdout.flush()
 
 
-_DEFAULT_PAGER: Final = "less --quit-if-one-screen --no-init"
+_DEFAULT_PAGER: Final = "less"
+
+_PAGER_PROMPT: Final = (
+    "?ltline %lt?L/%L.:byte %bB?s/%s..?e (END):?pB %pB\\%.. (press h for help or q to quit)"
+)
+
+_LESS_OPTIONS: Final = f"--no-init --prompt={_PAGER_PROMPT}$"
+
+
+def _pager_environment(environ: Mapping[str, str]) -> Mapping[str, str]:
+    return {**environ, "LESS": f"{_LESS_OPTIONS} {environ.get('LESS', '')}".rstrip()}
 
 
 @contextmanager
@@ -474,6 +484,7 @@ def write_paged(txt: str) -> None:
                 input=txt,
                 text=True,
                 check=False,
+                env=_pager_environment(os.environ),
             )
     except OSError, ValueError:
         print_(txt)

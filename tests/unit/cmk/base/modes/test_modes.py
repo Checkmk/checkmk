@@ -9,7 +9,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.base.modes.modes import write_paged
+from cmk.base.modes.modes import _pager_environment, write_paged
 from cmk.ccc.exceptions import raise_mkterminate_on_sigint
 
 
@@ -61,3 +61,7 @@ def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
     write_paged("the help\n")
 
     assert capfd.readouterr().out == "the help\n"
+
+
+def test_a_users_own_less_options_are_kept_after_ours() -> None:
+    assert _pager_environment({"LESS": "--tabs=4"})["LESS"].endswith("$ --tabs=4")

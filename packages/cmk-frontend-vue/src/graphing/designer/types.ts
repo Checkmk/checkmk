@@ -20,7 +20,7 @@ export type RRDMetricItem = components['schemas']['CustomGraphRRDMetricDataSourc
 export type RRDQueryItem = components['schemas']['CustomGraphRRDQueryDataSource']
 // consolidation_function carries the designer's flat shape, not the wire's.
 export type TelemetryMetricsItem = Omit<
-  components['schemas']['CustomGraphMetricBackendDataSource'],
+  components['schemas']['CustomGraphTelemetryMetricsDataSource'],
   'consolidation_function'
 > & { consolidation_function: DesignerConsolidationFunction }
 export type ConstantItem = components['schemas']['CustomGraphConstantDataSource']

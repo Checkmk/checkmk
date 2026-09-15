@@ -18,7 +18,7 @@ from ._metric_query import (
     QueryDataKey,
 )
 
-METRIC_BACKEND_KEY = "metric_backend"
+TELEMETRY_METRICS_KEY = "metric_backend"
 
 
 class FetchTimeSeriesProtocol(Protocol):
@@ -46,7 +46,7 @@ class BackendQueryBuilderProtocol(Protocol):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MetricBackend:
+class TelemetryMetricsBackend:
     @property
     def feature_available(self) -> bool:
         return False
@@ -58,10 +58,10 @@ class MetricBackend:
         return None
 
 
-class MetricBackendRegistry(Registry[MetricBackend]):
+class TelemetryMetricsBackendRegistry(Registry[TelemetryMetricsBackend]):
     @override
-    def plugin_name(self, instance: MetricBackend) -> str:
-        return METRIC_BACKEND_KEY
+    def plugin_name(self, instance: TelemetryMetricsBackend) -> str:
+        return TELEMETRY_METRICS_KEY
 
 
-metric_backend_registry = MetricBackendRegistry()
+telemetry_metrics_backend_registry = TelemetryMetricsBackendRegistry()

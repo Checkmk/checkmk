@@ -49,7 +49,7 @@ const props = defineProps<{
   encryption_allowed: boolean
   event_console_allowed: boolean
   collector_activation_allowed: boolean
-  metric_backend_allowed: boolean
+  data_backend_allowed: boolean
   may_create_password: boolean
   activate_changes_url: string
   grpc_receiver_endpoint_override?: string | null
@@ -215,7 +215,7 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
     if (!props.collector_activation_allowed && action.key === 'enableCollector') {
       return false
     }
-    if (!props.metric_backend_allowed && action.key === 'enableDataBackend') {
+    if (!props.data_backend_allowed && action.key === 'enableDataBackend') {
       return false
     }
     return true

@@ -173,9 +173,9 @@ from ._source import (
 from ._telemetry_metrics_registry import (
     BackendQueryBuilderProtocol,
     FetchTimeSeriesProtocol,
-    METRIC_BACKEND_KEY,
-    metric_backend_registry,
-    MetricBackend,
+    telemetry_metrics_backend_registry,
+    TELEMETRY_METRICS_KEY,
+    TelemetryMetricsBackend,
 )
 from ._unit import (
     ConvertibleUnitSpecification,
@@ -301,9 +301,9 @@ __all__ = [
     "LineType",
     "LivestatusQueryFunc",
     "merge_rrd_columns",
-    "METRIC_BACKEND_KEY",
-    "metric_backend_registry",
-    "MetricBackend",
+    "TELEMETRY_METRICS_KEY",
+    "telemetry_metrics_backend_registry",
+    "TelemetryMetricsBackend",
     "MetricName",
     "monitored_metrics_autocompleter",
     "metrics_from_api",

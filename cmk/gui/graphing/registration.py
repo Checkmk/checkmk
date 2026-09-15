@@ -20,8 +20,8 @@ from ._prediction_graphs import prediction_graph_dispatcher
 from ._prediction_page import PredictionPage, ServiceBreadcrumbFunc
 from ._settings import ConfigVariableGraphTimeranges
 from ._telemetry_metrics_registry import (
-    metric_backend_registry,
-    MetricBackend,
+    telemetry_metrics_backend_registry,
+    TelemetryMetricsBackend,
 )
 from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
@@ -52,7 +52,7 @@ def register(
 
     _register_graph_dispatchers(graph_dispatcher_registry, community_graph_codec())
 
-    metric_backend_registry.register(MetricBackend())
+    telemetry_metrics_backend_registry.register(TelemetryMetricsBackend())
 
     register_visitor_class(MetricExtended, MetricVisitor)
 

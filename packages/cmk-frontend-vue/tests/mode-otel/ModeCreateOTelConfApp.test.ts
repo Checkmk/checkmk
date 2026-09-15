@@ -17,7 +17,7 @@ const PROPS = {
   encryption_allowed: true,
   event_console_allowed: true,
   collector_activation_allowed: true,
-  metric_backend_allowed: true,
+  data_backend_allowed: true,
   may_create_password: true,
   activate_changes_url: 'wato.py?mode=changelog'
 }

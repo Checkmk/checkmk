@@ -24,13 +24,17 @@ command that converts a legacy configuration file into the
 ### Running the Migration
 
 ```
-mk-oracle --migrate-config <legacy-config> [--migrate-output <file>]
+mk-oracle --migrate-config <legacy-config> [--migrate-subdir <mk_oracle.d>] [--migrate-output <file>]
 ```
 
-| Option                          | Description                                                                                                    |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `-M`, `--migrate-config <path>` | Path to the legacy configuration file to convert                                                               |
-| `--migrate-output <path>`       | Write the result to this file (overwritten if it exists). Without this option the result is printed to stdout. |
+The deployed binary is `$MK_LIBDIR/plugins/libexec/mk-oracle-v2/mk-oracle-v2` (`.exe` on
+Windows); the examples call it `mk-oracle`.
+
+| Option                          | Description                                                                                                                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-M`, `--migrate-config <path>` | Path to the legacy configuration file to convert                                                                                                                                               |
+| `--migrate-subdir <dir>`        | The legacy `mk_oracle.d` directory. Its non-hidden `*.cfg` files are appended to the main file in name order and sourced in the same shell, exactly as the legacy plugin does. Linux/AIX only. |
+| `--migrate-output <path>`       | Write the result to this file (overwritten if it exists). Without this option the result is printed to stdout.                                                                                 |
 
 Typical invocations:
 
@@ -40,6 +44,9 @@ mk-oracle --migrate-config /etc/check_mk/mk_oracle.cfg
 
 # then write the new configuration file
 mk-oracle --migrate-config /etc/check_mk/mk_oracle.cfg --migrate-output /etc/check_mk/mk-oracle.yml
+
+# with a mk_oracle.d directory
+mk-oracle --migrate-config /etc/check_mk/mk_oracle.cfg --migrate-subdir /etc/check_mk/mk_oracle.d --migrate-output /etc/check_mk/mk-oracle.yml
 ```
 
 ```powershell
@@ -47,8 +54,8 @@ mk-oracle --migrate-config /etc/check_mk/mk_oracle.cfg --migrate-output /etc/che
 mk-oracle.exe --migrate-config C:\ProgramData\checkmk\agent\config\mk_oracle_cfg.ps1 --migrate-output C:\ProgramData\checkmk\agent\config\mk-oracle.yml
 ```
 
-The command exits with code `0` on success and `1` on failure (the legacy file cannot
-be read, `DBUSER` is not defined, or the output file cannot be written).
+The command exits with code `0` on success and `1` on failure (the legacy files cannot
+be read or executed, `DBUSER` is not defined, or the output file cannot be written).
 
 **The legacy config is executed.** To resolve variable values, the migration sources
 the legacy file in its native shell — `bash` on Linux, `ksh` on AIX, PowerShell on
@@ -65,10 +72,12 @@ The generated file is a single YAML document consisting of:
    (credentials are masked); `REMOTE_INSTANCE_*` entries that could not be parsed
    are marked `# INVALID`.
 3. `# WARNING:` comments for everything that needs manual attention, also printed
-   to the terminal: custom SQL files that cannot be executed as they are (see
-   [Adapting Custom SQL Files](#adapting-custom-sql-files)) and custom SQL sections
-   whose target instances could not be determined (see
-   [Custom SQL Sections](#custom-sql-sections-sqls_)).
+   to the terminal. The rule is: a legacy setting the new plugin does not support is
+   reported, not dropped silently. Warnings cover custom SQL files that cannot be
+   read or executed as they are (see [Adapting Custom SQL Files](#adapting-custom-sql-files)),
+   custom SQL sections whose target instances could not be determined and settings
+   without a counterpart (see [Custom SQL Sections](#custom-sql-sections-sqls_) and
+   [What Is Not Migrated](#what-is-not-migrated)).
 4. The converted configuration below the `# --- Unified Config ---` marker.
 
 The legacy file itself is not copied into the output — keep it until you have
@@ -108,22 +117,23 @@ of them on stderr:
 
 ### What Is Migrated
 
-| Legacy variable                            | Migrated to                                                                                       |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `DBUSER` (required)                        | Top-level `connection:` (hostname, port) and `authentication:`, plus the first `instances:` entry |
-| `DBUSER_<SID>`                             | An `instances:` entry with per-instance `connection:` and `authentication:`                       |
-| `ASMUSER`                                  | `asm_username`, `asm_password`, `asm_role`, `asm_type` under `authentication:`                    |
-| `REMOTE_INSTANCE_<ID>`                     | An `instances:` entry including `piggyback_host:` (Linux/AIX only)                                |
-| `SYNC_SECTIONS` / `ASYNC_SECTIONS`         | `sections:` entries with `is_async: false` / `true`                                               |
-| `SYNC_ASM_SECTIONS` / `ASYNC_ASM_SECTIONS` | `sections:` entries with `affinity: "asm"` (`"all"` if the section is also a normal section)      |
-| `CACHE_MAXAGE`                             | `cache_age:`                                                                                      |
-| `SQLS_MAX_CACHE_AGE`                       | `custom_metrics_cache_age:`                                                                       |
-| `MAX_TASKS`                                | `options.threads:` (only for values ≥ 2, capped at 8)                                             |
-| `ONLY_SIDS`                                | `discovery.include:` (with `detect: true`)                                                        |
-| `SKIP_SIDS`, `EXCLUDE_<SID>="ALL"`         | `discovery.exclude:` (with `detect: true`)                                                        |
-| `TNS_ADMIN`                                | `connection.tns_admin:`                                                                           |
-| `OLRLOC`                                   | `connection.oracle_local_registry:`                                                               |
-| `SQLS_SECTIONS` + per-section `SQLS_*`     | `custom_metrics:` entries (see below)                                                             |
+| Legacy variable                            | Migrated to                                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `DBUSER` (required)                        | Top-level `connection:` (hostname, port) and `authentication:`, plus the first `instances:` entry             |
+| `DBUSER_<SID>`                             | An `instances:` entry with per-instance `connection:` and `authentication:`                                   |
+| `ASMUSER`                                  | `asm_username`, `asm_password`, `asm_role`, `asm_type` under `authentication:`                                |
+| `REMOTE_INSTANCE_<ID>`                     | An `instances:` entry including `piggyback_host:` (Linux/AIX only)                                            |
+| `SYNC_SECTIONS` / `ASYNC_SECTIONS`         | `sections:` entries with `is_async: false` / `true`                                                           |
+| `SYNC_ASM_SECTIONS` / `ASYNC_ASM_SECTIONS` | `sections:` entries with `affinity: "asm"` (`"all"` if the section is also a normal section)                  |
+| `CACHE_MAXAGE`                             | `cache_age:`                                                                                                  |
+| `SQLS_MAX_CACHE_AGE`                       | `custom_metrics_cache_age:`                                                                                   |
+| `MAX_TASKS`                                | `options.threads:` (only for values ≥ 2, capped at 8)                                                         |
+| `ONLY_SIDS`                                | `discovery.include:` (with `detect: true`)                                                                    |
+| `SKIP_SIDS`                                | `discovery.exclude:` (with `detect: true`)                                                                    |
+| `EXCLUDE_<SID>="<section> ..."`            | An `excluded_sections:` entry for that SID (see [README.md](README.md#excluding-sections-for-single-targets)) |
+| `TNS_ADMIN`                                | `connection.tns_admin:`                                                                                       |
+| `OLRLOC`                                   | `connection.oracle_local_registry:`                                                                           |
+| `SQLS_SECTIONS` + per-section `SQLS_*`     | `custom_metrics:` entries (see below)                                                                         |
 
 Notes:
 
@@ -316,17 +326,19 @@ computed is not available to `mk-oracle`.
 
 ### What Is Not Migrated
 
-The following variables are recognized but only preserved as comments in the output;
-port them manually if you still need them:
+The following variables are recognized but not converted. Those marked as _warning_
+produce a `# WARNING:` line; the others are only preserved as comments in the output.
+Port them manually if you still need them:
 
-| Legacy variable                                       | Remark                                                                                                                        |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `SQLS_DBUSER`, `SQLS_DBPASSWORD`, `SQLS_DBSYSCONNECT` | Per-custom-SQL credentials; use per-instance `authentication:` overrides instead                                              |
-| `SQLS_PARAMETERS`                                     | SQL\*Plus parameter passing is not supported; port it to `sql_params:` (see [README.md](README.md#sql-parameters-sql_params)) |
-| `SQLS_ITEM_SID`                                       | The item always carries the name of the instance the section runs on)                                                         |
-| `EXCLUDE_<SID>="<section> ..."`                       | Per-SID exclusion of individual sections; only `EXCLUDE_<SID>="ALL"` is converted                                             |
-| `ORACLE_HOME`, `REMOTE_ORACLE_HOME`                   | The OCI runtime is located as described in [Options](README.md#options) (`use_host_client`)                                   |
-| `ID_BY`                                               | Selects `SID=` vs `SERVICE_NAME=` in the legacy connect string; use the `sid:` / `service_name:` instance fields instead      |
+| Legacy variable                                       | Reported as | Remark                                                                                                                        |
+| ----------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `SQLS_PARAMETERS`                                     | warning     | SQL\*Plus parameter passing is not supported; port it to `sql_params:` (see [README.md](README.md#sql-parameters-sql_params)) |
+| `SQLS_ITEM_SID`                                       | warning     | The item always carries the name of the instance the section runs on                                                          |
+| `REMOTE_ORACLE_HOME`                                  | warning     | The OCI runtime is located as described in [Options](README.md#options) (`use_host_client`)                                   |
+| `SQLS_DBUSER`, `SQLS_DBPASSWORD`, `SQLS_DBSYSCONNECT` | comment     | Per-custom-SQL credentials; use per-instance `authentication:` overrides instead                                              |
+| `EXCLUDE_<SID>="ALL"`                                 | comment     | Excluding a whole instance this way is not supported yet; add the SID to `discovery.exclude:` instead                         |
+| `ORACLE_HOME`                                         | comment     | The OCI runtime is located as described in [Options](README.md#options) (`use_host_client`)                                   |
+| `ID_BY`                                               | comment     | Selects `SID=` vs `SERVICE_NAME=` in the legacy connect string; use the `sid:` / `service_name:` instance fields instead      |
 
 On Windows the legacy plugin supports neither `REMOTE_INSTANCE_*` nor custom SQL
 sections, so both are ignored when migrating a Windows configuration.
@@ -481,25 +493,27 @@ No rules are deleted - everything is kept as is, though the state depends on the
 
 ### Emitted Warnings
 
-The warnings displayed are based on known differences with the original plugin and the new one.
+Every legacy field without a counterpart in the new rule produces a warning; the rule
+is still created. Fields that are skipped:
 
-Most of them relate to fields which cannot be mapped, these include:
-
-- **sqlnet.ora permission group**
-- **Host uses xinetd or systemd**
-- **Sqlnet Send timeout**
+- **sqlnet.ora permission group**, **Host uses xinetd or systemd** - not needed by the new plugin
+- **Sqlnet Send timeout** - use the connection timeout instead
 - **Add pre or postfix to TNSALIASes**
-- **ORACLE_HOME to use for remote access**
+- **ORACLE_HOME to use for remote access** - the plugin locates the Oracle client itself
 
-Other fields have sub-fields which cannot be migrated, which include:
+Fields that are migrated only in part:
 
-- ts_quotas (under **Sections - data to collect**)
-  - This field is unused in the legacy plugin in any case.
-- TNS Alias (under **Login Defaults**)
-- **Login for ASM** is not supported with any of the following fields:
-  - host
-  - port
-  - wallet
+- **Sections - data to collect**: `ts_quotas` has no check plugin and is omitted; a section
+  name that cannot be mapped is reported. A rule without a section selection gets the legacy
+  default written out explicitly.
+- **Login Defaults**: a TNS alias of the default login is not migrated - the new plugin
+  accepts an alias per database only; the instances are reached via host and port.
+- **Login for ASM** with its own host or port, or with wallet authentication, becomes a
+  `+ASM` entry under _Databases to monitor_ whose SID has to be corrected.
+- A missing or unknown authentication type defaults to Oracle wallet; a remote instance
+  without a matching login is reported.
+
+`cmk-update-config` warns as long as legacy rules exist and points to this tool.
 
 ### Usage
 
@@ -541,7 +555,7 @@ The expected workflow for migration is as follows:
 
 `cmk-migrate-oracle-rulesets --apply` to migrate all rules to the new plugin.
 
-In the GUI1, you then edit the generated rules, enabling them as needed.
+In the GUI, you then edit the generated rules, enabling them as needed.
 
 The legacy rule corresponding to each new rule has to be disabled to prevent baking errors.
 

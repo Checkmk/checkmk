@@ -732,6 +732,7 @@ class SNMPCommunity(BaseSchema):
     community = String(
         description="SNMP community (SNMP Versions 1 and 2c)",
         required=True,
+        load_only=True,
     )
 
     @post_load
@@ -798,6 +799,7 @@ class SNMPv3AuthNoPrivacy(BaseSchema, CheckmkTuple):
         description="Authentication pass phrase.",
         minLength=8,
         required=True,
+        load_only=True,
     )
 
 
@@ -837,6 +839,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
         description="Authentication pass phrase.",
         minLength=8,
         required=True,
+        load_only=True,
     )
     privacy_protocol = String(
         description=(
@@ -853,6 +856,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
         ),
         required=True,
         minLength=8,
+        load_only=True,
     )
 
 
@@ -873,18 +877,21 @@ class SNMPCredentials(CmkOneOfSchema):
     Examples:
 
         >>> schema = SNMPCredentials()
-        >>> dumped = schema.dump("bar")
-        >>> dumped
-        {'type': 'v1_v2_community', 'community': 'bar'}
+        >>> schema.dump("bar")
+        {'type': 'v1_v2_community'}
 
-        >>> schema.load(dumped)
+        >>> schema.load({'type': 'v1_v2_community', 'community': 'bar'})
         'bar'
 
-        >>> dumped = schema.dump(('authNoPriv', 'sha', 'foo', 'barbarbar'))
-        >>> dumped
-        {'type': 'v3_auth_no_privacy', 'auth_protocol': 'SHA-1-96', 'security_name': 'foo', 'auth_password': 'barbarbar'}
+        >>> schema.dump(('authNoPriv', 'sha', 'foo', 'barbarbar'))
+        {'type': 'v3_auth_no_privacy', 'auth_protocol': 'SHA-1-96', 'security_name': 'foo'}
 
-        >>> schema.load(dumped)
+        >>> schema.load({
+        ...     'type': 'v3_auth_no_privacy',
+        ...     'auth_protocol': 'SHA-1-96',
+        ...     'security_name': 'foo',
+        ...     'auth_password': 'barbarbar',
+        ... })
         ('authNoPriv', 'sha', 'foo', 'barbarbar')
 
         >>> auth_priv = {
@@ -898,13 +905,8 @@ class SNMPCredentials(CmkOneOfSchema):
         >>> schema.load(auth_priv)
         ('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbarbar')
 
-        >>> rv = schema.dump(('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbaric'))
-        >>>
-        {'type': 'v3_auth_privacy', 'security_name': 'foo', 'auth_password': 'barbarbar', \
-'auth_protocol': 'MD5-96', 'privacy_protocol': 'CBC-DES', 'privacy_password': 'barbaric'}
-
-        >>> schema.load(rv)
-        ('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbaric')
+        >>> schema.dump(('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbaric'))
+        {'type': 'v3_auth_privacy', 'security_name': 'foo', 'auth_protocol': 'MD5-96', 'privacy_protocol': 'CBC-DES'}
 
         >>> rv = schema.dump(('noAuthNoPriv', 'barbarbar'))
         >>> rv
@@ -937,7 +939,7 @@ class IPMIParameters(BaseSchema):
     cast_to_dict = True
 
     username = String(required=True)
-    password = String(required=True)
+    password = String(required=True, load_only=True)
 
 
 class MetaData(BaseSchema):

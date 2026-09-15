@@ -21,7 +21,6 @@ py_library(
         requirement("pytest"),
         requirement("requests"),
         "//tests/system:pkg_marker",
-        "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [

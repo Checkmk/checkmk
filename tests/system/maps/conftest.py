@@ -19,7 +19,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.system.site import ADMIN_USER, get_site_factory, Site, SiteFactory
 
 

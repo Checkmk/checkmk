@@ -8,7 +8,7 @@ from contextlib import AbstractContextManager
 
 import pytest
 
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.system.site import get_site_factory, Site, SiteFactory
 from tests.testlib.system.web_session import CMKWebSession
 

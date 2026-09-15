@@ -18,7 +18,6 @@ py_library(
         requirement("beautifulsoup4"),
         "//scripts/html_validation",
         "//tests/system:pkg_marker",
-        "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",
     ],
 )

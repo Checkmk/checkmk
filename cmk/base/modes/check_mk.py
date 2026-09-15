@@ -176,6 +176,7 @@ from .modes import (
     SubOptionsAndOptionalArguments,
     SubOptionsAndRequiredArgument,
     WithArgument,
+    write_stdout,
 )
 
 tracer = trace.get_tracer()
@@ -206,12 +207,6 @@ def load_checks() -> AgentBasedPlugins:
 _verbosity = 0
 _fake_dns: HostAddress | None = None
 _enforce_localhost = False
-
-
-def print_(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
 
 
 def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
@@ -522,9 +517,9 @@ def _mode_list_tag(_app: object, args: Sequence[str]) -> int:
         loading_result.hosts_config,
         loading_result.host_tags,
     )
-    print_("\n".join(sorted(hosts)))
+    write_stdout("\n".join(sorted(hosts)))
     if hosts:
-        print_("\n")
+        write_stdout("\n")
     return 0
 
 
@@ -643,7 +638,7 @@ def _mode_list_checks(app: CheckmkBaseApp) -> int:  # noqa: ARG001
     ]
 
     for e in sorted(table, key=lambda e: e.name):
-        print_(f"{e.render_tty()}\n")
+        write_stdout(f"{e.render_tty()}\n")
     return 0
 
 
@@ -864,7 +859,7 @@ def _mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], raw_hos
             assert raw_data.ok is not None
             output.append(raw_data.ok)
 
-    print_(b"".join(output).decode(errors="surrogateescape"))
+    write_stdout(b"".join(output).decode(errors="surrogateescape"))
     if has_errors:
         sys.exit(1)
     return 0
@@ -1430,13 +1425,13 @@ def _mode_flush(_app: object, args: Sequence[str]) -> int:
         )
 
     for host in hosts:
-        print_("%-20s: " % host)
+        write_stdout("%-20s: " % host)
         flushed = False
 
         # counters
         try:
             (cmk.utils.paths.counters_dir / host).unlink()
-            print_(tty.bold + tty.blue + " counters")
+            write_stdout(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
             pass
@@ -1454,14 +1449,14 @@ def _mode_flush(_app: object, args: Sequence[str]) -> int:
                     except OSError:
                         pass
             if d == 1:
-                print_(tty.bold + tty.green + " cache")
+                write_stdout(tty.bold + tty.green + " cache")
             elif d > 1:
-                print_(tty.bold + tty.green + " cache(%d)" % d)
+                write_stdout(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
         d = piggyback_backend.remove_source_status_file(host, cmk.utils.paths.omd_root)
         if d:
-            print_(tty.bold + tty.magenta + " piggyback(1)")
+            write_stdout(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.utils.paths.logwatch_dir / host
@@ -1476,7 +1471,7 @@ def _mode_flush(_app: object, args: Sequence[str]) -> int:
                     except OSError:
                         pass
             if d > 0:
-                print_(tty.bold + tty.magenta + " logfiles(%d)" % d)
+                write_stdout(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = sum(
@@ -1488,19 +1483,19 @@ def _mode_flush(_app: object, args: Sequence[str]) -> int:
         # config_cache.remove_autochecks(host)
         if count:
             flushed = True
-            print_(tty.bold + tty.cyan + " autochecks(%d)" % count)
+            write_stdout(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         tree_path = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
         if tree_path.path.exists() or tree_path.legacy.exists():
             tree_path.path.unlink(missing_ok=True)
             tree_path.legacy.unlink(missing_ok=True)
-            print_(tty.bold + tty.yellow + " inventory")
+            write_stdout(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
-            print_("(nothing)")
+            write_stdout("(nothing)")
 
-        print_(tty.normal + "\n")
+        write_stdout(tty.normal + "\n")
     return 0
 
 
@@ -3840,7 +3835,7 @@ mode_inventorize_marked_hosts = Mode(
 
 
 def _mode_version(app: CheckmkBaseApp) -> int:
-    print_(
+    write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
 

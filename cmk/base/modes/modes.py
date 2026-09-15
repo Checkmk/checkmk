@@ -431,7 +431,7 @@ def discover_modes() -> Sequence[Mode]:
     return tuple(discovery_result.plugins.values())
 
 
-def print_(txt: str) -> None:
+def write_stdout(txt: str) -> None:
     with suppress(IOError):
         sys.stdout.write(txt)
         sys.stdout.flush()
@@ -461,7 +461,7 @@ def _sigint_ignored() -> Iterator[None]:
 
 def write_paged(txt: str) -> None:
     if not sys.stdout.isatty():
-        print_(txt)
+        write_stdout(txt)
         return
 
     try:
@@ -474,7 +474,7 @@ def write_paged(txt: str) -> None:
                 env=_pager_environment(os.environ),
             )
     except OSError, ValueError:
-        print_(txt)
+        write_stdout(txt)
 
 
 class Modes:

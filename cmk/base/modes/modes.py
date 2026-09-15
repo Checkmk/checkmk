@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
 
 
@@ -95,10 +94,7 @@ class Option:
     def takes_argument(self) -> bool:
         return self.argument
 
-    def short_help_text(self, fmt: str) -> str | None:
-        if self.short_help is None:
-            return None  # type: ignore[unreachable]
-
+    def short_help_text(self, fmt: str) -> str:
         option_txt = " %s" % (", ".join(self.options()))
 
         if self.argument:
@@ -411,11 +407,7 @@ class Mode(Option):
                 text.append(wrapper.fill(paragraph))
 
         if self.sub_options:
-            sub_texts = []
-            for option in self.sub_options:
-                short_help_text = option.short_help_text(fmt="    %-24s")
-                if short_help_text is not None:
-                    sub_texts.append(short_help_text)
+            sub_texts = [option.short_help_text(fmt="    %-24s") for option in self.sub_options]
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
@@ -559,11 +551,7 @@ NOTES:
 """
 
     def _short_help(self) -> str:
-        texts = []
-        for mode in self._modes:
-            text = mode.short_help_text(" cmk %-36s")
-            if text:
-                texts.append(text)
+        texts = [mode.short_help_text(" cmk %-36s") for mode in self._modes]
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def _long_help(self) -> str:
@@ -590,11 +578,7 @@ NOTES:
                     handler(a)
 
     def _general_option_help(self) -> str:
-        texts = []
-        for option in self._general_options:
-            text = option.short_help_text(fmt="  %-21s")
-            if text:
-                texts.append("%s" % text)
+        texts = [option.short_help_text(fmt="  %-21s") for option in self._general_options]
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def _get_general_option(self, opt: str) -> GeneralOption | None:

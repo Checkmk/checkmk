@@ -11,11 +11,12 @@ import logging
 import socket
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Never, override
 
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.ccc.resulttype as result
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
 from cmk.base import config
 from cmk.base.app import make_app
@@ -29,7 +30,7 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.ccc.exceptions import OnError
+from cmk.ccc.exceptions import MKIPAddressLookupError, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import edition
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -62,7 +63,7 @@ from cmk.checkengine.discovery._autodiscovery import (
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -87,7 +88,7 @@ from cmk.fetchers import (
     StoredSecrets,
 )
 from cmk.fetchers.filecache import FileCacheOptions
-from cmk.helper_interface import SourceType
+from cmk.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
 from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
 from cmk.plugins.collection.agent_based.labels import agent_section_labels
@@ -1602,7 +1603,6 @@ def test_commandline_discovery(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=lambda *a: IPStackConfig.IPv4,
         ip_address_of=lambda *a: HostAddress(""),
-        ip_address_of_mandatory=lambda *a: HostAddress(""),
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         simulation_mode=True,
@@ -1622,7 +1622,7 @@ def test_commandline_discovery(
         ),
     )
 
-    commandline_discovery(
+    succeeded = commandline_discovery(
         host_name=testhost,
         clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
         parser=parser,
@@ -1645,12 +1645,89 @@ def test_commandline_discovery(
         on_error=OnError.RAISE,
     )
 
+    assert succeeded is True
+
     entries = AutochecksStore(testhost).read()
     found = {e.id(): e.service_labels for e in entries}
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)
     assert store.load() == _expected_host_labels
+
+
+class _FailingFetcher(FetcherFunction):
+    @override
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Never:
+        raise MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name} via DNS")
+
+
+@pytest.mark.usefixtures("disable_debug")
+def test_commandline_discovery_reports_failure() -> None:
+    """A failed discovery is reported to the caller, not only printed.
+
+    ``cmk -I`` needs this to exit non-zero; it used to swallow every failure
+    and still exit 0.  Debug mode is off, as it is for a normal ``cmk -I``
+    run; with it on the exception is re-raised instead.
+    """
+    succeeded = commandline_discovery(
+        host_name=HostName("test-host"),
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [],
+        fetcher=_FailingFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        ignore_plugin=lambda *args, **kw: False,
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+    )
+
+    assert succeeded is False
+
+
+class _EmptyFetcher(FetcherFunction):
+    """Fetches nothing; the parser fake supplies the source result."""
+
+    @override
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[Never]:
+        return ()
+
+
+def test_commandline_discovery_reports_failed_source() -> None:
+    """A data source that could not be contacted is reported as failure.
+
+    The discovery itself runs to the end -- the sources that did deliver data
+    are discovered as usual -- but the services of the failed source are
+    missing from the result, and the exit code is the only way ``cmk -I`` can
+    say so.
+    """
+    host_name = HostName("test-host")
+    failed: tuple[SourceInfo, result.Result[HostSections, Exception]] = (
+        SourceInfo(host_name, None, "agent", FetcherType.NONE, SourceType.HOST),
+        result.Error(MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name}")),
+    )
+    # The discovery runs to the end and writes the (empty) autochecks, so the
+    # site's autochecks directory has to be there.
+    paths.autochecks_dir.mkdir(parents=True, exist_ok=True)
+
+    succeeded = commandline_discovery(
+        host_name=host_name,
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [failed],
+        fetcher=_EmptyFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        ignore_plugin=lambda *args, **kw: False,
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+    )
+
+    assert succeeded is False
 
 
 class RealHostScenario(NamedTuple):

@@ -107,6 +107,7 @@ from cmk.utils.ip_lookup import (
     IPLookup,
     IPLookupOptional,
     IPStackConfig,
+    is_fallback_ip,
 )
 from cmk.utils.log import console
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
@@ -368,7 +369,10 @@ class CMKFetcher:
         force_snmp_cache_refresh: bool,
         get_ip_stack_config: Callable[[HostName], IPStackConfig],
         ip_address_of: IPLookup,
-        ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
+        # Strict lookup for the host's own address, raising if it fails.  Discovery
+        # deliberately omits it: a failed lookup must not abort the discovery of the
+        # sources that need no address at all.  Checking and inventory pass it.
+        ip_address_of_mandatory: IPLookup | None = None,
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
         secrets_config_relay: AdHocSecrets | StoredSecrets,
@@ -396,6 +400,31 @@ class CMKFetcher:
         self.max_cachefile_age: Final = max_cachefile_age
         self.metric_backend_fetcher_factory: Final = metric_backend_fetcher_factory
 
+    def _lookup_ip_address(
+        self, host_name: HostName, ip_stack_config: IPStackConfig
+    ) -> HostAddress | None:
+        """Look up the host address, reporting "no address" honestly.
+
+        With a strict lookup the caller has asked for a failure to be raised, so
+        its answer is passed through unchanged -- including an explicitly
+        configured or faked ``0.0.0.0``.
+
+        A tolerant `ConfiguredIPLookup` instead substitutes a fallback address
+        (``0.0.0.0`` / ``::``) for one it failed to obtain.  Passing that on
+        would point the fetchers at the local system, so it becomes ``None``:
+        `SourceBuilder` then emits a `MissingIPSource` for the sources that need
+        an address and leaves the ones that do not alone.
+
+        The sentinel check disappears together with the fallback address itself,
+        see CMK-38939.
+        """
+        if ip_stack_config is IPStackConfig.NO_IP:
+            return None
+        if self.ip_address_of_mandatory is not None:
+            return self.ip_address_of_mandatory(host_name, self.default_address_family(host_name))
+        address = self.ip_address_of(host_name, self.default_address_family(host_name))
+        return None if is_fallback_ip(address) else address
+
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
@@ -420,14 +449,7 @@ class CMKFetcher:
                     host_name,
                     self.default_address_family(host_name),
                     (ip_stack_config := self.config_cache.ip_stack_config(host_name)),
-                    ip_address
-                    or (
-                        None
-                        if ip_stack_config is IPStackConfig.NO_IP
-                        else self.ip_address_of_mandatory(
-                            host_name, self.default_address_family(host_name)
-                        )
-                    ),
+                    ip_address or self._lookup_ip_address(host_name, ip_stack_config),
                 )
             ]
         else:
@@ -436,11 +458,7 @@ class CMKFetcher:
                     node,
                     self.default_address_family(node),
                     (ip_stack_config := self.get_ip_stack_config(node)),
-                    (
-                        None
-                        if ip_stack_config is IPStackConfig.NO_IP
-                        else self.ip_address_of_mandatory(node, self.default_address_family(node))
-                    ),
+                    self._lookup_ip_address(node, ip_stack_config),
                 )
                 for node in self.config_cache.nodes(host_name)
             ]

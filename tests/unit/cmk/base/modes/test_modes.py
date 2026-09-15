@@ -11,12 +11,16 @@ import pytest
 
 from cmk.base.modes.modes import (
     _pager_environment,
+    Flag,
+    GeneralOption,
+    Modes,
     Option,
     option_count,
     option_names,
     option_string,
     option_strings,
     parse_sub_options,
+    WithArgument,
     write_paged,
 )
 from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
@@ -134,3 +138,57 @@ def test_a_missing_collected_option_has_no_values() -> None:
 def test_collected_values_that_are_not_strings_are_rejected() -> None:
     with pytest.raises(MKGeneralException):
         option_strings({"oid": (23,)}, "oid")
+
+
+def test_a_general_flag_option_reaches_its_handler() -> None:
+    handled: list[str] = []
+    modes = Modes(
+        plugins=[],
+        general_options=[
+            GeneralOption(
+                long_option="debug",
+                short_help="let exceptions raise through",
+                action=Flag(handler=lambda: handled.append("debug")),
+            )
+        ],
+    )
+
+    modes.process_general_options([("--debug", "")])
+
+    assert handled == ["debug"]
+
+
+def test_a_general_option_hands_its_argument_to_the_handler() -> None:
+    addresses: list[str] = []
+    modes = Modes(
+        plugins=[],
+        general_options=[
+            GeneralOption(
+                long_option="fake-dns",
+                short_help="fake the IP addresses of all hosts",
+                action=WithArgument(descr="IP", handler=addresses.append),
+            )
+        ],
+    )
+
+    modes.process_general_options([("--fake-dns", "1.2.3.4")])
+
+    assert addresses == ["1.2.3.4"]
+
+
+def test_an_option_that_is_not_a_general_one_is_left_alone() -> None:
+    handled: list[str] = []
+    modes = Modes(
+        plugins=[],
+        general_options=[
+            GeneralOption(
+                long_option="debug",
+                short_help="let exceptions raise through",
+                action=Flag(handler=lambda: handled.append("debug")),
+            )
+        ],
+    )
+
+    modes.process_general_options([("--verbose", "")])
+
+    assert handled == []

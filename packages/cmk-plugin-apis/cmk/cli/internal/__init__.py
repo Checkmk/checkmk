@@ -8,6 +8,10 @@ This is the ``internal`` variant of the per-domain command line API (see the
 plugin discovery reference in ``cmk.discover_plugins``). It is not exposed to
 third-party plug-in authors; it carries the commands (historically "modes")
 the ``cmk`` command offers, e.g. ``cmk --check``.
+
+To be discovered, a plug-in module must be placed in the ``cli`` subdirectory of a
+plug-in family (``cmk/plugins/<family>/cli/<module>.py``) and the plug-in instance
+name must start with the prefix returned by :func:`entry_point_prefixes`.
 """
 
 # The application object handed to every command is not typed yet (see BaseApp).

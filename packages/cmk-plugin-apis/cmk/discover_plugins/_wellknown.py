@@ -28,3 +28,4 @@ class PluginGroup(enum.Enum):
     INVENTORY_UI = "inventory_ui"
     DIAGNOSTICS = "diagnostics"
     LICENSING = "licensing"
+    CLI = "cli"

@@ -20,7 +20,11 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes
-from cmk.discover_plugins import discover_plugins_from_modules
+from cmk.discover_plugins import (
+    discover_all_plugins,
+    discover_plugins_from_modules,
+    PluginGroup,
+)
 from cmk.utils.log import console
 
 OptionSpec = str
@@ -362,10 +366,17 @@ def make_mode(command: CLICommand) -> Mode:
 
 
 def discover_modes() -> Sequence[Mode]:
-    discovery_result = discover_plugins_from_modules(
+    discovered = discover_all_plugins(
+        PluginGroup.CLI,
+        entry_point_prefixes(),
+        skip_wrong_types=False,
+        raise_errors=True,
+    )
+    # Transitional: commands that have not been moved to cmk/plugins/<family>/cli/ yet.
+    # This list shrinks with every move and goes away with the last one.
+    legacy = discover_plugins_from_modules(
         plugin_prefixes=entry_point_prefixes(),
         module_names_by_priority=[
-            # TODO: We need to get rid of this hard-coded list
             "cmk.base.modes.check_mk",
             "cmk.base.diagnostics",
             "cmk.base.localize",
@@ -381,7 +392,9 @@ def discover_modes() -> Sequence[Mode]:
         skip_wrong_types=True,
         raise_errors=True,
     )
-    return tuple(make_mode(command) for command in discovery_result.plugins.values())
+    return tuple(
+        make_mode(command) for command in (*discovered.plugins.values(), *legacy.plugins.values())
+    )
 
 
 def write_stdout(txt: str) -> None:

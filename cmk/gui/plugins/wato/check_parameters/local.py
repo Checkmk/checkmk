@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupEnforcedServicesApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, TextInput
 
 rulespec_registry.register(
     ManualCheckParameterRulespec(
@@ -55,6 +55,21 @@ def _parameter_valuespec_local() -> Dictionary:
     )
 
 
+def _parameter_valuespec_show_cache_info_local() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "hide_cache_info_from_summary",
+                FixedValue(
+                    True,
+                    title=_("Hide caching information from service summary"),
+                    totext="",
+                ),
+            ),
+        ]
+    )
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="local",
@@ -64,5 +79,16 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_local,
         title=lambda: _("Local checks in Checkmk clusters"),
         is_deprecated=True,
+    )
+)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hide_cache_info_local",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextInput(title=_("Name of local item")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_show_cache_info_local,
+        title=lambda: _("Local checks: Hide cache information"),
     )
 )

@@ -89,7 +89,7 @@ test('the payload is read as it arrives, snake_case and all', () => {
   ).toEqual({ sticky: true, persistent: false, notify: false, expireSeconds: 7200 })
 })
 
-test('a refused acknowledgement comes back as an error naming the reason', async () => {
+test('a refused acknowledgement comes back as an error that keeps the raw reason out', async () => {
   const built = action(
     { sticky: false, persistent: false, notify: true, expireSeconds: 3600 },
     async () => {
@@ -101,6 +101,7 @@ test('a refused acknowledgement comes back as an error naming the reason', async
 
   expect(feedback).toEqual({
     variant: 'error',
-    message: 'Could not acknowledge the problems: Forbidden: you may not acknowledge'
+    heading: 'Could not acknowledge the problems',
+    message: 'Retry the command. If it keeps failing, check whether the site is running.'
   })
 })

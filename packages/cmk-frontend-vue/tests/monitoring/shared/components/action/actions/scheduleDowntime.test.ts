@@ -9,7 +9,7 @@ import { expect, test } from 'vitest'
 
 import { createScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 
-const ERROR_MESSAGE = untranslated('Could not schedule the downtime for the selected hosts.')
+const ERROR_HEADING = untranslated('Could not schedule the downtime for the selected hosts')
 
 function action(schedule: () => Promise<number>) {
   return createScheduleDowntimeAction<string>({
@@ -18,7 +18,7 @@ function action(schedule: () => Promise<number>) {
     targetKind: 'host',
     schedule,
     successMessage: () => untranslated('done'),
-    errorMessage: ERROR_MESSAGE,
+    errorHeading: ERROR_HEADING,
     recurrences: [],
     // With none on offer the dialog starts on a custom four-hour range, which resolves to a
     // window - so the call is reached rather than refused by the zero-duration guard.
@@ -34,5 +34,9 @@ test('a refused downtime comes back as an error, not as a confirmation', async (
 
   const feedback = await built.perform(['host-1'], built.defaultValues())
 
-  expect(feedback).toEqual({ variant: 'error', message: ERROR_MESSAGE })
+  expect(feedback).toEqual({
+    variant: 'error',
+    heading: ERROR_HEADING,
+    message: 'Retry the command. If it keeps failing, check whether the site is running.'
+  })
 })

@@ -20,6 +20,7 @@ import ScheduleDowntimeForm, {
   downtimeWindow,
   isUntilKeyword
 } from './ScheduleDowntimeForm.vue'
+import { commandFailed } from './feedback'
 
 export const SCHEDULE_DOWNTIME_ACTION_ID = 'schedule_downtimes'
 
@@ -54,7 +55,7 @@ export interface ScheduleDowntimeKindConfig<Target> {
     options: ScheduleDowntimeOptions
   ): Promise<number>
   successMessage(count: number): TranslatedString
-  errorMessage: TranslatedString
+  errorHeading: TranslatedString
   /** The intervals the site offers to repeat the downtime on. */
   recurrences: DowntimeRecurrenceOption[]
   /** The durations the site offers; the first one is where the dialog starts. */
@@ -88,7 +89,8 @@ export function createScheduleDowntimeAction<Target>(
       if (window === null) {
         return {
           variant: 'error',
-          message: _t('Please choose a downtime duration greater than zero.')
+          heading: _t('Could not schedule the downtime'),
+          message: _t('Select a duration that ends in the future.')
         }
       }
       try {
@@ -104,7 +106,7 @@ export function createScheduleDowntimeAction<Target>(
         })
         return { variant: 'success', message: config.successMessage(count) }
       } catch {
-        return { variant: 'error', message: config.errorMessage }
+        return commandFailed(config.errorHeading)
       }
     }
   }

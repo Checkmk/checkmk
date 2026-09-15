@@ -223,7 +223,7 @@ test('leaves the listing alone after a command the site refused', async () => {
   await rescheduleTheOnlyHost(true)
 
   expect(
-    screen.getByText('Could not reschedule the checks for the selected hosts.')
+    screen.getByText('Could not reschedule the checks for the selected hosts')
   ).toBeInTheDocument()
 
   await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)

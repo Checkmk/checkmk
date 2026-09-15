@@ -9,10 +9,10 @@ import { expect, test } from 'vitest'
 
 import { createRescheduleAction } from '@/monitoring/shared/components/action/actions/reschedule'
 
-const ERROR_MESSAGE = untranslated('Could not reschedule the checks for the selected hosts.')
+const ERROR_HEADING = untranslated('Could not reschedule the checks for the selected hosts')
 
 function action(reschedule: () => Promise<number>) {
-  return createRescheduleAction<string>({ reschedule, errorMessage: ERROR_MESSAGE })
+  return createRescheduleAction<string>({ reschedule, errorHeading: ERROR_HEADING })
 }
 
 test('a refused reschedule comes back as an error, not as a confirmation', async () => {
@@ -22,5 +22,9 @@ test('a refused reschedule comes back as an error, not as a confirmation', async
 
   const feedback = await built.perform(['host-1'], built.defaultValues())
 
-  expect(feedback).toEqual({ variant: 'error', message: ERROR_MESSAGE })
+  expect(feedback).toEqual({
+    variant: 'error',
+    heading: ERROR_HEADING,
+    message: 'Retry the command. If it keeps failing, check whether the site is running.'
+  })
 })

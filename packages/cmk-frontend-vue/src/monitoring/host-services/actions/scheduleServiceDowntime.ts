@@ -44,6 +44,6 @@ export function useScheduleServiceDowntimeAction(
         count,
         { count }
       ),
-    errorMessage: _t('Could not schedule the downtime for the selected services.')
+    errorHeading: _t('Could not schedule the downtime for the selected services')
   })
 }

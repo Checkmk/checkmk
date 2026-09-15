@@ -14,6 +14,7 @@ import {
 
 import type { ActionTargetKind, MonitoringAction } from '../types'
 import AcknowledgeForm, { type AcknowledgeValues } from './AcknowledgeForm.vue'
+import { commandFailed } from './feedback'
 
 export const ACK_ACTION_ID = 'acknowledge'
 
@@ -95,13 +96,8 @@ export function createAcknowledgeAction<Target>(
           expireOn: values.expireOnEnabled ? values.expireOn?.toDate().toISOString() : undefined
         })
         return { variant: 'success', message: config.successMessage(count) }
-      } catch (error) {
-        return {
-          variant: 'error',
-          message: _t('Could not acknowledge the problems: %{detail}', {
-            detail: error instanceof Error ? error.message : String(error)
-          })
-        }
+      } catch {
+        return commandFailed(_t('Could not acknowledge the problems'))
       }
     }
   }

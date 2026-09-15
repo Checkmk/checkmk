@@ -48,6 +48,6 @@ export function useScheduleHostDowntimeAction(
           count
         }
       ),
-    errorMessage: _t('Could not schedule the downtime for the selected hosts.')
+    errorHeading: _t('Could not schedule the downtime for the selected hosts')
   })
 }

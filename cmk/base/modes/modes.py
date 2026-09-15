@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 
 import os
 import shlex
@@ -26,7 +24,7 @@ from cmk.utils.log import console
 OptionSpec = str
 Argument = str
 OptionName = str
-ConvertFunction = Callable
+ConvertFunction = Callable[[str], object]
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
 

@@ -14,7 +14,7 @@ import pprint
 from collections.abc import Callable, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal, override, TypedDict
+from typing import Any, Final, Literal, NewType, override, TypedDict
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
@@ -38,6 +38,11 @@ from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 
 ConfigDomainName = str
+
+RemoveIn310 = NewType("RemoveIn310", ConfigDomainName)
+"""Marks a previous config domain ident still sent by 2.5 central sites.
+
+3.0 is the last version to accept it: delete this type once 3.1 has branched off."""
 
 CORE: Final[ConfigDomainName] = "check_mk"
 GUI: Final[ConfigDomainName] = "multisite"
@@ -98,7 +103,7 @@ class ABCConfigDomain(abc.ABC):
     def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
-    def previous_idents(cls) -> Sequence[ConfigDomainName]:
+    def previous_idents(cls) -> Sequence[RemoveIn310]:
         """Idents this domain has been registered under before.
 
         Activation uses the idents on the wire, not just in the payload. This means idents are not

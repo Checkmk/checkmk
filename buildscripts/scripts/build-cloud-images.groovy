@@ -15,6 +15,7 @@ String build_cloud_images_names(version) {
     return ["cmk-ami-https-${version_suffix}", "cmk-azure-${version_suffix}"];
 }
 
+// groovylint-disable DuplicateMapLiteral
 void main() {
     check_job_parameters([
         "BUILD_CLOUD_IMAGES",
@@ -62,27 +63,10 @@ void main() {
         }
     }
 
-    // Build Phase
-    inside_container() {
-        smart_stage(
-            name: 'Packer init',
-            condition: build_cloud_images,
-            raiseOnError: true,
-        ) {
-            dir("${checkout_dir}/packer") {
-                // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
-                withEnv(packer_envvars) {
-                    // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
-                    sh("packer init .");
-                }
-            }
-            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images, packer_envvars));
-        }
-    }
-
-    // Publish Phase
     inside_container() {
         dir("${checkout_dir}") {
+            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images, packer_envvars));
+
             // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
             // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
             sh("make .venv");
@@ -124,6 +108,18 @@ LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
             string(
                 credentialsId: 'aws_access_key',
                 variable: 'PKR_VAR_aws_access_key'),
+            // this should be temporary only, see CMK-39232
+            // ~~~ AZURE ~~~
+            usernamePassword(
+                credentialsId: 'azure_client',
+                passwordVariable: 'PKR_VAR_azure_client_secret',
+                usernameVariable: 'PKR_VAR_azure_client_id'),
+            string(
+                credentialsId: 'azure_subscription_id',
+                variable: 'PKR_VAR_azure_subscription_id'),
+            string(
+                credentialsId: 'azure_tenant_id',
+                variable: 'PKR_VAR_azure_tenant_id'),
         ],
         // keep the key of the map in sync with the values of "cloud_targets"
         "secrets_azure-arm": [
@@ -138,6 +134,14 @@ LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
             string(
                 credentialsId: 'azure_tenant_id',
                 variable: 'PKR_VAR_azure_tenant_id'),
+            // this should be temporary only, see CMK-39232
+            // ~~~ AWS ~~~
+            string(
+                credentialsId: 'aws_secret_key',
+                variable: 'PKR_VAR_aws_secret_key'),
+            string(
+                credentialsId: 'aws_access_key',
+                variable: 'PKR_VAR_aws_access_key'),
         ],
     ];
 }
@@ -145,6 +149,22 @@ LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
 LinkedHashMap<String, List> create_build_stages(cloud_targets, env_secret_map, build_images, packer_envvars) {
     return cloud_targets.collectEntries { target -> [
         ("Building target ${target}"): {
+            smart_stage(
+                name: "Packer init ${target}",
+                condition: build_images,
+                raiseOnError: true,
+            ) {
+                dir("${checkout_dir}/packer") {
+                    // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
+                    withEnv(packer_envvars) {
+                        // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
+                        sh("""
+                            packer init -only="checkmk-ansible.${target}.builder" .
+                        """);
+                    }
+                }
+            }
+
             smart_stage(
                 name: "Building target ${target}",
                 condition: build_images,
@@ -177,6 +197,18 @@ LinkedHashMap<String, List> publish_env_secret_map() {
             string(
                 credentialsId: 'aws_publisher_access_key',
                 variable: 'AWS_ACCESS_KEY_ID'),
+            // this should be temporary only, see CMK-39232
+            // ~~~ AZURE ~~~
+            usernamePassword(
+                credentialsId: 'azure_client',
+                passwordVariable: 'AZURE_CLIENT_SECRET',
+                usernameVariable: 'AZURE_CLIENT_ID'),
+            string(
+                credentialsId: 'azure_subscription_id',
+                variable: 'SUBSCRIPTION_ID'),
+            string(
+                credentialsId: 'azure_tenant_id',
+                variable: 'AZURE_TENANT_ID'),
         ],
         "secrets_azure": [
             // ~~~ AZURE ~~~
@@ -190,6 +222,14 @@ LinkedHashMap<String, List> publish_env_secret_map() {
             string(
                 credentialsId: 'azure_tenant_id',
                 variable: 'AZURE_TENANT_ID'),
+            // this should be temporary only, see CMK-39232
+            // ~~~ AWS ~~~
+            string(
+                credentialsId: 'aws_publisher_secret_key',
+                variable: 'AWS_SECRET_ACCESS_KEY'),
+            string(
+                credentialsId: 'aws_publisher_access_key',
+                variable: 'AWS_ACCESS_KEY_ID'),
         ],
     ];
 }
@@ -220,7 +260,7 @@ LinkedHashMap<String, List> create_publish_stages(targets_names, version, publis
                         // Used global env variable from jenkins:
                         // AWS_MARKETPLACE_SCANNER_ARN and AWS_AMI_IMAGE_PRODUCT_ID
                         sh("""
-                           scripts/run-uvenv buildscripts/scripts/publish_cloud_images.py ${cli_args}
+                           SKIP_MAKEFILE_CALL=1 scripts/run-uvenv buildscripts/scripts/publish_cloud_images.py ${cli_args}
                         """);
                     }
                 }

@@ -70,10 +70,10 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
     # cmk/gui/plugins/wato/special_agents/azure.py
     "Microsoft.Network/virtualNetworkGateways": [
         ("AverageBandwidth,P2SBandwidth", "PT5M", "average"),
-        ("TunnelIngressBytes", "PT5M", "count"),
-        ("TunnelEgressBytes", "PT5M", "count"),
-        ("TunnelIngressPacketDropCount", "PT5M", "count"),
-        ("TunnelEgressPacketDropCount", "PT5M", "count"),
+        ("TunnelIngressBytes", "PT5M", "total"),
+        ("TunnelEgressBytes", "PT5M", "total"),
+        ("TunnelIngressPacketDropCount", "PT5M", "total"),
+        ("TunnelEgressPacketDropCount", "PT5M", "total"),
         ("P2SConnectionCount", "PT1M", "maximum"),
     ],
     "Microsoft.Sql/servers/databases": [
@@ -1060,9 +1060,11 @@ class IssueCollector:
         return len(self._list)
 
 
-def create_metric_dict(metric, aggregation, interval_id):
+def create_metric_dict(
+    metric: Mapping[str, Any], aggregation: str, interval_id: str
+) -> dict[str, Any] | None:
     name = metric["name"]["value"]
-    metric_dict = {
+    metric_dict: dict[str, Any] = {
         "name": name,
         "aggregation": aggregation,
         "value": None,

@@ -287,10 +287,10 @@ ALL_METRICS: dict[str, list[AzureMetric]] = {
     "Microsoft.Network/virtualNetworkGateways": [
         AzureMetric(name="AverageBandwidth", interval="PT5M", aggregation="average"),
         AzureMetric(name="P2SBandwidth", interval="PT5M", aggregation="average"),
-        AzureMetric(name="TunnelIngressBytes", interval="PT5M", aggregation="count"),
-        AzureMetric(name="TunnelEgressBytes", interval="PT5M", aggregation="count"),
-        AzureMetric(name="TunnelIngressPacketDropCount", interval="PT5M", aggregation="count"),
-        AzureMetric(name="TunnelEgressPacketDropCount", interval="PT5M", aggregation="count"),
+        AzureMetric(name="TunnelIngressBytes", interval="PT5M", aggregation="total"),
+        AzureMetric(name="TunnelEgressBytes", interval="PT5M", aggregation="total"),
+        AzureMetric(name="TunnelIngressPacketDropCount", interval="PT5M", aggregation="total"),
+        AzureMetric(name="TunnelEgressPacketDropCount", interval="PT5M", aggregation="total"),
         AzureMetric(name="P2SConnectionCount", interval="PT1M", aggregation="maximum"),
     ],
     "Microsoft.Sql/servers/databases": [

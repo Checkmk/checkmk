@@ -13,6 +13,7 @@ _REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
     CheckPluginName("custom_query_metric_backend"): CheckPluginName(
         "telemetry_metrics_custom_query"
     ),
+    CheckPluginName("metric_backend_omd"): CheckPluginName("data_backend_telemetry_metrics_omd"),
 }
 
 ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {

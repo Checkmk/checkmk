@@ -5209,11 +5209,11 @@ checkgroup_parameters['memory_utilization_multiitem'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
-checkgroup_parameters.setdefault('metric_backend_omd', [])
+checkgroup_parameters.setdefault('data_backend_telemetry_metrics_omd', [])
 
-checkgroup_parameters['metric_backend_omd'] = [
+checkgroup_parameters['data_backend_telemetry_metrics_omd'] = [
 {'id': '771ab72f-e651-4c1c-b0ae-9e408df4ae5a', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
-] + checkgroup_parameters['metric_backend_omd']
+] + checkgroup_parameters['data_backend_telemetry_metrics_omd']
 
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})

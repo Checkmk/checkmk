@@ -37,6 +37,10 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "static_checks:custom_query_metric_backend_monitoring": (
         "static_checks:telemetry_metrics_custom_query_monitoring"
     ),
+    "checkgroup_parameters:metric_backend_omd": (
+        "checkgroup_parameters:data_backend_telemetry_metrics_omd"
+    ),
+    "static_checks:metric_backend_omd": "static_checks:data_backend_telemetry_metrics_omd",
 }
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}

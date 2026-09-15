@@ -495,6 +495,7 @@ export const globalSettingsPagePayload = {
             default: ['alternative_no_defaults', null],
             abandoned_file_age: 2592000.0
           },
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -562,6 +563,7 @@ export const globalSettingsPagePayload = {
             use_system_wide_cas: true,
             trusted_cas: []
           },
+          global_value: null,
           modified: false,
           site_overrides: [
             {
@@ -601,6 +603,7 @@ export const globalSettingsPagePayload = {
           },
           value: [],
           default_value: [],
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -670,6 +673,7 @@ export const globalSettingsPagePayload = {
           default_value: {
             lifetime_in_months: '39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9'
           },
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -686,6 +690,7 @@ export const globalSettingsPagePayload = {
           },
           value: true,
           default_value: true,
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -702,6 +707,7 @@ export const globalSettingsPagePayload = {
           },
           value: false,
           default_value: false,
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -729,6 +735,7 @@ export const globalSettingsPagePayload = {
           },
           value: null,
           default_value: null,
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -879,6 +886,7 @@ export const globalSettingsPagePayload = {
           },
           value: null,
           default_value: null,
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -1039,6 +1047,7 @@ export const globalSettingsPagePayload = {
           default_value: {
             cleanup_abandoned_host_files: 2592000.0
           },
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -1055,6 +1064,7 @@ export const globalSettingsPagePayload = {
           },
           value: false,
           default_value: false,
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -1124,6 +1134,7 @@ export const globalSettingsPagePayload = {
               title: 'Receive Syslog messages (UDP/514)'
             }
           ],
+          global_value: null,
           modified: false,
           site_overrides: []
         }
@@ -1182,6 +1193,7 @@ export const globalSettingsPagePayload = {
           default_value: {
             rule_render_mode: '28e1990ecf99f31c23d958ae87836e94b41bae5a19717b30ad1b77c3dcd9dca4'
           },
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -1198,6 +1210,7 @@ export const globalSettingsPagePayload = {
           },
           value: false,
           default_value: false,
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -1292,6 +1305,7 @@ export const globalSettingsPagePayload = {
             enabled: false,
             max_count: 100
           },
+          global_value: null,
           modified: false,
           site_overrides: []
         },
@@ -1319,6 +1333,7 @@ export const globalSettingsPagePayload = {
           },
           value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
           default_value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
+          global_value: null,
           modified: false,
           site_overrides: []
         }

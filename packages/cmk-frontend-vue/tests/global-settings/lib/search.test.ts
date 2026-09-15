@@ -25,6 +25,7 @@ function variable(name: string, title: string, help: string = ''): GlobalSetting
     },
     value: 10,
     default_value: 10,
+    global_value: null,
     modified: false,
     site_overrides: []
   }

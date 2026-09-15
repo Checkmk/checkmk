@@ -63,6 +63,7 @@ const data: GlobalSettingsAppData = {
           },
           value: 10,
           default_value: 10,
+          global_value: null,
           modified: false,
           site_overrides: []
         }
@@ -90,6 +91,7 @@ const booleanTopic: GlobalSettingsTopic = {
       },
       value: false,
       default_value: false,
+      global_value: null,
       modified: false,
       site_overrides: []
     }

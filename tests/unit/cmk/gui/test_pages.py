@@ -157,6 +157,7 @@ def test_registered_pages() -> None:
         "wato_ajax_execute_check",
         "wato_ajax_fetch_site_status",
         "global_settings",
+        "site_specific_settings",
         "welcome",
         "werk",
         "ajax_initial_view_filters",

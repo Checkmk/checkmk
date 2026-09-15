@@ -82,6 +82,10 @@
         "spec": { "$ref": "vue_formspec/components.json#/$defs/components" },
         "value": {},
         "default_value": {},
+        "global_value": {
+          "description": "The installation-wide value a site inherits; null on the page that shows the installation's own settings.",
+          "tsType": "unknown"
+        },
         "modified": {
           "description": "Whether the variable is explicitly configured in the scope of this app.",
           "type": "boolean"
@@ -92,7 +96,15 @@
           "items": { "$ref": "#/$defs/global_settings_site_override" }
         }
       },
-      "required": ["name", "spec", "value", "default_value", "modified", "site_overrides"]
+      "required": [
+        "name",
+        "spec",
+        "value",
+        "default_value",
+        "global_value",
+        "modified",
+        "site_overrides"
+      ]
     },
     "global_settings_site_override": {
       "type": "object",

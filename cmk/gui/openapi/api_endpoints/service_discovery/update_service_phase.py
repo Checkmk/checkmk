@@ -33,9 +33,10 @@ from ._family import SERVICE_DISCOVERY_FAMILY
 from ._utils import make_pending_changes, SERVICE_DISCOVERY_PHASES
 from .models.request_models import UpdateDiscoveryPhaseModel, UpdateDiscoveryPhaseModelUnstable
 
-# TODO: CMK-10911 (permissions)
 UPDATE_PHASE_PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.services"),
         permissions.Perm("wato.service_discovery_to_monitored"),
         permissions.Perm("wato.service_discovery_to_ignored"),
         permissions.Perm("wato.service_discovery_to_undecided"),
@@ -103,6 +104,8 @@ def _update_service_phase(
     service_item: str | None,
     host: Host,
 ) -> None:
+    user.need_permission("wato.edit")
+    user.need_permission("wato.services")
     user.need_permission("wato.service_discovery_to_monitored")
     user.need_permission("wato.service_discovery_to_ignored")
     user.need_permission("wato.service_discovery_to_undecided")

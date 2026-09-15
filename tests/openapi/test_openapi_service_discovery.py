@@ -2687,40 +2687,33 @@ def test_update_service_phase_demands_all_four_transition_permissions(
 
 @pytest.mark.usefixtures("inline_background_jobs")
 @pytest.mark.parametrize("permission", ("wato.services", "wato.edit"))
-def test_update_service_phase_writes_without_manage_services_or_edit_hosts(
+def test_update_service_phase_refuses_without_manage_services_or_edit(
     clients: ClientRegistry,
     tier3_writes: Tier3Writes,
     denied_permission: Callable[[str], None],
     permission: str,
 ) -> None:
-    """§10.4 (CMK-38594): a role denied "Manage services" disables a service through the API.
+    """§10.4 (CMK-38594): the endpoint gates the same module permissions as its siblings.
 
-    The same write is refused a `403` when it is asked for through `.../service_discovery_run`,
-    which demands `wato.edit` in its handler and `wato.services` on entry to `perform_fix_all`,
-    inside `_service_discovery_context`. (Not in its pre-gate:
-    `has_discovery_action_specific_permissions` only ever looks at the four `to_*` permissions --
-    T3.3b is about that distinction.) Only this endpoint demands neither, so the permission a
-    client needs depends on which endpoint it happens to use. Tier 2 owns this ticket's tripwire --
-    on the permissions the endpoint *declares*, which is the one observation point no fix can avoid
-    changing (`test_services_dispatch.py`, T2.12). This test is the end-to-end symptom: when
-    CMK-38594 lands, the expectation here becomes `403`.
+    A role denied either "Make changes" (`wato.edit`) or "Manage services" (`wato.services`) can no
+    longer disable a service through this endpoint -- it is refused a `403` and writes nothing,
+    exactly as `.../service_discovery_run` already was (it demands `wato.edit` in its handler and
+    `wato.services` on entry to `perform_fix_all`). Before the fix this endpoint alone demanded
+    neither, so which permission a client needed depended on which endpoint it happened to use.
+    Tier 2 owns this ticket's tripwire, on the permissions the endpoint *declares*
+    (`test_services_dispatch.py`, T2.12); this is the end-to-end symptom.
     """
     denied_permission(permission)
 
-    # expect_ok=False deliberately: when CMK-38594 lands this answers 403, and the client would
-    # otherwise raise on the response before `assert_status_code` could report the status.
     clients.ServiceDiscovery.update_service_phase(
         str(TIER3_HOST),
         check_type=TIER3_PLUGIN,
         service_item="/unchanged",
         target_phase="ignored",
         expect_ok=False,
-    ).assert_status_code(204)
-
-    assert tier3_writes.services == [TIER3_BASELINE]
-    clients.ServiceDiscovery.start_service_discovery(
-        str(TIER3_HOST), "fix_all", expect_ok=False
     ).assert_status_code(403)
+
+    assert tier3_writes.services == []
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

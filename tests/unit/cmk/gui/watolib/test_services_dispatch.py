@@ -1087,9 +1087,9 @@ def test_discovery_alone_demands_no_wato_services(
     """``Discovery`` demands per-target permissions and nothing else.
 
     This is a layering fact, not an endorsement: ``_service_discovery_context`` is where
-    ``wato.services`` is enforced, and ``Discovery`` -- the shape the REST endpoint uses -- is
-    below that line. It stays true after §10.4 is fixed, because that fix is at the endpoint. The
-    endpoint-level gap is the quarantined ``test_update_service_phase_*_wato_services`` pair.
+    ``wato.services`` is enforced on the GUI path, and ``Discovery`` -- the shape the REST endpoint
+    uses -- is below that line. It stays true after §10.4's fix (CMK-38594), which adds the
+    module-level demands at the endpoint (``_update_service_phase``), not here.
     """
     Discovery(
         sample_host,
@@ -1200,10 +1200,11 @@ def fixture_update_ignored_phase(
 ) -> Callable[[Host], int]:
     """Runs the endpoint's whole handler for `PUT .../update_discovery_phase` and returns its status.
 
-    ``update_service_phase_v1`` rather than the ``_update_single_service_phase`` it delegates to:
-    the endpoint's four ``need_permission`` calls are in the handler, not in the helper, and a fix
-    for §10.4 or §10.9(b) may land in either. A tripwire below the layer the ticket names would
-    keep failing after a correct fix and never fire -- which is the whole point of `strict=True`.
+    ``update_service_phase_v1`` rather than the ``_update_single_service_phase`` it ultimately
+    calls: the endpoint's ``need_permission`` demands live in the shared ``_update_service_phase``
+    helper the versioned handlers delegate to, not in that innermost writer, so a test driving the
+    writer would see none of them. A tripwire below the layer a ticket names would keep failing
+    after a correct fix and never fire -- which is the whole point of `strict=True`.
 
     Only two things stand in for the request: a ``Config`` carrying one local site, from which the
     handler derives its own automation config, and the patched ``make_pending_changes``, because
@@ -1290,41 +1291,35 @@ def test_update_during_active_job_writes_nothing_and_says_nothing(
 
 # --- T2.12 / §10.4: the endpoint's authorization surface ------------------------------------
 #
-# The tripwire is on the permissions the endpoint *declares*, not on the ones it demands.
-# `PermissionValidator` raises in a testing context when an endpoint checks a permission it has
-# not declared (`openapi/restful_objects/validators.py:559-572`), so no fix for §10.4 can land
-# without adding `wato.services` to `UPDATE_PHASE_PERMISSIONS` -- whereas *where* the
-# `need_permission` call ends up is a free choice, and an xfail that guessed wrong would keep
-# failing after the fix and never fire. The declaration is also what the generated API
-# documentation shows a client, which is half of what the ticket is about.
+# Fixed in CMK-38594. The endpoint now gates the feature the same way its read-only siblings do --
+# `wato.edit` and `wato.services`, on top of the four transition permissions. Both facets are
+# asserted: the *demand*, so a role without them is refused, and the *declaration*, which is what
+# the framework validates the demand against (`PermissionValidator` refuses an undeclared demand,
+# `openapi/restful_objects/validators.py:559-572`) and what the generated API documentation
+# advertises to a client.
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
-def test_update_service_phase_writes_without_asking_for_manage_services(
+def test_update_service_phase_demands_manage_services_and_edit(
     sample_host: Host,
     transport: Transport,
     pending_changes: RecordingPendingChanges,
     demanded_permissions: list[str],
     update_ignored_phase: Callable[[Host], int],
 ) -> None:
-    """Today: it disables a service -- autochecks *and* a rule -- demanding neither permission."""
+    """It gates the module-level `wato.edit` and `wato.services`, and declares both (CMK-38594).
+
+    A role holding only the four `service_discovery_to_*` targets is refused the same move in the
+    GUI -- `_service_discovery_context` demands `wato.services` -- but before the fix it could
+    still disable or remove a service through this endpoint. The demand lives in the shared
+    `_update_service_phase` helper, so both API versions are covered.
+    """
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
 
     assert update_ignored_phase(sample_host) == 204
 
-    assert "wato.services" not in UPDATE_PHASE_PERMISSIONS
-    assert "wato.services" not in demanded_permissions
-    assert "wato.edit" not in demanded_permissions
-    assert "set-autochecks-v2" in transport.commands
-    assert pending_changes.actions() == ["new-rule", "set-autochecks"]
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="CMK-38594 (§10.4): update_discovery_phase bypasses wato.services and wato.edit, so a "
-    "role denied 'Manage services' can still write ignored_services rules and delete services",
-)
-def test_update_service_phase_requires_manage_services() -> None:
+    assert {"wato.edit", "wato.services"} <= set(demanded_permissions)
+    assert "wato.edit" in UPDATE_PHASE_PERMISSIONS
     assert "wato.services" in UPDATE_PHASE_PERMISSIONS
 
 

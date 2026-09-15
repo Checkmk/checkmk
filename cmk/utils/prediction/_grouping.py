@@ -12,6 +12,15 @@ Timegroup = NewType("Timegroup", str)
 
 PeriodName = Literal["wday", "day", "hour", "minute"]
 
+
+def parse_period_name(name: str) -> PeriodName | None:
+    match name:
+        case "wday" | "day" | "hour" | "minute":
+            return name
+        case _:
+            return None
+
+
 _WEEKDAYS = [
     "monday",
     "tuesday",

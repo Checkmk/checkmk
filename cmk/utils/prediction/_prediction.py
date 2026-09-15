@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import math
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, Protocol, Self
 
@@ -16,7 +16,7 @@ from cmk.utils.misc import pnp_cleanup
 from cmk.utils.paths import predictions_dir
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import time_slices
+from ._grouping import parse_period_name, PeriodName, time_slices
 
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
 
@@ -68,7 +68,7 @@ class PredictionStore:
     DATA_FILE_SUFFIX = ""
     INFO_FILE_SUFFIX = ".info"
     NAME_TEMPLATE = "{meta.metric}/{meta.params.period}-{meta.valid_interval[0]}-{meta.direction}"
-    RETENTION = {
+    RETENTION: Final[Mapping[PeriodName, int]] = {
         "wday": 7 * _DAY,
         "day": 31 * _DAY,
         "hour": 3 * _DAY,
@@ -120,8 +120,10 @@ class PredictionStore:
     def remove_outdated_predictions(self, now: float) -> None:
         for info_path in self.iter_all_metadata_files():
             period, start_time_str = info_path.name.split("-")[:2]
+            if (period_name := parse_period_name(period)) is None:
+                continue
 
-            if (now - float(start_time_str)) > self.RETENTION[period]:
+            if (now - float(start_time_str)) > self.RETENTION[period_name]:
                 info_path.unlink(missing_ok=True)
                 info_path.with_suffix(self.DATA_FILE_SUFFIX).unlink(missing_ok=True)
 

@@ -312,3 +312,13 @@ class TestPredictionStore:
         assert stillok_hour.exists()
         assert not too_old_minute.exists()
         assert stillok_minute.exists()
+
+    def test_remove_outdated_predictions_ignores_unknown_period(self, tmp_path: Path) -> None:
+        now = int(time.time())
+        (unknown_period := tmp_path / f"epoch-{now - 999 * 86400}-upper.info").touch()
+
+        store = PredictionStore(HostName("foo"), "bar")
+        store.path = tmp_path
+        store.remove_outdated_predictions(now)
+
+        assert unknown_period.exists()

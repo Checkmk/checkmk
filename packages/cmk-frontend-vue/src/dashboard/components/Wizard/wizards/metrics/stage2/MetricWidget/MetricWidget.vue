@@ -118,6 +118,23 @@ const widgetProps = computed(() => handler.value.widgetProps)
           />
         </FieldComponent>
       </TableFormRow>
+
+      <TableFormRow>
+        <FieldDescription>{{ _t('Sparkline display') }}</FieldDescription>
+        <FieldComponent>
+          <CmkDropdown
+            v-model="handler.sparkHeightMode.value"
+            :options="{
+              type: 'fixed',
+              suggestions: [
+                { name: 'band', title: _t('Band') },
+                { name: 'full', title: _t('Full height') }
+              ]
+            }"
+            :label="_t('Sparkline display')"
+          />
+        </FieldComponent>
+      </TableFormRow>
     </TableForm>
   </CmkCatalogPanel>
 

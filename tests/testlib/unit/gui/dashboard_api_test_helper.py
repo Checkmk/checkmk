@@ -193,6 +193,7 @@ class TestSingleMetricContent:
                 "status_display": {"type": "text", "for_states": "not_ok"},
                 "display_range": "automatic",
                 "show_display_range_limits": False,
+                "spark_height_mode": "full",
             },
         )
 

@@ -132,6 +132,7 @@ function formatValue(value: number): string {
         :stale="data.stale"
         :href="href"
         :format-value="formatValue"
+        :spark-height-mode="content.spark_height_mode"
       />
     </div>
   </DashboardContentContainer>

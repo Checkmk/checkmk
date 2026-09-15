@@ -113,11 +113,15 @@ class GaugeDashletConfig(SingleMetricDashletConfig):
     status_display: StatusDisplayWithText
 
 
+SingleMetricSparkHeightMode = Literal["band", "full"]
+
+
 class SingleGraphDashletConfig(SingleMetricDashletConfig):
     display_range: MetricDisplayRangeWithAutomatic  # TODO: remove once the old setup page is gone
     toggle_range_display: bool  # TODO: remove once the old setup page is gone
     time_range: MetricTimeRange
     status_display: StatusDisplayWithText
+    spark_height_mode: NotRequired[SingleMetricSparkHeightMode]
 
 
 class AverageScatterplotDashletConfig(DashletConfig):

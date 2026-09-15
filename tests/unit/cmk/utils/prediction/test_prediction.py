@@ -281,7 +281,13 @@ def approx(value_in: float) -> float:
 def test_data_stats(
     slices: list[Sequence[float | None]], result: Sequence[DataStat | None]
 ) -> None:
-    assert _prediction._data_stats(slices) == result  # noqa: SLF001
+    window = range(len(slices[0]))
+
+    prediction = _prediction._calculate_data_for_prediction(  # noqa: SLF001
+        window, [(window, values, 0) for values in slices]
+    )
+
+    assert prediction.points == result
 
 
 class TestPredictionStore:

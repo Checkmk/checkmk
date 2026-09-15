@@ -192,7 +192,7 @@ def _forward_fill_resample(
 
 
 def _data_stats(slices: Iterable[Iterable[float | None]]) -> list[DataStat | None]:
-    return [  # can't inline this b/c it is unit tested :-/
+    return [
         (
             DataStat.from_values(point_line)
             if (point_line := [x for x in time_column if x is not None])

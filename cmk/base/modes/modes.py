@@ -510,15 +510,8 @@ class Modes:
         write_paged(self.help())
         return 0
 
-    def exists(self, opt: OptionName) -> bool:
-        try:
-            self.get(opt)
-            return True
-        except KeyError:
-            return False
-
-    def get(self, name: OptionName) -> Mode:
-        return self._mode_map[name]
+    def find(self, name: OptionName) -> Mode | None:
+        return self._mode_map.get(name)
 
     def short_getopt_specs(self) -> str:
         options = ""

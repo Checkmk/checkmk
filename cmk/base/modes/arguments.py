@@ -11,6 +11,7 @@ from typing import Final
 from .modes import Argument, Mode, Modes, Options
 
 _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
+_IMPLICIT_CHECK_MODE: Final = "check"
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,12 @@ class InvalidArguments:
     message: str
 
 
+def _is_implicit_check(options: Options, arguments: Sequence[str]) -> bool:
+    return (0 < len(arguments) <= _IMPLICIT_CHECK_ARGUMENT_LIMIT) or any(
+        option == "--keepalive" for option, _argument in options
+    )
+
+
 def parse(modes: Modes, argv: Sequence[str]) -> RunMode | ShowHelp | InvalidArguments:
     try:
         options, arguments = getopt.getopt(
@@ -41,12 +48,13 @@ def parse(modes: Modes, argv: Sequence[str]) -> RunMode | ShowHelp | InvalidArgu
         return InvalidArguments(f"ERROR: {error} (see `{program} --help` for valid options)\n")
 
     for option, argument in options:
-        if modes.exists(name := option.lstrip("-")):
-            return RunMode(modes.get(name), argument, options, arguments)
+        if (mode := modes.find(option.lstrip("-"))) is not None:
+            return RunMode(mode, argument, options, arguments)
 
-    if (arguments and len(arguments) <= _IMPLICIT_CHECK_ARGUMENT_LIMIT) or "--keepalive" in [
-        option for option, _argument in options
-    ]:
-        return RunMode(modes.get("check"), "", options, arguments)
+    if (
+        _is_implicit_check(options, arguments)
+        and (mode := modes.find(_IMPLICIT_CHECK_MODE)) is not None
+    ):
+        return RunMode(mode, "", options, arguments)
 
     return ShowHelp(options)

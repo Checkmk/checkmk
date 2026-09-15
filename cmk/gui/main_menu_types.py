@@ -69,7 +69,6 @@ class MainMenuVueApp:
 class RenderTopics:
     topics: Callable[[UserPermissions], list[MainMenuTopic]]
     info_line: Callable[[], str] | None = None
-    hint: str | None = None
 
 
 @dataclass(frozen=True)

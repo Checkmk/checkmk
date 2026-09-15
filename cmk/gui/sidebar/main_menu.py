@@ -389,8 +389,6 @@ class MainMenuPopupRenderer:
         html.open_div(class_="search_bar")
         if menu.search:
             menu.search.show_search_field()
-        if action.hint:
-            html.span(action.hint, class_="main_menu_hint")
         html.close_div()
         if action.info_line:
             html.span(action.info_line(), id_="info_line_%s" % menu.name, class_="info_line")

@@ -8,7 +8,12 @@ from collections.abc import Mapping
 from cmk.checkengine.plugins import CheckPluginName
 
 # Please keep this functionality even if we currently don't have any replaced check plugins!
-_REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {}
+_REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
+    # 3.0: metric backend -> data backend / telemetry metrics
+    CheckPluginName("custom_query_metric_backend"): CheckPluginName(
+        "telemetry_metrics_custom_query"
+    ),
+}
 
 ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {
     **_REPLACED_CHECK_PLUGINS,

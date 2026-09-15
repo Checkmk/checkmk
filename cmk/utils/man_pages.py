@@ -120,7 +120,7 @@ CATALOG_TITLES: Final = {
     "containerization": "Containerization",
     "couchbase": "Couchbase",
     "cps": "Cyber Power System Inc.",
-    "custom_query_metric_backend": "Custom query (metric backend)",
+    "telemetry_metrics_custom_query": "Custom query (metric backend)",
     "datadog": "Datadog",
     "db2": "IBM DB2",
     "ddn_s2a": "DDN S2A",

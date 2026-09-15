@@ -28,7 +28,16 @@ from cmk.ruleset_matcher.tags import TagGroupID
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.log import VERBOSE
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
+# 3.0: metric backend -> data backend / telemetry metrics
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
+    "special_agents:custom_query_metric_backend": "special_agents:telemetry_metrics_custom_query",
+    "checkgroup_parameters:custom_query_metric_backend_monitoring": (
+        "checkgroup_parameters:telemetry_metrics_custom_query_monitoring"
+    ),
+    "static_checks:custom_query_metric_backend_monitoring": (
+        "static_checks:telemetry_metrics_custom_query_monitoring"
+    ),
+}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 

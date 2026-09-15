@@ -17,7 +17,7 @@ from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import man_pages
 from tests.code_quality.bazel_utils import bazel_repo_root as repo_path
 
-_NONFREE_INDICATORS = {"nonfree", "non-free", "custom_query_metric_backend"}
+_NONFREE_INDICATORS = {"nonfree", "non-free", "telemetry_metrics_custom_query"}
 _NONFREE_LICENSE = "Checkmk Enterprise License"
 _FREE_LICENSE = "GPLv2"
 
@@ -257,7 +257,7 @@ _ALLOWED_AGENTS = [
     "azure_v2",
     "azure_status",
     "cisco_meraki",
-    "custom_query_metric_backend",
+    "telemetry_metrics_custom_query",
     "datadog",
     "ddn_s2a",
     "elasticsearch",

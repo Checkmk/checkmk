@@ -38,7 +38,6 @@ from cmk.shared_typing.global_settings import (
     Components,
     GlobalSettingsApp,
     GlobalSettingsBreadcrumbItem,
-    GlobalSettingsDomain,
     GlobalSettingsScopeGlobal,
     GlobalSettingsSiteOverride,
     GlobalSettingsTopic,
@@ -153,7 +152,6 @@ def app_data(config: Config) -> GlobalSettingsApp:
     return GlobalSettingsApp(
         title=title,
         breadcrumb=_breadcrumb_items(title),
-        domain=GlobalSettingsDomain.global_settings,
         scope=GlobalSettingsScopeGlobal(),
         topics=list(_topics(config)),
     )

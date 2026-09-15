@@ -8,10 +8,6 @@
       "type": "array",
       "items": { "$ref": "#/$defs/global_settings_breadcrumb_item" }
     },
-    "domain": {
-      "description": "event console or global settings?",
-      "$ref": "#/$defs/global_settings_domain"
-    },
     "scope": {
       "description": "Whether the shown settings apply to all sites or to one specific site.",
       "anyOf": [
@@ -24,7 +20,7 @@
       "items": { "$ref": "#/$defs/global_settings_topic" }
     }
   },
-  "required": ["title", "breadcrumb", "domain", "scope", "topics"],
+  "required": ["title", "breadcrumb", "scope", "topics"],
   "$defs": {
     "global_settings_breadcrumb_item": {
       "title": "GlobalSettingsBreadcrumbItem",
@@ -34,10 +30,6 @@
         "link": { "type": ["string", "null"] }
       },
       "required": ["title", "link"]
-    },
-    "global_settings_domain": {
-      "type": "string",
-      "enum": ["global_settings", "event_console"]
     },
     "global_settings_scope_global": {
       "type": "object",

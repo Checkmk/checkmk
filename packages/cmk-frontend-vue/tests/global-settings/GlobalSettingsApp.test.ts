@@ -42,7 +42,6 @@ const data: GlobalSettingsAppData = {
     { title: 'Setup', link: null },
     { title: 'Global settings', link: null }
   ],
-  domain: 'global_settings',
   scope: { type: 'global' },
   topics: [
     {

@@ -61,6 +61,37 @@ test('selecting a consolidation function shows the new selection and emits updat
   expect(emitted('update:consolidationFn')?.at(-1)).toEqual(['avg'])
 })
 
+const INLINE_TOOLTIP_STUBS = {
+  CmkTooltipProvider: { template: '<div><slot /></div>' },
+  CmkTooltip: { template: '<div><slot /></div>' },
+  CmkTooltipTrigger: { template: '<div><slot /></div>' },
+  CmkTooltipContent: { template: '<div><slot /></div>' }
+}
+
+test('the consolidation functions are offered from the default downwards, each explaining what it displays', async () => {
+  const user = userEvent.setup()
+  render(GraphHeader, {
+    props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE },
+    global: { stubs: INLINE_TOOLTIP_STUBS }
+  })
+
+  await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
+
+  const descriptionPerOption = [
+    ['Max', 'Display of maximum values for each selected metric over time.'],
+    ['Average', 'Display of average values for each selected metric over time.'],
+    ['Min', 'Display of minimum values for each selected metric over time.']
+  ] as const
+  const options = await screen.findAllByRole('option')
+
+  expect(options.map((option) => option.getAttribute('aria-label'))).toEqual(
+    descriptionPerOption.map(([name]) => name)
+  )
+  descriptionPerOption.forEach(([, description], index) => {
+    expect(within(options[index]!).getByText(description)).toBeInTheDocument()
+  })
+})
+
 test('describes a same-day range with a single date and its resolution', () => {
   render(GraphHeader, {
     props: {

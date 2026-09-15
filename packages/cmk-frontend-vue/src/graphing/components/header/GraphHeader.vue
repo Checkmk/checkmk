@@ -17,10 +17,11 @@ import { isoDate, stepLabel } from '../../utils/timeFormat'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import type { ZoomMode } from '../TimeSeriesGraph'
 import {
-  CONSOLIDATION_FUNCTIONS,
+  CONSOLIDATION_FUNCTION_OPTION_ORDER,
   type ConsolidationFn,
   DEFAULT_CONSOLIDATION_FN,
   isConsolidationFn,
+  useConsolidationFunctionDescriptions,
   useConsolidationFunctionLabels
 } from '../consolidation'
 import GraphTitle from './GraphTitle.vue'
@@ -52,12 +53,14 @@ const zoomMode = defineModel<ZoomMode>('zoomMode', { default: 'time' })
 const { _t } = usei18n()
 
 const consolidationFunctionLabels = useConsolidationFunctionLabels()
+const consolidationFunctionDescriptions = useConsolidationFunctionDescriptions()
 
 const consolidationOptions = computed<Suggestions>(() => ({
   type: 'fixed',
-  suggestions: CONSOLIDATION_FUNCTIONS.map((consolidationFunction) => ({
+  suggestions: CONSOLIDATION_FUNCTION_OPTION_ORDER.map((consolidationFunction) => ({
     name: consolidationFunction,
-    title: consolidationFunctionLabels.value[consolidationFunction]
+    title: consolidationFunctionLabels.value[consolidationFunction],
+    tooltip: consolidationFunctionDescriptions.value[consolidationFunction]
   }))
 }))
 

@@ -165,6 +165,7 @@ function select(action: CellAction): void {
             <div
               v-else-if="failed && loadedActions === null"
               class="monitoring-action-buttons__menu-status monitoring-action-buttons__menu-hint"
+              role="alert"
             >
               {{ _t('Could not load more actions.') }}
             </div>

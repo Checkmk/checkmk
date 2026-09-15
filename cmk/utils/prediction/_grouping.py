@@ -103,7 +103,7 @@ def time_slices(
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Slice:
     group: Timegroup
     """Name of the group, like 'monday' or '12'"""

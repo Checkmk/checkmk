@@ -354,7 +354,7 @@ defineExpose({ focus })
   display: block;
   width: 100%;
   margin: 0;
-  padding: var(--dimension-2) var(--dimension-4);
+  padding: 6px;
   border: 0;
   background: transparent;
   color: var(--font-color);

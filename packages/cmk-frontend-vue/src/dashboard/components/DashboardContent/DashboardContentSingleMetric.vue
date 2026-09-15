@@ -100,6 +100,12 @@ const state = computed<KpiState | undefined>(() => {
 })
 
 const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
+
+function formatValue(value: number): string {
+  const rendered = value.toFixed(1)
+  const unit = data.value?.unit
+  return unit ? `${rendered} ${unit}` : rendered
+}
 </script>
 
 <template>
@@ -125,6 +131,7 @@ const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
         :range="data.range"
         :stale="data.stale"
         :href="href"
+        :format-value="formatValue"
       />
     </div>
   </DashboardContentContainer>

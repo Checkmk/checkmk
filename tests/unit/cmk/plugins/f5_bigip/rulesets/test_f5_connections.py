@@ -11,7 +11,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, registration, VisitorOp
 from cmk.plugins.f5_bigip.rulesets.f5_connections import rule_spec_f5_connections
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _register_form_spec_visitors() -> None:
     registration.register()
 
@@ -85,6 +85,7 @@ _PREDICTIVE_RULE = {
         pytest.param(_PREDICTIVE_RULE, _PREDICTIVE_RULE, id="migrated rule stays unchanged"),
     ],
 )
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_rule_spec_f5_connections_migration(
     rule: Mapping[str, object], expected: Mapping[str, object]
 ) -> None:

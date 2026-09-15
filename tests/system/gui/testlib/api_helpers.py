@@ -21,26 +21,6 @@ LOCALHOST_IPV4 = "127.0.0.1"
 
 
 @contextmanager
-def core_checks_paused(site: Site) -> Iterator[None]:
-    """Hold whatever state was forced into the core for the body of the block.
-
-    Active host and service checks are what would otherwise overwrite a state
-    submitted with ``send_*_check_result``, and a recovery clears an
-    acknowledgement with it. Both are site-wide switches, so they are restored
-    in a finally.
-    """
-    logger.info("Pausing active host and service checks on %s", site.id)
-    site.stop_host_checks()
-    site.stop_active_services()
-    try:
-        yield
-    finally:
-        logger.info("Resuming active host and service checks on %s", site.id)
-        site.start_host_checks()
-        site.start_active_services()
-
-
-@contextmanager
 def create_and_delete_hosts(
     host_details: list[HostDetails], site: Site, allow_foreign_changes: bool = False
 ) -> Iterator[None]:

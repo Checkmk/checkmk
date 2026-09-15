@@ -406,7 +406,3 @@ class HostServicesExperimental(CmkPage):
     def form_option(self, label: str) -> Locator:
         """A labelled control inside the open action form."""
         return self.main_area.locator().get_by_text(label, exact=True)
-
-    def catalog_panel(self, title: str) -> Locator:
-        """A collapsible section of an action form, e.g. Duration or Advanced option."""
-        return self.main_area.locator().get_by_role("button", name=title)

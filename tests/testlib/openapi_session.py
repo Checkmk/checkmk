@@ -166,7 +166,6 @@ class CMKOpenApiSession(requests.Session):
         self.ldap_connection = LDAPConnectionAPI(self)
         self.passwords = PasswordsAPI(self)
         self.license = LicenseAPI(self)
-        self.downtimes = DowntimesAPI(self)
         self.otel_collector = OtelCollectorAPI(self)
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
@@ -1799,37 +1798,6 @@ class LDAPConnectionAPI(BaseAPI):
         resp = self.session.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
-
-
-class DowntimesAPI(BaseAPI):
-    def get_all(
-        self, host_name: str | None = None, service_description: str | None = None
-    ) -> list[dict[str, Any]]:
-        """List downtimes, optionally narrowed to one host or one of its services."""
-        params: dict[str, str] = {}
-        if host_name is not None:
-            params["host_name"] = host_name
-        if service_description is not None:
-            params["service_description"] = service_description
-        response = self.session.get("/domain-types/downtime/collections/all", params=params)
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return list(response.json()["value"])
-
-    def delete_by_params(
-        self, host_name: str, service_descriptions: list[str] | None = None
-    ) -> None:
-        """Delete a host's own downtimes, or those of the named services on it.
-
-        Addressed by host and service rather than by id, so it also clears what an
-        interrupted earlier run left behind.
-        """
-        body: dict[str, Any] = {"delete_type": "params", "host_name": host_name}
-        if service_descriptions is not None:
-            body["service_descriptions"] = service_descriptions
-        response = self.session.post("/domain-types/downtime/actions/delete/invoke", json=body)
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
 
 
 class PasswordsAPI(BaseAPI):

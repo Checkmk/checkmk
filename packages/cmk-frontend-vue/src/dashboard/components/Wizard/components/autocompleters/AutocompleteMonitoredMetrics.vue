@@ -49,7 +49,10 @@ const metricNameAutocompleter = computed(() => {
   return autocompleter
 })
 
-const { internalValue } = useLabelValueAutocomplete(serviceMetrics, metricNameAutocompleter)
+const { internalValue, pending } = useLabelValueAutocomplete(
+  serviceMetrics,
+  metricNameAutocompleter
+)
 </script>
 
 <template>
@@ -59,5 +62,6 @@ const { internalValue } = useLabelValueAutocomplete(serviceMetrics, metricNameAu
     :size="0"
     :placeholder="_t('Select service metric')"
     :label="_t('Select service metric')"
+    :busy="pending"
   />
 </template>

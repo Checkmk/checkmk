@@ -76,6 +76,7 @@ export const panelConfig = {
     title: 'Floating',
     initialState: false
   },
+  busy: { type: 'boolean' as const, title: 'Busy', initialState: false },
   inputHint: {
     type: 'string' as const,
     title: 'Input Hint',
@@ -223,6 +224,7 @@ const dynamicOptions = computed<Suggestions>(() => {
         label="demo dropdown"
         :form-validation="propState.formValidation"
         :floating="propState.floating"
+        :busy="propState.busy"
       />
 
       <template #properties>

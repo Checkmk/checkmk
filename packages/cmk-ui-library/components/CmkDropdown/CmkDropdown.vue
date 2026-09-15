@@ -48,7 +48,8 @@ const {
   label,
   formValidation = false,
   describedBy,
-  floating = false
+  floating = false,
+  busy = false
 } = defineProps<{
   modelValue?: string | null
   options: Suggestions
@@ -63,6 +64,7 @@ const {
   formValidation?: boolean
   describedBy?: string | undefined
   floating?: boolean
+  busy?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -358,6 +360,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :aria-label="label"
       :aria-expanded="suggestionsShown"
       :aria-invalid="formValidation || undefined"
+      :aria-busy="busy || undefined"
       :aria-describedby="describedBy"
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"

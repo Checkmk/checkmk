@@ -1509,7 +1509,7 @@ class BIAggregationAPI(BaseAPI):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MetricBackendDCDConnectionAttributeFilter:
+class TelemetryMetricsDCDConnectionAttributeFilter:
     key: str
     value: str
 
@@ -1560,7 +1560,7 @@ class DcdAPI(BaseAPI):
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
 
-    def create_metric_backend_connection(
+    def create_telemetry_metrics_connection(
         self,
         *,
         dcd_id: str,
@@ -1568,9 +1568,9 @@ class DcdAPI(BaseAPI):
         site: str | None = None,
         interval: int = 60,
         host_name_template: str,
-        resource_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
-        scope_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
-        data_point_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
+        resource_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        scope_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        data_point_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
         delete_hosts: bool = False,
         discover_on_creation: bool = True,
         validity_period: int = 60,
@@ -1578,7 +1578,7 @@ class DcdAPI(BaseAPI):
     ) -> None:
         """Create a DCD connection via REST API."""
         response = self.session.post(
-            "domain-types/dcd_metric_backend/collections/all",
+            "domain-types/dcd_telemetry_metrics/collections/all",
             api_version=APIVersion.INTERNAL,
             json={
                 "dcd_id": dcd_id,

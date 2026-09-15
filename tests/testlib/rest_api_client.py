@@ -3193,8 +3193,8 @@ class DcdClient(RestApiClient):
         )
 
 
-class DcdMetricBackendClient(RestApiClient):
-    domain: Literal["dcd_metric_backend"] = "dcd_metric_backend"
+class DcdTelemetryMetricsClient(RestApiClient):
+    domain: Literal["dcd_telemetry_metrics"] = "dcd_telemetry_metrics"
     default_version = APIVersion.INTERNAL
 
     def get(self, dcd_id: str, expect_ok: bool = True) -> Response:
@@ -5254,7 +5254,7 @@ class ClientRegistry:
     Comment: CommentClient
     EventConsole: EventConsoleClient
     Dcd: DcdClient
-    DcdMetricBackend: DcdMetricBackendClient
+    DcdTelemetryMetrics: DcdTelemetryMetricsClient
     AuditLog: AuditLogClient
     BiPack: BiPackClient
     BiAggregation: BiAggregationClient
@@ -5324,7 +5324,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Comment=CommentClient(request_handler, url_prefix),
         EventConsole=EventConsoleClient(request_handler, url_prefix),
         Dcd=DcdClient(request_handler, url_prefix),
-        DcdMetricBackend=DcdMetricBackendClient(request_handler, url_prefix),
+        DcdTelemetryMetrics=DcdTelemetryMetricsClient(request_handler, url_prefix),
         AuditLog=AuditLogClient(request_handler, url_prefix),
         BiPack=BiPackClient(request_handler, url_prefix),
         BiAggregation=BiAggregationClient(request_handler, url_prefix),

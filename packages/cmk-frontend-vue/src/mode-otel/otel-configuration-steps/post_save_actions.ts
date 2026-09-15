@@ -167,7 +167,7 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
   try {
     const dcdId = `quick_setup_${ctx.configName}`
     const response = await fetchRestAPIDeprecated(
-      'api/internal/domain-types/dcd_metric_backend/collections/all',
+      'api/internal/domain-types/dcd_telemetry_metrics/collections/all',
       'POST',
       {
         title: ctx.configName,
@@ -187,9 +187,9 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
     return {
       ok: true,
       rollback: async () => {
-        // The dcd_metric_backend DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
+        // The dcd_telemetry_metrics DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
         await fetchRestAPIDeprecated(
-          `api/internal/objects/dcd_metric_backend/${encodeURIComponent(dcdId)}`,
+          `api/internal/objects/dcd_telemetry_metrics/${encodeURIComponent(dcdId)}`,
           'DELETE',
           undefined,
           IF_MATCH_ANY

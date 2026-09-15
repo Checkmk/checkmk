@@ -42,7 +42,7 @@ DomainType = Literal[
     "dashboard_responsive_grid",
     "dashboard_token",
     "dcd",
-    "dcd_metric_backend",
+    "dcd_telemetry_metrics",
     "discovery_run",
     "downtime",
     "event_console",

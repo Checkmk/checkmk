@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import signal
 import sys
+from collections.abc import Iterator
 
 import pytest
 
 from cmk.base.modes.modes import write_paged
+from cmk.ccc.exceptions import raise_mkterminate_on_sigint
 
 
 def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
@@ -36,3 +39,25 @@ def test_a_missing_pager_falls_back_to_stdout(
     write_paged("the help\n")
 
     assert capsys.readouterr().out == "the help\n"
+
+
+@pytest.fixture(name="own_sigint_handler")
+def _own_sigint_handler() -> Iterator[None]:
+    previous = signal.getsignal(signal.SIGINT)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
+
+
+@pytest.mark.usefixtures("own_sigint_handler")
+def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
+    monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("PAGER", "sh -c 'kill -INT $PPID; sleep 1; cat'")
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    raise_mkterminate_on_sigint()
+
+    write_paged("the help\n")
+
+    assert capfd.readouterr().out == "the help\n"

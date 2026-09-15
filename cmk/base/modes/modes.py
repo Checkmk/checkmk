@@ -9,11 +9,12 @@
 
 import os
 import shlex
+import signal
 import subprocess
 import sys
 import textwrap
-from collections.abc import Callable, Mapping, Sequence
-from contextlib import suppress
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from typing import Final, override, Self
 
@@ -452,13 +453,22 @@ def print_(txt: str) -> None:
 _DEFAULT_PAGER: Final = "less --quit-if-one-screen --no-init"
 
 
+@contextmanager
+def _sigint_ignored() -> Iterator[None]:
+    previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
+
+
 def write_paged(txt: str) -> None:
     if not sys.stdout.isatty():
         print_(txt)
         return
 
     try:
-        with suppress(BrokenPipeError):
+        with suppress(BrokenPipeError), _sigint_ignored():
             subprocess.run(
                 shlex.split(os.environ.get("PAGER") or _DEFAULT_PAGER),
                 input=txt,

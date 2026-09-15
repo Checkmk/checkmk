@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from unittest.mock import call, MagicMock
 
 import pytest
@@ -20,6 +20,8 @@ from cmk.automations.results import (
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
+from cmk.gui.openapi.restful_objects.registry import endpoint_registry
+from cmk.gui.utils.permission_verification import BasePerm
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.labels import HostLabel
 from cmk.utils.servicename import ServiceName
@@ -1396,3 +1398,139 @@ def test_openapi_service_discovery_accessible_to_admin_not_in_folder_contact_gro
 
     run_resp.assert_status_code(200)
     assert run_resp.json["extensions"]["state"] == "finished"
+
+
+# --- CMK-38594: the endpoint's authorization surface -----------------------------------------
+
+
+@pytest.fixture(name="mock_rule_evaluation")
+def fixture_mock_rule_evaluation(mocker: MockerFixture) -> None:
+    """Stub the two automations the "Disabled services" rule write needs.
+
+    Without them a request that gets *past* the permission gate dies on a missing `check_mk`
+    binary with a `500`, which would let the tests below pass for the wrong reason. With them, a
+    missing gate answers `204` and writes -- which is the symptom they have to catch.
+    """
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.get_services_labels",
+        return_value=GetServicesLabelsResult(labels=defaultdict(dict)),
+    )
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.analyze_service_rule_matches",
+        return_value=AnalyzeServiceRuleMatchesResult({}),
+    )
+
+
+def _declared_permissions(method: str, path: str) -> BasePerm | None:
+    """Return the set of permissions the registered endpoint declares (see BasePerm)."""
+    for endpoint in endpoint_registry:
+        if endpoint.method == method and endpoint.path == path:
+            return endpoint.permissions_required
+    raise LookupError(f"no endpoint registered for {method.upper()} {path}")
+
+
+@pytest.fixture(name="denied_permission")
+def fixture_denied_permission(clients: ClientRegistry) -> Callable[[str], None]:
+    """Log the client in as a user whose role is an admin minus one permission.
+
+    A cloned role rather than the built-in `user` role: the point is to isolate a single
+    permission, and every other difference between roles would be a second variable.
+    """
+
+    def deny(permission: str) -> None:
+        clients.UserRole.clone(body={"role_id": "admin"})
+        clients.UserRole.edit(role_id="adminx", body={"new_permissions": {permission: "no"}})
+        clients.User.create(
+            username="restricted",
+            fullname="restricted",
+            customer=None,
+            roles=["adminx"],
+            auth_option={"auth_type": "password", "password": "supersecretish"},
+        )
+        clients.ServiceDiscovery.set_credentials("restricted", "supersecretish")
+
+    return deny
+
+
+@pytest.mark.usefixtures(
+    "with_host", "inline_background_jobs", "mock_rule_evaluation", "mock_discovery_preview"
+)
+@pytest.mark.parametrize("permission", ("wato.services", "wato.edit"))
+def test_openapi_update_service_phase_refuses_without_manage_services_or_edit(
+    clients: ClientRegistry,
+    mock_set_autochecks: MagicMock,
+    denied_permission: Callable[[str], None],
+    permission: str,
+) -> None:
+    """CMK-38594: the endpoint gates the same module permissions as its siblings.
+
+    A role denied either "Make changes" (`wato.edit`) or "Manage services" (`wato.services`) can
+    no longer disable a service through this endpoint -- it is refused a `403` and writes nothing,
+    exactly as the read-only endpoints of the family already were (they demand both in their
+    handlers, see `RO_PERMISSIONS`). Before the fix this endpoint alone demanded neither, so which
+    permission a client needed depended on which endpoint it happened to use.
+    """
+    denied_permission(permission)
+
+    clients.ServiceDiscovery.update_service_phase(
+        "example.com",
+        check_type="df",
+        service_item="/boot",
+        target_phase="ignored",
+        expect_ok=False,
+    ).assert_status_code(403)
+
+    mock_set_autochecks.assert_not_called()
+
+
+@pytest.mark.usefixtures(
+    "with_host", "inline_background_jobs", "mock_rule_evaluation", "mock_discovery_preview"
+)
+@pytest.mark.parametrize(
+    "permission",
+    (
+        "wato.service_discovery_to_monitored",
+        "wato.service_discovery_to_ignored",
+        "wato.service_discovery_to_undecided",
+        "wato.service_discovery_to_removed",
+    ),
+)
+def test_openapi_update_service_phase_still_demands_all_four_transition_permissions(
+    clients: ClientRegistry,
+    mock_set_autochecks: MagicMock,
+    denied_permission: Callable[[str], None],
+    permission: str,
+) -> None:
+    """The four unconditional `service_discovery_to_*` demands survive the CMK-38594 fix.
+
+    They are what already refused a "Guest user" every move, and are the reason the werk's
+    mitigation works, so adding the two module-level demands must not have replaced them.
+    """
+    denied_permission(permission)
+
+    clients.ServiceDiscovery.update_service_phase(
+        "example.com",
+        check_type="df",
+        service_item="/boot",
+        target_phase="ignored",
+        expect_ok=False,
+    ).assert_status_code(403)
+
+    mock_set_autochecks.assert_not_called()
+
+
+@pytest.mark.usefixtures("load_plugins")
+def test_openapi_update_service_phase_declares_manage_services_and_edit() -> None:
+    """The endpoint *declares* both permissions, not only demands them (CMK-38594).
+
+    The declaration is what the generated API documentation advertises to a client, which is half
+    of what the werk is about; it is also what `PermissionValidator` validates the demand against,
+    refusing an undeclared demand in a testing context.
+    """
+    declared = _declared_permissions(
+        "put", "/objects/host/{host_name}/actions/update_discovery_phase/invoke"
+    )
+
+    assert declared is not None
+    assert "wato.edit" in declared
+    assert "wato.services" in declared

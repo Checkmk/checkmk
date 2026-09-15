@@ -103,7 +103,7 @@ test('CmkCheckbox page renders its component', () => {
 
 test('CmkChipAutocomplete page renders its component', () => {
   render(UclCmkChipAutocomplete, { props: { screenshotMode: false } })
-  within(componentPreview()).getByRole('textbox')
+  within(componentPreview()).getByRole('searchbox')
 })
 
 test('CmkSlideInDropdown page renders its component', async () => {

@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
@@ -65,4 +66,12 @@ py_requirements_test(
         ":decent_output",
     ],
     requirements_in = "requirements.in",
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    imports = ["."],
+    deps = [":sarif_preparse"],
 )

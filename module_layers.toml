@@ -2135,6 +2135,12 @@ allows = ["@ccc"]
 [file_dependencies."buildscripts/scripts/lib/registry.py"]
 allows = ["@ccc"]
 
+[file_dependencies."buildscripts/scripts/tests/test_assert_build_artifacts.py"]
+allows = ["@ccc"]
+
+[file_dependencies."buildscripts/scripts/tests/test_publish_cloud_images.py"]
+allows = ["@ccc"]
+
 [file_dependencies."omd/packages/check_mk/post-create/01_create-sample-config.py"]
 allows = ["@ccc", "cmk.gui", "cmk.utils.log", "cmk.utils.paths"]
 

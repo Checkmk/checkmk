@@ -9,6 +9,7 @@ load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 exports_files(
@@ -194,3 +195,11 @@ py_binary(
         ("buildifier.check", "--lint=warn"),
     ]
 ]
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    imports = ["."],
+    deps = [":extract_os_packages"],
+)

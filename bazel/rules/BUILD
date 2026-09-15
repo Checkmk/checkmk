@@ -1,3 +1,5 @@
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+
 # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
 exports_files(["xcomp/rust-test-wine.sh"])
 
@@ -27,12 +29,14 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-py_test(
-    # uses `unittest` to avoid overhead.
-    name = "console_scripts_gen_test",
+py_cmk_test(
+    name = "unit",
     size = "small",
-    srcs = ["console_scripts_gen_test.py"],
+    srcs = ["console_scripts_gen_test.py"] + glob(["tests/*.py"]),
     imports = ["."],
-    main = "console_scripts_gen_test.py",
-    deps = [":console_scripts_gen"],
+    deps = [
+        ":console_scripts_gen",
+        ":set_runpath_tree",
+        ":set_runpath_whl",
+    ],
 )

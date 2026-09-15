@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -113,5 +114,30 @@ sh_library(
         "create_unsign_msi_patch.sh",
         "extract_llvm.sh",
         "sign-packages.sh",
+    ],
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    imports = ["."],
+    tags = [
+        "deballast-keep=//buildscripts/scripts:build-cmk-container",
+        "deballast-keep=//buildscripts/scripts:unpublish-container-image",
+    ],
+    deps = [
+        requirement("azure-mgmt-compute"),
+        requirement("docker"),
+        requirement("requests"),
+        ":assert_build_artifacts",
+        ":build-cmk-container",
+        ":collect_mypy_lib",
+        ":collect_rust_tests_lib",
+        ":get_distros",
+        ":lib",
+        ":publish_cloud_images",
+        ":unpublish-container-image",
+        ":validate_changes",
     ],
 )

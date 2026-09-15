@@ -45,7 +45,8 @@ const {
   width,
   options,
   label,
-  formValidation = false
+  formValidation = false,
+  busy = false
 } = defineProps<{
   selectedOption: string | null
   options: Suggestions
@@ -58,6 +59,7 @@ const {
   label: TranslatedString
   width?: ButtonVariants['width']
   formValidation?: boolean
+  busy?: boolean
 }>()
 
 const vClickOutside = useClickOutside()
@@ -274,6 +276,7 @@ const group = computed<ButtonVariants['group']>(() => {
       ref="comboboxButtonRef"
       :aria-label="label"
       :aria-expanded="suggestionsShown"
+      :aria-busy="busy || undefined"
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"
       :value-is-selected="!(selectedOption instanceof NoSelection)"

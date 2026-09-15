@@ -48,7 +48,7 @@ const combinedMetricsAutocompleter = computed(() => {
   return autocompleter
 })
 
-const { internalValue } = useLabelValueAutocomplete(metrics, combinedMetricsAutocompleter)
+const { internalValue, pending } = useLabelValueAutocomplete(metrics, combinedMetricsAutocompleter)
 
 watch(
   () => [props.hostSelectionMode, props.serviceSelectionMode],
@@ -65,5 +65,6 @@ watch(
     :autocompleter="combinedMetricsAutocompleter"
     :size="0"
     :placeholder="_t('Select graph')"
+    :busy="pending"
   />
 </template>

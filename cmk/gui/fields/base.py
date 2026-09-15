@@ -528,6 +528,44 @@ Keys 'optional1', 'required1' occur more than once.
     def _has_fields(_schema: Schema) -> bool:
         return bool(_schema.declared_fields)
 
+    @cached_property
+    def _load_only_paths_by_schema(self) -> dict[int, list[str]]:
+        # self._nested is itself a cached_property, so the schema instances below are the
+        # same objects on every call, and their field structure never changes afterwards.
+        # Computing this once here avoids re-walking the (possibly deeply nested) schema
+        # for every dumped value, e.g. once per host when listing hosts.
+        return {id(schema): self._load_only_field_paths(schema) for schema in self._nested}
+
+    @staticmethod
+    def _load_only_field_paths(schema: Schema, _prefix: str = "") -> list[str]:
+        """Dotted paths (marshmallow's nested `partial` syntax) to every load_only
+        field reachable from `schema`, including fields nested inside `Nested`
+        fields and oneOf-style (marshmallow_oneofschema) sub-schemas.
+
+        Used to let the merge self-check below tolerate a required load_only
+        field (e.g. a redacted secret intentionally absent from GET responses)
+        without weakening the required-field validation for anything else.
+        """
+        paths: list[str] = []
+        for name, field in schema.fields.items():
+            full_name = f"{_prefix}{name}"
+            if field.load_only:
+                paths.append(full_name)
+            nested_schema = getattr(field, "schema", None)
+            if nested_schema is None:
+                continue
+            type_schemas = getattr(nested_schema, "type_schemas", None)
+            sub_schemas = (
+                [t if isinstance(t, Schema) else t() for t in type_schemas.values()]
+                if type_schemas is not None
+                else [nested_schema]
+            )
+            for sub_schema in sub_schemas:
+                paths.extend(
+                    MultiNested._load_only_field_paths(sub_schema, _prefix=f"{full_name}.")
+                )
+        return paths
+
     def _add_error(
         self,
         error_store: ErrorStore,
@@ -561,9 +599,14 @@ Keys 'optional1', 'required1' occur more than once.
 
                 # This only works if the schema has fields declared.
                 if self._has_fields(schema_inst):
+                    # Fields marked load_only (e.g. a redacted secret omitted from GET
+                    # responses) are intentionally absent from `dumped`; exempt exactly
+                    # those dotted paths from this self-check's required-field
+                    # validation, so it still fails for genuinely incomplete data.
                     loaded = schema_inst.load(
                         dumped,
                         unknown=self.unknown,
+                        partial=self._load_only_paths_by_schema[id(schema_inst)],
                     )
                     # We check what could actually pass through the load() call, because some
                     # schemas validate keys without having them defined in their _declared_fields.

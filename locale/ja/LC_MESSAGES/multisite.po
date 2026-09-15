@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-11 17:31+0000\n"
+"PO-Revision-Date: 2026-09-14 18:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.9.1\n"
 
 msgid " "
 msgstr " "
@@ -12504,7 +12504,6 @@ msgstr "ホストのチェックコマンド、正規表現による一致"
 msgid "Check command of the service, regex match"
 msgstr "サービスのチェックコマンド、正規表現による一致"
 
-#, fuzzy
 msgid "Check containers CPU utilization"
 msgstr "コンテナの CPU 利用率をチェックする"
 
@@ -12615,7 +12614,7 @@ msgstr "パラメータを確認する"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "ホストのパラメーターおよびその他の構成変数を確認する"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Check parameters for check type '%s' cannot be displayed"
 msgstr "チェックタイプ'%s'のチェックパラメータを表示できません"
 
@@ -12663,16 +12662,14 @@ msgstr ""
 "ホストまたはVMの状態が <i>unknown</i> として報告されている場合は、結果を確認"
 "してください"
 
-#, fuzzy
 msgid "Check secret credentials"
-msgstr "資格情報を使用する"
+msgstr "秘密の認証情報をチェックする"
 
 msgid "Check specific host(s)"
 msgstr "特定のホストを確認する"
 
-#, fuzzy
 msgid "Check state of broker on primary: "
-msgstr "プライマリのブローカーの状態を確認します。 "
+msgstr "プライマリ上のブローカーの状態を確認する: "
 
 msgid ""
 "Check submission of HTML forms via HTTP/HTTPS using the plug-in "
@@ -12706,7 +12703,6 @@ msgstr ""
 "プラグインはlivestatusにクエリを実行して、モニタリングコアのログファイルから"
 "通知関連のログエントリを抽出します。"
 
-#, fuzzy
 msgid "Check timeout for services (Checkmk Micro Core)"
 msgstr "サービスのタイムアウトを確認する(Micro core)"
 
@@ -12734,7 +12730,6 @@ msgstr ""
 "例えばエージェント経由、SNMPv1経由、SNMPv2経由をテストし、そのホストの正しい"
 "監視設定を見つけます。"
 
-#, fuzzy
 msgid ""
 "Check_MK Livestatus usually listens only on a local Unix socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -12760,15 +12755,14 @@ msgstr "チェッカーヘルパーの使用量"
 msgid "Checking of Datadog monitors"
 msgstr "Datadogモニターのチェック"
 
-#, fuzzy
 msgid ""
 "Checking this option allows self-signed certificates by ignoring OpenSSL "
 "error 18 (self-signed certificate). The service will not warn when this "
 "error is returned. Other errors will still trigger an alert."
 msgstr ""
-"このオプションをチェックすると、OpenSSLエラー18（自己署名証明書）を無視して自"
-"己署名証明書を許可し、このエラーが返されてもサービスは警告しません。その他の"
-"エラーは警告を発します。"
+"このオプションを有効にすると、OpenSSLエラー18（自己署名証明書）を無視して自己"
+"署名証明書の使用が許可されます。このエラーが返されてもサービスからの警告は表"
+"示されません。その他のエラーについては、引き続きアラートがトリガーされます。"
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -12777,11 +12771,9 @@ msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
 #. weblate-flags: read-only
-#, fuzzy
 msgid "Checkmk AI feature usage notice"
-msgstr "Checkmkフェッチャーの使用量"
+msgstr "Checkmk AI機能の使用状況に関するお知らせ"
 
-#, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Checkmkアプライアンス情報"
 
@@ -12803,7 +12795,6 @@ msgstr "Checkmkエージェント/API統合"
 msgid "Checkmk agent connection mode"
 msgstr "Checkmkエージェント接続モード"
 
-#, fuzzy
 msgid "Checkmk agent installation auditing"
 msgstr "Checkmkエージェントのインストール監査"
 
@@ -12816,7 +12807,7 @@ msgstr "Checkmkエージェントネットワークサービス(Solaris)"
 msgid "Checkmk agent plug-ins"
 msgstr "Checkmkエージェントプラグイン"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Checkmk agent port (<a href=\"%s\">rules</a>)"
 msgstr "Checkmkエージェントポート(<a href=\"%s\">ルール</a>)"
 
@@ -12831,7 +12822,6 @@ msgstr ""
 "態: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(エージェントプラグインmk_inventoryをインストールする必要があります)"
 
-#, fuzzy
 msgid "Checkmk agent: execute the Checkmk agent within running containers"
 msgstr ""
 "Checkmkエージェント:実行中のコンテナー内でCheckmkエージェントを実行します"
@@ -12858,15 +12848,12 @@ msgstr "Checkmkチェッカー待ち時間"
 msgid "Checkmk checker usage"
 msgstr "Checkmkチェッカーの使用量"
 
-#, fuzzy
 msgid "Checkmk config file name"
 msgstr "Checkmk設定ファイル名"
 
-#, fuzzy
 msgid "Checkmk configuration files"
 msgstr "Checkmk設定ファイル"
 
-#, fuzzy
 msgid "Checkmk core files"
 msgstr "Checkmkコアファイル"
 
@@ -12885,7 +12872,6 @@ msgstr "Checkmkフェッチャーのレイテンシー"
 msgid "Checkmk fetcher usage"
 msgstr "Checkmkフェッチャーの使用量"
 
-#, fuzzy
 msgid ""
 "Checkmk has an efficient SNMP implementation called inline SNMP which "
 "reduces the load produced by SNMP monitoring on the monitoring host "
@@ -12901,7 +12887,6 @@ msgstr ""
 "す。このルールを使用して、これらのホストのSNMPバックエンドを選択することがで"
 "きます。"
 
-#, fuzzy
 msgid ""
 "Checkmk has an efficient SNMP implementation called inline SNMP which "
 "reduces the load produced by SNMP monitoring on the monitoring host "
@@ -12925,29 +12910,25 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
-#, fuzzy
 msgid "Checkmk licensing files"
 msgstr "Checkmkライセンスファイル"
 
-#, fuzzy
 msgid "Checkmk log files"
 msgstr "Checkmkログファイル"
 
-#, fuzzy
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
 "here."
-msgstr "CheckmkメトリクスはOpenTelemetryデータポイントから作成されます。"
+msgstr ""
+"CheckmkメトリクスはOpenTelemetryデータポイントから作成されます。こちらで設定"
+"してください。"
 
-#, fuzzy
 msgid "Checkmk mobile"
 msgstr "Checkmkモバイル"
 
-#, fuzzy
 msgid "Checkmk overview"
-msgstr "Checkmkの概要"
+msgstr "Checkmk概要"
 
-#, fuzzy
 msgid "Checkmk overview of Checkmk server"
 msgstr "CheckmkサーバーのCheckmk概要"
 
@@ -12966,7 +12947,6 @@ msgstr "Checkmkサーバー"
 msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Checkmkサービスプロバイダのメタデータ（自動生成）"
 
-#, fuzzy
 msgid "Checkmk sidebar"
 msgstr "Checkmkサイドバー"
 
@@ -13024,14 +13004,12 @@ msgstr ""
 "い。Check_MKサービスのチェック間隔のみを変更する場合は、サービスのリストで"
 "<tt><b>Check_MK$</b></tt>を指定します。"
 
-#, fuzzy
 msgid "Checkmk version"
 msgstr "Checkmkバージョン"
 
 msgid "Checkmk versions"
 msgstr "Checkmkバージョン"
 
-#, fuzzy
 msgid "Checkmk virt1 appliance"
 msgstr "Checkmk仮想アプライアンス"
 
@@ -13063,21 +13041,17 @@ msgstr ""
 "きない環境向けの代替手段としてはオフライン認証機能も用意されており、この場合"
 "は手動での検証と報告が必要となります。"
 
-#, fuzzy
 msgid "Checkmk with times metrics"
-msgstr "タイムパフォーマンスデータとCheckmk"
+msgstr "Checkmkのタイムメトリクス"
 
-#, fuzzy
 msgid "Checkmk: API: bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: API: bytes"
 
-#, fuzzy
 msgid "Checkmk: API: requests"
-msgstr "Checkmk:BI: Requests"
+msgstr "Checkmk: API: requests"
 
-#, fuzzy
 msgid "Checkmk: API: secs"
-msgstr "Checkmk: BI: Secs"
+msgstr "Checkmk: API: secs"
 
 msgid "Checkmk: Agent Bakery signing keys expire soon"
 msgstr "Checkmk: エージェント・ベーカリーの署名鍵がまもなく期限切れになります"
@@ -13091,53 +13065,43 @@ msgstr "Checkmk: Ajax: Requests"
 msgid "Checkmk: Ajax: secs"
 msgstr "Checkmk: Ajax: Secs"
 
-#, fuzzy
 msgid "Checkmk: BI: bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: BI: bytes"
 
-#, fuzzy
 msgid "Checkmk: BI: requests"
-msgstr "Checkmk:BI: Requests"
+msgstr "Checkmk: BI: requests"
 
-#, fuzzy
 msgid "Checkmk: BI: secs"
-msgstr "Checkmk: BI: Secs"
+msgstr "Checkmk: BI: secs"
 
 msgid "Checkmk: License verification failed"
 msgstr "Checkmk:ライセンス認証に失敗しました"
 
-#, fuzzy
 msgid "Checkmk: Service risk advisory - agent signature keys expire"
 msgstr ""
 "Checkmk: サービスリスクアドバイザリ - エージェント署名キーの有効期限切れ"
 
-#, fuzzy
 msgid "Checkmk: Setup: bytes"
-msgstr "Checkmk: Setup: Bytes"
+msgstr "Checkmk: Setup: bytes"
 
-#, fuzzy
 msgid "Checkmk: Setup: requests"
-msgstr "Checkmk: Setup: Requests"
+msgstr "Checkmk: Setup: requests"
 
-#, fuzzy
 msgid "Checkmk: Setup: secs"
-msgstr "Checkmk: Setup: Secs"
+msgstr "Checkmk: Setup: secs"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
 msgstr "Checkmk: ライセンス有効期限%s"
 
-#, fuzzy
 msgid "Checkmk: dashboards: bytes"
-msgstr "Checkmk: ダッシュボード: Bytes"
+msgstr "Checkmk: dashboards: bytes"
 
-#, fuzzy
 msgid "Checkmk: dashboards: requests"
-msgstr "Checkmk: ダッシュボード: Requests"
+msgstr "Checkmk: dashboards: requests"
 
-#, fuzzy
 msgid "Checkmk: dashboards: secs"
-msgstr "Checkmk: ダッシュボード: Secs"
+msgstr "Checkmk: dashboards: secs"
 
 msgid "Checkmk: graphs: bytes"
 msgstr "Checkmk: Graphs: Bytes"
@@ -13166,65 +13130,50 @@ msgstr "Checkmk: Login: Requests"
 msgid "Checkmk: login: secs"
 msgstr "Checkmk: Login: Secs"
 
-#, fuzzy
 msgid "Checkmk: other: bytes"
-msgstr "Checkmk:その他: Bytes"
+msgstr "Checkmk: other: bytes"
 
-#, fuzzy
 msgid "Checkmk: other: requests"
-msgstr "Checkmk:他: Requests"
+msgstr "Checkmk: other: requests"
 
-#, fuzzy
 msgid "Checkmk: other: secs"
-msgstr "Checkmk: その他: Secs"
+msgstr "Checkmk: other: secs"
 
-#, fuzzy
 msgid "Checkmk: search: bytes"
-msgstr "Checkmk: Setup: Bytes"
+msgstr "Checkmk: search: bytes"
 
-#, fuzzy
 msgid "Checkmk: search: requests"
-msgstr "Checkmk: Setup: Requests"
+msgstr "Checkmk: search: requests"
 
-#, fuzzy
 msgid "Checkmk: search: secs"
-msgstr "Checkmk: Setup: Secs"
+msgstr "Checkmk: search: secs"
 
-#, fuzzy
 msgid "Checkmk: sidebar elements: bytes"
-msgstr "Checkmk: サイドバー要素: Bytes"
+msgstr "Checkmk: sidebar elements: bytes"
 
-#, fuzzy
 msgid "Checkmk: sidebar elements: requests"
-msgstr "Checkmk: サイドバー要素: Requests"
+msgstr "Checkmk: sidebar elements: requests"
 
-#, fuzzy
 msgid "Checkmk: sidebar elements: secs"
-msgstr "Checkmk: サイドバー要素: Secs"
+msgstr "Checkmk: sidebar elements: secs"
 
-#, fuzzy
 msgid "Checkmk: sidebar: bytes"
-msgstr "Checkmk: サイドバー要素: Bytes"
+msgstr "Checkmk: sidebar: bytes"
 
-#, fuzzy
 msgid "Checkmk: sidebar: requests"
-msgstr "Checkmk: サイドバー要素: Requests"
+msgstr "Checkmk: sidebar: requests"
 
-#, fuzzy
 msgid "Checkmk: sidebar: secs"
-msgstr "Checkmk: サイドバー要素: Secs"
+msgstr "Checkmk: sidebar: secs"
 
-#, fuzzy
 msgid "Checkmk: views: bytes"
-msgstr "Checkmk: ビュー: Bytes"
+msgstr "Checkmk: views: bytes"
 
-#, fuzzy
 msgid "Checkmk: views: requests"
-msgstr "Checkmk: ビュー: Requests"
+msgstr "Checkmk: views: requests"
 
-#, fuzzy
 msgid "Checkmk: views: secs"
-msgstr "Checkmk: ビュー: Secs"
+msgstr "Checkmk: views: secs"
 
 msgid "Checks on management boards"
 msgstr "マネジメントボードのチェック"
@@ -13232,7 +13181,6 @@ msgstr "マネジメントボードのチェック"
 msgid "Checks on regular hosts"
 msgstr "通常のホストをチェックします"
 
-#, fuzzy
 msgid ""
 "Checks the resolution of a host name into an IP address by a DNS server. "
 "This check uses <tt>check_dns</tt> from the standard Nagios plug-ins. Note, "
@@ -13241,10 +13189,10 @@ msgid ""
 "behavior can be configured by using the option <tt>DNS Server</tt>. "
 msgstr ""
 "DNSサーバーによるホスト名からIPアドレスへの解決を確認します。このチェックは標"
-"準のNagiosプラグインの<tt>check_dns</tt>を使用します。check_dnsは常に監視サイ"
-"トで実行されることに注意してください。デフォルトでは、このルールが適用される"
-"よう設定されたホストが DNS サーバーとして使用されます。この動作は、オプショ"
-"ン <tt>DNS Server</tt>を使用して設定できます。 "
+"準のNagiosプラグインの<tt>check_dns</tt>を使用します。注意：check_dnsは常に監"
+"視サイトで実行されます。デフォルトでは、このルールが適用されるよう設定された"
+"ホストが DNS サーバーとして使用されます。この動作は、オプション <tt>DNS "
+"Server</tt>を使用して設定できます。 "
 
 msgid "Checks via SSH. "
 msgstr "SSH経由でチェックします。 "
@@ -13261,7 +13209,6 @@ msgstr "子ホストもダウンタイムに入ります。"
 msgid "Child hosts also go in downtime."
 msgstr "子ホストもダウンタイムに入ります。"
 
-#, fuzzy
 msgid "Child node generation"
 msgstr "子ノードの生成"
 
@@ -13314,7 +13261,6 @@ msgstr "すべて選択する"
 msgid "Choose another %s"
 msgstr "別の %s を選択してください"
 
-#, fuzzy
 msgid ""
 "Choose between normal (utilize this node as much as possible) and exclusive "
 "(only build jobs with label restrictions matching this node). The state will "
@@ -13327,7 +13273,6 @@ msgstr ""
 msgid "Choose condition"
 msgstr "条件選択"
 
-#, fuzzy
 msgid ""
 "Choose how to monitor the Docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respective checkboxes "
@@ -13338,10 +13283,10 @@ msgid ""
 msgstr ""
 "Dockerノードを監視する方法を選択します。対応するサービスが必要ない場合は、"
 "個々のセクションのチェックを外すことができます。各チェックボックスは、"
-"\"docker_node_\"で始まる名前のチェックプラグインに属します(たとえば、\"ディス"
-"ク使用量:\"チェックボックスは\"docker_node_disk_usage\"に属します)。ディスク"
-"使用量のセクションが長いことは周知の事実です。パフォーマンスの問題が発生して"
-"いる場合は、無効にすることを検討してください。"
+"\"docker_node_\"で始まる名前のチェックプラグインに属します(例：「ディスク使用"
+"量:」チェックボックスは\"docker_node_disk_usage\"に属します)。ディスク使用量"
+"セクションは特に実行時間が長いことで知られています。パフォーマンスの問題が発"
+"生した場合は、この機能を無効にすることを検討してください。"
 
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
@@ -13365,7 +13310,6 @@ msgstr "テーブルカラムを選択する"
 msgid "Choose target user connector"
 msgstr "対象ユーザーコネクタを選択"
 
-#, fuzzy
 msgid ""
 "Choose the Checkmk state in case any of the forwarded log files cannot be "
 "read"
@@ -13392,17 +13336,15 @@ msgid ""
 msgstr ""
 "制限に達したときにイベントコンソールがトリガーするアクションを選択します。"
 
-#, fuzzy
 msgid ""
 "Choose the behavior for different interface speeds in interface groups. The "
 "default is \"Check and WARN\". This feature is currently only supported by "
 "the check netapp_api_if."
 msgstr ""
 "インターフェイスグループ内のさまざまなインターフェイス速度の動作を選択しま"
-"す。デフォルトは'チェックして警告'です。この機能は現在、チェックnetapp_api_if"
-"でのみサポートされています。"
+"す。デフォルトは'チェックして警告'です。この機能は現在、check netapp_api_ifで"
+"のみサポートされています。"
 
-#, fuzzy
 msgid ""
 "Choose the behavior when the current port is not the home port of the "
 "respective interface. The default is \"Check and display\". This feature is "
@@ -13469,7 +13411,6 @@ msgstr "サービスが[起動]状態にあることを許可する時間レベ�
 msgid "Choose unit"
 msgstr "ユニットを選択"
 
-#, fuzzy
 msgid ""
 "Choose what kind of output data is sent to the Checkmk server: Only count "
 "the files, only report count and extrem files (i.e. the oldest, newest, "
@@ -13486,7 +13427,6 @@ msgid ""
 msgstr ""
 "使用するモデムを選択します。現在、対応しているのはTeltonika-TRB140のみです。"
 
-#, fuzzy
 msgid ""
 "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
@@ -13516,7 +13456,6 @@ msgstr ""
 "合、削除されるファイルにはエージェント更新プログラムとエージェントコントロー"
 "ラーの登録情報も含まれるためです。"
 
-#, fuzzy
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plug-in's dedicated rules. Please choose \"override\" only "
@@ -13525,10 +13464,10 @@ msgid ""
 "this setting."
 msgstr ""
 "このルールを、プラグインの専用ルールで設定されているキャッシュ時間よりも優先"
-"させるかどうかを選択します。プラグインによってはパフォーマンスやその他の理由"
-"で最小キャッシュ時間を設定しているものがありますが、この設定により上書きされ"
-"てしまうので、それを理解している場合のみ「上書き(override)」を選択するように"
-"してください。"
+"させるかどうかを選択します。「上書き(override)」を選択するのは、その意味を十"
+"分理解している場合に限ってください。一部のプラグインでは、パフォーマンス上の"
+"理由やその他の理由でキャッシュの最小時間が設定されていますが、この設定によっ"
+"てそれらも上書きされてしまうためです。"
 
 msgid ""
 "Choose which identifier is used for the monitored containers. This will "
@@ -13548,18 +13487,15 @@ msgstr "NetBIOSサーバー名に親ホスト情報を使用するか指定す�
 msgid "Chosen file: %s"
 msgstr "選ばれたファイル：%s"
 
-#, fuzzy
 msgid "Chrony time synchronization"
-msgstr "慢性的な時間同期"
+msgstr "Chronyによる時刻同期"
 
 msgid "Cipher suite ID"
 msgstr "暗号スイートID"
 
-#, fuzzy
 msgid "Cisco ASA firewall connections"
 msgstr "Cisco ASAファイアウォール接続"
 
-#, fuzzy
 msgid "Cisco CPU memory"
 msgstr "CiscoCPUメモリ"
 
@@ -13572,44 +13508,35 @@ msgstr "Cisco IP SLA"
 msgid "Cisco Meraki"
 msgstr "Cisco Meraki"
 
-#, fuzzy
 msgid "Cisco Meraki API response codes"
-msgstr "Cisco Meraki power supply"
+msgstr "Cisco Meraki API 応答コード"
 
-#, fuzzy
 msgid "Cisco Meraki appliance VPNs"
-msgstr "Cisco Meraki デバイスステータス"
+msgstr "Cisco Meraki アプライアンスVPN"
 
-#, fuzzy
 msgid "Cisco Meraki appliance performance"
-msgstr "Oracleパフォーマンス"
+msgstr "Checkmk Merakiアプライアンスパフォーマンス"
 
-#, fuzzy
 msgid "Cisco Meraki appliance uplinks"
-msgstr "Cisco Meraki power supply"
+msgstr "Cisco Meraki アプライアンスアップリンク"
 
-#, fuzzy
 msgid "Cisco Meraki device status"
 msgstr "Cisco Meraki デバイスステータス"
 
-#, fuzzy
 msgid "Cisco Meraki licenses overview"
-msgstr "Cisco Meraki Organisation Licensesの概要"
+msgstr "Cisco Meraki ライセンス概要"
 
-#, fuzzy
 msgid "Cisco Meraki licenses remaining time"
-msgstr "Cisco Meraki デバイスステータス"
+msgstr "Cisco Meraki ライセンス残り時間"
 
 msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki power supply"
 
-#, fuzzy
 msgid "Cisco Meraki switch port statuses"
-msgstr "Cisco Meraki デバイスステータス"
+msgstr "Cisco Meraki スイッチポートステータス"
 
-#, fuzzy
 msgid "Cisco Meraki wireless SSID statuses"
-msgstr "Cisco Meraki デバイスステータス"
+msgstr "Cisco Meraki ワイヤレスSSID ステータス"
 
 msgid "Cisco Nexus Supervisor memory usage"
 msgstr "Cisco Nexusスーパーバイザのメモリ使用量"
@@ -13617,29 +13544,23 @@ msgstr "Cisco Nexusスーパーバイザのメモリ使用量"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
-#, fuzzy
 msgid "Cisco Prime WLAN controller access points"
 msgstr "Cisco Prime WLAN コントローラーアクセスポイント"
 
-#, fuzzy
 msgid "Cisco Prime WLAN controller clients"
 msgstr "Cisco Prime WLANコントローラークライアント"
 
-#, fuzzy
 msgid "Cisco Prime WLAN controller last backup"
 msgstr "Cisco Prime WLAN Controllerの最終バックアップ"
 
-#, fuzzy
 msgid "Cisco Prime WiFi access points"
 msgstr "Cisco Prime WiFiアクセスポイント"
 
-#, fuzzy
 msgid "Cisco Prime WiFi connections"
 msgstr "Cisco Prime WiFi接続"
 
-#, fuzzy
 msgid "Cisco SMA DNS requests"
-msgstr "HEAD リクエスト"
+msgstr "Cisco SMA DNSリクエスト"
 
 msgid "Cisco SMA files and sockets"
 msgstr "Cisco SMAファイルとソケット"
@@ -13653,11 +13574,9 @@ msgstr "Cisco SMAメール転送スレッド"
 msgid "Cisco SMA queue"
 msgstr "Cisco SMAキュー"
 
-#, fuzzy
 msgid "Cisco UCS C-Series rack server LED state"
-msgstr "Cisco UCS Cシリーズのラックサーバ LEDの状態"
+msgstr "Cisco UCS Cシリーズラックサーバ LEDの状態"
 
-#, fuzzy
 msgid "Cisco VPN sessions"
 msgstr "Cisco VPNセッション"
 
@@ -13677,28 +13596,23 @@ msgstr "Ciscoメモリ使用量 (%s)"
 msgid "Cisco quality of service"
 msgstr "シスコのサービス品質"
 
-#, fuzzy
 msgid "Cisco stack switch status"
-msgstr "Ciscoスタックスイッチのステータス"
+msgstr "Ciscoスタックスイッチステータス"
 
 msgid "Citrix"
 msgstr "Citrix"
 
-#, fuzzy
 msgid "Citrix NetScaler DNS counter rates"
 msgstr "Citrix NetscalerDNSカウンターレート"
 
-#, fuzzy
 msgid "Citrix NetScaler SSL certificates"
 msgstr "Citrix Netscaler SSL証明書"
 
-#, fuzzy
 msgid "Citrix NetScaler load balancer HA"
-msgstr "Citrix Netscaler Loadbalancer TCP接続"
+msgstr "Citrix Netscaler load balancer HA"
 
-#, fuzzy
 msgid "Citrix NetScaler load balancer TCP connections"
-msgstr "Citrix Netscaler Loadbalancer TCP接続"
+msgstr "Citrix Netscaler load balancer TCP接続"
 
 msgid "Citrix VM state"
 msgstr "Citrix VMの状態"
@@ -13706,27 +13620,21 @@ msgstr "Citrix VMの状態"
 msgid "Citrix XenApp (Windows)"
 msgstr "Citrix XenApp(Windows)"
 
-#, fuzzy
 msgid "Citrix desktops registered"
 msgstr "Citrixデスクトップが登録されました"
 
-#, fuzzy
 msgid "Citrix licenses (Windows)"
 msgstr "Citrixライセンス(Windows)"
 
-#, fuzzy
 msgid "Citrix load"
-msgstr "Citrixロード"
+msgstr "Citrix load"
 
-#, fuzzy
 msgid "Citrix server load"
 msgstr "Citrixサーバーの負荷"
 
-#, fuzzy
 msgid "Citrix serverload"
 msgstr "Citrix Serverload"
 
-#, fuzzy
 msgid "Citrix terminal server sessions"
 msgstr "Citrixターミナルサーバーセッション"
 
@@ -13745,7 +13653,6 @@ msgstr "クラス"
 msgid "Classic"
 msgstr "クラシック"
 
-#, fuzzy
 msgid "Classic load balancing (ELB)"
 msgstr "クラシックロードバランシング(ELB)"
 
@@ -13758,27 +13665,22 @@ msgstr "クラシックチェック"
 msgid "Classical web GUI"
 msgstr "従来のWeb GUI"
 
-#, fuzzy
 msgid "Clean up Checkmk agent program data directory on uninstall"
 msgstr ""
 "アンインストール時にCheckmkエージェントのプログラムデータディレクトリをクリー"
 "ンアップします"
 
-#, fuzzy
 msgid "Clean up abandoned host files older than"
-msgstr "設定日以上経過したホストファイルをクリーンアップする"
+msgstr "設定日以上経過したホストファイルを削除する"
 
-#, fuzzy
 msgid "Clean up messages"
 msgstr "クリーンアップメッセージ"
 
-#, fuzzy
 msgid "Clean up when disk space is below"
 msgstr "ディスク容量が次の値を下回るとクリーンアップ"
 
-#, fuzzy
 msgid "Cleanup"
-msgstr "クリーン"
+msgstr "クリーンアップ"
 
 msgid "Cleanup of working directory"
 msgstr "ワーキングディレクトリのクリーンアップ"
@@ -13829,29 +13731,26 @@ msgstr "グラフ統合機能を \"%s\" に変更するには、ここをクリ�
 msgid "Click on 'Register %s' to enable two-factor authentication via %s."
 msgstr "「%sを登録」をクリックし、%sによる2要素認証を有効にする。"
 
-#, fuzzy
 msgid ""
 "Click the \"Add OpenTelemetry configuration\" button to start setting up "
 "your first OpenTelemetry configuration."
 msgstr ""
-"\"Add configuration\"ボタンをクリックして、最初のコンフィギュレーションの設定"
-"を開始します。"
+"「OpenTelemetry設定を追加」ボタンをクリックして、最初のOpenTelemetry設定の"
+"セットアップを開始してください。"
 
-#, fuzzy
 msgid ""
 "Click the \"Add Prometheus configuration\" button to start setting up your "
 "first Prometheus configuration."
 msgstr ""
-"\"Add configuration\"ボタンをクリックして、最初のコンフィギュレーションの設定"
-"を開始します。"
+"「Prometheus設定を追加」ボタンをクリックして、最初のPrometheus設定のセット"
+"アップを開始してください。"
 
-#, fuzzy
 msgid ""
 "Click the \"Add Relay configuration\" button to start setting up your first "
 "Relay configuration."
 msgstr ""
-"\"Add configuration\"ボタンをクリックして、最初のコンフィギュレーションの設定"
-"を開始します。"
+"「リレー設定を追加」ボタンをクリックして、最初のリレー設定のセットアップを開"
+"始してください。"
 
 msgid ""
 "Click the \"Add configuration\" button to start setting up your first "
@@ -13860,15 +13759,11 @@ msgstr ""
 "\"Add configuration\"ボタンをクリックして、最初のコンフィギュレーションの設定"
 "を開始します。"
 
-#, fuzzy
 msgid "Click the icon to see details."
-msgstr "詳細はこちらをクリックしてください。"
+msgstr "アイコンをクリックすると詳細が表示されます。"
 
-#, fuzzy
 msgid "Click this icon to see the activation status per site."
-msgstr ""
-"サイトごとのアクティベーションステータスを確認するには、ここをクリックしてく"
-"ださい。"
+msgstr "このアイコンをクリックすると、サイトごとの有効化状況を確認できます。"
 
 msgid "Click to toggle this setting"
 msgstr "クリックで設定を切り替える"
@@ -13888,9 +13783,8 @@ msgstr "クライアントID"
 msgid "Client ID / Application ID"
 msgstr "クライアントID /アプリケーションID"
 
-#, fuzzy
 msgid "Client ID is required"
-msgstr "必須"
+msgstr "クライアントIDが必要です"
 
 msgid "Client ID must be a valid UUID."
 msgstr "クライアントIDは有効なUUIDである必要があります。"
@@ -13916,7 +13810,6 @@ msgstr "クライアントは2.4Ghz帯に接続"
 msgid "Client connects for 5 Ghz band"
 msgstr "クライアントは5Ghz帯に接続"
 
-#, fuzzy
 msgid "Client contacted services"
 msgstr "クライアント連絡サービス"
 
@@ -13929,9 +13822,8 @@ msgstr "受け取ったクライアント要求"
 msgid "Client secret"
 msgstr "Client secret"
 
-#, fuzzy
 msgid "Client secret is required"
-msgstr "受け取ったクライアント要求"
+msgstr "クライアントシークレットが必要"
 
 msgid "ClientID"
 msgstr "クライアント ID"
@@ -14061,9 +13953,9 @@ msgstr "クローントピック"
 msgid "Clone view"
 msgstr "クローン ビュー"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Cloned rule from rule %s in rule set \"%s\" in folder \"%s\""
-msgstr "複製されたルール %s ルールセット内 \"%s\" フォルダ内 \"%s\""
+msgstr "複製された %sルール (\"%s\" ルールセット内 \"%s\"フォルダ内)"
 
 msgid ""
 "Close connection once more than this number of bytes are received. Per "
@@ -14102,14 +13994,12 @@ msgstr "Cloud SQL"
 msgid "Cloud hosts"
 msgstr "クラウドホスト"
 
-#, fuzzy
 msgid "Cloud region"
-msgstr "CloudFront"
+msgstr "クラウドリージョン"
 
 msgid "Cloud services"
 msgstr "クラウドサービス"
 
-#, fuzzy
 msgid "Cloud-based environments"
 msgstr "クラウドベースの環境"
 
@@ -14125,11 +14015,9 @@ msgstr "CloudWatchアラーム"
 msgid "Cluster"
 msgstr "クラスター"
 
-#, fuzzy
 msgid "Cluster and nodes must have the same data source. "
 msgstr "クラスターとノードが同じデータソースを持つ必要があります。 "
 
-#, fuzzy
 msgid "Cluster behavior"
 msgstr "クラスターの動作"
 
@@ -14151,9 +14039,8 @@ msgstr "クラスター名"
 msgid "Cluster node IPs"
 msgstr "クラスターノードIP"
 
-#, fuzzy
 msgid "Cluster node IPs or subnets"
-msgstr "クラスターノードIP"
+msgstr "クラスタノードのIPアドレスまたはサブネット"
 
 msgid "Cluster node definition"
 msgstr "クラスターノードの定義"
@@ -14194,7 +14081,6 @@ msgstr "重複するクラスターのクラスター化されたサービス"
 msgid "Clusters"
 msgstr "クラスター"
 
-#, fuzzy
 msgid ""
 "Clusters can share nodes, meaning they \"overlap.\" In these scenarios, the "
 "standard rule set <i>Clustered services</i> is insufficient because it "
@@ -14202,25 +14088,21 @@ msgid ""
 "node belongs to. Use this rule set to explicitly specify the cluster "
 "assignment for such services."
 msgstr ""
-"ノードを共有するクラスターを持つことが可能です。そのようなクラスターは\"オー"
-"バーラップ\"していると言えます。このような場合、ルールセット<i>クラスタ化され"
-"たサービス</i>を使用するだけでは不十分です。なぜならそのような共有ノードで見"
-"つかったサービスが、いくつかの可能性のあるクラスタのどれに割り当てるかが明確"
-"でないためです。このルールセットを使用すれば、サービスを割り当てて、どのクラ"
-"スタに割り当てるかを明示的に指定できます。"
+"クラスタ間でノードを共有できるため、クラスタは「重複」することがあります。こ"
+"のようなシナリオでは、標準のルールセット<i>Clustered services</i> では、共有"
+"ノード上のサービスがどの重複するクラスタに属するかを判別できないため不十分で"
+"す。このようなサービスについては、このルールセットを使用してクラスタの割り当"
+"てを明示的に指定してください。"
 
 msgid "Clusters per account"
 msgstr "アカウントごとのクラスター"
 
-#, fuzzy
 msgid "Clusters: node-specific CPU utilization"
 msgstr "クラスター: ノードごとのCPU使用率"
 
-#, fuzzy
 msgid "Clusters: node-specific memory utilization"
 msgstr "クラスタ: ノードごとのメモリ使用率"
 
-#, fuzzy
 msgid "Clusters: preferred check result of local checks"
 msgstr "クラスター: ローカルチェックの優先チェック結果"
 
@@ -14269,7 +14151,6 @@ msgstr "診断を収集する"
 msgid "Collect information about OS and Checkmk version"
 msgstr "OSとCheckmkのバージョンに関する情報を収集する"
 
-#, fuzzy
 msgid ""
 "Collect information about OS, Checkmk version and edition, time, core, "
 "Python version and paths, architecture"
@@ -14291,7 +14172,6 @@ msgstr ""
 "パスワードの収集に失敗\n"
 "%s"
 
-#, fuzzy
 msgid "Collection size"
 msgstr "コレクションのサイズ"
 
@@ -14352,23 +14232,20 @@ msgstr "列"
 msgid "Columns to match"
 msgstr "一致するカラム"
 
-#, fuzzy
 msgid "Columns to remove"
-msgstr "一致するカラム"
+msgstr "削除するカラム"
 
 msgid "Com. buf. max/total"
 msgstr "Com. Buf. 最大/合計"
 
-#, fuzzy
 msgid "Combine the container name and container ID"
-msgstr "Dockerノードとコンテナー"
+msgstr "コンテナ名とコンテナIDを組み合わせる"
 
 msgid "Combine the host name and the container name"
 msgstr "ホスト名とコンテナ名を組合せる"
 
-#, fuzzy
 msgid "Combine the node name and the name of the container"
-msgstr "名前 - コンテナの名前を使用"
+msgstr "ノード名とコンテナ名を組合せる"
 
 msgid "Combine within last"
 msgstr "直近の組合せ"
@@ -14386,13 +14263,11 @@ msgstr "結合されたグラフ"
 msgid "Combined white-/blacklist for new and vanished services"
 msgstr "新規および消滅したサービスのホワイト/ブラックリストの組み合わせ"
 
-#, fuzzy
 msgid ""
 "Combining \"%s\" and \"%1\" style replacements in the service name is not "
 "allowed."
 msgstr ""
-"サービスの説明で\"\"%s \"と\"%1 \"スタイルの置換を組み合わせて使用することは"
-"できません。"
+"サービス名において\"%s \"と\"%1\"形式の置換を組み合わせることはできません。"
 
 msgid "Command"
 msgstr "コマンド"
@@ -14498,7 +14373,6 @@ msgstr "ホストのコメント"
 msgid "Comments of service"
 msgstr "サービスのコメント"
 
-#, fuzzy
 msgid "Commit latency"
 msgstr "コミットレイテンシ"
 
@@ -14514,15 +14388,12 @@ msgstr "コミットされたメモリ"
 msgid "Common name (CN)"
 msgstr "コモンネーム (CN)"
 
-#, fuzzy
 msgid "Common name (issuer)"
-msgstr "コモンネーム (Issuer)"
+msgstr "Common name (issuer)"
 
-#, fuzzy
 msgid "Common name (subject)"
-msgstr "コモンネーム (Subject)"
+msgstr "Common name (subject)"
 
-#, fuzzy
 msgid "Common provisioning groups: virtual pool configuration"
 msgstr "共通のプロビジョニンググループ：仮想プールの構成"
 
@@ -14543,9 +14414,8 @@ msgstr "コミュニティ フォーラム"
 msgid "Compare against discovered state"
 msgstr "発見された状態と比較する"
 
-#, fuzzy
 msgid "Compare against failover mode at discovery time"
-msgstr "発見された状態と比較する"
+msgstr "検出時のフェイルオーバーモードとの比較"
 
 msgid "Compare history"
 msgstr "履歴比較"
@@ -14577,7 +14447,6 @@ msgstr ""
 msgid "Compare to"
 msgstr "比較"
 
-#, fuzzy
 msgid ""
 "Compares the maximum number of connections that have been in use "
 "simultaneously since the server started with the maximum simultaneous "
@@ -14589,7 +14458,6 @@ msgstr ""
 "されている同時接続の最大数を比較します。このしきい値は、パーセンテージが構成"
 "されたレベル以上の場合、警告/クリティカル状態を発生させます。"
 
-#, fuzzy
 msgid ""
 "Compares the number of currently open connections to the server with the "
 "maximum simultaneous connections allowed by the configuration of the server. "
@@ -14600,15 +14468,13 @@ msgstr ""
 "接続数と比較します。このしきい値は、パーセンテージが構成されたレベル以上の場"
 "合、警告/クリティカル状態を発生させます。"
 
-#, fuzzy
 msgid ""
 "Compares the time which the remote can be behind the central. This rule "
 "makes the check raise WARNING/CRITICAL states if the time is equal to or "
 "above the configured levels."
 msgstr ""
-"スレーブがマスターの後ろにいることができる時間を比較します。このルールによ"
-"り、時間が設定されたレベル以上の場合、チェックで警告/クリティカル状態が発生し"
-"ます。"
+"リモートがセントラルより遅れている時間を比較します。このルールにより、時間が"
+"設定されたレベル以上の場合、チェックで警告/クリティカル状態が通知されます。"
 
 msgid "Comparison"
 msgstr "比較"
@@ -14640,14 +14506,12 @@ msgstr "完全な変数リスト(テスト用)"
 msgid "Completion"
 msgstr "完了"
 
-#, fuzzy
 msgid "Completion time over threshold occurred"
 msgstr "しきい値を超える完了時間が発生しました"
 
 msgid "Component"
 msgstr "コンポーネント"
 
-#, fuzzy
 msgid "Component-specific information"
 msgstr "コンポーネント固有の情報"
 
@@ -14667,7 +14531,6 @@ msgstr "計算オプション"
 msgid "Computation result: %s - %s"
 msgstr "計算結果: %s - %s"
 
-#, fuzzy
 msgid "Computation type"
 msgstr "計算タイプ"
 
@@ -14691,7 +14554,6 @@ msgstr ""
 "注意：平均は指数移動平均（EMA）法を使用して計算され、新しい値と前回の平均の両"
 "方を考慮し、それぞれに重み付け係数を適用します。"
 
-#, fuzzy
 msgid "Compute range according to displayed data"
 msgstr "表示されたデータに応じて範囲を計算します"
 
@@ -14701,9 +14563,8 @@ msgstr "すべての単調カウンターのレートを計算する"
 msgid "Computing differences"
 msgstr "計算の違い"
 
-#, fuzzy
 msgid "Concurrent connections"
-msgstr "現在の接続状況"
+msgstr "同時接続"
 
 msgid "Concurrent executions"
 msgstr "同時実行"
@@ -14714,9 +14575,8 @@ msgstr "同時実行の割合"
 msgid "Conda"
 msgstr "Conda"
 
-#, fuzzy
 msgid "Conda configuration"
-msgstr "設定の追加"
+msgstr "Conda設定"
 
 msgid ""
 "Conda environments can be packed into .tar.gz archives using <tt>conda-pack</"
@@ -14740,7 +14600,6 @@ msgstr "条件"
 msgid "Conditions for this rule to apply"
 msgstr "本ルールが適用される条件"
 
-#, fuzzy
 msgid "Conference allocation latency"
 msgstr "会議の割り当て遅延"
 
@@ -14826,7 +14685,6 @@ msgstr "顧客の設定"
 msgid "Configuration of event rules"
 msgstr "イベントルールの構成"
 
-#, fuzzy
 msgid "Configuration of individual event logs"
 msgstr "個々のイベントログの構成"
 
@@ -14836,7 +14694,6 @@ msgstr "外形監視のための管理robot の設定。"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Linux、Windows、およびUnix用の監視エージェントの構成"
 
-#, fuzzy
 msgid "Configuration of the Business Intelligence component of Checkmk"
 msgstr "Checkmkのビジネスインテリジェンスコンポーネントの設定"
 
@@ -14849,9 +14706,8 @@ msgstr "Datadog Specialエージェントの設定。"
 msgid "Configuration of update plug-in"
 msgstr "更新プラグインの設定"
 
-#, fuzzy
 msgid "Configuration properties"
-msgstr "設定バンドル・プロパティ"
+msgstr "設定プロパティ"
 
 #, python-format
 msgid ""
@@ -14881,16 +14737,14 @@ msgstr "構成"
 msgid "Configure"
 msgstr "設定"
 
-#, fuzzy
 msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
 msgstr "CheckmkでAmazon Web Services (AWS)監視を設定する"
 
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "CheckmkでGoogle Cloud Platform (GCP)監視を設定する"
 
-#, fuzzy
 msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
-msgstr "CheckmkでMicrosoft Azure監視を構成する"
+msgstr "CheckmkでMicrosoft Azure(非推奨)監視を構成する"
 
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "CheckmkでMicrosoft Azure監視を構成する"
@@ -14898,7 +14752,6 @@ msgstr "CheckmkでMicrosoft Azure監視を構成する"
 msgid "Configure SNMP related settings using rule sets"
 msgstr "ルールセットを使用してSNMP関連の設定を行う"
 
-#, fuzzy
 msgid ""
 "Configure TLS certificate validation for querying the Agent Receiver port "
 "from the Checkmk REST API"
@@ -14909,7 +14762,6 @@ msgstr ""
 msgid "Configure Windows Firewall to allow host monitoring"
 msgstr "ホストの監視を許可するようにWindowsファイアウォールを構成する"
 
-#, fuzzy
 msgid "Configure a log file section"
 msgstr "ログファイルセクションを構成する"
 
@@ -14932,7 +14784,6 @@ msgstr "エージェントを構成する"
 msgid "Configure alerting on connection loss"
 msgstr "接続切断自のアラート設定"
 
-#, fuzzy
 msgid ""
 "Configure an alternative URL for the connection from host to remote Agent "
 "Bakery. If not configured here, the URL from distributed monitoring "
@@ -15014,12 +14865,10 @@ msgstr ""
 "従来のnagiosプラグイン(いわゆるアクティブチェック)を使用してネットワークサー"
 "ビスの監視を構成します"
 
-#, fuzzy
 msgid ""
 "Configure offline or online verification regarding licensing of Checkmk "
 "sites."
-msgstr ""
-"Checkmkサイトのライセンスに関するオフラインまたはオンライン検証を設定する。"
+msgstr "Checkmkサイトのライセンスに関するオフラインまたはオンライン検証を設定する。"
 
 msgid "Configure policy violation levels"
 msgstr "ポリシー違反のレベルを設定"
@@ -15058,14 +14907,13 @@ msgstr ""
 "ルールがトリガーされたときに実行可能なアクションと、ユーザーによる手動アク"
 "ションを設定します。"
 
-#, fuzzy
 msgid ""
 "Configure the DNS domain name of your Active Directory domain here, Checkmk "
 "will then query this domain for its closest domain controller to communicate "
 "with."
 msgstr ""
-"ここでActive DirectoryドメインのDNSドメイン名を構成すると、Checkmkはこのドメ"
-"インに、通信するのに最も近いドメインコントローラーを照会します。"
+"ここでActive DirectoryドメインのDNSドメイン名を構成すると、Checkmkはこの"
+"ドメインに、通信するのに最も近いドメインコントローラーを照会します。"
 
 msgid "Configure the Jira URL here."
 msgstr "ここでJIRA URLを構成します。"
@@ -15075,7 +14923,7 @@ msgstr ""
 "プロキシサーバー経由で接続するかどうかをエージェントアップデーターに設定しま"
 "す。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
 "Agent Controller, see also the <a href=\"%s\">corresponding Bakery rule set</"
@@ -15085,11 +14933,11 @@ msgid ""
 "removal of hosts</a>."
 msgstr ""
 "エージェントコントローラから送信された要求に基づいて、新しいホストを自動的に"
-"作成するように設定します。<a href=\"%s\">corresponding bakery ruleset</a>も参"
-"照してください。 <b>注意</b>: このチャンネルで作成された新しいホストは、ホス"
-"トラベル<tt>cmk/agent_auto_registered:yes</tt>でマークされます。これは例え"
-"ば、 <a href=\"%s\">automatic removal of hosts</a>を介してホストのライフサイ"
-"クル管理を設定するために使用することができます。"
+"作成するように設定します。<a href=\"%s\">corresponding bakeryルールセット</a>"
+"も参照してください。 <b>注意</b>: このチャンネルで作成された新しいホストは、"
+"ホストラベル<tt>cmk/agent_auto_registered:yes</tt>でマークされます。これは例"
+"えば、 <a href=\"%s\">automatic removal of hosts</a>を介してホストの"
+"ライフサイクル管理を設定するために使用することができます。"
 
 msgid "Configure the automatic removal of monitored hosts."
 msgstr "監視対象ホストの自動削除を設定します。"
@@ -23360,6 +23208,8 @@ msgstr "キャッシュを有効にする"
 
 msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
 msgstr ""
+"AIエージェントエンジンデーモンによって駆動されるCheckmkのAIアシスタントを有効"
+"にします。"
 
 #, fuzzy
 msgid ""
@@ -40106,7 +39956,6 @@ msgstr "ログがイベントコンソールに正常に送信されました"
 msgid "Logswitches"
 msgstr "ログスイッチ"
 
-#, fuzzy
 msgid "Logwatch"
 msgstr "logwatch"
 

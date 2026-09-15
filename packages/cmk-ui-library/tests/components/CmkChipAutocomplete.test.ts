@@ -268,3 +268,22 @@ test('lists the wildcard entry first and commits it as typed', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'os_family*' }))
   expect(selected.value).toEqual(['os_family*'])
 })
+
+test('drops the wildcard entry once a single value is left to match', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'criticality:prod')
+  await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
+
+  expect(screen.queryByRole('button', { name: 'criticality:prod*' })).not.toBeInTheDocument()
+})
+
+test('drops the wildcard entry when a key leaves a single value to match', async () => {
+  mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'criticality')
+  await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
+
+  expect(screen.getByRole('button', { name: 'criticality' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'criticality*' })).not.toBeInTheDocument()
+})

@@ -26,6 +26,8 @@ const KEY_VALUE_SEPARATOR = ':'
 
 const WILDCARD = '*'
 
+const WILDCARD_MIN_MATCHES = 2
+
 const props = defineProps<{
   /** Suggestions for what has been typed so far. A rejection reads as "no matches". */
   suggest: (query: string) => Promise<string[]>
@@ -41,7 +43,10 @@ const props = defineProps<{
   keyValue?: boolean | undefined
   /**
    * Offer what was typed with a trailing `*` as the first entry, for selecting
-   * everything starting with it rather than one named value.
+   * everything starting with it rather than one named value. Only while more
+   * than one value it could commit matches, since below that it stands for
+   * nothing extra. In `key:value` mode a bare key is not such a value: picking
+   * it only continues the query.
    */
   wildcardOption?: boolean | undefined
   /** Refuse further picks once this many are selected. Unbounded when unset. */
@@ -95,10 +100,10 @@ const wildcardEntry = computed<string[]>(() => {
   return [`${typed}${WILDCARD}`]
 })
 
-const openSuggestions = computed<string[]>(() => {
+const matchedEntries = computed<string[]>(() => {
   const seen = new Set<string>()
   const listed: string[] = []
-  for (const entry of [...wildcardEntry.value, ...matchingKeys.value, ...suggestions.value]) {
+  for (const entry of [...matchingKeys.value, ...suggestions.value]) {
     if (selectedSet.value.has(entry) || seen.has(entry)) {
       continue
     }
@@ -106,6 +111,21 @@ const openSuggestions = computed<string[]>(() => {
     listed.push(entry)
   }
   return listed
+})
+
+const matchedValues = computed<string[]>(() =>
+  matchedEntries.value.filter((entry) => !props.keyValue || completesPair(entry))
+)
+
+const openSuggestions = computed<string[]>(() => {
+  const matched = matchedEntries.value
+  if (matchedValues.value.length < WILDCARD_MIN_MATCHES) {
+    return matched
+  }
+  const wildcard = wildcardEntry.value.filter(
+    (entry) => !selectedSet.value.has(entry) && !matched.includes(entry)
+  )
+  return [...wildcard, ...matched]
 })
 
 const showEmptyHint = computed(

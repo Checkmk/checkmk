@@ -736,6 +736,9 @@ pub fn convert(
     warnings.extend(warn_custom_sql_parameters(&custom_sqls));
     warnings.extend(custom_sql_warnings(&custom_sqls));
     warnings.extend(warn_remote_oracle_home(variables));
+    // Built before the warnings are flushed: the instance block is where the TNS alias is
+    // derived, and its warnings belong with the others at the top of the generated config.
+    let instance_lines = format_instances(&dbuser, &dbuser_extras, &custom_sqls, &mut warnings);
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
         print!("{warning}");
@@ -837,7 +840,7 @@ pub fn convert(
     let skip_sids = parse_sid_list(variables, "SKIP_SIDS");
 
     out.extend(format_options(max_tasks));
-    out.extend(format_instances(&dbuser, &dbuser_extras, &custom_sqls));
+    out.extend(instance_lines);
     out.extend(format_excluded_sections(&excluded_sections));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_custom_metrics(&custom_sqls));
@@ -874,6 +877,7 @@ fn format_instances(
     dbuser: &LegacyDbUser,
     dbuser_extras: &[LegacyDbUser],
     custom_sqls: &[LegacyCustomSql],
+    warnings: &mut Vec<String>,
 ) -> Vec<String> {
     // Accumulate instance entries first; the `instances:` header is prepended
     // only when at least one entry exists, so a bare DBUSER yields no block.
@@ -896,6 +900,11 @@ fn format_instances(
             log::info!(
                 "wallet authentication without TNSALIAS: assuming SID '{sid}' as the TNS alias"
             );
+            warnings.push(format!(
+                "wallet authentication without TNSALIAS: the SID is written out as \
+                 'alias: {sid}'. Verify that it resolves in tnsnames.ora, the legacy tnsping \
+                 check is not migrated"
+            ));
             Some(sid)
         });
         if sid.is_none() && alias.is_none() {
@@ -1539,6 +1548,42 @@ mod tests {
         assert!(!unified.to_lowercase().contains("oracle_home"));
         assert!(!unified.contains("/opt/oracle/remote"));
         super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_wallet_without_alias_warns_about_the_sid_alias() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("DBUSER_XE".into(), "/:".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // The SID is written out as the alias ...
+        assert!(
+            result.contains("      - sid: XE\n        alias: XE\n"),
+            "got: {result}"
+        );
+        // ... and the guess is reported, ahead of the config it applies to.
+        let (head, _) = result
+            .split_once("# --- Unified Config ---")
+            .expect("unified section present");
+        assert!(
+            head.contains("# WARNING: wallet authentication without TNSALIAS"),
+            "got: {result}"
+        );
+        super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_wallet_with_explicit_alias_does_not_warn() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("DBUSER_XE".into(), "/:::::PRODALIAS".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            !result.contains("wallet authentication without TNSALIAS"),
+            "an explicit alias is not a guess, got: {result}"
+        );
     }
 
     #[cfg(not(windows))]
@@ -2506,7 +2551,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         // port without hostname: connection block must fall back to localhost
         let xe = make_dbuser(Some("XE"), "", "", "", Some("1522"), None, None);
-        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
         assert!(out.contains(
             "        connection:\n          hostname: localhost\n          port: 1522\n"
         ));
@@ -2518,7 +2563,7 @@ sec3 () {
         let xe = make_dbuser(Some("XE"), "", "", "", None, None, Some("PROD"));
         let mut custom = make_custom_sql("sec1", None, "a.sql", &[]);
         custom.tns_alias = Some("PROD".to_owned());
-        let out: String = format_instances(&dbuser, &[xe], &[custom]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[custom], &mut Vec::new()).join("");
         assert!(out.contains(
             "      - sid: XE\n        alias: PROD\n        custom_metrics:\n          - sec1:\n              path: a.sql\n"
         ), "got: {out}");
@@ -2535,7 +2580,7 @@ sec3 () {
         c1.tns_alias = Some("REPORTING".into());
         let mut c2 = make_custom_sql("sec2", None, "b.sql", &[]);
         c2.tns_alias = Some("REPORTING".into());
-        let out: String = format_instances(&dbuser, &[], &[c1, c2]).join("");
+        let out: String = format_instances(&dbuser, &[], &[c1, c2], &mut Vec::new()).join("");
         assert_eq!(
             out.matches("      - alias: REPORTING\n").count(),
             1,
@@ -2551,7 +2596,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE"]);
         custom.tns_alias = Some("PROD".into());
-        let out: String = format_instances(&dbuser, &[], &[custom]).join("");
+        let out: String = format_instances(&dbuser, &[], &[custom], &mut Vec::new()).join("");
         assert!(
             out.contains("      - sid: XE\n        alias: PROD\n        custom_metrics:\n"),
             "SQLS_SIDS and SQLS_TNSALIAS must both reach the entry, got: {out}"
@@ -2572,7 +2617,8 @@ sec3 () {
         shared.tns_alias = Some("REPORTING".into());
         let mut rival = make_custom_sql("rival", None, "c.sql", &["RIVAL"]);
         rival.tns_alias = Some("REPORTING".into());
-        let out: String = format_instances(&dbuser, &[], &[multi, shared, rival]).join("");
+        let out: String =
+            format_instances(&dbuser, &[], &[multi, shared, rival], &mut Vec::new()).join("");
         assert!(
             out.contains("      - alias: PROD\n"),
             "several SIDs cannot identify one aliased entry, got: {out}"
@@ -2590,7 +2636,7 @@ sec3 () {
         let owner = make_dbuser(Some("XE1"), "user", "pass", "", None, None, Some("PROD"));
         let mut custom = make_custom_sql("sec1", None, "a.sql", &["OTHER"]);
         custom.tns_alias = Some("PROD".into());
-        let out: String = format_instances(&dbuser, &[owner], &[custom]).join("");
+        let out: String = format_instances(&dbuser, &[owner], &[custom], &mut Vec::new()).join("");
         assert!(
             out.contains("      - sid: XE1\n        alias: PROD\n"),
             "the alias keeps the SID of the instance owning it, got: {out}"
@@ -3329,7 +3375,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
         let xe = make_dbuser(Some("XE"), "/", "", "", None, None, None);
 
-        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
 
         assert!(
             out.contains("      - sid: XE\n        alias: XE\n"),
@@ -3343,7 +3389,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
         let xe = make_dbuser(Some("XE"), "/", "", "", None, None, Some("PRODALIAS"));
 
-        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
 
         assert!(
             out.contains("      - sid: XE\n        alias: PRODALIAS\n"),
@@ -3362,7 +3408,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
         let xe = make_dbuser(Some("XE"), "user", "pass", "", None, None, None);
 
-        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
 
         assert!(out.contains("      - sid: XE\n"), "got: {out}");
         assert!(
@@ -3395,7 +3441,7 @@ sec3 () {
             None,
         );
 
-        let out: String = format_instances(&dbuser, &[xe1, xe2], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe1, xe2], &[], &mut Vec::new()).join("");
 
         // DBUSER without sid/alias contributes no instance entry:
         // the first entry after the header is XE1

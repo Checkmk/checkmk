@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkVisuallyHiddenCodeExample.vue?raw'
 
@@ -17,11 +17,11 @@ export const panelConfig = {
   live: {
     type: 'list' as const,
     title: 'Live region',
-    options: [
-      { title: 'Off (static label)', name: 'off' },
-      { title: 'Polite', name: 'polite' },
-      { title: 'Assertive', name: 'assertive' }
-    ] satisfies Options<'off' | 'polite' | 'assertive'>[],
+    options: listOptions<'off' | 'polite' | 'assertive'>({
+      off: 'Off (static label)',
+      polite: 'Polite',
+      assertive: 'Assertive'
+    }),
     help: 'Polite/assertive turn the element into a live region that announces changes to its text.',
     initialState: 'off' as const
   }

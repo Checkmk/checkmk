@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { allIconOptions, allMultitoneIconOptions } from '@ucl/_ucl/lib/icon'
 
 import codeExample from './UclCmkIconLinkCodeExample.vue?raw'
@@ -105,11 +105,11 @@ export const panelConfig = {
   target: {
     type: 'list' as const,
     title: 'target',
-    options: [
-      { title: 'None (default)', name: '' },
-      { title: '_blank (new tab)', name: '_blank' },
-      { title: 'main iframe', name: 'main' }
-    ] satisfies Options<TargetOption>[],
+    options: listOptions<TargetOption>({
+      '': 'None (default)',
+      _blank: '_blank (new tab)',
+      main: 'main iframe'
+    }),
     initialState: '' as TargetOption
   }
 } satisfies PanelConfigFor<typeof CmkIconLink>

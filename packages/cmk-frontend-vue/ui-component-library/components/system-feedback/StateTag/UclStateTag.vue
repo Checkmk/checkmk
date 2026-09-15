@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import {
   type StateTagKind,
   type StateTagSize,
@@ -22,32 +22,32 @@ export const panelConfig = {
   tone: {
     type: 'list' as const,
     title: 'Tone',
-    options: [
-      { title: 'OK', name: 'ok' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Critical', name: 'critical' },
-      { title: 'Unknown', name: 'unknown' },
-      { title: 'Pending', name: 'pending' }
-    ] satisfies Options<StateTone>[],
+    options: listOptions<StateTone>({
+      ok: 'OK',
+      warning: 'Warning',
+      critical: 'Critical',
+      unknown: 'Unknown',
+      pending: 'Pending'
+    }),
     initialState: 'ok' as const
   },
   kind: {
     type: 'list' as const,
     title: 'Kind',
-    options: [
-      { title: 'Host', name: 'host' },
-      { title: 'Service', name: 'service' }
-    ] satisfies Options<StateTagKind>[],
+    options: listOptions<StateTagKind>({
+      host: 'Host',
+      service: 'Service'
+    }),
     initialState: 'host' as const
   },
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Compact', name: 'compact' },
-      { title: 'Inline', name: 'inline' }
-    ] satisfies Options<StateTagSize>[],
+    options: listOptions<StateTagSize>({
+      default: 'Default',
+      compact: 'Compact',
+      inline: 'Inline'
+    }),
     initialState: 'default' as const
   },
   stale: {

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
 import { type HeadingType } from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -51,12 +51,12 @@ export const itemPanelConfig = {
   headerAs: {
     type: 'list' as const,
     title: 'headerAs',
-    options: [
-      { title: 'h1', name: 'h1' },
-      { title: 'h2', name: 'h2' },
-      { title: 'h3', name: 'h3' },
-      { title: 'h4', name: 'h4' }
-    ] satisfies Options<NonNullable<HeadingType>>[],
+    options: listOptions<NonNullable<HeadingType>>({
+      h1: 'h1',
+      h2: 'h2',
+      h3: 'h3',
+      h4: 'h4'
+    }),
     initialState: 'h3' as NonNullable<HeadingType>,
     help: 'HTML element used to render the accordion item header.'
   },

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkTabsCodeExample.vue?raw'
 
@@ -33,11 +33,11 @@ export const panelConfig = {
   modelValue: {
     type: 'list' as const,
     title: 'Active Tab',
-    options: [
-      { title: 'Search', name: 'tab-1' },
-      { title: 'Information', name: 'tab-2' },
-      { title: 'Disabled', name: 'tab-3' }
-    ] satisfies Options<TabId>[],
+    options: listOptions<TabId>({
+      'tab-1': 'Search',
+      'tab-2': 'Information',
+      'tab-3': 'Disabled'
+    }),
     initialState: 'tab-1' as TabId
   }
 } satisfies PanelConfigFor<typeof CmkTabs, 'unmountOnHide'>

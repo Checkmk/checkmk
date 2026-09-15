@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type LabelProps } from 'cmk-ui-library/components/CmkLabel.vue'
 
 import codeExample from './UclCmkLabelCodeExample.vue?raw'
@@ -13,11 +13,11 @@ export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Title', name: 'title' },
-      { title: 'Subtitle', name: 'subtitle' }
-    ] satisfies Options<LabelProps['variant']>[],
+    options: listOptions<LabelProps['variant']>({
+      default: 'Default',
+      title: 'Title',
+      subtitle: 'Subtitle'
+    }),
     initialState: 'default' as const
   },
   dots: {
@@ -35,10 +35,11 @@ export const panelConfig = {
   cursor: {
     type: 'list' as const,
     title: 'Cursor',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Pointer', name: 'pointer' }
-    ] satisfies Options<LabelProps['cursor']>[],
+    options: listOptions<LabelProps['cursor']>({
+      default: 'Default',
+      inherit: 'Inherit',
+      pointer: 'Pointer'
+    }),
     initialState: 'default' as const
   },
   help: {

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef } from '@ucl/_ucl/types/prop-def'
 import { type ButtonVariants } from 'cmk-ui-library/components/CmkDropdown/CmkDropdownButton.vue'
 import { type Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
@@ -57,11 +57,11 @@ export const panelConfig = {
   width: {
     type: 'list' as const,
     title: 'Width',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Wide', name: 'wide' },
-      { title: 'Fill', name: 'fill' }
-    ] satisfies Options<NonNullable<ButtonVariants['width']>>[],
+    options: listOptions<NonNullable<ButtonVariants['width']>>({
+      default: 'Default',
+      wide: 'Wide',
+      fill: 'Fill'
+    }),
     initialState: 'default' as const
   },
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },

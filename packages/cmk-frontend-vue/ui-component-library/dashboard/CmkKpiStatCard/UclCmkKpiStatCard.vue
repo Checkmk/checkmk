@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
 import {
@@ -63,23 +63,23 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Comparison basis',
     help: 'What the delta compares the current value against, computed over the real samples before it.',
-    options: [
-      { title: 'Average', name: 'average' },
-      { title: 'Last sample', name: 'last' },
-      { title: 'Minimum', name: 'minimum' },
-      { title: 'Maximum', name: 'maximum' },
-      { title: 'Median', name: 'median' }
-    ] satisfies Options<ComparisonBasis>[],
+    options: listOptions<ComparisonBasis>({
+      average: 'Average',
+      last: 'Last sample',
+      minimum: 'Minimum',
+      maximum: 'Maximum',
+      median: 'Median'
+    }),
     initialState: 'average' as const
   },
   sparkHeightMode: {
     type: 'list' as const,
     title: 'Spark line height',
     help: 'Band reserves the lower part of the card so the curve and the numbers never overlap. Full runs the curve behind the numbers, behind a card-colored scrim.',
-    options: [
-      { title: 'Band', name: 'band' },
-      { title: 'Full', name: 'full' }
-    ] satisfies Options<SparkHeightMode>[],
+    options: listOptions<SparkHeightMode>({
+      band: 'Band',
+      full: 'Full'
+    }),
     initialState: 'band' as const
   },
   pointCount: {
@@ -92,12 +92,12 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Data state',
     help: 'Gap: a single contiguous outage window mid-series. Stale: the series ends in missing samples, so the bridge runs flat to the right edge and the delta is replaced by a "last sample" note. No data: no value, curve, delta, or state badge at all.',
-    options: [
-      { title: 'Complete', name: 'complete' },
-      { title: 'Gap', name: 'gap' },
-      { title: 'Stale', name: 'stale' },
-      { title: 'No data', name: 'no-data' }
-    ] satisfies Options<DataState>[],
+    options: listOptions<DataState>({
+      complete: 'Complete',
+      gap: 'Gap',
+      stale: 'Stale',
+      'no-data': 'No data'
+    }),
     initialState: 'complete' as const
   },
   showState: {
@@ -109,13 +109,13 @@ export const panelConfig = {
   stateSeverity: {
     type: 'list' as const,
     title: 'State',
-    options: [
-      { title: 'OK', name: 'ok' },
-      { title: 'WARN', name: 'warn' },
-      { title: 'CRIT', name: 'crit' },
-      { title: 'UNKN', name: 'unknown' },
-      { title: 'PEND', name: 'pending' }
-    ] satisfies Options<KpiStateSeverity>[],
+    options: listOptions<KpiStateSeverity>({
+      ok: 'OK',
+      warn: 'WARN',
+      crit: 'CRIT',
+      unknown: 'UNKN',
+      pending: 'PEND'
+    }),
     initialState: 'warn' as const
   },
   tintBackground: {

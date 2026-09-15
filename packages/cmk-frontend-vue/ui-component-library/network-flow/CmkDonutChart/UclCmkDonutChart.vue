@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
 import type { DonutLegendMode } from '@/network-flow/CmkDonutChart'
@@ -14,10 +14,10 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Legend',
     help: 'The table states the volume per category. The chips name the categories only and stack under the ring, for widgets with no width for both.',
-    options: [
-      { title: 'Table', name: 'table' },
-      { title: 'Compact', name: 'compact' }
-    ] satisfies Options<DonutLegendMode>[],
+    options: listOptions<DonutLegendMode>({
+      table: 'Table',
+      compact: 'Compact'
+    }),
     initialState: 'table' as const
   },
   centerLabel: {

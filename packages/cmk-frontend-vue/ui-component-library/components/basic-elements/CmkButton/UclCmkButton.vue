@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 import type { ButtonVariants } from 'cmk-ui-library/components/CmkButton'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
@@ -32,28 +32,28 @@ export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Optional', name: 'optional' },
-      { title: 'Primary', name: 'primary' },
-      { title: 'Secondary', name: 'secondary' },
-      { title: 'Success', name: 'success' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Danger', name: 'danger' },
-      { title: 'Info', name: 'info' },
-      { title: 'Text', name: 'text' },
-      { title: 'AI', name: 'ai' }
-    ] satisfies Options<ButtonVariants['variant']>[],
+    options: listOptions<ButtonVariants['variant']>({
+      optional: 'Optional',
+      primary: 'Primary',
+      secondary: 'Secondary',
+      success: 'Success',
+      warning: 'Warning',
+      danger: 'Danger',
+      info: 'Info',
+      text: 'Text',
+      ai: 'AI'
+    }),
     initialState: 'optional' as const,
     help: 'AI renders the optional button with a purple shimmer sweeping across it, marking an AI-powered action.'
   },
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Medium', name: 'medium' },
-      { title: 'Small', name: 'small' },
-      { title: 'Icon only', name: 'iconOnly' }
-    ] satisfies Options<ButtonVariants['size']>[],
+    options: listOptions<ButtonVariants['size']>({
+      medium: 'Medium',
+      small: 'Small',
+      iconOnly: 'Icon only'
+    }),
     initialState: 'medium' as const,
     help: 'Icon only renders a fixed 20px square button with no padding, for an icon-only button.'
   },

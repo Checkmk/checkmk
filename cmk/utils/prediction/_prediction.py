@@ -12,10 +12,10 @@ from pydantic import BaseModel
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName
+from cmk.utils.misc import pnp_cleanup
+from cmk.utils.paths import predictions_dir
+from cmk.utils.servicename import ServiceName
 
-from ..misc import pnp_cleanup
-from ..paths import predictions_dir
-from ..servicename import ServiceName
 from ._grouping import time_slices
 
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]

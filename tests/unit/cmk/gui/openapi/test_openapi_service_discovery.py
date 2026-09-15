@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
+from collections.abc import Callable
 from unittest.mock import call, MagicMock
 
 import pytest
@@ -24,6 +25,9 @@ from cmk.automations.results import (
 )
 
 from cmk.checkengine.discovery import CheckPreviewEntry
+
+from cmk.gui.openapi.restful_objects.permissions import BasePerm
+from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
@@ -1393,3 +1397,164 @@ def test_openapi_refresh_job_status(
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
+
+
+# --- CMK-38594: the endpoint's authorization surface -----------------------------------------
+
+
+@pytest.fixture(name="mock_rule_evaluation")
+def fixture_mock_rule_evaluation(mocker: MockerFixture) -> None:
+    """Stub the automation the "Disabled services" rule write needs.
+
+    Without it a request that gets *past* the permission gate dies on a missing `check_mk`
+    binary with a `500`, which would let the tests below pass for the wrong reason. With it, a
+    missing gate answers `204` and writes -- which is the symptom they have to catch.
+    """
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.get_services_labels",
+        return_value=GetServicesLabelsResult(labels=defaultdict(dict)),
+    )
+
+
+def _declared_permissions(method: str, path: str) -> BasePerm | None:
+    """Return the set of permissions the registered endpoint declares (see BasePerm)."""
+    for endpoint in endpoint_registry:
+        if endpoint.method == method and endpoint.path == path:
+            return endpoint.permissions_required
+    raise LookupError(f"no endpoint registered for {method.upper()} {path}")
+
+
+@pytest.fixture(name="denied_permission")
+def fixture_denied_permission(clients: ClientRegistry) -> Callable[[str], None]:
+    """Log the client in as a user whose role is an admin minus one permission.
+
+    A cloned role rather than the built-in `user` role: the point is to isolate a single
+    permission, and every other difference between roles would be a second variable.
+    """
+
+    def deny(permission: str) -> None:
+        clients.UserRole.clone(body={"role_id": "admin"})
+        clients.UserRole.edit(role_id="adminx", body={"new_permissions": {permission: "no"}})
+        clients.User.create(
+            username="restricted",
+            fullname="restricted",
+            customer="provider",  # 2.3.0 requires it; the CME schema has no default
+            roles=["adminx"],
+            auth_option={"auth_type": "password", "password": "supersecretish"},
+        )
+        clients.ServiceDiscovery.set_credentials("restricted", "supersecretish")
+
+    return deny
+
+
+@pytest.mark.usefixtures(
+    "with_host", "inline_background_jobs", "mock_rule_evaluation", "mock_discovery_preview"
+)
+@pytest.mark.parametrize("permission", ("wato.services", "wato.edit"))
+def test_openapi_update_service_phase_refuses_without_manage_services_or_edit(
+    clients: ClientRegistry,
+    mock_set_autochecks: MagicMock,
+    denied_permission: Callable[[str], None],
+    permission: str,
+) -> None:
+    """CMK-38594: the endpoint gates the module permissions the GUI already gates.
+
+    A role denied either "Make changes" (`wato.edit`) or "Manage services" (`wato.services`) can
+    no longer disable a service through this endpoint -- it is refused and writes nothing. The
+    service discovery page refuses the very same single-service move: every GUI entry point runs
+    inside `_service_discovery_context`, which demands `wato.services`. This endpoint reached
+    `Discovery.do_discovery()` without passing through that context manager, so it demanded
+    neither permission.
+
+    The refusal is a `401`: on 2.3.0 `MKAuthException.status` reaches the response unchanged.
+    """
+    denied_permission(permission)
+
+    clients.ServiceDiscovery.update_service_phase(
+        "example.com",
+        check_type="df",
+        service_item="/boot",
+        target_phase="ignored",
+        expect_ok=False,
+    ).assert_status_code(401)
+
+    mock_set_autochecks.assert_not_called()
+
+
+@pytest.mark.usefixtures(
+    "with_host", "inline_background_jobs", "mock_rule_evaluation", "mock_discovery_preview"
+)
+def test_openapi_update_service_phase_still_demands_the_target_phase_permission(
+    clients: ClientRegistry,
+    mock_set_autochecks: MagicMock,
+    denied_permission: Callable[[str], None],
+) -> None:
+    """The `service_discovery_to_*` demand survives the CMK-38594 fix.
+
+    It is what already refused a "Guest user" every move, so adding the two module-level demands
+    must not have replaced it.
+    """
+    denied_permission("wato.service_discovery_to_ignored")
+
+    clients.ServiceDiscovery.update_service_phase(
+        "example.com",
+        check_type="df",
+        service_item="/boot",
+        target_phase="ignored",
+        expect_ok=False,
+    ).assert_status_code(401)
+
+    mock_set_autochecks.assert_not_called()
+
+
+@pytest.mark.usefixtures(
+    "with_host", "inline_background_jobs", "mock_rule_evaluation", "mock_discovery_preview"
+)
+@pytest.mark.parametrize(
+    "permission",
+    (
+        "wato.service_discovery_to_monitored",
+        "wato.service_discovery_to_undecided",
+        "wato.service_discovery_to_removed",
+    ),
+)
+def test_openapi_update_service_phase_demands_only_the_target_phases_permission(
+    clients: ClientRegistry,
+    mock_set_autochecks: MagicMock,
+    denied_permission: Callable[[str], None],
+    permission: str,
+) -> None:
+    """Only the permission matching the requested phase is demanded, and CMK-38594 kept it so.
+
+    `Discovery.do_discovery()` picks the `service_discovery_to_*` demand from the transition it is
+    about to make, so a move to `ignored` is unaffected by the other three being denied. This is
+    where 2.3.0 differs from 2.4.0 and newer, which demand all four up front -- which is why the
+    werk's mitigation has to name all four permissions rather than any one of them.
+    """
+    denied_permission(permission)
+
+    clients.ServiceDiscovery.update_service_phase(
+        "example.com",
+        check_type="df",
+        service_item="/boot",
+        target_phase="ignored",
+    ).assert_status_code(204)
+
+    mock_set_autochecks.assert_called_once()
+
+
+@pytest.mark.usefixtures("load_plugins")
+def test_openapi_update_service_phase_declares_manage_services_and_edit() -> None:
+    """The endpoint *declares* both permissions, not only demands them (CMK-38594).
+
+    The declaration is what the generated API documentation advertises to a client, which is half
+    of what the werk is about; it is also what the endpoint validates the demand against,
+    refusing an undeclared demand in a testing context.
+    """
+    declared = _declared_permissions(
+        "put", "/objects/host/{host_name}/actions/update_discovery_phase/invoke"
+    )
+
+    assert declared is not None
+    assert "wato.edit" in declared
+    assert "wato.services" in declared

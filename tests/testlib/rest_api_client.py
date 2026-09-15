@@ -2679,6 +2679,28 @@ class ServiceDiscoveryClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def update_service_phase(
+        self,
+        host_name: str,
+        *,
+        check_type: str,
+        service_item: str | None,
+        target_phase: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        # The body params are keyword-only on purpose: three of them are interchangeable strings
+        # to a type checker, and transposing two yields a puzzling 400 rather than an error here.
+        return self.request(
+            "put",
+            url=f"/objects/host/{host_name}/actions/update_discovery_phase/invoke",
+            body={
+                "check_type": check_type,
+                "service_item": service_item,
+                "target_phase": target_phase,
+            },
+            expect_ok=expect_ok,
+        )
+
 
 class ParentScanClient(RestApiClient):
     domain: API_DOMAIN = "parent_scan"

@@ -7,11 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import { CmkTooltipProvider } from 'cmk-ui-library/components/CmkTooltip'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
+import SuggestionTooltip from './SuggestionTooltip.vue'
 import { ErrorResponse, type Suggestion, WarningResponse } from './suggestions'
 import {
   NoSelection,
@@ -384,79 +386,83 @@ defineExpose({
         @keydown.escape.prevent="emit('blur')"
       />
     </span>
-    <CmkScrollContainer class="cmk-suggestions__scroll" :max-height="maxHeight">
-      <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
-      <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
-      <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
-      <template v-for="(section, sIdx) in displaySections">
-        <li
-          v-if="section.title !== null"
-          :key="`h-${sIdx}`"
-          class="cmk-suggestions__section-header"
-          role="heading"
-          aria-level="3"
-          :aria-label="section.title"
-          tabindex="-1"
-          @mousedown.prevent
-        >
-          {{ section.title }}
-        </li>
-        <li
-          v-for="suggestion in section.suggestions"
-          ref="suggestionRefs"
-          tabindex="-1"
-          :role="role"
-          :aria-label="suggestion.title"
-          :aria-selected="
-            markSelected && suggestion.name !== null
-              ? suggestion.name === selectedSuggestion.getName()
-              : undefined
-          "
-          :class="{
-            selectable: suggestion.name !== null,
-            selected: suggestion === activeSuggestion,
-            'cmk-suggestions__item--in-section': section.title !== null,
-            'cmk-suggestions__item--markable': markSelected
-          }"
-          @click="selectSuggestion(suggestion)"
-        >
-          <span class="cmk-suggestions__option">
-            <slot name="option" :suggestion="suggestion">
-              <template v-for="render in [getRowRender(suggestion)]">
-                <template v-if="render.kind === 'title-match'">
-                  <span>{{ render.parts.before }}</span
-                  ><mark>{{ render.parts.match }}</mark
-                  ><span>{{ render.parts.after }}</span>
-                </template>
-                <template v-else-if="render.kind === 'name-match'"
-                  >{{ suggestion.title
-                  }}<span class="cmk-suggestions__name-match">
-                    ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
-                    >{{ render.nameParts.after }})</span
-                  >
-                </template>
-                <template v-else>{{ suggestion.title }}</template>
-              </template>
-            </slot>
-          </span>
-          <CmkIcon
-            v-if="
-              markSelected &&
-              suggestion.name !== null &&
-              suggestion.name === selectedSuggestion.getName()
+    <CmkTooltipProvider>
+      <CmkScrollContainer class="cmk-suggestions__scroll" :max-height="maxHeight">
+        <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
+        <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
+        <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
+        <template v-for="(section, sIdx) in displaySections">
+          <li
+            v-if="section.title !== null"
+            :key="`h-${sIdx}`"
+            class="cmk-suggestions__section-header"
+            role="heading"
+            aria-level="3"
+            :aria-label="section.title"
+            tabindex="-1"
+            @mousedown.prevent
+          >
+            {{ section.title }}
+          </li>
+          <li
+            v-for="suggestion in section.suggestions"
+            ref="suggestionRefs"
+            tabindex="-1"
+            :role="role"
+            :aria-label="suggestion.title"
+            :aria-selected="
+              markSelected && suggestion.name !== null
+                ? suggestion.name === selectedSuggestion.getName()
+                : undefined
             "
-            name="checkmark-bare"
-            size="small"
-            aria-hidden="true"
-            class="cmk-suggestions__selected-mark"
-          />
+            :class="{
+              selectable: suggestion.name !== null,
+              selected: suggestion === activeSuggestion,
+              'cmk-suggestions__item--in-section': section.title !== null,
+              'cmk-suggestions__item--markable': markSelected
+            }"
+            @click="selectSuggestion(suggestion)"
+          >
+            <SuggestionTooltip :text="suggestion.tooltip">
+              <span class="cmk-suggestions__option">
+                <slot name="option" :suggestion="suggestion">
+                  <template v-for="render in [getRowRender(suggestion)]">
+                    <template v-if="render.kind === 'title-match'">
+                      <span>{{ render.parts.before }}</span
+                      ><mark>{{ render.parts.match }}</mark
+                      ><span>{{ render.parts.after }}</span>
+                    </template>
+                    <template v-else-if="render.kind === 'name-match'"
+                      >{{ suggestion.title
+                      }}<span class="cmk-suggestions__name-match">
+                        ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
+                        >{{ render.nameParts.after }})</span
+                      >
+                    </template>
+                    <template v-else>{{ suggestion.title }}</template>
+                  </template>
+                </slot>
+              </span>
+            </SuggestionTooltip>
+            <CmkIcon
+              v-if="
+                markSelected &&
+                suggestion.name !== null &&
+                suggestion.name === selectedSuggestion.getName()
+              "
+              name="checkmark-bare"
+              size="small"
+              aria-hidden="true"
+              class="cmk-suggestions__selected-mark"
+            />
+          </li>
+        </template>
+        <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
+        <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
+          {{ noResultsHint }}
         </li>
-      </template>
-      <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
-      <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
-        {{ noResultsHint }}
-      </li>
-    </CmkScrollContainer>
+      </CmkScrollContainer>
+    </CmkTooltipProvider>
   </ul>
 </template>
 

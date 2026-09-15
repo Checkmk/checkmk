@@ -22,7 +22,6 @@ class VersionInfo:
         self.APACHE_CTL = ""
         self.APACHE_INIT_NAME = ""
         self.OMD_PHYSICAL_BASE = ""
-        self.APACHE_CONF_DIR = ""
         self.DISTRO_CODE = ""
 
         for k, v in self._read_info(info_dir).items():

@@ -124,9 +124,7 @@ from omdlib.user_processes import (
 )
 from omdlib.users_and_groups import (
     find_processes_of_user,
-    group_exists,
     group_id,
-    groupdel,
     popen_as_site_user,
     run_as_site_user,
     user_id,
@@ -3222,28 +3220,6 @@ def main_cleanup(
         version_path: str = os.path.join("/omd/versions", version)
         if os.path.exists(version_path):
             shutil.rmtree(version_path)
-
-    # In case the last version has been removed ensure some things created globally
-    # are removed.
-    if not omd_versions(versions_path):
-        _cleanup_global_files(version_info)
-
-
-def _cleanup_global_files(version_info: VersionInfo) -> None:
-    sys.stdout.write("No version left. Cleaning up global files.\n")
-    shutil.rmtree(version_info.OMD_PHYSICAL_BASE, ignore_errors=True)
-
-    for path in [
-        "/omd",
-        version_info.APACHE_CONF_DIR + "/zzz_omd.conf",
-        "/etc/init.d/omd",
-        "/usr/bin/omd",
-    ]:
-        with contextlib.suppress(FileNotFoundError):
-            os.unlink(path)
-
-    if group_exists("omd"):
-        groupdel("omd")
 
 
 # .

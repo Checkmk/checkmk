@@ -15,6 +15,7 @@ from cmk.gui.main_menu_types import (
     MainMenu,
     MainMenuData,
     MainMenuVueApp,
+    RenderVueApp,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.userdb.store import load_custom_attr
@@ -67,11 +68,12 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             title=_l("Changes"),
             icon=StaticIcon(IconNames.main_changes),
             sort_index=17,
-            topics=None,
             hide=_hide_menu,
-            vue_app=MainMenuVueApp(
-                name="cmk-main-menu-changes",
-                data=_data,
+            action=RenderVueApp(
+                vue_app=MainMenuVueApp(
+                    name="cmk-main-menu-changes",
+                    data=_data,
+                )
             ),
         )
     )

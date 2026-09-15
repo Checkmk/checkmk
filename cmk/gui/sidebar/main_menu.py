@@ -7,9 +7,6 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="unreachable"
-
 from contextlib import nullcontext
 from dataclasses import asdict
 from typing import NamedTuple, override, TypedDict
@@ -31,6 +28,8 @@ from cmk.gui.main_menu_types import (
     MainMenuTopic,
     MainMenuTopicSegment,
     MainMenuVueApp,
+    RenderTopics,
+    RenderVueApp,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics_popup
@@ -89,8 +88,8 @@ class MainMenuRenderer:
         html.open_ul(id_="main_menu")
 
         popup_triggers, search_item = self._get_main_menu_popup_triggers(user_permissions)
-        assert search_item
-        self._set_search_config(search_item, popup_triggers)
+        if search_item is not None:
+            self._set_search_config(search_item, popup_triggers)
         self._show_main_menu_content(user_permissions, popup_triggers)
         render_product_usage_analytics_popup(
             active_config=active_config, user=user, request=request, response=response
@@ -98,15 +97,15 @@ class MainMenuRenderer:
         html.close_ul()
 
     def _set_search_config(
-        self, search_item: MainMenu, popup_triggers: list[MainMenuPopupTrigger]
+        self, search_item: RenderVueApp, popup_triggers: list[MainMenuPopupTrigger]
     ) -> None:
-        assert search_item.vue_app
+        vue_app = search_item.vue_app
 
-        if callable(search_item.vue_app.data):
-            search_item.vue_app.data = search_item.vue_app.data(request)
+        if callable(vue_app.data):
+            vue_app.data = vue_app.data(request)
 
         for popup_trigger in popup_triggers:
-            self._add_unified_searchprovider(search_item.vue_app, popup_trigger)
+            self._add_unified_searchprovider(vue_app, popup_trigger)
 
     def _add_unified_searchprovider(
         self, vue_app: MainMenuVueApp, trigger: MainMenuPopupTrigger
@@ -200,14 +199,14 @@ class MainMenuRenderer:
 
     def _get_main_menu_popup_triggers(
         self, user_permissions: UserPermissions
-    ) -> tuple[list[MainMenuPopupTrigger], MainMenu]:
+    ) -> tuple[list[MainMenuPopupTrigger], RenderVueApp | None]:
         items: list[MainMenuPopupTrigger] = []
-        search_item: MainMenu
+        search_item: RenderVueApp | None = None
         for menu in sorted(main_menu_registry.values(), key=lambda g: g.sort_index):
-            if menu.name == "search":
-                search_item = menu
+            if menu.name == "search" and isinstance(menu.action, RenderVueApp):
+                search_item = menu.action
 
-            if menu.topics and not menu.topics(user_permissions):
+            if isinstance(menu.action, RenderTopics) and not menu.action.topics(user_permissions):
                 continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
 
             if menu.hide():
@@ -225,6 +224,8 @@ class MainMenuRenderer:
                     icon: DynamicIcon = {"icon": dynamic_icon, "emblem": menu.icon.emblem}
                 else:
                     icon = dynamic_icon
+            else:
+                icon = menu.icon
             items.append(
                 MainMenuPopupTrigger(
                     name=menu.name,
@@ -241,11 +242,8 @@ class MainMenuRenderer:
     ) -> str:
         with output_funnel.plugged():
             menu = main_menu_registry[popup_trigger.name]
-            classes = []
-            if menu.vue_app:
-                classes.append("fullscreen-popup")
-            else:
-                classes.append("popup_menu")
+            action = menu.action
+            classes = ["fullscreen-popup" if isinstance(action, RenderVueApp) else "popup_menu"]
 
             if user.get_attribute("nav_hide_icons_title"):
                 classes.append("min")
@@ -257,17 +255,16 @@ class MainMenuRenderer:
                 ]
                 + classes,
             )
-            if menu.vue_app:
-                html.vue_component(
-                    component_name=menu.vue_app.name,
-                    data=asdict(
-                        menu.vue_app.data(request)
-                        if callable(menu.vue_app.data)
-                        else menu.vue_app.data
-                    ),
-                )
-            else:
-                MainMenuPopupRenderer().show(menu, user_permissions)
+            match action:
+                case RenderVueApp(vue_app=vue_app):
+                    html.vue_component(
+                        component_name=vue_app.name,
+                        data=asdict(
+                            vue_app.data(request) if callable(vue_app.data) else vue_app.data
+                        ),
+                    )
+                case RenderTopics():
+                    MainMenuPopupRenderer().show(menu, action, user_permissions)
             html.close_div()
             return output_funnel.drain()
 
@@ -381,7 +378,7 @@ class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
 class MainMenuPopupRenderer:
     """Renders the content of the main menu popups"""
 
-    def show(self, menu: MainMenu, user_permissions: UserPermissions) -> None:
+    def show(self, menu: MainMenu, action: RenderTopics, user_permissions: UserPermissions) -> None:
         more_id = "main_menu_" + menu.name
 
         show_more = user.get_show_more_setting(more_id)
@@ -392,13 +389,12 @@ class MainMenuPopupRenderer:
         html.open_div(class_="search_bar")
         if menu.search:
             menu.search.show_search_field()
-        if menu.hint:
-            html.span(menu.hint, class_="main_menu_hint")
+        if action.hint:
+            html.span(action.hint, class_="main_menu_hint")
         html.close_div()
-        if menu.info_line:
-            html.span(menu.info_line(), id_="info_line_%s" % menu.name, class_="info_line")
-        if menu.topics:
-            topics = menu.topics(user_permissions)
+        if action.info_line:
+            html.span(action.info_line(), id_="info_line_%s" % menu.name, class_="info_line")
+        topics = action.topics(user_permissions)
         if any_show_more_items(topics):
             html.open_div()
             html.more_button(

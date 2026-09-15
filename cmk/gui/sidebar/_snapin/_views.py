@@ -14,7 +14,7 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.main_menu_types import MainMenu, MainMenuTopic, UnifiedSearch
+from cmk.gui.main_menu_types import MainMenu, MainMenuTopic, RenderTopics, UnifiedSearch
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
@@ -49,7 +49,7 @@ def register(
             title=_l("Monitor"),
             icon=StaticIcon(IconNames.main_monitoring),
             sort_index=5,
-            topics=view_menu_topics,
+            action=RenderTopics(topics=view_menu_topics),
             search=UnifiedSearch("monitoring_search", "unified-search-input-monitoring"),
         )
     )

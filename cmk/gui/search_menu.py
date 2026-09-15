@@ -16,6 +16,7 @@ from cmk.gui.main_menu_types import (
     MainMenu,
     MainMenuData,
     MainMenuVueApp,
+    RenderVueApp,
     UnifiedSearch,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
@@ -48,11 +49,12 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             title=_l("Search"),
             icon=StaticIcon(IconNames.main_search),
             sort_index=1,
-            topics=None,
             search=UnifiedSearch("unified_search", "unified-search-input"),
-            vue_app=MainMenuVueApp(
-                name="cmk-unified-search",
-                data=get_unified_search_config,
+            action=RenderVueApp(
+                vue_app=MainMenuVueApp(
+                    name="cmk-unified-search",
+                    data=get_unified_search_config,
+                )
             ),
         )
     )

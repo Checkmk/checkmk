@@ -12,7 +12,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
+from cmk.gui.main_menu_types import (
+    MainMenu,
+    MainMenuItem,
+    MainMenuTopic,
+    MainMenuTopicEntries,
+    RenderTopics,
+)
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
@@ -40,8 +46,10 @@ def register(
             title=_l("User"),
             icon=StaticIcon(IconNames.main_user),
             sort_index=20,
-            topics=user_menu_topics,
-            info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
+            action=RenderTopics(
+                topics=user_menu_topics,
+                info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
+            ),
         )
     )
 

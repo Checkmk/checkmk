@@ -19,6 +19,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
+from cmk.gui.main_menu_types import RenderTopics
 from cmk.gui.type_defs import (
     HTTPVariables,
     Row,
@@ -1412,17 +1413,15 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
 
     @override
     def get_results(self, query: str, user_permissions: UserPermissions) -> list[SearchResult]:
+        action = main_menu_registry["monitoring"].action
+        topics = action.topics(user_permissions) if isinstance(action, RenderTopics) else []
         return [
             SearchResult(
                 title=main_menu_item.title,
                 url=main_menu_item.url,
                 loading_transition=main_menu_item.loading_transition,
             )
-            for main_menu_topic in (
-                main_menu_registry["monitoring"].topics(user_permissions)
-                if main_menu_registry["monitoring"].topics
-                else []
-            )
+            for main_menu_topic in topics
             for main_menu_item in get_main_menu_items_prefixed_by_segment(main_menu_topic)
             if any(
                 query.lower() in match_text.lower()

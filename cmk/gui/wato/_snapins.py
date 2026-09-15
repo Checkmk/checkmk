@@ -18,7 +18,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, MainMenuRegistry
-from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, UnifiedSearch
+from cmk.gui.main_menu_types import (
+    MainMenu,
+    MainMenuItem,
+    MainMenuTopic,
+    RenderTopics,
+    UnifiedSearch,
+)
 from cmk.gui.permissions import permission_registry
 from cmk.gui.search import (
     ABCMatchItemGenerator,
@@ -127,12 +133,14 @@ def _hide_menu() -> bool:
     )
 
 
+_SETUP_MENU_ACTION = RenderTopics(topics=get_wato_menu_items)
+
 MainMenuSetup = MainMenu(
     name="setup",
     title=_l("Setup"),
     icon=StaticIcon(IconNames.main_setup),
     sort_index=15,
-    topics=get_wato_menu_items,
+    action=_SETUP_MENU_ACTION,
     hide=_hide_menu,
     search=UnifiedSearch("setup_search", "unified-search-input-setup"),
 )
@@ -174,7 +182,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
         return True
 
 
-MatchItemGeneratorSetup = MatchItemGeneratorSetupMenu("setup", MainMenuSetup.topics)
+MatchItemGeneratorSetup = MatchItemGeneratorSetupMenu("setup", _SETUP_MENU_ACTION.topics)
 
 
 class SidebarSnapinWATOMini(SidebarSnapin):

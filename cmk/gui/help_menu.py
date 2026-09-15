@@ -17,6 +17,7 @@ from cmk.gui.main_menu_types import (
     MainMenuTopic,
     MainMenuTopicEntries,
     MainMenuTopicSegment,
+    RenderTopics,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
@@ -41,8 +42,12 @@ def register(
             title=_l("Help"),
             icon=StaticIcon(IconNames.main_help),
             sort_index=18,
-            topics=_help_menu_topics(learning_entries, developer_entries, about_checkmk_entries),
-            info_line=info_line,
+            action=RenderTopics(
+                topics=_help_menu_topics(
+                    learning_entries, developer_entries, about_checkmk_entries
+                ),
+                info_line=info_line,
+            ),
             onopen=f'cmk.popup_menu.main_menu_reset_default_expansion("{main_menu_name}");',
         )
     )

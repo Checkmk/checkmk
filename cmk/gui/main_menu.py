@@ -47,14 +47,14 @@ class MainMenuRegistry(Registry[MainMenu]):
     Examples:
 
         >>> from cmk.gui.i18n import _l
-        >>> from cmk.gui.type_defs import MainMenu
         >>> from cmk.gui.main_menu import main_menu_registry
+        >>> from cmk.gui.main_menu_types import MainMenu, RenderTopics
         >>> main_menu_registry.register(MainMenu(
         ...     name="monitoring",
         ...     title=_l("Monitor"),
         ...     icon="main_monitoring",
         ...     sort_index=5,
-        ...     topics=lambda: [],
+        ...     action=RenderTopics(topics=lambda user_permissions: []),
         ...     search=None,
         ... ))
         MainMenu(...)

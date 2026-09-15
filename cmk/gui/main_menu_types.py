@@ -65,18 +65,30 @@ class MainMenuVueApp:
     data: Callable[[Request], MainMenuData] | MainMenuData
 
 
+@dataclass(frozen=True)
+class RenderTopics:
+    topics: Callable[[UserPermissions], list[MainMenuTopic]]
+    info_line: Callable[[], str] | None = None
+    hint: str | None = None
+
+
+@dataclass(frozen=True)
+class RenderVueApp:
+    vue_app: MainMenuVueApp
+
+
+MainMenuAction = RenderTopics | RenderVueApp
+
+
 class MainMenu(NamedTuple):
     name: str
     title: str | LazyString
     icon: StaticIcon | DynamicIcon
     sort_index: int
-    topics: Callable[[UserPermissions], list[MainMenuTopic]] | None
+    action: MainMenuAction
     search: ABCMainMenuSearch | None = None
-    info_line: Callable[[], str] | None = None
     hide: Callable[[], bool] = lambda: False
-    vue_app: MainMenuVueApp | None = None
     onopen: str | None = None
-    hint: str | None = None
 
 
 class ABCMainMenuSearch(ABC):

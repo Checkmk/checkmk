@@ -40,7 +40,6 @@ class DataStat(NamedTuple):
 
     @classmethod
     def from_values(cls, values: Sequence[float]) -> Self:
-        """Statistically summarize all the measured values"""
         average = sum(values) / float(len(values))
         return cls(
             average=average,
@@ -217,7 +216,6 @@ def _forward_fill_resample(
 
 
 def _data_stats(slices: Iterable[Iterable[float | None]]) -> list[DataStat | None]:
-    "Statistically summarize all the upsampled RRD data"
     return [  # can't inline this b/c it is unit tested :-/
         (
             DataStat.from_values(point_line)

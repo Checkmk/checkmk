@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import dataclasses
 import enum
 import itertools
@@ -2546,23 +2544,23 @@ _InventoryOptions = TypedDict(
 
 
 def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
-    options: _CheckingOptions | _DiscoveryOptions | _InventoryOptions,
+    *,
+    detect_plugins: frozenset[str] | None,
+    detect_sections: frozenset[SectionName] | None,
+    selected_plugins: frozenset[PluginName] | None,
     plugins: Mapping[PluginName, CheckPlugin | InventoryPlugin],
     sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin],
     type_: type[PluginName],
-) -> tuple[SectionNameCollection, Container]:
-    detect_plugins = options.get("detect-plugins")
+) -> tuple[SectionNameCollection, Container[PluginName]]:
     if detect_plugins is None:
         return (
-            options.get("detect-sections", NO_SELECTION),
-            options.get("plugins", EVERYTHING),
+            NO_SELECTION if detect_sections is None else detect_sections,
+            EVERYTHING if selected_plugins is None else selected_plugins,
         )
 
-    conflicting_options = {"detect-sections", "plugins"}
-    if conflicting_options.intersection(options):
+    if detect_sections is not None or selected_plugins is not None:
         raise MKBailOut(
-            "Option '--detect-plugins' must not be combined with %s"
-            % "/".join(f"--{o}" for o in conflicting_options)
+            "Option '--detect-plugins' must not be combined with --detect-sections/--plugins"
         )
 
     if detect_plugins == {"@all"}:
@@ -2697,10 +2695,12 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: Sequen
 
     on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(
-        options,
-        plugins.check_plugins,
-        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        CheckPluginName,
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.check_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=CheckPluginName,
     )
     parser = CMKParser(
         config.make_parser_config(
@@ -2971,10 +2971,12 @@ def run_checking(
     )
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(
-        options,
-        plugins.check_plugins,
-        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        CheckPluginName,
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.check_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=CheckPluginName,
     )
 
     service_name_config = make_passive_service_name_config(
@@ -3352,10 +3354,12 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: Seque
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(
-        options,
-        plugins.inventory_plugins,
-        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        InventoryPluginName,
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.inventory_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=InventoryPluginName,
     )
     fetcher = CMKFetcher(
         config_cache,

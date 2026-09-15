@@ -231,6 +231,7 @@ allows = [
 allows = [
   "cmk.data_backend",
   "cmk.shared_typing.consolidation",
+  "cmk.telemetry.custom_query_building",
   "cmk.telemetry.custom_query_rule_value",
   "cmk.utils.macros",
   "cmk.utils.paths",

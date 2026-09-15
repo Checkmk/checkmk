@@ -219,7 +219,9 @@ def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[
         contactgroups=["all"],
         roles=["admin"] if admin else [],
     )
-    site.openapi.changes.activate_and_wait_for_completion()
+    # The activation reports success before the core has reloaded; wait for the core,
+    # so that neither the test nor the next one gets a site that is not online yet.
+    site.activate_changes_and_wait_for_core_reload()
     yield user_name, email_address
     site.openapi.users.delete(user_name)
-    site.openapi.changes.activate_and_wait_for_completion()
+    site.activate_changes_and_wait_for_core_reload()

@@ -303,6 +303,8 @@ import lightIconLogSvg from '~cmk-frontend/themes/facelift/images/icon_log.svg?u
 import lightIconLoginPng from '~cmk-frontend/themes/facelift/images/icon_login.png?url&no-inline'
 import lightIconLogwatchPng from '~cmk-frontend/themes/facelift/images/icon_logwatch.png?url&no-inline'
 import lightIconMagicMovePng from '~cmk-frontend/themes/facelift/images/icon_magic_move.png?url&no-inline'
+import lightIconMainAiSvg from '~cmk-frontend/themes/facelift/images/icon_main_ai.svg?url&no-inline'
+import lightIconMainAiActiveSvg from '~cmk-frontend/themes/facelift/images/icon_main_ai_active.svg?url&no-inline'
 import lightIconMainChangesSvg from '~cmk-frontend/themes/facelift/images/icon_main_changes.svg?url&no-inline'
 import lightIconMainChangesActiveSvg from '~cmk-frontend/themes/facelift/images/icon_main_changes_active.svg?url&no-inline'
 import lightIconMainCustomizeSvg from '~cmk-frontend/themes/facelift/images/icon_main_customize.svg?url&no-inline'
@@ -663,6 +665,7 @@ import darkIconHomeSvg from '~cmk-frontend/themes/modern-dark/images/icon_home.s
 import darkIconHostSvcProblemsSvg from '~cmk-frontend/themes/modern-dark/images/icon_host_svc_problems.svg?url&no-inline'
 import darkIconHyphenSvg from '~cmk-frontend/themes/modern-dark/images/icon_hyphen.svg?url&no-inline'
 import darkIconInfoCircleSvg from '~cmk-frontend/themes/modern-dark/images/icon_info_circle.svg?url&no-inline'
+import darkIconMainAiSvg from '~cmk-frontend/themes/modern-dark/images/icon_main_ai.svg?url&no-inline'
 import darkIconMainChangesSvg from '~cmk-frontend/themes/modern-dark/images/icon_main_changes.svg?url&no-inline'
 import darkIconMainCustomizeSvg from '~cmk-frontend/themes/modern-dark/images/icon_main_customize.svg?url&no-inline'
 import darkIconMainHelpSvg from '~cmk-frontend/themes/modern-dark/images/icon_main_help.svg?url&no-inline'
@@ -1095,6 +1098,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'logo-cmk-small': lightLogoCmkSmallPng,
   logwatch: lightIconLogwatchPng,
   'magic-move': lightIconMagicMovePng,
+  'main-ai-active': lightIconMainAiActiveSvg,
   'main-changes-active': lightIconMainChangesActiveSvg,
   'main-customize-active': lightIconMainCustomizeActiveSvg,
   'main-help-active': lightIconMainHelpActiveSvg,
@@ -1418,6 +1422,7 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     'host-svc-problems': lightIconHostSvcProblemsSvg,
     hyphen: lightIconHyphenSvg,
     'info-circle': lightIconInfoCircleSvg,
+    'main-ai': lightIconMainAiSvg,
     'main-changes': lightIconMainChangesSvg,
     'main-customize': lightIconMainCustomizeSvg,
     'main-help': lightIconMainHelpSvg,
@@ -1491,6 +1496,7 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     'host-svc-problems': darkIconHostSvcProblemsSvg,
     hyphen: darkIconHyphenSvg,
     'info-circle': darkIconInfoCircleSvg,
+    'main-ai': darkIconMainAiSvg,
     'main-changes': darkIconMainChangesSvg,
     'main-customize': darkIconMainCustomizeSvg,
     'main-help': darkIconMainHelpSvg,

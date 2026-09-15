@@ -5,12 +5,17 @@
 
 
 import json
+import math
+import time
+from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
 from livestatus import RRDResponse
 
-from cmk.utils.prediction import _prediction
+from cmk.ccc.hostaddress import HostName
+from cmk.utils.prediction import _prediction, DataStat, PredictionStore
 from tests.testlib.common.repo import repo_path
 
 
@@ -208,3 +213,102 @@ def test_calculate_data_for_prediction(
     assert len(expected_reference.points) == len(data_for_pred.points)
     for cal, ref in zip(data_for_pred.points, expected_reference.points):
         assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
+
+
+def approx(value_in: float) -> float:
+    # ApproxBase != float :-(
+    return pytest.approx(value_in)  # type: ignore[return-value]
+
+
+@pytest.mark.parametrize(
+    "slices, result",
+    [
+        ([list(range(6))], [DataStat(i, i, i, None) for i in range(6)]),
+        (
+            [[1, 5, None, 6]],
+            [
+                DataStat(1, 1, 1, None),
+                DataStat(5, 5, 5, None),
+                None,
+                DataStat(6, 6, 6, None),
+            ],
+        ),
+        (
+            [
+                [1, 5, None, 6],
+                [2, None, 2, 4],
+            ],
+            [
+                DataStat(1.5, 1, 2, approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(5.0, 5, 5, None),
+                DataStat(2.0, 2, 2, None),
+                DataStat(5.0, 4, 6, approx(math.sqrt(2))),
+            ],
+        ),
+        (
+            [
+                [1, 5, 3, 6, 8, None],
+                [2, 2, 2, 4, 3, 5],
+                [3, 3, None, None, 2, 2],
+            ],
+            [
+                DataStat(approx(2.0), 1, 3, approx(1.0)),
+                DataStat(approx(3.333333), 2, 5, approx(1.527525)),
+                DataStat(2.5, 2, 3, approx(math.sqrt(2) / 2)),  # fixed: true-division
+                DataStat(approx(5.0), 4, 6, approx(math.sqrt(2))),
+                DataStat(approx(4.333333), 2, 8, approx(3.214550)),
+                DataStat(approx(3.5), 2, 5, approx(2.121320)),
+            ],
+        ),
+        (
+            [
+                [1, 5, 3, 2, 6, 8, None],
+                [None] * 7,
+                [5, 5, 5, 5, 2, 2, 2],
+            ],
+            [
+                DataStat(3.0, 1, 5, approx(2.828427)),
+                DataStat(5.0, 5, 5, approx(0.0)),
+                DataStat(4.0, 3, 5, approx(1.414213)),
+                DataStat(3.5, 2, 5, approx(2.121320)),
+                DataStat(4.0, 2, 6, approx(2.828427)),
+                DataStat(5.0, 2, 8, approx(4.242640)),
+                DataStat(2.0, 2, 2, None),
+            ],
+        ),
+    ],
+)
+def test_data_stats(
+    slices: list[Sequence[float | None]], result: Sequence[DataStat | None]
+) -> None:
+    assert _prediction._data_stats(slices) == result  # noqa: SLF001
+
+
+class TestPredictionStore:
+    def test_remove_outdated_predictions(self, tmp_path: Path) -> None:
+        now = int(time.time())
+
+        def _make_f(period: str, days_old: int) -> Path:
+            return tmp_path / f"{period}-{now - days_old * 86400}-upper.info"
+
+        (too_old_day := _make_f("day", 32)).touch()
+        (stillok_day := _make_f("day", 30)).touch()
+        (too_old_wday := _make_f("wday", 8)).touch()
+        (stillok_wday := _make_f("wday", 6)).touch()
+        (too_old_hour := _make_f("hour", 4)).touch()
+        (stillok_hour := _make_f("hour", 2)).touch()
+        (too_old_minute := _make_f("minute", 4)).touch()
+        (stillok_minute := _make_f("minute", 2)).touch()
+
+        store = PredictionStore(HostName("foo"), "bar")
+        store.path = tmp_path
+        store.remove_outdated_predictions(now)
+
+        assert not too_old_day.exists()
+        assert stillok_day.exists()
+        assert not too_old_wday.exists()
+        assert stillok_wday.exists()
+        assert not too_old_hour.exists()
+        assert stillok_hour.exists()
+        assert not too_old_minute.exists()
+        assert stillok_minute.exists()

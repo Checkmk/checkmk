@@ -154,7 +154,7 @@ def check_azure_virtual_network_gateway(
                 boundaries=(0, None),
             ),
             MetricData(
-                "count_TunnelIngressBytes",
+                "total_TunnelIngressBytes",
                 "ingress",
                 "Tunnel Ingress Bytes",
                 render.bytes,
@@ -162,7 +162,7 @@ def check_azure_virtual_network_gateway(
                 boundaries=(0, None),
             ),
             MetricData(
-                "count_TunnelEgressBytes",
+                "total_TunnelEgressBytes",
                 "egress",
                 "Tunnel Egress Bytes",
                 render.bytes,
@@ -170,7 +170,7 @@ def check_azure_virtual_network_gateway(
                 boundaries=(0, None),
             ),
             MetricData(
-                "count_TunnelIngressPacketDropCount",
+                "total_TunnelIngressPacketDropCount",
                 "ingress_packet_drop",
                 "Tunnel Ingress Packet Drop Count",
                 lambda v: str(int(v)),
@@ -178,7 +178,7 @@ def check_azure_virtual_network_gateway(
                 boundaries=(0, None),
             ),
             MetricData(
-                "count_TunnelEgressPacketDropCount",
+                "total_TunnelEgressPacketDropCount",
                 "egress_packet_drop",
                 "Tunnel Egress Packet Drop Count",
                 lambda v: str(int(v)),

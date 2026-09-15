@@ -633,7 +633,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__value {
   font-size: clamp(18px, min(40cqh, 16cqw), 52px);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   line-height: 1;
 
   /* Neutral: the accent/data color belongs to the curve, not the number. */

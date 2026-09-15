@@ -398,4 +398,8 @@ defineExpose({ focus })
   font-style: italic;
   opacity: 0.7;
 }
+
+body[data-theme='facelift'] .cmk-chip-autocomplete {
+  --chip-outline-bg-color: var(--color-daylight-grey-60);
+}
 </style>

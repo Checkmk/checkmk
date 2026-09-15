@@ -108,6 +108,8 @@ function mountTable(overrides: {
   columns?: ColumnDef<Row>[]
   fetchState?: FetchState
   hasLoaded?: boolean
+  loadFailed?: boolean
+  onRetry?: () => void
   sortState?: SortingState
   filterState?: ColumnFiltersState
   columnVisibility?: Ref<VisibilityState>
@@ -119,6 +121,8 @@ function mountTable(overrides: {
   const columns = overrides.columns ?? COLUMNS
   const fetchState = overrides.fetchState ?? 'idle'
   const hasLoaded = overrides.hasLoaded ?? true
+  const loadFailed = overrides.loadFailed ?? false
+  const onRetry = overrides.onRetry ?? (() => {})
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
@@ -135,7 +139,17 @@ function mountTable(overrides: {
         components: { MonitoringTable },
         setup() {
           provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-          return { rows, columns, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
+          return {
+            rows,
+            columns,
+            fetchState,
+            hasLoaded,
+            loadFailed,
+            onRetry,
+            filterState,
+            onFilterUpdate,
+            getRowKey
+          }
         },
         render() {
           return h(
@@ -144,10 +158,12 @@ function mountTable(overrides: {
               rows: this.rows,
               fetchState: this.fetchState,
               hasLoaded: this.hasLoaded,
+              loadFailed: this.loadFailed,
               columns: this.columns,
               filterState: this.filterState,
               ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
-              'onUpdate:filterState': this.onFilterUpdate
+              'onUpdate:filterState': this.onFilterUpdate,
+              onRetry: this.onRetry
             },
             {
               row: ({
@@ -291,6 +307,27 @@ test('uses getRowKey for row keying when provided', async () => {
 
   expect(screen.getByTestId('row-row-0')).toBeInTheDocument()
   expect(screen.getByTestId('row-row-1')).toBeInTheDocument()
+})
+
+test('says the results could not be loaded when the fetch failed', () => {
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true })
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not load the results')
+})
+
+test('does not pass a failed fetch off as an empty result', () => {
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true })
+
+  expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
+})
+
+test('offers a retry for a failed fetch', async () => {
+  const onRetry = vi.fn()
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true, onRetry })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(onRetry).toHaveBeenCalledOnce()
 })
 
 test('renders the empty-state slot when there are no rows and not loading', () => {

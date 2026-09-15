@@ -14,6 +14,8 @@ import {
   useVueTable
 } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
+import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, inject, nextTick, provide, ref, watch } from 'vue'
 
@@ -44,6 +46,7 @@ const props = defineProps<{
    */
   fetchState: FetchState
   hasLoaded?: boolean
+  loadFailed?: boolean
   columns: ColumnDef<T>[]
   filterState: ColumnFiltersState
   getRowKey?: (row: T, index: number) => string | number
@@ -52,11 +55,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: 'update:filterState', value: ColumnFiltersState): void
+  (event: 'retry'): void
 }>()
+
+const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, null)
 const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
-const showEmptyState = computed(() => props.hasLoaded && props.rows.length === 0)
+const showEmptyState = computed(
+  () => props.hasLoaded && props.rows.length === 0 && props.loadFailed !== true
+)
 
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
 
@@ -384,6 +392,15 @@ function tableRowAt(index: number): Row<T> {
 
 <template>
   <div ref="wrapperRef" class="monitoring-table" :aria-busy="fetchState !== 'idle'">
+    <CmkAlertBox
+      v-if="loadFailed"
+      class="monitoring-table__load-error"
+      variant="error"
+      :heading="_t('Could not load the results')"
+      :main-button="{ title: _t('Retry'), onclick: () => emit('retry') }"
+    >
+      {{ _t('Check whether the site is reachable, then retry.') }}
+    </CmkAlertBox>
     <TableSkeleton v-if="showSkeleton"></TableSkeleton>
     <table v-else class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">
@@ -430,6 +447,10 @@ function tableRowAt(index: number): Row<T> {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+}
+
+.monitoring-table__load-error {
+  margin: 0 0 var(--dimension-4);
 }
 
 .monitoring-table__table {

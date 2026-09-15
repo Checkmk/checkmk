@@ -166,11 +166,13 @@ function onRightPaneCollapse(collapsed: boolean): void {
           :rows="service.items.value"
           :fetch-state="service.fetchState.value"
           :has-loaded="service.hasLoaded.value"
+          :load-failed="service.loadFailed.value"
           :columns="columns"
           :filter-state="service.tableColumnFilters.value"
           :column-pinning="columnPinning"
           :get-row-key="getRowKey"
           @update:filter-state="service.onColumnFiltersUpdate($event)"
+          @retry="service.retry()"
         >
           <template #row="{ row, tableRow }">
             <slot name="row" :row="row" :table-row="tableRow" :on-command="onRowCommand" />

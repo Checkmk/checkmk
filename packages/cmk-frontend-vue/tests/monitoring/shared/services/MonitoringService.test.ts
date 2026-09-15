@@ -101,6 +101,37 @@ describe('MonitoringService', () => {
     consoleErrorSpy.mockRestore()
   })
 
+  it('reports a failed fetch instead of passing it off as an empty result', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi.fn().mockRejectedValue(new Error('boom'))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.loadFailed.value).toBe(true)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('drops the failure report once a retry brings rows back', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue(makeResponse([{ id: 'a', value: 1 }], 1, 1))
+    const service = new TestService(fetchBatch)
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.retry()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.loadFailed.value).toBe(false)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
   it('stays in a non-idle fetch state while a fetch is in flight', async () => {
     const pending = new Promise<PagedResponse<TestItem>>(() => {})
     const fetchBatch = vi.fn().mockReturnValue(pending)

@@ -135,6 +135,19 @@ body {
     color: $font-color;
     background: $bg-color;
 
+    /* `contain` makes it the containing block of the `fixed` elements inside, e.g. the
+       filter popup, so they move with it */
+    div#ai-panel-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-right: var(--main-area-inset-right, 0);
+      margin-left: var(--main-area-inset-left, 0);
+      margin-bottom: var(--main-area-inset-bottom, 0);
+      contain: layout;
+    }
+
     /* Can be toggled with N/n display option */
     &.inline {
       padding: 0;

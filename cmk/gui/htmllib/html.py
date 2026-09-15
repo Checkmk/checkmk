@@ -24,7 +24,7 @@ from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.gui import log, utils
+from cmk.gui import hooks, log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.dynamic_icon import resolve_icon_name
@@ -388,6 +388,7 @@ class HTMLGenerator(HTMLWriter):
     ) -> None:
         self.html_head(title, main_javascript, force)
         self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
+        hooks.call("body-started", active_config)
 
     def _get_body_css_classes(self) -> list[str]:  # TODO: Sequence!
         classes = self._body_classes[:]
@@ -418,6 +419,7 @@ class HTMLGenerator(HTMLWriter):
             enable_page_menu_entry(self, "inline_help")
         self.write_final_javascript()
         self.javascript("cmk.visibility_detection.initialize();")
+        hooks.call("body-ended")
         self.close_body()
         self.close_html()
 

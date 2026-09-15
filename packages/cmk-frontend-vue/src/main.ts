@@ -12,6 +12,7 @@ import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 
+import AiAssistantPanelApp from './ai/AiAssistantPanelApp.vue'
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import DynamicIconApp from './components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from './components/CmkIcon/IconApp.vue'
@@ -65,6 +66,7 @@ defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fullPage: true } })
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
+defineCmkComponent('cmk-ai-assistant-panel', AiAssistantPanelApp)
 defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })
 defineCmkComponent('cmk-icon', IconApp, { pure: true })

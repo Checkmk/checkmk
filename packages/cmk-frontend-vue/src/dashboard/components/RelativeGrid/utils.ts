@@ -359,9 +359,11 @@ export function calculateDashboardDimensions(dashboardElement: HTMLElement): Abs
     : 0
 
   const pageDims = getPageDimensions()
+  // Not the page width, the main area is narrower while a panel like the AI assistant is open
+  const containerRight = oContainer ? oContainer.getBoundingClientRect().right : pageDims.width
 
   return {
-    width: pageDims.width - dashboardRect.left - containerPaddingRight,
+    width: containerRight - dashboardRect.left - containerPaddingRight,
     // For some reason a cache removing reload on Firefox breaks this height calculation by 1px.
     // Thus the '- 1' hack here, so the dashboard does not overflow and no scrollbar is needed.
     height: pageDims.height - dashboardRect.top - 1

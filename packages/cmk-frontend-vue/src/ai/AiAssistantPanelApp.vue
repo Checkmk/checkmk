@@ -1,0 +1,159 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, watch } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import usePersistentRef from '@/lib/usePersistentRef'
+
+import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+
+// the toggle and the panel lives in different frames, so we use local storage to sync them:
+// Keep in sync with `cmk.aiAssistant` of cmk-frontend.
+const OPEN_STORAGE_KEY = 'cmk-ai-assistant-open'
+const PANEL_SIZE = '300px'
+
+const { _t } = usei18n()
+
+const { position = 'right' } = defineProps<{
+  position?: 'left' | 'right' | 'bottom'
+}>()
+
+const open = usePersistentRef(OPEN_STORAGE_KEY, false, (value) => value === true, 'session')
+
+// e.g. a view in a dashboard iframe, but not the content frame of index.py
+function isNestedInIframe(): boolean {
+  try {
+    return (
+      window.parent !== window &&
+      !(
+        window.parent.location.origin === window.location.origin &&
+        window.parent.location.pathname.endsWith('/index.py')
+      )
+    )
+  } catch {
+    // accessing the location of a cross-origin parent throws
+    return true
+  }
+}
+
+const renderPanel = !isNestedInIframe()
+
+function onStorage(event: StorageEvent): void {
+  if (event.key !== OPEN_STORAGE_KEY) {
+    return
+  }
+  open.value = event.newValue !== null && (JSON.parse(event.newValue) as boolean)
+}
+
+/* Shrinks `#ai-panel-container`, so that the panel does not overlay the page */
+function updateMainAreaInset(isOpen: boolean): void {
+  const size = isOpen ? PANEL_SIZE : '0px'
+  const style = document.documentElement.style
+  style.setProperty('--main-area-inset-right', position === 'right' ? size : '0px')
+  style.setProperty('--main-area-inset-left', position === 'left' ? size : '0px')
+  style.setProperty('--main-area-inset-bottom', position === 'bottom' ? size : '0px')
+  // trigger JavaScript layout flow:
+  window.dispatchEvent(new Event('resize'))
+}
+
+if (renderPanel) {
+  watch(open, updateMainAreaInset)
+
+  onMounted(() => {
+    window.addEventListener('storage', onStorage)
+    updateMainAreaInset(open.value)
+  })
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('storage', onStorage)
+    updateMainAreaInset(false)
+  })
+}
+</script>
+
+<template>
+  <div
+    v-if="renderPanel && open"
+    class="ai-assistant-panel-app"
+    :class="`ai-assistant-panel-app--${position}`"
+  >
+    <div class="ai-assistant-panel-app__header">
+      <span>{{ _t('AI assistant') }}</span>
+      <button
+        type="button"
+        class="ai-assistant-panel-app__close"
+        :title="_t('Close')"
+        @click="open = false"
+      >
+        <CmkIcon :aria-label="_t('Close')" name="close" size="xxsmall" />
+      </button>
+    </div>
+    <div class="ai-assistant-panel-app__body">
+      {{ _t('The AI assistant will live here.') }}
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.ai-assistant-panel-app {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* stylelint-disable-next-line color-function-notation -- $navigation-bg-color of facelift */
+  background-color: rgb(239, 239, 245);
+}
+
+:global(body[data-theme='modern-dark'] .ai-assistant-panel-app) {
+  /* stylelint-disable-next-line color-function-notation -- $navigation-bg-color of modern-dark */
+  background-color: rgb(17, 24, 29);
+}
+
+/* The panel fills exactly the inset it reserves in `#ai-panel-container`, so the size is
+   only defined once, in `PANEL_SIZE`. */
+.ai-assistant-panel-app--right {
+  left: auto;
+  width: var(--main-area-inset-right);
+}
+
+.ai-assistant-panel-app--left {
+  right: auto;
+  width: var(--main-area-inset-left);
+}
+
+.ai-assistant-panel-app--bottom {
+  top: auto;
+  height: var(--main-area-inset-bottom);
+}
+
+.ai-assistant-panel-app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--dimension-4);
+  border-bottom: 1px solid var(--ux-theme-6);
+}
+
+.ai-assistant-panel-app__close {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--dimension-4);
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ai-assistant-panel-app__body {
+  flex: 1;
+  overflow: auto;
+  padding: var(--dimension-4);
+}
+</style>

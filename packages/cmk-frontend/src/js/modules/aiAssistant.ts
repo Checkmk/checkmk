@@ -26,10 +26,13 @@ export function toggle() {
   const open = !isOpen()
   sessionStorage.setItem(OPEN_STORAGE_KEY, JSON.stringify(open))
   updateTriggerState(open)
-  // Placeholder until the AI assistant panel exists
-  console.log(`AI assistant ${open ? 'shown' : 'hidden'}`)
 }
 
 export function initialize() {
   updateTriggerState(isOpen())
+  window.addEventListener('storage', (event: StorageEvent) => {
+    if (event.key === OPEN_STORAGE_KEY) {
+      updateTriggerState(event.newValue === 'true')
+    }
+  })
 }

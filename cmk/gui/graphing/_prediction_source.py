@@ -196,13 +196,7 @@ def _predict(
 ) -> tuple[float | None, float | None, float | None]:
     if (stat := prediction.data.predict(timestamp)) is None:
         return None, None, None
-    levels = estimate_levels(
-        reference_value=stat.average,
-        stdev=stat.stdev,
-        direction=prediction.info.direction,
-        levels=prediction.info.params.levels,
-        bound=prediction.info.params.bound,
-    )
+    levels = estimate_levels(prediction.info, stat)
     if levels is None:
         return stat.average, None, None
     return stat.average, levels[0], levels[1]

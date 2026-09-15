@@ -6,7 +6,7 @@
 import math
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, Protocol, Self
+from typing import Final, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
@@ -18,9 +18,6 @@ from cmk.utils.servicename import ServiceName
 
 from ._file_layout import iter_info_and_data_files, meta_file_template, relative_data_file
 from ._grouping import parse_period_name, PeriodName, time_slices
-
-LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
-
 
 _DAY = 86400
 

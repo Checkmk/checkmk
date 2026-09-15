@@ -12,11 +12,13 @@ from cmk.utils.log import VERBOSE
 
 from ._prediction import (
     compute_prediction,
-    LevelsSpec,
+    DataStat,
     MetricRecord,
     PredictionData,
     PredictionStore,
 )
+
+_LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -43,13 +45,7 @@ def _make_reference_and_prediction(
     if prediction is None or (reference := prediction.predict(now)) is None:
         return None, None
 
-    return reference.average, estimate_levels(
-        reference_value=reference.average,
-        stdev=reference.stdev,
-        direction=meta.direction,
-        levels=meta.params.levels,
-        bound=meta.params.bound,
-    )
+    return reference.average, estimate_levels(meta, reference)
 
 
 def _update_prediction(
@@ -73,23 +69,17 @@ def _update_prediction(
     return prediction
 
 
-def estimate_levels(
-    reference_value: float,
-    stdev: float | None,
-    direction: Literal["upper", "lower"],
-    levels: LevelsSpec,
-    bound: tuple[float, float] | None,
-) -> tuple[float, float] | None:
+def estimate_levels(meta: PredictionInfo, reference: DataStat) -> tuple[float, float] | None:
     estimated = _compute_levels_from_params(
-        levels=levels,
-        sig=1 if direction == "upper" else -1,
-        reference=reference_value,
-        stdev=stdev,
+        levels=meta.params.levels,
+        sig=1 if meta.direction == "upper" else -1,
+        reference=reference.average,
+        stdev=reference.stdev,
     )
-    if estimated is None or bound is None:
+    if estimated is None or (bound := meta.params.bound) is None:
         return estimated
 
-    match direction:
+    match meta.direction:
         case "upper":
             return (max(estimated[0], bound[0]), max(estimated[1], bound[1]))
         case "lower":
@@ -100,7 +90,7 @@ def estimate_levels(
 
 def _compute_levels_from_params(
     *,
-    levels: LevelsSpec,
+    levels: _LevelsSpec,
     sig: Literal[1, -1],
     reference: float,
     stdev: float | None,

@@ -11,6 +11,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/all-hosts/slideInTabs'
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/events/api'
 import { HostApi } from '@/monitoring/shared/api/hosts'
@@ -40,8 +41,14 @@ const props = withDefaults(
     loadActionMenu: (host: HostRef) => Promise<CellAction[]>
     /** The tab on show, as a `v-model:activeTabId`; forwarded to the panel. */
     activeTabId?: string | undefined
+    /** Counts how often the reader asked for the relations; 0 means they did not. */
+    revealRelationsRequest?: number
   }>(),
-  { rowActions: () => [], permittedActions: () => [], activeTabId: undefined }
+  {
+    rowActions: () => [],
+    permittedActions: () => [],
+    activeTabId: undefined
+  }
 )
 
 const emit = defineEmits<{
@@ -117,10 +124,11 @@ const tabs = computed<SlideInTab[]>(() => {
   }
   return [
     {
-      id: 'overview',
+      id: HOST_TAB_OVERVIEW,
       title: _t('Overview'),
       component: markRaw(HostOverviewTab),
       skeleton: markRaw(HostOverviewSkeleton),
+      props: { revealRelationsRequest: props.revealRelationsRequest },
       load: () => hostApi.fetchHostOverview({ site_id: host.site_id, name: host.name })
     },
     {

@@ -321,7 +321,7 @@ test('emits open asking for the relations when the relation count is clicked', a
 
   await fireEvent.click(cell(container, 'num_relations').querySelector('button')!)
 
-  expect(onOpen).toHaveBeenCalledWith(host)
+  expect(onOpen).toHaveBeenCalledWith(host, true)
 })
 
 test('renders the zero counts as well — one badge per service state column', () => {

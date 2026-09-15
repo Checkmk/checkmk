@@ -9,7 +9,6 @@ import CmkStateCountBar, {
   type StateTotal
 } from 'cmk-ui-library/components/CmkStateCountBar.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -22,7 +21,16 @@ import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import { useTimeSince } from '@/monitoring/shared/useTimeSince'
 
-const props = defineProps<{ data: HostOverview }>()
+import HostRelationsSection from './HostRelationsSection.vue'
+
+const props = withDefaults(
+  defineProps<{
+    data: HostOverview
+    /** Counts how often the reader asked for the relations; 0 means they did not. */
+    revealRelationsRequest?: number
+  }>(),
+  { revealRelationsRequest: 0 }
+)
 
 const { _t } = usei18n()
 
@@ -148,12 +156,11 @@ const timeSince = useTimeSince()
       <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
       <CmkStateCountBar :segments="serviceSegments" :total="allServices" />
     </section>
-    <section class="monitoring-host-overview-tab__relations">
-      <CmkHeading type="h3">{{ _t('Relations') }}</CmkHeading>
-      <CmkParagraph class="monitoring-host-overview-tab__relations-empty">
-        {{ _t('No relations set') }}
-      </CmkParagraph>
-    </section>
+    <HostRelationsSection
+      :relations="data.relations"
+      :more-relations="data.more_relations"
+      :reveal-request="revealRelationsRequest"
+    />
   </div>
 </template>
 
@@ -172,14 +179,9 @@ const timeSince = useTimeSince()
   background: var(--ux-theme-4);
 }
 
-.monitoring-host-overview-tab__section,
-.monitoring-host-overview-tab__relations {
+.monitoring-host-overview-tab__section {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
-}
-
-.monitoring-host-overview-tab__relations-empty {
-  color: var(--font-color-dimmed);
 }
 </style>

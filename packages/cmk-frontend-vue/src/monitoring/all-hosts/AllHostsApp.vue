@@ -47,6 +47,7 @@ import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
 import { HostService } from './services/HostService'
+import { HOST_TAB_OVERVIEW } from './slideInTabs'
 
 const { _t, _tn } = usei18n()
 
@@ -227,10 +228,19 @@ function hostCountsLabel(selected: number, total: number): TranslatedString {
 
 const slideInHost = ref<HostEntry | null>(null)
 const slideInTabId = ref<string | undefined>(undefined)
+// Counted rather than flagged: clicking the relation count of the host the panel already shows
+// has to scroll there again, and a flag that is already set changes nothing.
+const revealRelationsRequest = ref(0)
 
-function openSlideIn(host: HostEntry): void {
+function openSlideIn(host: HostEntry, reveal: boolean = false): void {
   if (slideInHost.value === null) {
     hostService.beginAutoPause()
+  }
+  if (reveal) {
+    slideInTabId.value = HOST_TAB_OVERVIEW
+    revealRelationsRequest.value += 1
+  } else {
+    revealRelationsRequest.value = 0
   }
   slideInHost.value = host
 }
@@ -242,13 +252,20 @@ function closeSlideIn(): void {
   slideInHost.value = null
 }
 
+function selectSlideInTab(id: string): void {
+  slideInTabId.value = id
+  if (id !== HOST_TAB_OVERVIEW) {
+    revealRelationsRequest.value = 0
+  }
+}
+
 // A host is identified by the site it lives on plus its name. The listing this
 // URL describes usually carries that row already; when it does not - filtered
 // out, or in a state it has since left - the panel is opened from a fetch of
 // that one host instead, so a shared link keeps working.
 const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
   keys: ['host', 'site'],
-  defaultTabId: 'overview',
+  defaultTabId: HOST_TAB_OVERVIEW,
   encode: (host) => ({ host: host.name, site: host.site_id }),
   decode: (params) => {
     const name = params['host']
@@ -325,12 +342,14 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         </template>
       </MonitoringSplitPane>
       <HostSlideIn
-        v-model:active-tab-id="slideInTabId"
+        :active-tab-id="slideInTabId"
         :host="slideInHost"
+        :reveal-relations-request="revealRelationsRequest"
         :actions="actionRegistry"
         :row-actions="rowActionButtons"
         :permitted-actions="hostActions"
         :load-action-menu="loadActionMenu"
+        @update:active-tab-id="selectSlideInTab"
         @close="closeSlideIn"
         @performed="onActionPerformed"
       />

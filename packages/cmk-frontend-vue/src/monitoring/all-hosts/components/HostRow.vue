@@ -36,7 +36,8 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (event: 'open', host: HostEntry): void
+  /** `revealRelations` asks the panel to open on the host's relations. */
+  (event: 'open', host: HostEntry, revealRelations?: boolean): void
   (event: 'command', payload: { id: string; target: HostRef }): void
 }>()
 
@@ -136,7 +137,7 @@ const lastStateChange = computed(() =>
     :button="!!row.num_relations"
     :button-label="relationsLabel"
     blank-when-zero
-    @click="emit('open', row)"
+    @click="emit('open', row, true)"
   />
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
   <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />

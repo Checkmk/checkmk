@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence, Set
+from collections.abc import Iterator, Sequence, Set
+from contextlib import contextmanager
 
 from polyfactory.factories import DataclassFactory
 
+from cmk.ccc.user import UserId
 from cmk.gui.monitor.services._exceptions import ServiceNotFoundError
 from cmk.gui.monitor.services._models import (
     Service,
@@ -17,6 +19,10 @@ from cmk.gui.monitor.services._models import (
 )
 from cmk.gui.monitor.services._repositories import HostServicesRepository
 from cmk.gui.monitor.services._sorting import service_sorter
+from cmk.gui.permissions import permission_registry
+from cmk.gui.role_types import BuiltInUserRole
+from cmk.gui.session_context import UserContext
+from cmk.gui.utils.roles import UserPermissions
 
 KNOWN_HOSTNAME = "web-server-01"
 KNOWN_SITE_ID = "local"
@@ -96,3 +102,13 @@ def get_fake_host_services_repository(
             return len([s for s in self._services if query.lower() in s.name.lower()])
 
     return HostServicesFakeRepository()
+
+
+@contextmanager
+def login_with(permissions: dict[str, bool]) -> Iterator[None]:
+    """A logged-in user whose role spells out exactly these permissions."""
+    role: BuiltInUserRole = {"alias": "Test", "permissions": permissions, "builtin": True}
+    with UserContext(
+        UserId("test"), UserPermissions({"user": role}, permission_registry, {}, ["user"])
+    ):
+        yield

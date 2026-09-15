@@ -2,10 +2,23 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator
+
+import pytest
+
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
 from cmk.gui.monitor.hosts._models import HostState
 
-from .testlib import get_fake_host_repository, HostFactory
+from .testlib import get_fake_host_repository, HostFactory, login_with
+
+
+@pytest.fixture(name="may_see_all_hosts")
+def _may_see_all_hosts() -> Iterator[None]:
+    with login_with({"view.allhosts": True}):
+        yield
+
+
+pytestmark = pytest.mark.usefixtures("request_context", "may_see_all_hosts")
 
 
 def test_handle_list_hosts_limit_handling() -> None:

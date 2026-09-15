@@ -2,12 +2,40 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator
+
 import pytest
 
-from cmk.gui.monitor.services._api._modes import build_service_modes, build_service_modes_by_id
+from cmk.gui.monitor.services._api._modes import (
+    build_host_modes,
+    build_service_modes,
+    build_service_modes_by_id,
+)
 from cmk.gui.monitor.services._models import ServiceState
 
-from .testlib import ServiceFactory, ServiceOverviewFactory
+from .testlib import login_with, ServiceFactory, ServiceOverviewFactory
+
+_ALL_HOSTS_PERMISSION = "view.allhosts"
+
+_HOST_SERVICES_PERMISSION = "view.host"
+
+_CRASH_REPORTS_PERMISSION = "general.see_crash_reports"
+
+
+@pytest.fixture(name="may_see_the_listings")
+def _may_see_the_listings() -> Iterator[None]:
+    with login_with(
+        {
+            _ALL_HOSTS_PERMISSION: True,
+            _HOST_SERVICES_PERMISSION: True,
+            _CRASH_REPORTS_PERMISSION: True,
+        }
+    ):
+        yield
+
+
+pytestmark = pytest.mark.usefixtures("request_context", "may_see_the_listings")
+
 
 _HOSTNAME = "web-server-01"
 _SITE_ID = "local"
@@ -60,7 +88,6 @@ def test_build_service_modes_by_id_notifications_disabled() -> None:
     modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
 
     assert [mode.icon_name for mode in modes] == ["notif-disabled"]
-    assert modes[0].link.startswith("view.py?")
 
 
 def test_build_service_modes_by_id_comments() -> None:
@@ -195,7 +222,6 @@ def test_build_service_modes_flapping_is_not_a_mode() -> None:
 _CRASHED_OUTPUT = "UNKNOWN - check failed - please submit a crash report! (Crash-ID: abc-123)"
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_build_service_modes_by_id_crashed_check_links_to_the_dump() -> None:
     service = ServiceFactory.build(
         **_NO_MODES | {"state": ServiceState.UNKNOWN, "summary": _CRASHED_OUTPUT}
@@ -206,7 +232,6 @@ def test_build_service_modes_by_id_crashed_check_links_to_the_dump() -> None:
     assert modes[0].link == "crash.py?site=local&crash_id=abc-123"
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_build_service_modes_by_id_crashed_check_without_a_dump_links_nowhere() -> None:
     service = ServiceFactory.build(
         **_NO_MODES
@@ -221,20 +246,20 @@ def test_build_service_modes_by_id_crashed_check_without_a_dump_links_nowhere() 
     assert modes[0].link == ""
 
 
-@pytest.mark.usefixtures("request_context", "with_user_login")
 def test_build_service_modes_by_id_crashed_check_withholds_the_dump_without_the_permission() -> (
     None
 ):
     service = ServiceFactory.build(
         **_NO_MODES | {"state": ServiceState.UNKNOWN, "summary": _CRASHED_OUTPUT}
     )
-    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    with login_with({_CRASH_REPORTS_PERMISSION: False}):
+        modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
 
     assert [mode.icon_name for mode in modes] == ["crash"]
     assert modes[0].link == ""
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_build_service_modes_by_id_an_unknown_service_did_not_crash() -> None:
     # UNKNOWN on its own is an ordinary result; only the marker cmk.base appends means a crash.
     service = ServiceFactory.build(
@@ -242,3 +267,65 @@ def test_build_service_modes_by_id_an_unknown_service_did_not_crash() -> None:
     )
 
     assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []
+
+
+def test_build_service_modes_by_id_state_icons_open_the_service_panel() -> None:
+    service = ServiceFactory.build(
+        **_NO_MODES
+        | {
+            "name": "CPU load",
+            "acknowledged": True,
+            "notifications_enabled": False,
+            "active_checks_disabled": True,
+            "passive_checks_disabled": True,
+            "in_notification_period": False,
+            "in_service_period": False,
+            "in_check_period": False,
+        }
+    )
+
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert {mode.link for mode in modes} == {
+        "monitor_host_services.py?host=web-server-01&site=local#service=CPU+load"
+    }
+
+
+def test_build_service_modes_by_id_state_icons_fall_back_without_the_listing_permission() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"name": "CPU load", "acknowledged": True})
+
+    with login_with({_HOST_SERVICES_PERMISSION: False}):
+        modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [mode.link for mode in modes] == [
+        "view.py?view_name=service&site=local&host=web-server-01&service=CPU+load"
+    ]
+
+
+def test_build_host_modes_acknowledged_opens_the_host_panel() -> None:
+    service = ServiceOverviewFactory.build(
+        host_name=_HOSTNAME,
+        site_id=_SITE_ID,
+        host_in_downtime=False,
+        host_acknowledged=True,
+    )
+
+    assert [mode.link for mode in build_host_modes(service)] == [
+        "monitor_all_hosts.py#host=web-server-01&site=local"
+    ]
+
+
+def test_build_host_modes_fall_back_without_the_all_hosts_permission() -> None:
+    service = ServiceOverviewFactory.build(
+        host_name=_HOSTNAME,
+        site_id=_SITE_ID,
+        host_in_downtime=False,
+        host_acknowledged=True,
+    )
+
+    with login_with({_ALL_HOSTS_PERMISSION: False}):
+        modes = build_host_modes(service)
+
+    assert [mode.link for mode in modes] == [
+        "view.py?view_name=hoststatus&site=local&host=web-server-01"
+    ]

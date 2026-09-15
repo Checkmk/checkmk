@@ -198,6 +198,7 @@ ENDPOINT_GET_HOST_OVERVIEW = VersionedEndpoint(
                     # Read while titling a folder, on an installation that keeps the folders a
                     # user may not read out of sight.
                     permissions.OkayToIgnorePerm("wato.see_all_folders"),
+                    permissions.OkayToIgnorePerm("view.allhosts"),
                 ]
             )
         )

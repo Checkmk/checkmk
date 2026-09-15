@@ -250,6 +250,8 @@ ENDPOINT_GET_SERVICE_OVERVIEW = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("wato.rulesets"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
+                    permissions.OkayToIgnorePerm("view.host"),
+                    permissions.OkayToIgnorePerm("view.allhosts"),
                 ]
             )
         )

@@ -53,10 +53,17 @@ class CheckmkTuple:
                 if isinstance(field, tuple):
                     _result.append(_convert_to_tuple(field, converter or [], []))
                 else:
-                    try:
-                        entry = data[field]
-                    except KeyError as exc:
-                        raise KeyError(f"{field} not in {data}") from exc
+                    field_obj = self.declared_fields.get(field) if isinstance(field, str) else None
+                    if field not in data and field_obj is not None and field_obj.load_only:
+                        # A required load_only field (a redacted secret) can be legitimately
+                        # absent here when this is the partial=True self-check reload done by
+                        # MultiNested._dump_schemas rather than a real request load.
+                        entry = None
+                    else:
+                        try:
+                            entry = data[field]
+                        except KeyError as exc:
+                            raise KeyError(f"{field} not in {data}") from exc
                     _result.append(
                         converter.to_checkmk(entry) if isinstance(converter, Converter) else entry
                     )

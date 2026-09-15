@@ -352,7 +352,7 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
         if value is fields.missing_:  # type: ignore[attr-defined, unused-ignore]
             _miss = self.missing
             value = _miss() if callable(_miss) else _miss
-        value = super()._deserialize(value, attr, data)
+        value = super()._deserialize(value, attr, data, partial=partial)
         if self.many and self.metadata.get("uniqueItems"):
             self._verify_unique_schema_entries(value, self.schema.fields)
 

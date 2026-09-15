@@ -34,32 +34,60 @@ YamlScriptValueType = int | str | bool
 
 @dataclass(frozen=True)
 class AgentFileLocator:
+    """Find the source file of a container in the Checkmk site.
+
+    The agents folder of the plug-in family the container is bound to is the
+    default location. The site's agents directories are the fallback for files
+    that belong to no plug-in family, such as the agent itself.
+    """
+
     agents_dir: Path
     local_agents_dir: Path
     agents_wellknown_path_segment: str
 
     def get_source_path(self, container: BaseFileContainer) -> Path | None:
-        return (
-            self._get_v1_source_path(container)
-            if container.plugin_module is None
-            else self._get_v2_source_path(container.plugin_module, container.content.source)
+        if (source := container.content.source) is None:
+            return None
+
+        family_file = None
+        if container.plugin_module is not None:
+            if (
+                container.base_os is OS.WINDOWS
+                and (signed := self._signed_windows_plugin(source)).exists()
+            ):
+                return signed
+            family_file = self._family_agents_folder(container.plugin_module) / source
+            if family_file.exists():
+                return family_file
+
+        if (site_file := self._find_in_agents_dirs(container)) is not None:
+            return site_file
+
+        raise FileNotFoundError(
+            f"Agent file not found: {source} (looked at "
+            f"{', '.join(str(f) for f in (family_file, self.local_agents_dir, self.agents_dir) if f)})"
         )
 
-    def _get_v1_source_path(self, container: BaseFileContainer) -> Path | None:
+    def _signed_windows_plugin(self, source: Path) -> Path:
+        # All signed plugins are deployed to a single well-known location by
+        # the build/install pipeline (signed_plugins.tar), regardless of where
+        # the plug-in family lives. This path may change in the future.
+        return self.agents_dir / "windows/plugins/signed" / source.name
+
+    def _find_in_agents_dirs(self, container: BaseFileContainer) -> Path | None:
         if (rel_source := container.relative_source_path()) is None:
             return None
 
-        for source_location in self._v1_folders(container.base_os):
+        for source_location in self._agents_dirs(container.base_os):
             source_file = source_location / rel_source.parent / "signed" / rel_source.name
             if source_file.exists():
                 return source_file
             source_file = source_location / rel_source
             if source_file.exists():
                 return source_file
+        return None
 
-        raise FileNotFoundError("Agent file not found: %s" % rel_source)
-
-    def _v1_folders(self, os: OS) -> Iterable[Path]:
+    def _agents_dirs(self, os: OS) -> Iterable[Path]:
         if os is OS.WINDOWS:
             yield from self.windows_agent_folders()
         yield self.local_agents_dir
@@ -71,24 +99,12 @@ class AgentFileLocator:
             self.agents_dir / "windows",
         )
 
-    def _get_v2_source_path(self, plugin_module: str, source: Path | None) -> Path | None:
-        if source is None:
-            return None
-        # All signed plugins are deployed to a single well-known location by
-        # the build/install pipeline (signed_plugins.tar), regardless of where
-        # the v2 module originally lives. This path may change in the future.
-        signed = self.agents_dir / "windows/plugins/signed" / source.name
-        if signed.exists():
-            return signed
-        return self._get_v2_folder(plugin_module) / source
-
-    def _get_v2_folder(self, module_name: str) -> Path:
+    def _family_agents_folder(self, module_name: str) -> Path:
         file = self._module_file(module_name)
         bakery_plugins_dir = file.parent.parent if file.name == "__init__.py" else file.parent
         return bakery_plugins_dir.parent / self.agents_wellknown_path_segment
 
-    @staticmethod
-    def _module_file(module_name: str) -> Path:
+    def _module_file(self, module_name: str) -> Path:
         if (file := import_module(module_name).__file__) is None:
             # should never happen: we know we loaded this from a file.
             raise TypeError(f"module does not have a __file__ attrbute: {module_name}")

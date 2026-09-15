@@ -30,7 +30,6 @@ from tests.testlib import fake_site
 from tests.unit.mocks_and_helpers import DummyLicensingHandler
 
 logger = logging.getLogger(__name__)
-logging.getLogger("faker").setLevel(logging.ERROR)
 
 # This allows exceptions to be handled by IDEs (rather than just printing the results)
 # when pytest based tests are being run from inside the IDE

@@ -212,13 +212,6 @@ def pytest_internalerror(excinfo: pytest.ExceptionInfo[BaseException]) -> None:
         raise excinfo.value
 
 
-# Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
-# runs and prevent us from spot the important messages easily. Reduce the Reduce the log level
-# selectively.
-# See also https://github.com/joke2k/faker/issues/753
-logging.getLogger("faker").setLevel(logging.ERROR)
-
-
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register options to pytest"""
     parser.addoption(

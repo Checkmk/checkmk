@@ -34,6 +34,7 @@ from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import (
+    make_metrics_identity_routing_config,
     make_tcp_fetcher_config,
     make_telemetry_custom_service_config,
 )
@@ -1511,6 +1512,9 @@ class ConfigCache:
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             telemetry_custom_service=make_telemetry_custom_service_config(
+                self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
+            ),
+            metrics_identity_routing=make_metrics_identity_routing_config(
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",

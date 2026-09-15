@@ -40,6 +40,7 @@ EMPTY_CONFIG = BaseConfig(
     agent_encryption=(),
     agent_exclude_sections=(),
     telemetry_custom_service=(),
+    metrics_identity_routing=(),
     cmc_real_time_checks=None,
     snmp_check_interval=[],
     agent_bakery_logging=None,

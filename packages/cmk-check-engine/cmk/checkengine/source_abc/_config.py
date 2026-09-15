@@ -45,6 +45,7 @@ class SourceConfig:
         snmp_fetcher_config: SNMPFetcherConfig,
         tcp_fetcher_config: TCPFetcherConfig,
         telemetry_custom_service: Callable[[HostName], Sequence[Mapping[str, object]]],
+        metrics_identity_routing: Callable[[HostName], Mapping[str, object]],
         is_cmc: bool,
         uuid_lookup_dir: Path,
     ) -> None:
@@ -58,6 +59,7 @@ class SourceConfig:
         self.snmp_fetcher_config: Final = snmp_fetcher_config
         self.tcp_fetcher_config: Final = tcp_fetcher_config
         self.telemetry_custom_service: Final = telemetry_custom_service
+        self.metrics_identity_routing: Final = metrics_identity_routing
         self.is_cmc: Final = is_cmc
         self.uuid_lookup_dir: Final = uuid_lookup_dir
 

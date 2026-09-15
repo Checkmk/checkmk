@@ -107,6 +107,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     telemetry_custom_service: Sequence[RuleSpec[Mapping[str, object]]]
+    metrics_identity_routing: Sequence[RuleSpec[Mapping[str, object]]]
     cmc_real_time_checks: RealTimeChecks | None
     snmp_check_interval: list[
         RuleSpec[

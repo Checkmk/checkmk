@@ -36,6 +36,10 @@ class SourceContext:
     metrics_association: str | None
     check_mk_check_interval: float
     telemetry_custom_service: Callable[[HostName], Sequence[Mapping[str, object]]]
+    # Resolves the host's "OpenTelemetry data routing via identity labels" rule value,
+    # uninterpreted; an empty mapping means that no rule matched. Like the ruleset above
+    # it is carried unresolved, so hosts whose sources never ask do not pay for the match.
+    metrics_identity_routing: Callable[[HostName], Mapping[str, object]]
 
 
 class OptionalSource[TRawData: Sized](Source[TRawData], abc.ABC):

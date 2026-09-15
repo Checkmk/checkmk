@@ -11,7 +11,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, registration, VisitorOp
 from cmk.plugins.time.rulesets.timesyncd import rule_spec_timesyncd_time
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def _register_form_spec_visitors() -> None:
     registration.register()
 
@@ -65,6 +65,7 @@ MIGRATED_RULE = {
         ),
     ],
 )
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_rule_spec_timesyncd_time_migration(
     rule: Mapping[str, object], expected: Mapping[str, object]
 ) -> None:

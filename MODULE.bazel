@@ -156,6 +156,8 @@ single_version_override(
         "//bazel/patches:rules_lint-clang_tidy_per_file.patch",
         # https://github.com/aspect-build/rules_lint/pull/747
         "//bazel/patches:rules_lint-no_copy.patch",
+        # Completes the patch above, not part of that PR (yet).
+        "//bazel/patches:rules_lint-clippy_fixer_at_exec_root.patch",
         "//bazel/patches:rules_lint-clippy_fail_on_violation.patch",
         # For astrein and other internal tooling.
         "//bazel/patches:rules_lint_export_helpers.patch",

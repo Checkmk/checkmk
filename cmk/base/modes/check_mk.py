@@ -170,6 +170,7 @@ from .modes import (
     option_count,
     option_names,
     option_string,
+    option_strings,
     OptionalArguments,
     RequiredArgument,
     SubOptions,
@@ -1169,8 +1170,6 @@ mode_snmptranslate = Mode(
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-_oids: list[str] = []
-_extra_oids: list[str] = []
 _SNMPWalkOptions = dict[str, list[OID]]
 
 
@@ -1235,13 +1234,16 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 
 
 def _mode_snmpwalk(_app: object, options: Mapping[str, object], hostnames: Sequence[str]) -> int:
-    walk_options: _SNMPWalkOptions = {}
-    if _oids:
-        walk_options["oids"] = _oids
-    if _extra_oids:
-        walk_options["extraoids"] = _extra_oids
-    if "oids" in walk_options and "extraoids" in walk_options:
+    oids = option_strings(options, "oid")
+    extra_oids = option_strings(options, "extraoid")
+    if oids and extra_oids:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
+
+    walk_options: _SNMPWalkOptions = {}
+    if oids:
+        walk_options["oids"] = list(oids)
+    if extra_oids:
+        walk_options["extraoids"] = list(extra_oids)
 
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -1283,7 +1285,7 @@ mode_snmpwalk = Mode(
                 long_option="extraoid",
                 argument=True,
                 argument_descr="A",
-                argument_conv=_extra_oids.append,
+                repeat=True,
                 short_help="Walk also on this OID, in addition to mib-2 and "
                 "enterprises. You can specify this option multiple "
                 "times.",
@@ -1292,7 +1294,7 @@ mode_snmpwalk = Mode(
                 long_option="oid",
                 argument=True,
                 argument_descr="A",
-                argument_conv=_oids.append,
+                repeat=True,
                 short_help="Walk on this OID instead of mib-2 and enterprises. "
                 "You can specify this option multiple times.",
             ),
@@ -2844,7 +2846,7 @@ mode_discover = Mode(
                 long_option="discover",
                 short_option="I",
                 short_help="Delete existing services before starting discovery",
-                count=True,
+                repeat=True,
             ),
             _option_sections,
             _get_plugins_option(CheckPluginName),

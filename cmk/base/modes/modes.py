@@ -10,6 +10,7 @@ import signal
 import subprocess
 import sys
 import textwrap
+from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
@@ -44,7 +45,7 @@ class Option:
         argument_descr: str | None = None,
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
-        count: bool = False,
+        repeat: bool = False,
         # ----------------------------------------------------------------------
         deprecated_long_options: set[str] | None = None,
     ) -> None:
@@ -56,19 +57,13 @@ class Option:
         assert (argument_conv is None) or argument
         # Being optional implies that we actually have an argument.
         assert not argument_optional or argument
-        # Counting an option and having an argument is mutually exclusive.
-        assert not (count and argument)
 
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
         self._deprecated_long_options = deprecated_long_options or set()
 
-        # An option can either
-        # a) have an argument
-        # b) have no argument and count it's occurance
-        # c) have no argument (will always be True in sub_options)
-        self.count = count
+        self.repeat = repeat
         self.argument = argument
         self.argument_descr = argument_descr
         self.argument_conv = argument_conv
@@ -128,6 +123,8 @@ def parse_sub_options(
     sub_options: Sequence[Option], all_opts: Options
 ) -> Mapping[OptionName, object]:
     options: dict[OptionName, object] = {}
+    counts: Counter[OptionName] = Counter()
+    collected: dict[OptionName, list[Argument]] = {}
 
     for o, a in all_opts:
         for option in sub_options:
@@ -142,14 +139,15 @@ def parse_sub_options(
             if a and not option.argument:
                 raise MKGeneralException("No argument to %s expected." % o)
 
+            if option.repeat:
+                if option.argument:
+                    collected.setdefault(option.name, []).append(a)
+                else:
+                    counts[option.name] += 1
+                continue
+
             val: object = a
             if not option.argument:
-                if option.count:
-                    value = options.setdefault(option.name, 0)
-                    if not isinstance(value, int):
-                        raise TypeError
-                    options[option.name] = value + 1
-                    continue
                 val = True
             elif option.argument_conv:
                 try:
@@ -159,7 +157,11 @@ def parse_sub_options(
 
             options[option.name] = val
 
-    return options
+    return {
+        **options,
+        **counts,
+        **{name: tuple(values) for name, values in collected.items()},
+    }
 
 
 def option_string(parsed: Mapping[OptionName, object], name: OptionName) -> str | None:
@@ -168,6 +170,19 @@ def option_string(parsed: Mapping[OptionName, object], name: OptionName) -> str 
             return None
         case str() as value:
             return value
+        case value:
+            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+
+
+def option_strings(parsed: Mapping[OptionName, object], name: OptionName) -> Sequence[str]:
+    match parsed.get(name):
+        case None:
+            return ()
+        case tuple() as value:
+            strings = tuple(element for element in value if isinstance(element, str))
+            if len(strings) == len(value):
+                return strings
+            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
         case value:
             raise MKGeneralException(f"--{name}: invalid argument {value!r}")
 

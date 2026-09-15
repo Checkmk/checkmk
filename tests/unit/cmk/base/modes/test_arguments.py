@@ -152,6 +152,13 @@ def test_a_repeated_sub_option_is_counted() -> None:
     assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"discover": 2}
 
 
+def test_a_repeated_sub_option_argument_is_collected() -> None:
+    parsed = parse(_MODES, ["cmk", "--snmpwalk", "--oid=.1.1", "--oid=.1.2", "myhost"])
+
+    assert isinstance(parsed, RunMode)
+    assert parse_sub_options(parsed.mode.sub_options, parsed.options) == {"oid": (".1.1", ".1.2")}
+
+
 def test_a_sub_option_argument_is_converted() -> None:
     parsed = parse(_MODES, ["cmk", "--check", "--plugins=cpu", "myhost"])
 

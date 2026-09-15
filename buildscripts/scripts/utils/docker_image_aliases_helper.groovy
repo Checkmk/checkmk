@@ -18,8 +18,16 @@ docker_reference_image = { ->
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
+    def container_name_suffix = safe_branch_name;
 
-    def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+    // during a release there might be a VERSION specified, this testing container does not support custom builds like "XXX-2.4.0p37-rc2"
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    if (params.VERSION && safe_branch_name != branch_version) {
+        print("pulling image with name 'testing-ubuntu-22.04-checkmk-${container_name_suffix}' is not supported, ");
+        container_name_suffix = branch_version;
+        println("falling back to 'testing-ubuntu-22.04-checkmk-${container_name_suffix}'");
+    }
+    def container_name = "testing-ubuntu-22.04-checkmk-${container_name_suffix}";
 
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
         def image = docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker");

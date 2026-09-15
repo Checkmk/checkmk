@@ -215,6 +215,14 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
         // The pod templates uses - instead.
         def container_name_suffix = safe_branch_name.replace(".", "-");
 
+        // during a release the might be a VERSION specified, this minimal container does not support custom builds like "XXX-v2-5-0p13-rc3"
+        def branch_version = versioning.get_branch_version(checkout_dir);
+        if (params.VERSION && safe_branch_name != branch_version) {
+            print("inside_container_minimal image name 'minimal-alpine-python-checkmk-${container_name_suffix}' is not supported, ");
+            container_name_suffix = branch_version.replace(".", "-");
+            println("falling back to 'minimal-alpine-python-checkmk-${container_name_suffix}'");
+        }
+
         container("minimal-alpine-python-checkmk-${container_name_suffix}") {
             println("'inside_container_minimal' is using k8s container 'minimal-alpine-python-checkmk-${container_name_suffix}'");
             body();

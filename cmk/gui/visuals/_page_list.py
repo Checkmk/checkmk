@@ -27,14 +27,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    IconNames,
-    StaticIcon,
-    VisualName,
-    VisualPublic,
-    VisualTypeName,
-)
+from cmk.gui.type_defs import HTTPVariables, VisualName, VisualPublic, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.visuals.type import visual_type_registry
@@ -43,6 +36,7 @@ from cmk.mkp_tool import PackageName
 from cmk.web.utils.confirm_links import make_confirm_delete_link, make_confirm_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless, urlencode
 
 from ._breadcrumb import visual_page_breadcrumb

@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from typing import Literal
 
 from cmk.gui.htmllib.html import html
-from cmk.gui.type_defs import StaticIcon
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.web.utils.icons import StaticIcon
 
 
 class TileMenuRenderer:

@@ -51,14 +51,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
@@ -121,6 +114,7 @@ from cmk.web.utils.doc_references import DocReference, YouTubeReference
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 from ._bulk_actions import get_hostnames_from_checkboxes

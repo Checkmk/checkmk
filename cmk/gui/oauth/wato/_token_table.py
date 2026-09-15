@@ -27,9 +27,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.scopes import format_scopes
 from cmk.gui.table import Table
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.utils import render
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def load_clients_by_id() -> dict[ClientId, ClientRegistration]:

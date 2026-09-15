@@ -12,19 +12,12 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.painter.v0 import Painter, PainterRegistry
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIcon,
-    DynamicIconName,
-    FilterName,
-    StaticIcon,
-    VisualContext,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, FilterName, VisualContext, VisualLinkSpec
 from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (

@@ -23,7 +23,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -37,6 +36,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import is_allowed_url
 
 from ._base import SidebarSnapin

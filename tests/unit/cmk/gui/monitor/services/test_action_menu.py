@@ -14,8 +14,9 @@ from cmk.gui.monitor.services._api._action_menu import (
     _serialize_entry,
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.type_defs import DynamicIconName, DynamicIconWithEmblem, IconNames, Row, StaticIcon
+from cmk.gui.type_defs import Row
 from cmk.gui.views.icon.entries import IconEntry
+from cmk.web.utils.icons import DynamicIconName, DynamicIconWithEmblem, IconNames, StaticIcon
 
 
 @pytest.fixture(name="passthrough_macros")

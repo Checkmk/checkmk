@@ -32,11 +32,12 @@ from cmk.gui.sidebar._snapin._helpers import (
     write_snapin_exception,
 )
 from cmk.gui.sites import SiteStatus
-from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
+from cmk.gui.type_defs import Visual
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry, TopicItemMode
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 
 
 @pytest.fixture(name="rendering_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]

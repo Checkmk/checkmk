@@ -10,11 +10,12 @@ from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import DynamicIcon, HTTPVariables, IconNames, Row, StaticIcon
+from cmk.gui.type_defs import HTTPVariables, Row
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 

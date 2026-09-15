@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
+from cmk.gui.type_defs import Visual
 from cmk.gui.user_sites import sorted_sites
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.all_hosts import (
@@ -51,6 +51,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
     Site,
 )
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 _PAGE_TITLE = _("All hosts")

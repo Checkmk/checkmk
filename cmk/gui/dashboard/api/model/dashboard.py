@@ -27,13 +27,12 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.type_defs import (
     AnnotatedUserId,
     DashboardEmbeddedViewSpec,
-    DynamicIcon,
-    DynamicIconName,
     FilterName,
     SingleInfos,
     VisualContext,
     VisualPublic,
 )
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 
 from .token import DashboardTokenModel
 from .type_defs import AnnotatedInfoName

@@ -20,7 +20,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import PageHandlers, SidebarSnapin
-from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon, VirtualHostTreeSpec
+from cmk.gui.type_defs import HTTPVariables, VirtualHostTreeSpec
 from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     get_folder_title_path,
@@ -28,6 +28,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 

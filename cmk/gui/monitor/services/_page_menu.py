@@ -20,7 +20,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import DynamicIcon, StaticIcon
+from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 from ._legacy_menu import LegacyHostMenu, LegacyHostMenuSource
 

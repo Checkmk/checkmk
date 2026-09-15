@@ -67,14 +67,11 @@ from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import (
-    DynamicIconName,
     FilterHeader,
     FilterName,
-    IconNames,
     InfoName,
     Row,
     Rows,
-    StaticIcon,
     ViewName,
     ViewProcessTracking,
     ViewSpec,
@@ -88,6 +85,7 @@ from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri
 
 from .annotations import _handle_edit_annotations, handle_delete_annotations, show_annotations

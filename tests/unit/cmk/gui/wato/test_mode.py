@@ -15,10 +15,11 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, PermissionName
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import _base, WatoMode
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 
 module_registry = MainModuleRegistry()
 

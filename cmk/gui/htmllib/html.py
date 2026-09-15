@@ -29,18 +29,7 @@ from cmk.gui.i18n import _, get_current_language
 from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import (
-    Choice,
-    ChoiceGroup,
-    ChoiceId,
-    ChoiceText,
-    DynamicIcon,
-    DynamicIconName,
-    GroupedChoices,
-    IconNames,
-    IconSizes,
-    StaticIcon,
-)
+from cmk.gui.type_defs import Choice, ChoiceGroup, ChoiceId, ChoiceText, GroupedChoices
 from cmk.gui.utils.dataclasses import asdict_strip_none
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.misc import gen_id
@@ -52,6 +41,7 @@ from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
 from cmk.web.utils import escaping
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
 from cmk.web.utils.urls import requested_file_name
 
 from .generator import ClickAction, HTMLWriter

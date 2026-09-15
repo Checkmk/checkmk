@@ -58,7 +58,7 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.site_config import has_distributed_setup_remote_sites
-from cmk.gui.type_defs import ActionResult, GlobalSettings, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
@@ -98,6 +98,7 @@ from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec
 from cmk.web.utils import escaping
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 

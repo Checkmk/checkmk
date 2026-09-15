@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
@@ -84,6 +84,7 @@ from cmk.utils.timeperiod import (
 )
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 logger = logging.getLogger(__name__)
 

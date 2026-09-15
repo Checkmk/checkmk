@@ -28,16 +28,7 @@ from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, user
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import (
-    ColumnName,
-    DynamicIconName,
-    IconNames,
-    Row,
-    Rows,
-    SingleInfos,
-    StaticIcon,
-    VisualContext,
-)
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -55,6 +46,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 from cmk.web.utils.escaping import escape_attribute
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, urlencode_vars
 
 from .bi_manager import BIManager, load_compiled_branch

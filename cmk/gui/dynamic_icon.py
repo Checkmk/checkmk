@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import TypeGuard
 
 from cmk.gui.theme import Theme
-from cmk.gui.type_defs import DynamicIcon
 from cmk.shared_typing import icon as st
+from cmk.web.utils.icons import DynamicIcon
 
 # All functions in that file are about icons that the user can change.
 # Dashboards and Views have such icons.

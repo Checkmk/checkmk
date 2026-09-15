@@ -13,8 +13,8 @@ import cmk.ccc.plugin_registry
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.speaklater import LazyString
 from cmk.web.utils.urls import makeuri_contextless
 

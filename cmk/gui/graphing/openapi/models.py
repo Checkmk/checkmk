@@ -12,9 +12,9 @@ from pydantic import Json
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
-from cmk.gui.type_defs import IconNames
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
+from cmk.web.utils.icons import IconNames
 
 from .._built_graphs import BuiltGraph, DiscoveredGraphs
 from .._graph_dispatch import serialize_graphs

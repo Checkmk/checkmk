@@ -9,10 +9,11 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.gui.config import Config
-from cmk.gui.type_defs import ColumnName, DynamicIcon, Row, StaticIcon
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, StaticIcon
 from cmk.web.utils.speaklater import LazyString
 
 IconSpec = DynamicIcon | StaticIcon

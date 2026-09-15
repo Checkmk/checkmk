@@ -48,11 +48,9 @@ from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
-    IconNames,
     PainterParameters,
     Row,
     SorterName,
-    StaticIcon,
     VisualLinkSpec,
 )
 from cmk.gui.utils.output_funnel import output_funnel
@@ -88,6 +86,7 @@ from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter

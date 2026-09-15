@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.page_menu import PageMenuLink
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 
 
 class _LegacyEntry:

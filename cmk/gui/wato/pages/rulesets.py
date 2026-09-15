@@ -79,14 +79,7 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    RenderMode,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, RenderMode
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
@@ -214,6 +207,7 @@ from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ._rule_conditions import DictHostTagCondition

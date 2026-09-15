@@ -77,9 +77,7 @@ from cmk.gui.type_defs import (
     CustomHostAttrSpec,
     GlobalSettings,
     HTTPVariables,
-    IconNames,
     SetOnceDict,
-    StaticIcon,
 )
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
@@ -135,6 +133,7 @@ from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.web.utils import urls
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from .tls_registration_help import remove_tls_registration_help
 

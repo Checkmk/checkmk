@@ -34,9 +34,8 @@ from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.inventory.structured_data import SDPath
 from cmk.ruleset_matcher.labels import Labels
-from cmk.shared_typing.icon import IconNames as IconNames
-from cmk.shared_typing.icon import IconSizes as IconSizes
 from cmk.utils.password_store import PasswordId
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 from cmk.web.utils.speaklater import LazyString
 
 _ContactgroupName = str
@@ -722,23 +721,6 @@ class SetOnceDict(dict[K, V]):
     @override
     def __delitem__(self, key: K) -> None:
         raise NotImplementedError("Deleting items are not supported.")
-
-
-DynamicIconName = NewType("DynamicIconName", str)
-
-
-class DynamicIconWithEmblem(TypedDict):
-    icon: DynamicIconName
-    emblem: str | None
-
-
-DynamicIcon = DynamicIconName | DynamicIconWithEmblem
-
-
-@dataclass(frozen=True)
-class StaticIcon:
-    icon: IconNames
-    emblem: str | None = None
 
 
 SearchQuery = str

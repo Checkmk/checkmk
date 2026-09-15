@@ -17,7 +17,6 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
     ColumnSpec,
-    DynamicIconName,
     PainterParameters,
     SorterSpec,
     ViewName,
@@ -26,6 +25,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIconName
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 

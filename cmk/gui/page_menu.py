@@ -25,13 +25,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import (
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    StaticIcon,
-)
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
@@ -50,6 +44,7 @@ from cmk.web.utils.doc_references import (
     YouTubeReference,
 )
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import (
     is_allowed_url,
     makeuri,

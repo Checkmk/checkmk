@@ -52,16 +52,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
@@ -116,6 +107,7 @@ from cmk.web.utils import escaping
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import (
     makeactionuri,
     makeactionuri_contextless,

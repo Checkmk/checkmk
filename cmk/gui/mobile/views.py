@@ -13,19 +13,13 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIconName,
-    Rows,
-    SorterSpec,
-    ViewSpec,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, make_link_renderer
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |

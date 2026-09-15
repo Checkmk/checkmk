@@ -6,11 +6,11 @@
 """Register the built-in global setting configuration variable groups"""
 
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import IconNames
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
 )
+from cmk.web.utils.icons import IconNames
 
 
 def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> None:

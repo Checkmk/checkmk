@@ -83,17 +83,7 @@ from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistr
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIcon,
-    DynamicIconName,
-    IconNames,
-    PainterParameters,
-    Row,
-    StaticIcon,
-    Visual,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
@@ -103,6 +93,7 @@ from cmk.gui.views.store import get_all_views, get_permitted_views, multisite_bu
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 

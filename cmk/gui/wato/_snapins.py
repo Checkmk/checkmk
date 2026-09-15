@@ -31,7 +31,7 @@ from cmk.gui.sidebar import (
     VisualItem,
     VisualMenuItem,
 )
-from cmk.gui.type_defs import Choices, IconNames, RoleName, StaticIcon, ViewSpec
+from cmk.gui.type_defs import Choices, RoleName, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -47,6 +47,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def register(

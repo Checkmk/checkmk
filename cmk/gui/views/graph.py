@@ -39,7 +39,6 @@ from cmk.gui.painter_options import (
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    DynamicIconName,
     PainterParameters,
     Row,
     ViewName,
@@ -63,6 +62,7 @@ from cmk.gui.view_utils import (
 )
 from cmk.shared_typing.cmk_time_series_graph import Size
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 from cmk.web.utils.urls import makeuri_contextless
 
 # Options only the legacy renderer honoured; the graph engine ignores them.

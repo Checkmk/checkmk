@@ -35,9 +35,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageContext
-from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import WatoMode
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._utils import (

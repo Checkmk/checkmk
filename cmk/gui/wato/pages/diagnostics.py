@@ -52,7 +52,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -78,6 +78,7 @@ from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump_v2
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 timeout_default = 110

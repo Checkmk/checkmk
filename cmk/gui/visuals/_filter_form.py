@@ -8,9 +8,10 @@ from collections.abc import Mapping
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import IconNames, SingleInfos, StaticIcon, VisualContext
+from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 

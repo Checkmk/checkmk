@@ -21,14 +21,10 @@ from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
-from cmk.gui.type_defs import (
-    DashboardEmbeddedViewSpec,
-    IconNames,
-    StaticIcon,
-    VisualContext,
-)
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from .dashlet import (
     copy_view_into_dashlet,

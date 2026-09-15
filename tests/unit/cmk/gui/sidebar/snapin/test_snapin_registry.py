@@ -22,8 +22,8 @@ from cmk.gui.sidebar._snapin._registry import (
     SnapinRegistry,
 )
 from cmk.gui.sidebar._snapin._tactical_overview import TacticalOverviewSnapin
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 

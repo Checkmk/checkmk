@@ -22,9 +22,9 @@ from cmk.gui.sidebar._snapin._bookmarks import (
     Bookmarks,
     BookmarkSpec,
 )
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.icons import DynamicIconName
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 

@@ -11,14 +11,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
-from cmk.gui.type_defs import (
-    ColumnName,
-    DynamicIcon,
-    DynamicIconName,
-    DynamicIconWithEmblem,
-    Row,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import (
     CellSpec,
@@ -27,6 +20,7 @@ from cmk.gui.view_utils import (
     transform_action_url,
 )
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, DynamicIconWithEmblem, StaticIcon
 
 from .base import IconConfig
 from .entries import (

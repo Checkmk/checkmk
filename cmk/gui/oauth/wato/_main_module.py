@@ -8,9 +8,9 @@ from typing import override
 from cmk.gui.i18n import _
 from cmk.gui.oauth.wato._registered_clients_mode import ModeRegisteredOAuthClients
 from cmk.gui.oauth.wato._user_tokens_mode import ModeOAuthTokens
-from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.wato import MainModuleTopicGeneral
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 
 def register(main_module_registry: MainModuleRegistry) -> None:

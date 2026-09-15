@@ -44,14 +44,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    CustomHostAttrSpec,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, Choices, CustomHostAttrSpec, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.selection_id import SelectionId
@@ -86,6 +79,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import TagGroup
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 ImportTuple = tuple[HostName, HostAttributes, None]
 

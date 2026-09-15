@@ -1555,6 +1555,7 @@ allows = [
 
 [components."cmk.liveproxyd.gui"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -1935,7 +1936,7 @@ allows = [
 ]
 
 [components."cmk.web"]
-allows = ["@ccc"]
+allows = ["@ccc", "cmk.shared_typing"]
 
 [components."cmk.werk_ids_server"]
 allows = ["cmk.ccc.log"]

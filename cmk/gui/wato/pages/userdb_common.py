@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import load_connection_config, UserConnectionConfigFile
 from cmk.gui.utils.transaction_manager import transactions
@@ -40,6 +40,7 @@ from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 DisplayIndex = NewType("DisplayIndex", int)

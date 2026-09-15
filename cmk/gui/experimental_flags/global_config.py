@@ -24,7 +24,7 @@ from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as EXPERIMENTAL_FLAGS_CONFIG_FILENAME
 from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import GlobalSettings, IconNames
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -37,6 +37,7 @@ from cmk.rulesets.v1 import Help, Label, Title
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames
 
 # Kept as "release_flags" (not "experimental_flags"): this is the ConfigDomain
 # ident used as a dict key on both sides of activate_changes. A central and a

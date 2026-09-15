@@ -7,8 +7,8 @@ import re
 from unittest.mock import MagicMock, patch
 
 import cmk.gui.valuespec as vs
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.icons import DynamicIconName
 
 from .utils import (
     expect_validate_failure,

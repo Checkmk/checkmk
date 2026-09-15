@@ -47,7 +47,6 @@ from cmk.gui.inventory.filters import (
     FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
 from cmk.gui.unit_formatter import (
     DecimalFormatter,
@@ -85,6 +84,7 @@ from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
 from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 
 __all__ = ["SDPath"]
 

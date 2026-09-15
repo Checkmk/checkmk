@@ -20,9 +20,9 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
     FilterInvText,
 )
-from cmk.gui.type_defs import DynamicIconName
 from cmk.inventory.structured_data import SDValue
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 from cmk.web.utils.speaklater import LazyString
 
 SortFunction = Callable[[SDValue, SDValue], int]

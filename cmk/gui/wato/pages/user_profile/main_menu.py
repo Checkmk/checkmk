@@ -18,7 +18,7 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import HTTPVariables, IconNames
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -35,6 +35,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopicEntryChip,
     NavItemTopicEntryToggle,
 )
+from cmk.web.utils.icons import IconNames
 from cmk.web.utils.urls import makeuri_contextless
 
 

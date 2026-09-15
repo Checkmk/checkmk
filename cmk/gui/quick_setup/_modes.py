@@ -33,15 +33,7 @@ from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
@@ -93,6 +85,7 @@ from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 
 
 def register(

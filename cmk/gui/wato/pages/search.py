@@ -19,13 +19,14 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import ActionResult, DynamicIconName, HTTPVariables, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.web.utils.icons import DynamicIconName
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._host_attributes import configure_attributes

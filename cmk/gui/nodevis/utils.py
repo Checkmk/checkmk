@@ -14,10 +14,10 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui import sites
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.livestatus_client import lqencode
 from cmk.utils.paths import default_config_dir
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 topology_dir = cmk.utils.paths.var_dir / "topology"
 topology_data_dir = topology_dir / "data"

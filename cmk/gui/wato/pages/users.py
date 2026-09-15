@@ -48,15 +48,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    CustomUserAttrSpec,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-    UserSpec,
-)
+from cmk.gui.type_defs import ActionResult, Choices, CustomUserAttrSpec, PermissionName, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.userdb import (
@@ -114,6 +106,7 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 from ._user_security_message import (

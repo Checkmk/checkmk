@@ -22,18 +22,13 @@ from cmk.gui import sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import (
-    ColumnName,
-    DynamicIcon,
-    IconNames,
-    Row,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client import livestatus_lql
 from cmk.ruleset_matcher.tags import TagID
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 from .base import Icon, IconConfig
 from .registry import all_icons

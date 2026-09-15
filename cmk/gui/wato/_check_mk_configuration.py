@@ -37,7 +37,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
-from cmk.gui.type_defs import GlobalSettings, IconNames
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils.temperature_unit import temperature_unit_choices, TemperatureUnit
 from cmk.gui.valuespec import (
@@ -149,6 +149,7 @@ from cmk.rulesets.internal.form_specs import (
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.web.utils import html
+from cmk.web.utils.icons import IconNames
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._check_plugin_selection import CheckPluginSelection

@@ -23,7 +23,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
-from cmk.gui.type_defs import ColumnSpec, DynamicIconName, Row
+from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
@@ -32,6 +32,7 @@ from cmk.inventory.structured_data import deserialize_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 
 
 @pytest.fixture(name="live")

@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import Choices, IconNames, StaticIcon, VisualContext
+from cmk.gui.type_defs import Choices, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
@@ -39,6 +39,7 @@ from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils import paths
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def ajax_popup_add(ctx: PageContext) -> None:

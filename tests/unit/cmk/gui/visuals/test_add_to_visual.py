@@ -9,9 +9,9 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def _user_permissions() -> UserPermissions:

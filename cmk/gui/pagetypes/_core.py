@@ -79,17 +79,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
 )
 from cmk.gui.table import init_rowselect, Table, table_element
-from cmk.gui.type_defs import (
-    AnnotatedUserId,
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-    Visual,
-    VisualPublic,
-)
+from cmk.gui.type_defs import AnnotatedUserId, HTTPVariables, PermissionName, Visual, VisualPublic
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
@@ -124,6 +114,7 @@ from cmk.shared_typing.main_menu import (
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.speaklater import LazyString
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 

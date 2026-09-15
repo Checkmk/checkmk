@@ -11,7 +11,7 @@ import pytest
 
 import cmk.gui.views
 from cmk.gui.config import active_config
-from cmk.gui.type_defs import BuiltinIconVisibility, DynamicIconName, IconSpec, Row
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import (
     Icon,
@@ -21,6 +21,7 @@ from cmk.gui.views.icon import (
 from cmk.gui.views.icon import registry as icon_registry
 from cmk.gui.views.icon.base import IconSpec as IconSpecUnion
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIconName
 
 
 def test_builtin_icons_and_actions() -> None:

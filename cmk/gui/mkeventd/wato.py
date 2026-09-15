@@ -80,14 +80,7 @@ from cmk.gui.search.matchers import (
 )
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    DynamicIcon,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
@@ -228,6 +221,7 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 from ._rulespecs import RulespecLogwatchEC

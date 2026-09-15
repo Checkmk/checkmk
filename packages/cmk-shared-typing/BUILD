@@ -275,6 +275,7 @@ py_library(
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/packages/cmk-telemetry:__pkg__",
         "//packages/cmk-profiling:__pkg__",
+        "//packages/cmk-web/cmk/web/utils:__pkg__",
         "//tests:__subpackages__",
     ],
 )

@@ -28,7 +28,6 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     GlobalSettings,
     GraphTimerange,
-    IconNames,
     PermissionName,
 )
 from cmk.gui.watolib.site_changes import ChangeSpec
@@ -37,6 +36,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames
 from cmk.web.utils.speaklater import LazyString
 
 ConfigDomainName = str

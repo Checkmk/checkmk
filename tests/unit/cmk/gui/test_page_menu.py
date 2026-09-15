@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import DynamicIconName
+from cmk.web.utils.icons import DynamicIconName
 
 
 def test_make_simple_link() -> None:

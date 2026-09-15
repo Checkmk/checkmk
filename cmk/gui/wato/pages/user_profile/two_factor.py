@@ -69,8 +69,6 @@ from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import (
-    IconNames,
-    StaticIcon,
     TotpCredential,
     TwoFactorCredentials,
     WebAuthnActionState,
@@ -111,6 +109,7 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .page_menu import page_menu_dropdown_user_related

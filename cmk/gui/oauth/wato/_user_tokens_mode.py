@@ -21,12 +21,13 @@ from cmk.gui.oauth.wato._token_table import (
 )
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def register(mode_registry: ModeRegistry) -> None:

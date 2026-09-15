@@ -172,7 +172,7 @@ class CMKOpenApiSession(requests.Session):
         self.saml2 = Saml2API(self)
         self.relays = RelayAPI(self)
         self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
-        self.metric_backend = MetricBackendAPI(self)
+        self.data_backend = DataBackendAPI(self)
         self.graph = GraphAPI(self)
         self.custom_graph = CustomGraphAPI(self)
         self.dashboard = DashboardAPI(self)
@@ -2297,7 +2297,7 @@ class RelayRegistrationTokenAPI(BaseAPI):
         return str(response.json()["id"])  # Explicit type case to make mypy happy
 
 
-class MetricBackendAPI(BaseAPI):
+class DataBackendAPI(BaseAPI):
     # The endpoint switched from PUT to PATCH on master and was backported to
     # the 2.5.0 branch after 2.5.0p1 was tagged, so it first ships in 2.5.0p2.
     # Older sites (used by update tests via the `base_site` fixture) still
@@ -2312,7 +2312,7 @@ class MetricBackendAPI(BaseAPI):
             else self.session.put
         )
         response = method(
-            "domain-types/metric_backend/actions/update/invoke",
+            "domain-types/data_backend/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,
@@ -2334,7 +2334,7 @@ class MetricBackendAPI(BaseAPI):
     def names_with_types(self, value: str) -> dict[str, list[str]]:
         """The metric names the backend offers for `value`, each with the types it carries."""
         response = self._post_internal_action(
-            "domain-types/metric_backend/actions/names_with_types/invoke",
+            "domain-types/telemetry_metrics/actions/names_with_types/invoke",
             {"value": value},
         )
         return {

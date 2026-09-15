@@ -4689,8 +4689,8 @@ class RelayClient(RestApiClient):
         )
 
 
-class MetricBackendClient(RestApiClient):
-    domain: DomainType = "metric_backend"
+class DataBackendClient(RestApiClient):
+    domain: DomainType = "data_backend"
     default_version = APIVersion.INTERNAL
 
     def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
@@ -4700,6 +4700,11 @@ class MetricBackendClient(RestApiClient):
             body=dict(payload),
             expect_ok=expect_ok,
         )
+
+
+class TelemetryMetricsClient(RestApiClient):
+    domain: DomainType = "telemetry_metrics"
+    default_version = APIVersion.INTERNAL
 
     def names_with_types(self, value: str | None = None, expect_ok: bool = True) -> Response:
         body: dict[str, Any] = {} if value is None else {"value": value}
@@ -5280,7 +5285,8 @@ class ClientRegistry:
     ConstantClient: ConstantClient
     ViewClient: ViewClient
     RelayClient: RelayClient
-    MetricBackendClient: MetricBackendClient
+    DataBackendClient: DataBackendClient
+    TelemetryMetricsClient: TelemetryMetricsClient
     PagetypeTopicClient: PagetypeTopicClient
     IconClient: IconClient
     GlobalSetting: GlobalSettingClient
@@ -5350,7 +5356,8 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ViewClient=ViewClient(request_handler, url_prefix),
         RelayClient=RelayClient(request_handler, url_prefix),
         SidebarElement=SidebarElementClient(request_handler, url_prefix),
-        MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
+        DataBackendClient=DataBackendClient(request_handler, url_prefix),
+        TelemetryMetricsClient=TelemetryMetricsClient(request_handler, url_prefix),
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
         IconClient=IconClient(request_handler, url_prefix),
         GlobalSetting=GlobalSettingClient(request_handler, url_prefix),

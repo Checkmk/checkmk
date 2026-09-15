@@ -203,7 +203,6 @@ CATALOG_TITLES: Final = {
     "mcafee": "McAfee",
     "mcdata": "McDATA",
     "meinberg": "Meinberg",
-    "metric_backend": "Metric Backend",
     "mikrotik": "MikroTik",
     "misc": "Miscellaneous",
     "mongodb": "MongoDB",

@@ -11,6 +11,7 @@ import type {
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkBreadcrumb from 'cmk-ui-library/components/CmkBreadcrumb'
+import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -24,7 +25,6 @@ import GlobalSettingsEmptyState from './components/GlobalSettingsEmptyState.vue'
 import GlobalSettingsModificationFilter, {
   type ModificationFilter
 } from './components/GlobalSettingsModificationFilter.vue'
-import GlobalSettingsSearchInput from './components/GlobalSettingsSearchInput.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
 import { type VariableFilter, buildSearchIndex, matchTopics } from './lib/search'
 import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
@@ -137,10 +137,11 @@ function resetSearchAndFilters(): void {
   <div class="global-settings-app">
     <CmkBreadcrumb :items="breadcrumb" />
     <div class="global-settings-app__toolbar">
-      <GlobalSettingsSearchInput
+      <CmkSearchInput
         v-model="query"
         class="global-settings-app__search"
         :placeholder="_t('Search settings…')"
+        :show-submit-button="false"
       />
       <div class="global-settings-app__toolbar-right">
         <GlobalSettingsModificationFilter v-model="modification" />

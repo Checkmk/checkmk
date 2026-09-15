@@ -40,11 +40,7 @@ from ._graph_dispatch import (
     GraphDispatcher,
     legacy_graph_id,
 )
-from ._graph_specification import (
-    AnnotatedHostName,
-    graph_specification_registry,
-    GraphSpecification,
-)
+from ._graph_specification import AnnotatedHostName, GraphSpecification
 from ._graphs_order import sort_registered_graph_plugins
 from ._plugins import registered_graphs, registered_metrics, registered_translations
 from ._source import RRDFetchData, RRDFetchMetricNames
@@ -108,27 +104,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     @override
     def add_visual_type(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
-
-
-def get_template_graph_specification(
-    *,
-    site_id: SiteId | None,
-    host_name: GUIHostName,
-    service_name: GUIServiceName,
-    graph_id: str | None = None,
-    destination: str | None = None,
-) -> TemplateGraphSpecification:
-    if issubclass(
-        graph_specification := graph_specification_registry["template"], TemplateGraphSpecification
-    ):
-        return graph_specification(
-            site=site_id,
-            host_name=host_name,
-            service_description=service_name,
-            graph_id=graph_id,
-            destination=destination,
-        )
-    raise TypeError(graph_specification)
 
 
 TEMPLATE_KIND: Final = "template"

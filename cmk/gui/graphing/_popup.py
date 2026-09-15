@@ -16,7 +16,7 @@ from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 from cmk.utils.servicename import ServiceName
 
 from ._frontend import EngineDisplayOptions, render_engine_graph_group
-from ._graph_templates import get_template_graph_specification
+from ._graph_templates import TemplateGraphSpecification
 
 tracer = trace.get_tracer()
 
@@ -45,10 +45,10 @@ def host_service_graph_popup_cmk(
     html.open_div(class_="cmk_graph_hover")
     html.write_html(
         render_engine_graph_group(
-            get_template_graph_specification(
-                site_id=site,
+            TemplateGraphSpecification(
+                site=site,
                 host_name=host_name,
-                service_name=service_description,
+                service_description=service_description,
             ),
             size=Size(width=popup_size[0], height=popup_size[1], mode="fixed"),
             time_range=(start_time, end_time),

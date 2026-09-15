@@ -17,7 +17,6 @@ from cmk.gui.graphing import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
     EngineDisplayOptions,
-    get_template_graph_specification,
     GraphDisplayConfigHTML,
     GraphRenderOptions,
     render_engine_graph_group,
@@ -248,10 +247,10 @@ def _paint_time_graph_cmk(
             "Maybe metrics processing is disabled."
         )
 
-    graph_specification = get_template_graph_specification(
-        site_id=row["site"],
+    graph_specification = TemplateGraphSpecification(
+        site=row["site"],
         host_name=row["host_name"],
-        service_name=row.get("service_description", "_HOST_"),
+        service_description=row.get("service_description", "_HOST_"),
     )
 
     return "", _render_engine_graph_group(

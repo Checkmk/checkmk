@@ -30,7 +30,6 @@ from cmk.gui.graphing import (
     DiscoveredGraphs,
     evaluate_built_graphs,
     get_graph_plugin_choices,
-    get_template_graph_specification,
     graph_choices,
     GraphChoices,
     GraphDestinations,
@@ -265,10 +264,10 @@ class TemplateGraphDashlet(
         else:
             graph_id = None
 
-        return get_template_graph_specification(
-            site_id=site_id,
+        return TemplateGraphSpecification(
+            site=site_id,
             host_name=host,
-            service_name=service,
+            service_description=service,
             graph_id=graph_id,
             destination=GraphDestinations.dashlet,
         )
@@ -377,10 +376,10 @@ def _graph_and_single_metric_templates_choices_for_context(
         [
             built.graph
             for built in build_template_graphs(
-                get_template_graph_specification(
-                    site_id=site_id,
+                TemplateGraphSpecification(
+                    site=site_id,
                     host_name=host_name,
-                    service_name=service_name,
+                    service_description=service_name,
                 ),
                 registered_graphs=sorted_graph_plugins,
                 registered_metrics=registered_metric_definitions,

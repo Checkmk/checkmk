@@ -43,7 +43,7 @@ from ._graph_specification import (
     GraphEnvironment,
     GraphRanges,
 )
-from ._graph_templates import build_template_graphs, get_template_graph_specification
+from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
 
 
@@ -79,10 +79,10 @@ def _answer_graph_image_request(
     # has no idea about the site of the host. This could be optimized later.
     # if not site:
     #    raise MKGeneralException("Missing mandatory \"site\" parameter")
-    graph_specification = get_template_graph_specification(
-        site_id=None,
+    graph_specification = TemplateGraphSpecification(
+        site=None,
         host_name=host_name,
-        service_name=service_description,
+        service_description=service_description,
         destination=GraphDestinations.notification,
     )
 

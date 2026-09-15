@@ -194,6 +194,7 @@ class TestSingleMetricContent:
                 "display_range": "automatic",
                 "show_display_range_limits": False,
                 "spark_height_mode": "full",
+                "show_delta": True,
             },
         )
 

@@ -122,6 +122,7 @@ class SingleGraphDashletConfig(SingleMetricDashletConfig):
     time_range: MetricTimeRange
     status_display: StatusDisplayWithText
     spark_height_mode: NotRequired[SingleMetricSparkHeightMode]
+    show_delta: NotRequired[bool]
 
 
 class AverageScatterplotDashletConfig(DashletConfig):

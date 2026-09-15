@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -115,6 +116,16 @@ const widgetProps = computed(() => handler.value.widgetProps)
             v-model:enabled="handler.showServiceStatusEnabled.value"
             v-model:show-service-status="handler.showServiceStatus.value"
             v-model:show-service-status-selection="handler.showServiceStatusSelection.value"
+          />
+        </FieldComponent>
+      </TableFormRow>
+
+      <TableFormRow>
+        <FieldDescription>{{ _t('Change indicator') }}</FieldDescription>
+        <FieldComponent>
+          <CmkCheckbox
+            v-model="handler.showDelta.value"
+            :label="_t('Show the change versus the average of the displayed window')"
           />
         </FieldComponent>
       </TableFormRow>

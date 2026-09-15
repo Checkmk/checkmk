@@ -11,6 +11,7 @@ import useTimer from 'cmk-ui-library/lib/useTimer'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import CmkKpiStatCard, {
+  type KpiDeltaConfig,
   type KpiState,
   type TimestampedSample
 } from '@/dashboard/components/CmkKpiStatCard'
@@ -101,6 +102,8 @@ const state = computed<KpiState | undefined>(() => {
 
 const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
 
+const deltaConfig = computed<KpiDeltaConfig>(() => ({ show: props.content.show_delta }))
+
 function formatValue(value: number): string {
   const rendered = value.toFixed(1)
   const unit = data.value?.unit
@@ -133,6 +136,7 @@ function formatValue(value: number): string {
         :href="href"
         :format-value="formatValue"
         :spark-height-mode="content.spark_height_mode"
+        :delta="deltaConfig"
       />
     </div>
   </DashboardContentContainer>

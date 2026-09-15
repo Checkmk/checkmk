@@ -327,6 +327,9 @@ class SingleMetricContent(_BaseMetricContent):
         "value, or as a band strictly below it.",
         default_factory=ApiOmitted,
     )
+    show_delta: bool = api_field(
+        description="Whether to show the change versus the average of the displayed window."
+    )
 
     @classmethod
     @override
@@ -343,6 +346,7 @@ class SingleMetricContent(_BaseMetricContent):
             display_range=_metric_display_range_from_internal(config["display_range"]),
             show_display_range_limits=config["toggle_range_display"],
             spark_height_mode=config.get("spark_height_mode", "full"),
+            show_delta=config.get("show_delta", True),
         )
 
     @override
@@ -357,6 +361,7 @@ class SingleMetricContent(_BaseMetricContent):
             spark_height_mode=(
                 "full" if isinstance(self.spark_height_mode, ApiOmitted) else self.spark_height_mode
             ),
+            show_delta=self.show_delta,
         )
 
 

@@ -41,6 +41,7 @@ export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptio
   showServiceStatus: Ref<ShowServiceStatusType>
   showServiceStatusSelection: Ref<ForStates>
   sparkHeightMode: Ref<SparkHeightMode>
+  showDelta: Ref<boolean>
 
   dataRangeType: Ref<DataRangeType>
   dataRangeSymbol: Ref<string>
@@ -75,6 +76,7 @@ export const useMetric = async (
     currentContent?.status_display?.for_states ?? 'all'
   )
   const sparkHeightMode = ref<SparkHeightMode>(currentContent?.spark_height_mode ?? 'full')
+  const showDelta = ref<boolean>(currentContent?.show_delta ?? true)
 
   const {
     type: dataRangeType,
@@ -110,6 +112,7 @@ export const useMetric = async (
       display_range: dataRangeProps.value,
       show_display_range_limits: displayRangeLimits.value,
       spark_height_mode: sparkHeightMode.value,
+      show_delta: showDelta.value,
       time_range:
         timeRangeType.value === 'current'
           ? 'current'
@@ -163,6 +166,7 @@ export const useMetric = async (
       showServiceStatus,
       showServiceStatusSelection,
       sparkHeightMode,
+      showDelta,
       widgetGeneralSettings
     ],
     useDebounceFn(() => {
@@ -185,6 +189,7 @@ export const useMetric = async (
     showServiceStatus,
     showServiceStatusSelection,
     sparkHeightMode,
+    showDelta,
 
     title,
     showTitle,

@@ -33,7 +33,7 @@ py_library(
     ] + select({
         "//:gpl+nonfree_repo": [
             "//cmk/gui/nonfree/pro",
-            "//non-free/tests/testlib/system:metric_backend",
+            "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
             "//packages/cmk-wsgi",

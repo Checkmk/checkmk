@@ -36,7 +36,7 @@ py_library(
             "//cmk/gui/job_scheduler",
             "//non-free/packages/cmk-otel-collector:testlib",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
-            "//non-free/tests/testlib/system:metric_backend",
+            "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",
         ],

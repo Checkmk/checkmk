@@ -177,7 +177,7 @@ class CustomGraphDesigner(CmkPage):
         self._fill_autocompleter(form, "Service", service_name)
         self._fill_autocompleter(form, "Service metric", metric_title)
 
-    def add_metric_backend_metric(self, metric_name: str, metric_type: str) -> Locator:
+    def add_telemetry_metrics_metric(self, metric_name: str, metric_type: str) -> Locator:
         """Add a metric backend metric as a data source; return the row it appended.
 
         The dropdown titles a metric with the types it carries ("metric1 (gauge)"), so the

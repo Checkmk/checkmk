@@ -114,6 +114,7 @@ class LiveStatusHostRepository:
                 Hosts.alias,
                 Hosts.address,
                 Hosts.state,
+                Hosts.has_been_checked,
                 Hosts.num_services,
                 Hosts.num_services_ok,
                 Hosts.num_services_warn,

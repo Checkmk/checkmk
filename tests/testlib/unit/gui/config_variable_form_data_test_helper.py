@@ -799,14 +799,14 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "hide_version": True,
         "login_message": NoSaveableDefault(),
     },
-    "metric_backend": {
+    "data_backend": {
         "disabled": None,
         "enabled": {
-            "https_port": 26900,
+            "https_port": 27909,
             "relative_memory_limit_percentage": 50.0,
-            "tls_port": 27907,
+            "tls_port": 25720,
         },
-        "enabled.http_port": 26409,
+        "enabled.http_port": 25962,
     },
     "mkeventd_notify_remotehost": {
         "[enable]": "",
@@ -1248,7 +1248,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         },
     ),
     "login_screen": {},
-    "metric_backend": ("disabled", None),
+    "data_backend": ("disabled", None),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
     "network_flow": ("disabled", None),
@@ -2010,7 +2010,7 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("below-minimum", 100),
         CaseFail("not-an-int", "5000"),
     ],
-    "metric_backend": [
+    "data_backend": [
         CasePass("disabled", ("disabled", None)),
         CasePass(
             "configured",

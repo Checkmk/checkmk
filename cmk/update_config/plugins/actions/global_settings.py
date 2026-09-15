@@ -33,7 +33,9 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
+_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
+    ("metric_backend", "data_backend", {}),
+]
 _REMOVED_OPTIONS: Sequence[str] = []
 
 

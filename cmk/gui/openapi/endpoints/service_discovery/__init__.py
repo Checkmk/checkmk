@@ -267,9 +267,10 @@ class UpdateDiscoveryPhase(BaseSchema):
         404: "Host could not be found",
     },
     request_schema=UpdateDiscoveryPhase,
-    # TODO: CMK-10911 (permissions)
     permissions_required=permissions.AllPerm(
         [
+            permissions.Perm("wato.edit"),
+            permissions.Perm("wato.services"),
             permissions.Perm("wato.service_discovery_to_monitored"),
             permissions.Perm("wato.service_discovery_to_ignored"),
             permissions.Perm("wato.service_discovery_to_undecided"),
@@ -281,6 +282,8 @@ class UpdateDiscoveryPhase(BaseSchema):
 )
 def update_service_phase(params: Mapping[str, Any]) -> Response:
     """Update the phase of a service"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.services")
     user.need_permission("wato.service_discovery_to_monitored")
     user.need_permission("wato.service_discovery_to_ignored")
     user.need_permission("wato.service_discovery_to_undecided")

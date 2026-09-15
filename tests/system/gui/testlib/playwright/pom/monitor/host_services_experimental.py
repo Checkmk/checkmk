@@ -15,11 +15,11 @@ from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
 
-# The State column's own tag. `.monitoring-state-tag` alone is not enough: a check's plugin
+# The State column's own tag. `.cmk-state-tag` alone is not enough: a check's plugin
 # output may embed state markers of its own, and those carry the same class inside the Summary
 # column. Only the State cell wraps its tag in `.monitoring-state-cell`, and `BaseCell` renders
 # just the active one of its abbreviated/spelled-out slots, so this matches exactly one tag.
-_STATE_TAG = ".monitoring-state-cell .monitoring-state-tag"
+_STATE_TAG = ".monitoring-state-cell .cmk-state-tag"
 
 # The state tag spells its label out ("WARNING") or abbreviates it ("WA") depending on how
 # wide the rendered column turned out, so a reader of the DOM has to accept either form. Both
@@ -174,7 +174,7 @@ class HostServicesExperimental(CmkPage):
                     'button.monitoring-base-cell__button .monitoring-string-cell__text'
                 )
                 const stateTag = row.querySelector(
-                    '.monitoring-state-cell .monitoring-state-tag'
+                    '.monitoring-state-cell .cmk-state-tag'
                 )
                 const summaryCell = row.querySelector(
                     `td.monitoring-base-cell:nth-child(${summaryIndex})`
@@ -332,7 +332,7 @@ class HostServicesExperimental(CmkPage):
         The header always spells the state out, while the State column may abbreviate it, so
         compare the two through ``service_state_of`` rather than by their raw text.
         """
-        return self.slide_in.locator(".monitoring-state-tag")
+        return self.slide_in.locator(".cmk-state-tag")
 
     def close_slide_in(self) -> None:
         """Close the slide-in via its close button."""
@@ -406,3 +406,7 @@ class HostServicesExperimental(CmkPage):
     def form_option(self, label: str) -> Locator:
         """A labelled control inside the open action form."""
         return self.main_area.locator().get_by_text(label, exact=True)
+
+    def catalog_panel(self, title: str) -> Locator:
+        """A collapsible section of an action form, e.g. Duration or Advanced option."""
+        return self.main_area.locator().get_by_role("button", name=title)

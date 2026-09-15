@@ -195,9 +195,22 @@ const lastSampleTimeLabel = computed<string | undefined>(() => {
   )
 })
 
+// Below this, a plotted curve is too cramped to read - the card falls back to
+// the plain value-only display instead.
+const MIN_HISTORY_WIDTH = 280
+const MIN_HISTORY_HEIGHT = 180
+
+const cardSize = ref<{ width: number; height: number } | null>(null)
+const isTooSmallForHistory = computed(() => {
+  const size = cardSize.value
+  return size !== null && (size.width < MIN_HISTORY_WIDTH || size.height < MIN_HISTORY_HEIGHT)
+})
+
 // A single point draws no line, so anything under two is "no plot" and the
 // value takes the card to itself. No data at all means no curve either.
-const hasSparkLine = computed(() => hasData.value && props.series.length >= 2)
+const hasSparkLine = computed(
+  () => hasData.value && props.series.length >= 2 && !isTooSmallForHistory.value
+)
 
 // KpiSparkLine reports the focused real sample here while scrubbing; a tile with no
 // curve has nothing to scrub.
@@ -339,7 +352,9 @@ function onCardPointerLeave(): void {
 
 // Curve-less metrics center the value to fill the card. No-data is
 // different - it would normally plot a curve, so it stays top-left.
-const isValueOnly = computed(() => hasData.value && props.series.length < 2)
+const isValueOnly = computed(
+  () => hasData.value && (props.series.length < 2 || isTooSmallForHistory.value)
+)
 
 // Band mode never overlaps the value row, so only full mode needs a scrim.
 const showScrim = computed(() => hasSparkLine.value && props.sparkHeightMode === 'full')
@@ -358,10 +373,14 @@ function measureScrim(): void {
   const cardRect = card.getBoundingClientRect()
   const rowRect = row.getBoundingClientRect()
   scrimBottomEdge.value = rowRect.bottom - cardRect.top
+  if (cardRect.width > 0 && cardRect.height > 0) {
+    cardSize.value = { width: cardRect.width, height: cardRect.height }
+  }
 }
 
 const { observe } = useResizeObserver(measureScrim)
 observe(valueRowEl)
+observe(cardEl)
 watch(() => [props.value, props.unit, delta.value, hoveredSample.value], measureScrim, {
   flush: 'post'
 })
@@ -425,6 +444,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
     :class="{
       'db-cmk-kpi-stat-card--tinted': tintColor !== undefined,
       'db-cmk-kpi-stat-card--value-only': isValueOnly,
+      'db-cmk-kpi-stat-card--value-only-small': isTooSmallForHistory,
       'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band',
       'db-cmk-kpi-stat-card--has-range': rangeLimits
     }"
@@ -684,6 +704,12 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card--value-only .db-cmk-kpi-stat-card__value-row {
   justify-content: center;
+}
+
+/* Extra breathing room so the status badge isn't clipped when the card
+   falls back to value-only at small sizes. */
+.db-cmk-kpi-stat-card--value-only-small .db-cmk-kpi-stat-card__value-row {
+  padding: calc(var(--spacing) / 2);
 }
 
 .db-cmk-kpi-stat-card--value-only .db-cmk-kpi-stat-card__value {

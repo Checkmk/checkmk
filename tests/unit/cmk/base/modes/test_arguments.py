@@ -36,19 +36,19 @@ def _mode_argv(mode: Mode, option: str) -> Sequence[str]:
 
 
 def _general_option_argv(option: GeneralOption) -> Sequence[str]:
-    if option.takes_argument():
+    if option.argument:
         return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
     return [f"--{option.long_option}"]
 
 
 def _sub_option_argv(option: Option) -> Sequence[str]:
-    if option.takes_argument():
+    if option.argument:
         return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
     return [f"--{option.long_option}"]
 
 
 def _short_sub_option_argv(option: Option) -> Sequence[str]:
-    if option.takes_argument():
+    if option.argument:
         return [f"-{option.short_option}", _ARGUMENT_EVERY_CONVERSION_ACCEPTS]
     return [f"-{option.short_option}"]
 

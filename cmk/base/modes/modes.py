@@ -89,9 +89,6 @@ class Option:
     def is_deprecated_option(self, opt_str: str) -> bool:
         return opt_str.lstrip("-") in self._deprecated_long_options
 
-    def takes_argument(self) -> bool:
-        return self.argument
-
     def short_help_text(self, fmt: str) -> str:
         option_txt = " %s" % (", ".join(self.options()))
 
@@ -142,11 +139,11 @@ def parse_sub_options(
                     tty.format_warning(f"{o!r} is deprecated in favour of option {option.name!r}")
                 )
 
-            if a and not option.takes_argument():
+            if a and not option.argument:
                 raise MKGeneralException("No argument to %s expected." % o)
 
             val: object = a
-            if not option.takes_argument():
+            if not option.argument:
                 if option.count:
                     value = options.setdefault(option.name, 0)
                     if not isinstance(value, int):

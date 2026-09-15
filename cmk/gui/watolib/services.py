@@ -34,6 +34,7 @@ from cmk.automations.results import (
     SetAutochecksInput,
     SourceResult,
 )
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore, TextSerializer
 from cmk.ccc.version import __version__, Version
@@ -149,6 +150,11 @@ class UpdateType(enum.Enum):
     MONITORED = "unchanged"
     IGNORED = "ignored"
     REMOVED = "removed"
+
+
+#: The `table_target` values that name a command a caller may ask for: the four states a service can be *moved to*.
+#: Every other `DiscoveryState` is a classification the discovery run produces, not a target.
+COMMAND_TARGETS: Final[frozenset[str]] = frozenset(update_type.value for update_type in UpdateType)
 
 
 class DiscoveryResult(NamedTuple):
@@ -269,6 +275,16 @@ class Discovery:
         selected_services: Container[tuple[str, Item]],
         user_need_permission: Callable[[str], None],
     ) -> None:
+        if update_target is not None and update_target not in COMMAND_TARGETS:
+            # A target that is not a command cannot be applied to any service: no `_case_*` handler
+            # writes for it, so `compute_discovery_transition` would silently drop the service from
+            # the rebuilt autochecks (CMK-38588). The REST endpoint rejects these with a 400 before
+            # reaching here; this guard is the domain-level backstop that keeps the transition from
+            # ever deleting a service in the name of moving it.
+            raise MKGeneralException(
+                f"{update_target!r} is not a service discovery command; "
+                f"expected one of {sorted(COMMAND_TARGETS)}"
+            )
         self._host = host
         self._action = action
         self._update_source = update_source

@@ -93,8 +93,6 @@ SERVICE_DISCOVERY_PHASES = {
     "clustered_undecided": DiscoveryState.CLUSTERED_NEW,
     "clustered_vanished": DiscoveryState.CLUSTERED_VANISHED,
     "clustered_ignored": DiscoveryState.CLUSTERED_IGNORED,
-    "legacy": "legacy",
-    "legacy_ignored": "legacy_ignored",
 }
 
 

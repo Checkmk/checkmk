@@ -30,7 +30,6 @@ from collections.abc import Callable, Sequence
 import pytest
 
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.gui.openapi.api_endpoints.service_discovery._utils import SERVICE_DISCOVERY_PHASES
 from cmk.gui.watolib.services import DiscoveryAction, DiscoveryState, DiscoveryTransition
 from cmk.utils.everythingtype import EVERYTHING
 from tests.unit.cmk.gui.watolib.discovery_matrix import (
@@ -353,76 +352,6 @@ def test_ineligible_row_is_rewritten_instead_of_rejected(source: str) -> None:
     assert outcome.in_autochecks is source.startswith("clustered_")
     assert outcome.add_disabled == frozenset()
     assert outcome.remove_disabled == frozenset()
-
-
-# --------------------------------------------------------------------------------------------
-# T1b.11 -- targets that are not commands at all (§10.3)
-# --------------------------------------------------------------------------------------------
-
-#: The four phases that name a command (§11.1). Spelled as REST phase keys because that is the
-#: vocabulary §10.3 is about: `SERVICE_DISCOVERY_PHASES` is what the endpoint accepts, and its
-#: values are what reach `update_target`.
-_COMMAND_PHASES = frozenset({"monitored", "undecided", "ignored", "removed"})
-
-#: Every other phase, as the target string the endpoint hands to `Discovery`. Derived rather than
-#: listed, so that adding a phase without deciding what it means fails here.
-#:
-#: Two of them are **not** `DiscoveryState` values at all: `legacy` and `legacy_ignored` map to
-#: bare strings, which is why this list has 13 entries where the `DiscoveryState` enum would give
-#: 11. They are the sharpest instance of the defect -- a target no handler and no permission arm
-#: has ever heard of -- so the wider vocabulary is the right one to count here.
-_NON_COMMAND_TARGETS = tuple(
-    sorted(
-        target for phase, target in SERVICE_DISCOVERY_PHASES.items() if phase not in _COMMAND_PHASES
-    )
-)
-
-
-def test_the_non_command_targets_are_every_phase_but_the_four_commands() -> None:
-    """§10.3's "13 of 17": the arithmetic the two tests below depend on."""
-    assert len(SERVICE_DISCOVERY_PHASES) == 17
-    assert set(SERVICE_DISCOVERY_PHASES) > _COMMAND_PHASES
-    assert len(_NON_COMMAND_TARGETS) == 13
-
-
-@pytest.mark.parametrize("target", _NON_COMMAND_TARGETS)
-@pytest.mark.xfail(
-    strict=True,
-    reason="CMK-38588 (§10.3) -- only `monitor`, `disable` and `drop` are commands; every other "
-    "value names a state the caller cannot ask for and must be refused with a 400",
-)
-def test_non_command_target_is_rejected(target: str) -> None:
-    with pytest.raises(Exception):  # noqa: B017  # the rejection type is not decided yet
-        run_cell(DiscoveryState.MONITORED, target)
-
-
-#: The three non-command targets `_verify_permissions` happens to have an arm for. The other
-#: ten delete the service without demanding anything at all.
-_NON_COMMAND_TARGETS_DEMANDING_A_PERMISSION = {
-    DiscoveryState.CHANGED,
-    DiscoveryState.CLUSTERED_NEW,
-    DiscoveryState.CLUSTERED_OLD,
-}
-
-
-@pytest.mark.parametrize("target", _NON_COMMAND_TARGETS)
-def test_non_command_target_silently_deletes_the_service(target: str) -> None:
-    """Today: a monitored service is dropped from the autochecks file, and 10 of the 13 targets
-    demand no permission to do it.
-
-    `compute_discovery_transition` rebuilds the autochecks from scratch, so a target no handler
-    writes for is a deletion, not a no-op (§1). The three targets that do demand a permission
-    demand `to_monitored`, which is the permission for keeping the service -- not for deleting
-    it.
-    """
-    outcome = run_cell(DiscoveryState.MONITORED, target)
-    assert outcome.computed is True
-    assert outcome.in_autochecks is False
-    assert outcome.permissions == (
-        ("wato.service_discovery_to_monitored",)
-        if target in _NON_COMMAND_TARGETS_DEMANDING_A_PERMISSION
-        else ()
-    )
 
 
 # --------------------------------------------------------------------------------------------

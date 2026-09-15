@@ -18,6 +18,7 @@ from typing import get_args
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 
 # `Transition` is the check engine's *private* vocabulary of row states. It is imported here on
@@ -739,6 +740,28 @@ def test_command_targets_cover_the_permission_table() -> None:
     """Every target a command can be spelled as demands exactly one permission (§5.1)."""
     spellings = {target for targets in COMMAND_TARGETS.values() for target in targets}
     assert spellings == set(PERMISSION_BY_TARGET)
+
+
+#: Every `DiscoveryState` that is not one of the four commands: a state the classifier produces,
+#: never a target a caller may ask for. Derived so a new state joins the refused set until someone decides otherwise.
+_NON_COMMAND_TARGETS = sorted(
+    value
+    for name, value in vars(DiscoveryState).items()
+    if name.isupper() and value not in services_module.COMMAND_TARGETS
+)
+
+
+@pytest.mark.parametrize("target", _NON_COMMAND_TARGETS)
+def test_discovery_refuses_a_non_command_target(target: str) -> None:
+    """§10.3 / CMK-38588: `Discovery` refuses a target that is not a command, rather than applying
+    it -- no `_case_*` handler writes for one, so accepting it would delete the service (§1).
+
+    The refusal is the domain-level backstop behind the REST endpoint's `400`; it is asserted here
+    because the endpoint rejects before `Discovery` is ever constructed, so this layer is the only
+    place the guard itself is exercised.
+    """
+    with pytest.raises(MKGeneralException):
+        run_cell(DiscoveryState.MONITORED, target)
 
 
 # --------------------------------------------------------------------------------------------

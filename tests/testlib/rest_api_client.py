@@ -3721,6 +3721,7 @@ class ServiceDiscoveryClient(RestApiClient):
         check_type: str,
         service_item: str | None,
         target_phase: str,
+        api_version: APIVersion | None = None,
         expect_ok: bool = True,
     ) -> Response:
         # The body params are keyword-only on purpose: three of them are interchangeable strings
@@ -3733,6 +3734,7 @@ class ServiceDiscoveryClient(RestApiClient):
                 "service_item": service_item,
                 "target_phase": target_phase,
             },
+            api_version=api_version,
             expect_ok=expect_ok,
         )
 

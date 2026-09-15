@@ -27,6 +27,7 @@ from cmk.gui.openapi.api_endpoints.service_discovery._utils import SERVICE_DISCO
 from cmk.gui.openapi.api_endpoints.service_discovery.models.request_models import (
     UpdateDiscoveryPhaseModel,
 )
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.watolib.services import ServiceDiscoveryBackgroundJob
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.automation_config import LocalAutomationConfig
@@ -2394,7 +2395,7 @@ def test_refresh_and_tabula_rasa_redirect(
     )
 
 
-# --- T3.2 / §5.2, §10.1, §10.3: the seventeen accepted target phases -------------------------
+# --- T3.2 / §5.2, §10.1, §10.3: four command phases accepted, thirteen refused ---------------
 
 #: Every value `target_phase` accepts, taken from the request model rather than listed, so that
 #: adding one without deciding what it does fails here.
@@ -2409,23 +2410,32 @@ _TARGET_PHASES: tuple[str, ...] = tuple(
 # this repo rather than a hypothetical.
 assert _TARGET_PHASES, "target_phase is no longer a readable Literal"
 
-#: The two phases that name the source they are applied to, per source: asking for the phase a
-#: service is already in computes no transition at all, so nothing is written.
+#: The four phases that name a command a caller may ask for (§11.1). Every other phase the model
+#: still lists is refused with a 400 (§10.3 / CMK-38588).
+_COMMAND_PHASES = frozenset({"monitored", "undecided", "ignored", "removed"})
+
+#: The phase per source that names the source itself: asking for the phase a service is already in
+#: computes no transition at all, so nothing is written. Only `unchanged`'s is a command; a vanished
+#: service's own spelling, `vanished`, is not, so it is refused rather than a no-op.
 _NO_OP_PHASE = {"unchanged": "monitored", "vanished": "vanished"}
 
-#: The one phase per source that is a legitimate command and changes the file.
+#: The one command phase per source that changes the file.
 _COMMAND_PHASE = {"unchanged": "ignored", "vanished": "removed"}
 
 
-def test_the_request_model_and_the_phase_map_accept_the_same_seventeen_phases() -> None:
-    """The vocabulary is spelled out twice, and the two spellings must not drift.
+def test_the_v1_model_still_advertises_all_seventeen_phases() -> None:
+    """The stable v1 enum is unchanged for backwards compatibility, but only four phases name a
+    command; the other thirteen are refused with a 400 (§10.3 / CMK-38588).
 
-    `UpdateDiscoveryPhaseModel.target_phase` is what the generated documentation offers a client
-    and what the framework validates against; `SERVICE_DISCOVERY_PHASES` is what the handler can
-    translate. A phase in the model but not the map would reach the handler and raise `KeyError`.
+    The safety property the handler relies on: every command phase can be translated by
+    `SERVICE_DISCOVERY_PHASES`, so a valid request never raises `KeyError`. The two phases the model
+    lists but the map no longer carries -- `legacy` and `legacy_ignored`, werk 7342 remnants -- are
+    non-command phases, so they are refused before the lookup is ever reached.
     """
-    assert set(_TARGET_PHASES) == set(SERVICE_DISCOVERY_PHASES)
     assert len(_TARGET_PHASES) == 17
+    assert set(_TARGET_PHASES) >= _COMMAND_PHASES
+    assert set(SERVICE_DISCOVERY_PHASES) >= _COMMAND_PHASES
+    assert set(_TARGET_PHASES) - set(SERVICE_DISCOVERY_PHASES) == {"legacy", "legacy_ignored"}
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
@@ -2510,37 +2520,29 @@ def test_update_service_phase_reports_success_for_a_service_that_does_not_exist(
 def test_update_service_phase_target_matrix(
     clients: ClientRegistry, tier3_writes: Tier3Writes, phase: str, source: str
 ) -> None:
-    """§5.2 / A2-F1 / A2-F6: all seventeen phases are accepted with `204`, for both sources.
+    """§5.2 / §10.3: the four command phases are accepted with `204`; the other thirteen are `400`.
 
-    Three outcomes per source, and which of the three a phase lands in is the finding:
+    The v1 enum still lists all seventeen, but only `monitored`, `undecided`, `ignored` and
+    `removed` name a command a caller may ask for. §10.3 / CMK-38588 refuses the other thirteen with
+    a `400` -- for **either** source, since a phase that is not a command cannot be applied to any
+    service. That closes the A2-F6 gap where one `target_phase` had two opposite effects chosen by a
+    source the caller never sent (delete from `unchanged`, keep from `vanished`).
 
-    * the phase naming the source is a no-op -- no write at all;
-    * one phase is a real command and changes the file;
-    * the remaining fifteen are neither, and what they do depends on the source. From `unchanged`
-      they **delete** the service. From `vanished` the same fifteen **keep** it. One
-      `target_phase`, two opposite effects, chosen by a source the caller never sent: that is the
-      pair-validity gap of A2-F6, and it is the reason the fix has to reject the pair rather than
-      the value.
+    The four command cells that remain `204` still carry the two open defects the sibling tickets
+    own, characterized here until they land:
 
-    **Which ticket owns which cell**, because every one of them flips an expectation below:
-
-    * §10.3 / CMK-38588 owns the thirteen phases that name a state no caller can ask for. From
-      `unchanged` twelve of them delete plus `undecided` and `removed`, which legitimately drop
-      the service; from `vanished` twelve of them keep it (`vanished` itself is that source's
-      no-op).
     * §10.1 / CMK-38587 owns `unchanged`/`ignored`: disabling a monitored service leaves it in the
       autochecks file, where the file should no longer mention it at all.
-    * §10.16 / CMK-38592 owns three cells in the `vanished` column -- `ignored`, `undecided` and
-      `monitored`. A vanished service accepts only `removed`; the other three name states the
-      classifier cannot produce for a service that is no longer discovered, and §10.16's own table
-      lists exactly these three REST targets as "each returning 204". Note this tier sees only
-      half of that symptom: `_case_vanished` adds a **disabled-services rule** as well as writing
-      the entry back, and the ruleset save is invisible here because the fixture records only
-      `set_autochecks_v2`. The strict-xfail pair for it is Tier 1b's `vanished+disable`
+    * §10.16 / CMK-38592 owns three cells in the `vanished` column -- `monitored`, `undecided` and
+      `ignored`. A vanished service accepts only `removed`; the other three name states the
+      classifier cannot produce for a service that is no longer discovered. Note this tier sees only
+      half of the `ignored` symptom: `_case_vanished` adds a **disabled-services rule** as well as
+      writing the entry back, and the ruleset save is invisible here because the fixture records
+      only `set_autochecks_v2`. The strict-xfail pair for it is Tier 1b's `vanished+disable`
       Divergence row.
     """
-    # expect_ok=False deliberately: §10.3's and §10.16's fixes answer 400 here, and the raised
-    # client error would replace "expected 204, got 400" with a request dump.
+    # expect_ok=False deliberately: the thirteen non-command phases answer 400 here, and a raised
+    # client error would replace "expected 400, got ..." with a request dump.
     resp = clients.ServiceDiscovery.update_service_phase(
         str(TIER3_HOST),
         check_type=TIER3_PLUGIN,
@@ -2548,8 +2550,13 @@ def test_update_service_phase_target_matrix(
         target_phase=phase,
         expect_ok=False,
     )
-    resp.assert_status_code(204)
 
+    if phase not in _COMMAND_PHASES:
+        resp.assert_status_code(400)
+        assert tier3_writes.services == []
+        return
+
+    resp.assert_status_code(204)
     if phase == _NO_OP_PHASE[source]:
         expected: list[frozenset[str]] = []
     elif phase == _COMMAND_PHASE[source]:
@@ -2563,6 +2570,51 @@ def test_update_service_phase_target_matrix(
             else TIER3_BASELINE
         ]
     assert tier3_writes.services == expected
+
+
+# --- T3.2b / §9.3: the UNSTABLE version narrows the enum to the four commands ------------------
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs", "tier3_writes")
+@pytest.mark.parametrize("phase", sorted(_COMMAND_PHASES))
+def test_update_service_phase_unstable_accepts_every_command_phase(
+    clients: ClientRegistry, phase: str
+) -> None:
+    """The UNSTABLE version still accepts each of the four command phases with a `204`.
+
+    v1 keeps all seventeen values in the enum and rejects the thirteen at runtime; the UNSTABLE
+    version narrows the enum itself, so this pins that the narrowing did not also drop a command.
+    """
+    clients.ServiceDiscovery.update_service_phase(
+        str(TIER3_HOST),
+        check_type=TIER3_PLUGIN,
+        service_item="/unchanged",
+        target_phase=phase,
+        api_version=APIVersion.UNSTABLE,
+        expect_ok=False,
+    ).assert_status_code(204)
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+@pytest.mark.parametrize("phase", sorted(set(_TARGET_PHASES) - _COMMAND_PHASES))
+def test_update_service_phase_unstable_rejects_non_command_phases_at_the_schema(
+    clients: ClientRegistry, tier3_writes: Tier3Writes, phase: str
+) -> None:
+    """On UNSTABLE the thirteen non-command phases are not in the enum at all, so the framework
+    refuses them as a `literal_error` -- a schema rejection, before the handler runs, rather than
+    v1's hand-written `400`. Either way the service is left untouched.
+    """
+    resp = clients.ServiceDiscovery.update_service_phase(
+        str(TIER3_HOST),
+        check_type=TIER3_PLUGIN,
+        service_item="/unchanged",
+        target_phase=phase,
+        api_version=APIVersion.UNSTABLE,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["body.target_phase"]["type"] == "literal_error"
+    assert tier3_writes.services == []
 
 
 # --- T3.3 / §5.1, §10.4, §10.6: which permission actually stops a request ---------------------

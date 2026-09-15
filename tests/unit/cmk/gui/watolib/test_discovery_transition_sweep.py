@@ -12,10 +12,16 @@ silently compared against "nothing happens" -- and the 105 missing cells were no
 Every "accept" and every "re-enable" transition was in the untested half, which is the direct
 explanation for the werk 19800 gap surviving (behaviour matrix §7.0, A2-F2).
 
-The sweep here is total: 15 sources x 15 targets, no gaps and no dead expectations. It is
-**characterization, not conformance** -- it states what the code does today so that a rewrite
-cannot change any cell by accident. Which of these cells are *wrong* is decided in
-``test_discovery_transition_matrix.py`` (§11.2's meaningful cells, which must pass) and
+The sweep here is total: 15 sources x 15 targets, no gaps and no dead expectations, split into the
+two regions CMK-38588 (§10.3) draws. A ``target`` is either one of the four commands a caller may
+ask for (``COMMAND_TARGETS``), in which case the cell computes a transition, or one of the eleven
+other ``DiscoveryState`` values, in which case ``Discovery`` refuses it outright -- no ``_case_*``
+handler writes for it, so accepting one would delete the service in the name of moving it. The two
+regions are asserted separately below.
+
+It is **characterization, not conformance** -- it states what the code does today so that a rewrite
+cannot change any cell by accident. Which of the transition-computing cells are *wrong* is decided
+in ``test_discovery_transition_matrix.py`` (§11.2's meaningful cells, which must pass) and
 ``test_discovery_transition_quarantine.py`` (the divergences, each paired with a strict-xfail on
 the intended outcome and a ticket).
 
@@ -31,7 +37,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.watolib.services import DiscoveryState
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.watolib.services import COMMAND_TARGETS, DiscoveryState
 from tests.unit.cmk.gui.watolib.discovery_matrix import (
     DESCRIPTION,
     NO_TRANSITION,
@@ -46,20 +53,28 @@ ALL_STATES: Sequence[str] = tuple(
     sorted({value for name, value in vars(DiscoveryState).items() if name.isupper()})
 )
 
+#: The four targets a caller may ask for (§11.1), and the other eleven, which `Discovery` refuses.
+#: Derived from `COMMAND_TARGETS` so that adding a `DiscoveryState` puts it on the refused side
+#: until someone decides it is a command -- it cannot silently join the accepted grid.
+_COMMAND_TARGETS: Sequence[str] = tuple(sorted(COMMAND_TARGETS))
+_NON_COMMAND_TARGETS: Sequence[str] = tuple(t for t in ALL_STATES if t not in COMMAND_TARGETS)
+
 
 @dataclasses.dataclass(frozen=True)
 class HandlerSpec:
-    """What the handler for one source state does, per target (§4, Matrix A2)."""
+    """What the handler for one source state does, per command target (§4, Matrix A2)."""
 
     writes: frozenset[str]
-    """Targets for which the autochecks entry is (re)written. Anything else drops it: the
+    """Command targets for which the autochecks entry is (re)written. Anything else drops it: the
     transition rebuilds the file from scratch, so "no handler wrote it" means "deleted" (§1)."""
 
     adds_rule: frozenset[str] = frozenset()
     removes_rule: frozenset[str] = frozenset()
 
 
-_EVERY_TARGET = frozenset(ALL_STATES)
+#: The command targets only: every `HandlerSpec` set below is a subset of these, because a
+#: non-command target never reaches a handler at all.
+_EVERY_TARGET = frozenset(_COMMAND_TARGETS)
 
 _SPECS: dict[str, HandlerSpec] = {
     # `_case_undecided`: the service is not in the file yet, so only `monitored` puts it there.
@@ -67,8 +82,8 @@ _SPECS: dict[str, HandlerSpec] = {
         writes=frozenset({DiscoveryState.MONITORED}),
         adds_rule=frozenset({DiscoveryState.IGNORED}),
     ),
-    # `_case_vanished`: `removed` is the only target that cleans up; everything else falls into
-    # the catch-all `else` and keeps the service (A2-F4, A2-F6).
+    # `_case_vanished`: `removed` is the only target that cleans up; the other three commands fall
+    # into the catch-all `else` and keep the service (A2-F4).
     DiscoveryState.VANISHED: HandlerSpec(
         writes=_EVERY_TARGET - {DiscoveryState.REMOVED},
         adds_rule=frozenset({DiscoveryState.IGNORED}),
@@ -78,12 +93,10 @@ _SPECS: dict[str, HandlerSpec] = {
         writes=frozenset({DiscoveryState.MONITORED, DiscoveryState.IGNORED}),
         adds_rule=frozenset({DiscoveryState.IGNORED}),
     ),
-    # `_case_changed`: as `_case_monitored`, plus the `changed` self-target that writes the old
-    # values back.
+    # `_case_changed`: as `_case_monitored`. `changed` itself is not a command, so the self-target
+    # that wrote the old values back is now refused before the handler runs.
     DiscoveryState.CHANGED: HandlerSpec(
-        writes=frozenset(
-            {DiscoveryState.MONITORED, DiscoveryState.IGNORED, DiscoveryState.CHANGED}
-        ),
+        writes=frozenset({DiscoveryState.MONITORED, DiscoveryState.IGNORED}),
         adds_rule=frozenset({DiscoveryState.IGNORED}),
     ),
     # `_case_ignored`: the only handler that removes a rule. A disabled service is never written
@@ -95,7 +108,7 @@ _SPECS: dict[str, HandlerSpec] = {
             {DiscoveryState.MONITORED, DiscoveryState.UNDECIDED, DiscoveryState.VANISHED}
         ),
     ),
-    # `_case_clustered`: preserve-by-rewrite for every target but `ignored`, which drops the
+    # `_case_clustered`: preserve-by-rewrite for every command but `ignored`, which drops the
     # node's entry and adds no rule -- un-monitoring the service on the cluster (§10.17).
     **{
         clustered: HandlerSpec(writes=_EVERY_TARGET - {DiscoveryState.IGNORED})
@@ -123,19 +136,8 @@ _SPECS: dict[str, HandlerSpec] = {
 }
 
 
-#: What `_verify_permissions`' `match` demands per target, today. It is wider than the command
-#: vocabulary: `changed`, `clustered_new` and `clustered_old` share `to_monitored`'s arm although
-#: no caller should be able to ask for them (§5.1, §10.3).
-_TODAYS_PERMISSION_ARMS: dict[str, str] = {
-    **PERMISSION_BY_TARGET,
-    DiscoveryState.CHANGED: "wato.service_discovery_to_monitored",
-    DiscoveryState.CLUSTERED_NEW: "wato.service_discovery_to_monitored",
-    DiscoveryState.CLUSTERED_OLD: "wato.service_discovery_to_monitored",
-}
-
-
 def _expected(source: str, target: str) -> Outcome:
-    """The outcome the specs above predict for one cell."""
+    """The outcome the specs above predict for one cell whose target is a command."""
     if source == target:
         # Nothing differs, so `apply_changes` is never set and no transition is computed at all.
         return NO_TRANSITION
@@ -144,7 +146,7 @@ def _expected(source: str, target: str) -> Outcome:
     writes = target in spec.writes
     adds = frozenset({DESCRIPTION}) if target in spec.adds_rule else frozenset()
     removes = frozenset({DESCRIPTION}) if target in spec.removes_rule else frozenset()
-    permission = _TODAYS_PERMISSION_ARMS.get(target)
+    permission = PERMISSION_BY_TARGET.get(target)
     return Outcome(
         computed=True,
         in_autochecks=writes,
@@ -165,33 +167,50 @@ def test_the_sweep_covers_every_declared_state() -> None:
     assert len(ALL_STATES) == 15
 
 
+def test_the_grid_is_split_into_four_commands_and_eleven_refused_targets() -> None:
+    """§10.3's arithmetic: the two regions the tests below partition the target axis into."""
+    assert len(_COMMAND_TARGETS) == 4
+    assert len(_NON_COMMAND_TARGETS) == 11
+    assert set(_COMMAND_TARGETS) | set(_NON_COMMAND_TARGETS) == set(ALL_STATES)
+
+
 @pytest.mark.parametrize(
     "source, target",
-    list(itertools.product(ALL_STATES, ALL_STATES)),
+    list(itertools.product(ALL_STATES, _COMMAND_TARGETS)),
     ids=str,
 )
 def test_transition_cell(source: str, target: str) -> None:
-    """All 225 ordered `(source, target)` pairs, each asserted -- none defaulted."""
+    """All 15 x 4 command cells, each asserted -- none defaulted."""
     assert run_cell(source, target) == _expected(source, target)
 
 
-def test_only_six_of_fifteen_targets_demand_a_permission() -> None:
-    """§5.1: nine of the fifteen targets delete a monitored service demanding nothing at all.
+@pytest.mark.parametrize(
+    "source, target",
+    list(itertools.product(ALL_STATES, _NON_COMMAND_TARGETS)),
+    ids=str,
+)
+def test_non_command_target_is_refused(source: str, target: str) -> None:
+    """§10.3 / CMK-38588: a target that is not a command is refused for every source, rather than
+    silently deleting the service (or, from a `vanished` row, silently keeping it)."""
+    with pytest.raises(MKGeneralException):
+        run_cell(source, target)
 
-    `_verify_permissions`' `match` has no default arm, so a target it does not name is a silent
-    pass -- the mechanism behind §10.3. Of the six it does name, three are commands and three
-    (`changed`, `clustered_new`, `clustered_old`) are states no caller should be able to ask for;
-    all three of those demand `to_monitored`, so four distinct permissions cover six targets.
+
+def test_the_command_targets_from_a_monitored_service_demand_their_permission() -> None:
+    """§5.1: moving a monitored service to any of the other three commands demands exactly the
+    permission that command maps to; moving it to `monitored` is a no-op and demands nothing.
+
+    The counterpart of the removed §10.3 characterization: it used to be that nine of fifteen
+    targets deleted a monitored service demanding nothing at all. Those nine are now refused, so
+    the only targets left to demand anything are the commands, and each demands its own permission.
     """
     demanded = {
-        target for target in ALL_STATES if run_cell(DiscoveryState.MONITORED, target).permissions
+        target: run_cell(DiscoveryState.MONITORED, target).permissions
+        for target in _COMMAND_TARGETS
     }
     assert demanded == {
-        DiscoveryState.UNDECIDED,
-        DiscoveryState.IGNORED,
-        DiscoveryState.REMOVED,
-        DiscoveryState.CHANGED,
-        DiscoveryState.CLUSTERED_NEW,
-        DiscoveryState.CLUSTERED_OLD,
+        DiscoveryState.MONITORED: (),
+        DiscoveryState.UNDECIDED: (PERMISSION_BY_TARGET[DiscoveryState.UNDECIDED],),
+        DiscoveryState.IGNORED: (PERMISSION_BY_TARGET[DiscoveryState.IGNORED],),
+        DiscoveryState.REMOVED: (PERMISSION_BY_TARGET[DiscoveryState.REMOVED],),
     }
-    assert len(ALL_STATES) - len(demanded) == 9

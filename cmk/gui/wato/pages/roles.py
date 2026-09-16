@@ -50,7 +50,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserRole
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -71,6 +71,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.userroles import RoleID
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML

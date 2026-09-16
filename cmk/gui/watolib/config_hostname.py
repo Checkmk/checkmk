@@ -10,9 +10,9 @@ import re
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Choices
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
+from cmk.web.utils.choices import Choices
 
 from .hosts_and_folders import folder_tree, Host
 

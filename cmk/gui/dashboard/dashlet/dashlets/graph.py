@@ -46,12 +46,7 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import (
-    Choices,
-    GraphRenderOptionsVS,
-    SingleInfos,
-    VisualContext,
-)
+from cmk.gui.type_defs import GraphRenderOptionsVS, SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
     Timerange,
@@ -61,6 +56,7 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
 )
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.choices import Choices
 
 from ..base import (
     Dashlet,

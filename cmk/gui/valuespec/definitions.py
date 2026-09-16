@@ -75,7 +75,7 @@ from cmk.gui.i18n import _
 from cmk.gui.icons import all_available_icon_emblems, all_available_icons
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
+from cmk.gui.type_defs import ChoiceGroup, GroupedChoices
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.gui.utils.labels import (
@@ -98,6 +98,7 @@ from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
 from cmk.web.utils import escaping
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
+from cmk.web.utils.choices import ChoiceId, Choices, ChoiceText
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import (
     DynamicIcon,

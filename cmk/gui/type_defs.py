@@ -35,6 +35,7 @@ from cmk.gui.exceptions import FinalizeRequest
 from cmk.inventory.structured_data import SDPath
 from cmk.ruleset_matcher.labels import Labels
 from cmk.utils.password_store import PasswordId
+from cmk.web.utils.choices import Choices, ChoiceText
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 from cmk.web.utils.speaklater import LazyString
 
@@ -45,10 +46,6 @@ type VerticalAxisWidth = Literal["fixed"] | tuple[Literal["explicit"], SizePT]
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
 RoleName = str
-ChoiceText = str
-ChoiceId = str | None
-Choice = tuple[ChoiceId, ChoiceText]
-Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 ChoiceMapping = Mapping[str, ChoiceText]
 
 

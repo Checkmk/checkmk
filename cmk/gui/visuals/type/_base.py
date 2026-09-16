@@ -10,9 +10,10 @@ from collections.abc import Iterator
 
 from cmk.gui.http import Request
 from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.type_defs import Choices, HTTPVariables, Rows, SingleInfos, Visual, VisualContext
+from cmk.gui.type_defs import HTTPVariables, Rows, SingleInfos, Visual, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import get_labels
+from cmk.web.utils.choices import Choices
 
 
 class VisualType(abc.ABC):

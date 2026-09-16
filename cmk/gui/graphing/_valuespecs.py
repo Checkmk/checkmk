@@ -20,7 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
+from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
 from cmk.gui.unit_formatter import (
     AutoPrecision,
     NotationFormatter,
@@ -50,6 +50,7 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
 )
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.web.utils.choices import Choice, Choices
 
 from ._decoding import ensure_type
 from ._from_api import metrics_from_api, RegisteredMetric

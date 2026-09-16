@@ -13,10 +13,10 @@ from collections.abc import Callable, Collection
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.gui.utils.user_errors import user_errors
 from cmk.livestatus_client import LivestatusColumn, MultiSiteConnection
+from cmk.web.utils.choices import Choices
 
 from ._livestatus import get_only_sites_from_context, livestatus_query_bare_string
 

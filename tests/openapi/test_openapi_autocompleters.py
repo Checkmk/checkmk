@@ -7,8 +7,8 @@ import pytest
 
 from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.config import Config
-from cmk.gui.type_defs import Choices
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.utils.choices import Choices
 from tests.testlib.rest_api_client import ClientRegistry
 
 

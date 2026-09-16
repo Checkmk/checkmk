@@ -14,12 +14,12 @@ from cmk.gui import userdb, valuespec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import DropdownChoice, Transform, ValueSpecValidateFunc
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils import password_store
 from cmk.utils.password_store import ad_hoc_password_id, PasswordConfig
+from cmk.web.utils.choices import Choices
 
 
 class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):

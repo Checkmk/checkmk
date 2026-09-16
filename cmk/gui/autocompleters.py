@@ -14,7 +14,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import Choices
+from cmk.web.utils.choices import Choices
 
 AutocompleterFunc = Callable[[Config, str, dict[str, object]], Choices]
 

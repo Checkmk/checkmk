@@ -13,9 +13,9 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.groups_io import all_groups
+from cmk.web.utils.choices import Choices
 
 
 def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:

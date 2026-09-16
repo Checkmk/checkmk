@@ -72,13 +72,7 @@ from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import (
-    Choices,
-    CustomHostAttrSpec,
-    GlobalSettings,
-    HTTPVariables,
-    SetOnceDict,
-)
+from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, HTTPVariables, SetOnceDict
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -132,6 +126,7 @@ from cmk.utils.host_storage import (
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.web.utils import urls
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 

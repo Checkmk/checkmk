@@ -112,6 +112,7 @@ py_library(
         "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

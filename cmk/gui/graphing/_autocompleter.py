@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 from cmk.gui.autocompleters import AutocompleterFunc
 from cmk.gui.config import Config
-from cmk.gui.type_defs import Choices
+from cmk.web.utils.choices import Choices
 
 from ._decoding import context_from_json
 from ._from_api import metrics_from_api

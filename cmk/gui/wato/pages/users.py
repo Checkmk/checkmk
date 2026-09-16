@@ -48,7 +48,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, CustomUserAttrSpec, UserSpec
+from cmk.gui.type_defs import ActionResult, CustomUserAttrSpec, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.userdb import (
@@ -102,6 +102,7 @@ from cmk.gui.watolib.users import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths, render
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages

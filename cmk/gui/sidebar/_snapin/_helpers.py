@@ -19,12 +19,13 @@ from cmk.gui.icon_helpers import migrate_to_dynamic_icon, migrate_to_static_icon
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.sites import SiteStatus, states
-from cmk.gui.type_defs import Choices, Visual
+from cmk.gui.type_defs import Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 

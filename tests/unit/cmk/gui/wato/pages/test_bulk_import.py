@@ -19,7 +19,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import Choices, CustomHostAttrSpec
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.wato.pages.bulk_import import (
     _attribute_choices,
     _detect_attribute,
@@ -34,6 +34,7 @@ from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.ruleset_matcher.tags import TagGroup
+from cmk.web.utils.choices import Choices
 
 
 def _noop_pending_changes() -> PendingChanges:

@@ -51,7 +51,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
-from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables
+from cmk.gui.type_defs import ActionResult, HTTPVariables
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
@@ -109,6 +109,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference, YouTubeReference
 from cmk.web.utils.escaping import escape_to_html_permissive

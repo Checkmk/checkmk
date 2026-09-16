@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.config import Config
-from cmk.gui.type_defs import Choices
+from cmk.web.utils.choices import Choices
 
 from .defines import syslog_facilities
 from .helpers import service_levels

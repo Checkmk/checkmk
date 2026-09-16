@@ -3774,7 +3774,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
     if mode_name != "mkeventd_status":
         yield _page_menu_entry_status()
 
-    if mode_name != "mkeventd_config" and user.may("mkeventd.config"):
+    if user.may("mkeventd.config"):
         yield _page_menu_entry_settings(is_suggested=False)
 
     if mode_name != "mkeventd_mibs":

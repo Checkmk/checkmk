@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.utils.roles import UserPermissions
@@ -13,16 +14,22 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariable,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
 from cmk.gui.watolib.global_settings import (
     affected_sites,
+    global_settings_diff_text,
     is_available_in_global_settings,
     may_read,
 )
+from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1.form_specs import Integer
 from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.config_variable_form_data_test_helper import (
+    make_global_settings_context,
+)
 
 DEFAULTS = {"test_var": 1}
 
@@ -41,6 +48,11 @@ def _variable(
 
 def _always_activated(varname: str) -> bool:  # noqa: ARG001
     return True
+
+
+@pytest.fixture(name="global_settings_context")
+def fixture_global_settings_context() -> GlobalSettingsContext:
+    return make_global_settings_context(Edition.COMMUNITY)
 
 
 def test_variable_with_a_factory_default_is_available() -> None:
@@ -121,3 +133,65 @@ def test_the_event_console_actions_are_readable_with_the_executables_permission(
         explicit_permissions={"mkeventd.config", "wato.add_or_modify_executables"},
     ):
         assert may_read(config_variable_registry["actions"])
+
+
+def test_diff_text_form_spec_value_changed(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    assert (
+        global_settings_diff_text(
+            _variable(),
+            global_settings_context,
+            {"test_var": 100},
+            {"test_var": 66},
+        )
+        == 'Value of "test_var" changed from 100 to 66.'
+    )
+
+
+def test_diff_text_first_override_reads_as_added(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    assert (
+        global_settings_diff_text(
+            _variable(),
+            global_settings_context,
+            {},
+            {"test_var": 66},
+        )
+        == 'Attribute "test_var" with value 66 added.'
+    )
+
+
+def test_diff_text_reset_reads_as_removed(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    assert (
+        global_settings_diff_text(
+            _variable(),
+            global_settings_context,
+            {"test_var": 100},
+            {},
+        )
+        == 'Attribute "test_var" with value 100 removed.'
+    )
+
+
+def test_diff_text_form_spec_secret_is_redacted(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    config_variable = ConfigVariable(
+        group=ConfigVariableGroupUserInterface,
+        primary_domain=ConfigDomainGUI,
+        ident="test_var",
+        form_spec=lambda context: SimplePassword(),  # noqa: ARG005
+    )
+    diff_text = global_settings_diff_text(
+        config_variable,
+        global_settings_context,
+        {"test_var": "old-secret"},
+        {"test_var": "new-secret"},
+    )
+    assert diff_text == "Redacted secrets changed."
+    assert "old-secret" not in diff_text
+    assert "new-secret" not in diff_text

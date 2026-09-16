@@ -2132,7 +2132,7 @@ def _page_menu_dropdown_site_details(
 def _page_menu_entries_site_details(
     site_id: str, site: SiteConfiguration, site_configs: SiteConfigurations, current_mode: str
 ) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and site_globals_editable(site_configs, site):
+    if site_globals_editable(site_configs, site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name=StaticIcon(IconNames.configuration),

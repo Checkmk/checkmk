@@ -11,16 +11,18 @@ import pytest
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
     ConfigVariableChooseSNMPBackend,
+    ConfigVariableTableRowLimit,
     make_snmp_backend_hosts_rulespec,
 )
 from cmk.gui.watolib.config_domain_name import GlobalSettingsContext
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, Integer
 
 
 @pytest.mark.parametrize(
@@ -203,3 +205,41 @@ def test_inline_snmp_backend_unavailable_in_community() -> None:
         make_snmp_backend_hosts_rulespec(Edition.COMMUNITY).valuespec.validate_value(
             "inline", "varprefix"
         )
+
+
+def _table_row_limit_form_spec() -> Integer:
+    form_spec = ConfigVariableTableRowLimit.value_model(_global_settings_context(Edition.COMMUNITY))
+    assert isinstance(form_spec, Integer)
+    return form_spec
+
+
+def test_table_row_limit_uses_form_spec_backend() -> None:
+    assert isinstance(
+        ConfigVariableTableRowLimit.value_model(_global_settings_context(Edition.COMMUNITY)),
+        FormSpec,
+    )
+
+
+def test_table_row_limit_default_matches_general_config() -> None:
+    assert _table_row_limit_form_spec().prefill == DefaultValue(100)
+
+
+def test_table_row_limit_valid_value_round_trips_as_int() -> None:
+    visitor = get_visitor(
+        _table_row_limit_form_spec(),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    )
+    assert visitor.validate(RawFrontendData(50)) == []
+    assert visitor.to_disk(RawFrontendData(50)) == 50
+
+
+def test_table_row_limit_rejects_value_below_minimum() -> None:
+    visitor = get_visitor(
+        _table_row_limit_form_spec(),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    )
+    assert visitor.validate(RawFrontendData(0))
+
+
+def test_table_row_limit_upgrade_keeps_stored_int() -> None:
+    assert migrate_form_spec_disk_value(_table_row_limit_form_spec(), 42) == 42

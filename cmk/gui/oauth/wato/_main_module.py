@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.gui.i18n import _
 from cmk.gui.oauth.wato._registered_clients_mode import ModeRegisteredOAuthClients
+from cmk.gui.oauth.wato._user_tokens_mode import ModeOAuthTokens
 from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.wato import MainModuleTopicGeneral
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
@@ -14,6 +15,7 @@ from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainMod
 
 def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleRegisteredOAuthClients)
+    main_module_registry.register(MainModuleOAuthTokens)
 
 
 class MainModuleRegisteredOAuthClients(ABCMainModule):
@@ -51,6 +53,48 @@ class MainModuleRegisteredOAuthClients(ABCMainModule):
     @override
     def sort_index(self) -> int:
         return 90
+
+    @property
+    @override
+    def is_show_more(self) -> bool:
+        return True
+
+
+class MainModuleOAuthTokens(ABCMainModule):
+    @property
+    @override
+    def mode_or_url(self) -> str:
+        return ModeOAuthTokens.name()
+
+    @property
+    @override
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicGeneral
+
+    @property
+    @override
+    def title(self) -> str:
+        return _("OAuth access tokens")
+
+    @property
+    @override
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.passwords)  # TODO: add proper icon
+
+    @property
+    @override
+    def permission(self) -> None | str:
+        return "users"
+
+    @property
+    @override
+    def description(self) -> str:
+        return _("View and revoke OAuth access tokens issued to users.")
+
+    @property
+    @override
+    def sort_index(self) -> int:
+        return 91
 
     @property
     @override

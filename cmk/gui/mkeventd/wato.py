@@ -20,7 +20,6 @@ import warnings
 import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast, Literal, overload, override
 
@@ -117,23 +116,16 @@ from cmk.gui.wato import (
     MainModuleTopicEvents,
     sorted_contact_group_choices,
 )
-from cmk.gui.wato.pages.global_settings import (
-    ABCEditGlobalSettingMode,
-    ABCGlobalSettingsMode,
-)
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
-    config_variable_group_registry,
-    config_variable_registry,
     ConfigDomainRegistry,
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
     EVENT_CONSOLE,
-    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
 from cmk.gui.watolib.config_sync import (
@@ -148,10 +140,7 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import (
-    load_configuration_settings,
-    make_global_settings_context,
     make_pending_changes,
-    save_global_settings,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
@@ -254,8 +243,6 @@ def register(
     mode_registry.register(ModeEventConsoleEditRulePack)
     mode_registry.register(ModeEventConsoleEditRule)
     mode_registry.register(ModeEventConsoleStatus)
-    mode_registry.register(ModeEventConsoleSettings)
-    mode_registry.register(ModeEventConsoleEditGlobalSetting)
     mode_registry.register(ModeEventConsoleMIBs)
     mode_registry.register(ModeEventConsoleUploadMIBs)
 
@@ -3278,131 +3265,6 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
                 html.hidden_fields()
 
 
-class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "mkeventd_config"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return ["mkeventd.config"]
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEventConsoleRulePacks
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-
-        self._default_values = self._config_domain.default_globals()
-        self._current_settings = dict(load_configuration_settings())
-
-    @staticmethod
-    @override
-    def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
-        return [
-            g
-            for g in sorted(
-                config_variable_group_registry.values(), key=lambda grp: grp.sort_index()
-            )
-            if g
-            in (
-                ConfigVariableGroupEventConsoleGeneric,
-                ConfigVariableGroupEventConsoleLogging,
-                ConfigVariableGroupEventConsoleSNMP,
-            )
-        ]
-
-    @override
-    def title(self) -> str:
-        if self._search:
-            return html_escape(
-                _("Event Console configuration matching '%(search)s'") % {"search": self._search}
-            )
-        return _("Event Console configuration")
-
-    @override
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
-            dropdowns=[
-                PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Setup"),
-                            entries=list(_page_menu_entries_related_ec(self.name())),
-                        ),
-                    ],
-                ),
-            ],
-            breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(),
-        )
-
-    # TODO: Consolidate with ModeEditGlobals.action()
-    @override
-    def action(self, config: Config) -> ActionResult:
-        varname = request.var("_varname")
-        action = request.var("_action")
-        if not varname:
-            return None
-
-        try:
-            config_variable = config_variable_registry[varname]
-        except KeyError:
-            raise MKUserError("_varname", _("The requested global setting does not exist."))
-
-        def_value = self._default_values[varname]
-
-        if not transactions.check_transaction(request):
-            return None
-
-        if varname in self._current_settings:
-            self._current_settings[varname] = not self._current_settings[varname]
-        else:
-            self._current_settings[varname] = not def_value
-        msg = _("Changed Configuration variable %(varname)s to %(value)s.") % {
-            "varname": varname,
-            "value": self._current_settings[varname] and _("on") or _("off"),
-        }
-
-        save_global_settings(self._current_settings, config.sites)
-
-        self._add_change(
-            action_name="edit-configvar",
-            text=msg,
-            domains=config_variable.all_domains(),
-            pending_changes=_pending_changes_for_ec(config=config, acting_user=user.id),
-        )
-
-        if action == "_reset":
-            flash(msg)
-        return redirect(mode_url("mkeventd_config"))
-
-    @property
-    @override
-    def edit_mode_name(self) -> str:
-        return "mkeventd_edit_configvar"
-
-    @override
-    def page(self, config: Config) -> None:
-        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
-        self._show_configuration_variables(config)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            omd_site(),
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
-
-
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
     title=_l("Event Console: generic"),
     sort_index=18,
@@ -3425,48 +3287,6 @@ ConfigVariableGroupEventConsoleSNMP = ConfigVariableGroup(
     icon=IconNames.snmpmib,
     description=_l("Configures how the Event Console receives SNMP traps"),
 )
-
-
-class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "mkeventd_edit_configvar"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return ["mkeventd.config"]
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEventConsoleSettings
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._need_restart = None
-
-    @override
-    def title(self) -> str:
-        return _("Event Console configuration")
-
-    @override
-    def _affected_sites(self) -> list[SiteId]:
-        return _get_event_console_sync_sites()
-
-    @override
-    def _back_url(self) -> str:
-        return ModeEventConsoleSettings.mode_url()
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            omd_site(),
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
 
 
 def _get_event_console_sync_sites() -> list[SiteId]:

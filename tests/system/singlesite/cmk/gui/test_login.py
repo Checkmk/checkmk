@@ -44,16 +44,16 @@ def create_and_delete_automation_user(site: Site) -> Iterator[tuple[str, str]]:
 def test_login_and_logout(site: Site) -> None:
     web = CMKWebSession(site)
 
-    r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
+    r = web.get("global_settings.py", allow_redirect_to_login=True)
     assert "Global settings" not in r.text
 
     web.login()
     site.enforce_non_localized_gui(web)
-    r = web.get("wato.py?mode=globalvars")
+    r = web.get("global_settings.py")
     assert "Global settings" in r.text
 
     web.logout()
-    r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
+    r = web.get("global_settings.py", allow_redirect_to_login=True)
     assert "Global settings" not in r.text
 
 

@@ -4,61 +4,90 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Iterator
 
 import pytest
-from pytest import MonkeyPatch
 
-from cmk.ccc.version import Edition
-from cmk.gui.config import Config
+import cmk.utils.paths
+from cmk.ccc import store
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
-from cmk.gui.http import request
+from cmk.gui.htmllib.html import _load_vue_manifest
 from cmk.gui.i18n import _l
-from cmk.gui.pages import PageContext
-from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
-from cmk.gui.wato.pages import global_settings
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
-    ConfigVariableRegistry,
     GlobalSettingsContext,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import global_settings_diff_text
+from cmk.gui.watolib.paths import wato_var_dir
 from cmk.rulesets.internal.form_specs import SimplePassword
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, Integer, Password
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, Integer
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
-@pytest.mark.usefixtures("load_config")
-def test_parse_submitted_value_keeps_cleartext_password_for_storage(
-    monkeypatch: MonkeyPatch,
-    test_edition: Edition,
-) -> None:
-    registry = ConfigVariableRegistry()
-    registry.register(
-        ConfigVariable(
-            group=ConfigVariableGroupUserInterface,
-            primary_domain=ConfigDomainGUI,
-            ident="test_secret",
-            form_spec=lambda context: Password(title=Title("Secret")),  # noqa: ARG005
+@pytest.fixture(name="frontend_vue_manifest")
+def fixture_frontend_vue_manifest() -> Iterator[None]:
+    base = cmk.utils.paths.web_dir / "htdocs/cmk-frontend-vue"
+    base.mkdir(parents=True, exist_ok=True)
+    (base / ".manifest.json").write_text(
+        json.dumps(
+            {
+                "src/main.ts": {"file": "main.js"},
+                "src/nav_sidebar.ts": {"file": "nav_sidebar.js"},
+                "src/stage1.ts": {"file": "stage1.js"},
+            }
         )
     )
-    monkeypatch.setattr(global_settings, "config_variable_registry", registry)
+    _load_vue_manifest.cache_clear()
+    yield
+    _load_vue_manifest.cache_clear()
 
-    request.set_var("varname", "test_secret")
-    # PasswordVisitor frontend model: (type, password_id, password, encrypted)
-    request.set_var("_vue_global_settings", json.dumps(["explicit_password", "", "hunter2", False]))
 
-    submitted = global_settings.ModeEditGlobalSetting(  # noqa: SLF001
-        test_edition, PageContext(config=Config(), request=request)
-    )._parse_submitted_value()
+@pytest.mark.usefixtures("frontend_vue_manifest", "patch_theme")
+@pytest.mark.parametrize(
+    ("old_url", "new_url"),
+    [
+        ("wato.py?mode=globalvars", "global_settings.py"),
+        ("wato.py?mode=edit_configvar&varname=debug", "global_settings.py?varname=debug"),
+        ("wato.py?mode=edit_site_globals&site=remote", "site_specific_settings.py?site=remote"),
+        (
+            "wato.py?mode=edit_site_configvar&site=remote&varname=debug",
+            "site_specific_settings.py?site=remote&varname=debug",
+        ),
+        ("wato.py?mode=mkeventd_config", "event_console_settings.py"),
+        (
+            "wato.py?mode=mkeventd_edit_configvar&varname=debug",
+            "event_console_settings.py?varname=debug",
+        ),
+    ],
+)
+def test_a_retired_mode_redirects_to_its_settings_page(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, old_url: str, new_url: str
+) -> None:
+    response = logged_in_admin_wsgi_app.get(f"/NO_SITE/check_mk/{old_url}", status=302)
 
-    assert isinstance(submitted, tuple)
-    password_id_and_value = submitted[2]
-    assert isinstance(password_id_and_value, tuple)
-    assert password_id_and_value[1] == "hunter2"
+    assert response.headers["Location"] == new_url
+
+
+def _config_generation() -> int:
+    return int(store.load_object_from_file(wato_var_dir() / "config-generation.mk", default=0))
+
+
+@pytest.mark.usefixtures("frontend_vue_manifest", "patch_theme")
+def test_a_stale_action_url_redirects_without_recording_a_change(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+) -> None:
+    generation_before = _config_generation()
+
+    logged_in_admin_wsgi_app.get(
+        "/NO_SITE/check_mk/wato.py?mode=globalvars&_action=toggle&_varname=debug&_transid=stale",
+        status=302,
+    )
+
+    assert _config_generation() == generation_before
 
 
 def _table_row_limit_form_spec(context: GlobalSettingsContext) -> Integer:

@@ -3,726 +3,121 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-"""Editor for global settings in main.mk and modes for these global
-settings"""
+"""Redirects from the retired global settings modes to the pages replacing them"""
 
 import abc
-import contextlib
-from collections.abc import Collection, Iterable, Iterator, Sequence
-from typing import Any, override
+from collections.abc import Collection
+from typing import override
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition
-from cmk.gui import forms
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
-from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.form_specs import (
-    DisplayMode,
-    IncomingData,
-    localize,
-    parse_data_from_field_id,
-    RawDiskData,
-    read_data_from_frontend,
-    render_form_spec,
-)
-from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
-from cmk.gui.global_config import get_global_config
-from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.config import Config
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
-from cmk.gui.page_menu import (
-    get_search_expression,
-    make_confirmed_form_submit_link,
-    make_display_options_dropdown,
-    make_simple_form_page_menu,
-    make_simple_link,
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuEntry,
-    PageMenuSearch,
-    PageMenuTopic,
-)
-from cmk.gui.pages import PageContext
-from cmk.gui.site_config import has_distributed_setup_remote_sites
-from cmk.gui.type_defs import ActionResult, GlobalSettings
-from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.watolib.audit_log import make_audit_log_change_hook
-from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-    GlobalSettingsContext,
-)
-from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.global_settings import (
-    add_global_settings_change,
-    global_settings_diff_text,
-    load_configuration_settings,
-    make_global_settings_context,
-    save_global_settings,
-    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
-)
-from cmk.gui.watolib.hosts_and_folders import (
-    folder_preserving_link,
-    FolderTree,
-    make_folder_tree,
-)
-from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.pending_changes import (
-    index_update_change_hook,
-    PendingChanges,
-    PendingChangesStore,
-)
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
-from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec
-from cmk.web.utils import escaping
-from cmk.web.utils.flashed_messages import flash
-from cmk.web.utils.html import HTML
-from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.gui.type_defs import ActionResult
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 
 def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditGlobals)
     mode_registry.register(ModeEditGlobalSetting)
+    mode_registry.register(ModeEditSiteGlobals)
+    mode_registry.register(ModeEditSiteGlobalSetting)
+    mode_registry.register(ModeEventConsoleSettings)
+    mode_registry.register(ModeEventConsoleEditGlobalSetting)
 
 
-class ABCGlobalSettingsMode(WatoMode):
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        self._search: None | str = None
-        self._show_only_modified = False
+def _settings_page_url(filename: str, *carried_variables: str) -> str:
+    variables: list[HTTPVariable] = [
+        (name, value)
+        for name in carried_variables
+        if (value := request.get_ascii_input(name)) is not None
+    ]
+    return makeuri_contextless(request, variables, filename=filename)
 
-        super().__init__(edition, ctx)
 
-        self._default_values = ABCConfigDomain.get_all_default_globals()
-        self._global_settings: GlobalSettings = {}
-        self._current_settings: dict[str, Any] = {}
-
-    @override
-    def _from_vars(self) -> None:
-        self._search = get_search_expression()
-        self._show_only_modified = (
-            request.get_integer_input_mandatory("_show_only_modified", 0) == 1
-        )
-
+class ABCSettingsPageRedirect(WatoMode):
     @staticmethod
-    def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
-        groups = []
-
-        for group in config_variable_group_registry.values():
-            add = False
-            for config_variable in group.config_variables():
-                if not show_all and (
-                    not config_variable.in_global_settings()
-                    or not config_variable.primary_domain().in_global_settings
-                ):
-                    continue  # do not edit via global settings
-
-                add = True
-                break
-
-            if add:
-                groups.append(group)
-
-        return groups
-
-    def _groups(self) -> Iterable[ConfigVariableGroup]:
-        return self._get_groups(show_all=False)
-
-    @property
-    def edit_mode_name(self) -> str:
-        return "edit_configvar"
-
-    def _should_show_config_variable(self, config_variable: ConfigVariable, *, debug: bool) -> bool:
-        varname = config_variable.ident()
-
-        if not (domain := config_variable.primary_domain()).enabled():
-            return False
-
-        if isinstance(domain, ConfigDomainCore) and varname not in self._default_values:
-            if debug:
-                raise MKGeneralException(
-                    "The configuration variable <tt>%s</tt> is unknown to "
-                    "your local Checkmk installation" % varname
-                )
-            return False
-
-        return config_variable.in_global_settings()
-
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Details"),
-                entries=list(self._page_menu_entries_details()),
-            ),
-        )
-
-    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Show only modified settings"),
-            icon_name=StaticIcon(IconNames.toggle_on)
-            if self._show_only_modified
-            else StaticIcon(IconNames.toggle_off),
-            item=make_simple_link(
-                makeactionuri(
-                    request,
-                    transactions.get(),
-                    [
-                        ("_show_only_modified", "0" if self._show_only_modified else "1"),
-                    ],
-                )
-            ),
-        )
-
-    def iter_all_configuration_variables(
-        self, *, debug: bool
-    ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
-        yield from (
-            (
-                group,
-                (
-                    config_variable
-                    for config_variable in group.config_variables()
-                    if self._should_show_config_variable(config_variable, debug=debug)
-                ),
-            )
-            for group in sorted(self._groups(), key=lambda g: g.sort_index())
-        )
-
-    def _show_configuration_variables(self, config: Config) -> None:
-        search = self._search
-
-        at_least_one_painted = False
-        html.open_div(class_="globalvars")
-        global_config = get_global_config()
-        for group, config_variables in self.iter_all_configuration_variables(debug=config.debug):
-            header_is_painted = False  # needed for omitting empty groups
-
-            for config_variable in config_variables:
-                varname = config_variable.ident()
-                context = self.make_global_settings_context(config)
-                value_model = config_variable.value_model(context)
-                help_text = localize(resolve_help_text(value_model))
-                title_text = localize(resolve_title(value_model))
-
-                if not global_config.global_settings.is_activated(varname):
-                    continue
-
-                if self._show_only_modified and varname not in self._current_settings:
-                    continue
-
-                if (
-                    search
-                    and search not in group.title().lower()
-                    and search not in config_variable.primary_domain().ident().lower()
-                    and search not in varname
-                    and search not in help_text.lower()
-                    and search not in title_text.lower()
-                ):
-                    continue  # skip variable when search is performed and nothing matches
-                at_least_one_painted = True
-
-                if not header_is_painted:
-                    # always open headers when searching
-                    forms.header(group.title(), isopen=bool(search) or self._show_only_modified)
-                    if warning := group.warning():
-                        forms.warning_message(warning)
-                    header_is_painted = True
-
-                default_value = self._default_values[varname]
-
-                edit_url = folder_preserving_link(
-                    request,
-                    [
-                        ("mode", self.edit_mode_name),
-                        ("varname", varname),
-                        ("site", request.var("site", "")),
-                    ],
-                )
-                title = HTMLWriter.render_a(
-                    title_text,
-                    href=edit_url,
-                    class_="modified" if varname in self._current_settings else None,
-                    title=escaping.strip_tags(help_text),
-                )
-
-                if varname in self._current_settings:
-                    value = self._current_settings[varname]
-                elif varname in self._global_settings:
-                    value = self._global_settings[varname]
-                else:
-                    value = default_value
-
-                if varname in self._current_settings:
-                    modified_cls = ["modified"]
-                    value_title: str | None = _("This option has been modified.")
-                elif varname in self._global_settings:
-                    modified_cls = ["modified globally"]
-                    value_title = _("This option has been modified in the global settings.")
-                else:
-                    modified_cls = []
-                    value_title = None
-
-                if isinstance(value_model, BooleanChoice):
-                    forms.section(title, simple=True)
-                    _show_toggle_switch(varname, bool(value), modified_cls, value_title)
-                    continue
-
-                forms.section(title, simple=True)
-                html.open_a(href=edit_url, class_=modified_cls, title=value_title)
-                render_form_spec(
-                    value_model,
-                    f"_vue_gs_{varname}",
-                    RawDiskData(value),
-                    do_validate=False,
-                    display_mode=DisplayMode.READONLY,
-                )
-                html.close_a()
-
-            if header_is_painted:
-                forms.end()
-        if not at_least_one_painted and search:
-            html.show_message(_("Did not find any global setting matching your search."))
-        html.close_div()
+    @override
+    def static_permissions() -> Collection[PermissionName]:
+        return []
 
     @abc.abstractmethod
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext: ...
-
-
-class ABCEditGlobalSettingMode(WatoMode):
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        # Don't call this in _from_vars. make_global_settings_context might rely on the object
-        # being fully initialized.
-        context = self.make_global_settings_context(active_config)
-        self._value_model: FormSpec[Any] = self._config_variable.value_model(context)
-
-    @override
-    def _from_vars(self) -> None:
-        self._varname = request.get_ascii_input_mandatory("varname")
-        try:
-            self._config_variable = config_variable_registry[self._varname]
-        except KeyError:
-            raise MKUserError(
-                "varname",
-                _('The global setting "%(varname)s" does not exist.') % {"varname": self._varname},
-            )
-
-        if not self._may_edit_configvar(self._varname):
-            raise MKAuthException(_("You are not permitted to edit this global setting."))
-
-        self._current_settings = dict(load_configuration_settings())
-        self._global_settings: GlobalSettings = {}
-
-    def _may_edit_configvar(self, varname: str) -> bool:
-        if not get_global_config().global_settings.is_activated(varname):
-            return False
-        if varname in ["actions"]:
-            return user.may("wato.add_or_modify_executables")
-        return True
-
-    @override
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(
-            _("Setting"), breadcrumb, form_name="value_editor", button_name="_save"
-        )
-
-        reset_possible = self._config_variable.allow_reset() and self._is_configured()
-        default_values = ABCConfigDomain.get_all_default_globals()
-        defvalue = default_values[self._varname]
-        value = self._current_settings.get(
-            self._varname, self._global_settings.get(self._varname, defvalue)
-        )
-        menu.dropdowns[0].topics[0].entries.append(
-            PageMenuEntry(
-                title=_("Remove explicit setting") if value == defvalue else _("Reset to default"),
-                icon_name=StaticIcon(IconNames.reset),
-                item=make_confirmed_form_submit_link(
-                    form_name="value_editor",
-                    button_name="_reset",
-                    title=_("Reset configuration variable to default value"),
-                    confirm_button=_("Reset"),
-                ),
-                is_enabled=reset_possible,
-                is_shortcut=True,
-                is_suggested=True,
-            )
-        )
-
-        return menu
+    def _target_url(self) -> str:
+        raise NotImplementedError
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
-
-        current = self._current_settings.get(self._varname)
-        old_settings: GlobalSettings = (
-            {self._varname: current} if self._varname in self._current_settings else {}
-        )
-        if request.var("_reset"):
-            if not transactions.check_transaction(request):
-                return None
-
-            with contextlib.suppress(KeyError):
-                del self._current_settings[self._varname]
-
-            msg = HTML.with_escaping(
-                _("Resetted configuration variable %(varname)s to its default.")
-                % {"varname": self._varname}
-            )
-            new_settings: GlobalSettings = {}
-        else:
-            new_value = self._parse_submitted_value()
-            self._current_settings[self._varname] = new_value
-            msg = HTML.with_escaping(
-                _("Changed global configuration variable %(varname)s.") % {"varname": self._varname}
-            )
-            new_settings = {self._varname: new_value}
-
-        self._save(
-            make_folder_tree(config),
-            sites=config.sites,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-            liveproxyd_enabled=config.liveproxyd_enabled,
-        )
-
-        add_global_settings_change(
-            self._config_variable,
-            text=msg,
-            sites=self._affected_sites(),
-            pending_changes=_pending_changes(
-                config.sites,
-                use_git=config.wato_use_git,
-                local_site=omd_site(),
-                user_id=user.id,
-            ),
-            diff_text=global_settings_diff_text(
-                self._config_variable,
-                self.make_global_settings_context(config),
-                old_settings,
-                new_settings,
-            ),
-        )
-
-        if (
-            self.name() == "edit_site_configvar"
-            and not has_distributed_setup_remote_sites(config.sites)
-            and not self._current_settings
-        ):
-            return redirect(mode_url("sites"))
-
-        return redirect(self._back_url())
-
-    @abc.abstractmethod
-    def _back_url(self) -> str:
-        raise NotImplementedError
-
-    def _save(
-        self,
-        tree: FolderTree,  # noqa: ARG002
-        *,
-        sites: SiteConfigurations,
-        pprint_value: bool,  # noqa: ARG002
-        use_git: bool,  # noqa: ARG002
-        liveproxyd_enabled: bool,  # noqa: ARG002
-    ) -> None:
-        save_global_settings(self._current_settings, sites)
-
-    @abc.abstractmethod
-    def _affected_sites(self) -> Sequence[SiteId] | None:
-        raise NotImplementedError
-
-    def _is_configured(self) -> bool:
-        return self._varname in self._current_settings
-
-    def _vue_field_id(self) -> str:
-        # Note: this _underscore is critical because of the hidden vars special behaviour
-        # Non _ vars are always added as hidden vars into a form
-        return "_vue_global_settings"
-
-    def _title(self) -> str:
-        return localize(resolve_title(self._value_model))
-
-    def _parse_submitted_value(self) -> object:
-        return parse_data_from_field_id(self._value_model, self._vue_field_id())
-
-    def _render_editable_value(self, value: object) -> None:
-        if request.has_var(self._vue_field_id()):
-            value_incoming: IncomingData = read_data_from_frontend(self._vue_field_id())
-        else:
-            value_incoming = RawDiskData(value)
-        render_form_spec(self._value_model, self._vue_field_id(), value_incoming, do_validate=True)
-
-    def _render_readonly_value(self, field_id: str, value: object) -> None:
-        render_form_spec(
-            self._value_model,
-            field_id,
-            RawDiskData(value),
-            do_validate=False,
-            display_mode=DisplayMode.READONLY,
-        )
+        raise HTTPRedirect(self._target_url())
 
     @override
     def page(self, config: Config) -> None:
-        is_configured = self._is_configured()
-        is_configured_globally = self._varname in self._global_settings
-
-        default_values = ABCConfigDomain.get_all_default_globals()
-
-        defvalue = default_values[self._varname]
-        value = self._current_settings.get(
-            self._varname, self._global_settings.get(self._varname, defvalue)
-        )
-        for hint in self._config_variable.hints():
-            text = hint.text if hint.copyable is None else hint.text + html.render_tt(hint.copyable)
-            if hint.variant == "info":
-                html.show_info(text)
-            else:
-                html.show_warning(text)
-
-        with html.form_context("value_editor", method="POST"):
-            forms.header(self._title())
-            if not config.wato_hide_varnames:
-                forms.section(_("Configuration variable:"))
-                html.tt(self._varname)
-
-            forms.section(_("Current setting"))
-            self._render_editable_value(value)
-
-            if is_configured_globally:
-                self._show_global_setting()
-
-            forms.section(_("Factory setting"))
-            self._render_readonly_value("_vue_global_settings_factory", defvalue)
-
-            forms.section(_("Current state"))
-            if is_configured_globally:
-                html.write_text_permissive(
-                    _('This variable is configured in <a href="%(url)s">Global settings</a>.')
-                    % {"url": "wato.py?mode=edit_configvar&varname=%s" % self._varname}
-                )
-            elif not is_configured:
-                html.write_text_permissive(_("This variable is at factory settings."))
-            else:
-                curvalue = self._current_settings[self._varname]
-                if is_configured_globally and curvalue == self._global_settings[self._varname]:  # type: ignore[unreachable]
-                    html.write_text_permissive(_("Site setting and global setting are identical."))  # type: ignore[unreachable]
-                elif curvalue == defvalue:
-                    html.write_text_permissive(
-                        _("Your setting and factory settings are identical.")
-                    )
-                else:
-                    self._render_readonly_value("_vue_global_settings_current", curvalue)
-
-            forms.end()
-            html.hidden_fields()
-
-    def _show_global_setting(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext: ...
+        raise HTTPRedirect(self._target_url())
 
 
-class ModeEditGlobals(ABCGlobalSettingsMode):
+class ModeEditGlobals(ABCSettingsPageRedirect):
     @classmethod
     @override
     def name(cls) -> str:
         return "globalvars"
 
-    @staticmethod
     @override
-    def static_permissions() -> Collection[PermissionName]:
-        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._current_settings = dict(load_configuration_settings())
-
-    @override
-    def title(self) -> str:
-        if self._search:
-            return _("Global settings matching '%(search)s'") % {"search": self._search}
-        return _("Global settings")
-
-    @override
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = PageMenu(
-            dropdowns=[
-                PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Setup"),
-                            entries=list(self._page_menu_entries_related()),
-                        ),
-                    ],
-                ),
-            ],
-            breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(),
-        )
-
-        self._extend_display_dropdown(menu)
-        return menu
-
-    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Sites"),
-            icon_name=StaticIcon(IconNames.sites),
-            item=make_simple_link("wato.py?mode=sites"),
-        )
-
-    @override
-    def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
-
-        varname = request.var("_varname")
-        if not varname:
-            return None
-
-        action = request.var("_action")
-
-        config_variable = config_variable_registry[varname]
-        def_value = self._default_values[varname]
-
-        if not transactions.check_transaction(request):
-            return None
-
-        old_settings: GlobalSettings = (
-            {varname: self._current_settings[varname]} if varname in self._current_settings else {}
-        )
-        if varname in self._current_settings:
-            self._current_settings[varname] = not self._current_settings[varname]
-        else:
-            self._current_settings[varname] = not def_value
-        msg = _("Changed global configuration variable %(varname)s.") % {"varname": varname}
-        save_global_settings(self._current_settings, config.sites)
-
-        add_global_settings_change(
-            config_variable,
-            text=msg,
-            sites=None,
-            pending_changes=_pending_changes(
-                config.sites,
-                use_git=config.wato_use_git,
-                local_site=omd_site(),
-                user_id=user.id,
-            ),
-            diff_text=global_settings_diff_text(
-                config_variable,
-                self.make_global_settings_context(config),
-                old_settings,
-                {varname: self._current_settings[varname]},
-            ),
-        )
-
-        if action == "_reset":
-            flash(msg)
-        return redirect(mode_url("globalvars"))
-
-    @override
-    def page(self, config: Config) -> None:
-        self._show_configuration_variables(config)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            omd_site(),
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
+    def _target_url(self) -> str:
+        return _settings_page_url("global_settings.py")
 
 
-class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
+class ModeEditGlobalSetting(ABCSettingsPageRedirect):
     @classmethod
     @override
     def name(cls) -> str:
         return "edit_configvar"
 
-    @staticmethod
     @override
-    def static_permissions() -> Collection[PermissionName]:
-        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
+    def _target_url(self) -> str:
+        return _settings_page_url("global_settings.py", "varname")
 
+
+class ModeEditSiteGlobals(ABCSettingsPageRedirect):
     @classmethod
     @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEditGlobals
+    def name(cls) -> str:
+        return "edit_site_globals"
 
     @override
-    def title(self) -> str:
-        return _("Edit global setting")
+    def _target_url(self) -> str:
+        return _settings_page_url("site_specific_settings.py", "site")
+
+
+class ModeEditSiteGlobalSetting(ABCSettingsPageRedirect):
+    @classmethod
+    @override
+    def name(cls) -> str:
+        return "edit_site_configvar"
 
     @override
-    def _affected_sites(self) -> Sequence[SiteId] | None:
-        return None  # All sites
+    def _target_url(self) -> str:
+        return _settings_page_url("site_specific_settings.py", "site", "varname")
+
+
+class ModeEventConsoleSettings(ABCSettingsPageRedirect):
+    @classmethod
+    @override
+    def name(cls) -> str:
+        return "mkeventd_config"
 
     @override
-    def _back_url(self) -> str:
-        return ModeEditGlobals.mode_url()
+    def _target_url(self) -> str:
+        return _settings_page_url("event_console_settings.py")
+
+
+class ModeEventConsoleEditGlobalSetting(ABCSettingsPageRedirect):
+    @classmethod
+    @override
+    def name(cls) -> str:
+        return "mkeventd_edit_configvar"
 
     @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            omd_site(),
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
-
-
-def _show_toggle_switch(
-    varname: str, value: bool, modified_cls: list[str], value_title: str | None
-) -> None:
-    html.open_div(class_=["toggle_switch_container"] + modified_cls + (["on"] if value else []))
-    html.toggle_switch(
-        enabled=value,
-        help_txt=(value_title + " " if value_title else "") + _("Click to toggle this setting"),
-        href=makeactionuri(
-            request,
-            transactions.get(),
-            [("_action", "toggle"), ("_varname", varname)],
-        ),
-        class_=[*modified_cls, "large"],
-    )
-    html.close_div()
-
-
-def _pending_changes(
-    sites: SiteConfigurations,
-    *,
-    use_git: bool,
-    local_site: SiteId,
-    user_id: UserId | None,
-) -> PendingChanges:
-    return PendingChanges(
-        activation_sites=activation_sites(sites),
-        local_site=local_site,
-        acting_user=user_id,
-        store=PendingChangesStore(),
-        hooks=(
-            make_audit_log_change_hook(use_git=use_git),
-            sidebar_reload_change_hook,
-            index_update_change_hook,
-        ),
-    )
+    def _target_url(self) -> str:
+        return _settings_page_url("event_console_settings.py", "varname")

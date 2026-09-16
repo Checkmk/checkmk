@@ -59,8 +59,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
-    has_distributed_setup_remote_sites,
-    is_distributed_setup_remote_site,
     is_replication_enabled,
     site_is_local,
 )
@@ -74,10 +72,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.wato.pages.global_settings import (
-    ABCEditGlobalSettingMode,
-    ABCGlobalSettingsMode,
-)
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
@@ -90,8 +84,6 @@ from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
-    ConfigVariableGroup,
-    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_sync import (
@@ -99,11 +91,8 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
-    load_site_global_settings,
-    make_global_settings_context,
     make_pending_changes,
     save_global_settings,
-    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -125,7 +114,6 @@ from cmk.gui.watolib.sites import (
     PingResult,
     ReplicationStatus,
     ReplicationStatusFetcher,
-    save_site_globals,
     site_globals_editable,
     site_management_registry,
     STATIC_PERMISSIONS_SITES,
@@ -178,8 +166,6 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditSite)
     mode_registry.register(ModeEditBrokerConnection)
     mode_registry.register(ModeDistributedMonitoring)
-    mode_registry.register(ModeEditSiteGlobals)
-    mode_registry.register(ModeEditSiteGlobalSetting)
     mode_registry.register(ModeSiteLivestatusEncryption)
 
 
@@ -1909,272 +1895,6 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 }
             case _:
                 assert_never(_)
-
-
-class ModeEditSiteGlobals(ABCGlobalSettingsMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "edit_site_globals"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return STATIC_PERMISSIONS_SITES
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEditSite
-
-    @overload
-    @classmethod
-    def mode_url(cls, *, site: str) -> str: ...
-
-    @overload
-    @classmethod
-    def mode_url(cls, **kwargs: str) -> str: ...
-
-    @classmethod
-    @override
-    def mode_url(cls, **kwargs: str) -> str:
-        return super().mode_url(**kwargs)
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = site_management_registry["site_management"]
-        self._configured_sites = self._site_mgmt.load_sites()
-        try:
-            self._site = self._configured_sites[self._site_id]
-        except KeyError:
-            raise MKUserError("site", _("This site does not exist."))
-
-        # 2. Values of global settings
-        self._global_settings = load_configuration_settings()
-
-        # 3. Site specific global settings
-
-        if is_distributed_setup_remote_site(self._configured_sites):
-            self._current_settings = dict(load_site_global_settings())
-        else:
-            self._current_settings = self._site.get("globals", {})
-
-    @override
-    def title(self) -> str:
-        return _("Edit site-specific global settings of %(site_id)s") % {"site_id": self._site_id}
-
-    @override
-    def _breadcrumb_url(self) -> str:
-        return self.mode_url(site=self._site_id)
-
-    @override
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = PageMenu(
-            dropdowns=[
-                _page_menu_dropdown_site_details(
-                    self._site_id, self._site, self._configured_sites, self.name()
-                ),
-            ],
-            breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(),
-        )
-
-        self._extend_display_dropdown(menu)
-        return menu
-
-    # TODO: Consolidate with ModeEditGlobals.action()
-    @override
-    def action(self, config: Config) -> ActionResult:
-        varname = request.get_ascii_input("_varname")
-        action = request.get_ascii_input("_action")
-        if not varname:
-            return None
-
-        if varname not in config_variable_registry:
-            return None
-
-        config_variable = config_variable_registry[varname]
-        def_value = self._global_settings.get(varname, self._default_values[varname])
-
-        if not transactions.check_transaction(request):
-            return None
-
-        if varname in self._current_settings:
-            new_value = not self._current_settings[varname]
-        else:
-            new_value = not def_value
-
-        self._current_settings[varname] = new_value
-
-        msg = _("Changed site-specific configuration variable %(varname)s to %(value)s.") % {
-            "varname": varname,
-            "value": _("on") if self._current_settings[varname] else _("off"),
-        }
-
-        save_site_globals(
-            self._site_id,
-            self._configured_sites,
-            self._current_settings,
-            tree=make_folder_tree(config),
-            pprint_value=config.wato_pprint_config,
-            liveproxyd_enabled=config.liveproxyd_enabled,
-            use_git=config.wato_use_git,
-            acting_user_id=user.id,
-        )
-
-        _pending_changes(
-            config.sites,
-            use_git=config.wato_use_git,
-            local_site=omd_site(),
-            user_id=user.id,
-        ).add(
-            Change(
-                action_name="edit-configvar",
-                text=msg,
-                domains=[d.ident() for d in config_variable.all_domains()],
-                force_restart=config_variable.need_restart() or None,
-            ),
-            ChangeScope.sites([self._site_id]),
-        )
-
-        if action == "_reset":
-            flash(msg)
-        return redirect(mode_url("edit_site_globals", site=self._site_id))
-
-    @override
-    def _groups(self) -> Iterable[ConfigVariableGroup]:
-        return self._get_groups(show_all=True)
-
-    @property
-    @override
-    def edit_mode_name(self) -> str:
-        return "edit_site_configvar"
-
-    @override
-    def page(self, config: Config) -> None:
-        html.help(
-            _(
-                "Here, you can configure global settings, that should just be applied "
-                "on that site. <b>Note</b>: this only makes sense if the site "
-                "is part of a distributed setup."
-            )
-        )
-
-        if not is_distributed_setup_remote_site(self._configured_sites):
-            if (
-                not has_distributed_setup_remote_sites(self._configured_sites)
-                and not self._current_settings
-            ):
-                html.show_error(
-                    _(
-                        "You cannot configure site-specific global settings "
-                        "in non-distributed setups."
-                    )
-                )
-                return
-
-            if not is_replication_enabled(self._site) and not site_is_local(
-                self._configured_sites[self._site_id]
-            ):
-                html.show_error(
-                    _(
-                        "This site is not the central site nor a replication "
-                        "remote site. You cannot configure specific settings for it."
-                    )
-                )
-                return
-
-        self._show_configuration_variables(config)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            self._site_id,
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
-
-
-class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "edit_site_configvar"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEditSiteGlobals
-
-    @override
-    def _from_vars(self) -> None:
-        super()._from_vars()
-        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        if self._site_id:
-            self._configured_sites = site_management_registry["site_management"].load_sites()
-            try:
-                site = self._configured_sites[self._site_id]
-            except KeyError:
-                raise MKUserError("site", _("Invalid site"))
-
-        self._current_settings = site.setdefault("globals", {})  # type: ignore[possibly-undefined]
-        self._global_settings = load_configuration_settings()
-
-    @override
-    def title(self) -> str:
-        return _("Site-specific global configuration for %(site_id)s") % {"site_id": self._site_id}
-
-    @override
-    def _affected_sites(self) -> list[SiteId]:
-        return [self._site_id]
-
-    @override
-    def _save(
-        self,
-        tree: FolderTree,
-        *,
-        sites: SiteConfigurations,
-        pprint_value: bool,
-        use_git: bool,
-        liveproxyd_enabled: bool,
-    ) -> None:
-        save_site_globals(
-            self._site_id,
-            self._configured_sites,
-            self._current_settings,
-            tree=tree,
-            pprint_value=pprint_value,
-            liveproxyd_enabled=liveproxyd_enabled,
-            use_git=use_git,
-            acting_user_id=user.id,
-        )
-
-    @override
-    def _show_global_setting(self) -> None:
-        forms.section(_("Global setting"))
-        self._render_readonly_value(
-            "_vue_global_settings_global", self._global_settings[self._varname]
-        )
-
-    @override
-    def _back_url(self) -> str:
-        return ModeEditSiteGlobals.mode_url(site=self._site_id)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            self._site_id,
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
 
 
 class ModeSiteLivestatusEncryption(WatoMode):

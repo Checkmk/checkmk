@@ -8,7 +8,14 @@
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
+from cmk.plugins.oracle.agent_based.liboracle import (
+    Error,
+    InstancePerformance,
+    Ok,
+    oracle_handle_ora_errors,
+    Parsed,
+    SectionPerformance,
+)
 
 
 def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:
@@ -18,18 +25,29 @@ def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:
         except ValueError:
             return None
 
-    parsed: dict[str, dict[str, dict[str, Any]]] = {}
+    counters_by_sid: dict[str, dict[str, dict[str, Any]]] = {}
+    errors: dict[str, str] = {}
     for line in string_table:
-        if len(line) < 3:
-            continue
-        parsed.setdefault(line[0], {})
-        parsed[line[0]].setdefault(line[1], {})
-        counters = line[3:]
-        if len(counters) == 1:
-            parsed[line[0]][line[1]].setdefault(line[2], _try_parse_int(counters[0]))
-        else:
-            parsed[line[0]][line[1]].setdefault(line[2], list(map(_try_parse_int, counters)))
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                if len(line) < 3:
+                    continue
+                group = counters_by_sid.setdefault(line[0], {}).setdefault(line[1], {})
+                counters = line[3:]
+                if len(counters) == 1:
+                    group.setdefault(line[2], _try_parse_int(counters[0]))
+                else:
+                    group.setdefault(line[2], list(map(_try_parse_int, counters)))
 
+    parsed: dict[str, Parsed[InstancePerformance]] = {
+        sid: Ok(counters) for sid, counters in counters_by_sid.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
     return parsed
 
 

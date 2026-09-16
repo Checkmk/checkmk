@@ -25,7 +25,12 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.oracle import constants
-from cmk.plugins.oracle.agent_based.liboracle import InstancePerformance, SectionPerformance
+from cmk.plugins.oracle.agent_based.liboracle import (
+    Error,
+    InstancePerformance,
+    Ok,
+    SectionPerformance,
+)
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -57,16 +62,17 @@ from cmk.plugins.oracle.agent_based.liboracle import InstancePerformance, Sectio
 # ENLT1|librarycache|EDITION|4054576|4054369|7846832|7846023|366|0
 
 
-def _get_item_data(item: str, section: SectionPerformance) -> InstancePerformance:
-    data = section.get(item)
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    if not data:
-        raise IgnoreResultsError("Login into database failed")
-
-    return data
+def _get_item_data(item: str, section: SectionPerformance) -> InstancePerformance | Error:
+    match section.get(item):
+        case Ok(data) if data:
+            return data
+        case Error() as error:
+            return error
+        case _:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
 
 
 #
@@ -81,13 +87,20 @@ def discover_oracle_performance(
         "check_dbtime": params.get("dbtime") is None,
         "check_memory": params.get("memory") is None,
     }
-    yield from (Service(item=item, parameters=discovered_params.copy()) for item in section)
+    yield from (
+        Service(item=item, parameters=discovered_params.copy())
+        for item, result in section.items()
+        if isinstance(result, Ok)
+    )
 
 
 def check_oracle_performance(
     item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     data = _get_item_data(item, section)
+    if isinstance(data, Error):
+        yield Result(state=State.UNKNOWN, summary=data.message)
+        return
 
     value_store = get_value_store()
     now = time.time()
@@ -198,7 +211,7 @@ def discover_oracle_performance_subcheck(
     def inventory_func(params: Mapping[str, Any], section: SectionPerformance) -> DiscoveryResult:
         if params.get(subcheck_settings_name) is None:
             return
-        yield from (Service(item=sid) for sid in section)
+        yield from (Service(item=sid) for sid, result in section.items() if isinstance(result, Ok))
 
     return inventory_func
 
@@ -264,6 +277,9 @@ def check_oracle_performance_dbtime(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "dbtime")
     data = _get_item_data(item, section)
+    if isinstance(data, Error):
+        yield Result(state=State.UNKNOWN, summary=data.message)
+        return
     value_store = get_value_store()
     now = time.time()
     yield from _check_oracle_db_time(value_store, item, data, now, params)
@@ -312,6 +328,9 @@ def check_oracle_performance_memory(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "memory")
     data = _get_item_data(item, section)
+    if isinstance(data, Error):
+        yield Result(state=State.UNKNOWN, summary=data.message)
+        return
     sga_info = data.get("SGA_info", {})
 
     yield from _check_oracle_memory_info(
@@ -400,6 +419,9 @@ def check_oracle_performance_iostat_bytes(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_bytes")
     data = _get_item_data(item, section)
+    if isinstance(data, Error):
+        yield Result(state=State.UNKNOWN, summary=data.message)
+        return
     value_store = get_value_store()
     yield from _check_oracle_performance_iostat_file(
         value_store,
@@ -435,6 +457,9 @@ def check_oracle_performance_iostat_ios(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_ios")
     data = _get_item_data(item, section)
+    if isinstance(data, Error):
+        yield Result(state=State.UNKNOWN, summary=data.message)
+        return
     value_store = get_value_store()
     yield from _check_oracle_performance_iostat_file(
         value_store,
@@ -474,6 +499,9 @@ def check_oracle_performance_waitclasses(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "waitclasses")
     data = _get_item_data(item, section)
+    if isinstance(data, Error):
+        yield Result(state=State.UNKNOWN, summary=data.message)
+        return
     now = time.time()
     value_store = get_value_store()
 

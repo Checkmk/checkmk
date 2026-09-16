@@ -52,7 +52,7 @@ class TableSpaces(TypedDict):
 
 
 InstancePerformance = Mapping[str, Mapping[str, Any]]
-SectionPerformance = Mapping[str, InstancePerformance]
+SectionPerformance = Mapping[str, Parsed[InstancePerformance]]
 
 
 class Datafile(NamedTuple):

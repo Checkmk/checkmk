@@ -256,7 +256,7 @@ def fixture_var_without_factory_default() -> Iterator[str]:
 
 def test_show_factory_setting(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.get(INT_VAR)
-    assert resp.json == {"varname": INT_VAR, "value": INT_DEFAULT, "is_default": True}
+    assert resp.json == {"varname": INT_VAR, "value": INT_DEFAULT, "origin": "factory"}
     assert resp.headers["ETag"]
 
 
@@ -283,20 +283,20 @@ def _changes_of(site_id: str) -> list[str]:
     ]
 
 
-def test_update_clears_is_default(clients: ClientRegistry) -> None:
+def test_update_moves_the_origin_to_the_global_layer(clients: ClientRegistry) -> None:
     assert clients.GlobalSetting.update(INT_VAR, 42).json == {
         "varname": INT_VAR,
         "value": 42,
-        "is_default": False,
+        "origin": "global",
     }
-    assert clients.GlobalSetting.get(INT_VAR).json["is_default"] is False
+    assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "global"
 
 
-def test_update_to_the_default_value_still_clears_is_default(clients: ClientRegistry) -> None:
+def test_update_to_the_default_value_still_moves_the_origin(clients: ClientRegistry) -> None:
     clients.GlobalSetting.update(INT_VAR, INT_DEFAULT)
     resp = clients.GlobalSetting.get(INT_VAR)
     assert resp.json["value"] == INT_DEFAULT
-    assert resp.json["is_default"] is False
+    assert resp.json["origin"] == "global"
 
 
 @pytest.mark.parametrize("varname", ["log_levels", INT_VAR])
@@ -308,7 +308,7 @@ def test_the_shown_value_can_be_sent_back_unchanged(clients: ClientRegistry, var
 def test_update_with_a_rejected_value_400(clients: ClientRegistry) -> None:
     resp = clients.GlobalSetting.update(INT_VAR, "not a number", expect_ok=False)
     resp.assert_status_code(400)
-    assert clients.GlobalSetting.get(INT_VAR).json["is_default"] is True
+    assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "factory"
 
 
 def test_delete_resets_to_the_factory_setting(clients: ClientRegistry) -> None:
@@ -317,13 +317,13 @@ def test_delete_resets_to_the_factory_setting(clients: ClientRegistry) -> None:
     assert clients.GlobalSetting.get(INT_VAR).json == {
         "varname": INT_VAR,
         "value": INT_DEFAULT,
-        "is_default": True,
+        "origin": "factory",
     }
 
 
 def test_delete_of_an_unconfigured_variable_is_a_no_op(clients: ClientRegistry) -> None:
     clients.GlobalSetting.delete(INT_VAR).assert_status_code(204)
-    assert clients.GlobalSetting.get(INT_VAR).json["is_default"] is True
+    assert clients.GlobalSetting.get(INT_VAR).json["origin"] == "factory"
     assert _changes_of(LOCAL_SITE) == []
 
 
@@ -416,7 +416,7 @@ def test_the_etag_returned_by_an_update_is_still_valid(clients: ClientRegistry) 
 def test_setting_a_variable_to_its_default_value_changes_the_etag(
     clients: ClientRegistry,
 ) -> None:
-    """is_default is part of the tag, so an explicit write of the default value still moves it."""
+    """The origin is part of the tag, so an explicit write of the default value still moves it."""
     stale = clients.GlobalSetting.get(INT_VAR).headers["ETag"]
     clients.GlobalSetting.update(INT_VAR, INT_DEFAULT)
     assert clients.GlobalSetting.get(INT_VAR).headers["ETag"] != stale
@@ -618,13 +618,13 @@ def test_site_value_falls_back_to_the_central_value(
         "site_id": remote_site,
         "varname": INT_VAR,
         "value": INT_DEFAULT,
-        "is_default": True,
+        "origin": "factory",
     }
 
     clients.GlobalSetting.update(INT_VAR, 42)
     resp = clients.GlobalSetting.get_site(remote_site, INT_VAR)
     assert resp.json["value"] == 42
-    assert resp.json["is_default"] is True
+    assert resp.json["origin"] == "global"
 
 
 def test_site_override_replaces_the_central_value(
@@ -635,7 +635,7 @@ def test_site_override_replaces_the_central_value(
         "site_id": remote_site,
         "varname": INT_VAR,
         "value": 7,
-        "is_default": False,
+        "origin": "site",
     }
     # the central value is untouched
     assert clients.GlobalSetting.get(INT_VAR).json["value"] == 42
@@ -649,7 +649,7 @@ def test_deleting_a_site_override_falls_back_to_the_central_value(
     clients.GlobalSetting.delete_site(remote_site, INT_VAR).assert_status_code(204)
     resp = clients.GlobalSetting.get_site(remote_site, INT_VAR)
     assert resp.json["value"] == 42
-    assert resp.json["is_default"] is True
+    assert resp.json["origin"] == "global"
 
 
 def test_site_scope_changes_are_scoped_to_that_site(

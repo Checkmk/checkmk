@@ -26,6 +26,7 @@ import GlobalSettingsModificationFilter, {
   type ModificationFilter
 } from './components/GlobalSettingsModificationFilter.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
+import { isModifiedIn } from './lib/origin'
 import { type VariableFilter, buildSearchIndex, matchTopics } from './lib/search'
 import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
 
@@ -70,9 +71,9 @@ const modification = ref<ModificationFilter>(parseModificationFilter(urlParam(FI
 const variableFilter = computed<VariableFilter | null>(() => {
   switch (modification.value) {
     case 'default':
-      return (variable) => !variable.modified
+      return (variable) => !isModifiedIn(variable, props.scope)
     case 'modified':
-      return (variable) => variable.modified
+      return (variable) => isModifiedIn(variable, props.scope)
     default:
       return null
   }
@@ -160,6 +161,7 @@ function resetSearchAndFilters(): void {
         v-for="topic in shownTopics"
         :key="topic.headline"
         :topic="topic"
+        :scope="scope"
         :value="topic.headline"
         :match="shownVariablesOf(topic.headline)"
         :query="debouncedQuery"

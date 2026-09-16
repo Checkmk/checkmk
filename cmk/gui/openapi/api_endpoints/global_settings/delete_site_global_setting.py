@@ -23,6 +23,7 @@ from cmk.gui.watolib.global_settings import (
     need_site_write_permission,
 )
 from cmk.gui.watolib.sites import load_site_globals
+from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
@@ -59,17 +60,17 @@ def delete_site_global_setting_v1(
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
-    old_value, was_default = effective_site_value(
+    old_value, old_origin = effective_site_value(
         site_globals, varname, global_settings=load_configuration_settings()
     )
     if api_context.etag.enabled:
         api_context.etag.verify(
             site_global_setting_etag(
-                site_id, varname, value_to_json(form_spec, old_value), was_default
+                site_id, varname, value_to_json(form_spec, old_value), old_origin
             )
         )
 
-    if was_default:
+    if old_origin is not GlobalSettingsOrigin.site:
         # There is no override to remove, so DELETE stays idempotent and records no change.
         return
 

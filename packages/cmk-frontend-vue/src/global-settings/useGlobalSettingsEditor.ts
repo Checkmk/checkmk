@@ -30,7 +30,7 @@ export function describeError(error: unknown, fallback: TranslatedString): Trans
 
 export function applyReceived(variable: GlobalSettingsVariable, received: ReceivedValue): void {
   variable.value = received.value
-  variable.modified = !received.isDefault
+  variable.origin = received.origin
 }
 
 export class EditorSession {
@@ -42,7 +42,7 @@ export class EditorSession {
   constructor(
     readonly variable: GlobalSettingsVariable,
     private readonly service: GlobalSettingsService,
-    private readonly scope: GlobalSettingsScope,
+    readonly scope: GlobalSettingsScope,
     private readonly requestClose: (session: EditorSession) => void
   ) {}
 

@@ -5,6 +5,7 @@
  */
 import type {
   GlobalSettingsApp,
+  GlobalSettingsOrigin,
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import { CmkSimpleError } from 'cmk-ui-library/lib/error'
@@ -23,7 +24,7 @@ export const GLOBAL_SETTINGS_TOGGLE: InjectionKey<ToggleSetting> = Symbol('Globa
 
 export interface ReceivedValue {
   value: unknown
-  isDefault: boolean
+  origin: GlobalSettingsOrigin
   etag: string
 }
 
@@ -44,7 +45,7 @@ export const GLOBAL_SETTINGS_SERVICE: InjectionKey<GlobalSettingsService> =
 const CONTENT_TYPE_HEADER = { 'Content-Type': 'application/json' } as const
 
 function toReceivedValue(result: {
-  data?: { value: unknown; is_default: boolean }
+  data?: { value: unknown; origin: GlobalSettingsOrigin }
   response: Response
 }): ReceivedValue {
   const body = unwrap(result)
@@ -54,7 +55,7 @@ function toReceivedValue(result: {
       'The server answered without a version identifier for this setting. Reload the page to see its current state.'
     )
   }
-  return { value: body.value, isDefault: body.is_default, etag }
+  return { value: body.value, origin: body.origin, etag }
 }
 
 export const globalSettingsService: GlobalSettingsService = {

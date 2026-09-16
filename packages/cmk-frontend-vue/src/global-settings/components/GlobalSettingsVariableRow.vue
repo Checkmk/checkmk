@@ -11,17 +11,24 @@ import { computed } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
+import type { GlobalSettingsScope } from '../api'
+import { isModifiedIn } from '../lib/origin'
 import GlobalSettingsHighlightedText from './GlobalSettingsHighlightedText.vue'
 import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<{ variable: GlobalSettingsVariable; query: string }>()
+const props = defineProps<{
+  variable: GlobalSettingsVariable
+  scope: GlobalSettingsScope
+  query: string
+}>()
 
 const emit = defineEmits<{ edit: [] }>()
 
 const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_choice')
+const modified = computed(() => isModifiedIn(props.variable, props.scope))
 </script>
 
 <template>
@@ -42,7 +49,7 @@ const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_cho
             :data="variable.value"
             :backend-validation="[]"
           />
-          <span v-if="variable.modified" class="global-settings-variable-row__modified">
+          <span v-if="modified" class="global-settings-variable-row__modified">
             {{ _t('(modified)') }}
           </span>
         </div>

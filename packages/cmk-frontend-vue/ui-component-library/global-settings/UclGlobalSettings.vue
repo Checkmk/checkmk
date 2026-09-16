@@ -23,7 +23,11 @@ const demoSettings = new Map<string, ReceivedValue>(
     .flatMap((topic) => topic.variables)
     .map((variable) => [
       variable.name,
-      { value: structuredClone(variable.value), isDefault: !variable.modified, etag: 'demo' }
+      {
+        value: structuredClone(variable.value),
+        origin: variable.origin,
+        etag: 'demo'
+      }
     ])
 )
 const demoDefaults = new Map<string, unknown>(
@@ -43,7 +47,7 @@ const demoService: GlobalSettingsService = {
   async save(_scope, varname, value) {
     const stored: ReceivedValue = {
       value: structuredClone(toRaw(value)),
-      isDefault: false,
+      origin: 'global',
       etag: 'demo'
     }
     demoSettings.set(varname, stored)
@@ -52,7 +56,7 @@ const demoService: GlobalSettingsService = {
   async reset(_scope, varname) {
     demoSettings.set(varname, {
       value: structuredClone(demoDefaults.get(varname)),
-      isDefault: true,
+      origin: 'factory',
       etag: 'demo'
     })
   }

@@ -49,7 +49,7 @@ def show_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_read_permission(config_variable)
     sites = load_configured_sites()
-    value, is_default = effective_site_value(
+    value, origin = effective_site_value(
         load_site_globals(sites, site_id),
         varname,
         global_settings=load_configuration_settings(),
@@ -57,10 +57,10 @@ def show_site_global_setting_v1(
     json_value = value_to_json(form_spec_of(config_variable, site_id, api_context), value)
     return ApiResponse(
         body=SiteGlobalSettingModel(
-            site_id=site_id, varname=varname, value=json_value, is_default=is_default
+            site_id=site_id, varname=varname, value=json_value, origin=origin
         ),
         status_code=200,
-        etag=site_global_setting_etag(site_id, varname, json_value, is_default),
+        etag=site_global_setting_etag(site_id, varname, json_value, origin),
     )
 
 

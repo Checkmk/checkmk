@@ -45,12 +45,12 @@ def show_global_setting_v1(
     ensure_setup_access(api_context)
     config_variable = config_variable_registry[varname]
     need_read_permission(config_variable)
-    value, is_default = effective_value(load_configuration_settings(), varname)
+    value, origin = effective_value(load_configuration_settings(), varname)
     json_value = value_to_json(form_spec_of(config_variable, omd_site(), api_context), value)
     return ApiResponse(
-        body=GlobalSettingModel(varname=varname, value=json_value, is_default=is_default),
+        body=GlobalSettingModel(varname=varname, value=json_value, origin=origin),
         status_code=200,
-        etag=global_setting_etag(varname, json_value, is_default),
+        etag=global_setting_etag(varname, json_value, origin),
     )
 
 

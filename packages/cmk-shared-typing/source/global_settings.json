@@ -86,9 +86,8 @@
           "description": "The installation-wide value a site inherits; null on the page that shows the installation's own settings.",
           "tsType": "unknown"
         },
-        "modified": {
-          "description": "Whether the variable is explicitly configured in the scope of this app.",
-          "type": "boolean"
+        "origin": {
+          "$ref": "#/$defs/global_settings_origin"
         },
         "site_overrides": {
           "description": "Sites that configure their own explicit value for this variable.",
@@ -102,9 +101,14 @@
         "value",
         "default_value",
         "global_value",
-        "modified",
+        "origin",
         "site_overrides"
       ]
+    },
+    "global_settings_origin": {
+      "title": "GlobalSettingsOrigin",
+      "description": "The layer the shown value comes from.",
+      "enum": ["factory", "global", "site"]
     },
     "global_settings_site_override": {
       "type": "object",

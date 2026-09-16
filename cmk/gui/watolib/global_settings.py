@@ -36,6 +36,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
+from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.utils import paths
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
@@ -97,16 +98,18 @@ def load_configuration_settings(
     return settings
 
 
-def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
-    """The value in effect and whether it is the built-in default.
+def effective_value(
+    settings: Mapping[str, object], varname: str
+) -> tuple[object, GlobalSettingsOrigin]:
+    """The value in effect and the layer it comes from.
 
     Writers pass the same mapping they later hand to save_global_settings(),
     which rewrites the whole file, so they need a mutable copy of it.
     """
     if varname in settings:
-        return settings[varname], False
+        return settings[varname], GlobalSettingsOrigin.global_
 
-    return ABCConfigDomain.get_all_default_globals()[varname], True
+    return ABCConfigDomain.get_all_default_globals()[varname], GlobalSettingsOrigin.factory
 
 
 def effective_site_value(
@@ -114,17 +117,16 @@ def effective_site_value(
     varname: str,
     *,
     global_settings: Mapping[str, object],
-) -> tuple[object, bool]:
-    """The value in effect for the site and whether it comes from outside the site.
+) -> tuple[object, GlobalSettingsOrigin]:
+    """The value in effect for the site and the layer it comes from.
 
     Without an override the site inherits the central value, which in turn falls back
     to the built-in default.
     """
     if varname in site_globals:
-        return site_globals[varname], False
+        return site_globals[varname], GlobalSettingsOrigin.site
 
-    value, _is_built_in_default = effective_value(global_settings, varname)
-    return value, True
+    return effective_value(global_settings, varname)
 
 
 def save_global_settings_raw(

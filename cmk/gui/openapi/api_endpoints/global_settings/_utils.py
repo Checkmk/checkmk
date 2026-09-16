@@ -39,6 +39,7 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
 from cmk.web.utils.escaping import strip_tags
@@ -176,26 +177,26 @@ def _etag_value(json_value: object) -> str:
     return json.dumps(json_value, sort_keys=True, default=repr)
 
 
-def global_setting_etag(varname: str, json_value: object, is_default: bool) -> ETag:
-    # Must cover is_default too, so that "unset -> explicitly set to the default" changes the tag.
+def global_setting_etag(varname: str, json_value: object, origin: GlobalSettingsOrigin) -> ETag:
+    # Must cover the origin too, so that "unset -> explicitly set to the default" changes the tag.
     return ETag(
         {
             "varname": varname,
             "value": _etag_value(json_value),
-            "is_default": is_default,
+            "origin": origin.value,
         }
     )
 
 
 def site_global_setting_etag(
-    site_id: SiteId, varname: str, json_value: object, is_default: bool
+    site_id: SiteId, varname: str, json_value: object, origin: GlobalSettingsOrigin
 ) -> ETag:
     return ETag(
         {
             "site_id": site_id,
             "varname": varname,
             "value": _etag_value(json_value),
-            "is_default": is_default,
+            "origin": origin.value,
         }
     )
 

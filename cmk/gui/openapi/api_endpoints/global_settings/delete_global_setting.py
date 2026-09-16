@@ -26,6 +26,7 @@ from cmk.gui.watolib.global_settings import (
     need_write_permission,
     save_global_settings,
 )
+from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
@@ -63,13 +64,13 @@ def delete_global_setting_v1(
 
     form_spec = form_spec_of(config_variable, omd_site(), api_context)
     settings = dict(load_configuration_settings())
-    old_value, was_default = effective_value(settings, varname)
+    old_value, old_origin = effective_value(settings, varname)
     if api_context.etag.enabled:
         api_context.etag.verify(
-            global_setting_etag(varname, value_to_json(form_spec, old_value), was_default)
+            global_setting_etag(varname, value_to_json(form_spec, old_value), old_origin)
         )
 
-    if was_default:
+    if old_origin is not GlobalSettingsOrigin.global_:
         # Nothing to remove, the variable is already at its factory setting. Reporting a
         # success without recording a change keeps DELETE idempotent.
         return

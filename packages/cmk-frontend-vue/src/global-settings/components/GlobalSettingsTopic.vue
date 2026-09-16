@@ -14,12 +14,15 @@ import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import type { GlobalSettingsScope } from '../api'
+import { isModifiedIn } from '../lib/origin'
 import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 
 const { _t, _tn } = usei18n()
 
 const props = defineProps<{
   topic: GlobalSettingsTopic
+  scope: GlobalSettingsScope
   value: string
   /** The variables to show, or null while no search narrows them. */
   match: ReadonlySet<string> | null
@@ -39,7 +42,7 @@ const shownVariables = computed(() => {
 })
 
 const modifiedCount = computed(
-  () => props.topic.variables.filter((variable) => variable.modified).length
+  () => props.topic.variables.filter((variable) => isModifiedIn(variable, props.scope)).length
 )
 const variableCountLabel = computed(() =>
   _tn('%{count} variable', '%{count} variables', props.topic.variables.length, {
@@ -81,6 +84,7 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         v-for="variable in shownVariables"
         :key="variable.name"
         :variable="variable"
+        :scope="scope"
         :query="query"
         @edit="emit('edit', variable)"
       />

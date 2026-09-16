@@ -16,6 +16,7 @@ import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
 
+import { isModifiedIn } from '../lib/origin'
 import type { EditorSession } from '../useGlobalSettingsEditor'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
@@ -30,6 +31,7 @@ const emit = defineEmits<{
 }>()
 
 const variable = computed(() => props.session.variable)
+const modified = computed(() => isModifiedIn(variable.value, props.session.scope))
 const error = computed(() => props.session.error)
 const specWithoutTopLevelHelp = computed(() => ({ ...variable.value.spec, help: '' }))
 
@@ -73,7 +75,7 @@ function valuesEqual(a: unknown, b: unknown): boolean {
 }
 
 const isExplicitDefault = computed(
-  () => variable.value.modified && valuesEqual(variable.value.value, variable.value.default_value)
+  () => modified.value && valuesEqual(variable.value.value, variable.value.default_value)
 )
 
 const resetButtonLabel = computed<TranslatedString>(() =>
@@ -103,7 +105,7 @@ const resetConfirmation = computed<{
 )
 
 const currentStateText = computed<TranslatedString>(() =>
-  variable.value.modified
+  modified.value
     ? _t('This variable has been modified.')
     : _t('This variable is at factory settings.')
 )
@@ -116,7 +118,7 @@ const currentStateText = computed<TranslatedString>(() =>
         {{ _t('Save') }}
       </CmkButton>
       <CmkButton
-        v-if="variable.modified"
+        v-if="modified"
         variant="secondary"
         :icon="{ name: 'reset' }"
         :disabled="!session.editable"

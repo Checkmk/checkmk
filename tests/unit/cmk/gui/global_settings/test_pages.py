@@ -159,6 +159,26 @@ def test_a_variable_the_user_may_not_read_is_left_out(
         assert global_settings(load_config).topics == []
 
 
+@pytest.mark.usefixtures("test_variables", "with_admin_login")
+def test_an_unset_variable_comes_from_the_factory_defaults(load_config: Config) -> None:
+    variable = shown_variables(global_settings(load_config))["test_var_a"]
+
+    assert variable.value == 1
+    assert variable.origin is shared.GlobalSettingsOrigin.factory
+
+
+@pytest.mark.usefixtures("test_variables", "with_admin_login")
+def test_a_centrally_configured_variable_comes_from_the_global_settings(
+    load_config: Config,
+) -> None:
+    ConfigDomainGUI().save({"test_var_a": 5})
+
+    variable = shown_variables(global_settings(load_config))["test_var_a"]
+
+    assert variable.value == 5
+    assert variable.origin is shared.GlobalSettingsOrigin.global_
+
+
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
 def test_the_global_page_shows_no_inherited_value(load_config: Config) -> None:
     assert shown_variables(global_settings(load_config))["test_var_a"].global_value is None
@@ -222,7 +242,7 @@ def test_a_site_specific_value_is_shown_as_a_modification_of_the_inherited_one(
     variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_a"]
 
     assert variable.value == 5
-    assert variable.modified
+    assert variable.origin is shared.GlobalSettingsOrigin.site
     assert variable.global_value == 1
 
 
@@ -233,8 +253,18 @@ def test_a_site_inherits_a_centrally_configured_value(load_config: Config) -> No
     variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
 
     assert variable.value == 7
-    assert not variable.modified
+    assert variable.origin is shared.GlobalSettingsOrigin.global_
     assert variable.global_value == 7
+
+
+@pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
+def test_a_site_that_inherits_an_unconfigured_variable_comes_from_the_factory_defaults(
+    load_config: Config,
+) -> None:
+    variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
+
+    assert variable.value == 2
+    assert variable.origin is shared.GlobalSettingsOrigin.factory
 
 
 @pytest.mark.usefixtures("patch_omd_site", "with_admin_login")

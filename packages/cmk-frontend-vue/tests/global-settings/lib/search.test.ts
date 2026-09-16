@@ -26,7 +26,7 @@ function variable(name: string, title: string, help: string = ''): GlobalSetting
     value: 10,
     default_value: 10,
     global_value: null,
-    modified: false,
+    origin: 'factory',
     site_overrides: []
   }
 }
@@ -111,12 +111,12 @@ describe('matchTopics', () => {
 })
 
 describe('matchTopics with a variable filter', () => {
-  const modifiedOnly = (variable: GlobalSettingsVariable) => variable.modified
-  const defaultOnly = (variable: GlobalSettingsVariable) => !variable.modified
+  const modifiedOnly = (variable: GlobalSettingsVariable) => variable.origin === 'global'
+  const defaultOnly = (variable: GlobalSettingsVariable) => variable.origin !== 'global'
   const filterTopics: GlobalSettingsTopic[] = [
     topic('User management', 'Configures user/authentication settings', [
       variable('lock_on_logon_failures', 'Lock user accounts after N login failures'),
-      { ...variable('user_idle_timeout', 'Login session idle timeout'), modified: true }
+      { ...variable('user_idle_timeout', 'Login session idle timeout'), origin: 'global' }
     ]),
     topic('Site management', 'Configures site settings', [variable('site_setting', 'Site setting')])
   ]

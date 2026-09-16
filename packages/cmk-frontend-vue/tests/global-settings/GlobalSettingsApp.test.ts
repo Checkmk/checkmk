@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type {
   GlobalSettingsApp as GlobalSettingsAppData,
+  GlobalSettingsOrigin,
   GlobalSettingsTopic
 } from 'cmk-shared-typing/typescript/global_settings'
 import { HttpResponse, http } from 'msw'
@@ -64,7 +65,7 @@ const data: GlobalSettingsAppData = {
           value: 10,
           default_value: 10,
           global_value: null,
-          modified: false,
+          origin: 'factory',
           site_overrides: []
         }
       ]
@@ -92,9 +93,20 @@ const booleanTopic: GlobalSettingsTopic = {
       value: false,
       default_value: false,
       global_value: null,
-      modified: false,
+      origin: 'factory',
       site_overrides: []
     }
+  ]
+}
+
+const resettableTopic: GlobalSettingsTopic = {
+  icon: 'users',
+  headline: 'Resettable settings',
+  subline: 'Everything in here was modified',
+  warning: null,
+  variables: [
+    { ...data.topics[0]!.variables[0]!, origin: 'global' },
+    { ...booleanTopic.variables[0]!, value: true, origin: 'global' }
   ]
 }
 
@@ -104,8 +116,14 @@ interface Recorded {
   body: unknown
 }
 let requests: Recorded[] = []
-let serverValue: { value: number; is_default: boolean } = { value: 15, is_default: false }
-let booleanServerValue: { value: boolean; is_default: boolean } = { value: false, is_default: true }
+let serverValue: { value: number; origin: GlobalSettingsOrigin } = {
+  value: 15,
+  origin: 'global'
+}
+let booleanServerValue: { value: boolean; origin: GlobalSettingsOrigin } = {
+  value: false,
+  origin: 'factory'
+}
 
 const server = setupServer(
   http.get(SETTING_URL, () => {
@@ -118,7 +136,7 @@ const server = setupServer(
   http.put(SETTING_URL, async ({ request }) => {
     const body = (await request.json()) as { value: number }
     requests.push({ method: 'PUT', ifMatch: request.headers.get('If-Match'), body })
-    serverValue = { value: body.value, is_default: false }
+    serverValue = { value: body.value, origin: 'global' }
     return HttpResponse.json(
       { varname: 'lock_on_logon_failures', ...serverValue },
       { headers: { ETag: '"v2"' } }
@@ -126,13 +144,13 @@ const server = setupServer(
   }),
   http.delete(SETTING_URL, ({ request }) => {
     requests.push({ method: 'DELETE', ifMatch: request.headers.get('If-Match'), body: null })
-    serverValue = { value: 10, is_default: true }
+    serverValue = { value: 10, origin: 'factory' }
     return new HttpResponse(null, { status: 204 })
   }),
   http.put(BOOLEAN_SETTING_URL, async ({ request }) => {
     const body = (await request.json()) as { value: boolean }
     requests.push({ method: 'PUT', ifMatch: request.headers.get('If-Match'), body })
-    booleanServerValue = { value: body.value, is_default: false }
+    booleanServerValue = { value: body.value, origin: 'global' }
     return HttpResponse.json(
       { varname: 'site_piggyback_hub', ...booleanServerValue },
       { headers: { ETag: '"b2"' } }
@@ -143,8 +161,8 @@ const server = setupServer(
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   requests = []
-  serverValue = { value: 15, is_default: false }
-  booleanServerValue = { value: false, is_default: true }
+  serverValue = { value: 15, origin: 'global' }
+  booleanServerValue = { value: false, origin: 'factory' }
   server.resetHandlers()
 })
 afterAll(() => server.close())
@@ -187,7 +205,7 @@ const secondTopic: GlobalSettingsTopic = {
       ...data.topics[0]!.variables[0]!,
       name: 'site_setting',
       spec: { ...data.topics[0]!.variables[0]!.spec, title: 'Site setting' },
-      modified: true
+      origin: 'global'
     }
   ]
 }
@@ -414,7 +432,7 @@ describe('GlobalSettingsApp', () => {
   })
 
   test('an explicit value equal to the factory default gets the explicit-setting wording', async () => {
-    serverValue = { value: 10, is_default: false }
+    serverValue = { value: 10, origin: 'global' }
     await openEditor()
     const dialog = screen.getByRole('dialog')
     const removeButton = await within(dialog).findByRole('button', {
@@ -615,7 +633,7 @@ describe('GlobalSettingsApp', () => {
       http.get(siteSettingUrl, () => {
         requests.push({ method: 'GET', ifMatch: null, body: null })
         return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', value: 15, is_default: false },
+          { varname: 'lock_on_logon_failures', value: 15, origin: 'site' },
           { headers: { ETag: '"s1"' } }
         )
       }),
@@ -626,7 +644,7 @@ describe('GlobalSettingsApp', () => {
           body: await request.json()
         })
         return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', value: 20, is_default: false },
+          { varname: 'lock_on_logon_failures', value: 20, origin: 'site' },
           { headers: { ETag: '"s2"' } }
         )
       })
@@ -648,6 +666,18 @@ describe('GlobalSettingsApp', () => {
     expect(requests[1]).toMatchObject({ ifMatch: '"s1"', body: { value: 20 } })
   })
 
+  test('a site page leaves a value inherited from the global settings unmarked', async () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [resettableTopic] }
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
+    )
+
+    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+    expect(screen.getByText('0 modified')).toBeInTheDocument()
+  })
+
   test('a load response arriving after its editor was closed does not leak into the next editor', async () => {
     const secondSettingUrl = `${location.protocol}//${location.host}/api/internal/objects/global_setting/site_setting`
     let releaseStaleLoad: () => void = () => {}
@@ -659,20 +689,20 @@ describe('GlobalSettingsApp', () => {
       http.get(SETTING_URL, async () => {
         await staleLoad
         return HttpResponse.json(
-          { varname: 'lock_on_logon_failures', value: 99, is_default: false },
+          { varname: 'lock_on_logon_failures', value: 99, origin: 'global' },
           { headers: { ETag: '"stale"' } }
         )
       }),
       http.get(secondSettingUrl, () =>
         HttpResponse.json(
-          { varname: 'site_setting', value: 42, is_default: false },
+          { varname: 'site_setting', value: 42, origin: 'global' },
           { headers: { ETag: '"fresh"' } }
         )
       ),
       http.put(secondSettingUrl, ({ request }) => {
         putIfMatch = request.headers.get('If-Match')
         return HttpResponse.json(
-          { varname: 'site_setting', value: 43, is_default: false },
+          { varname: 'site_setting', value: 43, origin: 'global' },
           { headers: { ETag: '"fresh2"' } }
         )
       })

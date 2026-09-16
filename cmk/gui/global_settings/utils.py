@@ -39,6 +39,7 @@ from cmk.shared_typing.global_settings import (
     Components,
     GlobalSettingsApp,
     GlobalSettingsBreadcrumbItem,
+    GlobalSettingsOrigin,
     GlobalSettingsScopeGlobal,
     GlobalSettingsScopeSite,
     GlobalSettingsSiteOverride,
@@ -66,12 +67,10 @@ class _ShownSettings:
     inherited_settings: Mapping[str, object] | None
     override_sites: SiteConfigurations
 
-    def value_of(self, varname: str) -> object:
+    def resolve(self, varname: str) -> tuple[object, GlobalSettingsOrigin]:
         if self.inherited_settings is None:
-            return effective_value(self.settings, varname)[0]
-        return effective_site_value(
-            self.settings, varname, global_settings=self.inherited_settings
-        )[0]
+            return effective_value(self.settings, varname)
+        return effective_site_value(self.settings, varname, global_settings=self.inherited_settings)
 
 
 def ensure_page_access(config: Config, permissions: Iterable[PermissionName]) -> None:
@@ -194,7 +193,8 @@ def _variables(
             continue
         form_spec = config_variable.value_model(context)
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-        spec, vue_value = visitor.to_vue(RawDiskData(shown.value_of(varname)))
+        value, origin = shown.resolve(varname)
+        spec, vue_value = visitor.to_vue(RawDiskData(value))
         _, vue_default_value = visitor.to_vue(RawDiskData(default_values[varname]))
         if shown.inherited_settings is None:
             vue_inherited_value = None
@@ -213,7 +213,7 @@ def _variables(
             value=vue_value,
             default_value=vue_default_value,
             global_value=vue_inherited_value,
-            modified=varname in shown.settings,
+            origin=origin,
             site_overrides=_site_overrides(varname, shown.override_sites),
         )
 

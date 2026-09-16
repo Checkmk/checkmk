@@ -24,6 +24,7 @@ from cmk.gui.watolib.global_settings import (
     need_site_write_permission,
 )
 from cmk.gui.watolib.sites import load_site_globals
+from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
@@ -64,13 +65,13 @@ def update_site_global_setting_v1(
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
-    old_value, was_default = effective_site_value(
+    old_value, old_origin = effective_site_value(
         site_globals, varname, global_settings=load_configuration_settings()
     )
     if api_context.etag.enabled:
         api_context.etag.verify(
             site_global_setting_etag(
-                site_id, varname, value_to_json(form_spec, old_value), was_default
+                site_id, varname, value_to_json(form_spec, old_value), old_origin
             )
         )
 
@@ -89,19 +90,21 @@ def update_site_global_setting_v1(
         diff_text=global_settings_diff_text(
             config_variable,
             global_settings_context_of(site_id, api_context),
-            {} if was_default else {varname: old_value},
+            {varname: old_value} if old_origin is GlobalSettingsOrigin.site else {},
             {varname: new_value},
         ),
     )
 
-    # The site now carries an override, so the value no longer comes from outside it.
     json_value = value_to_json(form_spec, new_value)
     return ApiResponse(
         body=SiteGlobalSettingModel(
-            site_id=site_id, varname=varname, value=json_value, is_default=False
+            site_id=site_id,
+            varname=varname,
+            value=json_value,
+            origin=GlobalSettingsOrigin.site,
         ),
         status_code=200,
-        etag=site_global_setting_etag(site_id, varname, json_value, False),
+        etag=site_global_setting_etag(site_id, varname, json_value, GlobalSettingsOrigin.site),
     )
 
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 
 
 @api_model
@@ -16,11 +17,11 @@ class GlobalSettingModel:
         description="The value of the configuration variable, values not masked.",
         example={"cmk.web": 20},
     )
-    is_default: bool = api_field(
-        description="True if no value is configured for this variable. "
-        "Configuring a value makes this false "
-        "even if the configured value is identical to the default.",
-        example=True,
+    origin: GlobalSettingsOrigin = api_field(
+        description="The layer the value comes from: `global` once a value is configured "
+        "centrally, `factory` while none is, even if the configured value is identical "
+        "to the built-in default.",
+        example=GlobalSettingsOrigin.factory.value,
     )
 
 
@@ -30,9 +31,9 @@ class SiteGlobalSettingModel(GlobalSettingModel):
         description="The ID of the site connection this value belongs to.",
         example="prod",
     )
-    is_default: bool = api_field(
-        description="True if this site connection does not override the variable, so that "
-        "`value` shows the central value - or the built-in default, if the variable is "
-        "unset centrally as well. Those two cases are not distinguished here.",
-        example=True,
+    origin: GlobalSettingsOrigin = api_field(
+        description="The layer the value comes from: `site` when this site connection "
+        "overrides the variable, `global` when it inherits a centrally configured value, "
+        "`factory` when neither configures one.",
+        example=GlobalSettingsOrigin.site.value,
     )

@@ -815,6 +815,48 @@ describe('GlobalSettingsApp', () => {
   })
 })
 
+describe('GlobalSettingsApp deep link', () => {
+  function deepLink(varname: string): void {
+    window.history.replaceState({}, '', `/?varname=${varname}`)
+    render(GlobalSettingsApp, { props: data })
+  }
+
+  test('a setting named in the URL opens its topic and its editor', async () => {
+    deepLink('lock_on_logon_failures')
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET']))
+    expect(
+      screen.getByRole('button', { name: 'Edit Lock user accounts after N login failures' })
+    ).toBeInTheDocument()
+  })
+
+  test('a setting the page does not show is ignored', async () => {
+    deepLink('no_such_setting')
+
+    await waitFor(() => expect(requests).toEqual([]))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('opening a setting names it in the URL', async () => {
+    await openEditor()
+
+    await waitFor(() => expect(window.location.search).toBe('?varname=lock_on_logon_failures'))
+  })
+
+  test('closing the editor drops the setting from the URL', async () => {
+    deepLink('lock_on_logon_failures')
+    await screen.findByRole('dialog')
+
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' })
+    )
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(window.location.search).toBe('')
+  })
+})
+
 describe('GlobalSettingsApp overview presentation', () => {
   test('every topic is listed with its headline and subline, and expanding one reveals only its own settings', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })

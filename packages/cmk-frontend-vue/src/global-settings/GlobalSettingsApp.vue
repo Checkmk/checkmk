@@ -16,7 +16,7 @@ import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
-import { computed, inject, provide, ref, toRaw, watch } from 'vue'
+import { computed, inject, onMounted, provide, ref, toRaw, watch } from 'vue'
 
 import { GLOBAL_SETTINGS_SERVICE, GLOBAL_SETTINGS_TOGGLE, globalSettingsService } from './api'
 import ExpandCollapseButtons from './components/ExpandCollapseButtons.vue'
@@ -36,6 +36,7 @@ const service = inject(GLOBAL_SETTINGS_SERVICE, globalSettingsService)
 
 const SEARCH_URL_PARAM = 'search'
 const FILTER_URL_PARAM = 'filter'
+const VARNAME_URL_PARAM = 'varname'
 
 function urlParam(name: string): string | null {
   return new URLSearchParams(window.location.search).get(name)
@@ -111,13 +112,28 @@ watch(debouncedQuery, () => {
   openedItems.value = openedItemsForQuery()
 })
 
-watch([debouncedQuery, modification], ([value, filter]) => {
+watch([debouncedQuery, modification, session], ([value, filter, editing]) => {
   // replaceState, not pushState: typing must not fill the back stack.
   const url = new URL(window.location.href)
   setOrDelete(url.searchParams, SEARCH_URL_PARAM, value.trim() === '' ? null : value)
   setOrDelete(url.searchParams, FILTER_URL_PARAM, filter === 'all' ? null : filter)
+  setOrDelete(url.searchParams, VARNAME_URL_PARAM, editing?.variable.name ?? null)
   window.history.replaceState({}, '', url)
 })
+
+function openVariableFromUrl(): void {
+  const name = urlParam(VARNAME_URL_PARAM)
+  for (const topic of editableTopics.value) {
+    const variable = topic.variables.find((candidate) => candidate.name === name)
+    if (variable !== undefined) {
+      openedItems.value = [...new Set([...openedItems.value, topic.headline])]
+      void openEditor(variable)
+      return
+    }
+  }
+}
+
+onMounted(openVariableFromUrl)
 
 async function toggleSetting(
   variable: GlobalSettingsVariable,

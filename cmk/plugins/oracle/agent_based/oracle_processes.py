@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, MutableMapping
+import contextlib
+from collections.abc import Mapping
 from typing import NamedTuple
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
@@ -17,9 +18,11 @@ from cmk.agent_based.v2 import (
     render,
     Result,
     Service,
+    State,
     StringTable,
 )
-from cmk.plugins.oracle.agent_based.liboracle import OraErrors
+
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -36,37 +39,32 @@ class OracleProcess(NamedTuple):
     processes_limit: int
 
 
-ErrorProcesses = Mapping[str, OraErrors]
-OracleProcesses = Mapping[str, OracleProcess]
+type Section = Mapping[str, Parsed[OracleProcess]]
 
 
-class SectionOracleProcesses(NamedTuple):
-    error_processes: ErrorProcesses
-    oracle_processes: OracleProcesses
-
-
-def parse_oracle_processes(string_table: StringTable) -> SectionOracleProcesses:
-    valid_oracle_processes: MutableMapping[str, OracleProcess] = {}
-    error_processes: MutableMapping[str, OraErrors] = {}
-
+def parse_oracle_processes(string_table: StringTable) -> Section:
+    processes: dict[str, OracleProcess] = {}
+    errors: dict[str, str] = {}
     for line in string_table:
-        ora_error = OraErrors(line)
-
-        if ora_error.ignore:
-            continue
-        if ora_error.has_error:
-            error_processes[line[0]] = ora_error
-        else:
-            if len(line) < 3:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
                 continue
-            process = line[0]
-            valid_oracle_processes[process] = OracleProcess(
-                name=process, processes_count=int(line[1]), processes_limit=int(line[2])
-            )
+            case None:
+                if len(line) < 3:
+                    continue
+                with contextlib.suppress(ValueError):
+                    processes[line[0]] = OracleProcess(
+                        name=line[0], processes_count=int(line[1]), processes_limit=int(line[2])
+                    )
 
-    return SectionOracleProcesses(
-        error_processes=error_processes, oracle_processes=valid_oracle_processes
-    )
+    parsed: dict[str, Parsed[OracleProcess]] = {
+        sid: Ok(process) for sid, process in processes.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
 
 
 agent_section_oracle_processes = AgentSection(
@@ -75,27 +73,28 @@ agent_section_oracle_processes = AgentSection(
 )
 
 
-def discover_oracle_processes(section: SectionOracleProcesses) -> DiscoveryResult:
-    for process in section.error_processes:
-        yield Service(item=process)
-
-    for process in section.oracle_processes:
-        yield Service(item=process)
+def discover_oracle_processes(section: Section) -> DiscoveryResult:
+    yield from (Service(item=sid) for sid, result in section.items() if isinstance(result, Ok))
 
 
 def check_oracle_processes(
-    item: str, params: Mapping[str, tuple[float, float]], section: SectionOracleProcesses
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
 ) -> CheckResult:
-    if ora_error := section.error_processes.get(item):
-        yield Result(state=ora_error.error_severity, summary=ora_error.error_text)
-        return
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(process):
+            yield from _check_process(params, process)
 
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    if not (process := section.oracle_processes.get(item)):
-        raise IgnoreResultsError("Login into database failed")
 
+def _check_process(
+    params: Mapping[str, tuple[float, float]], process: OracleProcess
+) -> CheckResult:
     processes_pct = float(process.processes_count / process.processes_limit) * 100
     warn, crit = params["levels"]
 

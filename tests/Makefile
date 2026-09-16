@@ -91,6 +91,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	test-docker test-docker-docker \
 	test-system-mk-oracle test-system-mk-oracle-docker \
 	test-system-relay test-system-relay-docker \
+	test-system-ai-features test-system-ai-features-docker \
 	test-artifact-relay-image test-artifact-relay-image-docker \
 	test-format \
 	$(SYSTEM_TESTS) \
@@ -127,6 +128,8 @@ help:
 	@echo "test-system-mk-oracle-docker        - Run mk-oracle system tests in docker"
 	@echo "test-system-relay                   - Run relay system tests"
 	@echo "test-system-relay-docker            - Run relay system tests in docker"
+	@echo "test-system-ai-features             - Run AI feature system tests"
+	@echo "test-system-ai-features-docker      - Run AI feature system tests in docker"
 	@echo "test-artifact-relay-image           - Run relay image artifact tests"
 	@echo "test-artifact-relay-image-docker    - Run relay image artifact tests in docker"
 	@echo "test-mypy-community                 - Run mypy with community config"
@@ -279,9 +282,13 @@ test-system-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath system/redfish) --session-timeout 1800
 
-test-system-ai-agent-engine:
+test-system-ai-features-docker:
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+	    ../scripts/run-in-docker.sh make --quiet test-system-ai-features
+
+test-system-ai-features:
 	EDITION=pro $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath system/ai_agent_engine) --session-timeout 1800
+	$(realpath system/ai_features) --session-timeout 3600
 
 test-system-otel:
 	EDITION=ultimate $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \

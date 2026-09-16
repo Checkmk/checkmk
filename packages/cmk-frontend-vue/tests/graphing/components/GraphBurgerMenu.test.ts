@@ -43,16 +43,71 @@ test('clicking the trigger shows the dropdown with group headings and actions', 
   render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
   expect(screen.getByText('Add to dashboard')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Dashboard One' })).toBeInTheDocument()
+  expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toBeInTheDocument()
   expect(screen.getByText('Export')).toBeInTheDocument()
 })
 
 test('clicking an action emits doAction with its onClick and closes the dropdown', async () => {
   const { emitted } = render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
-  await fireEvent.click(screen.getByRole('button', { name: 'Dashboard One' }))
+  await fireEvent.click(screen.getByRole('menuitem', { name: 'Dashboard One' }))
   expect(emitted().doAction![0]).toEqual([GROUPS[0]!.actions[0]!.onClick])
   expect(screen.queryByText('Dashboard One')).not.toBeInTheDocument()
+})
+
+test('opening the dropdown moves focus to the first action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+  expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toHaveFocus()
+})
+
+test('ArrowDown/ArrowUp move focus between actions, wrapping at the ends', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dashboardOne = screen.getByRole('menuitem', { name: 'Dashboard One' })
+  const dashboardTwo = screen.getByRole('menuitem', { name: 'Dashboard Two' })
+  const exportAsJson = screen.getByRole('menuitem', { name: 'Export as JSON' })
+
+  await fireEvent.keyDown(dashboardOne, { key: 'ArrowDown' })
+  expect(dashboardTwo).toHaveFocus()
+
+  await fireEvent.keyDown(dashboardTwo, { key: 'ArrowDown' })
+  expect(exportAsJson).toHaveFocus()
+
+  await fireEvent.keyDown(exportAsJson, { key: 'ArrowDown' })
+  expect(dashboardOne).toHaveFocus()
+
+  await fireEvent.keyDown(dashboardOne, { key: 'ArrowUp' })
+  expect(exportAsJson).toHaveFocus()
+})
+
+test('Home/End move focus to the first/last action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dashboardOne = screen.getByRole('menuitem', { name: 'Dashboard One' })
+  const exportAsJson = screen.getByRole('menuitem', { name: 'Export as JSON' })
+
+  await fireEvent.keyDown(dashboardOne, { key: 'End' })
+  expect(exportAsJson).toHaveFocus()
+
+  await fireEvent.keyDown(exportAsJson, { key: 'Home' })
+  expect(dashboardOne).toHaveFocus()
+})
+
+test('ArrowDown on the trigger opens the dropdown and focuses the first action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.keyDown(screen.getByRole('button', { name: ARIA_LABEL }), { key: 'ArrowDown' })
+  expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toHaveFocus()
+})
+
+test('escape closes the dropdown and returns focus to the trigger', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  const trigger = screen.getByRole('button', { name: ARIA_LABEL })
+  await fireEvent.click(trigger)
+  await fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' })
+  expect(trigger).toHaveFocus()
 })
 
 test('clicking outside the component closes the dropdown', async () => {

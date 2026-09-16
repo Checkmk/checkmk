@@ -8,7 +8,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 import { BOTTOM_SCREEN_MARGIN } from './constants'
@@ -27,7 +27,28 @@ const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
+const triggerRef = ref<HTMLButtonElement | null>(null)
 const dropdownMaxHeight = ref<number | null>(null)
+
+function getItemButtons(): HTMLButtonElement[] {
+  return containerRef.value
+    ? Array.from(containerRef.value.querySelectorAll('.graphing-graph-burger-menu__item-button'))
+    : []
+}
+
+function focusItemAt(index: number) {
+  const items = getItemButtons()
+  if (!items.length) {
+    return
+  }
+  const wrappedIndex = (index + items.length) % items.length
+  items[wrappedIndex]!.focus()
+}
+
+function closeMenu() {
+  isOpen.value = false
+  triggerRef.value?.focus()
+}
 
 function onDocumentClick(e: MouseEvent) {
   if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
@@ -36,8 +57,45 @@ function onDocumentClick(e: MouseEvent) {
 }
 
 function onDocumentKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    isOpen.value = false
+  if (e.key === 'Escape' && isOpen.value) {
+    closeMenu()
+  }
+}
+
+function onTriggerKeydown(e: KeyboardEvent) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    isOpen.value = true
+    void nextTick(() => focusItemAt(e.key === 'ArrowDown' ? 0 : -1))
+  }
+}
+
+function onDropdownKeydown(e: KeyboardEvent) {
+  const items = getItemButtons()
+  const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement)
+
+  switch (e.key) {
+    case 'ArrowDown':
+      e.preventDefault()
+      focusItemAt(currentIndex + 1)
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      focusItemAt(currentIndex - 1)
+      break
+    case 'Home':
+      e.preventDefault()
+      focusItemAt(0)
+      break
+    case 'End':
+      e.preventDefault()
+      focusItemAt(-1)
+      break
+    case 'Tab':
+      isOpen.value = false
+      break
+    default:
+      break
   }
 }
 
@@ -54,6 +112,7 @@ watch(isOpen, (open) => {
   if (open) {
     updateDropdownMaxHeight()
     window.addEventListener('resize', updateDropdownMaxHeight)
+    void nextTick(() => focusItemAt(0))
   } else {
     window.removeEventListener('resize', updateDropdownMaxHeight)
   }
@@ -78,15 +137,18 @@ const isEmpty = computed(() => !groups?.length)
 <template>
   <div ref="containerRef" class="graphing-graph-burger-menu">
     <button
+      ref="triggerRef"
       class="graphing-graph-burger-menu__trigger"
       :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
       :aria-expanded="isOpen"
+      :aria-haspopup="true"
       :aria-label="ariaLabel"
       :disabled="isEmpty"
       :aria-disabled="isEmpty"
       :title="isEmpty ? _t('No action available') : ''"
       tabindex="0"
       @click="isOpen = !isOpen"
+      @keydown="onTriggerKeydown"
     >
       <CmkMultitoneIcon name="burger-menu" primary-color="font" size="small" />
     </button>
@@ -100,11 +162,14 @@ const isEmpty = computed(() => !groups?.length)
           ? { maxHeight: `${dropdownMaxHeight}px` }
           : undefined
       "
+      role="menu"
+      @keydown="onDropdownKeydown"
     >
       <ul
         v-for="group in groups"
         :key="group.heading"
         class="graphing-graph-burger-menu__group"
+        role="group"
         :aria-label="group.heading"
       >
         <li class="graphing-graph-burger-menu__group-heading" aria-hidden="true">
@@ -114,10 +179,13 @@ const isEmpty = computed(() => !groups?.length)
           v-for="action in group.actions"
           :key="action.label"
           class="graphing-graph-burger-menu__item"
+          role="none"
         >
           <button
             :aria-label="action.label"
             class="graphing-graph-burger-menu__item-button"
+            role="menuitem"
+            tabindex="-1"
             @click="doAction(action.onClick)"
           >
             <template v-if="action.icon">
@@ -222,6 +290,11 @@ const isEmpty = computed(() => !groups?.length)
   background: none;
   color: inherit;
   font-size: inherit;
+
+  &:focus-visible {
+    outline: revert;
+    color: var(--default-select-hover-color);
+  }
 }
 
 body[data-theme='facelift'] {

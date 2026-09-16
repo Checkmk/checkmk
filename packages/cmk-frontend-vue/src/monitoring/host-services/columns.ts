@@ -23,6 +23,7 @@ import type {
   DateTimeRangeFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 
 /**
  * Columns the user may hide that also map to API-optional fields.
@@ -60,7 +61,7 @@ export function buildHostServicesColumnPinning({
   includeSelect
 }: HostServicesColumnOptions): ColumnPinningState {
   return {
-    left: [...(includeSelect ? ['select'] : []), 'state', 'modes', 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
     right: ['actions']
   }
 }
@@ -192,11 +193,9 @@ export function useHostServicesColumns({
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: 'modes',
+      accessorKey: MODE_COLUMN_ID,
       header: _t('Mode'),
       enableSorting: false,
-      minSize: 80,
-      maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
     },
     {

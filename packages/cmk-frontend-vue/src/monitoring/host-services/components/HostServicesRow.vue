@@ -17,6 +17,7 @@ import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
@@ -91,7 +92,12 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
     :flapping="row.is_flapping"
     :stale="row.stale"
   />
-  <IconCell v-if="hasColumn('modes')" column-id="modes" :icons="row.modes ?? []" />
+  <IconCell
+    v-if="hasColumn(MODE_COLUMN_ID)"
+    :column-id="MODE_COLUMN_ID"
+    :icons="row.modes ?? []"
+    :max-per-row="MODE_ICONS_PER_ROW"
+  />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"

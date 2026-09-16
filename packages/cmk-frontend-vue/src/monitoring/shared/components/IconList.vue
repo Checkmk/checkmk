@@ -8,16 +8,27 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
+import { type CSSProperties, computed } from 'vue'
 
 import type { MonitoringIcon } from '@/monitoring/shared/api/types'
 
-defineProps<{
+import { ICON_LIST_GAP, ICON_LIST_ICON_SIZE, iconListWidth } from './iconList'
+
+const props = defineProps<{
   icons: MonitoringIcon[]
+  maxPerRow?: number | undefined
 }>()
+
+const gap = `${ICON_LIST_GAP}px`
+const iconSize = `${ICON_LIST_ICON_SIZE}px`
+
+const listStyle = computed<CSSProperties>(() =>
+  props.maxPerRow === undefined ? {} : { maxWidth: `${iconListWidth(props.maxPerRow)}px` }
+)
 </script>
 
 <template>
-  <div class="monitoring-icon-list">
+  <div class="monitoring-icon-list" :style="listStyle">
     <template v-for="icon in icons" :key="icon.icon_name">
       <CmkIconLink
         v-if="icon.link"
@@ -38,9 +49,9 @@ defineProps<{
 <style scoped>
 .monitoring-icon-list {
   display: flex;
-  flex-direction: row;
+  flex-flow: row wrap;
   align-items: center;
-  gap: var(--dimension-2);
+  gap: v-bind(gap);
 }
 
 .monitoring-icon-list__item {
@@ -51,7 +62,7 @@ defineProps<{
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
 .monitoring-icon-list__item :deep(.cmk-icon) {
-  width: var(--dimension-6);
-  height: var(--dimension-6);
+  width: v-bind(iconSize);
+  height: v-bind(iconSize);
 }
 </style>

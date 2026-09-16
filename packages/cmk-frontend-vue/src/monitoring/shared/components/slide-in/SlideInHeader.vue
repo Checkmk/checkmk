@@ -11,6 +11,7 @@ import IconList from '@/monitoring/shared/components/IconList.vue'
 import ActionButtons, {
   type CellAction
 } from '@/monitoring/shared/components/cell/ActionButtons.vue'
+import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 
 withDefaults(
   defineProps<{
@@ -32,7 +33,7 @@ const emit = defineEmits<{
     <slot name="state" />
     <template v-if="modes.length">
       <span class="monitoring-slide-in-header__divider" aria-hidden="true" />
-      <IconList :icons="modes" />
+      <IconList :icons="modes" :max-per-row="MODE_ICONS_PER_ROW" />
       <span class="monitoring-slide-in-header__divider" aria-hidden="true" />
     </template>
     <CmkHeading type="h2" class="monitoring-slide-in-header__title">

@@ -12,12 +12,13 @@ import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
+import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
@@ -174,6 +175,9 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
     }
   ]
 })
+
+const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
+const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
@@ -352,7 +356,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="hostService"
         :actions="actionRegistry"
         :bulk-actions="hostActions"
-        :columns="columns"
+        :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="hostRef"

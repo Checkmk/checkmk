@@ -22,6 +22,7 @@ import type {
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
@@ -117,7 +118,7 @@ export function buildHostColumnPinning({
   includeActions
 }: Pick<HostColumnOptions, 'includeSelect' | 'includeActions'>): ColumnPinningState {
   return {
-    left: [...(includeSelect ? ['select'] : []), 'state', 'modes', 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
     ...(includeActions ? { right: ['actions'] } : {})
   }
 }
@@ -286,11 +287,9 @@ export function buildHostColumns({
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: 'modes',
+      accessorKey: MODE_COLUMN_ID,
       header: _t('Mode'),
       enableSorting: false,
-      minSize: 80,
-      maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
     },
     {

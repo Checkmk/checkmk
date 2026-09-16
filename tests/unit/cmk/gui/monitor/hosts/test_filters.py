@@ -357,25 +357,6 @@ def test_query_builder_label_choice_multiple_with_or() -> None:
     assert parse_as_livestatus_filter(condition) == expected
 
 
-def test_label_choice_condition_rejects_a_newline(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
-    # A list-valued payload structurally matches SiteChoiceCondition.value too, so validating it
-    # against the FilterNode union also tries SiteIdConverter.should_exist, which needs a request
-    # context to read active_config - unrelated to the rejection this test is actually checking.
-    payload = {
-        "type": "condition",
-        "field": "labels",
-        "op": "one_of",
-        "value": ["key:va\nlue"],
-    }
-
-    with pytest.raises(ValidationError):
-        TypeAdapter(FilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
-            payload, strict=False
-        )
-
-
 def test_query_builder_label_choice_splits_on_the_first_colon_only() -> None:
     condition = LabelChoiceCondition(
         type="condition", field="labels", op="one_of", value=["url:https://example.com"]

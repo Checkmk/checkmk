@@ -72,7 +72,7 @@ class LiveStatusHostRepository:
     ) -> Sequence[Host]:
         query_ = _sanitize_query(query)
         extra_headers = [
-            *_split_filter_lines(filters),
+            *filters.splitlines(),
             _build_primary_sort(sorters),
         ]
         if limit is not None:
@@ -249,14 +249,14 @@ class LiveStatusHostRepository:
             ": ".join(line)
             for line in _build_query_filter(_sanitize_query(query), fields, self._folders).render()
         )
-        return self._count_hosts(extra_lines=[*query_filter, *_split_filter_lines(filters)])
+        return self._count_hosts(extra_lines=[*query_filter, *filters.splitlines()])
 
     def _count_hosts(self, *, extra_lines: Sequence[str] = ()) -> int:
         # A ``Stats`` count on the hosts table. Runs under the connection's ``AuthUser`` filter, so a
         # user without "see all" counts only the hosts they may see. The count is the trailing column
         # of each returned row; summing across rows adds up the per-site counts. A raw ``Stats`` query
         # returns untyped (string) columns, hence the explicit ``int`` conversion.
-        stats_query = "\n".join((f"GET {Hosts.__tablename__}", "Stats: state >= 0", *extra_lines))
+        stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *extra_lines])
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
 
@@ -327,10 +327,6 @@ def _sanitize_query(q: str) -> str:
     # TODO: decide on how we want to handle invalid regex? This will likely require coordinating
     # with frontend implementation to pass down errors to the response.
     return q.replace("*", ".*")
-
-
-def _split_filter_lines(filters: HostFilter) -> list[str]:
-    return filters.split("\n") if filters else []
 
 
 _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] = {

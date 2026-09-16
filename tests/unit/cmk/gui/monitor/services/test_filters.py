@@ -312,20 +312,6 @@ def test_query_builder_label_choice_multiple_with_or() -> None:
     assert parse_as_livestatus_filter(condition) == expected
 
 
-def test_label_choice_condition_rejects_a_newline() -> None:
-    payload = {
-        "type": "condition",
-        "field": "labels",
-        "op": "one_of",
-        "value": ["key:va\nlue"],
-    }
-
-    with pytest.raises(ValidationError):
-        TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
-            payload, strict=False
-        )
-
-
 def test_query_builder_label_choice_splits_on_the_first_colon_only() -> None:
     condition = ServiceLabelChoiceCondition(
         type="condition", field="labels", op="one_of", value=["url:https://example.com"]

@@ -232,7 +232,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
         self.extra_headers = [
-            line for h in extra_headers for line in str(h).split("\n") if line.strip()
+            line for h in extra_headers for line in str(h).splitlines() if line.strip()
         ]
         _tables = {column.table for column in columns}
         if len(_tables) != 1:

@@ -36,6 +36,7 @@ vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
 
 const SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/lock_on_logon_failures`
 const BOOLEAN_SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/site_piggyback_hub`
+const SITE_SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/site_connection/remote_1/global_setting/lock_on_logon_failures`
 
 const data: GlobalSettingsAppData = {
   title: 'Global settings',
@@ -110,6 +111,14 @@ const resettableTopic: GlobalSettingsTopic = {
   ]
 }
 
+const siteMixedTopic: GlobalSettingsTopic = {
+  ...resettableTopic,
+  variables: [
+    { ...resettableTopic.variables[0]!, global_value: 15 },
+    { ...resettableTopic.variables[1]!, origin: 'site', global_value: false }
+  ]
+}
+
 interface Recorded {
   method: string
   ifMatch: string | null
@@ -176,6 +185,27 @@ async function openEditor() {
     await screen.findByRole('button', { name: 'Edit Lock user accounts after N login failures' })
   )
   await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET']))
+}
+
+async function openSiteEditor(origin: GlobalSettingsOrigin): Promise<HTMLElement> {
+  server.use(
+    http.get(SITE_SETTING_URL, () =>
+      HttpResponse.json(
+        { varname: 'lock_on_logon_failures', value: 20, origin },
+        { headers: { ETag: '"s1"' } }
+      )
+    )
+  )
+  render(GlobalSettingsApp, {
+    props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [siteMixedTopic] }
+  })
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
+  )
+  await userEvent.click(
+    await screen.findByRole('button', { name: 'Edit Lock user accounts after N login failures' })
+  )
+  return await screen.findByRole('dialog')
 }
 
 function settingRow() {
@@ -253,11 +283,14 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.queryByText('Site setting')).not.toBeInTheDocument()
   })
 
-  test('the topic header shows singular variable count and the number of modified variables', () => {
-    render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
-    expect(screen.getAllByText('1 variable')).toHaveLength(2)
-    expect(screen.getByText('0 modified')).toBeInTheDocument()
+  test('the topic header counts the modified variables', () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [secondTopic] } })
     expect(screen.getByText('1 modified')).toBeInTheDocument()
+  })
+
+  test('a topic without a single modification carries no tag', () => {
+    render(GlobalSettingsApp, { props: data })
+    expect(screen.queryByText(/\d+ modified/)).not.toBeInTheDocument()
   })
 
   test('tabbing through expanded topics reaches each edit button', async () => {
@@ -382,7 +415,6 @@ describe('GlobalSettingsApp', () => {
     expect(within(dialog).getByText('10')).toBeInTheDocument()
     expect(within(dialog).getByText('This variable has been modified.')).toBeInTheDocument()
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Toggle Site overrides' }))
     expect(within(dialog).getByText('Remote site 1')).toBeVisible()
     expect(within(dialog).getByRole('link', { name: 'Open site settings' })).toHaveAttribute(
       'href',
@@ -628,16 +660,15 @@ describe('GlobalSettingsApp', () => {
   })
 
   test('a site scope routes load and save through the site connection endpoints', async () => {
-    const siteSettingUrl = `${location.protocol}//${location.host}/api/internal/objects/site_connection/remote_1/global_setting/lock_on_logon_failures`
     server.use(
-      http.get(siteSettingUrl, () => {
+      http.get(SITE_SETTING_URL, () => {
         requests.push({ method: 'GET', ifMatch: null, body: null })
         return HttpResponse.json(
           { varname: 'lock_on_logon_failures', value: 15, origin: 'site' },
           { headers: { ETag: '"s1"' } }
         )
       }),
-      http.put(siteSettingUrl, async ({ request }) => {
+      http.put(SITE_SETTING_URL, async ({ request }) => {
         requests.push({
           method: 'PUT',
           ifMatch: request.headers.get('If-Match'),
@@ -666,16 +697,62 @@ describe('GlobalSettingsApp', () => {
     expect(requests[1]).toMatchObject({ ifMatch: '"s1"', body: { value: 20 } })
   })
 
-  test('a site page leaves a value inherited from the global settings unmarked', async () => {
+  test('a site page counts a value modified in the global settings as modified', () => {
     render(GlobalSettingsApp, {
       props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [resettableTopic] }
     })
+
+    expect(screen.getByText('2 modified')).toBeInTheDocument()
+    expect(screen.queryByText(/overridden on this site/)).not.toBeInTheDocument()
+  })
+
+  test('a site page tags the values it overrides itself apart from the modified ones', () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [siteMixedTopic] }
+    })
+
+    expect(screen.getByText('2 modified')).toBeInTheDocument()
+    expect(screen.getByText('1 overridden on this site')).toBeInTheDocument()
+  })
+
+  test('a site editor shows the inherited value and the state of the shown one', async () => {
+    const dialog = await openSiteEditor('site')
+
+    expect(await within(dialog).findByText('Global settings')).toBeInTheDocument()
+    expect(within(dialog).getByText('15')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('This variable is overridden on this site.')
+    ).toBeInTheDocument()
+  })
+
+  test('a site editor names the global settings as the source of an inherited value', async () => {
+    const dialog = await openSiteEditor('global')
+
+    expect(
+      await within(dialog).findByText('This variable inherits the value from Global settings.')
+    ).toBeInTheDocument()
+    expect(
+      within(dialog).queryByRole('button', { name: 'Remove site-specific value' })
+    ).not.toBeInTheDocument()
+  })
+
+  test('removing a site override warns that the global settings take over', async () => {
+    const dialog = await openSiteEditor('site')
     await userEvent.click(
-      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
+      await within(dialog).findByRole('button', { name: 'Remove site-specific value' })
     )
 
-    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
-    expect(screen.getByText('0 modified')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('The site will inherit the value from Global settings.')
+    ).toBeInTheDocument()
+  })
+
+  test('the global editor has no section for an inherited value', async () => {
+    await openEditor()
+
+    expect(
+      within(screen.getByRole('dialog')).queryByText('Global settings')
+    ).not.toBeInTheDocument()
   })
 
   test('a load response arriving after its editor was closed does not leak into the next editor', async () => {
@@ -900,11 +977,11 @@ describe('GlobalSettingsApp search', () => {
   })
 
   test('the topic header counts stay totals while a search filters the rows', async () => {
-    const user = setup()
-    await search(user, 'idle timeout')
+    const user = setup({ ...data, topics: [resettableTopic] })
+    await search(user, 'piggyback')
 
-    expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
-    expect(screen.getByText('2 variables')).toBeInTheDocument()
+    expect(screen.getByText(label('Enable piggyback-hub'))).toBeInTheDocument()
+    expect(screen.getByText('2 modified')).toBeInTheDocument()
   })
 
   test('a value changed while a search is active persists after the query is cleared', async () => {
@@ -947,13 +1024,19 @@ describe('GlobalSettingsApp search', () => {
       expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
     })
 
-    test('default only hides the modified rows', async () => {
-      const user = setup()
-      await filterBy(user, 'Default only')
+    test('site overrides only hides everything the site does not override itself', async () => {
+      const user = setup({
+        ...searchData,
+        scope: { type: 'site', site_id: 'remote_1' },
+        topics: [siteMixedTopic]
+      })
+      await filterBy(user, 'Site overrides only')
       await user.click(screen.getByRole('button', { name: 'Expand all' }))
 
-      expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
-      expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
+      expect(screen.getByText(label('Enable piggyback-hub'))).toBeInTheDocument()
+      expect(
+        screen.queryByText(label('Lock user accounts after N login failures'))
+      ).not.toBeInTheDocument()
     })
 
     test('the filter leaves the sections closed', async () => {
@@ -987,7 +1070,7 @@ describe('GlobalSettingsApp search', () => {
       await vi.advanceTimersByTimeAsync(200)
       expect(window.location.search).toBe('?filter=modified')
 
-      await filterBy(user, 'All settings')
+      await filterBy(user, 'All variables')
       await vi.advanceTimersByTimeAsync(200)
       expect(window.location.search).toBe('')
     })
@@ -1001,7 +1084,7 @@ describe('GlobalSettingsApp search', () => {
       await vi.advanceTimersByTimeAsync(200)
 
       expect(screen.getByRole('searchbox')).toHaveValue('')
-      expect(screen.getByRole('button', { name: 'Toggle All settings' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Toggle All variables' })).toHaveAttribute(
         'aria-pressed',
         'true'
       )

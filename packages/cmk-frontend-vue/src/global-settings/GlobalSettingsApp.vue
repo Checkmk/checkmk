@@ -26,7 +26,7 @@ import GlobalSettingsModificationFilter, {
   type ModificationFilter
 } from './components/GlobalSettingsModificationFilter.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
-import { isModifiedIn } from './lib/origin'
+import { isModified, isSiteOverride } from './lib/origin'
 import { type VariableFilter, buildSearchIndex, matchTopics } from './lib/search'
 import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
 
@@ -45,8 +45,8 @@ function urlParam(name: string): string | null {
 
 function parseModificationFilter(value: string | null): ModificationFilter {
   switch (value) {
-    case 'default':
     case 'modified':
+    case 'site':
       return value
     default:
       return 'all'
@@ -63,6 +63,7 @@ function setOrDelete(params: URLSearchParams, name: string, value: string | null
 
 const editableTopics = ref(structuredClone(toRaw(props.topics)))
 const { session, openEditor, closeEditor } = useGlobalSettingsEditor(service, props.scope)
+const inSiteScope = computed(() => props.scope.type === 'site')
 const query = ref(urlParam(SEARCH_URL_PARAM) ?? '')
 const debouncedQuery = useDebounceRef(query, 100)
 const searchActive = computed(() => debouncedQuery.value.trim() !== '')
@@ -70,10 +71,10 @@ const searchActive = computed(() => debouncedQuery.value.trim() !== '')
 const modification = ref<ModificationFilter>(parseModificationFilter(urlParam(FILTER_URL_PARAM)))
 const variableFilter = computed<VariableFilter | null>(() => {
   switch (modification.value) {
-    case 'default':
-      return (variable) => !isModifiedIn(variable, props.scope)
     case 'modified':
-      return (variable) => isModifiedIn(variable, props.scope)
+      return isModified
+    case 'site':
+      return isSiteOverride
     default:
       return null
   }
@@ -171,7 +172,10 @@ function resetSearchAndFilters(): void {
     <CmkSlideInDialog
       :open="session !== null"
       size="small"
-      :header="{ title: _t('Edit global setting'), closeButton: true }"
+      :header="{
+        title: inSiteScope ? _t('Edit site-specific setting') : _t('Edit global setting'),
+        closeButton: true
+      }"
       @close="closeEditor"
     >
       <GlobalSettingsEditor v-if="session !== null" :session="session" @close="closeEditor" />

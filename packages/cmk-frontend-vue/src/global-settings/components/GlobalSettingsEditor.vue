@@ -16,7 +16,7 @@ import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
 
-import { isModifiedIn } from '../lib/origin'
+import { isExplicitIn } from '../lib/origin'
 import type { EditorSession } from '../useGlobalSettingsEditor'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
@@ -31,7 +31,8 @@ const emit = defineEmits<{
 }>()
 
 const variable = computed(() => props.session.variable)
-const modified = computed(() => isModifiedIn(variable.value, props.session.scope))
+const inSiteScope = computed(() => props.session.scope.type === 'site')
+const removable = computed(() => isExplicitIn(variable.value, props.session.scope))
 const error = computed(() => props.session.error)
 const specWithoutTopLevelHelp = computed(() => ({ ...variable.value.spec, help: '' }))
 
@@ -75,19 +76,32 @@ function valuesEqual(a: unknown, b: unknown): boolean {
 }
 
 const isExplicitDefault = computed(
-  () => modified.value && valuesEqual(variable.value.value, variable.value.default_value)
+  () =>
+    !inSiteScope.value &&
+    removable.value &&
+    valuesEqual(variable.value.value, variable.value.default_value)
 )
 
-const resetButtonLabel = computed<TranslatedString>(() =>
-  isExplicitDefault.value ? _t('Remove explicit setting') : _t('Remove modification')
-)
+const resetButtonLabel = computed<TranslatedString>(() => {
+  if (inSiteScope.value) {
+    return _t('Remove site-specific value')
+  }
+  return isExplicitDefault.value ? _t('Remove explicit setting') : _t('Remove modification')
+})
 
 const resetConfirmation = computed<{
   heading: TranslatedString
   body: TranslatedString
   confirm: TranslatedString
-}>(() =>
-  isExplicitDefault.value
+}>(() => {
+  if (inSiteScope.value) {
+    return {
+      heading: _t('Remove site-specific value?'),
+      body: _t('The site will inherit the value from Global settings.'),
+      confirm: _t('Remove')
+    }
+  }
+  return isExplicitDefault.value
     ? {
         heading: _t('Remove explicit setting?'),
         body: _t(
@@ -102,13 +116,20 @@ const resetConfirmation = computed<{
         ),
         confirm: _t('Remove')
       }
-)
+})
 
-const currentStateText = computed<TranslatedString>(() =>
-  modified.value
-    ? _t('This variable has been modified.')
-    : _t('This variable is at factory settings.')
-)
+const currentStateText = computed<TranslatedString>(() => {
+  switch (variable.value.origin) {
+    case 'site':
+      return _t('This variable is overridden on this site.')
+    case 'global':
+      return inSiteScope.value
+        ? _t('This variable inherits the value from Global settings.')
+        : _t('This variable has been modified.')
+    default:
+      return _t('This variable is at factory settings.')
+  }
+})
 </script>
 
 <template>
@@ -118,11 +139,15 @@ const currentStateText = computed<TranslatedString>(() =>
         {{ _t('Save') }}
       </CmkButton>
       <CmkButton
-        v-if="modified"
+        v-if="removable"
         variant="secondary"
         :icon="{ name: 'reset' }"
         :disabled="!session.editable"
-        :title="_t('Reset to factory default')"
+        :title="
+          inSiteScope
+            ? _t('Remove the value configured for this site')
+            : _t('Reset to factory default')
+        "
         @click="confirmResetOpen = true"
       >
         {{ resetButtonLabel }}
@@ -165,6 +190,19 @@ const currentStateText = computed<TranslatedString>(() =>
         <GlobalSettingsRow :label="_t('Current setting')" :help="untranslated(variable.spec.help)">
           <FormEdit v-model:data="draft" :spec="specWithoutTopLevelHelp" :backend-validation="[]" />
         </GlobalSettingsRow>
+        <GlobalSettingsRow :label="_t('Current state')">
+          {{ currentStateText }}
+        </GlobalSettingsRow>
+      </CmkCatalogPanel>
+
+      <CmkCatalogPanel v-if="inSiteScope" :title="_t('Global settings')">
+        <GlobalSettingsRow :label="_t('Global setting')">
+          <FormReadonly
+            :spec="variable.spec"
+            :data="variable.global_value"
+            :backend-validation="[]"
+          />
+        </GlobalSettingsRow>
       </CmkCatalogPanel>
 
       <CmkCatalogPanel :title="_t('Factory settings')">
@@ -175,16 +213,9 @@ const currentStateText = computed<TranslatedString>(() =>
             :backend-validation="[]"
           />
         </GlobalSettingsRow>
-        <GlobalSettingsRow :label="_t('Current state')">
-          {{ currentStateText }}
-        </GlobalSettingsRow>
       </CmkCatalogPanel>
 
-      <CmkCatalogPanel
-        v-if="variable.site_overrides.length > 0"
-        :title="_t('Site overrides')"
-        :open="false"
-      >
+      <CmkCatalogPanel v-if="variable.site_overrides.length > 0" :title="_t('Site overrides')">
         <p class="global-settings-editor__overrides-intro">
           {{ _t('This setting is overridden by the following sites:') }}
         </p>

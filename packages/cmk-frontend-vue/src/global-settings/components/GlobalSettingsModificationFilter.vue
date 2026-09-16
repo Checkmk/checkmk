@@ -8,16 +8,16 @@ import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-export type ModificationFilter = 'all' | 'default' | 'modified'
+export type ModificationFilter = 'all' | 'modified' | 'site'
 
 const { _t } = usei18n()
 
 const selected = defineModel<ModificationFilter>({ default: 'all' })
 
 const options = computed(() => [
-  { label: _t('All settings'), value: 'all' },
-  { label: _t('Default only'), value: 'default' },
-  { label: _t('Modified only'), value: 'modified' }
+  { label: _t('All variables'), value: 'all' },
+  { label: _t('Modified only'), value: 'modified' },
+  { label: _t('Site overrides only'), value: 'site' }
 ])
 </script>
 

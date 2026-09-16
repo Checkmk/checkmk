@@ -7,7 +7,16 @@ import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global
 
 import type { GlobalSettingsScope } from '../api'
 
-export function isModifiedIn(
+export function isModified(variable: GlobalSettingsVariable): boolean {
+  return variable.origin !== 'factory'
+}
+
+export function isSiteOverride(variable: GlobalSettingsVariable): boolean {
+  return variable.origin === 'site'
+}
+
+/** The scope holds the explicit value, so removing it here falls back to the layer below. */
+export function isExplicitIn(
   variable: GlobalSettingsVariable,
   scope: GlobalSettingsScope
 ): boolean {

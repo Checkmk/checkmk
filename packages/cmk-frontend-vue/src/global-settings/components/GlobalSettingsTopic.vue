@@ -15,10 +15,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { GlobalSettingsScope } from '../api'
-import { isModifiedIn } from '../lib/origin'
+import { isModified, isSiteOverride } from '../lib/origin'
 import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 
-const { _t, _tn } = usei18n()
+const { _t } = usei18n()
 
 const props = defineProps<{
   topic: GlobalSettingsTopic
@@ -41,15 +41,12 @@ const shownVariables = computed(() => {
     : props.topic.variables.filter((variable) => match.has(variable.name))
 })
 
-const modifiedCount = computed(
-  () => props.topic.variables.filter((variable) => isModifiedIn(variable, props.scope)).length
-)
-const variableCountLabel = computed(() =>
-  _tn('%{count} variable', '%{count} variables', props.topic.variables.length, {
-    count: props.topic.variables.length
-  })
-)
+const modifiedCount = computed(() => props.topic.variables.filter(isModified).length)
+const siteOverrideCount = computed(() => props.topic.variables.filter(isSiteOverride).length)
 const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modifiedCount.value }))
+const siteOverrideCountLabel = computed(() =>
+  _t('%{count} overridden on this site', { count: siteOverrideCount.value })
+)
 </script>
 
 <template>
@@ -62,18 +59,20 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
     </template>
     <template #header-right>
       <CmkTag
-        size="medium"
-        variant="fill"
-        class="global-settings-topic__count"
-        :content="variableCountLabel"
-        :title="variableCountLabel"
-      />
-      <CmkTag
+        v-if="modifiedCount > 0"
         size="medium"
         variant="fill"
         class="global-settings-topic__count"
         :content="modifiedCountLabel"
         :title="modifiedCountLabel"
+      />
+      <CmkTag
+        v-if="siteOverrideCount > 0"
+        size="medium"
+        variant="fill"
+        class="global-settings-topic__count"
+        :content="siteOverrideCountLabel"
+        :title="siteOverrideCountLabel"
       />
     </template>
     <template #content>
@@ -84,7 +83,6 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         v-for="variable in shownVariables"
         :key="variable.name"
         :variable="variable"
-        :scope="scope"
         :query="query"
         @edit="emit('edit', variable)"
       />

@@ -624,6 +624,7 @@ class TreeRenderer:
 
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
+        columns: Sequence[_Column]
         match tree:
             case ImmutableTree():
                 items_sorter = _SDItemsSorter(
@@ -649,7 +650,7 @@ class TreeRenderer:
             self._show_table(
                 now,
                 hint.table.name if isinstance(hint.table, TableWithView) else "",
-                columns,  # type: ignore[possibly-undefined]
+                columns,
                 sorted_rows,
             )
         for name in sorted(tree.nodes_by_name):

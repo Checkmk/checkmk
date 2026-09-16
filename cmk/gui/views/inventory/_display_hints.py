@@ -749,7 +749,7 @@ def _get_related_legacy_hints(
             related_legacy_hints.for_table.update(legacy_hint)
             continue
 
-        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:  # type: ignore[redundant-expr]
+        if inventory_path.key:
             related_legacy_hints.by_key.setdefault(inventory_path.key, legacy_hint)
             continue
 
@@ -1029,7 +1029,7 @@ def _parse_col_filter_from_legacy(
             ident=filter_ident,
             title=title,
         )
-    match filter_class.__name__:  # type: ignore[exhaustive-match]
+    match filter_class.__name__:
         case "FilterInvtableAdminStatus":
             return FilterInvtableChoice(
                 inv_info=table_view_name,
@@ -1104,7 +1104,8 @@ def _parse_col_filter_from_legacy(
                 ident=filter_ident,
                 title=title,
             )
-    raise TypeError(filter_class)
+        case _:
+            raise TypeError(filter_class)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1600,20 +1601,22 @@ def find_non_canonical_filters(
             continue
         if inv_path.source == inventory.TreeSource.attributes:
             name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
-            match legacy_hint.get("paint"):  # type: ignore[exhaustive-match]
+            match legacy_hint.get("paint"):
                 case "bytes" | "bytes_rounded":
                     filters[name] = FilterMigrationScale(name=name, prefix="M")
                 case "hz":
                     filters[name] = FilterMigrationScale(name=name, prefix="M")
                 case "bool":
                     filters.setdefault(name, FilterMigrationBoolIs(name=name))
+                case _:
+                    pass
         if (
             inv_path.source == inventory.TreeSource.table
             and (view_name := legacy_hint.get("view"))
             and (legacy_filter := legacy_hint.get("filter"))
         ):
             name = f"{_parse_view_name(view_name)}_{inv_path.key}"
-            match legacy_filter.__class__.__name__:  # type: ignore[exhaustive-match]
+            match legacy_filter.__class__.__name__:
                 case "FilterInvtableOperStatus":
                     filters.setdefault(
                         name,
@@ -1634,6 +1637,8 @@ def find_non_canonical_filters(
                     filters.setdefault(name, FilterMigrationBool(name=name))
                 case "FilterInvtableTimestampAsAge":
                     filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
+                case _:
+                    pass
     return filters
 
 

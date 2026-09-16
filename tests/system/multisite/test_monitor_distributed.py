@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Distributed behaviour of the All hosts feed and the host overview.
+"""Distributed behaviour of the All hosts list and the host overview.
 
-The feed asks every connected monitoring site for its own capped slice, then
+The list asks every connected monitoring site for its own capped slice, then
 merges the slices and re-applies both the cap and the counts centrally. Only a
 real central/remote pair exercises the fan-out, the cut and the merge together:
 the request-level doubles synthesise merged rows rather than receiving them, so
@@ -27,7 +27,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 # The names interleave across the two sites on purpose: sorted ascending they
-# alternate central, remote, central, ..., so a feed that returned one site's
+# alternate central, remote, central, ..., so a list that returned one site's
 # rows and then the other's is visibly wrong rather than accidentally right.
 # They differ by a trailing letter rather than a number, so the endpoint's
 # natural ordering and a plain lexicographic one agree and the expected order
@@ -73,14 +73,14 @@ def _hosts_per_site(central_site: Site, remote_site: Site) -> Iterator[Mapping[s
             )
         central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
         # Activating the configuration is not the same as every site's core having
-        # reloaded, so the hosts reach the merged feed a moment later. Every test
+        # reloaded, so the hosts reach the merged host list a moment later. Every test
         # below depends on all six being there, so wait for that, not for the
         # activation alone.
         wait_until(
             lambda: set(_listed_hosts(central_site)) == set(_ALL_HOSTS),
             timeout=120,
             interval=2,
-            condition_name="all six test hosts visible in the merged feed",
+            condition_name="all six test hosts visible in the merged host list",
         )
         # Visible is not the same as checked. The hosts have no agent, so their
         # services start PENDING and turn CRIT the moment the first check lands.
@@ -92,7 +92,7 @@ def _hosts_per_site(central_site: Site, remote_site: Site) -> Iterator[Mapping[s
             lambda: _all_services_have_been_checked(central_site),
             timeout=120,
             interval=2,
-            condition_name="no test host still reporting pending services in the merged feed",
+            condition_name="no test host still reporting pending services in the merged host list",
         )
         yield owner
     finally:
@@ -138,7 +138,7 @@ def _list_hosts(
     sort: list[str] | None = None,
     filters: Mapping[str, object] | None = None,
 ) -> _HostsPage:
-    """Ask ``site`` for the merged host feed, scoped to this module's hosts.
+    """Ask ``site`` for the merged host list, scoped to this module's hosts.
 
     ``q`` scopes the query so the counts are independent of whatever else the
     session-scoped sites happen to be monitoring.
@@ -160,7 +160,7 @@ def _names(page: _HostsPage) -> list[str]:
 
 
 def _listed_hosts(central_site: Site) -> dict[str, _HostRow]:
-    """This module's hosts as the merged feed currently reports them, keyed by name."""
+    """This module's hosts as the merged host list currently reports them, keyed by name."""
     return {
         host["name"]: host for host in _list_hosts(central_site, limit=_NO_CUT, q=_PREFIX)["hosts"]
     }
@@ -200,9 +200,9 @@ def _check_pending_services_now(
 
 
 def _all_services_have_been_checked(central_site: Site) -> bool:
-    """Whether all six hosts are in the feed and none still counts an unchecked service.
+    """Whether all six hosts are in the host list and none still counts an unchecked service.
 
-    Read through the merged feed rather than off each site, because the feed is
+    Read through the merged host list rather than off each site, because the list is
     what the tests read: a result already checked on the remote still has to
     cross the central's livestatus proxy before it shows up here.
     """
@@ -376,7 +376,7 @@ def test_the_overview_and_the_feed_agree_on_a_remote_host_service_counts(
         "crit": row["num_services_crit"],
         "unknown": row["num_services_unknown"],
         "pending": row["num_services_pending"],
-    }, "The overview and the merged feed disagree about the remote host's services"
+    }, "The overview and the merged host list disagree about the remote host's services"
     assert counts["total"] == (
         counts["ok"] + counts["warn"] + counts["crit"] + counts["unknown"] + counts["pending"]
     ), "The overview's service total does not add up from its per-state counts"

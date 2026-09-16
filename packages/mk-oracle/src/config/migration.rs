@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::defines::{keys, values};
+use crate::config::section::names as section_names;
 use anyhow::{bail, Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -199,6 +200,26 @@ fn yaml_quote(value: &str) -> String {
     }
     out.push('"');
     out
+}
+
+/// The section names of an ASM list, translated to the ones the unified plug-in knows.
+///
+/// Legacy calls the ASM instance section `instance`, the same name it uses for a database:
+/// which query runs is decided by the list the name appears in. The unified plug-in picks the
+/// query by section name and uses the affinity only to select the instances a section runs
+/// against, so the ASM instance section has its own name and its own query. Every other ASM
+/// section is named alike in both.
+fn parse_asm_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<String> {
+    parse_sections(variables, key)
+        .into_iter()
+        .map(|name| {
+            if name == section_names::INSTANCE {
+                section_names::ASM_INSTANCE.to_owned()
+            } else {
+                name
+            }
+        })
+        .collect()
 }
 
 fn parse_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<String> {
@@ -807,8 +828,8 @@ pub fn convert(
 
     let sync_normal = parse_sections(variables, "SYNC_SECTIONS");
     let async_normal = parse_sections(variables, "ASYNC_SECTIONS");
-    let sync_asm = parse_sections(variables, "SYNC_ASM_SECTIONS");
-    let async_asm = parse_sections(variables, "ASYNC_ASM_SECTIONS");
+    let sync_asm = parse_asm_sections(variables, "SYNC_ASM_SECTIONS");
+    let async_asm = parse_asm_sections(variables, "ASYNC_ASM_SECTIONS");
 
     fn as_str(s: &HashSet<String>) -> HashSet<&str> {
         s.iter().map(|s| s.as_str()).collect()
@@ -2989,9 +3010,16 @@ sec3 () {
         assert!(result.contains(
             "      - asm_diskgroup:\n          is_async: true\n          affinity: \"asm\"\n"
         ));
-        // instance: sync normal + sync asm → is_async: false, affinity: all
+        // instance: the legacy ASM list names it `instance` too, but that is the ASM
+        // instance section, which the unified plug-in calls `asm_instance` and queries
+        // differently. So the database `instance` stays normal-only, without affinity ...
+        assert!(result.contains("      - instance:\n          is_async: false\n"));
+        assert!(
+            !result.contains("      - instance:\n          is_async: false\n          affinity:")
+        );
+        // ... and the ASM one appears under its own name, asm-only and sync.
         assert!(result.contains(
-            "      - instance:\n          is_async: false\n          affinity: \"all\"\n"
+            "      - asm_instance:\n          is_async: false\n          affinity: \"asm\"\n"
         ));
         // processes: asm-only (not in normal), sync
         assert!(result.contains(

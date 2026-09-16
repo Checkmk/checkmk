@@ -1343,8 +1343,9 @@ fn test_migrate_reference_config_sections() {
     use SectionKind::{Async, Sync};
     let expected: &[(&str, SectionKind, SectionAffinity)] = &[
         ("asm_diskgroup", Async, Asm),
+        ("asm_instance", Sync, Asm),
         ("dataguard_stats", Sync, Db),
-        ("instance", Sync, All),
+        ("instance", Sync, Db),
         ("jobs", Async, Db),
         ("locks", Sync, Db),
         ("logswitches", Sync, Db),

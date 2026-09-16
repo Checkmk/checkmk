@@ -171,25 +171,29 @@ fn collect_rows(rows: impl Iterator<Item = Result<Vec<String>>>) -> Result<Vec<V
 
 /// Converts one fetched row to its string cells.
 ///
-/// A per-value decode error stays a non-fatal `Error: <e>` placeholder. A
-/// row-level fetch error is returned to the caller, which logs it and stops:
-/// the driver can re-yield such an error indefinitely, so continuing would spin
-/// CPU and grow memory without bound.
+/// A row-level fetch error and a cell the driver cannot render as a string
+/// (a REF CURSOR, for example) both fail the whole query. The caller stops
+/// and the section carries one FAILURE row instead of data rows with an
+/// `Error: ...` cell. Stopping also matters for fetch errors, which the
+/// driver can re-yield indefinitely.
 fn row_to_vector(row: oracle::Result<oracle::Row>) -> Result<Vec<String>> {
     // Propagate the raw driver error (no `.context`): its Display carries the
     // ORA-xxxxx text, which the section surfaces as the FAILURE reason.
     let row = row?;
-    Ok(row
-        .sql_values()
+    row.sql_values()
         .iter()
-        .map(|val| {
-            if val.is_null().unwrap_or(false) {
-                "".to_string()
-            } else {
-                String::from_sql(val).unwrap_or_else(|e| format!("Error: {}", e))
-            }
-        })
-        .collect::<Vec<String>>())
+        .zip(row.column_info())
+        .map(|(value, column)| cell_to_string(value, column.name()))
+        .collect()
+}
+
+/// NULL becomes the empty string. The column name goes into the error so
+/// the FAILURE row names the offending column of a user-supplied query.
+fn cell_to_string(value: &oracle::SqlValue, column_name: &str) -> Result<String> {
+    if value.is_null()? {
+        return Ok(String::new());
+    }
+    String::from_sql(value).map_err(|e| anyhow::anyhow!("{e} in column {column_name}"))
 }
 
 fn _to_privilege(role: &Role) -> Privilege {

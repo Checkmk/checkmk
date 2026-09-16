@@ -16,13 +16,21 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import HostServicesApp from '@/monitoring/host-services/HostServicesApp.vue'
 
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
+type ApiHostEntry = components['schemas']['HostEntry']
+
+const HOSTS_PATH = '/monitor/hosts'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let servicesPost: any
+let host: ApiHostEntry
 
 beforeEach(() => {
   document.body.innerHTML = '<div class="titlebar"></div>'
   postSpy = vi.spyOn(client, 'POST')
+  servicesPost = vi.fn()
+  host = makeApiHost()
 })
 
 afterEach(() => {
@@ -45,6 +53,14 @@ function servicesResponse(
   }
 }
 
+function hostsResponse(): unknown {
+  return {
+    data: { hosts: [host], meta: { limit: 1, matched: 1, total: 1, fields: [] } },
+    error: undefined,
+    response: new Response()
+  }
+}
+
 function mockServices(
   services: ApiServiceEntry[],
   counts: { matched: number; total: number } = {
@@ -52,7 +68,25 @@ function mockServices(
     total: services.length
   }
 ): void {
-  postSpy.mockResolvedValue(servicesResponse(services, counts) as never)
+  postSpy.mockImplementation((path: string, init: unknown) => {
+    if (path === HOSTS_PATH) {
+      return Promise.resolve(hostsResponse()) as never
+    }
+    servicesPost(path, init)
+    return Promise.resolve(servicesResponse(services, counts)) as never
+  })
+}
+
+function makeApiHost(overrides: Partial<ApiHostEntry> = {}): ApiHostEntry {
+  return {
+    name: 'web-1',
+    state: 'UP',
+    is_flapping: false,
+    stale: false,
+    site_id: 'local',
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    ...overrides
+  }
 }
 
 function makeApiEntry(): ApiServiceEntry {
@@ -72,6 +106,7 @@ function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
     props: {
       host: 'web-1',
       site: 'local',
+      host_url: 'monitor_all_hosts.py#host=web-1&site=local',
       user_id: 'cmkadmin',
       edition: 'pro',
       ...overrides
@@ -115,7 +150,7 @@ test('requests the services sorted by name ascending on the first click of the S
 
   await userEvent.click(screen.getByRole('button', { name: 'Service' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -134,7 +169,7 @@ test('requests a descending sort first for the State column', async () => {
 
   await userEvent.click(screen.getByRole('button', { name: 'State' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -156,7 +191,7 @@ test('requests the services matching a submitted search query', async () => {
   input.focus()
   await userEvent.type(input, 'CPU{Enter}')
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, q: 'CPU', fields: [] }
@@ -187,7 +222,7 @@ test('requests services whose name contains the typed filter text', async () => 
   await fireEvent.update(within(panel).getByRole('textbox'), 'cpu')
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -213,7 +248,7 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -230,7 +265,7 @@ test('requests services whose summary contains the typed filter text', async () 
   await fireEvent.update(within(panel).getByRole('textbox'), 'timeout')
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -256,7 +291,7 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -274,7 +309,7 @@ test('requests services that are not acknowledged and not in downtime', async ()
   await userEvent.click(within(panel).getByLabelText('NOT In downtime'))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -312,7 +347,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -326,7 +361,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT, una
 
   await userEvent.click(await screen.findByRole('button', { name: 'Unhandled service problems' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -353,7 +388,7 @@ test('clicking the unhandled-problems chip again turns it back off', async () =>
   await userEvent.click(chip)
   await userEvent.click(chip)
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -368,7 +403,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   await userEvent.click(await screen.findByRole('button', { name: 'Unhandled service problems' }))
   await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -414,7 +449,7 @@ test('resetting all filters restores the full, unfiltered list', async () => {
 
   await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -434,7 +469,7 @@ test('requests only the states the URL a link arrived on names', async () => {
   renderApp()
   await screen.findByText('Total rows: 1')
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -476,7 +511,7 @@ test('requests services in a picked state that are also flapping', async () => {
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -510,7 +545,7 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -607,7 +642,7 @@ test('sorts by the column the URL a link arrived on names', async () => {
   renderApp()
   await screen.findByText('Total rows: 1')
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, sort: ['state:desc'], fields: [] }
@@ -634,7 +669,7 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
   // `state` and `name` cannot be hidden, so the URL never has to name them.
   expect(screen.getByRole('columnheader', { name: 'Service' })).toBeInTheDocument()
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: ['labels'] }
@@ -658,7 +693,7 @@ test('falls back to the default ordering when the URL names an unsortable column
   expect(warn).toHaveBeenCalledWith(
     'table state: sort named a column that cannot be sorted (perfometer); dropped it'
   )
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: { limit: 1000, fields: [] }
@@ -700,7 +735,7 @@ test('requests services whose last state change is at or after the picked instan
   const today = new Date()
   const picked = new Date(today.getFullYear(), today.getMonth(), 20, 8, 45).getTime() / 1000
 
-  expect(postSpy).toHaveBeenLastCalledWith(
+  expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
       body: {
@@ -761,4 +796,37 @@ test('offers row selection once one action is permitted', async () => {
 
   expect(await screen.findByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
   expect(screen.getByRole('toolbar', { name: 'Actions for selected services' })).toBeInTheDocument()
+})
+
+test('shows the host state and links its name in the page header', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  expect(await screen.findByText('UP')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'web-1' })).toHaveAttribute(
+    'href',
+    'monitor_all_hosts.py#host=web-1&site=local'
+  )
+})
+
+test('reads the host of the page alongside its services', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await screen.findByText('UP')
+
+  expect(postSpy).toHaveBeenCalledWith(
+    HOSTS_PATH,
+    expect.objectContaining({
+      body: expect.objectContaining({
+        filter: {
+          type: 'and',
+          children: [
+            { type: 'condition', field: 'name', op: 'matches', value: '^web-1$' },
+            { type: 'condition', field: 'site_id', op: 'one_of', value: ['local'] }
+          ]
+        }
+      })
+    })
+  )
 })

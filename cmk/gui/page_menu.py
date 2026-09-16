@@ -327,6 +327,7 @@ class PageMenu:
     breadcrumb: Breadcrumb | None = None
     inpage_search: PageMenuSearch | None = None
     enable_suggestions: bool = True
+    show_up_link: bool = True
     hidden_vue_items: list[PageMenuVue] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -337,7 +338,12 @@ class PageMenu:
         self.dropdowns.append(make_help_dropdown())
 
         # Add the up-entry
-        if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
+        if (
+            self.show_up_link
+            and self.breadcrumb
+            and len(self.breadcrumb) > 1
+            and self.breadcrumb[-2].url
+        ):
             self.dropdowns.append(make_up_link(self.breadcrumb))
 
     def __getitem__(self, name: str) -> PageMenuDropdown:

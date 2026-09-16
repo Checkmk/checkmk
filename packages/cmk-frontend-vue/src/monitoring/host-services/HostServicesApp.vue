@@ -14,7 +14,9 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostRef, HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
+import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
@@ -117,9 +119,11 @@ const filterSchema = buildFilterUrlSchema(columns)
 const initialFilterState = readFilterUrlState(window.location.search, filterSchema)
 
 const servicesApi = new HostServicesApi()
+const hostApi = new HostApi()
 
 const hostServicesService = new HostServicesService(
   servicesApi,
+  hostApi,
   host,
   getKeyShortcutServiceInstance(),
   {
@@ -284,6 +288,12 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       :url="legacy_view_button.url"
     />
     <div class="monitoring-host-services-app">
+      <HostHeader
+        v-if="hostServicesService.hostEntry.value"
+        class="monitoring-host-services-app__host"
+        :host="hostServicesService.hostEntry.value"
+        :url="host_url"
+      />
       <div class="monitoring-host-services-app__header">
         <div class="monitoring-host-services-app__toolbar">
           <CmkSearchInput
@@ -370,6 +380,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   min-height: 0;
   padding-bottom: var(--spacing);
   padding-right: var(--spacing);
+}
+
+.monitoring-host-services-app__host {
+  flex: 0 0 auto;
+  padding-bottom: var(--spacing);
 }
 
 .monitoring-host-services-app__header {

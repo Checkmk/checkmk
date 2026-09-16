@@ -106,7 +106,8 @@ class MonitorHostServicesPage(Page):
         title = _("Services of host %(host)s") % {"host": hostname}
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
-        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, user_permissions)
+        host_url = _host_url(ctx, hostname, site_id)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, user_permissions)
 
         make_header(
             html,
@@ -142,6 +143,7 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     host=hostname,
                     site=site_id,
+                    host_url=host_url,
                     user_id=str(user.id),
                     edition=Edition(edition(paths.omd_root).short),
                     ai_explain=ai_explain.is_enabled(),
@@ -215,6 +217,7 @@ def _make_breadcrumb(
     ctx: PageContext,
     hostname: HostName,
     site_id: SiteId,
+    host_url: str,
     user_permissions: UserPermissions,
 ) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
@@ -232,7 +235,7 @@ def _make_breadcrumb(
     breadcrumb.append(
         BreadcrumbItem(
             title=hostname,
-            url=_host_url(ctx, hostname, site_id),
+            url=host_url,
             id=None,
         )
     )

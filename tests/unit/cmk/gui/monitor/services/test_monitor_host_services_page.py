@@ -23,6 +23,7 @@ from cmk.gui.monitor.command import (
 )
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.services._pages._monitor_host_services import (
+    _host_url,
     _make_breadcrumb,
     _row_actions,
     MonitorHostServicesPage,
@@ -65,6 +66,7 @@ def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
         ctx,
         HostName(host),
         SiteId(site),
+        _host_url(ctx, HostName(host), SiteId(site)),
         UserPermissions.from_config(ctx.config, permission_registry),
     )
 
@@ -147,13 +149,13 @@ def test_row_actions_are_dropped_without_the_rulesets_permission() -> None:
     assert _row_actions(config, HostName("web-1")) == []
 
 
-def _build_page_menu() -> PageMenu:
+def _build_page_menu(breadcrumb: Breadcrumb | None = None) -> PageMenu:
     # The menus themselves come from the injected legacy source, covered in test_page_menu.py.
     return build_page_menu(
         host_menus=HostMenus(),
         hostname="myhost",
         site_id="mysite",
-        breadcrumb=Breadcrumb(),
+        breadcrumb=Breadcrumb() if breadcrumb is None else breadcrumb,
     )
 
 
@@ -177,3 +179,15 @@ def test_display_dropdown_keeps_the_kiosk_toggle() -> None:
     assert toggle is not None
     assert isinstance(toggle.item, PageMenuLink)
     assert "kiosk=true" in (toggle.item.link.url or "")
+
+
+@pytest.mark.usefixtures("with_user_login")
+def test_page_menu_offers_no_up_entry_for_the_host_the_header_already_names() -> None:
+    menu = _build_page_menu(_breadcrumb_of())
+
+    assert all(
+        entry.name != "up"
+        for dropdown in menu.dropdowns
+        for topic in dropdown.topics
+        for entry in topic.entries
+    )

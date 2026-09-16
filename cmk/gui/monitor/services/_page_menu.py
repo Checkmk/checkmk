@@ -112,6 +112,7 @@ def build_page_menu(
             for host_menu in host_menus.offered(hostname=hostname, site_id=site_id)
         ],
         breadcrumb=breadcrumb,
+        show_up_link=False,
     )
 
     # PageMenu.__post_init__ appends the "display" and "help" dropdowns automatically.

@@ -179,6 +179,14 @@ fn resolve_account_name(sid: PSID) -> Option<String> {
     })
 }
 
+/// Names both forms: either can be pasted into `permissions_safe_entries`.
+fn describe_sid(sid: PSID, sid_str: &str) -> String {
+    match resolve_account_name(sid) {
+        Some(name) => format!("{name} ({sid_str})"),
+        None => sid_str.to_string(),
+    }
+}
+
 /// Members of the local Administrators group, as SID strings. Mirrors
 /// `Get-LocalGroupMember -SID "S-1-5-32-544"` from the legacy plugin: a
 /// principal added directly to that group is safe even though it isn't one
@@ -303,19 +311,17 @@ fn resolve_safe_entries(entries: &[String]) -> HashSet<String> {
 /// write access is safe only if its SID is a well-known admin group or
 /// domain/enterprise admin ([`is_privileged_sid`]), or a member of
 /// `local_admins` (see [`local_administrators`]).
-fn walk_dacl_ex(pdacl: PACL, path: &Path, local_admins: &HashSet<String>) -> bool {
+fn walk_dacl_ex(pdacl: PACL, path: &Path, local_admins: &HashSet<String>) -> Result<(), String> {
     if pdacl.is_null() {
         // A NULL DACL grants every principal full access — unsafe by
         // definition.
-        log::warn!("Path {:?} has a NULL DACL", path);
-        return false;
+        return Err(format!("Path {path:?} has a NULL DACL"));
     }
     let ace_count = DWORD::from(unsafe { (*pdacl).AceCount });
     for i in 0..ace_count {
         let mut pace: *mut c_void = ptr::null_mut();
         if unsafe { GetAce(pdacl, i, &mut pace) } == 0 || pace.is_null() {
-            log::warn!("Failed to read ACE #{} of {:?}", i, path);
-            return false;
+            return Err(format!("Failed to read ACE #{i} of {path:?}"));
         }
         let header_ptr = pace as *const ACE_HEADER;
         let ace_type = unsafe { (*header_ptr).AceType };
@@ -332,20 +338,17 @@ fn walk_dacl_ex(pdacl: PACL, path: &Path, local_admins: &HashSet<String>) -> boo
         // yields a valid PSID.
         let psid: PSID = unsafe { &(*ace).SidStart as *const _ as PSID };
         let Some(sid_str) = sid_to_string(psid) else {
-            log::warn!("ACE #{} of {:?} has an invalid SID", i, path);
-            return false;
+            return Err(format!("ACE #{i} of {path:?} has an invalid SID"));
         };
         if is_trusted_sid(&sid_str, local_admins) {
             continue;
         }
-        log::warn!(
-            "Path {:?} grants write access to non-privileged SID {}",
-            path,
-            sid_str
-        );
-        return false;
+        return Err(format!(
+            "Path {path:?} grants write access to non-privileged {}",
+            describe_sid(psid, &sid_str)
+        ));
     }
-    true
+    Ok(())
 }
 
 /// Whether the object owner is a trusted principal. On Windows the owner
@@ -354,20 +357,25 @@ fn walk_dacl_ex(pdacl: PACL, path: &Path, local_admins: &HashSet<String>) -> boo
 /// object: it can rewrite the DACL at will and plant a library an elevated
 /// process later loads. Mirrors the Linux check that rejects any non-root,
 /// non-safe owner (see `permissions_linux`).
-fn owner_is_trusted(owner: PSID, path: &Path, local_admins: &HashSet<String>) -> bool {
+fn owner_is_trusted(
+    owner: PSID,
+    path: &Path,
+    local_admins: &HashSet<String>,
+) -> Result<(), String> {
     let Some(sid_str) = sid_to_string(owner) else {
-        log::warn!("Path {:?} has a missing or invalid owner SID", path);
-        return false;
+        return Err(format!("Path {path:?} has a missing or invalid owner SID"));
     };
     if is_trusted_sid(&sid_str, local_admins) {
-        return true;
+        return Ok(());
     }
-    log::warn!("Path {:?} is owned by non-privileged SID {}", path, sid_str);
-    false
+    Err(format!(
+        "Path {path:?} is owned by non-privileged {}",
+        describe_sid(owner, &sid_str)
+    ))
 }
 
 /// Check the DACL of `path`. Follows reparse points to their target.
-fn only_admins_can_modify(path: &Path, local_admins: &HashSet<String>) -> bool {
+fn only_admins_can_modify(path: &Path, local_admins: &HashSet<String>) -> Result<(), String> {
     let wide = to_wide(path);
     let mut psid_owner: PSID = ptr::null_mut();
     let mut pdacl: PACL = ptr::null_mut();
@@ -385,28 +393,28 @@ fn only_admins_can_modify(path: &Path, local_admins: &HashSet<String>) -> bool {
         )
     };
     if status != ERROR_SUCCESS {
-        log::warn!(
-            "GetNamedSecurityInfoW failed for {:?} (status {})",
-            path,
-            status
-        );
-        return false;
+        return Err(format!(
+            "GetNamedSecurityInfoW failed for {path:?} (status {status})"
+        ));
     }
     // Both the owner SID and the DACL live inside `sd`, freed once below.
-    let ok =
-        owner_is_trusted(psid_owner, path, local_admins) && walk_dacl_ex(pdacl, path, local_admins);
+    let result = owner_is_trusted(psid_owner, path, local_admins)
+        .and_then(|()| walk_dacl_ex(pdacl, path, local_admins));
     if !sd.is_null() {
         unsafe {
             LocalFree(sd);
         }
     }
-    ok
+    result
 }
 
 /// Check the DACL of the reparse point itself, without following it.
 /// `FILE_FLAG_OPEN_REPARSE_POINT` stops the resolve; `FILE_FLAG_BACKUP_SEMANTICS`
 /// lets us open a directory handle.
-fn only_admins_can_modify_no_follow(path: &Path, local_admins: &HashSet<String>) -> bool {
+fn only_admins_can_modify_no_follow(
+    path: &Path,
+    local_admins: &HashSet<String>,
+) -> Result<(), String> {
     let wide = to_wide(path);
     let handle = unsafe {
         CreateFileW(
@@ -420,8 +428,7 @@ fn only_admins_can_modify_no_follow(path: &Path, local_admins: &HashSet<String>)
         )
     };
     if handle == INVALID_HANDLE_VALUE || handle.is_null() {
-        log::warn!("CreateFileW (no-follow) failed for {:?}", path);
-        return false;
+        return Err(format!("CreateFileW (no-follow) failed for {path:?}"));
     }
     let mut psid_owner: PSID = ptr::null_mut();
     let mut pdacl: PACL = ptr::null_mut();
@@ -442,22 +449,19 @@ fn only_admins_can_modify_no_follow(path: &Path, local_admins: &HashSet<String>)
         CloseHandle(handle);
     }
     if status != ERROR_SUCCESS {
-        log::warn!(
-            "GetSecurityInfo (no-follow) failed for {:?} (status {})",
-            path,
-            status
-        );
-        return false;
+        return Err(format!(
+            "GetSecurityInfo (no-follow) failed for {path:?} (status {status})"
+        ));
     }
     // Both the owner SID and the DACL live inside `sd`, freed once below.
-    let ok =
-        owner_is_trusted(psid_owner, path, local_admins) && walk_dacl_ex(pdacl, path, local_admins);
+    let result = owner_is_trusted(psid_owner, path, local_admins)
+        .and_then(|()| walk_dacl_ex(pdacl, path, local_admins));
     if !sd.is_null() {
         unsafe {
             LocalFree(sd);
         }
     }
-    ok
+    result
 }
 
 fn is_reparse_point(md: &Metadata) -> bool {
@@ -465,82 +469,60 @@ fn is_reparse_point(md: &Metadata) -> bool {
 }
 
 /// For a reparse point, check its own DACL so a non-admin cannot redirect the walk.
-fn check_reparse_point(path: &Path, md: &Metadata, local_admins: &HashSet<String>) -> bool {
-    if is_reparse_point(md) && !only_admins_can_modify_no_follow(path, local_admins) {
-        log::warn!("Reparse point {:?} is writable by non-privileged SID", path);
-        return false;
+fn check_reparse_point(
+    path: &Path,
+    md: &Metadata,
+    local_admins: &HashSet<String>,
+) -> Result<(), String> {
+    if !is_reparse_point(md) {
+        return Ok(());
     }
-    true
+    only_admins_can_modify_no_follow(path, local_admins)
+        .map_err(|e| format!("Reparse point rejected: {e}"))
 }
 
 /// Check every entry reachable from `path` is only modifiable by privileged
 /// principals. Reparse points are checked in place and then followed.
-fn only_admins_can_modify_tree(path: &Path, depth: usize, local_admins: &HashSet<String>) -> bool {
+fn only_admins_can_modify_tree(
+    path: &Path,
+    depth: usize,
+    local_admins: &HashSet<String>,
+) -> Result<(), String> {
     if depth == 0 {
-        log::warn!(
-            "Permission check aborted at {:?}: reparse recursion limit hit",
-            path
-        );
-        return false;
+        return Err(format!(
+            "Permission check aborted at {path:?}: reparse recursion limit hit"
+        ));
     }
-    if !only_admins_can_modify(path, local_admins) {
-        return false;
-    }
-    let entries = match std::fs::read_dir(path) {
-        Ok(e) => e,
-        Err(e) => {
-            log::warn!("Cannot read dir {:?}: {}", path, e);
-            return false;
-        }
-    };
+    only_admins_can_modify(path, local_admins)?;
+    let entries = std::fs::read_dir(path).map_err(|e| format!("Cannot read dir {path:?}: {e}"))?;
     for entry in entries {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(e) => {
-                log::warn!("Invalid entry under {:?}: {}", path, e);
-                return false;
-            }
-        };
+        let entry = entry.map_err(|e| format!("Invalid entry under {path:?}: {e}"))?;
         let sub = entry.path();
-        let md = match std::fs::symlink_metadata(&sub) {
-            Ok(m) => m,
-            Err(e) => {
-                log::warn!("Cannot stat {:?}: {}", sub, e);
-                return false;
-            }
-        };
-        if !check_reparse_point(&sub, &md, local_admins) {
-            return false;
-        }
+        let md =
+            std::fs::symlink_metadata(&sub).map_err(|e| format!("Cannot stat {sub:?}: {e}"))?;
+        check_reparse_point(&sub, &md, local_admins)?;
         // Follow reparse points to find out whether to recurse.
-        let follow_md = match std::fs::metadata(&sub) {
-            Ok(m) => m,
-            Err(e) => {
-                log::warn!("Cannot follow {:?}: {}", sub, e);
-                return false;
-            }
-        };
+        let follow_md =
+            std::fs::metadata(&sub).map_err(|e| format!("Cannot follow {sub:?}: {e}"))?;
         if follow_md.is_dir() {
-            if !only_admins_can_modify_tree(&sub, depth - 1, local_admins) {
-                return false;
-            }
-        } else if !only_admins_can_modify(&sub, local_admins) {
-            return false;
+            only_admins_can_modify_tree(&sub, depth - 1, local_admins)?;
+        } else {
+            only_admins_can_modify(&sub, local_admins)?;
         }
     }
-    true
+    Ok(())
 }
 
 /// Entry point for `setup::validate_permissions` on Windows. Non-admin
 /// callers always pass; admins require the path (and subtree for directories)
 /// to be only modifiable by privileged principals.
-pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
+pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
     if !check {
         log::info!(
             "Permission check disabled; skipping validation for {:?}",
             path
         );
-        return true;
+        return Ok(());
     }
 
     if !is_running_as_admin() {
@@ -548,29 +530,15 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
             "Not running as admin; skipping permission validation for {:?}",
             path
         );
-        return true;
+        return Ok(());
     }
-    let md = match std::fs::symlink_metadata(path) {
-        Ok(m) => m,
-        Err(e) => {
-            log::warn!("Cannot stat {:?}: {}", path, e);
-            return false;
-        }
-    };
+    let md = std::fs::symlink_metadata(path).map_err(|e| format!("Cannot stat {path:?}: {e}"))?;
     // Resolved once per validation run instead of per-ACL-walk: the tree walk
     // below can call only_admins_can_modify for every file under `path`.
     let mut safe_users = local_administrators();
     safe_users.extend(resolve_safe_entries(safe_entries));
-    if !check_reparse_point(path, &md, &safe_users) {
-        return false;
-    }
-    let follow_md = match std::fs::metadata(path) {
-        Ok(m) => m,
-        Err(e) => {
-            log::warn!("Cannot follow {:?}: {}", path, e);
-            return false;
-        }
-    };
+    check_reparse_point(path, &md, &safe_users)?;
+    let follow_md = std::fs::metadata(path).map_err(|e| format!("Cannot follow {path:?}: {e}"))?;
     if follow_md.is_dir() {
         only_admins_can_modify_tree(path, MAX_DEPTH, &safe_users)
     } else {
@@ -675,14 +643,19 @@ mod tests {
     fn test_only_admins_can_modify() {
         let protected_path = PathBuf::from("c:\\Windows\\Registration");
         assert!(
-            only_admins_can_modify(protected_path.as_path(), &local_administrators()),
+            only_admins_can_modify(protected_path.as_path(), &local_administrators()).is_ok(),
             "This is wrong: {protected_path:?} is protected"
         );
         let un_protected_path = PathBuf::from("c:\\Users\\Public\\Downloads");
-        assert!(
-            !only_admins_can_modify(un_protected_path.as_path(), &local_administrators()),
-            "This is wrong: {un_protected_path:?} is not protected"
-        );
+        // The rejection has to name the path and the principal that holds the
+        // offending access: it is the only thing the user ever sees.
+        let Err(reason) =
+            only_admins_can_modify(un_protected_path.as_path(), &local_administrators())
+        else {
+            panic!("This is wrong: {un_protected_path:?} is not protected");
+        };
+        assert!(reason.contains("Public"), "{reason}");
+        assert!(reason.contains("S-1-"), "{reason}");
     }
 
     #[test]

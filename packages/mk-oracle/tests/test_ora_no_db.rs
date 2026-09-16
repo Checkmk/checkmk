@@ -796,7 +796,7 @@ mod permissions {
         let lib = tmp.path().join("libclntsh.so.19.1");
         fs::write(&lib, b"").unwrap();
         fs::set_permissions(&lib, fs::Permissions::from_mode(0o666)).unwrap();
-        assert!(validate(tmp.path(), true, &[]));
+        assert!(validate(tmp.path(), true, &[]).is_ok());
     }
 }
 

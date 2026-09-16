@@ -4,7 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { type Ref, computed } from 'vue'
 
 const { _t } = usei18n()
@@ -27,17 +29,20 @@ const percentage: Ref<number> = computed(() =>
     )
   )
 )
+
+const labelId = useId()
 </script>
 
 <template>
   <div
     class="cmk-perfometer"
     role="progressbar"
-    :aria-label="_t('Perf-O-Meter')"
+    :aria-labelledby="labelId"
     :aria-valuenow="percentage"
     :aria-valuemin="0"
     :aria-valuemax="100"
   >
+    <CmkVisuallyHidden :id="labelId" :text="_t('Perf-O-Meter')" />
     <div
       class="cmk-perfometer__bar"
       :style="{

@@ -10,7 +10,7 @@ from typing import NamedTuple, Protocol
 
 from pydantic import BaseModel
 
-from ._artifacts import AgentFileLocator, BaseFileContainer
+from ._artifacts import AgentFileLocator, FileContainer
 from ._constants import LogicalPath
 from ._types import AgentConfig
 
@@ -115,7 +115,7 @@ class UnixAgentPathsKeeper(Protocol):
 
     def process_file_container(
         self,
-        file_container: BaseFileContainer,
+        file_container: FileContainer,
         pkg_root: Path,
         locator: AgentFileLocator,
     ) -> None: ...
@@ -153,7 +153,7 @@ class UnixMultipleDirectoryKeeper:
         (root_path / relative_path(self._agent_paths.var) / "log").mkdir(exist_ok=True)
 
     def process_file_container(
-        self, file_container: BaseFileContainer, pkg_root: Path, locator: AgentFileLocator
+        self, file_container: FileContainer, pkg_root: Path, locator: AgentFileLocator
     ) -> None:
         file_container.place(
             pkg_root,
@@ -229,7 +229,7 @@ class UnixSingleDirectoryKeeper:
 
     def process_file_container(
         self,
-        file_container: BaseFileContainer,
+        file_container: FileContainer,
         pkg_root: Path,
         locator: AgentFileLocator,
     ) -> None:
@@ -268,7 +268,7 @@ _WINDOWS_TARGET_LOCATIONS: Mapping[LogicalPath, str] = {
 
 
 def process_windows_file_container(
-    file_container: BaseFileContainer, pkg_root: Path, locator: AgentFileLocator
+    file_container: FileContainer, pkg_root: Path, locator: AgentFileLocator
 ) -> None:
     file_container.place(
         pkg_root, locator, Path(_WINDOWS_TARGET_LOCATIONS[file_container.logical_path]), 0

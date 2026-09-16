@@ -10,11 +10,11 @@
 
 import shutil
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Final, override, TypedDict
+from typing import Final, override
 
 from cmk.bakery.v1 import (
     OS,
@@ -28,7 +28,7 @@ from ._constants import (
     LogicalPath,
     ScriptType,
 )
-from ._types import AgentConfig
+from ._recipes import PluginExecution
 
 YamlScriptValueType = int | str | bool
 
@@ -46,8 +46,8 @@ class AgentFileLocator:
     local_agents_dir: Path
     agents_wellknown_path_segment: str
 
-    def get_source_path(self, container: BaseFileContainer) -> Path | None:
-        if (source := container.content.source) is None:
+    def get_source_path(self, container: FileContainer) -> Path | None:
+        if container.content is None or (source := container.content.source) is None:
             return None
 
         family_file = None
@@ -75,7 +75,7 @@ class AgentFileLocator:
         # the plug-in family lives. This path may change in the future.
         return self.agents_dir / "windows/plugins/signed" / source.name
 
-    def _find_in_agents_dirs(self, container: BaseFileContainer) -> Path | None:
+    def _find_in_agents_dirs(self, container: FileContainer) -> Path | None:
         if (rel_source := container.relative_source_path()) is None:
             return None
 
@@ -88,7 +88,7 @@ class AgentFileLocator:
                 return source_file
         return None
 
-    def _agents_dirs(self, os: OS) -> Iterable[Path]:
+    def _agents_dirs(self, os: OS | None) -> Iterable[Path]:
         if os is OS.WINDOWS:
             yield from self.windows_agent_folders()
         yield self.local_agents_dir
@@ -115,7 +115,7 @@ class AgentFileLocator:
 class ABCBakeryFile(ABC):
     """Represents a file that is managed by the bakery and will be added to the agents.
     This class and it's subclasses contain methods for operations on the files itself.
-    It is meant to be used as content for BaseFileContainer instances.
+    It is meant to be used as content for FileContainer instances.
     """
 
     def __init__(self, base_os: OS, target: Path) -> None:
@@ -163,36 +163,79 @@ class ABCBakeryFile(ABC):
         target_path.chmod(permissions)
 
 
-class BaseFileContainer:
-    """Represents the attributes of agent files managed by the bakery,
-    including the file itself.
-    Depending on the file category, different attributes need to be managed.
-    This class (and it's subclasses) contains methods for the proper evaluation
-    of all attributes and configs that incluence the adaption and placement of the
-    underlying ABCBakeryFile.
-    """
+class FileContainer:
+    """A file the bakery places into an agent package.
 
-    _not_set = object()
+    The bakery builds it from a recipe and knows the module of the bakelet the
+    recipe came from. A container without content only contributes the stat of
+    ``hash_dependency`` to the agent hash.
+    """
 
     def __init__(
         self,
-        content: ABCBakeryFile,
-        plugin_module: str | None,
+        *,
+        content: ABCBakeryFile | None,
         logical_path: LogicalPath,
+        plugin_module: str | None,
         preserve_executable: bool = False,
+        execution: PluginExecution | None = None,
+        custom_package: str | None = None,
+        hash_dependency: Path | None = None,
     ) -> None:
+        if (content is None) == (hash_dependency is None):
+            raise ValueError("A file container needs either content or a hash dependency")
         self.content: Final = content
-        self.plugin_module: Final = plugin_module
         self.logical_path: Final = logical_path
-        self._preserve_executable: Final = preserve_executable
+        self.plugin_module: Final = plugin_module
+        self.preserve_executable: Final = preserve_executable
+        self.execution: Final = execution
+        self.custom_package: Final = custom_package
+        self.hash_dependency: Final = hash_dependency
+
+    @override
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"content={self.content!r}, "
+            f"logical_path={self.logical_path!r}, "
+            f"plugin_module={self.plugin_module!r}, "
+            f"preserve_executable={self.preserve_executable!r}, "
+            f"execution={self.execution!r}, "
+            f"custom_package={self.custom_package!r}, "
+            f"hash_dependency={self.hash_dependency!r})"
+        )
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
     @property
-    def base_os(self) -> OS:
-        return self.content.base_os
+    def base_os(self) -> OS | None:
+        return None if self.content is None else self.content.base_os
+
+    @property
+    def is_plugin(self) -> bool:
+        return self.logical_path is LogicalPath.PLUGINS and self.custom_package is None
 
     def source_path(self, locator: AgentFileLocator) -> Path | None:
-        # Can't be inlined, or we break a RMK hack where we override this.
+        if self.hash_dependency is not None:
+            return self.hash_dependency
         return locator.get_source_path(self)
+
+    def relative_source_path(self) -> Path | None:
+        """Where the search below the site's agents directories expects the source"""
+        if self.content is None or self.content.source is None:
+            return None
+        if self.custom_package is not None:
+            return Path(
+                "custom",
+                self.custom_package,
+                CUSTOM_FILE_SUBDIRS[self.logical_path],
+                self.content.source,
+            )
+        if self.is_plugin:
+            return Path("plugins", self.content.source)
+        return self.content.source
 
     def place(
         self,
@@ -201,307 +244,41 @@ class BaseFileContainer:
         target_location: Path,
         unix_permissions: int,
     ) -> None:
+        if self.content is None:
+            return
         self.content.place(
             self.source_path(locator),
-            pkg_root / self._specific_target_location(target_location),
+            pkg_root / self._target_location(target_location),
             unix_permissions,
-            self._preserve_executable,
+            self.preserve_executable,
         )
 
-    def apply_config(self, yml_store: YamlStore) -> None:
-        pass
-
-    def relative_source_path(self) -> Path | None:
-        return self.content.source
-
-    def _specific_target_location(self, target_location: Path) -> Path:
-        return target_location
-
-
-class IntervalConfig(TypedDict):
-    override: bool
-    pattern: str
-    interval: int
-
-
-class PluginContainer(BaseFileContainer):
-    def __init__(
-        self,
-        agconf: AgentConfig,
-        content: ABCBakeryFile,
-        plugin_module: str | None,
-        *,
-        interval: int | None = None,
-        asynchronous: bool | None = None,
-        timeout: int | None = None,
-        retry_count: int | None = None,
-    ) -> None:
-        super().__init__(
-            content=content, plugin_module=plugin_module, logical_path=LogicalPath.PLUGINS
-        )
-
-        self._agconf = agconf
-        self._interval = interval
-        self._asynchronous: Final[bool | None] = asynchronous
-        self._timeout: Final[int | None] = timeout
-        self._retry_count: Final[int | None] = retry_count
-
-        self._apply_generic_rules(agconf)
-
-    @override
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"agconf={self._agconf!r}, "
-            f"content={self.content!r}, "
-            f"interval={self._interval!r}, "
-            f"asynchronous={self._asynchronous!r}, "
-            f"timeout={self._timeout!r}, "
-            f"retry_count={self._retry_count!r})"
-        )
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def _apply_generic_rules(self, agconf: AgentConfig) -> None:
-        self._apply_unix_custom_intervals(agconf)
-
-    def _apply_unix_custom_intervals(self, agconf: AgentConfig) -> None:
-        if self.base_os is OS.WINDOWS:
-            return
-        for entry in agconf.get("unix_plugins_cache_age", []):
-            self._apply_unix_custom_interval(entry)
-
-    def _apply_unix_custom_interval(self, interval_config: IntervalConfig) -> None:
-        if self._interval and not interval_config["override"]:
-            return
-
-        if self.content.target.match(interval_config["pattern"]):
-            self._interval = interval_config["interval"]
-
-    @override
-    def apply_config(self, yml_store: YamlStore) -> None:
-        if any((self._asynchronous, self._interval, self._timeout, self._retry_count)):
-            execution = yml_store.make_sub_list("plugins", "execution")
-            entry = self._create_plugin_execution_entry(
-                base_name=str(self.content.target),
-                asynchronous=self._asynchronous,
-                cache_age=self._interval,
-                timeout=self._timeout,
-                retry_count=self._retry_count,
-            )
-            execution.append(entry)
-
-    @override
-    def relative_source_path(self) -> Path | None:
-        return None if self.content.source is None else ("plugins" / self.content.source)
-
-    @override
-    def _specific_target_location(self, target_location: Path) -> Path:
-        if self.base_os is OS.WINDOWS:
+    def _target_location(self, target_location: Path) -> Path:
+        # The Unix agents run the plug-ins of a subdirectory named after the
+        # cache interval asynchronously.
+        if not self.is_plugin or self.base_os is OS.WINDOWS:
             return target_location
-        return target_location / Path(str(self._interval or ""))
+        interval = None if self.execution is None else self.execution.interval
+        return target_location / str(interval or "")
 
-    @staticmethod
-    def _create_plugin_execution_entry(
-        base_name: str,
-        *,
-        asynchronous: bool | None = None,
-        cache_age: int | None = None,
-        timeout: int | None = None,
-        retry_count: int | None = None,
-    ) -> dict:
-        entry: dict = {"pattern": "$CUSTOM_PLUGINS_PATH$\\" + base_name}
-
-        if asynchronous is not None:
-            entry["async"] = asynchronous
-        if cache_age is not None:
-            entry["cache_age"] = cache_age
-        if timeout is not None:
-            entry["timeout"] = timeout
-        if retry_count is not None:
-            entry["retry_count"] = retry_count
-
-        return entry
-
-
-class SystemBinaryContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None, **_kw: Any) -> None:
-        super().__init__(content=content, plugin_module=plugin_module, logical_path=LogicalPath.BIN)
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-class PluginConfigContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None, **_kw: Any) -> None:
-        super().__init__(
-            content=content, plugin_module=plugin_module, logical_path=LogicalPath.CONFIG
-        )
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-class SystemConfigContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None) -> None:
-        super().__init__(content=content, plugin_module=plugin_module, logical_path=LogicalPath.ETC)
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-class LibFileContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None) -> None:
-        super().__init__(
-            content=content,
-            plugin_module=plugin_module,
-            logical_path=LogicalPath.LIB,
-            preserve_executable=True,
-        )
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-class AgentInternalFileContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None) -> None:
-        super().__init__(
-            content=content,
-            plugin_module=plugin_module,
-            logical_path=LogicalPath.AGENT,
-            preserve_executable=True,
-        )
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-class RootFileContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None, **_kw: Any) -> None:
-        super().__init__(
-            content=content, plugin_module=plugin_module, logical_path=LogicalPath.ROOT
-        )
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-class HomeFileContainer(BaseFileContainer):
-    def __init__(self, content: ABCBakeryFile, plugin_module: str | None, **_kw: Any) -> None:
-        super().__init__(
-            content=content,
-            plugin_module=plugin_module,
-            logical_path=LogicalPath.HOME,
-            preserve_executable=True,
-        )
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(content={self.content!r})"
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    def get_derived_containers(self, _locator: AgentFileLocator) -> Iterator[BaseFileContainer]:
-        yield from ()
-
-
-_CUSTOM_BASE_PATH: Final[str] = "custom"
-
-
-class CustomFileContainer(BaseFileContainer):
-    def __init__(
-        self,
-        content: ABCBakeryFile,
-        plugin_module: str | None,
-        package: str,
-        logical_path: LogicalPath,
-    ) -> None:
-        super().__init__(
-            content=content,
-            plugin_module=plugin_module,
-            logical_path=logical_path,
-            preserve_executable=True,
-        )
-        self._package = package
-
-    @override
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"content={self.content!r}, "
-            f"plugin_module={self.plugin_module!r}, "
-            f"package={self._package!r}, "
-            f"logical_path={self.logical_path!r})"
-        )
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
-
-    @override
-    def relative_source_path(self) -> Path | None:
-        return (
-            None
-            if self.content.source is None
-            else Path(
-                _CUSTOM_BASE_PATH,
-                self._package,
-                CUSTOM_FILE_SUBDIRS[self.logical_path],
-                self.content.source,
-            )
-        )
+    def apply_config(self, yml_store: YamlStore) -> None:
+        if not self.is_plugin or self.execution is None or self.content is None:
+            return
+        execution = self.execution
+        if not any(
+            (execution.asynchronous, execution.interval, execution.timeout, execution.retry_count)
+        ):
+            return
+        entry: dict = {"pattern": "$CUSTOM_PLUGINS_PATH$\\" + str(self.content.target)}
+        if execution.asynchronous is not None:
+            entry["async"] = execution.asynchronous
+        if execution.interval is not None:
+            entry["cache_age"] = execution.interval
+        if execution.timeout is not None:
+            entry["timeout"] = execution.timeout
+        if execution.retry_count is not None:
+            entry["retry_count"] = execution.retry_count
+        yml_store.make_sub_list("plugins", "execution").append(entry)
 
 
 class ScriptletHandle:

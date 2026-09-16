@@ -21,21 +21,7 @@ from cmk.bakery.v2_unstable import (
     WindowsSystemConfigEntry,
 )
 
-from ._artifacts import (
-    AgentInternalFileContainer,
-    CustomFileContainer,
-    HomeFileContainer,
-    LibFileContainer,
-    PluginConfigContainer,
-    PluginContainer,
-    RootFileContainer,
-    ScriptletHandle,
-    SystemBinaryContainer,
-    SystemConfigContainer,
-    YamlEntry,
-    YamlItems,
-    YamlPluginSettings,
-)
+from ._artifacts import ScriptletHandle, YamlEntry, YamlItems, YamlPluginSettings
 from ._recipes import BinaryFile, CustomFile, HashDependency, SiteFile, TextFile
 from ._types import AgentConfig, AgentHash
 
@@ -53,15 +39,6 @@ class CoreFilesFunction(Protocol):
         | BinaryFile
         | CustomFile
         | HashDependency
-        | PluginContainer
-        | SystemBinaryContainer
-        | PluginConfigContainer
-        | SystemConfigContainer
-        | LibFileContainer
-        | AgentInternalFileContainer
-        | RootFileContainer
-        | HomeFileContainer
-        | CustomFileContainer
     ]: ...
 
 
@@ -101,11 +78,12 @@ class CoreBakelet:
     That signature is fixed, so a bakelet which does not need all three
     suppresses ARG001 on the unused ones.
 
-    The functions yield either the artifact types of :mod:`cmk.bakery.v2_unstable`
-    or the container types of this package. The bakery converts the former the
-    same way it converts the output of a ``BakeryPlugin``, supplying the agent
-    configuration and the module the bakelet was discovered in. Use the
-    container types only for what the versioned API cannot express.
+    The functions yield recipes: the artifact types of :mod:`cmk.bakery.v2_unstable`
+    or the types of this package such as ``SiteFile`` and ``TextFile``. The
+    bakery turns them into its file containers, knows the module the bakelet was
+    discovered in, and looks sources up in the agents folder of the bakelet's
+    plug-in family first. Use the internal types only for what the versioned API
+    cannot express.
 
     ``default_parameters`` are merged underneath the user-provided configuration
     for this bakelet (the user's values win). They are applied during config

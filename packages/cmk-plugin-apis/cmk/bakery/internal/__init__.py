@@ -13,21 +13,11 @@ ship with Checkmk.
 from ._artifacts import ABCBakeryFile as ABCBakeryFile
 from ._artifacts import ABCYamlConfig as ABCYamlConfig
 from ._artifacts import AgentFileLocator as AgentFileLocator
-from ._artifacts import AgentInternalFileContainer as AgentInternalFileContainer
-from ._artifacts import BaseFileContainer as BaseFileContainer
-from ._artifacts import CustomFileContainer as CustomFileContainer
+from ._artifacts import FileContainer as FileContainer
 from ._artifacts import FileFromSite as FileFromSite
 from ._artifacts import GeneratedBinaryFile as GeneratedBinaryFile
 from ._artifacts import GeneratedTextFile as GeneratedTextFile
-from ._artifacts import HomeFileContainer as HomeFileContainer
-from ._artifacts import IntervalConfig as IntervalConfig
-from ._artifacts import LibFileContainer as LibFileContainer
-from ._artifacts import PluginConfigContainer as PluginConfigContainer
-from ._artifacts import PluginContainer as PluginContainer
-from ._artifacts import RootFileContainer as RootFileContainer
 from ._artifacts import ScriptletHandle as ScriptletHandle
-from ._artifacts import SystemBinaryContainer as SystemBinaryContainer
-from ._artifacts import SystemConfigContainer as SystemConfigContainer
 from ._artifacts import YamlEntry as YamlEntry
 from ._artifacts import YamlItems as YamlItems
 from ._artifacts import YamlPluginSettings as YamlPluginSettings
@@ -78,41 +68,31 @@ __all__ = [
     "AgentControllerTargetArch",
     "AgentFileLocator",
     "AgentHash",
-    "AgentInternalFileContainer",
     "AgentPathsConfig",
-    "BaseFileContainer",
     "BinaryFile",
     "CoreBakelet",
     "CoreFilesFunction",
     "CoreScriptletsFunction",
     "CoreYamlConfigFunction",
     "CUSTOM_FILE_SUBDIRS",
-    "CustomFileContainer",
     "CustomFile",
     "CustomizeAgentPackageConfig",
     "DeploymentConfig",
     "DeploymentMode",
     "DeploymentModeProvider",
     "DirectoryConfig",
+    "FileContainer",
     "FileFromSite",
     "GeneratedBinaryFile",
     "GeneratedTextFile",
     "HashDependency",
-    "HomeFileContainer",
-    "IntervalConfig",
-    "LibFileContainer",
     "LogicalPath",
     "PYTHON_MODULE_EXT",
-    "PluginConfigContainer",
-    "PluginContainer",
     "PluginExecution",
-    "RootFileContainer",
     "ScriptType",
     "ScriptletHandle",
     "SiteFile",
     "SingleDirectoryConfig",
-    "SystemBinaryContainer",
-    "SystemConfigContainer",
     "TargetPathsProvider",
     "TextFile",
     "UnixAgentPathsKeeper",

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 from unittest.mock import patch
@@ -13,14 +15,17 @@ from pytest_mock import MockerFixture
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
+from cmk.crypto.certificate import CertificateRevocationList, CertificateRevocationListPEM
+from cmk.crypto.issued_certificates import IssuedCertificateEntry
 from cmk.gui.cmkcert.main import (
     _certificate_path,
     _run_init,
+    _run_revoke,
     _run_rotate,
     CertificateType,
 )
 from cmk.gui.config import Config
-from cmk.utils.certs import cert_dir, RootCA, SiteCA
+from cmk.utils.certs import cert_dir, crl_path, issued_certificates_path, RootCA, SiteCA
 
 
 @pytest.fixture(name="omd_root")
@@ -402,3 +407,43 @@ def test_rotate_agent_ca_rejects_provided_ca_with_a_weak_key(
         )
 
     assert agent_ca.read_text() == _dummy_cert_with_key()
+
+
+def _revoked_serial_numbers(ca_path: Path) -> list[int]:
+    crl = CertificateRevocationList.load_pem(
+        CertificateRevocationListPEM(crl_path(ca_path).read_bytes())
+    )
+    return [revoked.serial_number for revoked in crl.revoked_certificates]
+
+
+def _agent_certificate_log(omd_root: Path) -> Path:
+    return issued_certificates_path(omd_root, "agents")
+
+
+def _record_issued_certificate(omd_root: Path, serial_number: int) -> IssuedCertificateEntry:
+    entry = IssuedCertificateEntry(
+        ts="2026-09-16T12:00:00Z",
+        event="issued",
+        serial=f"{serial_number:02x}",
+        fp_sha256="d0f1a2",
+        issuer_ski="8411",
+        subject="CN=my agent",
+        san={"dns": ["my-agent"]},
+        not_before="2026-09-16T12:00:00Z",
+        not_after="2036-09-16T12:00:00Z",
+    )
+    entry.append_to(_agent_certificate_log(omd_root))
+    return entry
+
+
+def test_revoke_adds_the_serial_number_to_the_crl_and_records_the_revocation(
+    omd_root: Path, agent_ca: Path
+) -> None:
+    issued = _record_issued_certificate(omd_root, 0xAB)
+
+    _run_revoke(omd_root, _site_id(), "agent-ca", 0xAB)
+
+    assert _revoked_serial_numbers(agent_ca) == [0xAB]
+    revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
+    assert revocation == asdict(issued) | {"event": "revoked", "ts": revocation["ts"]}
+    assert revocation["ts"] != issued.ts

@@ -292,7 +292,7 @@ def test_relays_ca_create_and_load(tmp_path: Path) -> None:
     cert_dir = tmp_path / "etc" / "ssl"
     relays_ca = RelaysCA.create(cert_dir=cert_dir, site_id=SiteId("relay"), key_size=1024)
 
-    relays_ca_path = RelaysCA._ca_file(cert_dir)  # noqa: SLF001
+    relays_ca_path = RelaysCA.root_ca_path(cert_dir)
     assert relays_ca_path == cert_dir / "relays" / "ca.pem"
     assert relays_ca_path.is_file()
 

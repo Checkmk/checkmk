@@ -22,10 +22,14 @@ from cmk.ccc.user import UserId
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
+    CertificateRevocationList,
+    CertificateRevocationListPEM,
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
+    serial_number_string,
 )
 from cmk.crypto.issued_certificates import (
+    find_issued_certificate,
     issued_certificates_file,
     IssuedCertificatesComponent,
 )
@@ -178,6 +182,41 @@ def agent_ca_exists(site_root_dir: Path) -> bool:
 
 def issued_certificates_path(site_root_dir: Path, component: IssuedCertificatesComponent) -> Path:
     return issued_certificates_file(site_root_dir / "var" / "log", component)
+
+
+def crl_path(ca_cert_path: Path) -> Path:
+    return ca_cert_path.with_suffix(".crl")
+
+
+def revoke_certificate(
+    ca_cert_path: Path, ca_key_path: Path, serial_number: int, cert_log: Path
+) -> None:
+    """Add a serial number to the revocation list of the CA that issued the certificate.
+
+    Pass the same path twice for the CAs that keep certificate and private key in one file.
+    """
+    if (issued := find_issued_certificate(cert_log, serial_number)) is None:
+        raise ValueError(
+            f"No certificate with serial number {serial_number_string(serial_number)} was issued "
+            f"according to '{cert_log}'."
+        )
+
+    ca = PersistedCertificateWithPrivateKey.read_files(ca_cert_path, ca_key_path)
+    path = crl_path(ca_cert_path)
+    crl = (
+        CertificateRevocationList.load_pem(CertificateRevocationListPEM(path.read_bytes()))
+        if path.exists()
+        else CertificateRevocationList.create(issuer=ca)
+    )
+    if crl.is_revoked(serial_number):
+        raise ValueError(
+            f"The certificate with serial number {serial_number_string(serial_number)} is already "
+            f"revoked in '{path}'."
+        )
+
+    path.write_bytes(crl.revoke(serial_number, ca).dump_pem().bytes)
+    _set_certfile_permissions(path)
+    issued.revoked().append_to(cert_log)
 
 
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
@@ -645,8 +684,12 @@ class RelaysCA:
             return cls.create(cert_dir=cert_dir, site_id=site_id, key_size=key_size)
 
     @classmethod
+    def root_ca_path(cls, cert_dir: Path) -> Path:
+        return cert_dir / "relays" / "ca.pem"
+
+    @classmethod
     def load(cls, cert_dir: Path) -> RelaysCA:
-        cert_content = cls._ca_file(cert_dir).read_text()
+        cert_content = cls.root_ca_path(cert_dir).read_text()
         return cls(
             cert_dir,
             CertificateWithPrivateKey.load_combined_file_content(cert_content, passphrase=None),
@@ -663,7 +706,7 @@ class RelaysCA:
             is_ca=True,
         )
         cls._save_combined_pem(
-            target_file=cls._ca_file(cert_dir),
+            target_file=cls.root_ca_path(cert_dir),
             certificate=ca.certificate,
             private_key=ca.private_key,
             issuer=None,
@@ -692,10 +735,6 @@ class RelaysCA:
             if issuer is not None:
                 f.write(issuer.dump_pem().bytes)
         target_file.chmod(mode=0o660)
-
-    @staticmethod
-    def _ca_file(certificate_directory: Path) -> Path:
-        return certificate_directory / "relays" / "ca.pem"
 
 
 class MessagingTrustedCAs:

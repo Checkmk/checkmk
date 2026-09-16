@@ -153,8 +153,12 @@ class RetentionInterval:
         return cls(cached_at, cache_interval, retention_interval, "current")
 
     @property
+    def valid_until(self) -> int:
+        return self.cached_at + self.cache_interval
+
+    @property
     def keep_until(self) -> int:
-        return self.cached_at + self.cache_interval + self.retention_interval
+        return self.valid_until + self.retention_interval
 
 
 def parse_visible_raw_path(raw_path: str) -> SDPath:

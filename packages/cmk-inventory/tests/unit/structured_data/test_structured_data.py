@@ -45,6 +45,14 @@ from cmk.inventory.structured_data import (
 )
 
 
+def test_retention_interval_valid_until() -> None:
+    assert RetentionInterval(100, 20, 3, "current").valid_until == 120
+
+
+def test_retention_interval_keep_until() -> None:
+    assert RetentionInterval(100, 20, 3, "current").keep_until == 123
+
+
 @pytest.mark.parametrize(
     "left, right",
     [

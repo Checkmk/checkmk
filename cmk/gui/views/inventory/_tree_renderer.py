@@ -125,9 +125,7 @@ class SDItem:
                 html_values=[html_value],
             )
 
-        valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
-        keep_until = valid_until + self.retention_interval.retention_interval
-        if now > keep_until:
+        if now > self.retention_interval.keep_until:
             return TDSpec(
                 css_classes=(
                     [td_styles.css_class, "inactive_cell"]
@@ -151,7 +149,7 @@ class SDItem:
                 ],
             )
 
-        if now > valid_until:
+        if now > self.retention_interval.valid_until:
             return TDSpec(
                 css_classes=(
                     [td_styles.css_class, "inactive_cell"]
@@ -172,7 +170,9 @@ class SDItem:
                             "provided_at": cmk.utils.render.date_and_time(
                                 self.retention_interval.cached_at
                             ),
-                            "valid_until": cmk.utils.render.date_and_time(keep_until),
+                            "valid_until": cmk.utils.render.date_and_time(
+                                self.retention_interval.keep_until
+                            ),
                         },
                         css=["muted_text"],
                     )

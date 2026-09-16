@@ -33,7 +33,7 @@ dependencies:
   - purl: pkg:pypi/cffi@1.15.0
     path: non-free/packages/cmk-update-agent/src/pip/cffi-1.15.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
-  - purl: pkg:pypi/cerifi@2024.8.30
+  - purl: pkg:pypi/certifi@2024.8.30
     license: MPL-2.0
     path: non-free/packages/cmk-update-agent/src/pip/certifi-2024.8.30-py3-none-any.whl
 

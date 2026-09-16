@@ -9,8 +9,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, TypedDict
 
-from cmk.agent_based.v2 import State
-
 
 @dataclass(frozen=True)
 class Ok[T]:
@@ -27,55 +25,6 @@ class Error:
 
 
 type Parsed[T] = Ok[T] | Error
-
-
-class OraErrors:
-    """
-    >>> for line in ([""], ["", "FAILURE","ORA-"], ["", "FAILURE"], ["ORA-bar", "some", "data"]):
-    ...     [OraErrors(line).ignore,OraErrors(line).has_error,
-    ...     OraErrors(line).error_text,OraErrors(line).error_severity]
-    [False, False, '', <State.OK: 0>]
-    [False, True, 'ORA-', <State.UNKNOWN: 3>]
-    [True, False, '', <State.OK: 0>]
-    [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
-    """
-
-    def __init__(self, line: list[str]) -> None:
-        # Default values
-        self.ignore = False
-        self.has_error = False
-        self.error_text = ""
-        self.error_severity = State.OK
-
-        # Update according to line content
-        self.handle_errors(line)
-
-    # This function must be executed for each agent line which has been
-    # found for the current item. It must deal with the ORA-* error
-    # messages.
-    def handle_errors(self, line: Sequence[str]) -> None:
-        if len(line) == 1:
-            return
-
-        if line[0].startswith("ORA-"):
-            self.has_error = True
-            self.error_text = _error_summary_text(" ".join(line))
-            self.error_severity = State.UNKNOWN
-            return
-
-        # Handle error output from new agent
-        if line[1] == "FAILURE":
-            if len(line) == 3 and line[2].startswith("ORA-"):
-                self.has_error = True
-                self.error_text = "%s" % " ".join(line[2:])
-                self.error_severity = State.UNKNOWN
-                return
-            self.ignore = True
-            return  # ignore other FAILURE lines
-
-
-def _error_summary_text(agent_output_string: str) -> str:
-    return f'Found error in agent output "{agent_output_string}"'
 
 
 class DataFiles(TypedDict):
@@ -100,14 +49,6 @@ class TableSpaces(TypedDict):
     db_version: int
     status: str
     type: str
-
-
-ErrorSids = dict[str, OraErrors]
-
-
-class SectionTableSpaces(TypedDict):
-    error_sids: ErrorSids
-    tablespaces: dict[tuple[str, str], TableSpaces]
 
 
 InstancePerformance = Mapping[str, Mapping[str, Any]]

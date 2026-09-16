@@ -29,6 +29,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import db
 from cmk.plugins.oracle.agent_based import liboracle as oracle
+from cmk.plugins.oracle.agent_based.liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -42,6 +43,8 @@ ORACLE_TABLESPACES_DEFAULTS = {
     "magic_maxlevels": (60.0, 50.0),
     "defaultincrement": True,
 }
+
+type Section = Mapping[str, Parsed[Mapping[str, oracle.TableSpaces]]]
 
 # <<<oracle_tablespaces>>>
 # pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
@@ -72,18 +75,19 @@ ORACLE_TABLESPACES_DEFAULTS = {
 # 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 
-def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSpaces:
-    tablespaces: dict[tuple[str, str], oracle.TableSpaces] = {}
-    error_sids: oracle.ErrorSids = {}
+def parse_oracle_tablespaces(string_table: StringTable) -> Section:
+    tablespaces: dict[str, dict[str, oracle.TableSpaces]] = {}
+    errors: dict[str, str] = {}
 
     for line in string_table:
-        # Check for query errors
-        check_ora = oracle.OraErrors(line)
-        if check_ora.ignore:
-            continue  # ignore ancient agent outputs
-        if check_ora.has_error:
-            sid = line[0]
-            error_sids[sid] = check_ora
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+                continue
+            case False:
+                continue
+            case None:
+                pass
 
         if len(line) not in (13, 14, 15):
             continue
@@ -112,8 +116,8 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
         if len(line) == 15:
             db_version = int(line[14].split(".")[0])
 
-        tablespaces.setdefault(
-            (sid, ts_name),
+        tablespaces.setdefault(sid, {}).setdefault(
+            ts_name,
             {
                 "amount_missing_filenames": 0,
                 "autoextensible": False,
@@ -154,13 +158,19 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
 
         except ValueError:
             pass
-        tablespaces[(sid, ts_name)]["datafiles"].append(datafiles)
+        tablespaces[sid][ts_name]["datafiles"].append(datafiles)
 
-    for v in tablespaces.values():
-        v["amount_missing_filenames"] = len([df for df in v["datafiles"] if df["name"] == ""])
-        v["autoextensible"] = any(df["autoextensible"] for df in v["datafiles"])
+    for by_name in tablespaces.values():
+        for v in by_name.values():
+            v["amount_missing_filenames"] = len([df for df in v["datafiles"] if df["name"] == ""])
+            v["autoextensible"] = any(df["autoextensible"] for df in v["datafiles"])
 
-    return {"error_sids": error_sids, "tablespaces": tablespaces}
+    parsed: dict[str, Parsed[Mapping[str, oracle.TableSpaces]]] = {
+        sid: Ok(by_name) for sid, by_name in tablespaces.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
 
 
 agent_section_oracle_tablespaces = AgentSection(
@@ -169,19 +179,22 @@ agent_section_oracle_tablespaces = AgentSection(
 )
 
 
-def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> DiscoveryResult:
-    for (sid, ts_name), tablespace in section["tablespaces"].items():
-        if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
-            yield Service(
-                item=f"{sid}.{ts_name}",
-                parameters={"autoextend": tablespace["autoextensible"]},
-            )
+def discovery_oracle_tablespaces(section: Section) -> DiscoveryResult:
+    for sid, result in section.items():
+        if not isinstance(result, Ok):
+            continue
+        for ts_name, tablespace in result.value.items():
+            if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
+                yield Service(
+                    item=f"{sid}.{ts_name}",
+                    parameters={"autoextend": tablespace["autoextensible"]},
+                )
 
 
 def check_oracle_tablespaces(
     item: str,
     params: Mapping[str, Any],
-    section: oracle.SectionTableSpaces,
+    section: Section,
 ) -> CheckResult:
     try:
         if item.count(".") == 2:
@@ -194,9 +207,9 @@ def check_oracle_tablespaces(
         yield Result(state=State.UNKNOWN, summary="Invalid check item (must be <SID>.<tablespace>)")
         return
 
-    if sid in section["error_sids"]:
-        ora_error = section["error_sids"][sid]
-        yield Result(state=ora_error.error_severity, summary=ora_error.error_text)
+    result = section.get(sid)
+    if isinstance(result, Error):
+        yield Result(state=State.UNKNOWN, summary=result.message)
         return
 
     # In case of missing information we assume that the login into
@@ -204,7 +217,7 @@ def check_oracle_tablespaces(
     # switch to UNKNOWN, but will get stale.
     # TODO Treatment as in db2 and mssql dbs
     # "ts_status is None" possible?
-    tablespace = section["tablespaces"].get((sid, ts_name))
+    tablespace = result.value.get(ts_name) if result is not None else None
     if not tablespace or tablespace["status"] is None:
         raise IgnoreResultsError("Login into database failed")
 
@@ -343,24 +356,32 @@ def check_oracle_tablespaces(
 
 
 def cluster_check_oracle_tablespaces(
-    item: str, params: dict[str, Any], section: Mapping[str, oracle.SectionTableSpaces | None]
+    item: str, params: dict[str, Any], section: Mapping[str, Section | None]
 ) -> CheckResult:
-    selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
-
     # If there are more than one nodes per tablespace, then we select the node with the
-    # most data files
-    for tablespaces_per_node in section.values():
-        if tablespaces_per_node is None:
+    # most data files. Data of any node wins over the error of another node.
+    selected: dict[str, dict[str, oracle.TableSpaces]] = {}
+    errors: dict[str, str] = {}
+    for node_section in section.values():
+        if node_section is None:
             continue
+        for sid, result in node_section.items():
+            if isinstance(result, Error):
+                errors.setdefault(sid, result.message)
+                continue
+            tablespaces = selected.setdefault(sid, {})
+            for ts_name, tablespace in result.value.items():
+                if ts_name not in tablespaces or len(tablespaces[ts_name]["datafiles"]) < len(
+                    tablespace["datafiles"]
+                ):
+                    tablespaces[ts_name] = tablespace
 
-        for (sid, ts_name), tablespace in tablespaces_per_node["tablespaces"].items():
-            if (sid, ts_name) not in selected_tablespaces or len(
-                selected_tablespaces["tablespaces"][(sid, ts_name)]["datafiles"]
-            ) < len(tablespace["datafiles"]):
-                selected_tablespaces["tablespaces"][(sid, ts_name)] = tablespace
-            selected_tablespaces["error_sids"].update(tablespaces_per_node["error_sids"])
-
-    yield from check_oracle_tablespaces(item, params, selected_tablespaces)
+    merged: dict[str, Parsed[Mapping[str, oracle.TableSpaces]]] = {
+        sid: Ok(tablespaces) for sid, tablespaces in selected.items()
+    }
+    for sid, message in errors.items():
+        merged.setdefault(sid, Error(message))
+    yield from check_oracle_tablespaces(item, params, merged)
 
 
 check_plugin_oracle_tablespaces = CheckPlugin(
@@ -396,42 +417,46 @@ check_plugin_oracle_tablespaces = CheckPlugin(
 # 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 
-def inventorize_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
-    tablespaces = section["tablespaces"]
-    for tablespace in tablespaces:
-        sid, name = tablespace
-        attrs = tablespaces[tablespace]
-        db_version = attrs["db_version"]
+def inventorize_oracle_tablespaces(section: Section) -> InventoryResult:
+    for sid, result in section.items():
+        if not isinstance(result, Ok):
+            continue
+        for name, attrs in result.value.items():
+            yield _inventorize_tablespace(sid, name, attrs)
 
-        stats = oracle.datafiles_online_stats(
-            attrs["datafiles"],
-            db_version,
-        )
 
-        status_columns = None
-        if stats is not None:
-            status_columns = {
-                "current_size": stats.current_size,
-                "max_size": stats.max_size,
-                "used_size": stats.used_size,
-                "num_increments": stats.num_increments,
-                "increment_size": stats.increment_size,
-                "free_space": stats.free_space,
-            }
+def _inventorize_tablespace(sid: str, name: str, attrs: oracle.TableSpaces) -> TableRow:
+    db_version = attrs["db_version"]
 
-        yield TableRow(
-            path=["software", "applications", "oracle", "tablespaces"],
-            key_columns={
-                "sid": sid,
-                "name": name,
-            },
-            inventory_columns={
-                "version": db_version or "",
-                "type": attrs["type"],
-                "autoextensible": attrs["autoextensible"] and "YES" or "NO",
-            },
-            status_columns=status_columns,
-        )
+    stats = oracle.datafiles_online_stats(
+        attrs["datafiles"],
+        db_version,
+    )
+
+    status_columns = None
+    if stats is not None:
+        status_columns = {
+            "current_size": stats.current_size,
+            "max_size": stats.max_size,
+            "used_size": stats.used_size,
+            "num_increments": stats.num_increments,
+            "increment_size": stats.increment_size,
+            "free_space": stats.free_space,
+        }
+
+    return TableRow(
+        path=["software", "applications", "oracle", "tablespaces"],
+        key_columns={
+            "sid": sid,
+            "name": name,
+        },
+        inventory_columns={
+            "version": db_version or "",
+            "type": attrs["type"],
+            "autoextensible": attrs["autoextensible"] and "YES" or "NO",
+        },
+        status_columns=status_columns,
+    )
 
 
 inventory_plugin_oracle_tablespaces = InventoryPlugin(

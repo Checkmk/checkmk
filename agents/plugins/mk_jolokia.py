@@ -10,6 +10,7 @@ import io
 import os
 import re
 import socket
+import ssl
 import sys
 import urllib.parse
 
@@ -63,6 +64,39 @@ except ImportError:
         " Please install it on the monitored system.\n"
     )
     sys.exit(1)
+
+
+if sys.version_info >= (3, 12):  # noqa: UP036
+    from typing import override
+else:
+
+    def override(func):
+        return func
+
+
+class TrustStoreAdapter(requests.adapters.HTTPAdapter):
+    """Trust the OS certificate store in addition to the CA bundle shipped with requests
+
+    By default requests trusts only its bundled CAs (certifi), so a certificate from a CA known
+    only to the operating system, e.g. imported into the Windows certificate store, is rejected.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # HTTPAdapter.__init__ calls init_poolmanager, so the context must exist beforehand.
+        self._ssl_context = ssl.create_default_context()  # loads the OS trust store
+        self._ssl_context.load_verify_locations(cafile=requests.utils.DEFAULT_CA_BUNDLE_PATH)
+        super().__init__(*args, **kwargs)
+
+    @override
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = self._ssl_context
+        return super().init_poolmanager(*args, **kwargs)
+
+    @override
+    def proxy_manager_for(self, proxy, **proxy_kwargs):
+        proxy_kwargs["ssl_context"] = self._ssl_context
+        return super().proxy_manager_for(proxy, **proxy_kwargs)
+
 
 VERBOSE = sys.argv.count("--verbose") + sys.argv.count("-v") + 2 * sys.argv.count("-vv")
 DEBUG = sys.argv.count("--debug")
@@ -419,7 +453,9 @@ class JolokiaInstance:
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         session.verify = self._config["verify"]
-        if session.verify is False:
+        if session.verify is True:
+            session.mount("https://", TrustStoreAdapter())
+        elif session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         session.headers["User-Agent"] = user_agent
 

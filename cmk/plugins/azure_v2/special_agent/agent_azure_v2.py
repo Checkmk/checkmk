@@ -1447,6 +1447,120 @@ def _collect_async_metrics_tasks(
     return tasks
 
 
+# Cosmos DB speaks several database API,
+# Accounts using these APIs keep databases and containers under other resource types which the agent does not list.
+_UNSUPPORTED_COSMOSDB_CAPABILITIES = frozenset({"EnableCassandra", "EnableGremlin", "EnableTable"})
+
+
+async def get_cosmosdb_containers(
+    api_client: BaseAsyncApiClient, cosmosdb_account: AzureResource
+) -> Mapping[str, Sequence[str]] | None:
+    """Container names per database; None for account APIs without a known resource layout."""
+    account_uri = (
+        f"resourceGroups/{cosmosdb_account.info['group']}/providers/"
+        f"Microsoft.DocumentDB/databaseAccounts/{cosmosdb_account.name}"
+    )
+    params = {"api-version": "2025-04-15"}
+    account_info = await api_client.get_async(account_uri, params=params)
+    capabilities = {
+        capability["name"]
+        for capability in account_info.get("properties", {}).get("capabilities", [])
+    }
+    if capabilities & _UNSUPPORTED_COSMOSDB_CAPABILITIES:
+        return None
+
+    databases_path, containers_path = (
+        ("mongodbDatabases", "collections")
+        if account_info.get("kind") == "MongoDB"
+        else ("sqlDatabases", "containers")
+    )
+
+    databases = await api_client.get_async(
+        f"{account_uri}/{databases_path}", key="value", params=params
+    )
+
+    async def container_names(database_name: str) -> tuple[str, list[str]]:
+        containers = await api_client.get_async(
+            f"{account_uri}/{databases_path}/{database_name}/{containers_path}",
+            key="value",
+            params=params,
+        )
+        return database_name, [container["name"] for container in containers]
+
+    return dict(
+        await asyncio.gather(*(container_names(database["name"]) for database in databases))
+    )
+
+
+def _cosmosdb_database_resource(
+    account: AzureResource,
+    database_name: str,
+    unique_hostnames_config: UniqueHostnamesConfig,
+) -> AzureResource:
+    database = AzureResource(
+        {
+            "id": database_name,
+            "name": f"{account.name}_{database_name}",
+            "type": FetchedResource.COSMOSDB_DATABASE.type,
+            "location": account.info.get("location"),
+            "group": account.info.get("group"),
+        },
+        TagsImportPatternOption.import_all,
+        account.subscription,
+        unique_hostnames_config,
+    )
+    database.labels["cosmosdb_account"] = account.name
+    return database
+
+
+def _is_listed_cosmosdb_container(
+    containers: Mapping[str, Sequence[str]], database_name: str, container_name: str | None
+) -> bool:
+    if (listed := containers.get(database_name)) is None:
+        return False
+    return container_name is None or container_name in listed
+
+
+def build_cosmosdb_databases(
+    account: AzureResource,
+    containers: Mapping[str, Sequence[str]] | None,
+    metrics: Iterable[Mapping[str, Any]],
+    unique_hostnames_config: UniqueHostnamesConfig,
+) -> Sequence[AzureResource]:
+    databases: dict[str, AzureResource] = {}
+
+    def database(name: str) -> AzureResource:
+        if name not in databases:
+            databases[name] = _cosmosdb_database_resource(account, name, unique_hostnames_config)
+        return databases[name]
+
+    if containers is not None:
+        for database_name, container_names in containers.items():
+            database(database_name).info["specific_info"] = {"containers": list(container_names)}
+
+    for metric in metrics:
+        if not (metadata := metric.get("metadata_mapping")):
+            LOGGER.error("Skipping metric without metadata: %(metric)s", {"metric": metric})
+            continue
+        if any(value == "<empty>" for value in metadata.values()):
+            # aggregated over a whole dimension, belongs to no single database
+            continue
+        if not (database_name := metadata.get("databasename")):
+            LOGGER.error(
+                "Skipping metric without database name in metadata: %(metric)s",
+                {"metric": metric},
+            )
+            continue
+        if containers is not None and not _is_listed_cosmosdb_container(
+            containers, database_name, metadata.get("collectionname")
+        ):
+            # Azure Monitor keeps reporting deleted databases and containers by internal id
+            continue
+        database(database_name).metrics.append(metric)
+
+    return list(databases.values())
+
+
 async def process_cosmosdb(
     api_client: BaseAsyncApiClient,
     resource: AzureResource,
@@ -1454,13 +1568,9 @@ async def process_cosmosdb(
     args: argparse.Namespace,
 ) -> list[AzureResource]:
     resource.labels["cosmosdb_account"] = resource.name
-    resources = [resource]  # always include the main cosmosdb account resource
 
-    # to collect cosmos databases (will become piggybacked hosts)
-    # we query a cosmos db account metrics with a dimension filter 'DatabaseName = *'
-    # so that we obtain *every* database inside the account (together with their metrics)
-
-    tasks = _collect_async_metrics_tasks(
+    err = IssueCollector()
+    metric_tasks = _collect_async_metrics_tasks(
         COSMOS_DATABASE_METRICS,
         subscription,
         resource.info["location"],
@@ -1468,74 +1578,36 @@ async def process_cosmosdb(
         resource.info["type"],
         api_client,
         args,
-        err := IssueCollector(),
+        err,
     )
 
-    cosmosdb_databases: dict[str, AzureResource] = {}  # db_name : resource
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    for result in results:
+    # async collect both containers AND the metrics for the containers
+    containers, *metric_results = await asyncio.gather(
+        get_cosmosdb_containers(api_client, resource),
+        *metric_tasks,
+        return_exceptions=True,
+    )
+
+    # check exceptions over containers
+    if isinstance(containers, BaseException):
+        if args.debug:
+            raise containers
+        err.add("exception", "cosmosdb container listing", str(containers))
+        LOGGER.error("Listing cosmosdb containers failed: %(error)s", {"error": containers})
+        containers = None
+
+    # now let's see which metrics we got
+    metrics: list[Mapping[str, Any]] = []
+    for result in metric_results:
         if isinstance(result, BaseException):
             if args.debug:
                 raise result
             err.add("exception", "cosmosdb metric collection", str(result))
-            LOGGER.exception(result)
+            LOGGER.error("Collecting cosmosdb metrics failed: %(error)s", {"error": result})
             continue
 
-        # resource id is always the cosmos account
-        # metrics contain the database name (and other information) in the metadata mapping
-        for resource_id, metrics in result.items():
-            for metric in metrics:
-                if not (metadata := metric.get("metadata_mapping")):
-                    # this should never happen because of the dimension filter we use '<SomeDimension> = *'
-                    LOGGER.error("Skipping metric without metadata: %s", metric)
-                    continue
-
-                if any(value == "<empty>" for value in metadata.values()):
-                    # we can safely ignore metrics with dimensions set to <empty>,
-                    # these are "grouped" metrics, and, as of now, we are not interested in
-                    # these aggregations and we also keep the agent output cleaner
-                    continue
-
-                if not (database_name := metadata.get("databasename")):
-                    # this should never happen because of the dimension filter,
-                    # right now we should always have the database name in the metadata
-                    LOGGER.error("Skipping metric without database name in metadata: %s", metric)
-                    continue
-
-                if (db_resource := cosmosdb_databases.get(database_name)) is not None:
-                    LOGGER.info(
-                        "\n\n\nFound metric for existing database: %s, metric: %s",
-                        database_name,
-                        metric,
-                    )
-                    # db already present, just append the metric
-                    db_resource.metrics.append(metric)
-                    continue
-
-                # create a new resource for the database
-                db_resource_info = {
-                    "id": database_name,  # id = name of the database
-                    # name: <cosmosdb account name>_<database name>
-                    "name": f"{resource.name}_{database_name}",
-                    # fake type to fake the section (last part after /),
-                    # this will also be the label "entity"
-                    "type": "Microsoft.DocumentDB/databaseAccounts/cosmos_database",
-                    # data from cosmos account:
-                    "location": resource.info.get("location"),
-                    "group": resource.info.get("group"),
-                }
-
-                db_resource = AzureResource(
-                    db_resource_info,
-                    TagsImportPatternOption.import_all,
-                    resource.subscription,
-                    args.unique_hostnames_config,
-                )
-                db_resource.metrics.append(metric)
-                db_resource.labels["cosmosdb_account"] = resource.name
-
-                cosmosdb_databases[database_name] = db_resource
-                resources.append(db_resource)
+        for resource_metrics in result.values():
+            metrics.extend(resource_metrics)
 
     if err:
         LOGGER.error("Errors occurred during cosmosdb metrics collection.\n %s", err.dumpinfo())
@@ -1543,7 +1615,10 @@ async def process_cosmosdb(
         agent_info_section.add(err.dumpinfo())
         agent_info_section.write()
 
-    return resources
+    databases = build_cosmosdb_databases(
+        resource, containers, metrics, args.unique_hostnames_config
+    )
+    return [resource, *databases]
 
 
 class AzureAsyncCache(DataCache):
@@ -1713,6 +1788,10 @@ class UsageDetailsCache(AzureAsyncCache):
                         await asyncio.sleep(retry_after + 1)
 
 
+# The Azure portal allows splitting metrics into at most 50 time series.
+DIMENSION_TIME_SERIES_LIMIT = 50
+
+
 @dataclass(frozen=True, kw_only=True)
 class CacheMetricsGroupDefinition:
     interval: Intervals
@@ -1846,12 +1925,13 @@ class MetricCache(AzureAsyncCache):
         }
 
         if self.group_metrics_definitions.dimension_filters:
-            # build the filter for the azure getBatch api
-            filter = " and ".join(
+            params["filter"] = " and ".join(
                 f"{df.name} eq '{df.value}'"
                 for df in self.group_metrics_definitions.dimension_filters
             )
-            params["filter"] = filter
+            # Without "top" Azure returns at most 10 time series per request, in no stable order.
+            params["top"] = str(DIMENSION_TIME_SERIES_LIMIT)
+            params["orderby"] = f"{self.group_metrics_definitions.aggregation} desc"
 
         raw_metrics = []
         for chunk in _chunks(resource_ids):
@@ -2458,7 +2538,8 @@ def _unknown_resource_health_data(resource: AzureResource) -> Mapping[str, objec
 
 
 def _get_resource_health_sections(
-    resource_health_view: Sequence[ResourceHealth], resources: Mapping[ResourceId, AzureResource]
+    resource_health_view: Sequence[ResourceHealth],
+    resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 

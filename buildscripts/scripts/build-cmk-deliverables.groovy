@@ -37,27 +37,24 @@ void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
 
-    /// Might also be taken from editions.yml - there we also have "cloud" and "community" but
-    /// AFAIK there is no way to extract the editions we want to test generically, so we
-    /// hard-code these:
-    def all_distros = versioning.get_distros(override: "all");
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
     def branch_version = versioning.get_branch_version(checkout_dir);
     def safe_branch_name = versioning.safe_branch_name();
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-    def selected_distros = versioning.get_distros(
-        edition: params.EDITION,
-        use_case: params.USE_CASE,
-        override: params.OVERRIDE_DISTROS);
 
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
-    def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
-    def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
+    /// Might also be taken from editions.yml - there we also have "cloud" and "community" but
+    /// AFAIK there is no way to extract the editions we want to test generically, so we
+    /// hard-code these:
+    def all_distros = [];
     def bazel_log_prefix = "bazel_log_";
-
+    def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
+    def exclude_pattern = "";
+    def selected_distros = [];
+    def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
     /// In order to ensure a fixed order for stages executed in parallel,
     /// we wait an increasing amount of time (N * 1s).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
@@ -72,6 +69,16 @@ void main() {
         && (! params.DISABLE_CACHE)
     );
 
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        // run everything requiring python in this container
+        all_distros = versioning.get_distros(override: "all");
+        selected_distros = versioning.get_distros(
+            edition: params.EDITION,
+            use_case: params.USE_CASE,
+            override: params.OVERRIDE_DISTROS);
+        exclude_pattern = versioning.get_internal_artifacts_pattern();
+    }
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -85,6 +92,7 @@ void main() {
         |deploy_to_website:................. │${deploy_to_website}│
         |EDITION:........................... │${params.EDITION}│
         |FAKE_ARTIFACTS:.................... │${params.FAKE_ARTIFACTS}│
+        |force_build:....................... │${force_build}│
         |relative_deliverables_dir:......... │${relative_deliverables_dir}│
         |safe_branch_name:.................. │${safe_branch_name}│
         |selected_distros:.................. │${selected_distros}│
@@ -184,65 +192,69 @@ void main() {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 
-    smart_stage(
-        name: "Upload artifacts",
-        condition: upload_to_testbuilds && (! currentBuild.fullProjectName.contains("/cv/")),
-    ) {
-        dir("${deliverables_dir}") {
-            /// BOM shall have a unique name, see CMK-16483
-            // TODO: We should really let bazel generate the correct file name - we're already passing edition and version to bazel build
-            sh("""
-                cp bill-of-materials.json check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.json
-                cp bill-of-materials.csv check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.csv
-            """);
-        }
-
-        /// File.eachFileRecurse works on Jenkins master node only, so we have to build it
-        /// on our own..
-        def files_to_upload = {
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        smart_stage(
+            name: "Upload artifacts",
+            condition: upload_to_testbuilds && (! currentBuild.fullProjectName.contains("/cv/")),
+        ) {
             dir("${deliverables_dir}") {
-                cmd_output("ls *.{deb,rpm,cma,tar.gz} *bill-of-materials.{json,csv} || true").split().toList();
+                /// BOM shall have a unique name, see CMK-16483
+                // TODO: We should really let bazel generate the correct file name
+                // we're already passing edition and version to bazel build
+                sh("""
+                    cp bill-of-materials.json check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.json
+                    cp bill-of-materials.csv check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.csv
+                """);
             }
-        }();
-        print("Found files to upload: ${files_to_upload}");
 
-        files_to_upload.each { filename ->
-            artifacts_helper.upload_via_rsync(
-                "${WORKSPACE}/deliverables",
-                "${cmk_version_rc_aware}",
-                "${filename}",
-                "${INTERNAL_DEPLOY_DEST}",
-                INTERNAL_DEPLOY_PORT,
-                exclude_pattern = "{${bazel_log_prefix}*}"
-            );
-        }
+            /// File.eachFileRecurse works on Jenkins master node only, so we have to build it
+            /// on our own..
+            def files_to_upload = {
+                dir("${deliverables_dir}") {
+                    cmd_output("""
+                        ls *.{deb,rpm,cma,tar.gz} *bill-of-materials.{json,csv} || true
+                    """).split().toList();
+                }
+            }();
+            print("Found files to upload: ${files_to_upload}");
 
-        currentBuild.description += """\
-            <p><a href='${INTERNAL_DEPLOY_URL}/${cmk_version}'>Download Artifacts</a></p>
-            """.stripIndent();
-
-        // this must not be called from within the container (results in yaml package missing)
-        // Cloud edition packages must not be uploaded to the public download server
-        def exclude_pattern = versioning.get_internal_artifacts_pattern();
-        if (params.EDITION.toLowerCase() != "cloud") {
             files_to_upload.each { filename ->
                 artifacts_helper.upload_via_rsync(
                     "${WORKSPACE}/deliverables",
                     "${cmk_version_rc_aware}",
                     "${filename}",
-                    WEB_DEPLOY_DEST,
-                    WEB_DEPLOY_PORT,
-                    exclude_pattern = exclude_pattern,
+                    "${INTERNAL_DEPLOY_DEST}",
+                    INTERNAL_DEPLOY_PORT,
+                    exclude_pattern = "{${bazel_log_prefix}*}"
                 );
             }
-        }
 
-        if (params.EDITION.toLowerCase() == "cloud" && versioning.is_official_release(cmk_version_rc_aware)) {
-            // uploads distro packages, source.tar.gz and hashes
-            artifacts_helper.upload_files_to_nexus(
-                "${deliverables_dir}/check-mk-cloud-${cmk_version}*",
-                "${ARTIFACT_STORAGE}/repository/cloud-patch-releases/",
-            );
+            currentBuild.description += """\
+                <p><a href='${INTERNAL_DEPLOY_URL}/${cmk_version}'>Download Artifacts</a></p>
+                """.stripIndent();
+
+            // this must not be called from within the container (results in yaml package missing)
+            // Cloud edition packages must not be uploaded to the public download server
+            if (params.EDITION.toLowerCase() != "cloud") {
+                files_to_upload.each { filename ->
+                    artifacts_helper.upload_via_rsync(
+                        "${WORKSPACE}/deliverables",
+                        "${cmk_version_rc_aware}",
+                        "${filename}",
+                        WEB_DEPLOY_DEST,
+                        WEB_DEPLOY_PORT,
+                        exclude_pattern = exclude_pattern,
+                    );
+                }
+            }
+
+            if (params.EDITION.toLowerCase() == "cloud" && versioning.is_official_release(cmk_version_rc_aware)) {
+                // uploads distro packages, source.tar.gz and hashes
+                artifacts_helper.upload_files_to_nexus(
+                    "${deliverables_dir}/check-mk-cloud-${cmk_version}*",
+                    "${ARTIFACT_STORAGE}/repository/cloud-patch-releases/",
+                );
+            }
         }
     }
 

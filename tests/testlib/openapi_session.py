@@ -171,17 +171,6 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
-    @contextmanager
-    def acting_as(self, user: str, password: str) -> Iterator[None]:
-        """Temporarily authenticate as a different user, restoring the original credentials
-        afterwards."""
-        original_authorization = self.headers["Authorization"]
-        self.set_authentication_header(user, password)
-        try:
-            yield
-        finally:
-            self.headers["Authorization"] = original_authorization
-
     def request(  # type: ignore[override]
         self,
         method: str | bytes,

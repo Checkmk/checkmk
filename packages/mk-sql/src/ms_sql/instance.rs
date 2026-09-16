@@ -74,6 +74,26 @@ fn inaccessible_database_error() -> anyhow::Error {
     anyhow::anyhow!("database is not accessible")
 }
 
+/// Splits the databases so that each chunk is handled by its own thread.
+///
+/// The thresholds cap the thread count: one chunk below 8 databases, two up to
+/// 64, four above that.
+fn chunk_databases(databases: &[DatabaseEntry]) -> std::slice::Chunks<'_, DatabaseEntry> {
+    if databases.len() >= 64 {
+        let max_chunk = databases.len().div_ceil(4usize);
+        let min_chunk = 16usize;
+        databases.chunks(std::cmp::max(min_chunk, max_chunk))
+    } else if databases.len() >= 8 {
+        let max_chunk = databases.len().div_ceil(2usize);
+        let min_chunk = 4usize;
+        databases.chunks(std::cmp::max(min_chunk, max_chunk))
+    } else {
+        // `chunks(0)` panics, so an empty list has to ask for a non-zero size;
+        // it yields no chunk either way.
+        databases.chunks(std::cmp::max(1usize, databases.len()))
+    }
+}
+
 /// Splits database entries into `(accessible, inaccessible)` names, dropping any
 /// excluded database. Accessible databases are connected to for real data;
 /// inaccessible ones only get a simulated error line and are never connected to -
@@ -971,20 +991,8 @@ impl SqlInstance {
             log::warn!("No active databases, skip section {}", section.name());
             return String::new();
         }
-        let chunks = if databases.len() >= 64 {
-            let max_chunk = databases.len().div_ceil(4usize);
-            let min_chunk = 16usize;
-            databases.chunks(std::cmp::max(min_chunk, max_chunk))
-        } else if databases.len() >= 8 {
-            let max_chunk = databases.len().div_ceil(2usize);
-            let min_chunk = 4usize;
-            databases.chunks(std::cmp::max(min_chunk, max_chunk))
-        } else {
-            databases.chunks(databases.len())
-        };
         thread::scope(|s| {
-            let s: Vec<_> = chunks
-                .into_iter()
+            let s: Vec<_> = chunk_databases(databases)
                 .map(|chunk| {
                     s.spawn(|| {
                         // Accessible databases are connected to for real data;
@@ -2894,8 +2902,9 @@ fn to_sql_instance(answers: &UniAnswer) -> Vec<SqlInstanceBuilder> {
 #[cfg(test)]
 mod tests {
     use super::{
-        generate_instance_entries, generate_signaling_blocks, get_active_local_instances,
-        parse_has_access, partition_by_access, DatabaseEntry, SqlInstance, SqlInstanceBuilder,
+        chunk_databases, generate_instance_entries, generate_signaling_blocks,
+        get_active_local_instances, parse_has_access, partition_by_access, DatabaseEntry,
+        SqlInstance, SqlInstanceBuilder,
     };
     use crate::args::Args;
     use crate::config::ms_sql::{Authentication, Connection, Endpoint};
@@ -2933,6 +2942,47 @@ mod tests {
         let (accessible, inaccessible) = partition_by_access(&entries, &[]);
         assert_eq!(accessible, vec!["a".to_string(), "c".to_string()]);
         assert_eq!(inaccessible, vec!["b".to_string(), "d".to_string()]);
+    }
+
+    // The chunking decides how many threads a run spawns, so the thresholds
+    // are pinned here.
+    #[test]
+    fn test_chunk_databases_sizes() {
+        let make = |n: usize| {
+            (0..n)
+                .map(|i| db(&format!("db{i}"), true))
+                .collect::<Vec<_>>()
+        };
+
+        // Below 8 databases everything stays in a single chunk.
+        for n in 1..8 {
+            let entries = make(n);
+            assert_eq!(chunk_databases(&entries).count(), 1, "n={n}");
+        }
+
+        // 8..64: two chunks, at least 4 databases each.
+        let entries = make(8);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![4, 4]);
+
+        let entries = make(9);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![5, 4]);
+
+        // From 64 on: four chunks, at least 16 databases each.
+        let entries = make(64);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![16, 16, 16, 16]);
+
+        let entries = make(100);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![25, 25, 25, 25]);
+    }
+
+    /// An empty list must not panic: `chunks(0)` does.
+    #[test]
+    fn test_chunk_databases_empty() {
+        assert_eq!(chunk_databases(&[]).count(), 0);
     }
 
     // An excluded database is dropped entirely - neither connected to nor reported

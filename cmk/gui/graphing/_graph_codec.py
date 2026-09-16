@@ -41,7 +41,6 @@ from cmk.graphing_engine import (
     StrictPrecision,
     Sum,
     TimeNotation,
-    TimeRange,
     Unit,
 )
 
@@ -500,11 +499,3 @@ def community_graph_codec() -> GraphCodec:
     # kind introduced - a combined aggregation inside a custom graph - and every kind has to be able to
     # read it back.
     return graph_codec(COMMUNITY_QUANTITY_SPECS)
-
-
-def consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
-    return ensure_type(options["consolidation_function"], ConsolidationFunction)
-
-
-def time_range_of(options: Mapping[str, object]) -> TimeRange:
-    return ensure_type(options["time_range"], TimeRange)

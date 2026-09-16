@@ -19,7 +19,7 @@ from cmk.graphing_engine import (
 
 from ._decoding import ensure_type
 from ._from_api import GraphFromAPI
-from ._graph_codec import consolidation_function_of, GraphCodec, time_range_of
+from ._graph_codec import GraphCodec
 from ._source import FetchDiagnostics
 
 
@@ -36,6 +36,14 @@ def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> 
     return f"METRIC_{graph.name}"
 
 
+def _consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
+    return ensure_type(options["consolidation_function"], ConsolidationFunction)
+
+
+def _time_range_of(options: Mapping[str, object]) -> TimeRange:
+    return ensure_type(options["time_range"], TimeRange)
+
+
 @dataclass(frozen=True, kw_only=True)
 class CommonGraphOptions:
     consolidation_function: ConsolidationFunction
@@ -44,8 +52,8 @@ class CommonGraphOptions:
     @classmethod
     def from_request_options(cls, options: Mapping[str, object]) -> CommonGraphOptions:
         return cls(
-            consolidation_function=consolidation_function_of(options),
-            time_range=time_range_of(options),
+            consolidation_function=_consolidation_function_of(options),
+            time_range=_time_range_of(options),
         )
 
 

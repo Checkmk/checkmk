@@ -6,7 +6,7 @@
 import hashlib
 import secrets
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, UTC
@@ -20,6 +20,7 @@ from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, Scope
 
 @dataclass(frozen=True, slots=True)
 class TokenRecord:
+    token_hash: str
     user_id: UserId
     issued_at: datetime
     expires_at: datetime
@@ -129,7 +130,7 @@ class TokenStore(Backend):
 
         row = self._connection.execute(
             """
-            SELECT user_id, issued_at, expires_at, resource, scope, client_id
+            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id
             FROM tokens
             WHERE token_hash = ?
             """,
@@ -144,13 +145,47 @@ class TokenStore(Backend):
     def list_by_user(self, user_id: UserId) -> list[TokenRecord]:
         rows = self._connection.execute(
             """
-            SELECT user_id, issued_at, expires_at, resource, scope, client_id
+            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id
             FROM tokens
             WHERE user_id = ?
             """,
             (user_id,),
         ).fetchall()
         return [record for row in rows if (record := _row_to_record(row)) is not None]
+
+    def list_all(self) -> list[TokenRecord]:
+        rows = self._connection.execute(
+            """
+            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id
+            FROM tokens
+            ORDER BY issued_at DESC
+            """
+        ).fetchall()
+        return [record for row in rows if (record := _row_to_record(row)) is not None]
+
+    def revoke(self, token_hashes: Collection[str], *, user_id: UserId | None = None) -> int:
+        """Delete the given tokens, and return how many were actually deleted.
+
+        user_id, if given, scopes the deletion to that user's own tokens -- the
+        authorization check for the self-service page, independent of whatever
+        the caller already filtered the displayed list by.
+        """
+        unique_hashes = set(token_hashes)
+        if not unique_hashes:
+            return 0
+
+        with self.write_transaction():
+            if user_id is None:
+                cursor = self._connection.executemany(
+                    "DELETE FROM tokens WHERE token_hash = ?",
+                    [(token_hash,) for token_hash in unique_hashes],
+                )
+            else:
+                cursor = self._connection.executemany(
+                    "DELETE FROM tokens WHERE token_hash = ? AND user_id = ?",
+                    [(token_hash, user_id) for token_hash in unique_hashes],
+                )
+        return cursor.rowcount
 
 
 @contextmanager
@@ -172,6 +207,7 @@ def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:
         return None
 
     return TokenRecord(
+        token_hash=row["token_hash"],
         user_id=UserId(row["user_id"]),
         issued_at=datetime.fromtimestamp(row["issued_at"], tz=UTC),
         expires_at=datetime.fromtimestamp(row["expires_at"], tz=UTC),

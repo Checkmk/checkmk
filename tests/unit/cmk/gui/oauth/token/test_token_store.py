@@ -20,7 +20,7 @@ _CLIENT = "test-client"
 
 @pytest.fixture
 def store() -> TokenStore:
-    connection = sqlite3.connect(":memory:")
+    connection = sqlite3.connect(":memory:", isolation_level=None)
     connection.row_factory = sqlite3.Row
     # Production connections enforce foreign keys (see open_connection); the
     # tokens.client_id constraint only exists with the pragma set.
@@ -57,6 +57,7 @@ def _overwrite_stored_scope(store: TokenStore, token: str, raw_scope: str | None
 
 def test_record_is_valid_before_it_expires() -> None:
     record = TokenRecord(
+        token_hash="deadbeef",
         user_id=_USER,
         issued_at=_past(5),
         expires_at=_future(5),
@@ -70,6 +71,7 @@ def test_record_is_valid_before_it_expires() -> None:
 
 def test_record_is_not_valid_after_it_expires() -> None:
     record = TokenRecord(
+        token_hash="deadbeef",
         user_id=_USER,
         issued_at=_past(10),
         expires_at=_past(5),
@@ -83,6 +85,7 @@ def test_record_is_not_valid_after_it_expires() -> None:
 
 def test_record_is_valid_defaults_to_the_current_time() -> None:
     record = TokenRecord(
+        token_hash="deadbeef",
         user_id=_USER,
         issued_at=_past(5),
         expires_at=_future(60),
@@ -96,6 +99,7 @@ def test_record_is_valid_defaults_to_the_current_time() -> None:
 
 def test_record_is_valid_rejects_naive_datetimes() -> None:
     record = TokenRecord(
+        token_hash="deadbeef",
         user_id=_USER,
         issued_at=_past(5),
         expires_at=_future(5),
@@ -241,15 +245,15 @@ def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
         _USER,
         expires_at=_future(60),
         resource=None,
-        scope=frozenset({ScopeId.WRITE}),
+        scope=frozenset({ScopeId.READ}),
         client_id=_CLIENT,
     )
     assert token.is_ok()
 
     record = store.get_by_token(token.ok)
     assert record is not None
-    assert record.scope == {ScopeId.READ, ScopeId.WRITE}
-    assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read write"  # noqa: SLF001
+    assert record.scope == {ScopeId.READ}
+    assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read"  # noqa: SLF001
 
 
 @pytest.mark.parametrize("stored_scope", ["mcp", None])
@@ -310,3 +314,85 @@ def test_list_by_user_skips_tokens_whose_stored_scope_does_not_parse(store: Toke
     _overwrite_stored_scope(store, unusable.ok, "mcp")
 
     assert len(store.list_by_user(_USER)) == 1
+
+
+# TokenStore.list_all
+
+
+def test_list_all_returns_empty_for_an_empty_store(store: TokenStore) -> None:
+    assert store.list_all() == []
+
+
+def test_list_all_returns_tokens_across_users(store: TokenStore) -> None:
+    other_user = UserId("other")
+    store.issue_token(
+        other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+
+    records = store.list_all()
+
+    assert len(records) == 2
+    assert {record.user_id for record in records} == {_USER, other_user}
+
+
+# TokenStore.revoke
+
+
+def test_revoke_deletes_the_given_token(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+    record = store.get_by_token(token.ok)
+    assert record is not None
+
+    deleted = store.revoke([record.token_hash])
+
+    assert deleted == 1
+    assert store.get_by_token(token.ok) is None
+
+
+def test_revoke_returns_zero_for_an_unknown_token(store: TokenStore) -> None:
+    assert store.revoke(["never-issued"]) == 0
+
+
+def test_revoke_returns_zero_for_an_empty_collection(store: TokenStore) -> None:
+    assert store.revoke([]) == 0
+
+
+def test_revoke_deletes_multiple_tokens_at_once(store: TokenStore) -> None:
+    first = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    second = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert first.is_ok()
+    assert second.is_ok()
+    first_record = store.get_by_token(first.ok)
+    second_record = store.get_by_token(second.ok)
+    assert first_record is not None
+    assert second_record is not None
+
+    deleted = store.revoke([first_record.token_hash, second_record.token_hash])
+
+    assert deleted == 2
+    assert store.list_by_user(_USER) == []
+
+
+def test_revoke_scoped_to_a_user_does_not_delete_another_users_token(store: TokenStore) -> None:
+    other_user = UserId("other")
+    token = store.issue_token(
+        other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+    record = store.get_by_token(token.ok)
+    assert record is not None
+
+    deleted = store.revoke([record.token_hash], user_id=_USER)
+
+    assert deleted == 0
+    assert store.get_by_token(token.ok) is not None

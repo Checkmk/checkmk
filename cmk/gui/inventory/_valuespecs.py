@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextInput, ValueSpec
+from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 
-def vs_element_inventory_visible_raw_path() -> tuple[str, ValueSpec]:
+def vs_element_inventory_visible_raw_path() -> DictionaryEntry:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
     # 'Contact groups::Permitted HW/SW Inventory paths'.

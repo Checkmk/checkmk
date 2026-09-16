@@ -35,7 +35,7 @@ from cmk.gui.views.inventory._display_hints import (
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
+from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
 from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
@@ -67,8 +67,17 @@ from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
         (0, 1, -1),
     ],
 )
-def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
+def test__cmp_inv_generic(val_a: SDValue, val_b: SDValue, result: int) -> None:
     assert _decorate_sort_function(_cmp_inv_generic)(val_a, val_b) == result
+
+
+def test__cmp_inv_generic_compares_strings() -> None:
+    assert _decorate_sort_function(_cmp_inv_generic)("a", "b") == -1
+
+
+def test__cmp_inv_generic_rejects_mixed_types() -> None:
+    with pytest.raises(TypeError):
+        _decorate_sort_function(_cmp_inv_generic)("a", 1)
 
 
 @pytest.mark.parametrize(

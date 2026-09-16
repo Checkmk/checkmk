@@ -90,7 +90,6 @@ from ._paint_functions import inv_paint_generic
 from .registry import (
     inv_paint_funtions,
     InventoryHintSpec,
-    InvValue,
     PaintFunction,
     SortFunction,
 )
@@ -368,12 +367,12 @@ class _SortFunctionText:
     def __init__(self, text_field: TextFieldFromAPI) -> None:
         self._text_field = text_field
 
-    def __call__(self, val_a: InvValue, val_b: InvValue) -> int:
+    def __call__(self, val_a: SDValue, val_b: SDValue) -> int:
         if not isinstance(val_a, str):
             raise TypeError(val_a)
 
-        if not isinstance(val_b, str):  # type: ignore[unreachable]
-            raise TypeError(val_a)
+        if not isinstance(val_b, str):
+            raise TypeError(val_b)
 
         if self._text_field.sort_key is None:
             return (val_a > val_b) - (val_a < val_b)
@@ -387,7 +386,7 @@ class _SortFunctionChoice:
     def __init__(self, choice_field: ChoiceFieldFromAPI) -> None:
         self._choice_field = choice_field
 
-    def __call__(self, val_a: InvValue, val_b: InvValue) -> int:
+    def __call__(self, val_a: SDValue, val_b: SDValue) -> int:
         keys = list(self._choice_field.mapping)
 
         if val_a in keys:
@@ -771,20 +770,24 @@ def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFu
 
 
 def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
-    def wrapper(val_a: InvValue | None, val_b: InvValue | None) -> int:
+    def wrapper(val_a: SDValue, val_b: SDValue) -> int:
         if val_a is None:
             return 0 if val_b is None else -1
 
         if val_b is None:
-            return 0 if val_a is None else 1  # type: ignore[redundant-expr]
+            return 1
 
         return sort_function(val_a, val_b)
 
     return wrapper
 
 
-def _cmp_inv_generic(val_a: InvValue, val_b: InvValue) -> int:
-    return (val_a > val_b) - (val_a < val_b)
+def _cmp_inv_generic(val_a: SDValue, val_b: SDValue) -> int:
+    if isinstance(val_a, str) and isinstance(val_b, str):
+        return (val_a > val_b) - (val_a < val_b)
+    if isinstance(val_a, int | float) and isinstance(val_b, int | float):
+        return (val_a > val_b) - (val_a < val_b)
+    raise TypeError(val_a, val_b)
 
 
 def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]:

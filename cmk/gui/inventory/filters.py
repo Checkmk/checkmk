@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -1017,7 +1015,7 @@ class FilterInvHasSoftwarePackage(Filter):
     @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        name: str | re.Pattern = value.get(self._varprefix + "name", "")
+        name: str | re.Pattern[str] = value.get(self._varprefix + "name", "")
         if not name:
             return rows
 

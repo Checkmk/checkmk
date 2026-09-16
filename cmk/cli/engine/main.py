@@ -31,14 +31,6 @@ import cmk.ccc.version as cmk_version
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.base.app import make_app
-from cmk.base.modes.call import call
-from cmk.base.modes.modes import (
-    discover_modes,
-    general_options,
-    Modes,
-    Option,
-    parse_general_options,
-)
 from cmk.ccc.exceptions import (
     MKBailOut,
     MKGeneralException,
@@ -47,6 +39,14 @@ from cmk.ccc.exceptions import (
 )
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.cli.engine.call import call
+from cmk.cli.engine.modes import (
+    discover_modes,
+    general_options,
+    Modes,
+    Option,
+    parse_general_options,
+)
 from cmk.crash import (
     ABCCrashReport,
     BaseDetails,

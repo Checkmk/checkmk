@@ -76,8 +76,8 @@ py_wheel(
     name = "whl",
     distribution = "checkmk",
     entry_points = {"console_scripts": [
-        "check_mk = cmk.base.modes.main:main",
-        "cmk = cmk.base.modes.main:main",
+        "check_mk = cmk.cli.engine.main:main",
+        "cmk = cmk.cli.engine.main:main",
         "cmk-automation-client = cmk.automations.client:main",
         "cmk-automation-helper = cmk.base.automation_helper:main",
         "cmk-cert = cmk.gui.cmkcert.main:main",

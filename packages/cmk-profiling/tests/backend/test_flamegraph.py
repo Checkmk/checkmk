@@ -131,7 +131,7 @@ def test_folded_stacks_prioritise_heavy_child_with_zero_edge_cumtime() -> None:
     """The heavy subtree must be traversed first even when its edge cumtime is 0.
 
     cProfile reports a per-caller edge cumtime of 0.0 for the single call into a
-    re-entrant entry point (``cmk.base.modes.call``), while the callee's own
+    re-entrant entry point (``cmk.cli.engine.call``), while the callee's own
     cumtime is the whole program. Ordering children by the edge cumtime sorts the
     heavy subtree last, so a trivial sibling exhausts the traversal budget and the
     real call tree never makes it into the flamegraph. Weighting by the callee's

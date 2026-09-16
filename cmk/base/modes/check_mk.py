@@ -125,6 +125,13 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
+from cmk.cli.engine.modes import (
+    option_count,
+    option_names,
+    option_string,
+    option_strings,
+    write_stdout,
+)
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.inventory.paths import Paths as InventoryPaths
@@ -158,8 +165,6 @@ from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
-
-from .modes import option_count, option_names, option_string, option_strings, write_stdout
 
 tracer = trace.get_tracer()
 

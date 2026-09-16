@@ -9,7 +9,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.base.modes.modes import (
+from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
+from cmk.cli.engine.modes import (
     _pager_environment,
     Option,
     option_count,
@@ -20,7 +21,6 @@ from cmk.base.modes.modes import (
     parse_sub_options,
     write_paged,
 )
-from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
 from cmk.cli.internal import GlobalOptions
 
 

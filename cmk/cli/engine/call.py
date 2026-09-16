@@ -5,7 +5,7 @@
 
 from cmk import trace
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.modes.modes import (
+from cmk.cli.engine.modes import (
     Argument,
     Arguments,
     Mode,

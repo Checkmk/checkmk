@@ -110,6 +110,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
         "//non-free/packages/cmk-bakery:__pkg__",
     ],
@@ -167,7 +168,7 @@ py_library(
     deps = [
         "//cmk/automations",
         "//cmk/base/automations",
-        "//cmk/base/modes:modes-registry",
+        "//cmk/cli/engine",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
@@ -206,7 +207,7 @@ py_library(
         "deballast-keep=//cmk/base:notify",  # loaded at runtime via discover_modes()
         "deballast-keep=//cmk/base/automations:automations",  # loaded at runtime via discover_automations()
         "deballast-keep=//cmk/base/modes:modes",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base/modes:modes-registry",  # provides discover_modes()/Modes for CLI assembly
+        "deballast-keep=//cmk/cli/engine",  # provides discover_modes()/Modes for CLI assembly
     ],
     visibility = [
         "//cmk:__pkg__",
@@ -220,7 +221,7 @@ py_library(
         "//cmk/base/automations",
         "//cmk/base/core",
         "//cmk/base/modes",
-        "//cmk/base/modes:modes-registry",
+        "//cmk/cli/engine",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
@@ -236,6 +237,7 @@ py_library(
         "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
         "//cmk/product_usage:__pkg__",
         "//cmk/update_config:__pkg__",
@@ -312,9 +314,9 @@ py_library(
         "//cmk/base/default_config:default-config",
         "//cmk/base/errorhandling",
         "//cmk/base/modes",
-        "//cmk/base/modes:main",
-        "//cmk/base/modes:modes-registry",
         "//cmk/base/plugins:plugins-bakery",
+        "//cmk/cli/engine",
+        "//cmk/cli/engine:main",
         "//packages/cmk-check-engine:sources",
     ],
 )

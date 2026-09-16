@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from typing import Final
 
 from cmk.base.community_app import make_app
-from cmk.base.modes.call import call
-from cmk.base.modes.modes import Mode, Option
+from cmk.cli.engine.call import call
+from cmk.cli.engine.modes import Mode, Option
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 

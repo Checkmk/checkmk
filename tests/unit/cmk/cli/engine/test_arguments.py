@@ -8,8 +8,9 @@ from typing import Final
 
 import pytest
 
-from cmk.base.modes.arguments import InvalidArguments, parse, RunMode, ShowHelp
-from cmk.base.modes.modes import (
+from cmk.checkengine.plugins import CheckPluginName
+from cmk.cli.engine.arguments import InvalidArguments, parse, RunMode, ShowHelp
+from cmk.cli.engine.modes import (
     discover_modes,
     general_options,
     Mode,
@@ -17,7 +18,6 @@ from cmk.base.modes.modes import (
     Option,
     parse_sub_options,
 )
-from cmk.checkengine.plugins import CheckPluginName
 
 _PLUGINS: Final = discover_modes()
 

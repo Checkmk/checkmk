@@ -25,12 +25,12 @@ from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosti
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.config import LoadingResult
-from cmk.base.modes.modes import option_string
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.cli.engine.modes import option_string
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.diagnostics.engine import (
     DumpSelection,

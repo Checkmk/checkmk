@@ -7,8 +7,8 @@ import pytest
 
 from cmk import trace
 from cmk.base.community_app import make_app
-from cmk.base.modes.call import call
-from cmk.base.modes.modes import make_mode, make_option, parse_sub_options
+from cmk.cli.engine.call import call
+from cmk.cli.engine.modes import make_mode, make_option, parse_sub_options
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
 

@@ -18,8 +18,6 @@ import cmk.utils.paths as cmk_paths
 from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
-from cmk.base.modes.call import call
-from cmk.base.modes.modes import make_mode, Options
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
@@ -29,6 +27,8 @@ from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
+from cmk.cli.engine.call import call
+from cmk.cli.engine.modes import make_mode, Options
 from cmk.cli.internal import GlobalOptions
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.trace import Context

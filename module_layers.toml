@@ -498,6 +498,7 @@ allows = [
   "@plugin_apis",
   "cmk.bakery.base",
   "cmk.base",
+  "cmk.cli.engine",
   "cmk.check_helper_protocol",
   "cmk.checkengine",
   "cmk.events",
@@ -553,6 +554,7 @@ allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 
 [components."cmk.base"]
 allows = [
+  "cmk.cli.engine",
   "cmk.diagnostics.engine",
   "@ccc",
   "@livestatus_client",
@@ -1349,6 +1351,22 @@ allows = [
 
 [components."cmk.diagnostics.engine"]
 allows = ["@plugin_apis", "cmk.discover_plugins"]
+
+[components."cmk.cli.engine"]
+# The engine assembles and runs the "cmk" command line. It reaches into cmk.base
+# only for the application object, whose type still lives there (see BaseApp in
+# cmk.cli.internal).
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "@trace",
+  "cmk.base.app",
+  "cmk.base.base_app",
+  "cmk.crash",
+  "cmk.discover_plugins",
+  "cmk.profiling.backend",
+  "cmk.utils",
+]
 
 [components."cmk.cli.internal"]
 allows = []

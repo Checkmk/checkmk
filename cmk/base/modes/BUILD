@@ -1,39 +1,14 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
-    name = "modes-registry",
-    srcs = [
-        "arguments.py",
-        "modes.py",
-    ],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
-    ],
-    deps = [
-        "//cmk/base:base-app",
-        "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:tty",
-        "//packages/cmk-plugin-apis:cli",
-        "//packages/cmk-plugin-apis:discover_plugins",
-    ],
-)
-
-py_library(
     name = "modes",
-    srcs = [
-        "call.py",
-        "check_mk.py",
-    ],
+    srcs = ["check_mk.py"],
     imports = ["../../.."],
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        ":modes-registry",
         "//cmk/base:base-app",
         "//cmk/base:checkers",
         "//cmk/base:dump-host",
@@ -42,6 +17,7 @@ py_library(
         "//cmk/base/configlib",
         "//cmk/base/core",
         "//cmk/base/errorhandling",
+        "//cmk/cli/engine",
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
@@ -78,29 +54,6 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
-        "//packages/cmk-profiling:backend",
-        "//packages/cmk-trace",
-    ],
-)
-
-# currently can't be in either of the above (cycle)
-py_library(
-    name = "main",
-    srcs = ["main.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
-    ],
-    deps = [
-        ":modes",
-        ":modes-registry",
-        "//cmk/base:app",
-        "//packages/cmk-ccc:debug",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:log",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:version-info",
         "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",
     ],

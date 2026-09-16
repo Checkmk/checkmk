@@ -10,13 +10,7 @@ third-party plug-in authors; it carries the built-in ("core") bakelets that
 ship with Checkmk.
 """
 
-from ._artifacts import ABCBakeryFile as ABCBakeryFile
 from ._artifacts import ABCYamlConfig as ABCYamlConfig
-from ._artifacts import AgentFileLocator as AgentFileLocator
-from ._artifacts import FileContainer as FileContainer
-from ._artifacts import FileFromSite as FileFromSite
-from ._artifacts import GeneratedBinaryFile as GeneratedBinaryFile
-from ._artifacts import GeneratedTextFile as GeneratedTextFile
 from ._artifacts import ScriptletHandle as ScriptletHandle
 from ._artifacts import YamlEntry as YamlEntry
 from ._artifacts import YamlItems as YamlItems
@@ -31,7 +25,6 @@ from ._common_config import DeploymentModeProvider as DeploymentModeProvider
 from ._common_config import DirectoryConfig as DirectoryConfig
 from ._common_config import get_agent_controller_arch as get_agent_controller_arch
 from ._common_config import get_unix_agent_paths_keeper as get_unix_agent_paths_keeper
-from ._common_config import process_windows_file_container as process_windows_file_container
 from ._common_config import SingleDirectoryConfig as SingleDirectoryConfig
 from ._common_config import TargetPathsProvider as TargetPathsProvider
 from ._common_config import UnixAgentPathsKeeper as UnixAgentPathsKeeper
@@ -60,13 +53,11 @@ from ._types import AgentConfig as AgentConfig
 from ._types import AgentHash as AgentHash
 
 __all__ = [
-    "ABCBakeryFile",
     "ABCYamlConfig",
     "AGENT_FILE_HEADER",
     "ALL_OPSYSES",
     "AgentConfig",
     "AgentControllerTargetArch",
-    "AgentFileLocator",
     "AgentHash",
     "AgentPathsConfig",
     "BinaryFile",
@@ -81,10 +72,6 @@ __all__ = [
     "DeploymentMode",
     "DeploymentModeProvider",
     "DirectoryConfig",
-    "FileContainer",
-    "FileFromSite",
-    "GeneratedBinaryFile",
-    "GeneratedTextFile",
     "HashDependency",
     "LogicalPath",
     "PYTHON_MODULE_EXT",
@@ -107,5 +94,4 @@ __all__ = [
     "entry_point_prefixes",
     "get_agent_controller_arch",
     "get_unix_agent_paths_keeper",
-    "process_windows_file_container",
 ]

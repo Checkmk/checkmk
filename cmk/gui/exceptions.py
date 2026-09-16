@@ -11,15 +11,13 @@ from werkzeug.http import HTTP_STATUS_CODES
 from cmk.ccc.exceptions import MKException, MKTimeout
 
 
-class MKHTTPException(MKException):
-    status: int = http.HTTPStatus.BAD_REQUEST
-
-
-class RequestTimeout(MKTimeout, MKHTTPException):
+class RequestTimeout(MKTimeout):
     """Is raised from the alarm signal handler (handle_request_timeout()) to
     abort page processing before the system apache times out."""
 
-    status = http.HTTPStatus.SERVICE_UNAVAILABLE  # type: ignore[mutable-override]
+
+class MKHTTPException(MKException):
+    status: int = http.HTTPStatus.BAD_REQUEST
 
 
 class FinalizeRequest(MKException):

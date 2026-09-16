@@ -40,7 +40,6 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Response, response
@@ -137,28 +136,16 @@ def _render_exception(e: Exception, title: str) -> Response:
         )
 
     if not fail_silently():
-        if html.output_format != "html":
-            # A machine-readable export (csv_export, json, ...) may already have set its
-            # own Content-Type/Content-Disposition and started writing its body before
-            # failing. Neither belongs on an error response, so take full ownership of it
-            # instead of leaving them stale.
-            response.set_content_type("text/html")
-            response.headers.pop("Content-Disposition", None)
-            response.set_data(b"")
-            html.write_html(HTMLWriter.render_div(str(e), class_="error"))
-        else:
-            make_header(html, title, Breadcrumb())
-            html.open_ts_container(
-                container="div",
-                function_name="insert_before",
-                arguments={"targetElementId": "main_page_content"},
-            )
-            html.show_error(str(e))
-            html.close_div()
-            html.footer()
+        make_header(html, title, Breadcrumb())
+        html.open_ts_container(
+            container="div",
+            function_name="insert_before",
+            arguments={"targetElementId": "main_page_content"},
+        )
+        html.show_error(str(e))
+        html.close_div()
+        html.footer()
 
-    if status_code is not None:
-        response.status_code = status_code
     return response
 
 

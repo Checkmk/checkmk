@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib.prometheus_form_elements import api_request_authentication, connection
+from cmk.plugins.lib.prometheus_form_elements import api_request_authentication
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -17,6 +17,21 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+
+def connection() -> String:
+    return String(
+        title=Title("URL server address"),
+        help_text=Help(
+            "Specify the address of your Prometheus server, e.g. <tt>prometheus.example.com:9090</tt>. "
+            "Do not include the protocol. The special agent queries the Prometheus HTTP API "
+            "(<tt>/api/v1/rules</tt>) to read the alerting rules and their current state. "
+            "Do not point it at an Alertmanager instance (usually port 9093): Alertmanager does not "
+            "provide this endpoint, and silences, receivers or cluster status are not covered by "
+            "this agent."
+        ),
+        custom_validate=(validators.LengthInRange(min_value=1),),
+    )
 
 
 def _parameter_form() -> Dictionary:
@@ -64,7 +79,7 @@ def _parameter_form() -> Dictionary:
                     help_text=Help(
                         "The ignore option can target alert rules on different levels including "
                         "specific rules as well as entire rule groups. Matching rules will be filtered "
-                        "out on the alertmanager agent side."
+                        "out by the special agent."
                     ),
                     migrate=_migrate_ignore_alerts,
                     elements={
@@ -108,7 +123,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_special_agent_alertmanager = SpecialAgent(
     name="alertmanager",
-    title=Title("Prometheus Alertmanager"),
+    title=Title("Prometheus alerting rules (via Prometheus API)"),
     topic=Topic.CLOUD,
     parameter_form=_parameter_form,
 )

@@ -65,14 +65,14 @@ Groups = dict[str, list[Rule]]
 
 class AlertmanagerAPI:
     """
-    Realizes communication with the Alertmanager API
+    Realizes communication with the Prometheus HTTP API
     """
 
     def __init__(self, session: ApiSession) -> None:
         self.session = session
 
     def query_static_endpoint(self, endpoint: str) -> requests.models.Response:
-        """Query the given endpoint of the Alertmanager API expecting a text response
+        """Query the given endpoint of the Prometheus HTTP API expecting a text response
 
         Args:
             endpoint: Param which contains the Prometheus API endpoint to be queried
@@ -104,10 +104,10 @@ def retrieve_rule_data(api_client: AlertmanagerAPI) -> dict[str, Any]:
 
 
 def parse_rule_data(group_data: list[dict[str, Any]], ignore_alerts: IgnoreAlerts) -> Groups:
-    """Parses data from Alertmanager API endpoint
+    """Parses data from the Prometheus rules API endpoint
 
     Args:
-        data: Raw  unparsed data from Alertmanager API endpoint
+        data: Raw unparsed data from the Prometheus rules API endpoint
 
     Returns:
         Returns a dict of all alert rule groups containing a list

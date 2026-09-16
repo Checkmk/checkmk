@@ -232,7 +232,9 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         self.columns = columns
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
-        self.extra_headers = [str(h) for h in extra_headers if h]
+        self.extra_headers = [
+            line for h in extra_headers for line in str(h).split("\n") if line.strip()
+        ]
         _tables = {column.table for column in columns}
         if len(_tables) != 1:
             raise ValueError(f"Query doesn't specify a single table: {_tables!r}")

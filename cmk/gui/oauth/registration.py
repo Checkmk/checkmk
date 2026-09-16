@@ -14,6 +14,7 @@ from cmk.gui.oauth.wato._main_module import register as register_main_module
 from cmk.gui.oauth.wato._registered_clients_mode import (
     register as register_registered_clients_mode,
 )
+from cmk.gui.oauth.wato._user_tokens_mode import register as register_user_tokens_mode
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -32,9 +33,9 @@ def register(
     MCP server) is active for the site; while it returns False, every page
     answers 404.
 
-    The Setup page for managing already-registered clients is always
-    available, independent of enabled -- an admin may still need to review
-    or delete registered clients after disabling the feature.
+    The Setup pages for managing already-registered clients and already-issued
+    tokens are always available, independent of enabled -- an admin may still
+    need to review or delete them after disabling the feature.
     """
 
     page_registry.register(
@@ -49,4 +50,5 @@ def register(
     page_registry.register(PageEndpoint("noauth:oauth_token", OAuthTokenPage(enabled)))
     page_registry.register(PageEndpoint("noauth:oauth_introspect", OAuthIntrospectPage(enabled)))
     register_registered_clients_mode(mode_registry)
+    register_user_tokens_mode(mode_registry)
     register_main_module(main_module_registry)

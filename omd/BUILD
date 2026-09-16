@@ -9,6 +9,7 @@ load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
 load("//bazel/rules:pkg_cma_from_tar.bzl", "pkg_cma_from_tar")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
+load("//bazel/rules:sign_package.bzl", "RELEASE_KEY_FINGERPRINT", "sign_package")
 load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
@@ -1128,6 +1129,13 @@ pkg_rpm_from_tar(
         "//conditions:default": ["@platforms//:incompatible"],
     }),
     version = "@cmk//version",
+)
+
+sign_package(
+    name = "rpm_signed",
+    src = ":rpm",
+    expected_fingerprint = RELEASE_KEY_FINGERPRINT,
+    tags = ["manual"],
 )
 
 sh_test(

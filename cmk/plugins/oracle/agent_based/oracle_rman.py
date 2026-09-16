@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
@@ -21,7 +21,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.oracle.agent_based.liboracle import OraErrors
+
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
 
 # actual format
 # <<<oracle_rman>>>
@@ -51,111 +52,119 @@ class SectionSidOracleRman(TypedDict):
     used_incr_0: bool
 
 
+# The backups of one database, keyed by item ("<database>.<backup type>").
 SectionOracleRman = dict[str, SectionSidOracleRman]
 
+type Section = Mapping[str, Parsed[SectionOracleRman]]
 
-def parse_oracle_rman(
-    string_table: StringTable,
-) -> SectionOracleRman:
-    section: SectionOracleRman = {}
-    error_sids = {}
+
+def parse_oracle_rman(string_table: StringTable) -> Section:
+    backups_by_database: dict[str, SectionOracleRman] = {}
+    errors: dict[str, str] = {}
 
     for line in string_table:
-        # Check for query errors
-        check_ora = OraErrors(line)
-        if check_ora.ignore:
-            continue  # ignore ancient agent outputs
-        if check_ora.has_error:
-            sid = line[0]
-            error_sids[sid] = check_ora.error_text
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                if (backup := _parse_backup(line)) is not None:
+                    item, data = backup
+                    # Backups can occur multiple times for the same item. The lines are
+                    # already ordered by the DB, meaning that the entry that overwrites the
+                    # previous is always the latest backup.
+                    backups_by_database.setdefault(line[0], {})[item] = data
 
-        # we leave the llop with break when item is found except for DB_INCR_0
-        # later we need to restore the values for DB_INCR_0 due to possible
-        # overwrite with new line from section
+    for backups in backups_by_database.values():
+        _use_newer_incr_0(backups)
 
-        backupscn = -1
-        item = ""
+    parsed: dict[str, Parsed[SectionOracleRman]] = {
+        name: Ok(backups) for name, backups in backups_by_database.items() if name not in errors
+    }
+    for name, message in errors.items():
+        parsed[name] = Error(message)
+    return parsed
 
-        if len(line) == 6:
-            sid, status, _start, _end, backuptype, backupage_str = line
+
+def _parse_backup(line: Sequence[str]) -> tuple[str, SectionSidOracleRman] | None:
+    backupscn = -1
+
+    if len(line) == 6:
+        sid, status, _start, _end, backuptype, backupage_str = line
+        item = f"{sid}.{backuptype}"
+        backuplevel = "-1"
+
+    elif len(line) == 8:
+        (
+            sid,
+            status,
+            _not_used_1,
+            _end,
+            backuptype,
+            backuplevel,
+            backupage_str,
+            backupscn_str,
+        ) = line
+        backupscn = -1 if backupscn_str == "" else int(backupscn_str)
+
+        if backuptype == "DB_INCR":
+            if inventory_oracle_rman_incremental_details:
+                item = f"{sid}.{backuptype}_{backuplevel}"
+            else:
+                # This is for really old plugins without an information for the backuplevel
+                item = f"{sid}.{backuptype}"
+        else:
             item = f"{sid}.{backuptype}"
 
-            backupscn = -1
-            backuplevel = "-1"
+    else:
+        return None
 
-        elif len(line) == 8:
-            (
-                sid,
-                status,
-                _not_used_1,
-                _end,
-                backuptype,
-                backuplevel,
-                backupage_str,
-                backupscn_str,
-            ) = line
-            backupscn = -1 if backupscn_str == "" else int(backupscn_str)
+    try:
+        # sysdate can be old on slow databases with long running SQLs, therefore we can end up
+        # with a negative number here if the Archivelog backup is running while the agent is
+        # collecting data
+        backupage: int | None = max(
+            int(backupage_str),
+            0,
+        )
+    except ValueError, TypeError:
+        backupage = None
 
-            if backuptype == "DB_INCR":
-                if inventory_oracle_rman_incremental_details:
-                    item = f"{sid}.{backuptype}_{backuplevel}"
-                else:
-                    # This is for really old plugins without an information for the backuplevel
-                    item = f"{sid}.{backuptype}"
-            else:
-                item = f"{sid}.{backuptype}"
+    return item, {
+        "sid": sid,
+        "backuptype": backuptype,
+        "backuplevel": backuplevel,
+        "backupage": backupage,
+        "status": status,
+        "backupscn": backupscn,
+        "used_incr_0": False,  # True when last incr0 is newer then incr1
+    }
 
-        else:
-            continue
 
-        try:
-            # sysdate can be old on slow databases with long running SQLs, therefore we can end up
-            # with a negative number here if the Archivelog backup is running while the agent is
-            # collecting data
-            backupage: int | None = max(
-                int(backupage_str),
-                0,
-            )
-        except ValueError, TypeError:
-            backupage = None
-
-        # Backups can occur multiple times for the same item. The lines are
-        # already ordered by the DB, meaning that the entry that overwrites the
-        # previous is always the latest backup.
-        section[item] = {
-            "sid": sid,
-            "backuptype": backuptype,
-            "backuplevel": backuplevel,
-            "backupage": backupage,
-            "status": status,
-            "backupscn": backupscn,
-            "used_incr_0": False,  # True when last incr0 is newer then incr1
-        }
-
+def _use_newer_incr_0(backups: SectionOracleRman) -> None:
     # some tweaks in section for change in behavior of oracle
     # correct backupage for INCR_1 when newer INCR_0 is existing
-    for elem in section:
+    for elem in backups:
         # search DB_INCR_1 in section
         if elem.rsplit(".", 1)[1] == "DB_INCR_1":
             # check backupage
             sid_level0 = "%s0" % (elem[0:-1])
-            if sid_level0 in section:
-                sid_level0_backupage = section[sid_level0]["backupage"]
-                section_backupage = section[elem]["backupage"]
+            if sid_level0 in backups:
+                sid_level0_backupage = backups[sid_level0]["backupage"]
+                section_backupage = backups[elem]["backupage"]
 
                 if (
                     isinstance(sid_level0_backupage, int)
                     and isinstance(section_backupage, int)
                     and sid_level0_backupage < section_backupage
                 ):
-                    section[elem].update(
+                    backups[elem].update(
                         {
                             "backupage": sid_level0_backupage,
                             "used_incr_0": True,
                         }
                     )
-
-    return section
 
 
 agent_section_oracle_rman = AgentSection(
@@ -164,23 +173,42 @@ agent_section_oracle_rman = AgentSection(
 )
 
 
-def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
-    for elem in section.values():
-        sid = elem["sid"]
-        backuptype = elem["backuptype"]
-        backuplevel = elem["backuplevel"]
+def discovery_oracle_rman(section: Section) -> DiscoveryResult:
+    for result in section.values():
+        if not isinstance(result, Ok):
+            continue
+        for elem in result.value.values():
+            sid = elem["sid"]
+            backuptype = elem["backuptype"]
+            backuplevel = elem["backuplevel"]
 
-        if backuptype in ("ARCHIVELOG", "DB_FULL", "DB_INCR", "CONTROLFILE"):
-            if inventory_oracle_rman_incremental_details and backuptype == "DB_INCR":
-                yield Service(item=f"{sid}.{backuptype}_{backuplevel}")
-                continue
-            yield Service(item=f"{sid}.{backuptype}")
+            if backuptype in ("ARCHIVELOG", "DB_FULL", "DB_INCR", "CONTROLFILE"):
+                if inventory_oracle_rman_incremental_details and backuptype == "DB_INCR":
+                    yield Service(item=f"{sid}.{backuptype}_{backuplevel}")
+                    continue
+                yield Service(item=f"{sid}.{backuptype}")
 
 
-def check_oracle_rman(
-    item: str, params: Mapping[str, Any], section: SectionOracleRman
-) -> CheckResult:
-    rman_backup = section.get(item)
+def _database_of(item: str, section: Section) -> Parsed[SectionOracleRman] | None:
+    # "SID.DB_INCR_0" and "SID.ARCHIVELOG" belong to "SID"
+    return section.get(item.rsplit(".", 1)[0])
+
+
+def check_oracle_rman(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    match _database_of(item, section):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed. Working on %s" % item)
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(backups):
+            yield from _check_backup(item, params, backups)
+
+
+def _check_backup(item: str, params: Mapping[str, Any], backups: SectionOracleRman) -> CheckResult:
+    rman_backup = backups.get(item)
 
     sid_level0 = ""
 
@@ -190,10 +218,10 @@ def check_oracle_rman(
 
         sid_level0 = "%s0" % (item[0:-1])
 
-        if item[-1] == "1" and sid_level0 in section:
+        if item[-1] == "1" and sid_level0 in backups:
             # => INCR_1 in item and INCR_0 found
             # => Switch to INCR_0 + used_incr_0
-            rman_backup = section[sid_level0]
+            rman_backup = backups[sid_level0]
             rman_backup.update({"used_incr_0": True})
 
         else:
@@ -237,16 +265,31 @@ def check_oracle_rman(
 
 
 def cluster_check_oracle_rman(
-    item: str, params: Mapping[str, Any], section: Mapping[str, SectionOracleRman | None]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Section | None]
 ) -> CheckResult:
+    databases: list[Parsed[SectionOracleRman]] = []
+    for node_section in section.values():
+        if node_section is None:
+            continue
+        if (database := _database_of(item, node_section)) is not None:
+            databases.append(database)
+
+    with_item = [
+        database.value
+        for database in databases
+        if isinstance(database, Ok) and item in database.value
+    ]
+    if not with_item:
+        for database in databases:
+            if isinstance(database, Error):
+                yield Result(state=State.UNKNOWN, summary=database.message)
+                return
+        return
+
     youngest_backup_age: int | None = None
     # take the most current backupage in clustered environments
-    for node_data in section.values():
-        if node_data is None:
-            continue
-        if item not in node_data:
-            continue
-        backupage = node_data[item]["backupage"]
+    for backups in with_item:
+        backupage = backups[item]["backupage"]
         if not youngest_backup_age:
             youngest_backup_age = backupage
         if (
@@ -257,13 +300,10 @@ def cluster_check_oracle_rman(
             youngest_backup_age = backupage
 
     # Check only first found item
-    for node_data in section.values():
-        if node_data is None or item not in node_data:
-            continue
-        if isinstance(youngest_backup_age, int):
-            node_data[item].update({"backupage": youngest_backup_age})
-        yield from check_oracle_rman(item, params, node_data)
-        return
+    first = with_item[0]
+    if isinstance(youngest_backup_age, int):
+        first[item].update({"backupage": youngest_backup_age})
+    yield from _check_backup(item, params, first)
 
 
 check_plugin_oracle_rman = CheckPlugin(

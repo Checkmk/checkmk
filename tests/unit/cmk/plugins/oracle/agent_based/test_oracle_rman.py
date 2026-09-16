@@ -17,37 +17,50 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.oracle.agent_based import oracle_rman
+from cmk.plugins.oracle.agent_based.liboracle import Ok
 
 
-def get_parsed_section() -> oracle_rman.SectionOracleRman:
+def get_parsed_section() -> oracle_rman.Section:
     return {
-        "AFIS11.ARCHIVELOG": {
-            "backupage": 103,
-            "backuplevel": "",
-            "backupscn": -1,
-            "backuptype": "ARCHIVELOG",
-            "sid": "AFIS11",
-            "status": "COMPLETED",
-            "used_incr_0": False,
-        },
-        "AFIS2.DB_INCR_0": {
-            "backupage": 460,
-            "backuplevel": "0",
-            "backupscn": 545791334,
-            "backuptype": "DB_INCR",
-            "sid": "AFIS2",
-            "status": "COMPLETED",
-            "used_incr_0": False,
-        },
-        "TUX2.DB_INCR": {
-            "backupage": 32,
-            "backuplevel": "-1",
-            "backupscn": -1,
-            "backuptype": "DB_INCR",
-            "sid": "TUX2",
-            "status": "COMPLETED",
-            "used_incr_0": False,
-        },
+        "AFIS11": Ok(
+            {
+                "AFIS11.ARCHIVELOG": {
+                    "backupage": 103,
+                    "backuplevel": "",
+                    "backupscn": -1,
+                    "backuptype": "ARCHIVELOG",
+                    "sid": "AFIS11",
+                    "status": "COMPLETED",
+                    "used_incr_0": False,
+                },
+            }
+        ),
+        "AFIS2": Ok(
+            {
+                "AFIS2.DB_INCR_0": {
+                    "backupage": 460,
+                    "backuplevel": "0",
+                    "backupscn": 545791334,
+                    "backuptype": "DB_INCR",
+                    "sid": "AFIS2",
+                    "status": "COMPLETED",
+                    "used_incr_0": False,
+                },
+            }
+        ),
+        "TUX2": Ok(
+            {
+                "TUX2.DB_INCR": {
+                    "backupage": 32,
+                    "backuplevel": "-1",
+                    "backupscn": -1,
+                    "backuptype": "DB_INCR",
+                    "sid": "TUX2",
+                    "status": "COMPLETED",
+                    "used_incr_0": False,
+                },
+            }
+        ),
     }
 
 
@@ -102,15 +115,19 @@ def get_parsed_section() -> oracle_rman.SectionOracleRman:
                 ],
             ],
             {
-                "AFIS2.DB_INCR_0": {
-                    "backupage": 0,
-                    "backuplevel": "0",
-                    "backupscn": 545791334,
-                    "backuptype": "DB_INCR",
-                    "sid": "AFIS2",
-                    "status": "COMPLETED",
-                    "used_incr_0": False,
-                },
+                "AFIS2": Ok(
+                    {
+                        "AFIS2.DB_INCR_0": {
+                            "backupage": 0,
+                            "backuplevel": "0",
+                            "backupscn": 545791334,
+                            "backuptype": "DB_INCR",
+                            "sid": "AFIS2",
+                            "status": "COMPLETED",
+                            "used_incr_0": False,
+                        },
+                    }
+                ),
             },
             id="backupage < 0",
         ),
@@ -118,7 +135,7 @@ def get_parsed_section() -> oracle_rman.SectionOracleRman:
 )
 def test_parse(
     string_table: StringTable,
-    parsed: oracle_rman.SectionOracleRman,
+    parsed: oracle_rman.Section,
 ) -> None:
     assert oracle_rman.parse_oracle_rman(string_table) == parsed
 
@@ -185,7 +202,7 @@ def test_discovery() -> None:
 def test_check(
     item: str,
     params: Mapping[str, object],
-    section: oracle_rman.SectionOracleRman,
+    section: oracle_rman.Section,
     results: CheckResult,
 ) -> None:
     yielded_results = list(oracle_rman.check_oracle_rman(item, params, section))
@@ -201,9 +218,9 @@ def test_check_raises() -> None:
 def test_cluster_check() -> None:
     item = "TUX2.DB_INCR"
     parsed_section_2 = get_parsed_section()
-    parsed_section_2[item]["backupage"] = 1
+    _backups(parsed_section_2, "TUX2")[item]["backupage"] = 1
     parsed_section_3 = get_parsed_section()
-    parsed_section_3[item]["backupage"] = None
+    _backups(parsed_section_3, "TUX2")[item]["backupage"] = None
     node_sections = {
         "node1": get_parsed_section(),
         "node2": parsed_section_2,
@@ -218,6 +235,58 @@ def test_cluster_check() -> None:
         ),
         Metric("age", 60.0),
     ] == yielded_results
+
+
+def _backups(section: oracle_rman.Section, database: str) -> oracle_rman.SectionOracleRman:
+    result = section[database]
+    assert isinstance(result, Ok)
+    return result.value
+
+
+_FAILURE = [["FREE", "FAILURE", "ORA-00942: table or view does not exist"]]
+
+
+def test_cluster_check_reports_the_error_when_no_node_has_the_backup() -> None:
+    node_sections = {
+        "node1": oracle_rman.parse_oracle_rman(_FAILURE),
+        "node2": None,
+    }
+    assert list(oracle_rman.cluster_check_oracle_rman("FREE.ARCHIVELOG", {}, node_sections)) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")
+    ]
+
+
+def test_discovery_skips_failure_row() -> None:
+    assert not list(oracle_rman.discovery_oracle_rman(oracle_rman.parse_oracle_rman(_FAILURE)))
+
+
+def test_check_surfaces_failure() -> None:
+    assert list(
+        oracle_rman.check_oracle_rman(
+            "FREE.ARCHIVELOG", {}, oracle_rman.parse_oracle_rman(_FAILURE)
+        )
+    ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
+
+
+def test_failure_row_wins_over_data_row() -> None:
+    section = oracle_rman.parse_oracle_rman(
+        [
+            [
+                "FREE",
+                "COMPLETED",
+                "2016-07-12_09:50:46",
+                "2016-07-12_08:08:05",
+                "ARCHIVELOG",
+                "",
+                "103",
+                "",
+            ]
+        ]
+        + _FAILURE
+    )
+    assert list(oracle_rman.check_oracle_rman("FREE.ARCHIVELOG", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")
+    ]
 
 
 @pytest.mark.parametrize(
@@ -247,21 +316,23 @@ def test_cluster_check() -> None:
                 ],
             ],
             {
-                "MYDB.DB_INCR_1": {
-                    "sid": "MYDB",
-                    "backuptype": "DB_INCR",
-                    "backuplevel": "1",
-                    "backupage": 12,
-                    "status": "COMPLETED",
-                    "backupscn": 1022591235,
-                    "used_incr_0": False,
-                },
+                "MYDB": Ok(
+                    {
+                        "MYDB.DB_INCR_1": {
+                            "sid": "MYDB",
+                            "backuptype": "DB_INCR",
+                            "backuplevel": "1",
+                            "backupage": 12,
+                            "status": "COMPLETED",
+                            "backupscn": 1022591235,
+                            "used_incr_0": False,
+                        },
+                    }
+                ),
             },
             id="Latest backup is written to section in case of multiple backups for the same item",
         ),
     ],
 )
-def test_parse_oracle_rman(
-    string_table: StringTable, section: oracle_rman.SectionOracleRman
-) -> None:
+def test_parse_oracle_rman(string_table: StringTable, section: oracle_rman.Section) -> None:
     assert oracle_rman.parse_oracle_rman(string_table) == section

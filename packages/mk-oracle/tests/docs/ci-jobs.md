@@ -17,23 +17,31 @@ mapping is in the tables below and the topology diagram in
 Jenkins folder prefixes (`cv/`, `heavy/`, `builders/`) — the tables carry the
 full job paths.
 
+Jobs triggered from more than one place (per change and by a chain) appear
+once per triggering block.
+
 ```mermaid
 flowchart TD
     subgraph CV["Gerrit CV — per change"]
         TG["test-gerrit<br/>(stages.yml)"]
-        PKG["'Package mk-oracle' stage<br/>build-cmk-package-k8s<br/>⇒ oracle-rocky-ci"]
         WTB["winagt-test-build<br/>⇒ oracle-rocky-ci"]
-        TG -->|"mk-oracle files<br/>changed"| PKG
+        subgraph CVORA[" "]
+            PKG["'Package mk-oracle' stage<br/>build-cmk-package-k8s<br/>⇒ oracle-rocky-ci"]
+            CVTSM["test-system-mk-oracle<br/>⇒ Docker Oracle Free"]
+            CVTCM["test-component-mk-oracle<br/>⇒ oracle-rocky-ci<br/>(SSH, runs on VM)"]
+        end
+        TG -->|"on changes touching<br/>packages/mk-oracle"| CVORA
     end
-
 
     subgraph HEAVY["Post-submit heavy chain — several times a day"]
         HSPACE[" "]
         TH["trigger-post-submit-<br/>tests-heavy"]
-        WMO["winagt-test-mk-oracle<br/>⇒ ORACLE-WIN-CI<br/>(network + run-on-VM)"]
-        IAP["test-integration-<br/>agent-plugin<br/>⇒ Docker Oracle Free"]
         HSPACE ~~~ TH
-        TH --> WMO
+        HTSM["test-system-mk-oracle"]
+        HWMO["winagt-test-mk-oracle"]
+        IAP["test-integration-<br/>agent-plugin<br/>⇒ Docker Oracle Free"]
+        TH --> HTSM
+        TH --> HWMO
         TH --> IAP
     end
 
@@ -41,10 +49,10 @@ flowchart TD
         NSPACE[" "]
         BC["trigger-cmk-build-<br/>chain-&lt;edition&gt;"]
         NSPACE ~~~ BC
-        TCM["test-component-mk-oracle<br/>(ultimatemt only)<br/>⇒ oracle-rocky-ci<br/>(SSH, runs on VM)"]
+        NTCM["test-component-mk-oracle<br/>(ultimatemt only)"]
         AIXSOL["build-mk-oracle-<br/>on-aix-and-solaris<br/>⇒ AIX + Solaris<br/>(build only)"]
         WB["winagt-build (signed)<br/>build only, no DB tests"]
-        BC --> TCM
+        BC --> NTCM
         BC --> AIXSOL
         BC --> WB
     end
@@ -53,10 +61,11 @@ flowchart TD
         K8S["build-cmk-package-<br/>mk-oracle-k8s<br/>(mk-oracle.rhel8<br/>+ test binary)"]
     end
 
-    CV -.-> HEAVY
-    HEAVY -.-> NIGHTLY
+    %% invisible links: keep the blocks in development-workflow order
+    CVTSM ~~~ HSPACE
+    HTSM ~~~ NSPACE
 
-    TCM -. "test binary" .-> K8S
+    NTCM -. "test binary" .-> K8S
     IAP -. "mk-oracle.rhel8" .-> K8S
 
     classDef spacer fill:none,stroke:none
@@ -79,6 +88,23 @@ otherwise it is skipped with "No mk-oracle files changed".
 `cv/winagt-test-build` is assumed to fire on changes to `packages/mk-oracle/`
 (the authoritative trigger pattern lives in the Jenkins job-definition repo,
 not in checkmk.git).
+
+Since [CMK-38578](https://jira.lan.tribe29.com/browse/CMK-38578) the CV
+additionally triggers the mk-oracle test jobs per change, guarded by
+`ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES` (changes under
+`packages/mk-oracle/` or top-level `packages/` files; no reference-image or
+Rust-workspace trigger). Previously these ran only post-submit or via manual
+`start: <job>` comments. The stages reuse the existing job definitions
+unchanged — see the stage 2 / stage 3 tables for what they run. On this
+branch (2.5.0) the Windows lane is not wired: `winagt-test-mk-oracle` here
+still runs the network model already covered per change by
+`cv/winagt-test-build`, so a per-change stage for it would only duplicate;
+it follows once the run-on-VM model is backported.
+
+| CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                        |
+| --------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------- |
+| **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                    |
+| **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent) |
 
 ## Stage 2 — post-submit heavy chain (several times a day)
 
@@ -138,6 +164,9 @@ cover:
 | `builders/test-component-mk-oracle`           | daily ~03:00 (+ on-demand re-runs)           | green        |
 | `builders/build-mk-oracle-on-aix-and-solaris` | ~2/day (nightly chains + on demand)          | green        |
 | `winagt-build`                                | several/day                                  | green        |
+
+The per-change CV triggering added by CMK-38578 (see stage 1) postdates this
+snapshot and is therefore not reflected here.
 
 ## Known gaps / TODO
 

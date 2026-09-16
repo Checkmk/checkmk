@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Annotated, final, override
+from typing import Annotated, final, Literal, override
 
 from pydantic import (
     BaseModel,
@@ -21,7 +21,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 
-from ._line_types import GraphConsolidationFunction
+GraphConsolidationFunction = Literal["max", "min", "average"]
 
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 

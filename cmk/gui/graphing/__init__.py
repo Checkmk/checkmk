@@ -80,6 +80,7 @@ from ._graph_specification import (
     AnnotatedHostName,
     compute_graph_ranges_for_width,
     graph_specification_registry,
+    GraphConsolidationFunction,
     GraphEnvironment,
     GraphExportRequest,
     GraphRanges,
@@ -97,7 +98,7 @@ from ._graph_templates import (
     TemplateGraphSpecification,
 )
 from ._graphs_order import sort_registered_graph_plugins
-from ._line_types import DrawnLineType, GraphConsolidationFunction, LineType
+from ._line_types import DrawnLineType, LineType
 from ._metric_data import (
     evaluated_metrics,
     EvaluatedMetric,

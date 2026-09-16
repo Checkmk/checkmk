@@ -51,7 +51,7 @@ SERVICE_RESTART_ORDER: tuple[Service, ...] = (
     Service.MKEVENTD,
     Service.AGENT_RECEIVER,
     Service.MCP_SERVER,
-    Service.AI_AGENT_ENGINE,
+    Service.AI_CONTROL_PLANE,
     Service.NAGIOS,
     Service.CMC,
 )
@@ -61,7 +61,7 @@ EDITION_GATED_SERVICES: MappingProxyType[Service, frozenset[str]] = MappingProxy
     {
         Service.CMC: PRO_PLUS_EDITIONS,
         Service.DCD: PRO_PLUS_EDITIONS,
-        Service.AI_AGENT_ENGINE: PRO_PLUS_EDITIONS,
+        Service.AI_CONTROL_PLANE: PRO_PLUS_EDITIONS,
     }
 )
 """Services that only exist on specific editions."""

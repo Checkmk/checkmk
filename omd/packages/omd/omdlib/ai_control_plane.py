@@ -10,7 +10,7 @@ from omdlib.config_api import Config, Error, Hook
 from cmk.flags import load_experimental_flags
 
 
-def ai_agent_engine_has_error(value: str) -> None | Error:
+def ai_control_plane_has_error(value: str) -> None | Error:
     if value not in ("on", "off"):
         return Error("Allowed are: on, off")
     if value == "on" and not load_experimental_flags(Path("etc/check_mk")).exp_ai_assistant:
@@ -19,11 +19,11 @@ def ai_agent_engine_has_error(value: str) -> None | Error:
 
 
 # The route below /{site}/check_mk/ that the site Apache forwards to the daemon.
-_ROUTE = "ai-agent-engine"
+_ROUTE = "ai-control-plane"
 
-# Pinned by skel/etc/init.d/ai-agent-engine of the cmk-agent-engine package, which
+# Pinned by skel/etc/init.d/ai-control-plane of the cmk-ai-control-plane package, which
 # pre-creates the socket and passes it to uvicorn as --uds. Keep both in sync.
-_SOCKET_REL_PATH = Path("tmp/run/ai-agent-engine.sock")
+_SOCKET_REL_PATH = Path("tmp/run/ai-control-plane.sock")
 
 # mod_proxy pools and reuses backend connections keyed by the "scheme://host[:port]"
 # string after the "|". The unix socket path before the "|" plays no part in that
@@ -34,9 +34,9 @@ _SOCKET_REL_PATH = Path("tmp/run/ai-agent-engine.sock")
 _ORIGIN = "http://localhost:2"
 
 
-def _write_ai_agent_engine_apache_conf(site_name: str, site_home: Path, config: Config) -> None:
-    conf_path = site_home / "etc" / "apache" / "conf.d" / "ai-agent-engine.conf"
-    if config["AI_AGENT_ENGINE"] != "on":
+def _write_ai_control_plane_apache_conf(site_name: str, site_home: Path, config: Config) -> None:
+    conf_path = site_home / "etc" / "apache" / "conf.d" / "ai-control-plane.conf"
+    if config["AI_CONTROL_PLANE"] != "on":
         conf_path.unlink(missing_ok=True)
         return
 
@@ -44,7 +44,7 @@ def _write_ai_agent_engine_apache_conf(site_name: str, site_home: Path, config: 
     route = f"/{site_name}/check_mk/{_ROUTE}"
     conf_path.write_text(
         f"""\
-# Written by AI_AGENT_ENGINE hook
+# Written by AI_CONTROL_PLANE hook
 # Guard the LoadModule directives against warnings when other hooks load the same modules.
 <IfModule !proxy_module>
 LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
@@ -74,9 +74,9 @@ ProxyPassReverse "{route}" "{_ORIGIN}"
     )
 
 
-AI_AGENT_ENGINE = Hook(
-    name="AI_AGENT_ENGINE",
+AI_CONTROL_PLANE = Hook(
+    name="AI_CONTROL_PLANE",
     default=lambda _edition: "off",
-    activation=_write_ai_agent_engine_apache_conf,
-    choices=ai_agent_engine_has_error,
+    activation=_write_ai_control_plane_apache_conf,
+    choices=ai_control_plane_has_error,
 )

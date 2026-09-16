@@ -100,7 +100,7 @@ class ExperimentalFlagConfig(BaseModel):
         experimental_field(
             description=(
                 "Show the settings for Checkmk's AI assistant, starting with the "
-                "toggle for the AI agent engine, the site-side daemon that hosts "
+                "toggle for the AI control plane, the site-side daemon that hosts "
                 "LLM-backed agents. More AI assistant UI features will land behind "
                 "this same gate."
             ),

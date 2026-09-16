@@ -6,7 +6,7 @@
 from collections import defaultdict
 from pathlib import Path
 
-from omdlib.ai_agent_engine import AI_AGENT_ENGINE
+from omdlib.ai_control_plane import AI_CONTROL_PLANE
 from omdlib.mcp import MCP_SERVER
 
 # mod_proxy pools backend connections by the "scheme://host" after the "|" and
@@ -17,7 +17,7 @@ from omdlib.mcp import MCP_SERVER
 # The hook list is explicit. config_hooks._HOOKS holds every hook, but most
 # activations need other settings and site directories, so they cannot run in a
 # bare tmp site. A new unix-socket hook is added here.
-_UNIX_SOCKET_PROXY_HOOKS = [MCP_SERVER, AI_AGENT_ENGINE]
+_UNIX_SOCKET_PROXY_HOOKS = [MCP_SERVER, AI_CONTROL_PLANE]
 
 
 def _sockets_by_origin(conf_dir: Path) -> dict[str, set[str]]:
@@ -45,5 +45,5 @@ def test_unix_socket_proxy_hooks_use_one_socket_per_origin(tmp_path: Path) -> No
 
     assert _sockets_by_origin(conf_dir) == {
         "http://localhost:1": {str(site_home / "tmp" / "run" / "mcp.sock")},
-        "http://localhost:2": {str(site_home / "tmp" / "run" / "ai-agent-engine.sock")},
+        "http://localhost:2": {str(site_home / "tmp" / "run" / "ai-control-plane.sock")},
     }

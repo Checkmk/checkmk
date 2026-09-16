@@ -2473,7 +2473,7 @@ CASES: Mapping[str, list[Case]] = {
             },
         ),
     ],
-    "site_ai_agent_engine": CHECKBOX_CASES,
+    "site_ai_control_plane": CHECKBOX_CASES,
     "site_mcp_server": CHECKBOX_CASES,
     "site_mcp_trace_forward": CHECKBOX_CASES,
     "site_mkeventd": [

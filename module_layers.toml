@@ -327,7 +327,7 @@ allows = ["cmk.utils.paths"]
 allows = []
 
 # empty until code needs a first-party import
-[components."cmk.agent_engine"]
+[components."cmk.ai_control_plane"]
 allows = []
 
 [components."cmk.agent_receiver"]
@@ -1591,8 +1591,8 @@ allows = [
 [components."cmk.reviewmk"]
 allows = []
 
-[components."cmk.testlib.agent_engine"]
-allows = ["cmk.agent_engine"]
+[components."cmk.testlib.ai_control_plane"]
+allows = ["cmk.ai_control_plane"]
 
 [components."cmk.testlib.agent_receiver"]
 allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]

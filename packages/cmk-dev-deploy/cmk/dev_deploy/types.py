@@ -286,7 +286,7 @@ class Service(StrEnum):
     AGENT_RECEIVER = "agent-receiver"
     DCD = "dcd"
     MCP_SERVER = "mcp-server"
-    AI_AGENT_ENGINE = "ai-agent-engine"
+    AI_CONTROL_PLANE = "ai-control-plane"
 
 
 @dataclass(frozen=True)

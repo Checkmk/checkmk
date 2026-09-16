@@ -267,35 +267,39 @@ class TestResolveServicesEditionGating:
         result = resolve_services(changes, None, _site(Edition.PRO))
         assert result == [(Service.CMC, ServiceAction.RESTART)]
 
-    def test_ai_agent_engine_filtered_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_ai_control_plane_filtered_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
                 ServiceSpec(
-                    source_prefix="non-free/packages/cmk-agent-engine/",
-                    services=((Service.AI_AGENT_ENGINE, ServiceAction.RESTART),),
+                    source_prefix="non-free/packages/cmk-ai-control-plane/",
+                    services=((Service.AI_CONTROL_PLANE, ServiceAction.RESTART),),
                     edition_constraint=None,
                 ),
             ],
         )
-        changes = _changeset(files=("non-free/packages/cmk-agent-engine/cmk/agent_engine/app.py",))
+        changes = _changeset(
+            files=("non-free/packages/cmk-ai-control-plane/cmk/ai_control_plane/app.py",)
+        )
         result = resolve_services(changes, None, _site(Edition.COMMUNITY))
         assert result == []
 
-    def test_ai_agent_engine_included_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_ai_control_plane_included_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
                 ServiceSpec(
-                    source_prefix="non-free/packages/cmk-agent-engine/",
-                    services=((Service.AI_AGENT_ENGINE, ServiceAction.RESTART),),
+                    source_prefix="non-free/packages/cmk-ai-control-plane/",
+                    services=((Service.AI_CONTROL_PLANE, ServiceAction.RESTART),),
                     edition_constraint=None,
                 ),
             ],
         )
-        changes = _changeset(files=("non-free/packages/cmk-agent-engine/cmk/agent_engine/app.py",))
+        changes = _changeset(
+            files=("non-free/packages/cmk-ai-control-plane/cmk/ai_control_plane/app.py",)
+        )
         result = resolve_services(changes, None, _site(Edition.PRO))
-        assert result == [(Service.AI_AGENT_ENGINE, ServiceAction.RESTART)]
+        assert result == [(Service.AI_CONTROL_PLANE, ServiceAction.RESTART)]
 
 
 class TestResolveServicesOrdering:

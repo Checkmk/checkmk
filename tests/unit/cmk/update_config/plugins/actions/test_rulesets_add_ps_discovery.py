@@ -21,7 +21,7 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     rule_present,
 )
 
-_AGENT_ENGINE_RULE_ID = "e7083f95-5ee1-4814-bdba-d7c1fbbff57d"
+_AI_CONTROL_PLANE_RULE_ID = "11683ac1-4306-47c2-bad5-d117c2fdd1d6"
 
 _PS_DISCOVERY_RULESPEC = HostRulespec(
     name=PS_DISCOVERY_RULE_NAME,
@@ -115,39 +115,41 @@ def test_update_with_all_preexisting_adds_nothing(tree: FolderTree) -> None:
     assert ruleset.num_rules() == len(INVENTORY_PROCESS_DISCOVERY_RULES)
 
 
-def _agent_engine_command_line() -> list[str]:
+def _ai_control_plane_command_line() -> list[str]:
     return [
         "python3",
         "/omd/sites/mysite/bin/uvicorn",
         "--factory",
         "--uds",
-        "/omd/sites/mysite/tmp/run/ai-agent-engine.sock",
+        "/omd/sites/mysite/tmp/run/ai-control-plane.sock",
         "--timeout-graceful-shutdown",
         "30",
-        "cmk.agent_engine.app:create_app",
+        "cmk.ai_control_plane.api.app:create_app",
     ]
 
 
-def test_agent_engine_rule_matches_daemon_command_line() -> None:
-    rule = next(r for r in INVENTORY_PROCESS_DISCOVERY_RULES if r["id"] == _AGENT_ENGINE_RULE_ID)
+def test_ai_control_plane_rule_matches_daemon_command_line() -> None:
+    rule = next(
+        r for r in INVENTORY_PROCESS_DISCOVERY_RULES if r["id"] == _AI_CONTROL_PLANE_RULE_ID
+    )
     match = rule["value"]["match"]
     assert isinstance(match, str)
 
-    assert process_matches(_agent_engine_command_line(), match)
+    assert process_matches(_ai_control_plane_command_line(), match)
 
 
-def test_agent_engine_rule_does_not_overlap_other_rules() -> None:
-    command_line = _agent_engine_command_line()
+def test_ai_control_plane_rule_does_not_overlap_other_rules() -> None:
+    command_line = _ai_control_plane_command_line()
 
     for rule in INVENTORY_PROCESS_DISCOVERY_RULES:
-        if rule["id"] == _AGENT_ENGINE_RULE_ID:
+        if rule["id"] == _AI_CONTROL_PLANE_RULE_ID:
             continue
         match = rule["value"]["match"]
         assert isinstance(match, str)
         assert not process_matches(command_line, match), (
-            f"rule {rule['id']!r} unexpectedly also matches the agent-engine command line"
+            f"rule {rule['id']!r} unexpectedly also matches the ai-control-plane command line"
         )
 
 
-def test_agent_engine_rule_is_backfilled_on_existing_sites() -> None:
-    assert _AGENT_ENGINE_RULE_ID in _NEW_DEFAULT_RULE_IDS
+def test_ai_control_plane_rule_is_backfilled_on_existing_sites() -> None:
+    assert _AI_CONTROL_PLANE_RULE_ID in _NEW_DEFAULT_RULE_IDS

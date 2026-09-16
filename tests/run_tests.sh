@@ -58,7 +58,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
   test-system-otel                        Run system tests for otel (ultimate edition)
   test-system-azure                       Run system tests for azure (ultimate edition)
-  test-system-ai-features                 Run system tests for the mcp-server and the ai-agent-engine (pro edition)
+  test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
   test-system-update-community            Run update tests for community edition

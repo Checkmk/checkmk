@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.ccc.site import SiteId
 from cmk.gui.monitor.hosts._folder import MonitorFolders, SetupFolders
 from cmk.gui.monitor.hosts._impl import (
     _build_primary_sort,
@@ -22,6 +23,7 @@ from cmk.gui.monitor.hosts._models import (
     HostSortColumn,
     HostSortDirection,
 )
+from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
 from cmk.livestatus_client.testing import expect_single_query
 from tests.testlib.gui.web_test_app import SetConfig
 
@@ -102,12 +104,18 @@ def _folders() -> MonitorFolders:
     return folders
 
 
+def _sites() -> MonitorSites:
+    return MonitorSites(MonitorSite(id=SiteId(site_id)) for site_id in ("heute", "remote_muc"))
+
+
 def test_build_query_filter_without_a_query_matches_everything() -> None:
-    assert _build_query_filter("", frozenset(HostOptionalField), _folders()).render() == []
+    assert (
+        _build_query_filter("", frozenset(HostOptionalField), _folders(), _sites()).render() == []
+    )
 
 
 def test_build_query_filter_searches_the_name_of_a_table_without_optional_columns() -> None:
-    assert _build_query_filter("web", frozenset(), _folders()).render() == [
+    assert _build_query_filter("web", frozenset(), _folders(), _sites()).render() == [
         ("Filter", "name ~~ web")
     ]
 
@@ -125,6 +133,7 @@ def test_build_query_filter_searches_every_shown_text_field() -> None:
             }
         ),
         _folders(),
+        _sites(),
     ).render() == [
         ("Filter", "name ~~ web"),
         ("Filter", "alias ~~ web"),
@@ -136,7 +145,7 @@ def test_build_query_filter_searches_every_shown_text_field() -> None:
 
 def test_build_query_filter_leaves_out_the_folder_no_title_carries() -> None:
     assert _build_query_filter(
-        "no such folder", frozenset({HostOptionalField.FOLDER}), _folders()
+        "no such folder", frozenset({HostOptionalField.FOLDER}), _folders(), _sites()
     ).render() == [("Filter", "name ~~ no such folder")]
 
 
@@ -176,16 +185,55 @@ def test_build_query_filter_leaves_out_the_folder_no_title_carries() -> None:
 def test_build_query_filter_searches_a_shown_list_column(
     field: HostOptionalField, expected: list[tuple[str, str]]
 ) -> None:
-    assert _build_query_filter("web", frozenset({field}), _folders()).render() == [
+    assert _build_query_filter("web", frozenset({field}), _folders(), _sites()).render() == [
         ("Filter", "name ~~ web"),
         *expected,
         ("Or", "2"),
     ]
 
 
+def test_build_query_filter_searches_the_site_of_every_host_it_monitors() -> None:
+    assert _build_query_filter("heute", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ heute"),
+        ("Filter", "labels = cmk/site heute"),
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_searches_the_site_of_a_table_not_showing_the_column() -> None:
+    assert _build_query_filter(
+        "heute", frozenset({HostOptionalField.ALIAS}), _folders(), _sites()
+    ).render() == [
+        ("Filter", "name ~~ heute"),
+        ("Filter", "alias ~~ heute"),
+        ("Filter", "labels = cmk/site heute"),
+        ("Or", "3"),
+    ]
+
+
+def test_build_query_filter_searches_the_site_ignoring_case() -> None:
+    assert _build_query_filter("REMOTE", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ REMOTE"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_leaves_out_the_site_no_id_carries() -> None:
+    assert _build_query_filter("no such site", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ no such site")
+    ]
+
+
+def test_build_query_filter_takes_a_regex_metacharacter_in_the_site_query_literally() -> None:
+    assert _build_query_filter("heute[", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ heute[")
+    ]
+
+
 def test_build_query_filter_leaves_out_a_hidden_field() -> None:
     assert _build_query_filter(
-        "web", frozenset({HostOptionalField.ALIAS}), _folders()
+        "web", frozenset({HostOptionalField.ALIAS}), _folders(), _sites()
     ).render() == [
         ("Filter", "name ~~ web"),
         ("Filter", "alias ~~ web"),

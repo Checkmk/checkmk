@@ -39,6 +39,7 @@ from .._models import (
     UnixTimestamp,
 )
 from .._repositories import HostRepository
+from .._site import MonitorSite, MonitorSites
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import extract_site_scope, FilterNode, parse_as_livestatus_filter
 from ._modes import build_host_modes, ModeInfo
@@ -277,8 +278,10 @@ class HostsRequestBody:
         PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
     ] = api_field(
         description=(
-            "Search text, matched against the host name and every text field asked for through "
-            "`fields` (alias, address, folder). Omit or pass empty string to return all hosts."
+            "Search text, matched against the host name, the site, and every text field asked "
+            "for through `fields` (alias, address, folder, labels, tags, contacts, contact "
+            "groups). The site is searched whether or not the column is shown. Omit or pass "
+            "empty string to return all hosts."
         ),
         example="web-server",
         default_factory=ApiOmitted,
@@ -328,7 +331,11 @@ def list_hosts(
                 status=400, title="Invalid filter", detail=str(exc)
             ) from exc
 
-    host_repo = LiveStatusHostRepository(connection=sites.live(), folders=monitor_folders)
+    host_repo = LiveStatusHostRepository(
+        connection=sites.live(),
+        folders=monitor_folders,
+        sites=MonitorSites(MonitorSite(id=site_id) for site_id in api_context.config.sites),
+    )
 
     # NOTE: we never want this value scoped by the selected sites. It should always get full count.
     # As a temporary solution, we are querying count here and passing the result to the handler.

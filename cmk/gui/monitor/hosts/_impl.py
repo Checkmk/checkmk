@@ -25,6 +25,7 @@ from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryE
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Log
 from cmk.livestatus_client.types import Column
+from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import HostNotFoundError
 from ._folder import folder_files_matching, folder_title, MonitorFolders
@@ -42,6 +43,7 @@ from ._models import (
     ServiceCounts,
     UnixTimestamp,
 )
+from ._site import MonitorSites
 from ._sorting import host_sorter
 
 
@@ -51,11 +53,13 @@ class LiveStatusHostRepository:
         *,
         connection: MultiSiteConnection,
         folders: MonitorFolders | None = None,
+        sites: MonitorSites | None = None,
     ) -> None:
         self._connection = connection
         # A folder is shown and searched by its Setup title, which Livestatus does not have. A
         # caller reading no folder needs none, hence the default that knows no titles.
         self._folders = folders if folders is not None else MonitorFolders()
+        self._sites = sites if sites is not None else MonitorSites()
 
     def host_exists(self, hostname: str) -> bool:
         q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
@@ -102,7 +106,7 @@ class LiveStatusHostRepository:
                     for column in columns
                 ),
             ],
-            _build_query_filter(query_, fields, self._folders),
+            _build_query_filter(query_, fields, self._folders, self._sites),
             extra_headers=extra_headers,
         )
 
@@ -247,7 +251,9 @@ class LiveStatusHostRepository:
         # ``Query`` class can't emit ``Stats`` headers yet, so the filter is assembled by hand.
         query_filter = (
             ": ".join(line)
-            for line in _build_query_filter(_sanitize_query(query), fields, self._folders).render()
+            for line in _build_query_filter(
+                _sanitize_query(query), fields, self._folders, self._sites
+            ).render()
         )
         return self._count_hosts(extra_lines=[*query_filter, *_split_filter_lines(filters)])
 
@@ -352,7 +358,10 @@ _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] =
 
 
 def _build_query_filter(
-    query: str, fields: Set[HostOptionalField], folders: MonitorFolders
+    query: str,
+    fields: Set[HostOptionalField],
+    folders: MonitorFolders,
+    sites: MonitorSites,
 ) -> QueryExpression:
     if not query:
         return NothingExpression()
@@ -364,6 +373,10 @@ def _build_query_filter(
         searched.extend(
             Hosts.filename.equals(file) for file in folder_files_matching(query, folders.titles())
         )
+    searched.extend(
+        Hosts.labels.op("=", f"{BuiltinLabelsKey.SITE} {site_id}")
+        for site_id in sites.matching(query)
+    )
 
     return Or(Hosts.name.contains(query, ignore_case=True), *searched)
 

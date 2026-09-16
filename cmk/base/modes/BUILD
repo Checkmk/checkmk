@@ -10,7 +10,6 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
-        "//non-free/packages/cmk-bakery:__pkg__",
     ],
     deps = [
         "//cmk/base:base-app",

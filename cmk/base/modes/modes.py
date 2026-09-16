@@ -19,6 +19,7 @@ from typing import Final, override
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes
 from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.utils.log import console
 
@@ -28,7 +29,6 @@ OptionName = str
 ConvertFunction = Callable[[str], object]
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
-
 
 type ModeHandler = Callable[[CheckmkBaseApp, Mapping[str, object], Sequence[str]], int]
 """The signature of every mode's handler: the application, the parsed sub-options (empty if
@@ -331,9 +331,39 @@ class Mode(Option):
         return "\n\n".join(text)
 
 
+def make_option(option: CLIOption) -> Option:
+    """Build the engine's option from its API declaration"""
+    return Option(
+        long_option=option.long_option,
+        short_help=option.short_help,
+        short_option=option.short_option,
+        argument=option.argument,
+        argument_descr=option.argument_descr,
+        argument_conv=option.argument_conv,
+        argument_optional=option.argument_optional,
+        repeat=option.repeat,
+        deprecated_long_options=set(option.deprecated_long_options),
+    )
+
+
+def make_mode(command: CLICommand) -> Mode:
+    """Build the engine's mode from its API declaration"""
+    return Mode(
+        long_option=command.long_option,
+        handler_function=command.handler_function,
+        short_help=command.short_help,
+        short_option=command.short_option,
+        argument=command.argument,
+        argument_descr=command.argument_descr,
+        argument_optional=command.argument_optional,
+        long_help=list(command.long_help) if command.long_help is not None else None,
+        sub_options=[make_option(option) for option in command.sub_options],
+    )
+
+
 def discover_modes() -> Sequence[Mode]:
     discovery_result = discover_plugins_from_modules(
-        plugin_prefixes={Mode: "mode_"},
+        plugin_prefixes=entry_point_prefixes(),
         module_names_by_priority=[
             # TODO: We need to get rid of this hard-coded list
             "cmk.base.modes.check_mk",
@@ -351,7 +381,7 @@ def discover_modes() -> Sequence[Mode]:
         skip_wrong_types=True,
         raise_errors=True,
     )
-    return tuple(discovery_result.plugins.values())
+    return tuple(make_mode(command) for command in discovery_result.plugins.values())
 
 
 def write_stdout(txt: str) -> None:

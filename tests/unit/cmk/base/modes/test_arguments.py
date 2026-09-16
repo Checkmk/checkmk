@@ -20,7 +20,9 @@ from cmk.base.modes.modes import (
 )
 from cmk.checkengine.plugins import CheckPluginName
 
-_MODES: Final = Modes(plugins=discover_modes(), general_options=general_options())
+_PLUGINS: Final = discover_modes()
+
+_MODES: Final = Modes(plugins=_PLUGINS, general_options=general_options())
 
 _MODE_ARGUMENT: Final = "myhost"
 
@@ -53,7 +55,7 @@ def _short_sub_option_argv(option: Option) -> Sequence[str]:
     return [f"-{option.short_option}"]
 
 
-@pytest.mark.parametrize("mode", discover_modes(), ids=lambda mode: mode.name)
+@pytest.mark.parametrize("mode", _PLUGINS, ids=lambda mode: mode.name)
 def test_the_long_option_selects_its_mode(mode: Mode) -> None:
     parsed = parse(_MODES, ["cmk", *_mode_argv(mode, f"--{mode.long_option}")])
 
@@ -63,7 +65,7 @@ def test_the_long_option_selects_its_mode(mode: Mode) -> None:
 
 @pytest.mark.parametrize(
     "mode",
-    [mode for mode in discover_modes() if mode.short_option is not None],
+    [mode for mode in _PLUGINS if mode.short_option is not None],
     ids=lambda mode: mode.name,
 )
 def test_the_short_option_selects_its_mode(mode: Mode) -> None:
@@ -75,7 +77,7 @@ def test_the_short_option_selects_its_mode(mode: Mode) -> None:
 
 @pytest.mark.parametrize(
     ("mode", "option"),
-    [(mode, option) for mode in discover_modes() for option in mode.sub_options],
+    [(mode, option) for mode in _PLUGINS for option in mode.sub_options],
     ids=lambda value: value.name,
 )
 def test_every_sub_option_reaches_its_mode(mode: Mode, option: Option) -> None:
@@ -92,7 +94,7 @@ def test_every_sub_option_reaches_its_mode(mode: Mode, option: Option) -> None:
     ("mode", "option"),
     [
         (mode, option)
-        for mode in discover_modes()
+        for mode in _PLUGINS
         for option in mode.sub_options
         if option.short_option is not None
     ],

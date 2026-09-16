@@ -56,7 +56,6 @@ from cmk.base import config, events
 from cmk.base.automations.automations import Automation, load_config, load_plugins
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, raise_mkterminate_on_sigint
 from cmk.ccc.hostaddress import HostName
@@ -64,6 +63,7 @@ from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.cli.internal import Args, CLICommand, CLIOption, Options
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -364,11 +364,7 @@ def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
     return dict.fromkeys(parsed, True)
 
 
-def _mode_notify(
-    app: CheckmkBaseApp,
-    parsed: Mapping[str, object],
-    args: Sequence[str],
-) -> int:
+def _mode_notify(app: CheckmkBaseApp, parsed: Options, args: Args) -> int:
     options = _notify_flags(parsed)
     community_edition = app.edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
@@ -972,18 +968,18 @@ def _automation_get_bulks(
     )
 
 
-mode_notify = Mode(
+cli_command_notify = CLICommand(
     long_option="notify",
     handler_function=_mode_notify,
     argument=True,
     argument_descr="MODE",
     argument_optional=True,
     sub_options=[
-        Option(
+        CLIOption(
             long_option="log-to-stdout",
             short_help="Also write log messages to console",
         ),
-        Option(
+        CLIOption(
             long_option="keepalive",
             short_help="Execute in keepalive mode (Commercial editions only)",
         ),

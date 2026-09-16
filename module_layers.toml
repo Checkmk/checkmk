@@ -148,14 +148,7 @@ allows = [
 
 [plugin_families.violations.bakery]
 # One of the first modes to go into the expected namespace
-allows = [
-  "@ccc",
-  "cmk.base.modes.modes",
-  "cmk.cli.internal",
-  "cmk.utils.log.console",
-  "cmk.utils.render",
-  "cmk.bakery",
-]
+allows = ["@ccc", "cmk.utils.log.console", "cmk.utils.render", "cmk.bakery"]
 
 
 [plugin_families.violations.crash]
@@ -375,7 +368,6 @@ allows = [
   "cmk.base.base_app",
   "cmk.base.config",
   "cmk.base.configlib",
-  "cmk.base.modes.modes",
   "cmk.cli.internal",
   "cmk.base.nonfree.plugins.bakery.bakery_api",
   "cmk.base.plugins.bakery.bakery_api",

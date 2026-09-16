@@ -25,12 +25,13 @@ from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosti
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.config import LoadingResult
-from cmk.base.modes.modes import Mode, Option, option_string
+from cmk.base.modes.modes import option_string
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.cli.internal import Args, CLICommand, CLIOption, Options
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,
@@ -134,9 +135,7 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
             )
 
 
-def _mode_create_diagnostics_dump(
-    _app: object, parsed: Mapping[str, object], _args: Sequence[str]
-) -> int:
+def _mode_create_diagnostics_dump(_app: object, parsed: Options, _args: Args) -> int:
     options = _cli_selection(parsed)
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     loading_result = load_config()
@@ -164,15 +163,15 @@ def _mode_create_diagnostics_dump(
     return 0
 
 
-mode_create_diagnostics_dump = Mode(
+cli_command_create_diagnostics_dump = CLICommand(
     long_option="create-diagnostics-dump",
     handler_function=_mode_create_diagnostics_dump,
     sub_options=[
-        Option(
+        CLIOption(
             long_option="list",
             short_help="List the available topics and plugins and exit",
         ),
-        Option(
+        CLIOption(
             long_option="all-topics",
             short_help=(
                 "Select all plugins of all topics up to the given sensitivity threshold "
@@ -181,13 +180,13 @@ mode_create_diagnostics_dump = Mode(
             argument=True,
             argument_descr="THRESHOLD",
         ),
-        Option(
+        CLIOption(
             long_option="plugins",
             short_help="Additionally select the given plugins, regardless of topic thresholds",
             argument=True,
             argument_descr="NAME,NAME...",
         ),
-        Option(
+        CLIOption(
             long_option="checkmk-server-host",
             short_help=(
                 "The name of the host monitoring the Checkmk server; needed by some plugins"

@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Final
 
 from cmk.base.community_app import make_app
 from cmk.base.modes.call import call
-from cmk.base.modes.modes import Mode, ModeHandler, Option
+from cmk.base.modes.modes import Mode, Option
+from cmk.cli.internal import Args, CommandHandler, Options
 from cmk.trace import Context
 
 _APP: Final = make_app()
@@ -18,21 +19,16 @@ _SUB_OPTIONS: Final = [Option(long_option="flag", short_help="a flag")]
 
 class _Recorder:
     def __init__(self, exit_code: int = 0) -> None:
-        self.calls: list[tuple[Mapping[str, object], Sequence[str]]] = []
+        self.calls: list[tuple[Options, Args]] = []
         self._exit_code = exit_code
 
-    def __call__(
-        self,
-        _app: object,
-        options: Mapping[str, object],
-        args: Sequence[str],
-    ) -> int:
+    def __call__(self, _app: object, options: Options, args: Args) -> int:
         self.calls.append((options, args))
         return self._exit_code
 
 
 def _mode(
-    handler: ModeHandler,
+    handler: CommandHandler,
     *,
     argument: bool = False,
     argument_optional: bool = False,

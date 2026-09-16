@@ -19,7 +19,7 @@ from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
 from cmk.base.modes.call import call
-from cmk.base.modes.modes import Options
+from cmk.base.modes.modes import make_mode, Options
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
@@ -122,7 +122,7 @@ class TestModeDumpAgent:
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
         )
 
-        call(app, check_mk.mode_dump_agent, hostname, [], [], Context())
+        call(app, make_mode(check_mk.cli_command_dump_agent), hostname, [], [], Context())
 
         assert capsys.readouterr().out == raw_data.decode()
 
@@ -228,7 +228,7 @@ class TestModeDumpAgentSnmpBackend:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),  # noqa: ARG005
         )
-        call(app, check_mk.mode_dump_agent, hostname, options, [], Context())
+        call(app, make_mode(check_mk.cli_command_dump_agent), hostname, options, [], Context())
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

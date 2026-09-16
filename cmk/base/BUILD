@@ -140,7 +140,6 @@ py_library(
         "//cmk/automations",
         "//cmk/base/automations",
         "//cmk/base/config",
-        "//cmk/base/modes:modes-registry",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
@@ -190,7 +189,6 @@ py_library(
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        "//cmk/base/modes:modes-registry",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",

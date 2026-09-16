@@ -13,7 +13,6 @@ import {
   type Table
 } from '@tanstack/vue-table'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
-import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -267,7 +266,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
                 type="button"
                 class="monitoring-table-header__filter-button"
                 :class="{
-                  'monitoring-table-header__filter-button--active': isActive || isOpen
+                  'monitoring-table-header__filter-button--open': isOpen
                 }"
                 :title="filterButtonLabel(header.column, isActive)"
                 :aria-label="filterButtonLabel(header.column, isActive)"
@@ -275,13 +274,17 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
                 :aria-controls="panelId"
                 @click="toggle"
               >
-                <CmkIconEmblem :emblem="isActive ? 'warning' : undefined">
-                  <CmkMultitoneIcon
-                    name="filter"
-                    :primary-color="{ custom: 'var(--success)' }"
-                    aria-hidden="true"
-                  />
-                </CmkIconEmblem>
+                <CmkMultitoneIcon
+                  name="more-actions"
+                  primary-color="font"
+                  aria-hidden="true"
+                  size="small"
+                />
+                <span
+                  v-if="isActive"
+                  class="monitoring-table-header__filter-dot"
+                  aria-hidden="true"
+                ></span>
               </button>
             </template>
           </FilterDropdown>
@@ -414,6 +417,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 }
 
 .monitoring-table-header__filter-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -425,7 +429,6 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   color: inherit;
   cursor: pointer;
   border-radius: 0;
-  opacity: 0.5;
 
   &:focus-visible {
     outline: 1px solid var(--success);
@@ -441,20 +444,21 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 
   &:not(:disabled):hover {
     background-color: var(--ux-theme-3);
-    opacity: 1;
   }
 }
 
-.monitoring-table-header__filter-button--active {
-  opacity: 1;
+.monitoring-table-header__filter-button--open {
+  background-color: var(--ux-theme-3);
 }
 
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.monitoring-table-header__filter-button :deep(.cmk-icon-emblem__emblem) {
-  width: 50%;
-  height: 50%;
-  right: -10%;
-  bottom: -10%;
+.monitoring-table-header__filter-dot {
+  position: absolute;
+  top: var(--dimension-3);
+  right: 0;
+  width: var(--dimension-3);
+  height: var(--dimension-3);
+  border-radius: 50%;
+  background: var(--success);
 }
 
 .monitoring-table-header__sort-icon {

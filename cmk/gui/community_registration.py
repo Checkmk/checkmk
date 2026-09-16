@@ -348,6 +348,7 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
         replication_path_registry=replication_path_registry,
         builtin_pagetype_topic_registry=builtin_pagetype_topic_registry,
+        page_registry=page_registry,
         save_active_config=save_active_config,
     )
     custom_icons_register(

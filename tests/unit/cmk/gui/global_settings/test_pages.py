@@ -5,73 +5,70 @@
 
 import dataclasses
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
 
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.gui import login
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_settings.pages import global_settings, site_specific_settings
 from cmk.gui.i18n import _l
-from cmk.gui.permissions import permission_registry
-from cmk.gui.role_types import CustomUserRole
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-)
+from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
+from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import site_management_registry, SitesConfigFile
 from cmk.livestatus_client import UnixSocketInfo
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import Integer
 from cmk.shared_typing import global_settings as shared
 from cmk.web.utils.icons import IconNames
-from cmk.web.utils.permission_verification import PermissionName
+from tests.testlib.gui.global_settings import (
+    logged_in,
+    patch_factory_defaults,
+    registered,
+    shown_variables,
+)
 from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 REMOTE_SITE = SiteId("remote")
 UNREPLICATED_SITE = SiteId("unreplicated")
 TEST_DEFAULTS: Mapping[str, object] = {"test_var_a": 1, "test_var_b": 2}
-
-
-def _patch_factory_defaults(
-    monkeypatch: pytest.MonkeyPatch, defaults: Mapping[str, object]
-) -> None:
-    """Give a factory default to the test variables only, which hides every real variable
-    and with it every real group. The real lookup runs an automation that needs a site."""
-    monkeypatch.setattr(
-        ABCConfigDomain,
-        "get_all_default_globals",
-        classmethod(lambda cls: defaults),  # noqa: ARG005
-    )
+EVENT_CONSOLE_VAR = "test_ec_var"
+GUI_VAR = "test_gui_var"
 
 
 @pytest.fixture(name="factory_defaults")
 def fixture_factory_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch_factory_defaults(monkeypatch, TEST_DEFAULTS)
+    patch_factory_defaults(monkeypatch, TEST_DEFAULTS)
 
 
 @pytest.fixture(name="test_variables")
 def fixture_test_variables(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    _patch_factory_defaults(monkeypatch, TEST_DEFAULTS)
-    with _registered(
+    patch_factory_defaults(monkeypatch, TEST_DEFAULTS)
+    with registered(
         ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a", "test_var_b"
+    ):
+        yield
+
+
+@pytest.fixture(name="variables_of_both_domains")
+def fixture_variables_of_both_domains(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    patch_factory_defaults(monkeypatch, {EVENT_CONSOLE_VAR: 1, GUI_VAR: 2})
+    with (
+        registered(
+            ConfigVariableGroup(title=_l("Event Console group"), sort_index=1),
+            EVENT_CONSOLE_VAR,
+            primary_domain=ConfigDomainEventConsole,
+        ),
+        registered(ConfigVariableGroup(title=_l("GUI group"), sort_index=2), GUI_VAR),
     ):
         yield
 
 
 @pytest.fixture(name="executables_variable")
 def fixture_executables_variable(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    _patch_factory_defaults(monkeypatch, {"actions": 1})
-    with _registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "actions"):
+    patch_factory_defaults(monkeypatch, {"actions": 1})
+    with registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "actions"):
         yield
 
 
@@ -101,58 +98,9 @@ def _add_remote_site(
     SitesConfigFile().save(sites, pprint_value=False)
 
 
-@contextmanager
-def _registered(group: ConfigVariableGroup, *varnames: str) -> Iterator[None]:
-    config_variable_group_registry.register(group)
-    variables = [
-        ConfigVariable(
-            group=group,
-            primary_domain=ConfigDomainGUI,
-            ident=varname,
-            form_spec=lambda context: Integer(title=Title("Test")),  # noqa: ARG005
-        )
-        for varname in varnames
-    ]
-    shadowed = [
-        config_variable_registry[varname]
-        for varname in varnames
-        if varname in config_variable_registry
-    ]
-    for variable in variables:
-        config_variable_registry.register(variable)
-    try:
-        yield
-    finally:
-        for variable in variables:
-            config_variable_registry.unregister(variable.ident())
-        for variable in shadowed:
-            config_variable_registry.register(variable)
-        config_variable_group_registry.unregister(group.ident())
-
-
-@contextmanager
-def _logged_in(user_id: UserId, *permissions: PermissionName) -> Iterator[None]:
-    role = CustomUserRole(
-        alias="Test role",
-        permissions=dict.fromkeys(permissions, True),
-        builtin=False,
-        basedon="no_permissions",
-    )
-    with login.TransactionIdContext(
-        user_id,
-        UserPermissions({"test_role": role}, permission_registry, {user_id: ["test_role"]}, []),
-    ):
-        yield
-
-
-def _variable(data: shared.GlobalSettingsApp, varname: str) -> shared.GlobalSettingsVariable:
-    shown = {variable.name: variable for topic in data.topics for variable in topic.variables}
-    return shown[varname]
-
-
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_registered_group_with_a_visible_variable_becomes_a_topic(load_config: Config) -> None:
-    with _registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
+    with registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
         topics = global_settings(load_config).topics
     assert [topic.headline for topic in topics] == ["Test group"]
     assert [variable.name for variable in topics[0].variables] == ["test_var_a"]
@@ -160,7 +108,7 @@ def test_a_registered_group_with_a_visible_variable_becomes_a_topic(load_config:
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_group_without_visible_variables_yields_no_topic(load_config: Config) -> None:
-    with _registered(ConfigVariableGroup(title=_l("Empty group"), sort_index=1)):
+    with registered(ConfigVariableGroup(title=_l("Empty group"), sort_index=1)):
         topics = global_settings(load_config).topics
     assert topics == []
 
@@ -173,7 +121,7 @@ def test_the_group_icon_and_description_become_the_topic_header(load_config: Con
         icon=IconNames.sites,
         description=_l("Configures the test"),
     )
-    with _registered(group, "test_var_a"):
+    with registered(group, "test_var_a"):
         topic = global_settings(load_config).topics[0]
     assert topic.icon == shared.IconNames.sites
     assert topic.subline == "Configures the test"
@@ -181,7 +129,7 @@ def test_the_group_icon_and_description_become_the_topic_header(load_config: Con
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_group_without_icon_and_description_gets_the_defaults(load_config: Config) -> None:
-    with _registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
+    with registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
         topic = global_settings(load_config).topics[0]
     assert topic.icon == shared.IconNames.configuration
     assert topic.subline == ""
@@ -190,8 +138,8 @@ def test_a_group_without_icon_and_description_gets_the_defaults(load_config: Con
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_topics_follow_the_group_sort_index(load_config: Config) -> None:
     with (
-        _registered(ConfigVariableGroup(title=_l("Later"), sort_index=20), "test_var_a"),
-        _registered(ConfigVariableGroup(title=_l("Earlier"), sort_index=10), "test_var_b"),
+        registered(ConfigVariableGroup(title=_l("Later"), sort_index=20), "test_var_a"),
+        registered(ConfigVariableGroup(title=_l("Earlier"), sort_index=10), "test_var_b"),
     ):
         topics = global_settings(load_config).topics
     assert [topic.headline for topic in topics] == ["Earlier", "Later"]
@@ -207,18 +155,18 @@ def test_an_administrator_sees_a_variable_that_adds_executables(load_config: Con
 def test_a_variable_the_user_may_not_read_is_left_out(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
-    with _logged_in(with_user[0], "wato.use", "wato.global"):
+    with logged_in(with_user[0], "wato.use", "wato.global"):
         assert global_settings(load_config).topics == []
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
 def test_the_global_page_shows_no_inherited_value(load_config: Config) -> None:
-    assert _variable(global_settings(load_config), "test_var_a").global_value is None
+    assert shown_variables(global_settings(load_config))["test_var_a"].global_value is None
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
 def test_the_global_page_links_the_site_that_overrides_a_variable(load_config: Config) -> None:
-    variable = _variable(global_settings(load_config), "test_var_a")
+    variable = shown_variables(global_settings(load_config))["test_var_a"]
 
     assert variable.site_overrides == [
         shared.GlobalSettingsSiteOverride(
@@ -244,7 +192,7 @@ def test_the_page_needs_the_global_settings_permission(load_config: Config) -> N
 def test_reading_all_modules_suffices_for_the_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
-    with _logged_in(with_user[0], "wato.use", "wato.seeall"):
+    with logged_in(with_user[0], "wato.use", "wato.seeall"):
         global_settings(load_config)
 
 
@@ -271,7 +219,7 @@ def test_the_read_only_message_is_shown_on_the_page(
 def test_a_site_specific_value_is_shown_as_a_modification_of_the_inherited_one(
     load_config: Config,
 ) -> None:
-    variable = _variable(site_specific_settings(load_config, REMOTE_SITE), "test_var_a")
+    variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_a"]
 
     assert variable.value == 5
     assert variable.modified
@@ -282,7 +230,7 @@ def test_a_site_specific_value_is_shown_as_a_modification_of_the_inherited_one(
 def test_a_site_inherits_a_centrally_configured_value(load_config: Config) -> None:
     ConfigDomainGUI().save({"test_var_b": 7})
 
-    variable = _variable(site_specific_settings(load_config, REMOTE_SITE), "test_var_b")
+    variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
 
     assert variable.value == 7
     assert not variable.modified
@@ -313,7 +261,7 @@ def test_a_site_without_replication_offers_no_site_specific_settings(load_config
 def test_the_site_management_permission_suffices_for_the_site_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
-    with _logged_in(with_user[0], "wato.use", "wato.sites"):
+    with logged_in(with_user[0], "wato.use", "wato.sites"):
         site_specific_settings(load_config, REMOTE_SITE)
 
 
@@ -329,7 +277,7 @@ def test_the_site_page_refuses_a_user_without_the_site_management_permission(
 def test_a_site_manager_does_not_see_a_variable_they_may_not_read(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
-    with _logged_in(with_user[0], "wato.use", "wato.sites"):
+    with logged_in(with_user[0], "wato.use", "wato.sites"):
         assert site_specific_settings(load_config, REMOTE_SITE).topics == []
 
 
@@ -346,3 +294,16 @@ def test_the_site_specific_breadcrumb_hangs_under_the_site_connection(load_confi
         "wato.py?mode=sites",
         "wato.py?mode=edit_site&site=remote",
     ]
+
+
+@pytest.mark.usefixtures("variables_of_both_domains", "with_admin_login")
+def test_the_global_page_hides_event_console_variables(load_config: Config) -> None:
+    assert set(shown_variables(global_settings(load_config))) == {GUI_VAR}
+
+
+@pytest.mark.usefixtures("variables_of_both_domains", "distributed_setup", "with_admin_login")
+def test_the_site_page_shows_event_console_variables_too(load_config: Config) -> None:
+    assert set(shown_variables(site_specific_settings(load_config, REMOTE_SITE))) == {
+        EVENT_CONSOLE_VAR,
+        GUI_VAR,
+    }

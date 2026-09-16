@@ -11,6 +11,7 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
@@ -34,7 +35,7 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.sample_config import SampleConfigGeneratorRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
-from . import _filters, views, wato
+from . import _filters, _settings_page, views, wato
 from ._find_usage import (
     find_timeperiod_usage_in_ec_rules,
     find_usages_of_contact_group_in_ec_rules,
@@ -80,6 +81,7 @@ def register(
     endpoint_family_registry: EndpointFamilyRegistry,
     replication_path_registry: ReplicationPathRegistry,
     builtin_pagetype_topic_registry: BuiltinPagetypeTopicRegistry,
+    page_registry: PageRegistry,
     save_active_config: Callable[[], None],
 ) -> None:
     views.register(
@@ -107,6 +109,7 @@ def register(
         notification_parameter_registry,
         replication_path_registry,
     )
+    _settings_page.register(page_registry)
     permission_section_registry.register(PERMISSION_SECTION_EVENT_CONSOLE)
     autocompleter_registry.register_autocompleter(
         "syslog_facilities", syslog_facilities_autocompleter

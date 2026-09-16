@@ -19,6 +19,7 @@ py_library(
         "//cmk/gui/dashboard:type_defs",
         "//cmk/gui/data_source",
         "//cmk/gui/form_specs",
+        "//cmk/gui/global_settings",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:api_config",

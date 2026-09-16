@@ -14,7 +14,7 @@ from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
-from typing import Final, override, Self
+from typing import Final, override
 
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
@@ -28,6 +28,12 @@ OptionName = str
 ConvertFunction = Callable[[str], object]
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
+
+
+type ModeHandler = Callable[[CheckmkBaseApp, Mapping[str, object], Sequence[str]], int]
+"""The signature of every mode's handler: the application, the parsed sub-options (empty if
+the mode has none) and the positional arguments (none, exactly one, or all remaining ones,
+depending on the declaration); it returns the exit status."""
 
 
 class Option:
@@ -250,129 +256,31 @@ class GeneralOption(Option):
         self.action = action
 
 
-@dataclass(frozen=True)
-class NoArgument:
-    handler: Callable[[CheckmkBaseApp], int]
-
-
-@dataclass(frozen=True)
-class RequiredArgument:
-    descr: str
-    handler: Callable[[CheckmkBaseApp, Argument], int]
-
-
-@dataclass(frozen=True)
-class OptionalArguments:
-    descr: str
-    handler: Callable[[CheckmkBaseApp, Arguments], int]
-
-
-@dataclass(frozen=True)
-class SubOptions:
-    options: Sequence[Option]
-    handler: Callable[[CheckmkBaseApp, Mapping[OptionName, object]], int]
-
-    @classmethod
-    def parsing[OptionsT](
-        cls,
-        *,
-        options: Sequence[Option],
-        parse_options: Callable[[Mapping[OptionName, object]], OptionsT],
-        handler: Callable[[CheckmkBaseApp, OptionsT], int],
-    ) -> Self:
-        return cls(
-            options=options,
-            handler=lambda app, parsed: handler(app, parse_options(parsed)),
-        )
-
-
-@dataclass(frozen=True)
-class SubOptionsAndRequiredArgument:
-    options: Sequence[Option]
-    descr: str
-    handler: Callable[[CheckmkBaseApp, Mapping[OptionName, object], Argument], int]
-
-
-@dataclass(frozen=True)
-class SubOptionsAndOptionalArguments:
-    options: Sequence[Option]
-    descr: str
-    handler: Callable[[CheckmkBaseApp, Mapping[OptionName, object], Arguments], int]
-
-    @classmethod
-    def parsing[OptionsT](
-        cls,
-        *,
-        options: Sequence[Option],
-        descr: str,
-        parse_options: Callable[[Mapping[OptionName, object]], OptionsT],
-        handler: Callable[[CheckmkBaseApp, OptionsT, Arguments], int],
-    ) -> Self:
-        return cls(
-            options=options,
-            descr=descr,
-            handler=lambda app, parsed, arguments: handler(app, parse_options(parsed), arguments),
-        )
-
-
-Dispatch = (
-    NoArgument
-    | RequiredArgument
-    | OptionalArguments
-    | SubOptions
-    | SubOptionsAndRequiredArgument
-    | SubOptionsAndOptionalArguments
-)
-
-
-def _argument_descr(dispatch: Dispatch) -> str | None:
-    match dispatch:
-        case RequiredArgument(descr=descr) | OptionalArguments(descr=descr):
-            return descr
-        case (
-            SubOptionsAndRequiredArgument(descr=descr) | SubOptionsAndOptionalArguments(descr=descr)
-        ):
-            return descr
-        case _:
-            return None
-
-
-def _sub_options(dispatch: Dispatch) -> Sequence[Option]:
-    match dispatch:
-        case (
-            SubOptions(options=options)
-            | SubOptionsAndRequiredArgument(options=options)
-            | SubOptionsAndOptionalArguments(options=options)
-        ):
-            return options
-        case _:
-            return ()
-
-
 class Mode(Option):
     def __init__(
         self,
         *,
         long_option: OptionName,
-        dispatch: Dispatch,
+        handler_function: ModeHandler,
         short_help: str,
         short_option: OptionName | None = None,
+        argument: bool = False,
+        argument_descr: str | None = None,
+        argument_optional: bool = False,
         long_help: list[str] | None = None,
+        sub_options: Sequence[Option] = (),
     ) -> None:
-        descr = _argument_descr(dispatch)
         super().__init__(
             long_option=long_option,
             short_help=short_help,
             short_option=short_option,
-            argument=descr is not None,
-            argument_descr=descr,
-            argument_optional=isinstance(
-                dispatch, OptionalArguments | SubOptionsAndOptionalArguments
-            ),
+            argument=argument,
+            argument_descr=argument_descr,
+            argument_optional=argument_optional,
         )
-        self.dispatch = dispatch
+        self.handler_function = handler_function
         self.long_help = long_help
-        self.sub_options = _sub_options(dispatch)
+        self.sub_options = sub_options
 
     @override
     def short_getopt_specs(self) -> list[str]:
@@ -511,16 +419,16 @@ class Modes:
     def mode_help(self) -> Mode:
         # It's a little weird to implement the --help option like this,
         # but it is the easiest way to be consistent with how we use `getopt`.
+        def _show_help(_app: object, _options: object, _args: object) -> int:
+            write_paged(self.help())
+            return 0
+
         return Mode(
             long_option="help",
             short_option="h",
-            dispatch=NoArgument(handler=self._show_help),
+            handler_function=_show_help,
             short_help="Print this help",
         )
-
-    def _show_help(self, _app: CheckmkBaseApp) -> int:
-        write_paged(self.help())
-        return 0
 
     def find(self, name: OptionName) -> Mode | None:
         return self._mode_map.get(name)

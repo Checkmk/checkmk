@@ -188,7 +188,6 @@ py_library(
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        ":base-app",
         "//cmk/base/modes:modes-registry",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",

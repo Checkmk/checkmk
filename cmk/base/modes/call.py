@@ -9,14 +9,8 @@ from cmk.base.modes.modes import (
     Argument,
     Arguments,
     Mode,
-    NoArgument,
-    OptionalArguments,
     Options,
     parse_sub_options,
-    RequiredArgument,
-    SubOptions,
-    SubOptionsAndOptionalArguments,
-    SubOptionsAndRequiredArgument,
 )
 
 tracer = trace.get_tracer()
@@ -32,24 +26,20 @@ def call(
 ) -> int:
     sub_options = parse_sub_options(mode.sub_options, all_opts)
 
+    args: Arguments
+    if mode.argument and not mode.argument_optional:
+        args = [arg]
+    elif mode.argument:
+        args = all_args
+    else:
+        args = ()
+
     with tracer.span(
         f"mode[{mode.name}]",
         attributes={
             "cmk.base.mode.name": mode.name,
-            "cmk.base.mode.args": repr((arg, sub_options, all_args)),
+            "cmk.base.mode.args": repr((sub_options, args)),
         },
         context=trace_context,
     ):
-        match mode.dispatch:
-            case NoArgument(handler=handler):
-                return handler(app)
-            case RequiredArgument(handler=handler):
-                return handler(app, arg)
-            case OptionalArguments(handler=handler):
-                return handler(app, all_args)
-            case SubOptions(handler=handler):
-                return handler(app, sub_options)
-            case SubOptionsAndRequiredArgument(handler=handler):
-                return handler(app, sub_options, arg)
-            case SubOptionsAndOptionalArguments(handler=handler):
-                return handler(app, sub_options, all_args)
+        return mode.handler_function(app, sub_options, args)

@@ -25,7 +25,7 @@ from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosti
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.config import LoadingResult
-from cmk.base.modes.modes import Mode, Option, option_string, SubOptions
+from cmk.base.modes.modes import Mode, Option, option_string
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -134,7 +134,10 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
             )
 
 
-def _mode_create_diagnostics_dump(_app: object, options: _CliSelection) -> int:
+def _mode_create_diagnostics_dump(
+    _app: object, parsed: Mapping[str, object], _args: Sequence[str]
+) -> int:
+    options = _cli_selection(parsed)
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     loading_result = load_config()
     catalogue = _load_plugin_catalogue(logger=ConsoleLogger())
@@ -163,39 +166,36 @@ def _mode_create_diagnostics_dump(_app: object, options: _CliSelection) -> int:
 
 mode_create_diagnostics_dump = Mode(
     long_option="create-diagnostics-dump",
-    dispatch=SubOptions.parsing(
-        parse_options=_cli_selection,
-        options=[
-            Option(
-                long_option="list",
-                short_help="List the available topics and plugins and exit",
+    handler_function=_mode_create_diagnostics_dump,
+    sub_options=[
+        Option(
+            long_option="list",
+            short_help="List the available topics and plugins and exit",
+        ),
+        Option(
+            long_option="all-topics",
+            short_help=(
+                "Select all plugins of all topics up to the given sensitivity threshold "
+                "(off, low, medium or high)"
             ),
-            Option(
-                long_option="all-topics",
-                short_help=(
-                    "Select all plugins of all topics up to the given sensitivity threshold "
-                    "(off, low, medium or high)"
-                ),
-                argument=True,
-                argument_descr="THRESHOLD",
+            argument=True,
+            argument_descr="THRESHOLD",
+        ),
+        Option(
+            long_option="plugins",
+            short_help="Additionally select the given plugins, regardless of topic thresholds",
+            argument=True,
+            argument_descr="NAME,NAME...",
+        ),
+        Option(
+            long_option="checkmk-server-host",
+            short_help=(
+                "The name of the host monitoring the Checkmk server; needed by some plugins"
             ),
-            Option(
-                long_option="plugins",
-                short_help="Additionally select the given plugins, regardless of topic thresholds",
-                argument=True,
-                argument_descr="NAME,NAME...",
-            ),
-            Option(
-                long_option="checkmk-server-host",
-                short_help=(
-                    "The name of the host monitoring the Checkmk server; needed by some plugins"
-                ),
-                argument=True,
-                argument_descr="HOST",
-            ),
-        ],
-        handler=_mode_create_diagnostics_dump,
-    ),
+            argument=True,
+            argument_descr="HOST",
+        ),
+    ],
     short_help="Create diagnostics dump",
     long_help=[
         (

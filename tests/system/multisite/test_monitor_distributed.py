@@ -41,6 +41,17 @@ _ALL_HOSTS = sorted(_CENTRAL_HOSTS + _REMOTE_HOSTS)
 # doing the cutting when a test is about something else.
 _NO_CUT = len(_ALL_HOSTS) * 10
 
+# A check against an address with no agent fails fast, and the forced check is
+# waited for on the owning site's own livestatus rather than across the central's
+# proxy. The allowance is for a loaded CI machine, not for the check itself.
+_CHECK_TIMEOUT = 60
+
+# How often a host is asked again for services still reporting no check result.
+# One round settles them; the retries are for a service the core had not listed
+# yet when the round was assembled, which nothing else would force before its own
+# interval -- two hours, for the discovery service.
+_FORCE_ROUNDS = 3
+
 
 @pytest.fixture(name="hosts_per_site", scope="module")
 def _hosts_per_site(central_site: Site, remote_site: Site) -> Iterator[Mapping[str, str]]:
@@ -66,16 +77,22 @@ def _hosts_per_site(central_site: Site, remote_site: Site) -> Iterator[Mapping[s
         # below depends on all six being there, so wait for that, not for the
         # activation alone.
         wait_until(
-            lambda: (
-                {
-                    host["name"]
-                    for host in _list_hosts(central_site, limit=_NO_CUT, q=_PREFIX)["hosts"]
-                }
-                == set(_ALL_HOSTS)
-            ),
+            lambda: set(_listed_hosts(central_site)) == set(_ALL_HOSTS),
             timeout=120,
             interval=2,
             condition_name="all six test hosts visible in the merged feed",
+        )
+        # Visible is not the same as checked. The hosts have no agent, so their
+        # services start PENDING and turn CRIT the moment the first check lands.
+        # A test that reads the same counts twice would otherwise straddle that
+        # transition and see the two reads disagree (CMK-39284), so settle the
+        # counts here, once, before any test reads them.
+        _check_pending_services_now(central_site, remote_site, owner)
+        wait_until(
+            lambda: _all_services_have_been_checked(central_site),
+            timeout=120,
+            interval=2,
+            condition_name="no test host still reporting pending services in the merged feed",
         )
         yield owner
     finally:
@@ -140,6 +157,59 @@ def _list_hosts(
 
 def _names(page: _HostsPage) -> list[str]:
     return [host["name"] for host in page["hosts"]]
+
+
+def _listed_hosts(central_site: Site) -> dict[str, _HostRow]:
+    """This module's hosts as the merged feed currently reports them, keyed by name."""
+    return {
+        host["name"]: host for host in _list_hosts(central_site, limit=_NO_CUT, q=_PREFIX)["hosts"]
+    }
+
+
+def _check_pending_services_now(
+    central_site: Site, remote_site: Site, owner: Mapping[str, str]
+) -> None:
+    """Check every not-yet-checked service now, on the site that monitors it.
+
+    Asked of the central, whose livestatus reaches every connected site: a
+    remote's own REST API rejects us, because the central's users replace its
+    own on activation. The forced check goes to the core actually holding the
+    service. Leaving it to that core's schedule is no option -- the discovery
+    service the sample configuration adds is checked every two hours. No
+    expected state is passed, because with no agent these services settle on
+    CRIT, and all this waits for is that they were checked at all.
+
+    Asked again after each round rather than forcing the first answer and
+    trusting it: a service the core had not listed yet would otherwise never be
+    forced by anyone, and the wait behind this one can only observe.
+    """
+    sites = {central_site.id: central_site, remote_site.id: remote_site}
+    for host_name, site_id in owner.items():
+        for _round in range(_FORCE_ROUNDS):
+            if not (pending := sorted(central_site.get_host_services(host_name, pending=True))):
+                break
+            # The difference between "the counts were settled already" and "this
+            # is what settled them" is the first thing worth knowing if they ever
+            # disagree again, so it is logged before the checks, which may raise.
+            logger.info(
+                "Forcing a first check of %(host_name)s: %(pending)r",
+                {"host_name": host_name, "pending": pending},
+            )
+            for service_name in pending:
+                sites[site_id].schedule_check(host_name, service_name, wait_timeout=_CHECK_TIMEOUT)
+
+
+def _all_services_have_been_checked(central_site: Site) -> bool:
+    """Whether all six hosts are in the feed and none still counts an unchecked service.
+
+    Read through the merged feed rather than off each site, because the feed is
+    what the tests read: a result already checked on the remote still has to
+    cross the central's livestatus proxy before it shows up here.
+    """
+    rows = _listed_hosts(central_site)
+    return set(rows) == set(_ALL_HOSTS) and not any(
+        row["num_services_pending"] for row in rows.values()
+    )
 
 
 def _only_site(site_id: str) -> Mapping[str, object]:

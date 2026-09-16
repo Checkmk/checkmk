@@ -77,7 +77,11 @@ class PUrl:
                 "",
                 path,
                 "",
-                urlencode(dict(self.qualifiers)),
+                # Sorted by key, as the purl spec demands. Without that, iterating
+                # the frozenset would follow the randomized string hash order, so a
+                # purl with more than one qualifier would serialize differently on
+                # every build.
+                urlencode(sorted(self.qualifiers)),
                 quote(self.subpath or ""),
             )
         )

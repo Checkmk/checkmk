@@ -67,6 +67,18 @@ py_cmk_test(
 )
 
 py_cmk_test(
+    name = "test_cyclonedx",
+    srcs = [
+        "cyclonedx.py",
+        "test_cyclonedx.py",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("pydantic"),
+    ],
+)
+
+py_cmk_test(
     name = "test_manual_dep_manifest",
     srcs = [
         "cyclonedx.py",

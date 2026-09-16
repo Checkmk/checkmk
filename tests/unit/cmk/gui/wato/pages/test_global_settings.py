@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterable
-from typing import override
 
 import pytest
 from pytest import MonkeyPatch
@@ -14,23 +12,13 @@ from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
-from cmk.gui.form_specs.unstable.legacy_converter import (
-    TransformDataForLegacyFormatOrRecomposeFunction,
-)
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.pages import PageContext
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
-from cmk.gui.search.matchers import MatchItem
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
 from cmk.gui.wato.pages import global_settings
-from cmk.gui.wato.pages.global_settings import (
-    DefaultModeEditGlobals,
-    MatchItemGeneratorSettings,
-)
 from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableRegistry,
@@ -40,98 +28,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.global_settings import global_settings_diff_text
 from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    DefaultValue,
-    FormSpec,
-    Integer,
-    Password,
-    String,
-)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_match_item_generator_settings(monkeypatch: MonkeyPatch, test_edition: Edition) -> None:
-    group = ConfigVariableGroup(
-        title=_l("xyz"),
-        sort_index=10,
-    )
-
-    config_variable = ConfigVariable(
-        group=group,
-        primary_domain=ConfigDomainCore,
-        ident="ident",
-        form_spec=lambda context: String(title=Title("title")),  # noqa: ARG005
-    )
-
-    class SomeSettingsMode(DefaultModeEditGlobals):
-        @override
-        def iter_all_configuration_variables(
-            self, *, debug: bool
-        ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
-            return [
-                (
-                    group,
-                    [config_variable],
-                )
-            ]
-
-    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", dict)
-
-    assert list(
-        MatchItemGeneratorSettings(
-            "settings",
-            "Settings",
-            lambda: SomeSettingsMode(test_edition, PageContext(config=Config(), request=request)),
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
-    ) == [
-        MatchItem(
-            title="title",
-            topic="Settings",
-            url="wato.py?mode=edit_configvar&varname=ident",
-            match_texts=["title", "ident"],
-        ),
-    ]
-
-
-@pytest.mark.usefixtures("request_context")
-def test_match_item_generator_settings_looks_through_transform(
-    monkeypatch: MonkeyPatch, test_edition: Edition
-) -> None:
-    # TransformDataForLegacyFormatOrRecomposeFunction is a transparent wrapper without a
-    # title of its own, so the title has to be taken from the wrapped form spec.
-    group = ConfigVariableGroup(
-        title=_l("xyz"),
-        sort_index=10,
-    )
-
-    config_variable = ConfigVariable(
-        group=group,
-        primary_domain=ConfigDomainCore,
-        ident="ident",
-        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
-            wrapped_form_spec=Integer(title=Title("Wrapped title")),
-            from_disk=lambda value: value,
-            to_disk=lambda value: value,
-        ),
-    )
-
-    class SomeSettingsMode(DefaultModeEditGlobals):
-        @override
-        def iter_all_configuration_variables(
-            self, *, debug: bool
-        ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
-            return [(group, [config_variable])]
-
-    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", dict)
-
-    assert [
-        match_item.title
-        for match_item in MatchItemGeneratorSettings(
-            "settings",
-            "Settings",
-            lambda: SomeSettingsMode(test_edition, PageContext(config=Config(), request=request)),
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
-    ] == ["Wrapped title"]
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, Integer, Password
 
 
 @pytest.mark.usefixtures("load_config")

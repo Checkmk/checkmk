@@ -5,7 +5,6 @@
 
 from collections.abc import Callable
 
-from cmk.ccc.version import Edition
 from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
@@ -54,7 +53,6 @@ from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 def register(
     *,
-    edition: Edition,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     data_source_registry: DataSourceRegistry,
@@ -94,7 +92,6 @@ def register(
     )
     icon_registry.register(MkeventdIcon)
     wato.register(
-        edition,
         permission_registry,
         sample_config_generator_registry,
         mode_registry,
@@ -109,7 +106,7 @@ def register(
         notification_parameter_registry,
         replication_path_registry,
     )
-    _settings_page.register(page_registry)
+    _settings_page.register(page_registry, match_item_generator_registry)
     permission_section_registry.register(PERMISSION_SECTION_EVENT_CONSOLE)
     autocompleter_registry.register_autocompleter(
         "syslog_facilities", syslog_facilities_autocompleter

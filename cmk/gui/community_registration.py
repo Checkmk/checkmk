@@ -321,7 +321,6 @@ def register(
         main_module_registry,
     )
     mkeventd_registration.register(
-        edition=edition,
         permission_section_registry=permission_section_registry,
         permission_registry=permission_registry,
         data_source_registry=data_source_registry,

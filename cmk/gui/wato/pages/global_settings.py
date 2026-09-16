@@ -12,7 +12,7 @@ settings"""
 import abc
 import contextlib
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
-from typing import Any, Final, override
+from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
@@ -51,17 +51,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import PageContext
-from cmk.gui.search.matchers import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItemGeneratorRegistry,
-    MatchItems,
-)
 from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
@@ -100,25 +93,12 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeuri_contextless
+from cmk.web.utils.urls import makeactionuri
 
 
-def register(
-    edition: Edition,
-    mode_registry: ModeRegistry,
-    match_item_generator_registry: MatchItemGeneratorRegistry,
-) -> None:
+def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(DefaultModeEditGlobals)
     mode_registry.register(DefaultModeEditGlobalSetting)
-    match_item_generator_registry.register(
-        MatchItemGeneratorSettings(
-            "global_settings",
-            _("Global settings"),
-            lambda: DefaultModeEditGlobals(
-                edition, PageContext(config=active_config, request=request)
-            ),
-        )
-    )
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -756,68 +736,6 @@ def _show_toggle_switch(
         class_=[*modified_cls, "large"],
     )
     html.close_div()
-
-
-class MatchItemGeneratorSettings(ABCMatchItemGenerator):
-    def __init__(
-        self,
-        name: str,
-        topic: str,
-        # we cannot pass an instance here because we would get
-        # RuntimeError("Working outside of request context.")
-        # when registering below due to
-        # ABCGlobalSettingsMode.__init__ --> _from_vars --> get_search_expression)
-        create_mode: Callable[[], ABCGlobalSettingsMode],
-    ) -> None:
-        super().__init__(name, provider="setup")
-        self._topic: Final[str] = topic
-        self._create_mode: Final = create_mode
-
-    def _config_variable_to_match_item(
-        self,
-        config_variable: ConfigVariable,
-        edit_mode_name: str,
-        global_settings_context: GlobalSettingsContext,
-    ) -> MatchItem:
-        title = localize(resolve_title(config_variable.value_model(global_settings_context))) or _(
-            "Untitled setting"
-        )
-        ident = config_variable.ident()
-        return MatchItem(
-            title=title,
-            topic=self._topic,
-            url=makeuri_contextless(
-                request,
-                [("mode", edit_mode_name), ("varname", ident)],
-                filename="wato.py",
-            ),
-            match_texts=[title, ident],
-        )
-
-    @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
-        mode = self._create_mode()
-        yield from (
-            self._config_variable_to_match_item(
-                config_variable,
-                mode.edit_mode_name,
-                mode.make_global_settings_context(active_config),
-            )
-            for _group, config_variables in mode.iter_all_configuration_variables(
-                debug=active_config.debug
-            )
-            for config_variable in config_variables
-        )
-
-    @staticmethod
-    @override
-    def is_affected_by_change(_change_action_name: str) -> bool:
-        return False
-
-    @property
-    @override
-    def is_localization_dependent(self) -> bool:
-        return True
 
 
 def _pending_changes(

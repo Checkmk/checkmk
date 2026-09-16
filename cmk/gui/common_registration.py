@@ -420,7 +420,7 @@ def register(
         agent_bakery_enabled,
     )
     welcome.register(page_registry, snapin_registry)
-    global_settings.register(page_registry)
+    global_settings.register(page_registry, match_item_generator_registry)
     search_registration.register(
         page_registry,
         job_registry,

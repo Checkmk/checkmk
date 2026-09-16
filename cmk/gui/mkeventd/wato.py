@@ -120,7 +120,6 @@ from cmk.gui.wato import (
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
-    MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
@@ -234,7 +233,6 @@ from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
 def register(
-    edition: Edition,
     permission_registry: PermissionRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     mode_registry: ModeRegistry,
@@ -310,15 +308,6 @@ def register(
     register_permissions(permission_registry)
 
     match_item_generator_registry.register(MatchItemEventConsole)
-    match_item_generator_registry.register(
-        MatchItemGeneratorSettings(
-            "event_console_settings",
-            _("Event Console settings"),
-            lambda: ModeEventConsoleSettings(
-                edition, PageContext(config=active_config, request=request)
-            ),
-        )
-    )
 
     notification_parameter_registry.register(
         NotificationParameter(

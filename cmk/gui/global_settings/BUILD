@@ -15,6 +15,7 @@ py_library(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/form_specs",
+        "//cmk/gui/search:matchers",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",

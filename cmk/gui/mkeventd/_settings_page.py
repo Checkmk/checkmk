@@ -11,20 +11,42 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.global_settings import central_settings, ensure_page_access, render_settings_page
+from cmk.gui.global_settings import (
+    central_settings,
+    ensure_page_access,
+    MatchItemGeneratorSettings,
+    render_settings_page,
+)
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
+from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.wato import MainModuleTopicEvents
+from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.shared_typing.global_settings import GlobalSettingsApp
 from cmk.web.utils.urls import makeuri_contextless
 
 from .config_domain import ConfigDomainEventConsole
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     page_registry.register(PageEndpoint("event_console_settings", _event_console_settings_page))
+    match_item_generator_registry.register(
+        MatchItemGeneratorSettings(
+            "event_console_settings",
+            _("Event Console settings"),
+            filename="event_console_settings.py",
+            shows=_owned_by_the_event_console,
+        )
+    )
+
+
+def _owned_by_the_event_console(config_variable: ConfigVariable) -> bool:
+    return isinstance(config_variable.primary_domain(), ConfigDomainEventConsole)
 
 
 def event_console_settings(config: Config) -> GlobalSettingsApp:
@@ -36,9 +58,7 @@ def event_console_settings(config: Config) -> GlobalSettingsApp:
         config,
         title=title,
         breadcrumb=_breadcrumb(title),
-        shows=lambda config_variable: isinstance(
-            config_variable.primary_domain(), ConfigDomainEventConsole
-        ),
+        shows=_owned_by_the_event_console,
     )
 
 

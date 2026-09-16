@@ -4,10 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.global_settings.pages import register
+from cmk.gui.global_settings.search import MatchItemGeneratorSettings
 from cmk.gui.global_settings.utils import (
     central_settings,
     ensure_page_access,
     render_settings_page,
 )
 
-__all__ = ["central_settings", "ensure_page_access", "register", "render_settings_page"]
+__all__ = [
+    "central_settings",
+    "ensure_page_access",
+    "MatchItemGeneratorSettings",
+    "register",
+    "render_settings_page",
+]

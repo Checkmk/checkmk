@@ -12,8 +12,11 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.i18n import _l
-from cmk.gui.mkeventd._settings_page import event_console_settings
+from cmk.gui.mkeventd._settings_page import event_console_settings, register
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
+from cmk.gui.pages import PageRegistry
+from cmk.gui.search.matchers import MatchItemGeneratorRegistry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from tests.testlib.gui.global_settings import (
     logged_in,
@@ -43,6 +46,20 @@ def fixture_variables_of_both_domains(monkeypatch: pytest.MonkeyPatch) -> Iterat
 @pytest.mark.usefixtures("variables_of_both_domains", "with_admin_login")
 def test_the_page_lists_only_event_console_variables(load_config: Config) -> None:
     assert set(shown_variables(event_console_settings(load_config))) == {EVENT_CONSOLE_VAR}
+
+
+@pytest.mark.usefixtures("variables_of_both_domains", "load_config")
+def test_the_search_index_lists_only_event_console_variables() -> None:
+    match_item_generator_registry = MatchItemGeneratorRegistry()
+    register(PageRegistry(), match_item_generator_registry)
+
+    match_items = match_item_generator_registry["event_console_settings"].generate_match_items(
+        UserPermissions({}, {}, {}, [])
+    )
+
+    assert [match_item.url for match_item in match_items] == [
+        f"event_console_settings.py?varname={EVENT_CONSOLE_VAR}"
+    ]
 
 
 @pytest.mark.usefixtures("with_admin_login")

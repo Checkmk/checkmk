@@ -370,7 +370,7 @@ class TestIndexSearcher:
         mocker: MockerFixture,
     ) -> None:
         get_config = mocker.patch(
-            "cmk.gui.wato.pages.global_settings.ABCConfigDomain.get_all_default_globals"
+            "cmk.gui.global_settings.search.ABCConfigDomain.get_all_default_globals"
         )
 
         with pytest.raises(IndexNotFoundException):

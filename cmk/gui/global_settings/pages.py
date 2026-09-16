@@ -11,6 +11,7 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.global_settings.search import MatchItemGeneratorSettings
 from cmk.gui.global_settings.utils import (
     central_settings,
     ensure_page_access,
@@ -21,8 +22,10 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
+from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.wato import MainModuleTopicGeneral
+from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.gui.watolib.sites import (
     site_globals_editable,
     site_management_registry,
@@ -33,9 +36,24 @@ from cmk.shared_typing.global_settings import GlobalSettingsApp
 from cmk.web.utils.urls import makeuri_contextless
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     page_registry.register(PageEndpoint("global_settings", _global_settings_page))
     page_registry.register(PageEndpoint("site_specific_settings", _site_specific_settings_page))
+    match_item_generator_registry.register(
+        MatchItemGeneratorSettings(
+            "global_settings",
+            _("Global settings"),
+            filename="global_settings.py",
+            shows=_shown_on_the_global_page,
+        )
+    )
+
+
+def _shown_on_the_global_page(config_variable: ConfigVariable) -> bool:
+    return config_variable.primary_domain().in_global_settings
 
 
 def global_settings(config: Config) -> GlobalSettingsApp:
@@ -45,7 +63,7 @@ def global_settings(config: Config) -> GlobalSettingsApp:
         config,
         title=title,
         breadcrumb=_global_breadcrumb(title),
-        shows=lambda config_variable: config_variable.primary_domain().in_global_settings,
+        shows=_shown_on_the_global_page,
     )
 
 

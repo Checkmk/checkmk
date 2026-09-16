@@ -43,7 +43,6 @@ py_library(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/form_specs",
-        "//cmk/gui/search:matchers",
         "//cmk/gui/userdb",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

@@ -345,6 +345,5 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   height: 100%;
   min-height: 0;
   padding-bottom: var(--spacing);
-  padding-right: var(--spacing);
 }
 </style>

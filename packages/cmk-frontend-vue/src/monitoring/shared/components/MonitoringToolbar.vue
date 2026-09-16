@@ -77,10 +77,20 @@ defineExpose({
 
 <style scoped>
 .monitoring-toolbar {
+  --monitoring-toolbar-border-color: var(--color-mid-grey-10);
+
+  box-sizing: border-box;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
   gap: var(--spacing);
+  padding: var(--dimension-4) var(--dimension-5);
+  background: var(--ux-theme-2);
+  border-bottom: 1px solid var(--monitoring-toolbar-border-color);
+}
+
+body[data-theme='modern-dark'] .monitoring-toolbar {
+  --monitoring-toolbar-border-color: var(--color-mid-grey-100);
 }
 
 .monitoring-toolbar__controls {

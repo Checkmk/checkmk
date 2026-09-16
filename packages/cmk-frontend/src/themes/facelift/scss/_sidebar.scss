@@ -151,6 +151,11 @@ body.side.main {
   padding-left: 0;
 }
 
+#content_area:has(cmk-monitoring-all-hosts),
+#content_area:has(cmk-monitoring-host-services) {
+  padding-left: 0;
+}
+
 /* Top logo part */
 #side_header {
   height: 58px;

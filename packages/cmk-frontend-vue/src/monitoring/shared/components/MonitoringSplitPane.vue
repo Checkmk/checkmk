@@ -210,10 +210,12 @@ function onRightPaneCollapse(collapsed: boolean): void {
 }
 
 .monitoring-split-pane__left-pane {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  padding: 0 var(--dimension-5);
 }
 
 .monitoring-split-pane__results-count {

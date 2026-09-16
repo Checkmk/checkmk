@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# The edition's implementations of the engine's source protocols: the livestatus reads a graph's
-# data comes from, and the fetch that assembles them into what the engine evaluates. The pure
-# ingredients live beside it - perf-data parsing in _engine_perfdata, translation resolution in
-# _engine_translations, series alignment in _engine_series.
-
 
 import contextlib
 import time

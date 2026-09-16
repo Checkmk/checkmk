@@ -119,7 +119,7 @@ def _quote_pair(varname: str, value: None | int | str) -> str:
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
-def urlencode_vars(vars_: Sequence[tuple[str, int | str | None]]) -> str:
+def urlencode_vars(vars_: Sequence[HTTPVariable]) -> str:
     """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string"""
     return "&".join([_quote_pair(var, val) for var, val in sorted(vars_)])
 
@@ -264,8 +264,8 @@ def requested_file_name(
 
 
 def append_site_from_request(
-    request: RequestProtocol, url_vars: Sequence[tuple[str, int | str | None]]
-) -> Sequence[tuple[str, int | str | None]]:
+    request: RequestProtocol, url_vars: Sequence[HTTPVariable]
+) -> Sequence[HTTPVariable]:
     """Append the given request's site parameter to URL variables if present."""
     if site := request.var("site"):
         return [*url_vars, ("site", site)]
@@ -274,13 +274,13 @@ def append_site_from_request(
 
 def makeuri(
     request: RequestProtocol,
-    addvars: Sequence[tuple[str, int | str | None]],
+    addvars: Sequence[HTTPVariable],
     filename: str | None = None,
     remove_prefix: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
     new_vars = [nv[0] for nv in addvars]
-    vars_: Sequence[tuple[str, int | str | None]] = [
+    vars_: Sequence[HTTPVariable] = [
         (v, val)
         for v, val in request.itervars()
         if v[0] != "_" and v not in new_vars and not (delvars and v in delvars)
@@ -297,7 +297,7 @@ def makeuri(
 
 def makeuri_contextless(
     request: RequestProtocol,
-    vars_: Sequence[tuple[str, int | str | None]],
+    vars_: Sequence[HTTPVariable],
     filename: str | None = None,
 ) -> str:
     if not filename:
@@ -310,11 +310,11 @@ def makeuri_contextless(
 def makeactionuri(
     request: RequestProtocol,
     transid: str,
-    addvars: Sequence[tuple[str, int | str | None]],
+    addvars: Sequence[HTTPVariable],
     filename: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
-    session_vars: list[tuple[str, int | str | None]] = [("_transid", transid)]
+    session_vars: list[HTTPVariable] = [("_transid", transid)]
     if session and hasattr(session, "session_info"):
         session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
@@ -324,10 +324,10 @@ def makeactionuri(
 def makeactionuri_contextless(
     request: RequestProtocol,
     transid: str,
-    addvars: Sequence[tuple[str, int | str | None]],
+    addvars: Sequence[HTTPVariable],
     filename: str | None = None,
 ) -> str:
-    session_vars: list[tuple[str, int | str | None]] = [("_transid", transid)]
+    session_vars: list[HTTPVariable] = [("_transid", transid)]
     if session and hasattr(session, "session_info"):
         session_vars.append(("_csrf_token", session.session_info.csrf_token))
 

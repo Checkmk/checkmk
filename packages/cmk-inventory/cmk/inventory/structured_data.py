@@ -221,7 +221,6 @@ class _MutableAttributes:
         self,
         now: int,
         previous: ImmutableAttributes,
-        path: SDPath,  # noqa: ARG002
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
@@ -332,7 +331,6 @@ class _MutableTable:
         self,
         now: int,
         previous: ImmutableTable,
-        path: SDPath,  # noqa: ARG002
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
@@ -510,9 +508,9 @@ class MutableTree:
         node = self.setdefault_node(choices.path)
         previous_node = previous_tree.get_tree(choices.path)
         for c in choices.pairs:
-            node.attributes.update(now, previous_node.attributes, choices.path, choices.interval, c)
+            node.attributes.update(now, previous_node.attributes, choices.interval, c)
         for c in choices.columns:
-            node.table.update(now, previous_node.table, choices.path, choices.interval, c)
+            node.table.update(now, previous_node.table, choices.interval, c)
 
     def setdefault_node(self, path: SDPath) -> MutableTree:
         if not path:
@@ -909,9 +907,9 @@ def _make_filter_func[CT: (SDKey, SDNodeName)](
 ) -> Callable[[CT], bool]:
     match choice:
         case "nothing":
-            return lambda k: False  # noqa: ARG005
+            return lambda _k: False
         case "all":
-            return lambda k: True  # noqa: ARG005
+            return lambda _k: True
         case _:
             return lambda k: k in choice
 

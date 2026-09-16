@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+import cmk.utils.render
 from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory import NodeDisplayHint
@@ -808,3 +809,15 @@ def test__replace_title_placeholders(
         )
         == expected_title
     )
+
+
+def test_td_spec_tooltip_names_the_validity() -> None:
+    item = SDItem(
+        key=SDKey("key"),
+        title="Title",
+        value="value",
+        retention_interval=RetentionInterval(100, 20, 3, "previous"),
+        paint_function=_wrap_paint_function(inv_paint_generic),
+        icon_path_svc_problems="",
+    )
+    assert cmk.utils.render.date_and_time(120) in str(item.compute_td_spec(121).html_values[0])

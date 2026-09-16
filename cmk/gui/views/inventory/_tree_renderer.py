@@ -171,7 +171,7 @@ class SDItem:
                                 self.retention_interval.cached_at
                             ),
                             "valid_until": cmk.utils.render.date_and_time(
-                                self.retention_interval.keep_until
+                                self.retention_interval.valid_until
                             ),
                         },
                         css=["muted_text"],

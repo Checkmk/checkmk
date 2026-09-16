@@ -436,6 +436,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--ux-theme-4);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
+  font-weight: var(--font-weight-default);
 }
 
 .monitoring-filter-dropdown__sort {
@@ -462,10 +463,6 @@ onBeforeUnmount(() => {
 
   &:hover {
     background-color: var(--ux-theme-3);
-  }
-
-  &[aria-pressed='true'] {
-    font-weight: var(--font-weight-bold);
   }
 }
 

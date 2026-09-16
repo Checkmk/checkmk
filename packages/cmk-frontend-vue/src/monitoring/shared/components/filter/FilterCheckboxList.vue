@@ -124,7 +124,7 @@ function toggleAll(): void {
       :aria-label="_t('Filter values')"
     />
 
-    <div class="monitoring-filter-checkbox-list__row monitoring-filter-checkbox-list__row--all">
+    <div class="monitoring-filter-checkbox-list__row">
       <CmkCheckbox
         allow-indeterminate
         :model-value="selectAllModelValue"
@@ -188,10 +188,6 @@ function toggleAll(): void {
   &:focus-within {
     background-color: var(--ux-theme-3);
   }
-}
-
-.monitoring-filter-checkbox-list__row--all {
-  font-weight: var(--font-weight-bold);
 }
 
 .monitoring-filter-checkbox-list__empty {

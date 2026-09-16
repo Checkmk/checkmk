@@ -15,8 +15,9 @@ import { computed, ref } from 'vue'
 import MetricAttributeGroups from '../MetricAttributeGroups.vue'
 import type { HorizontalLine, Metric, ShadedRegion } from '../TimeSeriesGraph'
 import { type MetricAttribute, attributesOf } from '../metricAttributes'
+import { orderMetricsTopToBottom } from '../metricOrder'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
-import { orderMetricsForLegend, withNameToggled } from './legendUtils'
+import { withNameToggled } from './legendUtils'
 
 const { _t } = usei18n()
 
@@ -93,7 +94,7 @@ function withTruncationLayout(
 }
 
 const items = computed((): CompactLegendItem[] => [
-  ...orderMetricsForLegend(props.metrics).map((metric) =>
+  ...orderMetricsTopToBottom(props.metrics).map((metric) =>
     withTruncationLayout({
       key: `metric:${metric.metadata.name}`,
       title: metric.metadata.title,

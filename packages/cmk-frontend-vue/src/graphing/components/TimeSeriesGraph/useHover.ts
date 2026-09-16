@@ -10,6 +10,7 @@ import { type Ref, onBeforeUnmount, ref } from 'vue'
 
 import type { ConsolidationFn } from '../consolidation'
 import { attributesOf } from '../metricAttributes'
+import { orderMetricsTopToBottom } from '../metricOrder'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
 import { bucketAnchorTime, consolidatedSampleTime, selectConsolidatedValue } from './render/bucket'
@@ -189,9 +190,12 @@ export function useHover(options: HoverOptions) {
       closestSample.isClosest = true
     }
 
-    // Drop the placeholder samples of hidden metrics; index alignment with hitDistances
-    // is no longer needed past this point.
-    const visibleSamples = samples.filter((_, i) => !metricsList[i]!.render.hidden)
+    // Listed as the legend lists them, topmost series first; the placeholder samples of
+    // hidden metrics drop out. Index alignment with hitDistances is no longer needed.
+    const sampleOfMetric = new Map(metricsList.map((metric, i) => [metric, samples[i]!]))
+    const visibleSamples = orderMetricsTopToBottom(metricsList)
+      .filter((metric) => !metric.render.hidden)
+      .map((metric) => sampleOfMetric.get(metric)!)
     const snapSample = closestSample ?? visibleSamples.find((sample) => sample.snapTime !== null)
     const snapTime = snapSample?.snapTime ?? cursorTime
     const snapX = options.xScale(new Date(snapTime * 1000))

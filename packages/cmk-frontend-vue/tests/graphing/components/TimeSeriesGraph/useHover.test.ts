@@ -39,6 +39,16 @@ function makeInverseLineMetric(name: string, dataPoints: (number | null)[]): Met
   return { ...metric, render: { ...metric.render, inverse: true } }
 }
 
+function makeStackedMetric(
+  name: string,
+  dataPoints: (number | null)[],
+  stack: string,
+  hidden = false
+): Metric {
+  const metric = makeLineMetric(name, dataPoints)
+  return { ...metric, render: { ...metric.render, stack, hidden } }
+}
+
 function constantPoints(value: number | null): (number | null)[] {
   return Array.from({ length: 11 }, () => value)
 }
@@ -114,10 +124,9 @@ describe('useHover — hit-test', () => {
     hover.moveHoverTo(pointAt(50, 85))
 
     const samples = hover.hoverState.value!.samples
-    expect(samples.map((sample) => [sample.metricName, sample.isClosest])).toEqual([
-      ['low', true],
-      ['high', false]
-    ])
+    expect(samples.filter((sample) => sample.isClosest).map((sample) => sample.metricName)).toEqual(
+      ['low']
+    )
   })
 
   test('carries the cursor position and snaps the crosshair near it', () => {
@@ -142,13 +151,12 @@ describe('useHover — hit-test', () => {
     hover.moveHoverTo(pointAt(50, 15))
 
     const samples = hover.hoverState.value!.samples
-    expect(samples[0]).toMatchObject({
-      metricName: 'empty',
+    expect(samples.find((sample) => sample.metricName === 'empty')).toMatchObject({
       formattedValue: 'n/a',
       pixelY: null,
       isClosest: false
     })
-    expect(samples[1]!.isClosest).toBe(true)
+    expect(samples.find((sample) => sample.metricName === 'high')!.isClosest).toBe(true)
   })
 
   test('a cursor out of reach of every curve singles none of them out', () => {
@@ -173,7 +181,7 @@ describe('useHover — hit-test', () => {
     hover.moveHoverTo(pointAt(50, 50))
 
     const samples = hover.hoverState.value!.samples
-    expect(samples.map((sample) => sample.formattedValue)).toEqual(['10', '90'])
+    expect(samples.map((sample) => sample.formattedValue).sort()).toEqual(['10', '90'])
   })
 
   test('a plot with no metrics yields no hover state', () => {
@@ -306,6 +314,53 @@ describe('useHover — snapping to drawn points', () => {
       formattedValue: 'n/a',
       pixelY: null
     })
+  })
+})
+
+describe('useHover — sample order', () => {
+  test('lists a stack topmost layer first, the way it reads down the graph', () => {
+    const hover = mountHover([
+      makeStackedMetric('bottom', constantPoints(10), 's1'),
+      makeStackedMetric('middle', constantPoints(20), 's1'),
+      makeStackedMetric('top', constantPoints(30), 's1')
+    ])
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const listedPixelYs = hover.hoverState.value!.samples.map((sample) => sample.pixelY!)
+    expect(listedPixelYs).toHaveLength(3)
+    expect(listedPixelYs).toEqual([...listedPixelYs].sort((first, second) => first - second))
+  })
+
+  test('lists lines above the areas they overlay, then the mirrored half, minus the baseline', () => {
+    const drawOrder = [
+      makeStackedMetric('user', constantPoints(10), 's1'),
+      makeStackedMetric('system', constantPoints(10), 's1'),
+      makeStackedMetric('baseline', constantPoints(5), 's1', true),
+      makeInverseLineMetric('outbound', constantPoints(20)),
+      makeLineMetric('util', constantPoints(60))
+    ]
+    const hover = mountHover(drawOrder, TIME_RANGE, { valueDomain: [-100, 100] })
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const listedNames = hover.hoverState.value!.samples.map((sample) => sample.metricName)
+    expect(listedNames).toEqual(['util', 'system', 'user', 'outbound'])
+  })
+
+  test('the reordering keeps each sample on its own metric', () => {
+    const hover = mountHover([
+      makeStackedMetric('bottom', constantPoints(10), 's1'),
+      makeStackedMetric('top', constantPoints(30), 's1')
+    ])
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const samplesByName = new Map(
+      hover.hoverState.value!.samples.map((sample) => [sample.metricName, sample])
+    )
+    expect(samplesByName.get('bottom')!.formattedValue).toBe('10')
+    expect(samplesByName.get('top')!.formattedValue).toBe('30')
   })
 })
 

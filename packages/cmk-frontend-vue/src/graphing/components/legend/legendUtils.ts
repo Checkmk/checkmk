@@ -54,36 +54,6 @@ export function horizontalLineValue(line: HorizontalLine): string {
   return formatter.render(line.value)
 }
 
-export function orderMetricsForLegend(metrics: Metric[]): Metric[] {
-  const drawn = metrics.filter((metric) => !isStackReference(metric))
-  const upwardDrawnBottomUp = drawn.filter((metric) => !metric.render.inverse)
-  const mirroredDrawnTopDown = drawn.filter((metric) => metric.render.inverse)
-  return [
-    ...topmostFirst(upwardDrawnBottomUp.filter(isLine)),
-    ...topmostFirst(upwardDrawnBottomUp.filter(isArea)),
-    ...mirroredDrawnTopDown.filter(isArea),
-    ...mirroredDrawnTopDown.filter(isLine),
-    ...metrics.filter(isStackReference)
-  ]
-}
-
-function isLine(metric: Metric): boolean {
-  return metric.render.stack === null
-}
-
-function isArea(metric: Metric): boolean {
-  return metric.render.stack !== null
-}
-
-/** Hidden members carry the baseline a stack is drawn from, not a series of their own. */
-function isStackReference(metric: Metric): boolean {
-  return metric.render.hidden
-}
-
-function topmostFirst(seriesInDrawOrder: Metric[]): Metric[] {
-  return [...seriesInDrawOrder].reverse()
-}
-
 export function withNameToggled(hiddenNames: string[], name: string): string[] {
   if (hiddenNames.includes(name)) {
     return hiddenNames.filter((hiddenName) => hiddenName !== name)

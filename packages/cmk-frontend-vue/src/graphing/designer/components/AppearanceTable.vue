@@ -20,12 +20,9 @@ import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.v
 
 import MetricAttributesTable from '../../components/MetricAttributesTable.vue'
 import type { Metric } from '../../components/TimeSeriesGraph'
-import {
-  type MetricStats,
-  metricStats,
-  orderMetricsForLegend
-} from '../../components/legend/legendUtils'
+import { type MetricStats, metricStats } from '../../components/legend/legendUtils'
 import { attributesOf, hasAttributes } from '../../components/metricAttributes'
+import { orderMetricsTopToBottom } from '../../components/metricOrder'
 import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
@@ -103,7 +100,7 @@ const linesBySource = computed(() => {
   for (const [id, series] of metricsBySource) {
     out.set(
       id,
-      orderMetricsForLegend([...series]).map((metric) => ({
+      orderMetricsTopToBottom([...series]).map((metric) => ({
         metric,
         stats: metricStats(metric)
       }))

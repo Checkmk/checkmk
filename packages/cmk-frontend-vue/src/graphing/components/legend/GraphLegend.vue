@@ -19,12 +19,12 @@ import {
   useConsolidationFunctionLabels
 } from '../consolidation'
 import { attributesOf, hasAttributes } from '../metricAttributes'
+import { orderMetricsTopToBottom } from '../metricOrder'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
 import {
   type MetricStats,
   metricStats as computeMetricStats,
   horizontalLineValue,
-  orderMetricsForLegend,
   withNameToggled
 } from './legendUtils'
 
@@ -86,7 +86,7 @@ const scrollMaxHeight = computed(() => {
   return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX}px`
 })
 
-const displayMetrics = computed(() => orderMetricsForLegend(props.metrics))
+const displayMetrics = computed(() => orderMetricsTopToBottom(props.metrics))
 const allHidden = computed(
   () =>
     props.metrics.length > 0 &&

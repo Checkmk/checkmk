@@ -26,14 +26,10 @@ from ._rulespec import RulespecGroupInventory
 from ._tree import (
     get_history,
     get_raw_status_data_via_livestatus,
-    InventoryPath,
     load_delta_tree,
     load_latest_delta_tree,
     load_tree,
-    make_filter_choices_from_api_request_paths,
     make_filter_choices_from_permitted_paths,
-    parse_internal_raw_path,
-    TreeSource,
     verify_permission,
 )
 from ._valuespecs import (
@@ -45,17 +41,13 @@ from ._webapi import page_host_inv_api
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 __all__ = [
-    "InventoryPath",
     "RulespecGroupInventory",
-    "TreeSource",
     "get_history",
     "get_raw_status_data_via_livestatus",
     "load_delta_tree",
     "load_latest_delta_tree",
     "load_tree",
-    "make_filter_choices_from_api_request_paths",
     "make_filter_choices_from_permitted_paths",
-    "parse_internal_raw_path",
     "register",
     "vs_element_inventory_visible_raw_path",
     "vs_inventory_path_or_keys_help",

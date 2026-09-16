@@ -16,13 +16,13 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory._tree import get_history, InventoryPath, load_tree
+from cmk.gui.inventory._tree import get_history, load_tree
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
-from cmk.inventory.structured_data import HistoryStore, RetentionInterval, SDValue
+from cmk.inventory.structured_data import HistoryStore, InventoryPath, RetentionInterval, SDValue
 from cmk.livestatus_client import LivestatusResponse, OnlySites
 
 

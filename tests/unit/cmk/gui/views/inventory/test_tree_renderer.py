@@ -8,7 +8,6 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.utils.render
-from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory import NodeDisplayHint
 from cmk.gui.views.inventory._display_hints import (
@@ -30,10 +29,12 @@ from cmk.inventory.structured_data import (
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableTable,
+    InventoryPath,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
     SDPath,
+    TreeSource,
 )
 
 

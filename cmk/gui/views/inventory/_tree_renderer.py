@@ -36,6 +36,7 @@ from cmk.inventory.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    parse_internal_raw_path,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
@@ -483,7 +484,7 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
         theme=gui_theme,
         request=http_request,
         show_internal_tree_paths=show_internal_tree_paths,
-    ).show(time.time(), tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
+    ).show(time.time(), tree.get_tree(parse_internal_raw_path(raw_path).path), tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:

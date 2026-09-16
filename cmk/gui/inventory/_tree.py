@@ -5,8 +5,6 @@
 
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
-from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
@@ -38,71 +36,7 @@ from cmk.inventory.structured_data import (
     SDFilterChoice,
     SDKey,
     SDNodeName,
-    SDPath,
 )
-
-
-class TreeSource(Enum):
-    node = auto()
-    table = auto()
-    attributes = auto()
-
-
-@dataclass(frozen=True)
-class InventoryPath:
-    path: SDPath
-    source: TreeSource
-    key: SDKey = SDKey("")
-
-    @property
-    def node_name(self) -> str:
-        return self.path[-1] if self.path else ""
-
-
-def _sanitize_path(path: Sequence[str]) -> SDPath:
-    # ":": Nested tables, see also lib/structured_data.py
-    return tuple(
-        SDNodeName(p) for part in path for p in (part.split(":") if ":" in part else [part]) if p
-    )
-
-
-def parse_internal_raw_path(raw: str) -> InventoryPath:
-    if not raw:
-        return InventoryPath(
-            path=(),
-            source=TreeSource.node,
-        )
-    if raw.endswith("."):
-        return InventoryPath(
-            path=_sanitize_path(raw[:-1].strip(".").split(".")),
-            source=TreeSource.node,
-        )
-    if raw.endswith(":"):
-        return InventoryPath(
-            path=_sanitize_path(raw[:-1].strip(".").split(".")),
-            source=TreeSource.table,
-        )
-    path = raw.strip(".").split(".")
-    sanitized_path = _sanitize_path(path[:-1])
-    if ":" in path[-2]:
-        source = TreeSource.table
-        # Forget the last '*' or an index like '17'
-        # because it's related to columns (not nodes)
-        sanitized_path = sanitized_path[:-1]
-    else:
-        source = TreeSource.attributes
-    return InventoryPath(
-        path=sanitized_path,
-        source=source,
-        key=SDKey(path[-1]),
-    )
-
-
-# TODO Cleanup variation:
-#   - parse_internal_raw_path parses NOT visible, internal tree paths used in displayhints/views
-#   - cmk.inventory.structured_data.py::parse_visible_raw_path
-#     parses visible, internal tree paths for contact groups etc.
-# => Should be unified one day.
 
 
 def _transform_attribute[T](
@@ -127,29 +61,6 @@ def make_filter_choices_from_permitted_paths(
         )
         for entry in permitted_paths
         if entry.get("visible_raw_path")
-    ]
-
-
-def make_filter_choices_from_api_request_paths(
-    api_request_paths: Sequence[str],
-) -> Sequence[SDFilterChoice]:
-    def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
-        if inventory_path.key:
-            return SDFilterChoice(
-                path=inventory_path.path,
-                pairs=[inventory_path.key],
-                columns=[inventory_path.key],
-                nodes="nothing",
-            )
-        return SDFilterChoice(
-            path=inventory_path.path,
-            pairs="all",
-            columns="all",
-            nodes="all",
-        )
-
-    return [
-        _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
     ]
 
 

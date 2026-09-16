@@ -22,7 +22,6 @@ from typing import assert_never, Literal, override
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.gui import inventory
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
@@ -57,7 +56,15 @@ from cmk.gui.unit_formatter import (
     TimeFormatter,
 )
 from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory.structured_data import (
+    InventoryPath,
+    parse_internal_raw_path,
+    SDKey,
+    SDNodeName,
+    SDPath,
+    SDValue,
+    TreeSource,
+)
 from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_unstable import AutoPrecision as AutoPrecisionFromAPI
@@ -488,7 +495,7 @@ def _make_attribute_filter(
     *,
     filter_ident: str,
     long_title: str,
-    inventory_path: inventory.InventoryPath,
+    inventory_path: InventoryPath,
 ) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
     match field_from_api:
         case BoolFieldFromAPI():
@@ -552,9 +559,9 @@ def _parse_attr_field_from_api(
             field_from_api,
             filter_ident=name,
             long_title=long_title,
-            inventory_path=inventory.InventoryPath(
+            inventory_path=InventoryPath(
                 path=path,
-                source=inventory.TreeSource.attributes,
+                source=TreeSource.attributes,
                 key=SDKey(key),
             ),
         ),
@@ -728,17 +735,17 @@ def _get_related_legacy_hints(
 ) -> Mapping[SDPath, _RelatedLegacyHints]:
     related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
     for raw_path, legacy_hint in legacy_hints.items():
-        inventory_path = inventory.parse_internal_raw_path(raw_path)
+        inventory_path = parse_internal_raw_path(raw_path)
         related_legacy_hints = related_legacy_hints_by_path.setdefault(
             inventory_path.path,
             _RelatedLegacyHints(),
         )
 
-        if inventory_path.source == inventory.TreeSource.node:
+        if inventory_path.source == TreeSource.node:
             related_legacy_hints.for_node.update(legacy_hint)
             continue
 
-        if inventory_path.source == inventory.TreeSource.table:
+        if inventory_path.source == TreeSource.table:
             if inventory_path.key:
                 related_legacy_hints.by_column.setdefault(inventory_path.key, legacy_hint)
                 continue
@@ -879,9 +886,9 @@ def _get_unit_choices_from_legacy_data_type(data_type: str) -> Mapping[str, Filt
 def _make_attribute_filter_from_legacy_hint(
     *, path: SDPath, key: str, data_type: str, filter_ident: str, title: str, is_show_more: bool
 ) -> FilterInvText | FilterInvBool | FilterInvFloat:
-    inventory_path = inventory.InventoryPath(
+    inventory_path = InventoryPath(
         path=path,
-        source=inventory.TreeSource.attributes,
+        source=TreeSource.attributes,
         key=SDKey(key),
     )
     match data_type:
@@ -1593,10 +1600,10 @@ def find_non_canonical_filters(
                 filters.setdefault(name, FilterMigrationBool(name=name))
 
     for raw_path, legacy_hint in legacy_hints.items():
-        inv_path = inventory.parse_internal_raw_path(raw_path)
+        inv_path = parse_internal_raw_path(raw_path)
         if not inv_path.key:
             continue
-        if inv_path.source == inventory.TreeSource.attributes:
+        if inv_path.source == TreeSource.attributes:
             name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
             match legacy_hint.get("paint"):
                 case "bytes" | "bytes_rounded":
@@ -1608,7 +1615,7 @@ def find_non_canonical_filters(
                 case _:
                     pass
         if (
-            inv_path.source == inventory.TreeSource.table
+            inv_path.source == TreeSource.table
             and (view_name := legacy_hint.get("view"))
             and (legacy_filter := legacy_hint.get("filter"))
         ):

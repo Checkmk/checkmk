@@ -9,8 +9,6 @@ from collections.abc import Callable
 
 import pytest
 
-import cmk.gui.inventory
-from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvText,
 )
@@ -35,7 +33,15 @@ from cmk.gui.views.inventory._display_hints import (
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory.structured_data import (
+    InventoryPath,
+    parse_internal_raw_path,
+    SDKey,
+    SDNodeName,
+    SDPath,
+    SDValue,
+    TreeSource,
+)
 from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
@@ -194,9 +200,7 @@ def test_get_node_hint_returns_registered_hint_verbatim() -> None:
 def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
-    node_hint = inv_display_hints.get_node_hint(
-        cmk.gui.inventory.parse_internal_raw_path(raw_path).path
-    )
+    node_hint = inv_display_hints.get_node_hint(parse_internal_raw_path(raw_path).path)
 
     assert node_hint.name == "_".join(("inv",) + node_hint.path)
     assert node_hint.icon == expected_node_hint.icon
@@ -266,7 +270,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     ],
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
-    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
@@ -390,7 +394,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
 def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
-    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )

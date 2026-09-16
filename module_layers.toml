@@ -1019,6 +1019,7 @@ allows = [
   "cmk.graphing_engine",
   "cmk.gui",
   "cmk.gui_plugins.internal",
+  "cmk.inventory",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.product_usage",

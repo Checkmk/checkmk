@@ -18,7 +18,6 @@ inventory_ui plug-in being loaded.
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.gui.inventory import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,
@@ -34,7 +33,13 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.type_defs import Rows
 from cmk.gui.visuals.filter import Filter
-from cmk.inventory.structured_data import deserialize_tree, SDKey, SDNodeName
+from cmk.inventory.structured_data import (
+    deserialize_tree,
+    InventoryPath,
+    SDKey,
+    SDNodeName,
+    TreeSource,
+)
 
 
 class FilterTableTest(NamedTuple):

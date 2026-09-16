@@ -63,7 +63,7 @@ from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.cli.internal import Args, CLICommand, CLIOption, Options
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -364,7 +364,9 @@ def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
     return dict.fromkeys(parsed, True)
 
 
-def _mode_notify(app: CheckmkBaseApp, parsed: Options, args: Args) -> int:
+def _mode_notify(
+    app: CheckmkBaseApp, _global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
     options = _notify_flags(parsed)
     community_edition = app.edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:

@@ -9,10 +9,10 @@ from cmk import trace
 from cmk.base.community_app import make_app
 from cmk.base.modes.call import call
 from cmk.base.modes.modes import make_mode, make_option, parse_sub_options
-from cmk.cli.internal import Args, CLICommand, CLIOption, Options
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
 
-def _handler(_app: object, _options: Options, _args: Args) -> int:
+def _handler(_app: object, _global_options: GlobalOptions, _options: Options, _args: Args) -> int:
     return 0
 
 
@@ -69,7 +69,7 @@ def test_call_shapes_the_positional_arguments(
 ) -> None:
     seen: list[Args] = []
 
-    def _record(_app: object, _options: Options, args: Args) -> int:
+    def _record(_app: object, _global_options: GlobalOptions, _options: Options, args: Args) -> int:
         seen.append(args)
         return 42
 
@@ -86,6 +86,7 @@ def test_call_shapes_the_positional_arguments(
     exit_status = call(
         make_app(),
         mode,
+        GlobalOptions(),
         "ARG" if argument else "",
         [("--thing", "ARG" if argument else "")],
         ["ARG", "more"],

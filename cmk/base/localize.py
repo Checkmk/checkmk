@@ -12,7 +12,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
-from cmk.cli.internal import Args, CLICommand, Options
+from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.utils.log import VERBOSE
 
 __all__ = ["cli_command_localize"]
@@ -31,7 +31,9 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _mode_localize(_app: object, _options: Options, args: Args) -> int:
+def _mode_localize(
+    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
     do_localize(list(args))
     return 0
 

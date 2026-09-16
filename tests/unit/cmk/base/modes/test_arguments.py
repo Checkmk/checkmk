@@ -9,10 +9,9 @@ from typing import Final
 import pytest
 
 from cmk.base.modes.arguments import InvalidArguments, parse, RunMode, ShowHelp
-from cmk.base.modes.check_mk import general_options
 from cmk.base.modes.modes import (
     discover_modes,
-    GeneralOption,
+    general_options,
     Mode,
     Modes,
     Option,
@@ -37,7 +36,7 @@ def _mode_argv(mode: Mode, option: str) -> Sequence[str]:
     return [option, _MODE_ARGUMENT]
 
 
-def _general_option_argv(option: GeneralOption) -> Sequence[str]:
+def _general_option_argv(option: Option) -> Sequence[str]:
     if option.argument:
         return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
     return [f"--{option.long_option}"]
@@ -228,7 +227,7 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
 
 
 @pytest.mark.parametrize("option", general_options(), ids=lambda option: option.name)
-def test_a_general_option_does_not_select_a_mode(option: GeneralOption) -> None:
+def test_a_general_option_does_not_select_a_mode(option: Option) -> None:
     parsed = parse(_MODES, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, RunMode)
@@ -236,7 +235,7 @@ def test_a_general_option_does_not_select_a_mode(option: GeneralOption) -> None:
 
 
 @pytest.mark.parametrize("option", general_options(), ids=lambda option: option.name)
-def test_a_general_option_is_handed_back_for_processing(option: GeneralOption) -> None:
+def test_a_general_option_is_handed_back_for_processing(option: Option) -> None:
     parsed = parse(_MODES, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, RunMode)

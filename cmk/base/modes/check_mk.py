@@ -125,7 +125,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
-from cmk.cli.internal import Args, CLICommand, CLIOption, Options
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
@@ -151,7 +151,7 @@ from cmk.server_side_calls_backend import (
     load_active_checks,
     load_secrets_file,
 )
-from cmk.utils import config_warnings, ip_lookup, log, timeperiod
+from cmk.utils import config_warnings, ip_lookup, timeperiod
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import ConfiguredIPLookup
@@ -159,17 +159,7 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
-from .modes import (
-    Argument,
-    Flag,
-    GeneralOption,
-    option_count,
-    option_names,
-    option_string,
-    option_strings,
-    WithArgument,
-    write_stdout,
-)
+from .modes import option_count, option_names, option_string, option_strings, write_stdout
 
 tracer = trace.get_tracer()
 
@@ -196,7 +186,6 @@ def load_checks() -> AgentBasedPlugins:
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
 
-_verbosity = 0
 _fake_dns: HostAddress | None = None
 _enforce_localhost = False
 
@@ -226,53 +215,14 @@ def _host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
     return [_host_address(raw_host_address) for raw_host_address in raw_host_addresses]
 
 
-def option_verbosity() -> None:
-    global _verbosity
-    _verbosity += 1
-    log.logger.setLevel(log.verbosity_to_log_level(_verbosity))
+def _set_fake_dns(raw_address: str | None) -> None:
+    """Remember --fake-dns for the ip lookup of this command.
 
-
-_VERBOSE_OPTION = GeneralOption(
-    long_option="verbose",
-    short_option="v",
-    short_help="Enable verbose output (Use twice for more)",
-    action=Flag(handler=option_verbosity),
-)
-
-
-def option_debug() -> None:
-    cmk.ccc.debug.enable()
-
-
-_DEBUG_OPTION = GeneralOption(
-    long_option="debug",
-    short_help="Let most Python exceptions raise through",
-    action=Flag(handler=option_debug),
-)
-
-
-def option_profile() -> None:
-    profiling.enable()
-    log.logger.debug("Enabled profiling")
-
-
-_PROFILE_OPTION = GeneralOption(
-    long_option="profile",
-    short_help="Enable profiling mode",
-    action=Flag(handler=option_profile),
-)
-
-
-def option_fake_dns(a: Argument) -> None:
+    The engine hands the raw value to every handler; the ones that look up IP
+    addresses store it here, where _forced_ip_lookup() picks it up.
+    """
     global _fake_dns
-    _fake_dns = _host_address(a)
-
-
-_FAKE_DNS_OPTION = GeneralOption(
-    long_option="fake-dns",
-    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    action=WithArgument(descr="IP", handler=option_fake_dns),
-)
+    _fake_dns = None if raw_address is None else _host_address(raw_address)
 
 
 def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
@@ -281,15 +231,6 @@ def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
     if _enforce_localhost:
         return ip_lookup.local_ip_for
     return None
-
-
-def general_options() -> Sequence[GeneralOption]:
-    return [
-        _VERBOSE_OPTION,
-        _DEBUG_OPTION,
-        _PROFILE_OPTION,
-        _FAKE_DNS_OPTION,
-    ]
 
 
 # .
@@ -417,7 +358,9 @@ def _list_all_hosts(
     return hostlist
 
 
-def _mode_list_hosts(_app: object, options: Options, args: Args) -> int:
+def _mode_list_hosts(
+    _app: object, _global_options: GlobalOptions, options: Options, args: Args
+) -> int:
     loading_result = config.load()
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(
@@ -501,7 +444,9 @@ def _list_all_hosts_with_tags(
     return hosts
 
 
-def _mode_list_tag(_app: object, _options: Options, args: Args) -> int:
+def _mode_list_tag(
+    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
     loading_result = config.load()
     hosts = _list_all_hosts_with_tags(
         tuple(TagID(_) for _ in args),
@@ -587,7 +532,9 @@ def _get_ds_type(
     return _DSType.AGENT_SNMP
 
 
-def _mode_list_checks(_app: object, _options: Options, _args: Args) -> int:
+def _mode_list_checks(
+    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     from cmk.utils import man_pages
 
     plugins = load_checks()
@@ -652,7 +599,10 @@ cli_command_list_checks = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_dump_agent(app: CheckmkBaseApp, options: Options, args: Args) -> int:
+def _mode_dump_agent(
+    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
     hostname = _host_address(raw_host_name)
     file_cache_options = _handle_fetcher_options(options)
@@ -886,7 +836,10 @@ cli_command_dump_agent = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_dump_hosts(_app: object, _options: Options, args: Args) -> int:
+def _mode_dump_hosts(
+    _app: object, global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     hostlist: Iterable[HostName] = _host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
@@ -988,7 +941,9 @@ cli_command_dump = CLICommand(
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
-def _fail_with_deprecation_msg(_app: object, _options: Options, argv: Args) -> int:
+def _fail_with_deprecation_msg(
+    _app: object, _global_options: GlobalOptions, _options: Options, argv: Args
+) -> int:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
     return 1
 
@@ -1015,7 +970,10 @@ cli_command_package = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_update_dns_cache(_app: object, _options: Options, _args: Args) -> int:
+def _mode_update_dns_cache(
+    _app: object, global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     loading_result = config.load()
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
@@ -1052,7 +1010,9 @@ cli_command_update_dns_cache = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_cleanup_piggyback(_app: object, _options: Options, _args: Args) -> int:
+def _mode_cleanup_piggyback(
+    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     loaded_config = config.load().loaded_config
     piggyback_backend.cleanup_piggyback_files(
         loaded_config.piggyback_max_cachefile_age,
@@ -1084,7 +1044,9 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
     return omd_root / "local/share/snmp/mibs"
 
 
-def _mode_snmptranslate(_app: object, _options: Options, args: Args) -> int:
+def _mode_snmptranslate(
+    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
     walk_filename = args[0]
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
@@ -1224,7 +1186,10 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
         raise MKGeneralException(str(exc)) from exc
 
 
-def _mode_snmpwalk(_app: object, options: Options, hostnames: Args) -> int:
+def _mode_snmpwalk(
+    _app: object, global_options: GlobalOptions, options: Options, hostnames: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     oids = option_strings(options, "oid")
     extra_oids = option_strings(options, "extraoid")
     if oids and extra_oids:
@@ -1316,7 +1281,8 @@ cli_command_snmpwalk = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_snmpget(_app: object, options: Options, args: Args) -> int:
+def _mode_snmpget(_app: object, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    _set_fake_dns(global_options.fake_dns)
     if not args:
         raise MKBailOut("You need to specify an OID.")
     try:
@@ -1391,7 +1357,7 @@ cli_command_snmpget = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_flush(_app: object, _options: Options, args: Args) -> int:
+def _mode_flush(_app: object, _global_options: GlobalOptions, _options: Options, args: Args) -> int:
     hosts = _host_addresses(args)
     plugins = load_checks()
     loading_result = config.load()
@@ -1520,7 +1486,10 @@ cli_command_flush = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_dump_nagios_config(app: CheckmkBaseApp, _options: Options, raw_host_names: Args) -> int:
+def _mode_dump_nagios_config(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     args = _host_addresses(raw_host_names)
 
     from cmk.base.core.nagios import create_config
@@ -1676,7 +1645,10 @@ def _make_configured_notify_relay(
     ).publish_new_config
 
 
-def _mode_update(app: CheckmkBaseApp, _options: Options, _args: Args) -> int:
+def _mode_update(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1794,7 +1766,10 @@ cli_command_update = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_restart(app: CheckmkBaseApp, _options: Options, raw_host_names: Args) -> int:
+def _mode_restart(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     args = _host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load()
@@ -1906,7 +1881,10 @@ cli_command_restart = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_reload(app: CheckmkBaseApp, _options: Options, raw_host_names: Args) -> int:
+def _mode_reload(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     args = _host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load()
@@ -2018,7 +1996,7 @@ cli_command_reload = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_man(_app: object, options: Options, args: Args) -> int:
+def _mode_man(_app: object, _global_options: GlobalOptions, options: Options, args: Args) -> int:
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -2090,7 +2068,9 @@ cli_command_man = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_browse_man(_app: object, _options: Options, _args: Args) -> int:
+def _mode_browse_man(
+    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(
@@ -2121,7 +2101,9 @@ cli_command_browse_man = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_automation(app: CheckmkBaseApp, _options: Options, args: Args) -> int:
+def _mode_automation(
+    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
     from cmk.automations.types import AutomationID
     from cmk.base.automations.automations import (
         AutomationError,
@@ -2183,7 +2165,10 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
     return check_result.state
 
 
-def _mode_check_discovery(app: CheckmkBaseApp, options: Options, args: Args) -> int:
+def _mode_check_discovery(
+    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
     hostname = _host_address(raw_host_name)
     file_cache_options = _handle_fetcher_options(options)
@@ -2623,7 +2608,10 @@ def _preprocess_hostnames(
     return node_names
 
 
-def _mode_discover(app: CheckmkBaseApp, parsed: Options, args: Args) -> int:
+def _mode_discover(
+    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     options = _discovery_options(parsed)
     plugins = load_checks()
     loading_result = config.load()
@@ -3168,7 +3156,10 @@ def run_checking(
     return check_result.state
 
 
-def _mode_check(app: CheckmkBaseApp, parsed: Options, args: Args) -> int:
+def _mode_check(
+    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     options = _checking_options(parsed)
     plugins = load_checks()
     loading_result = config.load()
@@ -3287,7 +3278,10 @@ def _inventory_options(parsed: Mapping[str, object]) -> _InventoryOptions:
     return options
 
 
-def _mode_inventory(app: CheckmkBaseApp, parsed: Options, args: Args) -> int:
+def _mode_inventory(
+    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     options = _inventory_options(parsed)
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -3635,7 +3629,10 @@ def execute_active_check_inventory(
     return result.check_results
 
 
-def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Options, _args: Args) -> int:
+def _mode_inventorize_marked_hosts(
+    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, _args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -3828,7 +3825,9 @@ cli_command_inventorize_marked_hosts = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_version(app: CheckmkBaseApp, _options: Options, _args: Args) -> int:
+def _mode_version(
+    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH

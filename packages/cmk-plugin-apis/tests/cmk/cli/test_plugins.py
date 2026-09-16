@@ -10,6 +10,7 @@ from cmk.cli.internal import (
     CLICommand,
     CLIOption,
     entry_point_prefixes,
+    GlobalOptions,
     Options,
 )
 
@@ -18,7 +19,9 @@ def test_entry_point_prefixes() -> None:
     assert entry_point_prefixes() == {CLICommand: "cli_command_"}
 
 
-def _print_version(_app: object, _options: Options, _args: Args) -> int:
+def _print_version(
+    _app: object, _global_optoins: GlobalOptions, _options: Options, _args: Args
+) -> int:
     return 0
 
 

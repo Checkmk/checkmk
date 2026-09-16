@@ -39,7 +39,30 @@ optional argument.
 """
 
 
-type CommandHandler = Callable[[BaseApp, Options, Args], int]
+@dataclass(frozen=True, kw_only=True)
+class GlobalOptions:
+    """The options every command accepts.
+
+    The engine declares and parses them, and applies the effects that are its own
+    (log level, debug mode, profiling) before the command's handler runs. The
+    handler receives the values for whatever it has to do with them itself.
+    """
+
+    verbosity: int = 0
+    """The number of ``-v`` / ``--verbose`` occurrences"""
+    debug: bool = False
+    """``--debug``: let most Python exceptions raise through"""
+    profile: bool = False
+    """``--profile``: profile the command"""
+    fake_dns: str | None = None
+    """``--fake-dns IP``: use this address for all hosts instead of looking them up
+
+    A plain string: the address type lives in cmk-ccc, on which this package must
+    not depend. The handler that uses it validates it.
+    """
+
+
+type CommandHandler = Callable[[BaseApp, GlobalOptions, Options, Args], int]
 """The signature of a command's handler; it returns the exit status."""
 
 
@@ -94,7 +117,7 @@ class CLICommand:
     Example:
     ********
 
-    >>> def greet(app: BaseApp, options: Options, args: Args) -> int:
+    >>> def greet(app: BaseApp, global_options: GlobalOptions, options: Options, args: Args) -> int:
     ...     print("Hello", ", ".join(args))
     ...     return 0
     >>> mode_greet = CLICommand(
@@ -150,5 +173,6 @@ __all__ = [
     "CLIOption",
     "CommandHandler",
     "entry_point_prefixes",
+    "GlobalOptions",
     "Options",
 ]

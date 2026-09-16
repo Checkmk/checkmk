@@ -32,12 +32,12 @@ import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.base.app import make_app
 from cmk.base.modes.call import call
-from cmk.base.modes.check_mk import general_options
 from cmk.base.modes.modes import (
     discover_modes,
-    GeneralOption,
+    general_options,
     Modes,
-    WithArgument,
+    Option,
+    parse_general_options,
 )
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -54,11 +54,12 @@ from cmk.crash import (
     make_crash_report_base_path,
     VersionInfo,
 )
-from cmk.profiling.backend import output_profile
+from cmk.profiling import backend as profiling
 from cmk.trace.export import (
     exporter_from_config,
     init_span_processor,
 )
+from cmk.utils import log
 from cmk.utils.paths import profile_dir
 
 from .arguments import InvalidArguments, parse, ShowHelp
@@ -145,10 +146,11 @@ def main() -> int:
         del root_logger.handlers[:]  # Remove the default stream handler.
         root_logger.addHandler(handler)
 
-    _log_file_option = GeneralOption(
+    _log_file_option = Option(
         long_option="log-file",
         short_help="Log to the given file (with timestamps) instead of stderr",
-        action=WithArgument(descr="PATH", handler=_enable_file_logging),
+        argument=True,
+        argument_descr="PATH",
     )
 
     modes = Modes(
@@ -161,7 +163,17 @@ def main() -> int:
         sys.stdout.write(parsed.message)
         return 1
 
-    modes.process_general_options(parsed.options)
+    for option, argument in parsed.options:
+        if option.lstrip("-") == _log_file_option.long_option:
+            _enable_file_logging(argument)
+    global_options = parse_general_options(parsed.options)
+    if global_options.verbosity:
+        log.logger.setLevel(log.verbosity_to_log_level(global_options.verbosity))
+    if global_options.debug:
+        cmk.ccc.debug.enable()
+    if global_options.profile:
+        profiling.enable()
+        log.logger.debug("Enabled profiling")
 
     try:
         if isinstance(parsed, ShowHelp):
@@ -171,6 +183,7 @@ def main() -> int:
         return call(
             make_app(cmk_version.edition(OMD_ROOT)),
             parsed.mode,
+            global_options,
             parsed.argument,
             parsed.options,
             parsed.arguments,
@@ -207,4 +220,4 @@ def main() -> int:
         return 1
 
     finally:
-        output_profile(profile_dir)
+        profiling.output_profile(profile_dir)

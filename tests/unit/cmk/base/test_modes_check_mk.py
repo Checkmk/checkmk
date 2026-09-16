@@ -29,6 +29,7 @@ from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
+from cmk.cli.internal import GlobalOptions
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.trace import Context
 from tests.testlib.common.empty_config import EMPTY_CONFIG
@@ -122,7 +123,15 @@ class TestModeDumpAgent:
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
         )
 
-        call(app, make_mode(check_mk.cli_command_dump_agent), hostname, [], [], Context())
+        call(
+            app,
+            make_mode(check_mk.cli_command_dump_agent),
+            GlobalOptions(),
+            hostname,
+            [],
+            [],
+            Context(),
+        )
 
         assert capsys.readouterr().out == raw_data.decode()
 
@@ -228,7 +237,15 @@ class TestModeDumpAgentSnmpBackend:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),  # noqa: ARG005
         )
-        call(app, make_mode(check_mk.cli_command_dump_agent), hostname, options, [], Context())
+        call(
+            app,
+            make_mode(check_mk.cli_command_dump_agent),
+            GlobalOptions(),
+            hostname,
+            options,
+            [],
+            Context(),
+        )
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

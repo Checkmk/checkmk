@@ -13,13 +13,12 @@ import textwrap
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass
 from typing import Final, override
 
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes
+from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes, GlobalOptions
 from cmk.discover_plugins import (
     discover_all_plugins,
     discover_plugins_from_modules,
@@ -34,7 +33,9 @@ ConvertFunction = Callable[[str], object]
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = Sequence[str]
 
-type ModeHandler = Callable[[CheckmkBaseApp, Mapping[str, object], Sequence[str]], int]
+type ModeHandler = Callable[
+    [CheckmkBaseApp, GlobalOptions, Mapping[str, object], Sequence[str]], int
+]
 """The signature of every mode's handler: the application, the parsed sub-options (empty if
 the mode has none) and the positional arguments (none, exactly one, or all remaining ones,
 depending on the declaration); it returns the exit status."""
@@ -218,48 +219,6 @@ def option_names[NameT](
             raise MKGeneralException(f"--{name}: invalid argument {value!r}")
 
 
-@dataclass(frozen=True)
-class Flag:
-    handler: Callable[[], None]
-
-
-@dataclass(frozen=True)
-class WithArgument:
-    descr: str
-    handler: Callable[[Argument], None]
-
-
-Action = Flag | WithArgument
-
-
-def _action_descr(action: Action) -> str | None:
-    match action:
-        case WithArgument(descr=descr):
-            return descr
-        case Flag():
-            return None
-
-
-class GeneralOption(Option):
-    def __init__(
-        self,
-        *,
-        long_option: OptionName,
-        action: Action,
-        short_help: str,
-        short_option: OptionName | None = None,
-    ) -> None:
-        descr = _action_descr(action)
-        super().__init__(
-            long_option=long_option,
-            short_help=short_help,
-            short_option=short_option,
-            argument=descr is not None,
-            argument_descr=descr,
-        )
-        self.action = action
-
-
 class Mode(Option):
     def __init__(
         self,
@@ -365,6 +324,53 @@ def make_mode(command: CLICommand) -> Mode:
     )
 
 
+_VERBOSE_OPTION = Option(
+    long_option="verbose",
+    short_option="v",
+    short_help="Enable verbose output (Use twice for more)",
+)
+
+_DEBUG_OPTION = Option(
+    long_option="debug",
+    short_help="Let most Python exceptions raise through",
+)
+
+_PROFILE_OPTION = Option(
+    long_option="profile",
+    short_help="Enable profiling mode",
+)
+
+_FAKE_DNS_OPTION = Option(
+    long_option="fake-dns",
+    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
+    argument=True,
+    argument_descr="IP",
+)
+
+
+def general_options() -> Sequence[Option]:
+    """The options every command accepts, see `cmk.cli.internal.GlobalOptions`"""
+    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION, _FAKE_DNS_OPTION]
+
+
+def parse_general_options(all_opts: Options) -> GlobalOptions:
+    """Collect the general options from the parsed command line"""
+    verbosity = 0
+    debug = False
+    profile = False
+    fake_dns: str | None = None
+    for option, argument in all_opts:
+        if option in _VERBOSE_OPTION.options():
+            verbosity += 1
+        elif option in _DEBUG_OPTION.options():
+            debug = True
+        elif option in _PROFILE_OPTION.options():
+            profile = True
+        elif option in _FAKE_DNS_OPTION.options():
+            fake_dns = argument
+    return GlobalOptions(verbosity=verbosity, debug=debug, profile=profile, fake_dns=fake_dns)
+
+
 def discover_modes() -> Sequence[Mode]:
     discovered = discover_all_plugins(
         PluginGroup.CLI,
@@ -448,7 +454,7 @@ class Modes:
         self,
         *,
         plugins: Sequence[Mode],
-        general_options: Sequence[GeneralOption],
+        general_options: Sequence[Option],
     ) -> None:
         super().__init__()
         modes = [*plugins, self.mode_help()]
@@ -462,7 +468,9 @@ class Modes:
     def mode_help(self) -> Mode:
         # It's a little weird to implement the --help option like this,
         # but it is the easiest way to be consistent with how we use `getopt`.
-        def _show_help(_app: object, _options: object, _args: object) -> int:
+        def _show_help(
+            _app: object, _global_options: GlobalOptions, _options: object, _args: object
+        ) -> int:
             write_paged(self.help())
             return 0
 
@@ -516,27 +524,6 @@ NOTES:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    #
-    # GENERAL OPTIONS
-    #
-
-    def process_general_options(self, all_opts: Options) -> None:
-        for o, a in all_opts:
-            if (option := self._get_general_option(o)) is None:
-                continue
-
-            match option.action:
-                case Flag(handler=handler):
-                    handler()
-                case WithArgument(handler=handler):
-                    handler(a)
-
     def _general_option_help(self) -> str:
         texts = [option.short_help_text(fmt="  %-21s") for option in self._general_options]
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
-
-    def _get_general_option(self, opt: str) -> GeneralOption | None:
-        for option in self._general_options:
-            if opt.lstrip("-") in [option.long_option, option.short_option]:
-                return option
-        return None

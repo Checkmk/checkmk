@@ -12,6 +12,7 @@ from cmk.base.modes.modes import (
     Options,
     parse_sub_options,
 )
+from cmk.cli.internal import GlobalOptions
 
 tracer = trace.get_tracer()
 
@@ -19,6 +20,7 @@ tracer = trace.get_tracer()
 def call(
     app: CheckmkBaseApp,
     mode: Mode,
+    global_options: GlobalOptions,
     arg: Argument,
     all_opts: Options,
     all_args: Arguments,
@@ -38,8 +40,8 @@ def call(
         f"mode[{mode.name}]",
         attributes={
             "cmk.base.mode.name": mode.name,
-            "cmk.base.mode.args": repr((sub_options, args)),
+            "cmk.base.mode.args": repr((global_options, sub_options, args)),
         },
         context=trace_context,
     ):
-        return mode.handler_function(app, sub_options, args)
+        return mode.handler_function(app, global_options, sub_options, args)

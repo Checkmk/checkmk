@@ -31,7 +31,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
-from cmk.cli.internal import Args, CLICommand, CLIOption, Options
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,
@@ -135,7 +135,9 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
             )
 
 
-def _mode_create_diagnostics_dump(_app: object, parsed: Options, _args: Args) -> int:
+def _mode_create_diagnostics_dump(
+    _app: object, _global_options: GlobalOptions, parsed: Options, _args: Args
+) -> int:
     options = _cli_selection(parsed)
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     loading_result = load_config()

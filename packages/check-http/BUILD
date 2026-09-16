@@ -22,10 +22,11 @@ rust_library(
     aliases = aliases(),
     crate_name = "check_http",
     edition = "2021",
+    link_deps = ["@openssl"],
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    deps = all_crate_deps() + ["@openssl"],
+    deps = all_crate_deps(),
 )
 
 rust_test(

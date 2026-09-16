@@ -6,7 +6,7 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HostApi } from '@/monitoring/all-hosts/api/hosts'
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostsPageMeta, HostsResponse } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
 

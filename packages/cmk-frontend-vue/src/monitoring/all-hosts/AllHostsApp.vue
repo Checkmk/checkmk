@@ -14,6 +14,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -37,7 +38,6 @@ import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
   type SlideInUrlDescriptor,
-  exactPattern,
   readSlideInFromHash,
   slideInWriter
 } from '../shared/urlState/slideInState'
@@ -46,7 +46,6 @@ import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
-import { HostApi } from './api/hosts'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
@@ -261,25 +260,7 @@ const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
       : { site_id: siteId, name }
   },
   matches: (host, identity) => host.name === identity.name && host.site_id === identity.site_id,
-  load: async (identity) => {
-    // `name` offers no equality operator, so an anchored pattern stands in for
-    // one and the exact row is picked out of what comes back.
-    const response = await hostApi.fetchHosts({
-      filter: {
-        type: 'and',
-        children: [
-          { type: 'condition', field: 'name', op: 'matches', value: exactPattern(identity.name) },
-          { type: 'condition', field: 'site_id', op: 'one_of', value: [identity.site_id] }
-        ]
-      },
-      limit: 1
-    })
-    return (
-      response.hosts.find(
-        (host) => host.name === identity.name && host.site_id === identity.site_id
-      ) ?? null
-    )
-  }
+  load: async (identity) => hostApi.fetchHost(identity)
 }
 
 useUrlSync([

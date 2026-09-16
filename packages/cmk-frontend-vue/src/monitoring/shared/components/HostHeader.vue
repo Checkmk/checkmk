@@ -15,10 +15,11 @@ import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader
 const props = withDefaults(
   defineProps<{
     host: HostEntry
+    url?: string | undefined
     actions?: CellAction[]
     loadActionMenu?: (() => Promise<CellAction[]>) | undefined
   }>(),
-  { actions: () => [], loadActionMenu: undefined }
+  { url: undefined, actions: () => [], loadActionMenu: undefined }
 )
 
 const emit = defineEmits<{
@@ -35,13 +36,14 @@ function onSelect(action: CellAction): void {
 <template>
   <SlideInHeader
     :title="host.name"
+    :title-url="url"
     :modes="host.modes ?? []"
     :actions="actions"
     :load-action-menu="loadActionMenu"
     @select="onSelect"
   >
     <template #state>
-      <span class="monitoring-host-slide-in-header__state">
+      <span class="monitoring-host-header__state">
         <HostStateDisplay :state="host.state" :stale="host.stale" />
         <StateModeIcons :flapping="host.is_flapping" :stale="host.stale" />
       </span>
@@ -50,7 +52,7 @@ function onSelect(action: CellAction): void {
 </template>
 
 <style scoped>
-.monitoring-host-slide-in-header__state {
+.monitoring-host-header__state {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-3);

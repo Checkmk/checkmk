@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 
 import type { HostMode, ServiceMode } from '@/monitoring/shared/api/types'
@@ -16,11 +17,12 @@ import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 withDefaults(
   defineProps<{
     title: string
+    titleUrl?: string | undefined
     modes?: (HostMode | ServiceMode)[]
     actions?: CellAction[]
     loadActionMenu?: (() => Promise<CellAction[]>) | undefined
   }>(),
-  { modes: () => [], actions: () => [], loadActionMenu: undefined }
+  { titleUrl: undefined, modes: () => [], actions: () => [], loadActionMenu: undefined }
 )
 
 const emit = defineEmits<{
@@ -37,7 +39,8 @@ const emit = defineEmits<{
       <span class="monitoring-slide-in-header__divider" aria-hidden="true" />
     </template>
     <CmkHeading type="h2" class="monitoring-slide-in-header__title">
-      {{ title }}
+      <CmkLink v-if="titleUrl" :href="titleUrl">{{ title }}</CmkLink>
+      <template v-else>{{ title }}</template>
     </CmkHeading>
     <ActionButtons
       v-if="loadActionMenu || actions.length > 0"

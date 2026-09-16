@@ -7,8 +7,8 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import HostSlideInHeader from '@/monitoring/all-hosts/components/slide-in/HostSlideInHeader.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 
 beforeAll(() => {
@@ -54,14 +54,29 @@ const INLINE_ACTIONS: CellAction[] = [
 ]
 
 test('renders the host state badge and name', () => {
-  render(HostSlideInHeader, { props: { host: makeHost() } })
+  render(HostHeader, { props: { host: makeHost() } })
 
   expect(screen.getByText('UP')).toBeInTheDocument()
   expect(screen.getByText('web-1')).toBeInTheDocument()
 })
 
+test('renders the host name as plain text when no url is given', () => {
+  render(HostHeader, { props: { host: makeHost() } })
+
+  expect(screen.queryByRole('link', { name: 'web-1' })).not.toBeInTheDocument()
+})
+
+test('links the host name to the given url', () => {
+  render(HostHeader, { props: { host: makeHost(), url: 'monitor_all_hosts.py#host=web-1' } })
+
+  expect(screen.getByRole('link', { name: 'web-1' })).toHaveAttribute(
+    'href',
+    'monitor_all_hosts.py#host=web-1'
+  )
+})
+
 test('renders the mode icons ahead of the host name', () => {
-  render(HostSlideInHeader, {
+  render(HostHeader, {
     props: {
       host: makeHost({
         modes: [
@@ -83,7 +98,7 @@ test('renders the mode icons ahead of the host name', () => {
 })
 
 test('shows a flapping badge between the state and the host name', () => {
-  render(HostSlideInHeader, { props: { host: makeHost({ is_flapping: true }) } })
+  render(HostHeader, { props: { host: makeHost({ is_flapping: true }) } })
 
   const flapping = screen.getByTitle('Flapping')
   expect(flapping.compareDocumentPosition(screen.getByText('UP'))).toBe(
@@ -95,20 +110,20 @@ test('shows a flapping badge between the state and the host name', () => {
 })
 
 test('shows a stale badge when the host is stale', () => {
-  render(HostSlideInHeader, { props: { host: makeHost({ stale: true }) } })
+  render(HostHeader, { props: { host: makeHost({ stale: true }) } })
 
   expect(screen.getByTitle('Stale')).toBeInTheDocument()
 })
 
 test('shows neither badge for a host that is neither flapping nor stale', () => {
-  render(HostSlideInHeader, { props: { host: makeHost() } })
+  render(HostHeader, { props: { host: makeHost() } })
 
   expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
   expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
 })
 
 test('renders the inline actions as links with their host-specific tooltips', () => {
-  render(HostSlideInHeader, { props: { host: makeHost(), actions: INLINE_ACTIONS } })
+  render(HostHeader, { props: { host: makeHost(), actions: INLINE_ACTIONS } })
 
   expect(screen.getByRole('link', { name: 'Show status of host web-1' })).toHaveAttribute(
     'href',
@@ -126,7 +141,7 @@ test('emits command with the host when a menu command entry is selected', async 
       { id: 'reschedule', label: 'Reschedule check' as TranslatedString, icon: 'reload' }
     ]
   )
-  const { emitted } = render(HostSlideInHeader, {
+  const { emitted } = render(HostHeader, {
     props: { host: makeHost(), actions: INLINE_ACTIONS, loadActionMenu: load }
   })
 

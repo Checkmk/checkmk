@@ -5,16 +5,18 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { MonitoringApi, type MonitoringQueryParams } from '@/monitoring/shared/api/MonitoringApi'
-
 import type {
   FilterNode,
+  HostEntry,
   HostOptionalField,
   HostOverview,
   HostRef,
   HostsRequestBody,
   HostsResponse
-} from '../../shared/api/types'
+} from '@/monitoring/shared/api/types'
+import { exactPattern } from '@/monitoring/shared/urlState/slideInState'
+
+import { MonitoringApi, type MonitoringQueryParams } from './MonitoringApi'
 
 export interface HostQueryParams extends MonitoringQueryParams {
   // `FilterNode` spans every monitoring page's fields, including service-only ones like
@@ -40,6 +42,26 @@ export class HostApi extends MonitoringApi {
         body,
         ...(signal && { signal })
       })
+    )
+  }
+
+  public async fetchHost(host: HostRef, signal?: AbortSignal): Promise<HostEntry | null> {
+    const response = await this.fetchHosts(
+      {
+        filter: {
+          type: 'and',
+          children: [
+            { type: 'condition', field: 'name', op: 'matches', value: exactPattern(host.name) },
+            { type: 'condition', field: 'site_id', op: 'one_of', value: [host.site_id] }
+          ]
+        },
+        limit: 1
+      },
+      signal
+    )
+    return (
+      response.hosts.find((entry) => entry.name === host.name && entry.site_id === host.site_id) ??
+      null
     )
   }
 

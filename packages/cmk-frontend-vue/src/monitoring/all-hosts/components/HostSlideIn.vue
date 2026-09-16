@@ -11,10 +11,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
-import { HostApi } from '@/monitoring/all-hosts/api/hosts'
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/events/api'
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
+import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
@@ -26,7 +27,6 @@ import { useSlideInActions } from '@/monitoring/shared/services/useSlideInAction
 
 import HostOverviewSkeleton from './slide-in/HostOverviewSkeleton.vue'
 import HostOverviewTab from './slide-in/HostOverviewTab.vue'
-import HostSlideInHeader from './slide-in/HostSlideInHeader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -156,7 +156,7 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
     @update:active-tab-id="emit('update:activeTabId', $event)"
   >
     <template #above-tabs>
-      <HostSlideInHeader
+      <HostHeader
         v-if="host"
         :host="host"
         :actions="inlineActions"

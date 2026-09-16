@@ -34,6 +34,7 @@ from cmk.gui.sidebar import (
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.transaction_manager import transactions
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -116,7 +117,7 @@ def fixture_extra_snapins() -> Iterator[None]:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions)
 
 
 def _only_test_snapins(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -24,6 +24,7 @@ from cmk.gui.monitor.hosts._pages._monitor_all_hosts import (
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.transaction_manager import transactions
 from tests.testlib.gui.users import create_and_destroy_user
 
 
@@ -47,7 +48,7 @@ def test_page_denied_without_legacy_view_permission() -> None:
     page = MonitorAllHostsPage(MonitorCommands(monitor_command_registry), DowntimeRecurrences())
 
     with pytest.raises(MKAuthException):
-        page.page(PageContext(config=Config(), request=request))
+        page.page(PageContext(config=Config(), request=request, transactions=transactions))
 
 
 @pytest.mark.usefixtures("user_without_permissions")

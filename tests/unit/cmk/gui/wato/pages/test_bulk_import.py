@@ -20,6 +20,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.bulk_import import (
     _attribute_choices,
     _detect_attribute,
@@ -197,7 +198,9 @@ def test_bulk_import_csv_parsing(
     host_attributes = all_host_attributes(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
-    mode_bulk_import = ModeBulkImport(test_edition, PageContext(config=Config(), request=request))
+    mode_bulk_import = ModeBulkImport(
+        test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+    )
     request.set_var("attribute_0", "host_name")
     request.set_var("attribute_1", "ipaddress")
 

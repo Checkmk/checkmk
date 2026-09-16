@@ -11,12 +11,15 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.users import ModeUsers
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme", "with_admin_login")
 def test_show_user_list_without_locked_field(test_edition: Edition) -> None:
-    mode = ModeUsers(test_edition, PageContext(config=Config(), request=request))
+    mode = ModeUsers(
+        test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+    )
     users = {
         UserId("u1"): UserSpec(alias="User one"),
     }

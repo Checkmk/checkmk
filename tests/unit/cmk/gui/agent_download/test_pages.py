@@ -26,6 +26,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request as global_request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 
 
 def _shipped_page(allowed_dirs: Sequence[Path]) -> PageDownloadAgentPlugin:
@@ -67,7 +68,7 @@ def test_download_href_local_plugin_family_file_uses_authenticated_handler() -> 
 
 @pytest.fixture(name="page_context")
 def fixture_page_context(request_context: None) -> PageContext:
-    return PageContext(config=Config(), request=global_request)
+    return PageContext(config=Config(), request=global_request, transactions=transactions)
 
 
 def test_page_download_serves_allowed_plugin_file(
@@ -255,7 +256,8 @@ def test_other_mode_shows_shipped_and_local_file_in_one_section(
 
     sections = list(
         ModeDownloadAgentsOther(  # noqa: SLF001
-            test_edition, PageContext(config=Config(), request=global_request)
+            test_edition,
+            PageContext(config=Config(), request=global_request, transactions=transactions),
         )._extra_sections()
     )
 
@@ -280,7 +282,8 @@ def test_other_mode_titles_share_tree_section_by_path(test_edition: cmk_version.
     # Files below the share tree keep their existing label.
     assert (
         ModeDownloadAgentsOther(  # noqa: SLF001
-            test_edition, PageContext(config=Config(), request=global_request)
+            test_edition,
+            PageContext(config=Config(), request=global_request, transactions=transactions),
         )._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins")
         == "Plug-ins"
     )

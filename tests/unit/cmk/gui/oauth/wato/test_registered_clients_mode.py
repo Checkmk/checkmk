@@ -38,7 +38,7 @@ def test_page_renders_registered_client_details(
 
     with output_funnel.plugged():
         ModeRegisteredOAuthClients(
-            test_edition, PageContext(config=Config(), request=request)
+            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
         ).page(Config())
         written = "".join(output_funnel.drain())
 
@@ -53,7 +53,7 @@ def test_page_renders_registered_client_details(
 def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
     with output_funnel.plugged():
         ModeRegisteredOAuthClients(
-            test_edition, PageContext(config=Config(), request=request)
+            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
         ).page(Config())
         written = "".join(output_funnel.drain())
 
@@ -79,7 +79,8 @@ class TestModeRegisteredOAuthClientsAction:
             request.set_var("_transid", "-1")
 
             ModeRegisteredOAuthClients(
-                test_edition, PageContext(config=Config(), request=request)
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
             ).action(Config())
 
         with get_client_store() as store:
@@ -107,7 +108,8 @@ class TestModeRegisteredOAuthClientsAction:
             request.set_var("_transid", "-1")
 
             ModeRegisteredOAuthClients(
-                test_edition, PageContext(config=Config(), request=request)
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
             ).action(Config())
 
         with get_client_store() as store:
@@ -131,7 +133,8 @@ class TestModeRegisteredOAuthClientsAction:
             flask_app.preprocess_request()
 
             ModeRegisteredOAuthClients(
-                test_edition, PageContext(config=Config(), request=request)
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
             ).action(Config())
 
         with get_client_store() as store:

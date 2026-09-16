@@ -26,6 +26,7 @@ from cmk.gui.sidebar._snapin._search import (
 )
 from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -39,7 +40,7 @@ def fixture_permissive_user(
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions)
 
 
 @pytest.mark.parametrize(

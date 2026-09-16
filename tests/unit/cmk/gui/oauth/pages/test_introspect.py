@@ -17,6 +17,7 @@ from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import DEFAULT_SCOPE
+from cmk.gui.utils.transaction_manager import transactions
 from tests.testlib.gui.users import create_and_destroy_user
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -55,7 +56,7 @@ class TestOAuthIntrospectPage:
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -72,7 +73,7 @@ class TestOAuthIntrospectPage:
         ):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -91,7 +92,7 @@ class TestOAuthIntrospectPage:
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -109,7 +110,7 @@ class TestOAuthIntrospectPage:
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -126,7 +127,7 @@ class TestOAuthIntrospectPage:
             with flask_app.test_request_context(method="POST", data={"token": token}):
                 flask_app.preprocess_request()
                 OAuthIntrospectPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
                 assert response.status_code == 200
@@ -141,7 +142,7 @@ class TestOAuthIntrospectPage:
         ):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -157,7 +158,7 @@ class TestOAuthIntrospectPage:
         ):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -167,7 +168,7 @@ class TestOAuthIntrospectPage:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 405
@@ -180,7 +181,7 @@ class TestOAuthIntrospectPage:
         ):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -192,7 +193,7 @@ class TestOAuthIntrospectPage:
         ):
             flask_app.preprocess_request()
             OAuthIntrospectPage(lambda: False).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 404

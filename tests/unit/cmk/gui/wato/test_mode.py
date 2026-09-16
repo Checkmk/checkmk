@@ -15,6 +15,7 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import _base, WatoMode
@@ -92,7 +93,10 @@ class TestWatoMode:
     @pytest.mark.usefixtures("request_context", "main_module_registry")
     def test_breadcrumb_without_additions(self, test_edition: Edition) -> None:
         assert list(
-            SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
+            SomeWatoMode(
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
+            ).breadcrumb()
         ) == [
             BreadcrumbItem(title="Hosts", url=None, id="hosts"),
             BreadcrumbItem(
@@ -124,7 +128,10 @@ class TestWatoMode:
             additional_breadcrumb_items,
         )
         assert list(
-            SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
+            SomeWatoMode(
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
+            ).breadcrumb()
         ) == [
             BreadcrumbItem(title="Hosts", url=None, id="hosts"),
             BreadcrumbItem(title="In between 1", url=None, id=None),

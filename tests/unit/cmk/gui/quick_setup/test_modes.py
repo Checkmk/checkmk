@@ -10,6 +10,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
 from cmk.gui.quick_setup._modes import ModeConfigurationBundle
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 
 
@@ -25,7 +26,9 @@ def test_mode_configuration_bundle_action_crashes_when_bundle_missing(
 
     # __init__ calls _from_vars(), which finds the bundle missing and returns early
     # without setting self._bundle — exactly mirroring the crash scenario.
-    mode = ModeConfigurationBundle(test_edition, PageContext(config=Config(), request=request))
+    mode = ModeConfigurationBundle(
+        test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+    )
 
     # The fix ensures self._bundle is never accessed when self._existing_bundle is False.
     assert not hasattr(mode, "_bundle")

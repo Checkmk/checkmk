@@ -19,6 +19,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import UserSidebarSnapin
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.fixture(scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -371,6 +372,7 @@ def test_ajax_fold(
         PageContext(
             config=Config(),
             request=Request(create_environ()),
+            transactions=transactions,
         )
     )
 
@@ -422,6 +424,7 @@ def test_ajax_openclose_close(mocker: MockerFixture, origin_state: str, set_stat
         PageContext(
             config=Config(),
             request=Request(create_environ()),
+            transactions=transactions,
         )
     )
 
@@ -454,6 +457,7 @@ def test_move_snapin_not_permitted(monkeypatch: pytest.MonkeyPatch, mocker: Mock
             PageContext(
                 config=Config(),
                 request=Request(create_environ()),
+                transactions=transactions,
             )
         )
         m_load.assert_not_called()
@@ -475,6 +479,7 @@ def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: boo
         PageContext(
             config=Config(),
             request=Request(create_environ()),
+            transactions=transactions,
         )
     )
 

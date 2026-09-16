@@ -23,6 +23,7 @@ from cmk.gui.sidebar._snapin._base import SidebarSnapin
 from cmk.gui.sidebar._snapin_dashlet import SnapinDashlet, SnapinWidgetIFramePage
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.transaction_manager import transactions
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -79,7 +80,7 @@ def _dashlet_spec(snapin: str) -> SnapinDashletConfig:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions)
 
 
 def test_dashlet_metadata() -> None:

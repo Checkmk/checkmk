@@ -11,6 +11,7 @@ from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.mark.usefixtures("request_context")
@@ -25,7 +26,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 201
@@ -45,7 +46,7 @@ class TestOAuthClientRegistrationPage:
         with flask_app.test_request_context(method="POST", json=submitted):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 201
@@ -59,13 +60,13 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
             assert isinstance(response.json, dict)
             first_client_id = response.json["client_id"]
 
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
             assert isinstance(response.json, dict)
             second_client_id = response.json["client_id"]
@@ -76,7 +77,7 @@ class TestOAuthClientRegistrationPage:
         with flask_app.test_request_context(method="POST"):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: False).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 404
@@ -85,7 +86,7 @@ class TestOAuthClientRegistrationPage:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 405
@@ -94,7 +95,7 @@ class TestOAuthClientRegistrationPage:
         with flask_app.test_request_context(method="POST"):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -106,7 +107,7 @@ class TestOAuthClientRegistrationPage:
         with flask_app.test_request_context(method="POST", json={}):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -117,7 +118,7 @@ class TestOAuthClientRegistrationPage:
         with flask_app.test_request_context(method="POST", json={"redirect_uris": []}):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -132,7 +133,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -147,7 +148,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -161,7 +162,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -175,7 +176,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert isinstance(response.json, dict)
@@ -200,7 +201,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -214,7 +215,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -231,7 +232,7 @@ class TestOAuthClientRegistrationPage:
         ):
             flask_app.preprocess_request()
             OAuthClientRegistrationPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400

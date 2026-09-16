@@ -58,7 +58,9 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_editio
     _issue_token(_USER, client_id)
 
     with output_funnel.plugged():
-        ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).page(Config())
+        ModeOAuthTokens(
+            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+        ).page(Config())
         written = "".join(output_funnel.drain())
 
     assert _USER in written
@@ -68,7 +70,9 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_editio
 @pytest.mark.usefixtures("request_context")
 def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
     with output_funnel.plugged():
-        ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).page(Config())
+        ModeOAuthTokens(
+            test_edition, PageContext(config=Config(), request=request, transactions=transactions)
+        ).page(Config())
         written = "".join(output_funnel.drain())
 
     assert "No entries" in written
@@ -91,9 +95,10 @@ class TestModeOAuthTokensAction:
             transactions.ignore()
             request.set_var("_transid", "-1")
 
-            ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).action(
-                Config()
-            )
+            ModeOAuthTokens(
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
+            ).action(Config())
 
         with get_token_store() as store:
             assert store.get_by_token(token) is None
@@ -122,9 +127,10 @@ class TestModeOAuthTokensAction:
             transactions.ignore()
             request.set_var("_transid", "-1")
 
-            ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).action(
-                Config()
-            )
+            ModeOAuthTokens(
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
+            ).action(Config())
 
         with get_token_store() as store:
             assert store.get_by_token(checked) is None
@@ -145,9 +151,10 @@ class TestModeOAuthTokensAction:
         ):
             flask_app.preprocess_request()
 
-            ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).action(
-                Config()
-            )
+            ModeOAuthTokens(
+                test_edition,
+                PageContext(config=Config(), request=request, transactions=transactions),
+            ).action(Config())
 
         with get_token_store() as store:
             assert store.get_by_token(token) is not None

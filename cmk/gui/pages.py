@@ -8,7 +8,7 @@ import abc
 import http.client as http_client
 import json
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import override, Protocol
 
 import cmk.ccc.plugin_registry
@@ -22,7 +22,6 @@ from cmk.gui.http import Request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 from cmk.gui.utils.transaction_manager import TransactionManager
-from cmk.gui.utils.transaction_manager import transactions as _request_transactions
 
 PageResult = object
 
@@ -33,10 +32,7 @@ class PageContext:
 
     config: Config
     request: Request
-    # Defaults to the request-local manager so that the many places building a
-    # context for a page that never starts a transaction need not name it. Every
-    # caller serving a real request passes it explicitly.
-    transactions: TransactionManager = field(default_factory=lambda: _request_transactions)
+    transactions: TransactionManager
 
 
 class PageHandler(Protocol):

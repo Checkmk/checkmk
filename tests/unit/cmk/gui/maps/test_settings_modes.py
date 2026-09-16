@@ -21,6 +21,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.maps.gui import _settings_modes
 from cmk.maps.gui._config_domain import (
@@ -116,7 +117,9 @@ def test_daemon_form_rejects_an_out_of_range_refresh_interval(
     TypedDict shape, and the value is replicated to the daemon.
     """
     monkeypatch.setattr(ConfigDomainMaps, "config_dir", lambda self: tmp_path)  # noqa: ARG005
-    mode = ModeMapsDaemonSettings(Edition.COMMUNITY, PageContext(config=Config(), request=request))
+    mode = ModeMapsDaemonSettings(
+        Edition.COMMUNITY, PageContext(config=Config(), request=request, transactions=transactions)
+    )
 
     with pytest.raises((MKUserError, MKGeneralException)):
         mode._valuespec().validate_value(  # noqa: SLF001
@@ -135,7 +138,9 @@ def test_daemon_form_accepts_a_valid_refresh_interval(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(ConfigDomainMaps, "config_dir", lambda self: tmp_path)  # noqa: ARG005
-    mode = ModeMapsDaemonSettings(Edition.COMMUNITY, PageContext(config=Config(), request=request))
+    mode = ModeMapsDaemonSettings(
+        Edition.COMMUNITY, PageContext(config=Config(), request=request, transactions=transactions)
+    )
 
     mode._valuespec().validate_value(  # noqa: SLF001
         {

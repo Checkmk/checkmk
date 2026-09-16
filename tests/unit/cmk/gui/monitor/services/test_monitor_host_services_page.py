@@ -32,6 +32,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuEntry, PageMenuLink
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.transaction_manager import transactions
 from tests.testlib.gui.users import create_and_destroy_user
 
 
@@ -57,11 +58,11 @@ def test_page_denied_without_legacy_view_permission() -> None:
     )
 
     with pytest.raises(MKAuthException):
-        page.page(PageContext(config=Config(), request=request))
+        page.page(PageContext(config=Config(), request=request, transactions=transactions))
 
 
 def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
-    ctx = PageContext(config=Config(), request=request)
+    ctx = PageContext(config=Config(), request=request, transactions=transactions)
     return _make_breadcrumb(
         ctx,
         HostName(host),

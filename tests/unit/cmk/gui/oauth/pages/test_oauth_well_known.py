@@ -10,13 +10,16 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request, response
 from cmk.gui.oauth.pages._oauth_well_known import OAuthAuthorizationServerMetadataPage
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.mark.usefixtures("request_context")
 class TestOAuthAuthorizationServerMetadataPage:
     def test_returns_metadata_when_enabled(self) -> None:
         OAuthAuthorizationServerMetadataPage(lambda: True).handle_page(
-            PageContext(config=Config(), request=Request(create_environ()))
+            PageContext(
+                config=Config(), request=Request(create_environ()), transactions=transactions
+            )
         )
 
         assert response.status_code == 200
@@ -34,7 +37,9 @@ class TestOAuthAuthorizationServerMetadataPage:
 
     def test_returns_404_when_disabled(self) -> None:
         OAuthAuthorizationServerMetadataPage(lambda: False).handle_page(
-            PageContext(config=Config(), request=Request(create_environ()))
+            PageContext(
+                config=Config(), request=Request(create_environ()), transactions=transactions
+            )
         )
 
         assert response.status_code == 404

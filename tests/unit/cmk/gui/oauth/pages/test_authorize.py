@@ -25,7 +25,7 @@ from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.transaction_manager import TransactionManager, transactions
 from cmk.utils.redis import disable_redis, get_redis_client
 
 _SESSION_USER = UserId("alice")
@@ -152,7 +152,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -168,7 +168,7 @@ class TestOAuthAuthorizePage:
         with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -183,7 +183,7 @@ class TestOAuthAuthorizePage:
         with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -200,7 +200,7 @@ class TestOAuthAuthorizePage:
         with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -218,7 +218,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -234,7 +234,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 405
@@ -250,7 +250,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -280,7 +280,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -312,7 +312,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -333,7 +333,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert 'action="/oauth-heute/authorize"' in response.get_data(as_text=True)
@@ -351,7 +351,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             assert response.status_code == 200
@@ -386,7 +386,7 @@ class TestOAuthAuthorizePage:
                 pytest.raises(MKGeneralException, match="CSRF"),
             ):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
         assert get_redis_client().keys() == []
@@ -402,7 +402,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             assert response.status_code == 200
@@ -432,7 +432,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -457,7 +457,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             assert response.status_code == 200
@@ -479,7 +479,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -521,7 +521,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 400
@@ -568,7 +568,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 200
@@ -612,7 +612,7 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
         assert _logged_reason(security_log) == reason
@@ -622,7 +622,7 @@ class TestOAuthAuthorizePage:
         with flask_app.test_request_context(query_string=_authorize_request(client_id=None)):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: False).handle_page(
-                PageContext(config=Config(), request=request)
+                PageContext(config=Config(), request=request, transactions=transactions)
             )
 
             assert response.status_code == 404
@@ -644,7 +644,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -693,7 +693,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -727,7 +727,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -756,7 +756,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -777,7 +777,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
         assert get_redis_client().keys() == []
@@ -798,7 +798,7 @@ class TestOAuthAuthorizePage:
                 disable_redis(),
             ):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -823,7 +823,7 @@ class TestOAuthAuthorizePage:
                 caplog.at_level(logging.ERROR, logger="cmk.web"),
             ):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
         [logged] = [record for record in caplog.records if record.name == "cmk.web"]
@@ -842,7 +842,7 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                    PageContext(config=Config(), request=request, transactions=transactions)
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))

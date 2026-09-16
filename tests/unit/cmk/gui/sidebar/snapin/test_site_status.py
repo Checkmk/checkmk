@@ -20,6 +20,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.sidebar._snapin._site_status import SiteStatus as SiteStatusSnapin
 from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.transaction_manager import transactions
 
 
 class RecordingSiteConfig:
@@ -160,7 +161,7 @@ def test_show_offers_the_bulk_switches(
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions)
 
 
 def test_switch_site_needs_the_snapin_permission(

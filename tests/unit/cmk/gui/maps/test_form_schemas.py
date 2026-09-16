@@ -13,6 +13,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.maps.gui import _settings
 from cmk.maps.gui._form_schemas import _build_spec, AjaxMapsFormParse, AjaxMapsFormSchema
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -34,7 +35,7 @@ _STORED_METADATA = {
 def _page_context(spec_name: str, values: object) -> PageContext:
     request.set_var("spec", spec_name)
     request.set_var("request", json.dumps({"data": values}))
-    return PageContext(config=Config(), request=request)
+    return PageContext(config=Config(), request=request, transactions=transactions)
 
 
 @pytest.fixture(name="no_connections")

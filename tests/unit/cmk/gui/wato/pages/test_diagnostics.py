@@ -22,6 +22,7 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.wato.pages import diagnostics as diagnostics_page
 
@@ -76,7 +77,7 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_vs_diagnostics_builds_from_discovered_plugins() -> None:
     request.set_var("select_site_p_site", "NO_SITE")
     mode = diagnostics_page.ModeDiagnostics(
-        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+        Edition.COMMUNITY, PageContext(config=Config(), request=request, transactions=transactions)
     )
 
     valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())  # noqa: SLF001
@@ -113,7 +114,7 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
     )
     request.set_var("select_site_p_site", "NO_SITE")
     mode = diagnostics_page.ModeDiagnostics(
-        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+        Edition.COMMUNITY, PageContext(config=Config(), request=request, transactions=transactions)
     )
 
     elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())  # noqa: SLF001
@@ -131,7 +132,7 @@ def test_form_submission_resolves_topic_thresholds() -> None:
     request.set_var("diagnostics_p_checkmk_server_host", "myserver")
 
     mode = diagnostics_page.ModeDiagnostics(
-        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+        Edition.COMMUNITY, PageContext(config=Config(), request=request, transactions=transactions)
     )
     params = mode._diagnostics_parameters  # noqa: SLF001
 

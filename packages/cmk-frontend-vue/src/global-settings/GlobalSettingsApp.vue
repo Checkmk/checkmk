@@ -43,11 +43,17 @@ function urlParam(name: string): string | null {
   return new URLSearchParams(window.location.search).get(name)
 }
 
+const hasSiteOverrides =
+  props.topics.some((topic) =>
+    topic.variables.some((variable) => isSiteOverride(variable, props.scope))
+  ) || props.scope.type === 'site'
+
 function parseModificationFilter(value: string | null): ModificationFilter {
   switch (value) {
     case 'modified':
-    case 'site':
       return value
+    case 'site':
+      return hasSiteOverrides ? value : 'all'
     default:
       return 'all'
   }
@@ -74,7 +80,7 @@ const variableFilter = computed<VariableFilter | null>(() => {
     case 'modified':
       return isModified
     case 'site':
-      return isSiteOverride
+      return (variable) => isSiteOverride(variable, props.scope)
     default:
       return null
   }
@@ -146,7 +152,10 @@ function resetSearchAndFilters(): void {
         :show-submit-button="false"
       />
       <div class="global-settings-app__toolbar-right">
-        <GlobalSettingsModificationFilter v-model="modification" />
+        <GlobalSettingsModificationFilter
+          v-model="modification"
+          :show-site-overrides="hasSiteOverrides"
+        />
         <ExpandCollapseButtons
           @expand-all="openedItems = shownTopics.map((topic) => topic.headline)"
           @collapse-all="openedItems = []"

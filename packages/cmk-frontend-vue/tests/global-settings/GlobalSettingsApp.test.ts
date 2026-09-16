@@ -111,6 +111,22 @@ const resettableTopic: GlobalSettingsTopic = {
   ]
 }
 
+const overriddenTopic: GlobalSettingsTopic = {
+  ...data.topics[0]!,
+  variables: [
+    {
+      ...data.topics[0]!.variables[0]!,
+      site_overrides: [
+        {
+          site_id: 'remote_1',
+          title: 'Remote site 1',
+          url: '/remote_1/check_mk/site_specific_settings.py?site=remote_1'
+        }
+      ]
+    }
+  ]
+}
+
 const siteMixedTopic: GlobalSettingsTopic = {
   ...resettableTopic,
   variables: [
@@ -386,21 +402,6 @@ describe('GlobalSettingsApp', () => {
   })
 
   test('the editor shows the factory value and the overriding sites alongside the current one', async () => {
-    const overriddenTopic: GlobalSettingsTopic = {
-      ...data.topics[0]!,
-      variables: [
-        {
-          ...data.topics[0]!.variables[0]!,
-          site_overrides: [
-            {
-              site_id: 'remote_1',
-              title: 'Remote site 1',
-              url: '/remote_1/check_mk/wato.py?mode=edit_site_globals&site=remote_1'
-            }
-          ]
-        }
-      ]
-    }
     render(GlobalSettingsApp, { props: { ...data, topics: [overriddenTopic] } })
     await userEvent.click(
       screen.getByRole('button', { name: 'Toggle accordion item User management' })
@@ -418,7 +419,7 @@ describe('GlobalSettingsApp', () => {
     expect(within(dialog).getByText('Remote site 1')).toBeVisible()
     expect(within(dialog).getByRole('link', { name: 'Open site settings' })).toHaveAttribute(
       'href',
-      '/remote_1/check_mk/wato.py?mode=edit_site_globals&site=remote_1'
+      '/remote_1/check_mk/site_specific_settings.py?site=remote_1'
     )
   })
 
@@ -695,6 +696,12 @@ describe('GlobalSettingsApp', () => {
 
     await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
     expect(requests[1]).toMatchObject({ ifMatch: '"s1"', body: { value: 20 } })
+  })
+
+  test('the global page counts the variables that a site overrides', () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [overriddenTopic] } })
+
+    expect(screen.getByText('1 overridden on sites')).toBeInTheDocument()
   })
 
   test('a site page counts a value modified in the global settings as modified', () => {
@@ -1022,6 +1029,33 @@ describe('GlobalSettingsApp search', () => {
 
       expect(screen.getByText(label('Site setting'))).toBeInTheDocument()
       expect(screen.queryByText(label('Login session idle timeout'))).not.toBeInTheDocument()
+    })
+
+    test('the site override filter stays away while nothing is overridden', () => {
+      setup()
+
+      expect(
+        screen.queryByRole('button', { name: 'Toggle Site overrides only' })
+      ).not.toBeInTheDocument()
+    })
+
+    test('a site override filter in the URL is ignored while nothing is overridden', () => {
+      window.history.replaceState({}, '', '/?filter=site')
+      setup()
+
+      expect(screen.getByText(label('Site management'))).toBeInTheDocument()
+      expect(screen.getByText(label('User management'))).toBeInTheDocument()
+    })
+
+    test('site overrides only keeps the variables a site overrides on the global page', async () => {
+      const user = setup({ ...searchData, topics: [overriddenTopic, secondTopic] })
+      await filterBy(user, 'Site overrides only')
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+      expect(
+        screen.getByText(label('Lock user accounts after N login failures'))
+      ).toBeInTheDocument()
+      expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
     })
 
     test('site overrides only hides everything the site does not override itself', async () => {

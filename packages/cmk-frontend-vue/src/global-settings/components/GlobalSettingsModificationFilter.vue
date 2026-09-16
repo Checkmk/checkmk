@@ -12,12 +12,14 @@ export type ModificationFilter = 'all' | 'modified' | 'site'
 
 const { _t } = usei18n()
 
+const props = defineProps<{ showSiteOverrides: boolean }>()
+
 const selected = defineModel<ModificationFilter>({ default: 'all' })
 
 const options = computed(() => [
   { label: _t('All variables'), value: 'all' },
   { label: _t('Modified only'), value: 'modified' },
-  { label: _t('Site overrides only'), value: 'site' }
+  ...(props.showSiteOverrides ? [{ label: _t('Site overrides only'), value: 'site' }] : [])
 ])
 </script>
 

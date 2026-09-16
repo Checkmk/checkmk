@@ -42,10 +42,14 @@ const shownVariables = computed(() => {
 })
 
 const modifiedCount = computed(() => props.topic.variables.filter(isModified).length)
-const siteOverrideCount = computed(() => props.topic.variables.filter(isSiteOverride).length)
+const siteOverrideCount = computed(
+  () => props.topic.variables.filter((variable) => isSiteOverride(variable, props.scope)).length
+)
 const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modifiedCount.value }))
 const siteOverrideCountLabel = computed(() =>
-  _t('%{count} overridden on this site', { count: siteOverrideCount.value })
+  props.scope.type === 'site'
+    ? _t('%{count} overridden on this site', { count: siteOverrideCount.value })
+    : _t('%{count} overridden on sites', { count: siteOverrideCount.value })
 )
 </script>
 

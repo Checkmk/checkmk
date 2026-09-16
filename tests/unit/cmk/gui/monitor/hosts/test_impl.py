@@ -105,7 +105,12 @@ def _folders() -> MonitorFolders:
 
 
 def _sites() -> MonitorSites:
-    return MonitorSites(MonitorSite(id=SiteId(site_id)) for site_id in ("heute", "remote_muc"))
+    return MonitorSites(
+        [
+            MonitorSite(id=SiteId("heute")),
+            MonitorSite(id=SiteId("remote_muc"), customer="Bäckerei (Müller) GmbH"),
+        ]
+    )
 
 
 def test_build_query_filter_without_a_query_matches_everything() -> None:
@@ -228,6 +233,30 @@ def test_build_query_filter_leaves_out_the_site_no_id_carries() -> None:
 def test_build_query_filter_takes_a_regex_metacharacter_in_the_site_query_literally() -> None:
     assert _build_query_filter("heute[", frozenset(), _folders(), _sites()).render() == [
         ("Filter", "name ~~ heute[")
+    ]
+
+
+def test_build_query_filter_searches_the_customer_of_every_host_its_sites_monitor() -> None:
+    assert _build_query_filter("Müller", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ Müller"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_leaves_out_the_site_of_a_customer_nothing_names() -> None:
+    assert _build_query_filter("Bäckerei Meier", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ Bäckerei Meier")
+    ]
+
+
+def test_build_query_filter_takes_a_regex_metacharacter_in_the_customer_literally() -> None:
+    assert _build_query_filter(
+        "Bäckerei (Müller) GmbH", frozenset(), _folders(), _sites()
+    ).render() == [
+        ("Filter", "name ~~ Bäckerei (Müller) GmbH"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "2"),
     ]
 
 

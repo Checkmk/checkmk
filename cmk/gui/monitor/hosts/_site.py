@@ -14,9 +14,10 @@ from cmk.ccc.site import SiteId
 @dataclass(frozen=True, kw_only=True)
 class MonitorSite:
     id: SiteId
+    customer: str | None = None
 
     def carries(self, needle: str) -> bool:
-        return needle in self.id.lower()
+        return any(needle in shown.lower() for shown in (self.id, self.customer) if shown)
 
 
 class MonitorSites:

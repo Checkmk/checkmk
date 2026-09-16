@@ -55,13 +55,15 @@ void main() {
                         ]
                     ) {
                         withEnv(["PYTHONUNBUFFERED=1"]) {
+                            def additional_args = ("-rc" in params.VERSION) ? "--skip-docker" : "";
                             def result = sh(
                                 script: """python3 \
                                 buildscripts/scripts/assert_build_artifacts.py \
                                 --editions_file "${checkout_dir}/editions.yml" \
                                 assert_build_artifacts \
                                 --version "${cmk_version_rc_aware}" \
-                                --use_case "${use_case}"
+                                --use_case "${use_case}" \
+                                ${additional_args}
                                 """,
                                 returnStatus: true,
                             );
@@ -95,7 +97,7 @@ void main() {
 
         success &= smart_stage(
             name: "Assert Docker images",
-            condition: true,
+            condition: !("-rc" in params.VERSION),
             raiseOnError: false,
         ) {
             def docker_file_location = "dirty_workspace/Dockerfile";

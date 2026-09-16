@@ -15,6 +15,7 @@ void main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION).replaceAll("\\+security", "");
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    def is_rc_build = params.VERSION.contains("-rc");
 
     def use_case = params.USE_CASE.trim() ?: "daily";
 
@@ -47,10 +48,12 @@ void main() {
                         ]
                     ) {
                         withEnv(["PYTHONUNBUFFERED=1"]) {
+                            def additional_args = is_rc_build ? "--skip_docker" : "";
                             def result = sh(
                                 script: """python3 \
                                 buildscripts/scripts/assert_build_artifacts.py \
                                 --editions_file "${checkout_dir}/editions.yml" \
+                                ${additional_args} \
                                 assert_build_artifacts \
                                 --version "${cmk_version_rc_aware}" \
                                 --use_case "${use_case}"

@@ -6,7 +6,7 @@
 import base64
 import uuid
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import Annotated, Literal, NewType, override, Self
@@ -64,6 +64,13 @@ class PUrl:
                 else frozenset()
             ),
             unquote(parsed_url.fragment) if parsed_url.fragment else None,
+        )
+
+    def without_qualifiers(self, keys: Iterable[str]) -> Self:
+        """Return a copy with the given qualifiers dropped."""
+        dropped = frozenset(keys)
+        return replace(
+            self, qualifiers=frozenset((k, v) for k, v in self.qualifiers if k not in dropped)
         )
 
     def purl_str(self) -> str:

@@ -79,6 +79,22 @@ py_cmk_test(
 )
 
 py_cmk_test(
+    name = "test_list_dependencies",
+    srcs = [
+        "cyclonedx.py",
+        "list_dependencies.py",
+        "pnpm_parser.py",
+        "test_list_dependencies.py",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("pydantic"),
+        requirement("pyyaml"),
+        requirement("toml"),
+    ],
+)
+
+py_cmk_test(
     name = "test_manual_dep_manifest",
     srcs = [
         "cyclonedx.py",

@@ -76,14 +76,13 @@ from ._graph_images import (
     graph_image_render_options,
 )
 from ._graph_png import compute_png_size_mm, mm_per_ex, render_png, render_png_ex
+from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
     AnnotatedHostName,
-    compute_graph_ranges_for_width,
     graph_specification_registry,
     GraphConsolidationFunction,
     GraphEnvironment,
     GraphExportRequest,
-    GraphRanges,
     GraphSpecification,
     parse_graph_specification,
 )

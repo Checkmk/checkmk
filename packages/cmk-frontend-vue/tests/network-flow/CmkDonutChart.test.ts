@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render } from '@testing-library/vue'
+import { fireEvent, render, within } from '@testing-library/vue'
 import { nextTick } from 'vue'
 
 import CmkDonutChart from '@/network-flow/CmkDonutChart/CmkDonutChart.vue'
@@ -57,8 +57,15 @@ function slicePaths(container: Element): (string | null)[] {
   )
 }
 
+// Both legends are laid out at once and a container query picks one; jsdom
+// applies no CSS, so the queries are addressed to the table, which is the legend
+// these tests are about.
 function renderChart(slices: DonutSlice[] = SLICES) {
-  return render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
+  const result = render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
+  return {
+    ...result,
+    ...within(result.container.querySelector<HTMLElement>('.network-flow-donut-legend-table')!)
+  }
 }
 
 test('renders one arc segment and one legend entry per slice', () => {
@@ -216,6 +223,13 @@ function renderCompactChart() {
     props: { slices: SLICES, formatValue: (value: number) => `${value} B`, legendMode: 'compact' }
   })
 }
+
+test('lays out both legends, so the widget can pick one by its own size', () => {
+  const { container } = renderChart()
+
+  expect(container.querySelector('.network-flow-donut-legend-table')).not.toBeNull()
+  expect(container.querySelector('.network-flow-donut-legend-compact')).not.toBeNull()
+})
 
 test('drops the table for a row of chips when the legend is compact', () => {
   const { container } = renderCompactChart()

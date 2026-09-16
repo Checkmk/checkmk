@@ -13,7 +13,7 @@ export const panelConfig = {
   legendMode: {
     type: 'list' as const,
     title: 'Legend',
-    help: 'The table states the volume per category. The chips name the categories only and stack under the ring, for widgets with no width for both.',
+    help: 'The table states the volume per category, and follows the box: beside the ring where there is room, under it where the widget stands upright, and down to the chips where a table would be a header and one row. The chips are the chips at every size.',
     options: listOptions<DonutLegendMode>({
       table: 'Table',
       compact: 'Compact'

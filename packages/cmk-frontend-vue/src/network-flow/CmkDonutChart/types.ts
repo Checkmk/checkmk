@@ -21,7 +21,12 @@ export interface DonutSlice {
   isOther?: boolean
 }
 
-/** Which shape the legend takes; the widget config picks one. */
+/**
+ * Which shape the legend takes; the widget config picks one. The table follows
+ * the box it is given: beside the ring where there is room, under it where the
+ * widget stands upright, and down to the chips where a table would be a header
+ * and one row. The chips are the chips at every size.
+ */
 export type DonutLegendMode = 'table' | 'compact'
 
 /** One legend row, formatted by the chart so the legend holds no arithmetic. */
@@ -52,9 +57,9 @@ export interface CmkDonutChartProps {
   /** Defaults to "Volume". */
   centerLabel?: string
   /**
-   * The table states the volume per category; the chips name the categories
-   * and stack under the ring, for widgets with no width for both. Defaults to
-   * the table.
+   * The table states the volume per category and gives way to the chips where
+   * the widget has no room for it; the chips name the categories only and
+   * stack under the ring at any size. Defaults to the table.
    */
   legendMode?: DonutLegendMode
   /**

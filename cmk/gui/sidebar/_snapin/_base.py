@@ -8,9 +8,10 @@ import abc
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageHandler
-from cmk.gui.type_defs import PermissionName, RoleName
+from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
+from cmk.web.utils.permission_verification import PermissionName
 
 PageHandlers = dict[str, PageHandler]
 

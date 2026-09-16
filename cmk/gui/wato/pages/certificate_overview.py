@@ -31,7 +31,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.messaging import get_cert_info
 from cmk.utils.paths import (
@@ -43,6 +42,7 @@ from cmk.utils.paths import (
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 @dataclass

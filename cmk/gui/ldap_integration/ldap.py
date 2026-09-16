@@ -38,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_connection_config_types import ACTIVE_DIR, LDAPUserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
@@ -89,6 +89,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:

@@ -41,7 +41,6 @@ from cmk.gui.page_menu import (
     search_form,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import ID, ValueSpec
 from cmk.gui.wato.pages.rulesets import render_value_model_readonly
 from cmk.gui.watolib.check_mk_automations import get_check_information
@@ -54,6 +53,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import man_pages, paths
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ._tile_menu import TileMenuRenderer

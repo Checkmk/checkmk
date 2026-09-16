@@ -18,9 +18,10 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.shared_typing.main_menu import NavItem
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
 

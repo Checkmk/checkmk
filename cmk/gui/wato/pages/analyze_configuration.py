@@ -37,7 +37,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.analyze_configuration import (
@@ -51,6 +51,7 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.web.utils import escaping
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri
 
 

@@ -13,7 +13,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GlobalSettings, GraphTimerange, PermissionName
+from cmk.gui.type_defs import GlobalSettings, GraphTimerange
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import LogMessage, make_audit_log_change_hook
@@ -39,6 +39,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
+from cmk.web.utils.permission_verification import PermissionName
 
 STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
 

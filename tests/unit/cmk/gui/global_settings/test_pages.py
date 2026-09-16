@@ -18,7 +18,6 @@ from cmk.gui.global_settings.pages import app_data, ensure_permitted
 from cmk.gui.i18n import _l
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import CustomUserRole
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -32,6 +31,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Integer
 from cmk.shared_typing import global_settings as shared
 from cmk.web.utils.icons import IconNames
+from cmk.web.utils.permission_verification import PermissionName
 from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 

@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from typing import override
 
 import cmk.ccc.plugin_registry
-from cmk.gui.type_defs import PermissionName, RoleName
+from cmk.gui.type_defs import RoleName
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.speaklater import LazyString, LazyText
 
 

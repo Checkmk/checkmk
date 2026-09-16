@@ -44,7 +44,6 @@ SizeMM = float
 type VerticalAxisWidth = Literal["fixed"] | tuple[Literal["explicit"], SizePT]
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
-PermissionName = str
 RoleName = str
 ChoiceText = str
 ChoiceId = str | None

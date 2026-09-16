@@ -57,7 +57,7 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import HTTPVariables, PermissionName
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -135,6 +135,7 @@ from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._status_links import make_host_status_link

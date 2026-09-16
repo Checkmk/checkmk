@@ -28,10 +28,11 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
+from cmk.gui.type_defs import RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.utils.escaping import escape
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.speaklater import LazyString
 
 TVisual = TypeVar("TVisual", bound=Visual)  # TODO: Remove this

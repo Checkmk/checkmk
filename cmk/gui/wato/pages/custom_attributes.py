@@ -41,7 +41,6 @@ from cmk.gui.type_defs import (
     CustomAttrSpec,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
-    PermissionName,
 )
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
@@ -73,6 +72,7 @@ from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_f
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 

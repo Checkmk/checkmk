@@ -91,7 +91,7 @@ from cmk.gui.site_config import (
     site_is_local,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, Users
+from cmk.gui.type_defs import ActionResult, HTTPVariables, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -207,6 +207,7 @@ from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 OPTIMIZE_NOTIFICATIONS_ENTRIES: dict[str, list[str]] = {

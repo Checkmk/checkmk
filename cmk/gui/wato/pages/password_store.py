@@ -28,7 +28,6 @@ from cmk.gui.quick_setup.html import (
     quick_setup_source_cell,
 )
 from cmk.gui.table import Table
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import (
     Alternative,
     DictionaryEntry,
@@ -59,6 +58,7 @@ from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.utils.password_store import PasswordConfig
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:

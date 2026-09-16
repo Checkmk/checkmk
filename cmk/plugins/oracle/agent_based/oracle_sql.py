@@ -178,7 +178,7 @@ def check_oracle_sql(item: str, params: Mapping[str, Any], section: Section) -> 
         yield Result(state=State(data.exit), summary=", ".join(details))
         yield from metrics
 
-    if long := data.long:
+    if (long := data.long) and long[0]:
         # we use notice here to not show information in the summary
         # and only show it in the details view of the check output
         yield Result(state=State.OK, notice="\n".join(long))

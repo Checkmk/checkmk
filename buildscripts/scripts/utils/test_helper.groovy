@@ -169,7 +169,10 @@ Object analyse_issues(result_check_type, result_check_file_pattern, as_stage=tru
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Bazel Lint', // Name shown on left side menu
-                regex: '(.*):(\\d+):(\\d+):(.*)', // RegEx
+                // Anchored and whitespace-free on the path so that Bazel's own
+                // stderr events, e.g. "(12:46:51) DEBUG: /.../repo_utils.bzl:101:16: ...",
+                // are not mistaken for buildifier findings.
+                regex: '^(\\S+):(\\d+):(\\d+):(.*)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(4)).setLineStart(Integer.parseInt(matcher.group(2))).setColumnStart(Integer.parseInt(matcher.group(3))).buildOptional()', // Mapping script
                 example: "omd/packages/freetds/freetds_http.bzl:8:19: syntax error near build_file",  // example log message
             //       |               1                     |2|3 |             4               |

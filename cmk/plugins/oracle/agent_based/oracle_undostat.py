@@ -11,6 +11,7 @@
 # TUX2 160 0 1081 300 0
 
 
+import contextlib
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -29,26 +30,51 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-type Section = Mapping[str, Sequence[int]]
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+
+type Section = Mapping[str, Parsed[Sequence[int]]]
 
 
 def parse_oracle_undostat(string_table: StringTable) -> Section:
-    return {line[0]: [int(v) for v in line[1:]] for line in string_table if len(line) == 6}
+    stats: dict[str, Sequence[int]] = {}
+    errors: dict[str, str] = {}
+    for line in string_table:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                if len(line) == 6:
+                    with contextlib.suppress(ValueError):
+                        stats[line[0]] = [int(v) for v in line[1:]]
+
+    parsed: dict[str, Parsed[Sequence[int]]] = {
+        sid: Ok(values) for sid, values in stats.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
 
 
 def discover_oracle_undostat(section: Section) -> DiscoveryResult:
-    for item in section:
-        yield Service(item=item)
+    yield from (Service(item=sid) for sid, result in section.items() if isinstance(result, Ok))
 
 
 def check_oracle_undostat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    data = section.get(item)
-    if data is None:
-        # In case of missing information we assume that the login into
-        # the database has failed and we simply skip this check. It won't
-        # switch to UNKNOWN, but will get stale.
-        raise IgnoreResultsError("Login into database failed")
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(data):
+            yield from _check_undostat(params, data)
 
+
+def _check_undostat(params: Mapping[str, Any], data: Sequence[int]) -> CheckResult:
     activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = data
     warn, crit = params["levels"]
 

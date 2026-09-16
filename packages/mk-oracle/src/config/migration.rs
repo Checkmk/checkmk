@@ -769,20 +769,28 @@ pub fn convert(
     out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
 
     // connection
-    let host = if dbuser.hostname.is_empty() {
-        "localhost"
-    } else {
-        &dbuser.hostname
-    };
-    out.push_str(&format!("    connection:\n      hostname: {host}\n"));
+    //
+    // An empty DBUSER hostname does not mean localhost: with none configured the plug-in
+    // resolves the Grid Infrastructure node name and falls back to localhost only off GI,
+    // which is what the legacy plug-in does as well. Writing localhost out would pin it and
+    // break Grid Infrastructure, so the block is emitted only for what the legacy config
+    // actually names.
+    let mut connection = String::new();
+    if !dbuser.hostname.is_empty() {
+        connection.push_str(&format!("      hostname: {}\n", dbuser.hostname));
+    }
     if let Some(port) = &dbuser.port {
-        out.push_str(&format!("      port: {port}\n"));
+        connection.push_str(&format!("      port: {port}\n"));
     }
     if let Some(tns_admin) = variables.get("TNS_ADMIN") {
-        out.push_str(&format!("      tns_admin: {tns_admin}\n"));
+        connection.push_str(&format!("      tns_admin: {tns_admin}\n"));
     }
     if let Some(olrloc) = variables.get("OLRLOC") {
-        out.push_str(&format!("      oracle_local_registry: {olrloc}\n"));
+        connection.push_str(&format!("      oracle_local_registry: {olrloc}\n"));
+    }
+    if !connection.is_empty() {
+        out.push_str("    connection:\n");
+        out.push_str(&connection);
     }
 
     // authentication
@@ -1581,6 +1589,27 @@ mod tests {
         assert!(!unified.to_lowercase().contains("oracle_home"));
         assert!(!unified.contains("/opt/oracle/remote"));
         super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_omits_the_connection_block_without_a_configured_host() {
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:secret::::".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // No hostname configured: the plug-in resolves the Grid Infrastructure node name and
+        // falls back to localhost itself, so writing one out would pin it.
+        assert!(!result.contains("    connection:\n"), "got: {result}");
+        super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_keeps_an_explicitly_configured_host() {
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:secret::localhost:1521:".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // An explicit localhost is the user's choice and must survive.
+        assert!(
+            result.contains("    connection:\n      hostname: localhost\n      port: 1521\n"),
+            "got: {result}"
+        );
     }
 
     #[test]

@@ -13,8 +13,6 @@
 ---
 oracle:
   main:
-    connection:
-      hostname: localhost
     authentication:
       username: "user"
       password: "pass"

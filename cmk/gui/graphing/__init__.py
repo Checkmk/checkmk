@@ -84,7 +84,6 @@ from ._graph_specification import (
     GraphExportRequest,
     GraphRanges,
     GraphSpecification,
-    MKCombinedGraphLimitExceededError,
     parse_graph_specification,
 )
 from ._graph_templates import (
@@ -312,7 +311,6 @@ __all__ = [
     "MetricVisitor",
     "migrate_graph_render_options_title_format",
     "migrate_graph_render_options_title_format_from_disk",
-    "MKCombinedGraphLimitExceededError",
     "MKGraphNotFound",
     "mm_per_ex",
     "PageHostServiceGraphPopup",

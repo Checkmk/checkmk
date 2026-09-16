@@ -18,16 +18,12 @@ from pydantic import (
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 
 from ._line_types import GraphConsolidationFunction
 
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
-
-
-class MKCombinedGraphLimitExceededError(MKHTTPException): ...
 
 
 @dataclass(frozen=True)

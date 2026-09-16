@@ -913,6 +913,18 @@ fn format_instances(
         }
 
         let sid_written = if let Some(sid) = &sid {
+            // DBUSER_<SID> and REMOTE_INSTANCE_<SID> may name the same SID, and two hosts may
+            // run instances of the same name. Both entries are kept - merging them would drop
+            // a database - but the duplicate is reported: without a piggyback host the two
+            // report as one instance. And it is normal to have same names for monitoring
+            if known_sids.contains(sid) {
+                warnings.push(format!(
+                    "SID '{sid}' is declared by more than one legacy variable; every entry is \
+                     migrated, so the instance is queried once per entry. Remove the redundant \
+                     entry, or give the instances a piggyback host if they are different \
+                     databases"
+                ));
+            }
             known_sids.push(sid.clone());
             lines.push(format!("      - sid: {sid}\n"));
             true

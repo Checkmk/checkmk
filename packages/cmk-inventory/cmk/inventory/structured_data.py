@@ -906,6 +906,69 @@ class SDRetentionFilterChoices:
         self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
 
 
+# Data for the HW/SW Inventory has a validity period (live data or persisted).
+# With the retention intervals configuration you can keep specific attributes or table columns
+# longer than their validity period.
+#
+# 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
+#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW Inventory
+#     entities'.
+#
+# 2.) Process collected cache infos - handle the following four cases:
+#
+#       previous node | inv node | retention intervals from
+#     -----------------------------------------------------------------------------------
+#       no            | no       | None
+#       no            | yes      | inv_node keys
+#       yes           | no       | previous_node keys
+#       yes           | yes      | previous_node keys + inv_node keys
+#
+#     - If there's no previous node then filtered keys + intervals of current node is stored
+#       (like a first run) and will be checked against the future node in the next run.
+#     - if there's a previous node then check if the data is recent enough and merge
+#       attributes/tables data from the previous node with the current one.
+#       'Recent enough' means: now <= cache_at + cache_interval + retention_interval
+#       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
+#             retention_interval: configured in the above ruleset
+
+
+def _parse_choice(
+    raw_choice: Literal["all"] | tuple[str, list[str]],
+) -> Sequence[SDKey] | Literal["all"]:
+    return [SDKey(k) for k in raw_choice[-1]] if isinstance(raw_choice, tuple) else raw_choice
+
+
+def make_retention_filter_choices(
+    *,
+    now: int,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
+    pairs_cache_info: Mapping[SDPath, tuple[int, int] | None],
+    columns_cache_info: Mapping[SDPath, tuple[int, int] | None],
+) -> Sequence[SDRetentionFilterChoices]:
+    def cache_info(
+        by_path: Mapping[SDPath, tuple[int, int] | None], path: SDPath
+    ) -> tuple[int, int]:
+        return (now, 0) if (ci := by_path.get(path)) is None else ci
+
+    choices_by_path: dict[SDPath, SDRetentionFilterChoices] = {}
+    for entry in raw_intervals_from_config:
+        path = parse_visible_raw_path(entry["visible_raw_path"])
+        choices = choices_by_path.setdefault(
+            path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
+        )
+        if attributes := entry.get("attributes"):
+            choices.add_pairs_choice(
+                choice=_parse_choice(attributes),
+                cache_info=cache_info(pairs_cache_info, path),
+            )
+        elif columns := entry.get("columns"):
+            choices.add_columns_choice(
+                choice=_parse_choice(columns),
+                cache_info=cache_info(columns_cache_info, path),
+            )
+    return list(choices_by_path.values())
+
+
 def _make_filter_func[CT: (SDKey, SDNodeName)](
     choice: Literal["nothing", "all"] | Sequence[CT],
 ) -> Callable[[CT], bool]:

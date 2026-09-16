@@ -25,10 +25,12 @@ from cmk.inventory.structured_data import (
     ImmutableTree,
     InventoryStore,
     make_meta,
+    make_retention_filter_choices,
     merge_trees,
     MutableTree,
     parse_from_gzipped,
     parse_visible_raw_path,
+    RawIntervalFromConfig,
     RetentionInterval,
     SDDeltaValue,
     SDFilterChoice,
@@ -43,6 +45,86 @@ from cmk.inventory.structured_data import (
     serialize_delta_tree,
     serialize_tree,
 )
+
+_RETENTION_PATH = (SDNodeName("path"), SDNodeName("to"), SDNodeName("node"))
+
+
+def _retention_config() -> Sequence[RawIntervalFromConfig]:
+    return [
+        RawIntervalFromConfig(
+            interval=7,
+            visible_raw_path="path.to.node",
+            attributes=("choices", ["a1"]),
+        ),
+        RawIntervalFromConfig(
+            interval=7,
+            visible_raw_path="path.to.node",
+            columns="all",
+        ),
+    ]
+
+
+def _updated_tree(
+    *, now: int, pairs_cache_info: Mapping[SDPath, tuple[int, int] | None]
+) -> MutableTree:
+    tree = MutableTree()
+    tree.add(
+        path=_RETENTION_PATH,
+        pairs=[{SDKey("a1"): "value 1", SDKey("a2"): "value 2"}],
+        key_columns=[SDKey("c0")],
+        rows=[{SDKey("c0"): "row 0", SDKey("c1"): "value 1"}],
+    )
+    for choices in make_retention_filter_choices(
+        now=now,
+        raw_intervals_from_config=_retention_config(),
+        pairs_cache_info=pairs_cache_info,
+        columns_cache_info={},
+    ):
+        tree.update(now=now, previous_tree=ImmutableTree(), choices=choices)
+    return tree
+
+
+def _retained_pairs(
+    *, now: int, pairs_cache_info: Mapping[SDPath, tuple[int, int] | None]
+) -> Mapping[SDKey, RetentionInterval]:
+    return (
+        _updated_tree(now=now, pairs_cache_info=pairs_cache_info)
+        .get_tree(_RETENTION_PATH)
+        .attributes.retentions
+    )
+
+
+def test_retention_filter_keeps_the_columns_of_the_same_path() -> None:
+    assert _updated_tree(now=10, pairs_cache_info={}).get_tree(
+        _RETENTION_PATH
+    ).table.retentions == {
+        ("row 0",): {
+            SDKey("c0"): RetentionInterval(10, 0, 7, "current"),
+            SDKey("c1"): RetentionInterval(10, 0, 7, "current"),
+        }
+    }
+
+
+def test_retention_filter_keeps_only_the_configured_pairs() -> None:
+    assert set(_retained_pairs(now=10, pairs_cache_info={})) == {SDKey("a1")}
+
+
+def test_retention_filter_defaults_the_cache_info() -> None:
+    assert _retained_pairs(now=10, pairs_cache_info={}) == {
+        SDKey("a1"): RetentionInterval(10, 0, 7, "current")
+    }
+
+
+def test_retention_filter_uses_the_cache_info() -> None:
+    assert _retained_pairs(now=10, pairs_cache_info={_RETENTION_PATH: (2, 3)}) == {
+        SDKey("a1"): RetentionInterval(2, 3, 7, "current")
+    }
+
+
+def test_retention_filter_defaults_an_unset_cache_info() -> None:
+    assert _retained_pairs(now=10, pairs_cache_info={_RETENTION_PATH: None}) == {
+        SDKey("a1"): RetentionInterval(10, 0, 7, "current")
+    }
 
 
 def test_retention_interval_valid_until() -> None:

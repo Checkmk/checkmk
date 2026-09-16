@@ -12,7 +12,7 @@ import signal
 import time
 from collections.abc import Callable
 from types import FrameType, TracebackType
-from typing import Self
+from typing import override, Self
 
 from psutil import NoSuchProcess, Process, STATUS_ZOMBIE
 
@@ -128,3 +128,19 @@ class MonitorTimeout:
         if self._timeout > 0:
             self._process.terminate()
             signal.signal(signal.SIGINT, self._sigint_handler)
+
+
+class FunctionTimeout(MonitorTimeout):
+    """Like MonitorTimeout, but raises a plain TimeoutError instead of SessionTimeoutError.
+
+    tests/conftest.py's pytest_exception_interact() sets `session.shouldstop` on
+    SessionTimeoutError, aborting the whole run - appropriate for the suite-wide
+    --session-timeout use, but not for bounding a single call inside one test. A plain
+    TimeoutError only adds diagnostics there and lets the suite continue with the next test.
+    """
+
+    @override
+    def _default_timeout_handler(self, signum: int, frame: FrameType | None) -> None:
+        if self.timeout_detected:
+            raise TimeoutError(f"Run duration exceeds {self._timeout} seconds!")
+        raise KeyboardInterrupt

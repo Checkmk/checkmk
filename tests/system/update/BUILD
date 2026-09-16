@@ -29,6 +29,7 @@ py_library(
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
+            "//tests/testlib/pytest_helpers",
         ],
         "//:gpl_repo": [],
     }),

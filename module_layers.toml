@@ -228,6 +228,7 @@ allows = [
   "cmk.shared_typing.consolidation",
   "cmk.telemetry.custom_query_building",
   "cmk.telemetry.custom_query_rule_value",
+  "cmk.telemetry.custom_query_section",
   "cmk.utils.macros",
   "cmk.utils.paths",
 ]

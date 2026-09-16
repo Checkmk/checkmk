@@ -30,7 +30,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.profiling.backend import (
     build_flamegraph_tree,
@@ -121,7 +120,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             i18n=_,
             url=makeactionuri_contextless(
                 request,
-                transactions.get(),
+                self._ctx.transactions.get(),
                 [("mode", self.name()), ("_action", "delete_all")],
                 filename="wato.py",
             ),
@@ -132,7 +131,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             i18n=_,
             url=makeactionuri_contextless(
                 request,
-                transactions.get(),
+                self._ctx.transactions.get(),
                 [("mode", self.name()), ("_action", "housekeeping")],
                 filename="wato.py",
             ),
@@ -187,7 +186,7 @@ class ModePerformanceProfiles(WatoMode[None]):
     @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
-        if not transactions.check_transaction(request):
+        if not self._ctx.transactions.check_transaction(request):
             return None
 
         _require_feature_enabled(config)
@@ -258,7 +257,7 @@ class ModePerformanceProfiles(WatoMode[None]):
                         i18n=_,
                         url=makeactionuri_contextless(
                             request,
-                            transactions.get(),
+                            self._ctx.transactions.get(),
                             [
                                 ("mode", self.name()),
                                 ("_action", "delete"),

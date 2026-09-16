@@ -8,10 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.config import Config
-from cmk.gui.inventory._cleanup import (
-    InventoryCleanup,
-)
+from cmk.inventory.cleanup import InventoryCleanup
 from cmk.inventory.config import (
     InvCleanupParams,
     InvCleanupParamsCombined,
@@ -20,22 +17,23 @@ from cmk.inventory.config import (
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.paths import TreePath, TreePathGz
 
+from ._logger import null_logger
+
 
 def test_nothing_to_do(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     archive_host = inv_paths.archive_host(HostName("hostname"))
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
 
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=100,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=100,
         ),
         host_names=[HostName("hostname")],
         now=100,
+        logger=null_logger(),
     )
     assert not archive_host.exists()
     assert not delta_cache_host.exists()
@@ -47,16 +45,15 @@ def test_only_archive_host(tmp_path: Path) -> None:
     archive_host.mkdir(parents=True, exist_ok=True)
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
 
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=100,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=100,
         ),
         host_names=[HostName("hostname")],
         now=100,
+        logger=null_logger(),
     )
     assert archive_host.exists()
     assert not delta_cache_host.exists()
@@ -68,16 +65,15 @@ def test_only_delta_cache_host_exists(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=100,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=100,
         ),
         host_names=[HostName("hostname")],
         now=100,
+        logger=null_logger(),
     )
     assert not archive_host.exists()
     assert delta_cache_host.exists()
@@ -90,16 +86,15 @@ def test_both_exist(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=100,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=100,
         ),
         host_names=[HostName("hostname")],
         now=100,
+        logger=null_logger(),
     )
     assert archive_host.exists()
     assert delta_cache_host.exists()
@@ -169,16 +164,15 @@ def _legacy_setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArc
 
 def test_legacy_one_archive(tmp_path: Path) -> None:
     files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -188,21 +182,20 @@ def test_legacy_one_archive(tmp_path: Path) -> None:
 
 def test_legacy_one_archive_file_file_age(tmp_path: Path) -> None:
     files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("file_age", 2),
-                    ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("file_age", 2),
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -212,21 +205,20 @@ def test_legacy_one_archive_file_file_age(tmp_path: Path) -> None:
 
 def test_legacy_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
     files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("number_of_history_entries", 1),
-                    ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("number_of_history_entries", 1),
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -236,28 +228,27 @@ def test_legacy_one_archive_file_number_of_history_entries(tmp_path: Path) -> No
 
 def test_legacy_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=2,
-                                number_of_history_entries=1,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="and",
+                            file_age=2,
+                            number_of_history_entries=1,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -267,28 +258,27 @@ def test_legacy_one_archive_file_file_age_and_number_of_history_entries(tmp_path
 
 def test_legacy_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="or",
-                                file_age=2,
-                                number_of_history_entries=1,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="or",
+                            file_age=2,
+                            number_of_history_entries=1,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -356,21 +346,20 @@ def _legacy_setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) 
 
 def test_legacy_file_age(tmp_path: Path) -> None:
     files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("file_age", 3),
-                    )
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("file_age", 3),
+                )
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -388,21 +377,20 @@ def test_legacy_file_age(tmp_path: Path) -> None:
 
 def test_legacy_number_of_history_entries(tmp_path: Path) -> None:
     files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("number_of_history_entries", 2),
-                    )
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("number_of_history_entries", 2),
+                )
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -420,28 +408,27 @@ def test_legacy_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_legacy_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=3,
-                                number_of_history_entries=2,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="and",
+                            file_age=3,
+                            number_of_history_entries=2,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -459,28 +446,27 @@ def test_legacy_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_legacy_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="or",
-                                file_age=3,
-                                number_of_history_entries=2,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="or",
+                            file_age=3,
+                            number_of_history_entries=2,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.legacy.exists()
     assert files.inventory_tree_gz.legacy.exists()
@@ -499,16 +485,15 @@ def test_legacy_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
 def test_legacy_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
     known_files = _legacy_setup_files(tmp_path, HostName("known"), timestamp=100)
     unknown_files = _legacy_setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.legacy.exists()
     assert known_files.inventory_tree_gz.legacy.exists()
@@ -541,16 +526,15 @@ def test_legacy_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
 def test_legacy_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
     known_files = _legacy_setup_files(tmp_path, HostName("known"), timestamp=100)
     unknown_files = _legacy_setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=2,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=2,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.legacy.exists()
     assert known_files.inventory_tree_gz.legacy.exists()
@@ -611,16 +595,15 @@ def test_legacy_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> No
     unknown_files_no_history = _legacy_setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=99
     )
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=2,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=2,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.legacy.exists()
     assert known_files.inventory_tree_gz.legacy.exists()
@@ -657,16 +640,15 @@ def test_legacy_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -
     unknown_files_no_history = _legacy_setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=100
     )
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=2,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=2,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.legacy.exists()
     assert known_files.inventory_tree_gz.legacy.exists()
@@ -730,16 +712,15 @@ def _setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFil
 
 def test_one_archive(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -749,21 +730,20 @@ def test_one_archive(tmp_path: Path) -> None:
 
 def test_one_archive_file_file_age(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("file_age", 2),
-                    ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("file_age", 2),
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -773,21 +753,20 @@ def test_one_archive_file_file_age(tmp_path: Path) -> None:
 
 def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("number_of_history_entries", 1),
-                    ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("number_of_history_entries", 1),
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -797,28 +776,27 @@ def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=2,
-                                number_of_history_entries=1,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="and",
+                            file_age=2,
+                            number_of_history_entries=1,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -828,28 +806,27 @@ def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path)
 
 def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="or",
-                                file_age=2,
-                                number_of_history_entries=1,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="or",
+                            file_age=2,
+                            number_of_history_entries=1,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -917,21 +894,20 @@ def _setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Fil
 
 def test_file_age(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("file_age", 3),
-                    )
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("file_age", 3),
+                )
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -949,21 +925,20 @@ def test_file_age(tmp_path: Path) -> None:
 
 def test_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=("number_of_history_entries", 2),
-                    )
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=("number_of_history_entries", 2),
+                )
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -981,28 +956,27 @@ def test_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=3,
-                                number_of_history_entries=2,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="and",
+                            file_age=3,
+                            number_of_history_entries=2,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -1020,28 +994,27 @@ def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="or",
-                                file_age=3,
-                                number_of_history_entries=2,
-                            ),
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[
+                InvCleanupParamsOfHosts(
+                    regex_or_explicit=["hostname"],
+                    parameters=(
+                        "combined",
+                        InvCleanupParamsCombined(
+                            strategy="or",
+                            file_age=3,
+                            number_of_history_entries=2,
                         ),
                     ),
-                ],
-                default=None,
-                abandoned_file_age=1,
-            )
+                ),
+            ],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("hostname")],
         now=101,
+        logger=null_logger(),
     )
     assert files.inventory_tree.path.exists()
     assert files.inventory_tree_gz.path.exists()
@@ -1060,16 +1033,15 @@ def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
 def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
     known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
     unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=1,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=1,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.path.exists()
     assert known_files.inventory_tree_gz.path.exists()
@@ -1102,16 +1074,15 @@ def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
 def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
     known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
     unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=2,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=2,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.path.exists()
     assert known_files.inventory_tree_gz.path.exists()
@@ -1172,16 +1143,15 @@ def test_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> None:
     unknown_files_no_history = _setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=99
     )
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=2,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=2,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.path.exists()
     assert known_files.inventory_tree_gz.path.exists()
@@ -1218,16 +1188,15 @@ def test_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
     unknown_files_no_history = _setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=100
     )
-    InventoryCleanup(tmp_path)._run(  # noqa: SLF001
-        Config(
-            inventory_cleanup=InvCleanupParams(
-                for_hosts=[],
-                default=None,
-                abandoned_file_age=2,
-            )
+    InventoryCleanup(tmp_path).run(
+        InvCleanupParams(
+            for_hosts=[],
+            default=None,
+            abandoned_file_age=2,
         ),
         host_names=[HostName("known")],
         now=101,
+        logger=null_logger(),
     )
     assert known_files.inventory_tree.path.exists()
     assert known_files.inventory_tree_gz.path.exists()

@@ -45,6 +45,7 @@ py_library(
         "//packages/cmk-web/cmk/web/utils",
         requirement("pydantic"),
         requirement("redis"),
+        "//cmk/gui:auth",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:scopes",

@@ -165,6 +165,17 @@ def default_user_menu_topics(
             ),
         )
 
+    if user.may("general.edit_profile"):
+        entries.append(
+            NavItemTopicEntry(
+                id="oauth_tokens",
+                title=_("OAuth access tokens"),
+                url="user_oauth_tokens.py",
+                icon=DefaultIcon(id=IconNames.passwords),
+                sort_index=35,
+            ),
+        )
+
     entries.append(
         NavItemTopicEntry(
             id="logout",

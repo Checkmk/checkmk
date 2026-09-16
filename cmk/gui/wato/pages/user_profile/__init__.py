@@ -8,6 +8,7 @@ from collections.abc import Callable
 from cmk.ccc.version import Edition
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.oauth.wato._user_tokens_page import register as register_user_oauth_tokens_page
 from cmk.gui.pages import PageRegistry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import profile_replication
@@ -33,6 +34,7 @@ def register(
 ) -> None:
     main_menu.register(page_registry, main_menu_registry, user_menu_topics)
     two_factor.register(edition, page_registry)
+    register_user_oauth_tokens_page(edition, page_registry)
     edit_profile.register(edition, page_registry)
     change_password.register(edition, page_registry)
     replicate.register(page_registry)

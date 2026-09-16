@@ -35,7 +35,6 @@ from cmk.gui.painter_options import (
     PainterOptionRegistry,
     PainterOptions,
 )
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -209,7 +208,6 @@ def _paint_time_graph_cmk(
     graph_size = resolve_size(view_options)
 
     display_config = GraphDisplayConfigHTML.from_options(
-        theme.get(),
         view_options,
     )
 

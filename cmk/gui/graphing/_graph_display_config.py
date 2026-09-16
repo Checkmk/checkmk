@@ -104,10 +104,13 @@ class _GraphDisplayConfigBase(BaseModel):
     title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
     vertical_axis_width: VerticalAxisWidth = "fixed"
 
+    @classmethod
+    def from_options(cls, options: GraphRenderOptions) -> Self:
+        return cls.model_validate(options.dump_set_fields())
+
 
 class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     fixed_timerange: bool = False
-    foreground_color: str = "#000000"
     preview: bool = False
     resizable: bool = True
     show_controls: bool = True
@@ -115,28 +118,10 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
 
-    @classmethod
-    def from_options(
-        cls,
-        theme_id: str,
-        options: GraphRenderOptions,
-    ) -> Self:
-        return cls.model_validate(
-            options.dump_set_fields()
-            | {"foreground_color": "#ffffff" if theme_id == "modern-dark" else "#000000"},
-        )
-
 
 class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     size: tuple[float, float] = (70, 16)
-    border_width: SizeMM = 0.05
     show_title: bool = True
-    background_color: str = "#f8f4f0"
-    foreground_color: str = "#000000"
-
-    @classmethod
-    def from_options(cls, options: GraphRenderOptions) -> Self:
-        return cls.model_validate(options.dump_set_fields())
 
 
 _DEFAULT_GRAPH_SIZE: tuple[float, float] = (70.0, 16.0)

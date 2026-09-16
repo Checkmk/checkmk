@@ -4157,9 +4157,9 @@ setuptools==84.0.0 \
     #   -r cmk/requirements.in
     #   opsgenie-sdk
     #   setuptools-scm
-setuptools-scm==10.3.0 \
-    --hash=sha256:6ba119665ae859783321da7654a9fa45eda6afe5b804ebf1a3da8682c5ffe6c6 \
-    --hash=sha256:7177457a181c3af30c1a524e6f919960665f9f153a39fe04906fe543c7eb5f80
+setuptools-scm==10.2.3 \
+    --hash=sha256:7fcf8ff55c95eb8b572a23c81495e5559b9b90f3e82fcf0952bb76c37de27a81 \
+    --hash=sha256:f179ed3e2a63cf5823e5ee9aa9ca08386219400443a0553224d72dde3f206b44
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

@@ -8481,8 +8481,8 @@
             "https://files.pythonhosted.org/packages/95/9c/c510029fc6ef33a6275cd2c5d3cecd6613dfd6aa401d57c54f1c18852ccf/setuptools-84.0.0-py3-none-any.whl": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670"
           },
           "setuptools-scm": {
-            "https://files.pythonhosted.org/packages/cc/8a/97f90194a735caf517a2d9cecd9ad4c8519c4402e80b015a726176e98cb7/setuptools_scm-10.3.0-py3-none-any.whl": "6ba119665ae859783321da7654a9fa45eda6afe5b804ebf1a3da8682c5ffe6c6",
-            "https://files.pythonhosted.org/packages/e5/ec/4f0869ecb8ffb847537c64c43a53eeef731d81587985e9a46e0f1536dd53/setuptools_scm-10.3.0.tar.gz": "7177457a181c3af30c1a524e6f919960665f9f153a39fe04906fe543c7eb5f80"
+            "https://files.pythonhosted.org/packages/3c/87/1ff7adcf6e03021ae58ce401565be3c9b8c739a44d14a8253d38b3754117/setuptools_scm-10.2.3.tar.gz": "f179ed3e2a63cf5823e5ee9aa9ca08386219400443a0553224d72dde3f206b44",
+            "https://files.pythonhosted.org/packages/4b/00/e9c0591b77186f6c1a8479500456ee72cd30730836c58b7a8a2654909c23/setuptools_scm-10.2.3-py3-none-any.whl": "7fcf8ff55c95eb8b572a23c81495e5559b9b90f3e82fcf0952bb76c37de27a81"
           },
           "sgmllib3k": {
             "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz": "7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9"

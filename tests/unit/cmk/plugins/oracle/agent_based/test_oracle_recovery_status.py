@@ -5,41 +5,90 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.oracle.agent_based.oracle_recovery_status import (
     check_oracle_recovery_status,
+    discover_oracle_recovery_status,
     parse_oracle_recovery_status,
 )
 
+_FAILURE = [["ORCL", "FAILURE", "ORA-00942: table or view does not exist"]]
 
-@pytest.mark.parametrize(
-    "item, info, expected_result",
-    [
-        (
-            "Error Message:          MyDatabase",
+
+def test_check_surfaces_failure() -> None:
+    assert list(
+        check_oracle_recovery_status("ORCL", {}, parse_oracle_recovery_status(_FAILURE))
+    ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
+
+
+def test_failure_row_wins_over_data_row() -> None:
+    section = parse_oracle_recovery_status(
+        [
             [
-                [
-                    "Error Message:          MyDatabase",
-                    "FAILURE",
-                    "ERROR: ORA-123456: Some kind of error occurred",
-                ]
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "1",
+                "1722989170",
+                "717",
+                "ONLINE",
+                "NO",
+                "YES",
+                "1966755",
+                "NOT ACTIVE",
+                "0",
             ],
-            [
-                Result(
-                    state=State.CRIT,
-                    summary="Error Message:          MyDatabase, FAILURE, ERROR: ORA-123456: Some kind of error occurred",
-                )
-            ],
-        )
-    ],
-)
-def test_check_oracle_recovery_status(
-    item: str, info: list[list[str]], expected_result: CheckResult
-) -> None:
-    assert (
-        list(check_oracle_recovery_status(item, {}, parse_oracle_recovery_status(info)))
-        == expected_result
+        ]
+        + _FAILURE
     )
+    assert list(check_oracle_recovery_status("ORCL", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")
+    ]
+
+
+def test_check_row_of_unknown_length_is_crit_with_the_raw_row() -> None:
+    section = parse_oracle_recovery_status(
+        [["TUX2", "tux2", "PRIMARY", "MOUNTED", "1", "1405456155", "ONLINE", "", "NO", "2719061"]]
+    )
+    assert list(check_oracle_recovery_status("TUX2", {}, section)) == [
+        Result(
+            state=State.CRIT,
+            summary="TUX2, tux2, PRIMARY, MOUNTED, 1, 1405456155, ONLINE, , NO, 2719061",
+        )
+    ]
+
+
+def test_discover_normal() -> None:
+    section = parse_oracle_recovery_status(
+        [
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "1",
+                "1722989170",
+                "717",
+                "ONLINE",
+                "NO",
+                "YES",
+                "1966755",
+                "NOT ACTIVE",
+                "0",
+            ],
+        ]
+    )
+    assert list(discover_oracle_recovery_status(section)) == [Service(item="ORCL")]
+
+
+def test_discover_skips_failure_row() -> None:
+    assert not list(discover_oracle_recovery_status(parse_oracle_recovery_status(_FAILURE)))
+
+
+def test_check_missing_goes_stale() -> None:
+    with pytest.raises(IgnoreResultsError):
+        list(check_oracle_recovery_status("ORCL", {}, parse_oracle_recovery_status([])))
 
 
 def test_check_oracle_recovery_status_good() -> None:

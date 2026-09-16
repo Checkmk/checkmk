@@ -22,7 +22,7 @@
 # PV|PV|PRIMARY|READ WRITE|400|||ONLINE|||0
 # PV|PV|PRIMARY|READ WRITE|401|||ONLINE|||0
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -39,14 +39,53 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
 
-def discover_oracle_recovery_status(section: StringTable) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section)
+# The first column is the database name, or the instance name when the
+# agent runs with IGNORE_DB_NAME. Either way it is the item.
+type Section = Mapping[str, Parsed[Sequence[Sequence[str]]]]
+
+
+def parse_oracle_recovery_status(string_table: StringTable) -> Section:
+    rows_by_name: dict[str, list[Sequence[str]]] = {}
+    errors: dict[str, str] = {}
+    for line in string_table:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                rows_by_name.setdefault(line[0], []).append(line)
+
+    parsed: dict[str, Parsed[Sequence[Sequence[str]]]] = {
+        name: Ok(rows) for name, rows in rows_by_name.items() if name not in errors
+    }
+    for name, message in errors.items():
+        parsed[name] = Error(message)
+    return parsed
+
+
+def discover_oracle_recovery_status(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name, result in section.items() if isinstance(result, Ok))
 
 
 def check_oracle_recovery_status(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(rows):
+            yield from _check_recovery_status(params, rows)
+
+
+def _check_recovery_status(params: Mapping[str, Any], rows: Sequence[Sequence[str]]) -> CheckResult:
     state = State.OK
     offlinecount = 0
     filemissingcount = 0
@@ -57,72 +96,62 @@ def check_oracle_recovery_status(
 
     perfdata: list[Metric] = []
 
-    itemfound = False
-    for line in section:
-        if line[0] == item:
-            itemfound = True
+    for line in rows:
+        if len(line) == 11:
+            (
+                db_name,
+                db_unique_name,
+                database_role,
+                _open_mode,
+                _filenr,
+                _checkpoint_time,
+                checkpoint_age,
+                datafilestatus,
+                _recovery,
+                _fuzzy,
+                _checkpoint_change,
+            ) = line
 
-            if len(line) == 11:
-                (
-                    db_name,
-                    db_unique_name,
-                    database_role,
-                    _open_mode,
-                    _filenr,
-                    _checkpoint_time,
-                    checkpoint_age,
-                    datafilestatus,
-                    _recovery,
-                    _fuzzy,
-                    _checkpoint_change,
-                ) = line
+            backup_state = "unknown"
 
-                backup_state = "unknown"
+        elif len(line) == 13:
+            (
+                db_name,
+                db_unique_name,
+                database_role,
+                _open_mode,
+                _filenr,
+                _checkpoint_time,
+                checkpoint_age,
+                datafilestatus,
+                _recovery,
+                _fuzzy,
+                _checkpoint_change,
+                backup_state,
+                backup_age,
+            ) = line
 
-            elif len(line) == 13:
-                (
-                    db_name,
-                    db_unique_name,
-                    database_role,
-                    _open_mode,
-                    _filenr,
-                    _checkpoint_time,
-                    checkpoint_age,
-                    datafilestatus,
-                    _recovery,
-                    _fuzzy,
-                    _checkpoint_change,
-                    backup_state,
-                    backup_age,
-                ) = line
+        else:
+            yield Result(state=State.CRIT, summary=", ".join(line))
+            return
 
-            else:
-                yield Result(state=State.CRIT, summary=", ".join(line))
-                return
+        if backup_state == "ACTIVE":
+            backup_count += 1
+            oldest_backup_age = max(int(backup_age), oldest_backup_age)  # type: ignore[possibly-undefined]
 
-            if backup_state == "ACTIVE":
-                backup_count += 1
-                oldest_backup_age = max(int(backup_age), oldest_backup_age)  # type: ignore[possibly-undefined]
+        if datafilestatus == "ONLINE":
+            if backup_state == "FILE MISSING":
+                filemissingcount += 1
+            elif checkpoint_age:
+                checkpoint_age = int(checkpoint_age)  # type: ignore[assignment]
 
-            if datafilestatus == "ONLINE":
-                if backup_state == "FILE MISSING":
-                    filemissingcount += 1
-                elif checkpoint_age:
-                    checkpoint_age = int(checkpoint_age)  # type: ignore[assignment]
+                if oldest_checkpoint_age is None:
+                    oldest_checkpoint_age = int(checkpoint_age)
+                else:
+                    oldest_checkpoint_age = max(oldest_checkpoint_age, int(checkpoint_age))
 
-                    if oldest_checkpoint_age is None:
-                        oldest_checkpoint_age = int(checkpoint_age)
-                    else:
-                        oldest_checkpoint_age = max(oldest_checkpoint_age, int(checkpoint_age))
-
-            else:
-                offlinecount += 1
-
-    if not itemfound:
-        # In case of missing information we assume that the login into
-        # the database has failed and we simply skip this check. It won't
-        # switch to UNKNOWN, but will get stale.
-        raise IgnoreResultsError("Login into database failed")
+        else:
+            offlinecount += 1
 
     infotext = "%s database" % (database_role.lower())  # type: ignore[possibly-undefined]
 
@@ -222,10 +251,6 @@ def check_oracle_recovery_status(
 
     yield Result(state=state, summary=infotext)
     yield from perfdata
-
-
-def parse_oracle_recovery_status(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_oracle_recovery_status = AgentSection(

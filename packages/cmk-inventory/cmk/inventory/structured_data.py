@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 """
 This module handles tree structures for HW/SW Inventory system and
 structured monitoring data of Check_MK.
@@ -22,7 +20,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, NewType, override, Self, TypedDict
+from typing import Literal, NewType, override, Self, TypedDict, TypeIs
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -1365,14 +1363,22 @@ def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Im
     return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
 
 
+def _is_sd_value(value: object) -> TypeIs[SDValue]:
+    return value is None or isinstance(value, int | float | str | bool)
+
+
+def _parse_legacy_row(raw_row: Mapping[str, object]) -> Mapping[SDKey, SDValue]:
+    return {SDKey(key): value for key, value in raw_row.items() if _is_sd_value(value)}
+
+
 def _deserialize_legacy_tree(
     path: SDPath,
     raw_tree: Mapping[str, object],
-    raw_rows: Sequence[Mapping] | None = None,
+    raw_rows: Sequence[Mapping[SDKey, SDValue]] | None = None,
 ) -> ImmutableTree:
     raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[SDNodeName, list[dict]] = {}
-    raw_nodes: dict[SDNodeName, dict] = {}
+    raw_tables: dict[SDNodeName, list[Mapping[SDKey, SDValue]]] = {}
+    raw_nodes: dict[SDNodeName, dict[str, object]] = {}
 
     for key, value in raw_tree.items():
         if isinstance(value, dict):
@@ -1384,7 +1390,7 @@ def _deserialize_legacy_tree(
             if not value:
                 continue
 
-            if all(isinstance(v, int | float | str | bool) or v is None for v in value):
+            if all(_is_sd_value(v) for v in value):
                 if w := ", ".join(str(v) for v in value if v):
                     raw_pairs.setdefault(SDKey(key), w)
                 continue
@@ -1401,13 +1407,13 @@ def _deserialize_legacy_tree(
                 #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
                 #       ...
                 #   ]
-                raw_tables.setdefault(SDNodeName(key), value)
+                raw_tables.setdefault(SDNodeName(key), [_parse_legacy_row(r) for r in value])
                 continue
 
             for idx, entry in enumerate(value):
                 raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
 
-        elif isinstance(value, int | float | str | bool) or value is None:
+        elif _is_sd_value(value):
             raw_pairs.setdefault(SDKey(key), value)
 
         else:

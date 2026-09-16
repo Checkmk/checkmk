@@ -205,6 +205,14 @@ py_library(
 )
 
 py_library(
+    name = "cli",
+    srcs = ["cmk/cli/internal/__init__.py"],
+    data = ["cmk/cli/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "dcd_connectors",
     srcs = [
         "cmk/dcd_connectors/__init__.py",
@@ -281,6 +289,7 @@ py_doc_test(
     srcs = [
         ":agent_based",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
@@ -311,6 +320,15 @@ py_cmk_test(
     srcs = glob(["tests/cmk/bakery/**/*.py"]),
     deps = [
         ":bakery",
+    ],
+)
+
+py_cmk_test(
+    name = "cli-test",
+    size = "small",
+    srcs = glob(["tests/cmk/cli/**/*.py"]),
+    deps = [
+        ":cli",
     ],
 )
 
@@ -427,6 +445,7 @@ py_wheel(
     deps = [
         ":agent_based",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
@@ -453,6 +472,7 @@ filegroup(
     srcs = [
         "cmk/agent_based/py.typed",
         "cmk/bakery/py.typed",
+        "cmk/cli/py.typed",
         "cmk/dcd_connector_parameters/py.typed",
         "cmk/dcd_connectors/py.typed",
         "cmk/diagnostics/py.typed",
@@ -486,6 +506,7 @@ py_requirements_test(
     libs = [
         ":agent_based",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",

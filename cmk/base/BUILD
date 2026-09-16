@@ -152,6 +152,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-events",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:cli",
     ],
 )
 
@@ -175,6 +176,7 @@ py_library(
         "//packages/cmk-ccc:tty",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:diagnostics",
     ],
 )
@@ -192,6 +194,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-plugin-apis:cli",
     ],
 )
 

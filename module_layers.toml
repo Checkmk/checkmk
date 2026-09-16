@@ -61,6 +61,7 @@ plugin_apis = [
   "cmk.bakery.internal",
   "cmk.bakery.v1",
   "cmk.bakery.v2_unstable",
+  "cmk.cli.internal",
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",
   "cmk.diagnostics.internal",
@@ -150,6 +151,7 @@ allows = [
 allows = [
   "@ccc",
   "cmk.base.modes.modes",
+  "cmk.cli.internal",
   "cmk.utils.log.console",
   "cmk.utils.render",
   "cmk.bakery",
@@ -374,6 +376,7 @@ allows = [
   "cmk.base.config",
   "cmk.base.configlib",
   "cmk.base.modes.modes",
+  "cmk.cli.internal",
   "cmk.base.nonfree.plugins.bakery.bakery_api",
   "cmk.base.plugins.bakery.bakery_api",
   "cmk.checkengine",
@@ -1317,6 +1320,9 @@ allows = [
 
 [components."cmk.diagnostics.engine"]
 allows = ["@plugin_apis", "cmk.discover_plugins"]
+
+[components."cmk.cli.internal"]
+allows = []
 
 [components."cmk.diagnostics.internal"]
 allows = []

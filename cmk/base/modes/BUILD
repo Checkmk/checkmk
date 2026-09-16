@@ -17,6 +17,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
     ],
 )
@@ -76,6 +77,7 @@ py_library(
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",

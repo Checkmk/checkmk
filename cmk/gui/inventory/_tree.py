@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -128,7 +126,7 @@ def make_filter_choices_from_permitted_paths(
             nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
         )
         for entry in permitted_paths
-        if entry  # type: ignore[redundant-expr]
+        if entry.get("visible_raw_path")
     ]
 
 
@@ -271,8 +269,8 @@ def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName)
     finally:
         sites.live().set_only_sites()
 
-    if result and result[0]:
-        return result[0][0]
+    if result and result[0] and isinstance(raw_status_data := result[0][0], bytes):
+        return raw_status_data
     return b""
 
 

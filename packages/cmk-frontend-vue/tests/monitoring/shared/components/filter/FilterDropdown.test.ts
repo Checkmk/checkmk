@@ -11,7 +11,8 @@ import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/type
 import FilterDropdown from '@/monitoring/shared/components/filter/FilterDropdown.vue'
 import type {
   CheckboxListFilter,
-  ColumnFilterValue
+  ColumnFilterValue,
+  SortDirection
 } from '@/monitoring/shared/components/filter/types'
 
 const definition: CheckboxListFilter<'state'> = {
@@ -29,8 +30,12 @@ function upFilter(): ColumnFilterNode<'state'> {
 
 // Wrapper holding the committed model so we can observe what the dropdown
 // commits, and supplying the trigger slot the shell expects.
-function renderDropdown(initial: ColumnFilterNode<FilterField> | undefined = undefined) {
+function renderDropdown(
+  initial: ColumnFilterNode<FilterField> | undefined = undefined,
+  sortable: boolean = false
+) {
   const model = ref<ColumnFilterNode<FilterField> | undefined>(initial)
+  const sort = ref<SortDirection>(false)
   const wrapper = defineComponent({
     setup() {
       return () =>
@@ -39,6 +44,11 @@ function renderDropdown(initial: ColumnFilterNode<FilterField> | undefined = und
           {
             definition: definition,
             label: 'State',
+            sortable: sortable,
+            sort: sort.value,
+            'onUpdate:sort': (value: SortDirection) => {
+              sort.value = value
+            },
             modelValue: model.value,
             'onUpdate:modelValue': (value: ColumnFilterValue<FilterField> | undefined) => {
               model.value = value as ColumnFilterNode<FilterField> | undefined
@@ -68,8 +78,28 @@ function renderDropdown(initial: ColumnFilterNode<FilterField> | undefined = und
         )
     }
   })
-  return { model, ...render(wrapper) }
+  return { model, sort, ...render(wrapper) }
 }
+
+test('a sort direction is reported as it is picked, on its own', async () => {
+  const user = userEvent.setup()
+  const { model, sort } = renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('button', { name: 'Sort ascending' }))
+
+  expect(sort.value).toBe('asc')
+  expect(model.value).toBeUndefined()
+})
+
+test('a column offers no sort directions unless it sorts', async () => {
+  const user = userEvent.setup()
+  renderDropdown()
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+
+  expect(screen.queryByRole('button', { name: 'Sort ascending' })).not.toBeInTheDocument()
+})
 
 test('toggling an option does not commit to the model before Apply', async () => {
   const user = userEvent.setup()

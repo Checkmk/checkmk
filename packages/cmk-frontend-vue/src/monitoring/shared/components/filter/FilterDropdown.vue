@@ -20,6 +20,7 @@ click-outside discard the draft, leaving the model at the state it had on open.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
@@ -47,7 +48,7 @@ import FilterDateTimeRange from './FilterDateTimeRange.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
 import FilterVisualFilter from './FilterVisualFilter.vue'
-import type { ColumnFilterDefinition, ColumnFilterValue } from './types'
+import type { ColumnFilterDefinition, ColumnFilterValue, SortDirection } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
@@ -71,9 +72,13 @@ const props = defineProps<{
    * Unset, the panel lines up with the trigger itself.
    */
   anchor?: string
+  /** Offer the column's sort directions above the filter. */
+  sortable?: boolean
 }>()
 
 const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
+
+const sort = defineModel<SortDirection>('sort', { default: false })
 
 const { _t } = usei18n()
 const panelId = useId()
@@ -114,6 +119,12 @@ const trigger = ref<HTMLElement | null>(null)
 provideFloatingTarget(() => panel.value ?? undefined)
 
 const isActive = computed(() => model.value !== undefined)
+
+const sortOptions = computed<{ direction: SortDirection; label: string }[]>(() => [
+  { direction: 'asc', label: _t('Sort ascending') },
+  { direction: 'desc', label: _t('Sort descending') },
+  { direction: false, label: _t('No sorting / default sorting') }
+])
 
 const filterComponent = computed(() => FILTER_COMPONENTS[props.definition.type])
 
@@ -343,6 +354,37 @@ onBeforeUnmount(() => {
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
+      <div v-if="sortable" class="monitoring-filter-dropdown__sort">
+        <button
+          v-for="option in sortOptions"
+          :key="String(option.direction)"
+          type="button"
+          class="monitoring-filter-dropdown__sort-option"
+          :aria-pressed="sort === option.direction"
+          @click="sort = option.direction"
+        >
+          <CmkMultitoneIcon
+            v-if="option.direction !== false"
+            name="dashlet-resize"
+            :rotate="option.direction === 'asc' ? 180 : 0"
+            primary-color="font"
+            aria-hidden="true"
+            size="xsmall"
+          />
+          <span
+            v-else
+            class="monitoring-filter-dropdown__sort-option-spacer"
+            aria-hidden="true"
+          ></span>
+          {{ option.label }}
+          <span
+            v-if="sort === option.direction"
+            class="monitoring-filter-dropdown__sort-marker"
+            aria-hidden="true"
+          ></span>
+        </button>
+      </div>
+
       <div class="monitoring-filter-dropdown__content">
         <CmkButton
           variant="text"
@@ -394,6 +436,49 @@ onBeforeUnmount(() => {
   border: 1px solid var(--ux-theme-4);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
+}
+
+.monitoring-filter-dropdown__sort {
+  display: flex;
+  flex-direction: column;
+  padding: var(--dimension-2);
+  border-bottom: 1px solid var(--ux-theme-4);
+}
+
+.monitoring-filter-dropdown__sort-option {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
+  padding: var(--dimension-3) var(--dimension-4);
+  background: transparent;
+  border: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+  line-height: 20px;
+
+  &:hover {
+    background-color: var(--ux-theme-3);
+  }
+
+  &[aria-pressed='true'] {
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+.monitoring-filter-dropdown__sort-option-spacer {
+  width: 10px;
+}
+
+.monitoring-filter-dropdown__sort-marker {
+  width: var(--dimension-3);
+  height: var(--dimension-3);
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--success);
 }
 
 .monitoring-filter-dropdown__content {

@@ -87,7 +87,9 @@ function makeMockService(
       onSortUpdate(newSort)
     }),
     columnVisibility,
-    rowToReveal: ref<Row | null>(null)
+    rowToReveal: ref<Row | null>(null),
+    beginAutoPause: vi.fn(),
+    endAutoPause: vi.fn()
   }
 }
 
@@ -237,6 +239,64 @@ test('aria-sort reflects the active sort direction', () => {
     'descending'
   )
   expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'none')
+})
+
+async function pickSortDirection(column: string, direction: string): Promise<void> {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: `Filter ${column}` }))
+  await user.click(screen.getByRole('button', { name: direction }))
+}
+
+test('the column panel sorts the column ascending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ onSortUpdate })
+
+  await pickSortDirection('Name', 'Sort ascending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: false }])
+})
+
+test('the column panel sorts the column descending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ onSortUpdate })
+
+  await pickSortDirection('Name', 'Sort descending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: true }])
+})
+
+test('the column panel drops only its own column out of a multi-column sort', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: true },
+      { id: 'state', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await pickSortDirection('Name', 'No sorting / default sorting')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'state', desc: false }])
+})
+
+test('the column panel marks the direction the column is sorted by', async () => {
+  const user = userEvent.setup()
+  mountTable({ sortState: [{ id: 'name', desc: true }] })
+
+  await user.click(screen.getByRole('button', { name: 'Filter Name' }))
+
+  expect(screen.getByRole('button', { name: 'Sort descending' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.getByRole('button', { name: 'Sort ascending' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
 })
 
 test('aria-busy is true while a fetch is in flight', () => {

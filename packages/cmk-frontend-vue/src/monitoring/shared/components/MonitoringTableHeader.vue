@@ -22,7 +22,7 @@ import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
-import type { ColumnFilterValue } from './filter/types'
+import type { ColumnFilterValue, SortDirection } from './filter/types'
 
 const { _t } = usei18n()
 
@@ -42,6 +42,14 @@ function setFilterValue(
   node: ColumnFilterValue<FilterField> | undefined
 ): void {
   column.setFilterValue(node)
+}
+
+function setSort(column: Column<T, unknown>, direction: SortDirection): void {
+  if (direction === false) {
+    column.clearSorting()
+    return
+  }
+  column.toggleSorting(direction === 'desc')
 }
 
 function columnLabel(column: Column<T, unknown>): string {
@@ -100,8 +108,6 @@ function isLastPinned(columnId: string): boolean {
 function isFirstPinnedRight(columnId: string): boolean {
   return columns?.value.get(columnId)?.isFirstPinnedRight ?? false
 }
-
-type SortDirection = false | 'asc' | 'desc'
 
 function ariaSortFor(direction: SortDirection): 'ascending' | 'descending' | 'none' {
   if (direction === 'asc') {
@@ -259,7 +265,10 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             :definition="header.column.columnDef.meta.filter"
             :label="columnLabel(header.column)"
             anchor="th"
+            :sortable="header.column.getCanSort()"
+            :sort="header.column.getIsSorted()"
             :model-value="filterValue(header.column)"
+            @update:sort="setSort(header.column, $event)"
             @update:model-value="setFilterValue(header.column, $event)"
           >
             <template #trigger="{ toggle, isOpen, isActive, panelId }">

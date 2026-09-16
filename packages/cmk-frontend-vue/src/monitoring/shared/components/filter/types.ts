@@ -7,6 +7,9 @@ import type { ConfiguredValues } from 'cmk-ui-library/components/filter'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
+/** What a column is sorted by, in the shape TanStack Table reports and takes. */
+export type SortDirection = false | 'asc' | 'desc'
+
 /** A single checkable value shown in the {@link CheckboxListFilter} dropdown. */
 export interface FilterCheckboxOption {
   value: string

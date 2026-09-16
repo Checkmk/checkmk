@@ -16,7 +16,7 @@ from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
 from omdlib.ai_control_plane import AI_CONTROL_PLANE
 from omdlib.automation_helper import AUTOMATION_HELPER
 from omdlib.autostart import AUTOSTART
-from omdlib.config_api import Config, Hook, PortHook
+from omdlib.config_api import Config, Error, Hook, PortHook
 from omdlib.core import CORE, update_cmk_core_config
 from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT,
@@ -286,7 +286,7 @@ def _config_set(
     config: Config,
     hook_name: str,
     omd_path: Path = Path("/omd/"),
-) -> None:
+) -> Error | None:
     site_home = Path(SitePaths.from_site_name(site_name).home)
 
     hook = get_hook(hook_name)
@@ -303,9 +303,10 @@ def _config_set(
         hook.activation(site_name, site_home, config)
     except Exception:
         traceback.print_exc()
-        return
+        return Error(f"Failed to activate {hook_name}.")
 
     os.environ["CONFIG_" + hook_name] = config[hook_name]
+    return None
 
 
 def _build_site_configs(omd_path: Path = Path("/omd")) -> _SiteConfigs:
@@ -348,12 +349,14 @@ def config_set_value(
     hook_name: str,
     value: str,
     save: bool = True,
-) -> None:
+) -> Error | None:
     config[hook_name] = value
-    _config_set(site_name, config, hook_name)
+    error = _config_set(site_name, config, hook_name)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
         update_cmk_core_config(config)
 
     if save:
         save_site_conf(SitePaths.from_site_name(site_name).home, config)
+
+    return error

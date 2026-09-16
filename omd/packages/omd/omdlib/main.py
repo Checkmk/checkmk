@@ -35,11 +35,10 @@ import omdlib
 import omdlib.backup
 from omdlib.args_site_user import args_to_command_line, Copy, Create, Move, Restore
 from omdlib.buffer import BufferWithCopy
-from omdlib.config_api import Config, ConfigHookChoices, Error, PortHook
+from omdlib.config_api import Config, ConfigHookChoices, Error, join_errors, PortHook
 from omdlib.config_hooks import (
     config_set_all,
     config_set_value,
-    ConfigHook,
     ConfigHooks,
     create_config_environment,
     get_hook,
@@ -1424,11 +1423,15 @@ def config_change(
         validate_config_change_commands(config_hooks, settings)
 
         changed: list[str] = []
+        errors: list[Error] = []
         for key, value in settings:
-            config_set_value(site.name, config, key, value, save=False)
+            if (error := config_set_value(site.name, config, key, value, save=False)) is not None:
+                errors.append(error)
             changed.append(key)
 
         save_site_conf(site_home, config)
+        if (error := join_errors(*errors)) is not None:
+            sys.exit(error)
         return changed
     finally:
         if site_was_stopped:
@@ -1470,29 +1473,26 @@ def config_set(
     config_hooks: ConfigHooks,
     args: Arguments,
     verbose: bool,
-) -> list[str]:
+) -> Error | list[str]:
     if len(args) != 2:
-        sys.stderr.write("Please specify variable name and value\n")
         config_usage()
-        return []
+        return Error("Please specify variable name and value")
 
     if not site.is_stopped(verbose):
-        sys.stderr.write("Cannot change config variables while site is running.\n")
-        return []
+        return Error("Cannot change config variables while site is running.")
 
     hook_name = args[0]
     value = args[1]
     hook = config_hooks.get(hook_name)
     if not hook:
-        sys.stderr.write("No such variable '%s'\n" % hook_name)
-        return []
+        return Error("No such variable '%s'" % hook_name)
 
     error_from_config_choice = _error_from_config_choice(get_hook(hook_name).choices, value)
     if error_from_config_choice is not None:
-        sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice}\n")
-        return []
+        return Error(f"Invalid value for '{value}'. {error_from_config_choice}")
 
-    config_set_value(site.name, config, hook_name, value, save=True)
+    if (error := config_set_value(site.name, config, hook_name, value, save=True)) is not None:
+        return error
     return [hook_name]
 
 
@@ -1525,13 +1525,12 @@ omd config change        - change multiple at once. Provide newline separated
     )
 
 
-def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> None:
+def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> Error | None:
     active_map = load_hook_dependencies(config, config_hooks)
-    hook: ConfigHook | None
+    errors: list[Error] = []
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
-            hook = config_hooks[hook_name]
             if active_map[hook_name]:
                 sys.stdout.write(f"{hook_name}: {config[hook_name]}\n")
     else:
@@ -1539,12 +1538,13 @@ def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> N
         for hook_name in args:
             hook = config_hooks.get(hook_name)
             if not hook:
-                sys.stderr.write("No such variable %s\n" % hook_name)
+                errors.append(Error(f"No such variable {hook_name}"))
             else:
                 output.append(config[hook_name])
 
         sys.stdout.write(" ".join(output))
         sys.stdout.write("\n")
+    return join_errors(*errors)
 
 
 def config_configure(
@@ -2869,6 +2869,7 @@ def main_config(
 
     config_hooks = load_config_hooks(site.hook_dir)
     set_hooks: list[str] = []
+    error: Error | None = None
     config = read_site_config(site_home)
     if len(args) == 0:
         set_hooks = list(config_configure(site, config, config_hooks, global_opts.verbose))
@@ -2876,13 +2877,18 @@ def main_config(
         command = args[0]
         args = args[1:]
         if command == "show":
-            config_show(config, config_hooks, args)
+            error = config_show(config, config_hooks, args)
         elif command == "set":
-            set_hooks = config_set(site, config, config_hooks, args, global_opts.verbose)
+            match config_set(site, config, config_hooks, args, global_opts.verbose):
+                case Error() as config_error:
+                    error = config_error
+                case hook_names:
+                    set_hooks = hook_names
         elif command == "change":
             set_hooks = config_change(site, config, config_hooks, global_opts.verbose)
         else:
             config_usage()
+            error = Error(f"No such command '{command}'")
 
     if (
         set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"})
@@ -2897,6 +2903,9 @@ def main_config(
 
     if need_start:
         start_site(site, config)
+
+    if error is not None:
+        sys.exit(error)
 
 
 def main_su(

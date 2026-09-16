@@ -774,3 +774,63 @@ def test_run_omd_cleanup_removes_orphaned_version(site: Site, tmp_path: Path) ->
 # General Options:
 # -V <version>                    set specific version, useful in combination with update/create
 # omd COMMAND -h, --help          show available options of COMMAND
+
+
+def test_run_omd_config_show_all(site: Site) -> None:
+    p = site.omd("config", "show", check=False)
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert f"CORE: {site.core_name()}\n" in p.stdout
+
+
+def test_run_omd_config_show_variable(site: Site) -> None:
+    p = site.omd("config", "show", "CORE", check=False)
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout == f"{site.core_name()}\n"
+
+
+def test_run_omd_config_show_unknown_variable(site: Site) -> None:
+    p = site.omd("config", "show", "NO_SUCH_VARIABLE", check=False)
+    assert p.returncode == 1
+    assert "No such variable NO_SUCH_VARIABLE" in p.stderr
+
+
+def test_run_omd_config_show_reports_every_unknown_variable(site: Site) -> None:
+    p = site.omd("config", "show", "NO_SUCH_VARIABLE", "ME_NEITHER", check=False)
+    assert p.returncode == 1
+    assert "No such variable NO_SUCH_VARIABLE" in p.stderr
+    assert "No such variable ME_NEITHER" in p.stderr
+
+
+def test_run_omd_config_show_keeps_printing_the_known_variables(site: Site) -> None:
+    p = site.omd("config", "show", "CORE", "NO_SUCH_VARIABLE", check=False)
+    assert p.returncode == 1
+    assert p.stdout == f"{site.core_name()}\n"
+
+
+def test_run_omd_config_unknown_command(site: Site) -> None:
+    p = site.omd("config", "no-such-command", check=False)
+    assert p.returncode == 1
+    assert "No such command 'no-such-command'" in p.stderr
+    assert "Usage of config command:" in p.stdout
+
+
+def test_run_omd_config_set_without_arguments(site: Site) -> None:
+    p = site.omd("config", "set", check=False)
+    assert p.returncode == 1
+    assert "Please specify variable name and value" in p.stderr
+    assert "Usage of config command:" in p.stdout
+
+
+def test_run_omd_config_set_on_running_site(site: Site) -> None:
+    p = site.omd("config", "set", "CORE", site.core_name(), check=False)
+    assert p.returncode == 1
+    assert "Cannot change config variables while site is running." in p.stderr
+
+
+def test_run_omd_config_set_unknown_variable(site: Site) -> None:
+    with site.omd_stopped():
+        p = site.omd("config", "set", "NO_SUCH_VARIABLE", "on", check=False)
+    assert p.returncode == 1
+    assert "No such variable 'NO_SUCH_VARIABLE'" in p.stderr

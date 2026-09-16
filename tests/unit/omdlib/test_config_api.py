@@ -8,8 +8,10 @@ import pytest
 
 from omdlib import main
 from omdlib.config_api import (
+    Error,
     ip_address_list_has_error,
     ip_listen_address_has_error,
+    join_errors,
     network_port_has_error,
 )
 from omdlib.system_apache import apache_TCP_addr_has_error
@@ -173,3 +175,15 @@ def test__error_from_config_choice_network_port() -> None:
     assert main._error_from_config_choice(network_port_has_error, "22") == "Invalid port number"  # noqa: SLF001
     assert main._error_from_config_choice(network_port_has_error, "65536") == "Invalid port number"  # noqa: SLF001
     assert main._error_from_config_choice(network_port_has_error, "") == "Invalid port number"  # noqa: SLF001
+
+
+def test_join_errors_without_arguments() -> None:
+    assert join_errors() is None
+
+
+def test_join_errors_keeps_the_only_error() -> None:
+    assert join_errors(Error("Boom.")) == "Boom."
+
+
+def test_join_errors_separates_by_newline() -> None:
+    assert join_errors(Error("Boom."), Error("Bang.")) == "Boom.\nBang."

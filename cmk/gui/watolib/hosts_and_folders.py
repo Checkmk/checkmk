@@ -2474,9 +2474,9 @@ class Folder:
                 break
         if not have_mode:
             url_vars.append(("mode", "folder"))
-        if request.var("debug") == "1":
-            add_vars.append(("debug", "1"))
         url_vars += add_vars
+        if request.var("debug") == "1":
+            url_vars.append(("debug", "1"))
         return _makeuri_to_wato(url_vars)
 
     def edit_url(self, backfolder: Folder | None = None) -> str:

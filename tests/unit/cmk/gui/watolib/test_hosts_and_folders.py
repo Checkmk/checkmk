@@ -25,6 +25,7 @@ from pytest import MonkeyPatch
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis import TimeoutError as RedisTimeoutError
+from werkzeug.test import create_environ
 
 import cmk.ruleset_matcher.tags
 import cmk.utils.paths
@@ -35,9 +36,11 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search.matchers import MatchItem
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
@@ -316,6 +319,18 @@ def test_create_nested_folders(tree: FolderTree) -> None:
         folder2.save_folder_attributes()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
+
+
+def test_url_does_not_mutate_the_passed_variables(tree: FolderTree) -> None:
+    """A debug request used to append its marker to the caller's list."""
+    add_vars: HTTPVariables = [("mode", "edit_host")]
+
+    root = tree.root_folder()
+    request = Request(create_environ(query_string="debug=1"))
+    first = root.url(request, add_vars)
+
+    assert add_vars == [("mode", "edit_host")]
+    assert root.url(request, add_vars) == first
 
 
 def test_eq_operation(tree: FolderTree) -> None:

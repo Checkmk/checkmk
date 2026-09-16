@@ -27,7 +27,8 @@ function variable(name: string, title: string, help: string = ''): GlobalSetting
     default_value: 10,
     global_value: null,
     origin: 'factory',
-    site_overrides: []
+    site_overrides: [],
+    hints: []
   }
 }
 

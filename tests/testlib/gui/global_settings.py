@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 
 import pytest
@@ -19,6 +19,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableHint,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -48,6 +49,7 @@ def registered[ModelT](
     *varnames: str,
     primary_domain: type[ABCConfigDomain] = ConfigDomainGUI,
     form_spec: Callable[[GlobalSettingsContext], FormSpec[ModelT]] | None = None,
+    hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
 ) -> Iterator[None]:
     config_variable_group_registry.register(group)
     variables = [
@@ -56,6 +58,7 @@ def registered[ModelT](
             primary_domain=primary_domain,
             ident=varname,
             form_spec=_an_integer if form_spec is None else form_spec,
+            hints=hints,
         )
         for varname in varnames
     ]

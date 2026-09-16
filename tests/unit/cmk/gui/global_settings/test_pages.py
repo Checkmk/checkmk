@@ -5,6 +5,7 @@
 
 import dataclasses
 from collections.abc import Iterator, Mapping
+from typing import override
 
 import pytest
 
@@ -16,11 +17,17 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_settings.pages import global_settings, site_specific_settings
 from cmk.gui.i18n import _l
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
-from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
+from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
+    ConfigDomainName,
+    ConfigVariableGroup,
+    ConfigVariableHint,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import site_management_registry, SitesConfigFile
 from cmk.livestatus_client import UnixSocketInfo
 from cmk.shared_typing import global_settings as shared
+from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames
 from tests.testlib.gui.global_settings import (
     logged_in,
@@ -337,3 +344,71 @@ def test_the_site_page_shows_event_console_variables_too(load_config: Config) ->
         EVENT_CONSOLE_VAR,
         GUI_VAR,
     }
+
+
+class _HintingDomain(ConfigDomainGUI):
+    @classmethod
+    @override
+    def ident(cls) -> ConfigDomainName:
+        return "test_hinting_domain"
+
+    @classmethod
+    @override
+    def hint(cls) -> HTML:
+        return HTML.without_escaping("<b>Restart</b> required")
+
+
+@pytest.fixture(name="hinting_domain")
+def fixture_hinting_domain() -> Iterator[None]:
+    config_domain_registry.register(_HintingDomain())
+    try:
+        yield
+    finally:
+        config_domain_registry.unregister(_HintingDomain.ident())
+
+
+@pytest.mark.usefixtures("factory_defaults", "hinting_domain", "with_admin_login")
+def test_the_domain_hint_precedes_the_hints_of_the_variable(load_config: Config) -> None:
+    with registered(
+        ConfigVariableGroup(title=_l("Test group"), sort_index=1),
+        "test_var_a",
+        primary_domain=_HintingDomain,
+        hints=lambda: [ConfigVariableHint(HTML.without_escaping("Take care"), variant="info")],
+    ):
+        variable = shown_variables(global_settings(load_config))["test_var_a"]
+
+    assert variable.hints == [
+        shared.GlobalSettingsHint(
+            text="<b>Restart</b> required",
+            variant=shared.GlobalSettingsHintVariant.warning,
+            copyable=None,
+        ),
+        shared.GlobalSettingsHint(
+            text="Take care", variant=shared.GlobalSettingsHintVariant.info, copyable=None
+        ),
+    ]
+
+
+@pytest.mark.usefixtures("test_variables", "with_admin_login")
+def test_a_variable_of_a_domain_without_a_hint_has_none(load_config: Config) -> None:
+    assert shown_variables(global_settings(load_config))["test_var_a"].hints == []
+
+
+@pytest.mark.usefixtures("factory_defaults", "with_admin_login")
+def test_a_copyable_hint_keeps_its_value_out_of_the_text(load_config: Config) -> None:
+    with registered(
+        ConfigVariableGroup(title=_l("Test group"), sort_index=1),
+        "test_var_a",
+        hints=lambda: [
+            ConfigVariableHint(HTML.without_escaping("Reachable at "), copyable="http://host/mcp")
+        ],
+    ):
+        variable = shown_variables(global_settings(load_config))["test_var_a"]
+
+    assert variable.hints == [
+        shared.GlobalSettingsHint(
+            text="Reachable at ",
+            variant=shared.GlobalSettingsHintVariant.warning,
+            copyable="http://host/mcp",
+        )
+    ]

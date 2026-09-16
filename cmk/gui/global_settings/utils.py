@@ -39,6 +39,8 @@ from cmk.shared_typing.global_settings import (
     Components,
     GlobalSettingsApp,
     GlobalSettingsBreadcrumbItem,
+    GlobalSettingsHint,
+    GlobalSettingsHintVariant,
     GlobalSettingsOrigin,
     GlobalSettingsScopeGlobal,
     GlobalSettingsScopeSite,
@@ -215,6 +217,14 @@ def _variables(
             global_value=vue_inherited_value,
             origin=origin,
             site_overrides=_site_overrides(varname, shown.override_sites),
+            hints=[
+                GlobalSettingsHint(
+                    text=str(hint.text),
+                    variant=GlobalSettingsHintVariant(hint.variant),
+                    copyable=hint.copyable,
+                )
+                for hint in config_variable.hints()
+            ],
         )
 
 

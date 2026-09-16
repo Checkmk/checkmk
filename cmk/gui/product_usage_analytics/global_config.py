@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Final, override
 
@@ -16,6 +16,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableHint,
     SerializedSettings,
 )
 from cmk.rulesets.v1 import form_specs as fs
@@ -78,14 +79,9 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         }
 
 
-def make_product_usage_analytics_config_variable(
-    hint: Callable[[], HTML] = HTML.empty,
-) -> ConfigVariable:
-    return ConfigVariable(
-        group=ConfigVariableGroupProductUsageAnalytics,
-        primary_domain=ConfigDomainProductUsageAnalytics,
-        ident="product_usage_analytics",
-        domain_hint=HTML.without_escaping(
+def _inspect_data_hint() -> ConfigVariableHint:
+    return ConfigVariableHint(
+        HTML.without_escaping(
             _(
                 "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %(link)s. "
                 "This allows you to review the data locally; it does not enable the feature or transmit any information."
@@ -96,8 +92,18 @@ def make_product_usage_analytics_config_variable(
                     href="download_product_usage.py",
                 )
             }
-        ),
-        hint=hint,
+        )
+    )
+
+
+def make_product_usage_analytics_config_variable(
+    hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
+) -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroupProductUsageAnalytics,
+        primary_domain=ConfigDomainProductUsageAnalytics,
+        ident="product_usage_analytics",
+        hints=lambda: [_inspect_data_hint(), *hints()],
         form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
             title=Title("Product usage analytics"),
             elements={

@@ -93,6 +93,11 @@
           "description": "Sites that configure their own explicit value for this variable.",
           "type": "array",
           "items": { "$ref": "#/$defs/global_settings_site_override" }
+        },
+        "hints": {
+          "description": "Notes shown above the form of the setting.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/global_settings_hint" }
         }
       },
       "required": [
@@ -102,13 +107,35 @@
         "default_value",
         "global_value",
         "origin",
-        "site_overrides"
+        "site_overrides",
+        "hints"
       ]
     },
     "global_settings_origin": {
       "title": "GlobalSettingsOrigin",
       "description": "The layer the shown value comes from.",
       "enum": ["factory", "global", "site"]
+    },
+    "global_settings_hint": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "Trusted HTML, sanitized to the allow-list of cmk/utils/escaping.py.",
+          "type": "string"
+        },
+        "variant": { "$ref": "#/$defs/global_settings_hint_variant" },
+        "copyable": {
+          "description": "Value shown verbatim behind the text, with a control that copies it.",
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["text", "variant", "copyable"]
+    },
+    "global_settings_hint_variant": {
+      "title": "GlobalSettingsHintVariant",
+      "description": "How urgent a hint is.",
+      "type": "string",
+      "enum": ["info", "warning"]
     },
     "global_settings_site_override": {
       "type": "object",

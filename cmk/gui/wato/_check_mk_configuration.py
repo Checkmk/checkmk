@@ -82,6 +82,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
+    ConfigVariableHint,
     ConfigVariableRegistry,
     GlobalSettingsContext,
 )
@@ -2053,12 +2054,16 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
 ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainCACertificates,
-    domain_hint=html.HTML.without_escaping(
-        _(
-            "Warning: changing these settings will affect all outgoing HTTPS requests, including "
-            "online license verification."
+    hints=lambda: [
+        ConfigVariableHint(
+            html.HTML.without_escaping(
+                _(
+                    "Warning: changing these settings will affect all outgoing HTTPS requests, "
+                    "including online license verification."
+                )
+            )
         )
-    ),
+    ],
     ident="trusted_certificate_authorities",
     form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Trusted certificate authorities for SSL"),

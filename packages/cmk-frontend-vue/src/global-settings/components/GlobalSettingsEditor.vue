@@ -4,9 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { GlobalSettingsHint } from 'cmk-shared-typing/typescript/global_settings'
+import type { CmkAlertBoxProps } from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import CmkCopy from 'cmk-ui-library/components/CmkCopy.vue'
+import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -118,6 +122,10 @@ const resetConfirmation = computed<{
       }
 })
 
+function hintAlertProps(hint: GlobalSettingsHint): CmkAlertBoxProps {
+  return hint.variant === 'info' ? { variant: 'info' } : { variant: 'warning' }
+}
+
 const currentStateText = computed<TranslatedString>(() => {
   switch (variable.value.origin) {
     case 'site':
@@ -181,6 +189,22 @@ const currentStateText = computed<TranslatedString>(() => {
           'This setting uses an explicit value and overrides the factory and Global settings value.'
         )
       }}
+    </CmkAlertBox>
+
+    <CmkAlertBox v-for="(hint, index) in variable.hints" :key="index" v-bind="hintAlertProps(hint)">
+      <span class="global-settings-editor__hint">
+        <CmkHtml :html="hint.text" />
+        <template v-if="hint.copyable !== null">
+          <code>{{ hint.copyable }}</code>
+          <CmkCopy :text="hint.copyable">
+            <CmkButton
+              size="iconOnly"
+              :icon="{ name: 'view-copy' }"
+              :aria-label="_t('Copy to clipboard')"
+            />
+          </CmkCopy>
+        </template>
+      </span>
     </CmkAlertBox>
 
     <FormHelp :help="variable.spec.help" />
@@ -259,6 +283,13 @@ const currentStateText = computed<TranslatedString>(() => {
 
 .global-settings-editor__error {
   white-space: pre-wrap;
+}
+
+.global-settings-editor__hint {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
 }
 
 .global-settings-editor__overrides-intro {

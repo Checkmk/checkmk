@@ -490,16 +490,12 @@ class ABCEditGlobalSettingMode(WatoMode):
         value = self._current_settings.get(
             self._varname, self._global_settings.get(self._varname, defvalue)
         )
-        domain_hint = self._config_variable.domain_hint()
-
-        if domain_hint:
-            html.show_warning(domain_hint)
-        hint = self._config_variable.hint()
-        if hint:
-            if self._config_variable.hint_type() == "info":
-                html.show_info(hint)
+        for hint in self._config_variable.hints():
+            text = hint.text if hint.copyable is None else hint.text + html.render_tt(hint.copyable)
+            if hint.variant == "info":
+                html.show_info(text)
             else:
-                html.show_warning(hint)
+                html.show_warning(text)
 
         with html.form_context("value_editor", method="POST"):
             forms.header(self._title())

@@ -30,7 +30,6 @@ from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames
 from cmk.web.utils.permission_verification import PermissionName
@@ -360,6 +359,14 @@ class GlobalSettingsContext:
     configured_graph_timeranges: Sequence[GraphTimerange]
 
 
+@dataclass(frozen=True)
+class ConfigVariableHint:
+    text: HTML
+    variant: Literal["info", "warning"] = "warning"
+    copyable: str | None = None
+    """Value the frontend shows behind the text with a control that copies it."""
+
+
 class ConfigVariable:
     def __init__(
         self,
@@ -372,9 +379,7 @@ class ConfigVariable:
         need_apache_reload: bool = False,
         allow_reset: bool = True,
         in_global_settings: bool = True,
-        hint: Callable[[], HTML] = HTML.empty,
-        hint_type: MsgType = "warning",
-        domain_hint: HTML | None = None,
+        hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -384,9 +389,7 @@ class ConfigVariable:
         self._need_apache_reload = need_apache_reload
         self._allow_reset = allow_reset
         self._in_global_settings = in_global_settings
-        self._hint_func = hint
-        self._hint_type = hint_type
-        self._domain_hint = domain_hint
+        self._hints = hints
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
     def group(self) -> ConfigVariableGroup:
@@ -433,14 +436,9 @@ class ConfigVariable:
         """Whether or not to show this option on the global settings page"""
         return self._in_global_settings
 
-    def hint(self) -> HTML:
-        return self._hint_func()
-
-    def hint_type(self) -> MsgType:
-        return self._hint_type
-
-    def domain_hint(self) -> HTML:
-        return self._domain_hint or self.primary_domain().hint() or HTML.empty()
+    def hints(self) -> Sequence[ConfigVariableHint]:
+        domain_hint = self.primary_domain().hint()
+        return [*([ConfigVariableHint(domain_hint)] if domain_hint else []), *self._hints()]
 
     def add_config_domain_affected_by_change(
         self,

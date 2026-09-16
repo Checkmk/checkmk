@@ -67,7 +67,8 @@ const data: GlobalSettingsAppData = {
           default_value: 10,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         }
       ]
     }
@@ -95,7 +96,8 @@ const booleanTopic: GlobalSettingsTopic = {
       default_value: false,
       global_value: null,
       origin: 'factory',
-      site_overrides: []
+      site_overrides: [],
+      hints: []
     }
   ]
 }
@@ -854,6 +856,51 @@ describe('GlobalSettingsApp deep link', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(window.location.search).toBe('')
+  })
+})
+
+describe('GlobalSettingsApp hints', () => {
+  const hintedTopic: GlobalSettingsTopic = {
+    ...data.topics[0]!,
+    headline: 'Hinted settings',
+    variables: [
+      {
+        ...data.topics[0]!.variables[0]!,
+        hints: [
+          { text: 'A full restart is <b>required</b>.', variant: 'warning', copyable: null },
+          {
+            text: 'Reachable at ',
+            variant: 'info',
+            copyable: 'http://localhost/heute/check_mk/mcp'
+          }
+        ]
+      }
+    ]
+  }
+
+  async function openHintedEditor(): Promise<HTMLElement> {
+    render(GlobalSettingsApp, { props: { ...data, topics: [hintedTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Hinted settings' })
+    )
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Edit Lock user accounts after N login failures' })
+    )
+    return await screen.findByRole('dialog')
+  }
+
+  test('each hint is shown in a box matching its variant', async () => {
+    const dialog = await openHintedEditor()
+
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('A full restart is required.')
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Reachable at')
+  })
+
+  test('a copyable hint shows its value next to a copy control', async () => {
+    const dialog = await openHintedEditor()
+
+    expect(within(dialog).getByText('http://localhost/heute/check_mk/mcp')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Copy to clipboard' })).toBeInTheDocument()
   })
 })
 

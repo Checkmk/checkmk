@@ -497,7 +497,8 @@ export const globalSettingsPagePayload = {
           },
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'trusted_certificate_authorities',
@@ -576,7 +577,8 @@ export const globalSettingsPagePayload = {
               title: 'Berlin site',
               url: 'wato.py?mode=edit_site_globals&site=ber'
             }
-          ]
+          ],
+          hints: []
         },
         {
           name: 'site_subject_alternative_names',
@@ -605,7 +607,8 @@ export const globalSettingsPagePayload = {
           default_value: [],
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'agent_controller_certificates',
@@ -675,7 +678,8 @@ export const globalSettingsPagePayload = {
           },
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'rest_api_etag_locking',
@@ -692,7 +696,8 @@ export const globalSettingsPagePayload = {
           default_value: true,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'site_autostart',
@@ -709,7 +714,14 @@ export const globalSettingsPagePayload = {
           default_value: false,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: [
+            {
+              text: 'Changing this setting triggers a full restart of all affected sites during activate changes.',
+              variant: 'warning',
+              copyable: null
+            }
+          ]
         },
         {
           name: 'site_core',
@@ -737,7 +749,8 @@ export const globalSettingsPagePayload = {
           default_value: null,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'site_livestatus_tcp',
@@ -888,7 +901,14 @@ export const globalSettingsPagePayload = {
           default_value: null,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: [
+            {
+              text: "Once enabled, your site's Livestatus port is reachable at ",
+              variant: 'info',
+              copyable: 'localhost:6557'
+            }
+          ]
         },
         {
           name: 'diskspace_cleanup',
@@ -1049,7 +1069,8 @@ export const globalSettingsPagePayload = {
           },
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'site_piggyback_hub',
@@ -1066,7 +1087,8 @@ export const globalSettingsPagePayload = {
           default_value: false,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'site_mkeventd',
@@ -1136,7 +1158,8 @@ export const globalSettingsPagePayload = {
           ],
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         }
       ]
     },
@@ -1195,7 +1218,8 @@ export const globalSettingsPagePayload = {
           },
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'inject_js_profiling_code',
@@ -1212,7 +1236,8 @@ export const globalSettingsPagePayload = {
           default_value: false,
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'profiling_options',
@@ -1307,7 +1332,8 @@ export const globalSettingsPagePayload = {
           },
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         },
         {
           name: 'load_frontend_vue',
@@ -1335,7 +1361,8 @@ export const globalSettingsPagePayload = {
           default_value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
           global_value: null,
           origin: 'factory',
-          site_overrides: []
+          site_overrides: [],
+          hints: []
         }
       ]
     }

@@ -265,6 +265,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             :definition="header.column.columnDef.meta.filter"
             :label="columnLabel(header.column)"
             anchor="th"
+            :heading="_t('Filter')"
             :sortable="header.column.getCanSort()"
             :sort="header.column.getIsSorted()"
             :model-value="filterValue(header.column)"

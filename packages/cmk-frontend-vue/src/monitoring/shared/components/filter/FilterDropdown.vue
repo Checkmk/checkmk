@@ -67,6 +67,8 @@ const props = defineProps<{
   /** Human-readable column name, used for the accessible popover label. */
   label: string
   clearLabel?: string
+  /** Title of the filter section, shown opposite the clear button. */
+  heading?: string
   /**
    * Selector of the ancestor the panel lines up with, resolved with `closest`.
    * Unset, the panel lines up with the trigger itself.
@@ -386,16 +388,17 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="monitoring-filter-dropdown__content">
-        <CmkButton
-          variant="text"
-          size="small"
-          class="monitoring-filter-dropdown__clear"
-          @click="clear"
-        >
-          {{ props.clearLabel ?? _t('Clear') }}
-        </CmkButton>
-
-        <hr class="monitoring-filter-dropdown__content-row-separator" />
+        <div class="monitoring-filter-dropdown__content-header">
+          <span v-if="heading" class="monitoring-filter-dropdown__heading">{{ heading }}</span>
+          <CmkButton
+            variant="text"
+            size="small"
+            class="monitoring-filter-dropdown__clear"
+            @click="clear"
+          >
+            {{ props.clearLabel ?? _t('Clear') }}
+          </CmkButton>
+        </div>
 
         <component
           :is="filterComponent"
@@ -442,15 +445,15 @@ onBeforeUnmount(() => {
 .monitoring-filter-dropdown__sort {
   display: flex;
   flex-direction: column;
-  padding: var(--dimension-2);
+  padding: var(--dimension-3) 0;
   border-bottom: 1px solid var(--ux-theme-4);
 }
 
 .monitoring-filter-dropdown__sort-option {
   display: flex;
   align-items: center;
-  gap: var(--dimension-3);
-  padding: var(--dimension-3) var(--dimension-4);
+  gap: var(--dimension-5);
+  padding: var(--dimension-3) var(--dimension-5);
   background: transparent;
   border: none;
   margin: 0;
@@ -479,21 +482,19 @@ onBeforeUnmount(() => {
 }
 
 .monitoring-filter-dropdown__content {
-  width: calc(100% - 2 * var(--dimension-2));
-  margin: var(--dimension-2);
-}
-
-.monitoring-filter-dropdown__clear {
-  margin: var(--dimension-3);
-  float: right;
-}
-
-.monitoring-filter-dropdown__content-row-separator {
   width: 100%;
-  height: var(--dimension-1);
-  border: 0;
-  background-color: var(--ux-theme-4);
-  margin: var(--dimension-2) 0;
+}
+
+.monitoring-filter-dropdown__content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-5);
+}
+
+.monitoring-filter-dropdown__heading {
+  font-weight: var(--font-weight-bold);
 }
 
 .monitoring-filter-dropdown__panel--up {
@@ -507,9 +508,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: var(--dimension-4);
   justify-content: flex-end;
-  margin-top: var(--dimension-2);
-  padding: var(--dimension-4) var(--dimension-3);
-  border-top: 1px solid var(--ux-theme-4);
+  padding: var(--dimension-4) var(--dimension-5);
   align-items: center;
 }
 </style>

@@ -173,16 +173,16 @@ function toggleAll(): void {
 
 .monitoring-filter-checkbox-list__row-separator {
   width: 100%;
-  height: var(--dimension-1);
+  height: 0;
   border: 0;
-  background-color: var(--ux-theme-4);
-  margin: var(--dimension-1) 0;
+  border-top: 1px dashed var(--ux-theme-4);
+  margin: var(--dimension-3) 0;
 }
 
 .monitoring-filter-checkbox-list__row {
   display: flex;
   align-items: center;
-  padding: 0 var(--dimension-2) var(--dimension-2) var(--dimension-2);
+  padding: var(--dimension-2) var(--dimension-5);
 
   &:hover,
   &:focus-within {

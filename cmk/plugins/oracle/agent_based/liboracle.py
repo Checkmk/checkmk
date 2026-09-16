@@ -31,18 +31,13 @@ type Parsed[T] = Ok[T] | Error
 
 class OraErrors:
     """
-    >>> for line in ([""], ["", "FAILURE","ORA-", "foo"], ["", "FAILURE","ORA-"], ["", "FAILURE"],
-    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"], ["Error", "Message:", "Hello"]):
+    >>> for line in ([""], ["", "FAILURE","ORA-"], ["", "FAILURE"], ["ORA-bar", "some", "data"]):
     ...     [OraErrors(line).ignore,OraErrors(line).has_error,
     ...     OraErrors(line).error_text,OraErrors(line).error_severity]
     [False, False, '', <State.OK: 0>]
-    [False, True, 'ORA- foo', <State.UNKNOWN: 3>]
     [False, True, 'ORA-', <State.UNKNOWN: 3>]
     [True, False, '', <State.OK: 0>]
-    [True, False, '', <State.OK: 0>]
-    [False, True, 'Found error in agent output "ORA-bar"', <State.UNKNOWN: 3>]
     [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
-    [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
 
     def __init__(self, line: list[str]) -> None:
@@ -57,8 +52,7 @@ class OraErrors:
 
     # This function must be executed for each agent line which has been
     # found for the current item. It must deal with the ORA-* error
-    # messages. It has to skip over the lines which show the SQL statement
-    # and the SQL error message which comes before the ORA-* message.
+    # messages.
     def handle_errors(self, line: Sequence[str]) -> None:
         if len(line) == 1:
             return
@@ -71,30 +65,13 @@ class OraErrors:
 
         # Handle error output from new agent
         if line[1] == "FAILURE":
-            if len(line) >= 3 and line[2].startswith("ORA-"):
+            if len(line) == 3 and line[2].startswith("ORA-"):
                 self.has_error = True
                 self.error_text = "%s" % " ".join(line[2:])
                 self.error_severity = State.UNKNOWN
                 return
             self.ignore = True
             return  # ignore other FAILURE lines
-
-        # Handle error output from old (pre 1.2.0p2) agent
-        if line[1] in ["select", "*", "ERROR"]:
-            self.ignore = True
-            return
-        if line[1].startswith("ORA-"):
-            self.has_error = True
-            self.error_text = _error_summary_text(" ".join(line[1:]))
-            self.error_severity = State.UNKNOWN
-            return
-
-        # Handle error output from 1.6 solaris agent, see SUP-9521
-        if line[0] == "Error":
-            self.has_error = True
-            self.error_text = _error_summary_text(" ".join(line[1:]))
-            self.error_severity = State.UNKNOWN
-            return
 
 
 def _error_summary_text(agent_output_string: str) -> str:
@@ -278,37 +255,19 @@ def oracle_handle_ora_errors(line: Sequence[str]) -> str | Literal[False] | None
         return legacy_error
 
     # mk-oracle collapses "|" and line breaks, so its errors are exactly three
-    # fields and need not start with "ORA-". Legacy mk_oracle can emit ORA-
-    # messages containing "|", which splits the row into more fields. A longer
-    # row without an ORA- message is data (a PDB may be named "FAILURE").
+    # fields and need not start with "ORA-". A longer row is data (a PDB may be
+    # named "FAILURE").
     if line[1] == "FAILURE":
         if len(line) == 3:
             if not line[2].strip():
                 return False
             return line[2]
-        if len(line) > 3 and line[2].startswith("ORA-"):
-            return " ".join(line[2:])
         if len(line) == 2:
             return False
-        return None
-
-    # Handle error output from old (pre 1.2.0p2) agent
-    if line[1] in ["select", "*", "ERROR"]:
-        return False
-    if line[1].startswith("ORA-"):
-        return 'Found error in agent output "%s"' % " ".join(line[1:])
     return None
 
 
 def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
-    # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
-    if line == ["ERROR:"]:
-        return False
-
     if line[0].startswith("ORA-"):
         return 'Found error in agent output "%s"' % " ".join(line)
-
-    # Handle error output from 1.6 solaris agent, see SUP-9521
-    if line[0] == "Error":
-        return 'Found error in agent output "%s"' % " ".join(line[1:])
     return None

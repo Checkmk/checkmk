@@ -9,7 +9,6 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.oracle.agent_based.liboracle import OraErrors
 from cmk.plugins.oracle.agent_based.oracle_processes import (
     check_oracle_processes,
     discover_oracle_processes,
@@ -41,31 +40,6 @@ def test_parse_oracle_processes(info: StringTable, parse_result: SectionOraclePr
 
 
 @pytest.mark.parametrize(
-    "info, parse_result",
-    [
-        pytest.param(
-            [["Error", "Message:"]],
-            SectionOracleProcesses(
-                error_processes={"Error": OraErrors(["Error", "Message:"])},
-                oracle_processes={},
-            ),
-            id="Parsing one error Oracle process from the input",
-        ),
-    ],
-)
-def test_parse_error_oracle_processes(
-    info: StringTable, parse_result: SectionOracleProcesses
-) -> None:
-    process_name = info[0][0]
-    parse_value = parse_oracle_processes(info).error_processes[process_name]
-    error_parse_result = parse_result.error_processes[process_name]
-    assert parse_value.has_error == error_parse_result.has_error
-    assert parse_value.ignore == error_parse_result.ignore
-    assert parse_value.error_text == error_parse_result.error_text
-    assert parse_value.error_severity == error_parse_result.error_severity
-
-
-@pytest.mark.parametrize(
     "section, discovered_item",
     [
         pytest.param(
@@ -81,14 +55,6 @@ def test_parse_error_oracle_processes(
                 Service(item="DB1DEV2"),
             ],
             id="One valid Oracle process is discovered",
-        ),
-        pytest.param(
-            SectionOracleProcesses(
-                error_processes={"Error": OraErrors(["Error", "Message:"])},
-                oracle_processes={},
-            ),
-            [Service(item="Error")],
-            id="One error Oracle process is discovered",
         ),
         pytest.param(
             SectionOracleProcesses(error_processes={}, oracle_processes={}),
@@ -160,20 +126,6 @@ def test_discover_oracle_processes(
                 Metric(name="processes", value=1450, levels=(1050, 1350)),
             ],
             id="Oracle process state CRIT",
-        ),
-        pytest.param(
-            SectionOracleProcesses(
-                error_processes={"Error": OraErrors(["Error", "Message:"])},
-                oracle_processes={},
-            ),
-            "Error",
-            [
-                Result(
-                    state=State.UNKNOWN,
-                    summary='Found error in agent output "Message:"',
-                )
-            ],
-            id="UNKNOWN on error from 1.6 solaris agent plug-in output",
         ),
     ],
 )

@@ -13,7 +13,6 @@ from cmk.plugins.oracle.agent_based.oracle_version import (
 def test_discover_skips_error_rows() -> None:
     section = [
         ["orcl", "FAILURE", "ORA-00942: table or view does not exist"],
-        ["orcl2", "ORA-01017:", "invalid username/password"],
         ["XE", "Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production"],
     ]
     assert list(discover_oracle_version(section)) == [Service(item="XE")]

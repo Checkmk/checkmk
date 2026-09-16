@@ -197,7 +197,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'dashlet-network-topology': ['widget map', 'network diagram'],
   'dashlet-nodata': ['empty widget', 'no data'],
   'dashlet-notifications-bar-chart': ['widget chart', 'notifications graph'],
-  'dashlet-resize': ['widget resize', 'scale'],
+  'dashlet-resize': ['widget resize', 'scale', 'sort', 'arrow'],
   'dashlet-url': ['widget link', 'embed'],
   'db-widget-clone': ['duplicate widget', 'copy dashboard element'],
   'db-widget-delete': ['trash', 'remove widget', 'bin'],

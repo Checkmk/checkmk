@@ -791,7 +791,8 @@ export const oneColorIcons = [
   'waiting',
   'more-actions',
   'open-details',
-  'dash'
+  'dash',
+  'dashlet-resize'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment'] as const
 

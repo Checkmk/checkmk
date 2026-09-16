@@ -11,7 +11,7 @@ settings"""
 
 import abc
 import contextlib
-from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
+from collections.abc import Collection, Iterable, Iterator, Sequence
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -97,8 +97,8 @@ from cmk.web.utils.urls import makeactionuri
 
 
 def register(mode_registry: ModeRegistry) -> None:
-    mode_registry.register(DefaultModeEditGlobals)
-    mode_registry.register(DefaultModeEditGlobalSetting)
+    mode_registry.register(ModeEditGlobals)
+    mode_registry.register(ModeEditGlobalSetting)
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -552,17 +552,9 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
-    def __init__(
-        self,
-        edition: Edition,
-        ctx: PageContext,
-        page_menu_dropdowns_postprocess: Callable[
-            [Sequence[PageMenuDropdown]], list[PageMenuDropdown]
-        ],
-    ) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         super().__init__(edition, ctx)
         self._current_settings = dict(load_configuration_settings())
-        self._page_menu_dropdowns_postprocess = page_menu_dropdowns_postprocess
 
     @override
     def title(self) -> str:
@@ -572,25 +564,19 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        dropdowns = []
-
-        dropdowns.append(
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Setup"),
-                        entries=list(self._page_menu_entries_related()),
-                    ),
-                ],
-            ),
-        )
-
-        dropdowns = self._page_menu_dropdowns_postprocess(dropdowns)
-
         menu = PageMenu(
-            dropdowns=dropdowns,
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
@@ -667,11 +653,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         )
 
 
-class DefaultModeEditGlobals(ModeEditGlobals):
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx, list)
-
-
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     @override
@@ -708,13 +689,6 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
             sites=config.sites,
             graph_timeranges=config.graph_timeranges,
         )
-
-
-class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return DefaultModeEditGlobals
 
 
 def _show_toggle_switch(

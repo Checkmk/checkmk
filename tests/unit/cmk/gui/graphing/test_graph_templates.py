@@ -36,7 +36,7 @@ from cmk.gui.graphing import (
     FetchDiagnostics,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graph_choices import BuiltGraph
+from cmk.gui.graphing._built_graphs import BuiltGraph
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
 from cmk.gui.graphing._metric_data import RawPerformanceValue
 

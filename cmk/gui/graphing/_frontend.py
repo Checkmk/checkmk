@@ -47,8 +47,8 @@ from cmk.shared_typing.global_time_picker import (
 from cmk.web.utils.html import HTML
 
 from . import _plugins as engine_plugins
+from ._built_graphs import BuiltGraph
 from ._drawn_curves import DrawnCurve, line_type_with_mirroring, serialize_drawn_curves
-from ._graph_choices import BuiltGraph
 from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification

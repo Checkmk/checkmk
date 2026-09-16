@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from ._autocompleter import monitored_metrics_autocompleter
+from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._drawn_curves import (
     drawn_curves,
     DrawnCurve,
@@ -35,13 +36,7 @@ from ._frontend import (
     to_cmk_time_series_graph,
     user_first_day_of_week,
 )
-from ._graph_choices import (
-    BuiltGraph,
-    DiscoveredGraphs,
-    graph_choices,
-    GraphChoices,
-    GraphPluginChoice,
-)
+from ._graph_choices import graph_choices, GraphChoices, GraphPluginChoice
 from ._graph_codec import (
     COMMUNITY_QUANTITY_SPECS,
     context_from_json,

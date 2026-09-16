@@ -16,7 +16,7 @@ from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionMo
 from cmk.gui.type_defs import IconNames
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
-from .._graph_choices import BuiltGraph, DiscoveredGraphs
+from .._built_graphs import BuiltGraph, DiscoveredGraphs
 from .._graph_dispatch import serialize_graphs
 from .._unit_format import notation_name, precision_kind
 

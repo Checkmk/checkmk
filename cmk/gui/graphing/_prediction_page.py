@@ -29,8 +29,8 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.cmk_time_series_graph import Size
 from cmk.utils.servicename import ServiceName
 
+from ._built_graphs import BuiltGraph
 from ._frontend import STATIC_INTERACTION, to_cmk_time_series_graph
-from ._graph_choices import BuiltGraph
 from ._graph_display_config import (
     GraphRenderOptions,
     HTML_SIZE_PER_EX,

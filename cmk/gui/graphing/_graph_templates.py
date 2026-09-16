@@ -30,8 +30,9 @@ from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName as GUIServiceName
 
+from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._from_api import GraphFromAPI
-from ._graph_choices import BuiltGraph, DiscoveredGraphs, GraphPluginChoice
+from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
     CommonGraphOptions,

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { ModeCreateOtelConf } from 'cmk-shared-typing/typescript/mode_create_otel_conf'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkWizard, {
@@ -43,18 +44,7 @@ import {
   createOTelReceiverConfigAction
 } from './otel-configuration-steps/post_save_actions.ts'
 
-const props = defineProps<{
-  no_auth_allowed: boolean
-  endpoint_config_allowed: boolean
-  encryption_allowed: boolean
-  event_console_allowed: boolean
-  collector_activation_allowed: boolean
-  data_backend_allowed: boolean
-  may_create_password: boolean
-  activate_changes_url: string
-  grpc_receiver_endpoint_override?: string | null
-  http_receiver_endpoint_override?: string | null
-}>()
+const props = defineProps<ModeCreateOtelConf>()
 
 const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')

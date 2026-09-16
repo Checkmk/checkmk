@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "mode_create_otel_conf",
+  "properties": {
+    "no_auth_allowed": { "type": "boolean" },
+    "endpoint_config_allowed": { "type": "boolean" },
+    "encryption_allowed": { "type": "boolean" },
+    "event_console_allowed": { "type": "boolean" },
+    "collector_activation_allowed": { "type": "boolean" },
+    "data_backend_allowed": { "type": "boolean" },
+    "may_create_password": { "type": "boolean" },
+    "activate_changes_url": { "type": "string" },
+    "grpc_receiver_endpoint_override": { "type": ["string", "null"] },
+    "http_receiver_endpoint_override": { "type": ["string", "null"] }
+  },
+  "required": [
+    "no_auth_allowed",
+    "endpoint_config_allowed",
+    "encryption_allowed",
+    "event_console_allowed",
+    "collector_activation_allowed",
+    "data_backend_allowed",
+    "may_create_password",
+    "activate_changes_url"
+  ]
+}

@@ -1891,6 +1891,7 @@ allows = [
   "cmk.shared_typing.aggregation",
   "cmk.shared_typing.attribute_filter",
   "cmk.shared_typing.consolidation",
+  "cmk.shared_typing.mode_create_otel_conf",
   "cmk.shared_typing.mode_custom_services",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.custom_query_rule_value",

@@ -4,15 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkSlideInTabbed from 'cmk-ui-library/components/CmkSlideInTabbed'
-import type { SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import CmkAsyncContent from 'cmk-ui-library/components/CmkAsyncContent'
+import type { CmkAsyncContentProps } from 'cmk-ui-library/components/CmkAsyncContent'
+import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import { computed, markRaw } from 'vue'
 
 import { networkFlowContextApi } from '../api/context'
 import AutonomousSystemSlideInOverview from './AutonomousSystemSlideInOverview.vue'
-
-const { _t } = usei18n()
 
 const props = defineProps<{
   open: boolean
@@ -27,22 +25,20 @@ const header = computed(() => ({
   closeButton: true
 }))
 
-const tabs = computed<SlideInTab[]>(() => {
+const content = computed<CmkAsyncContentProps | null>(() => {
   const asn = props.asn
   if (asn === null) {
-    return []
+    return null
   }
-  return [
-    {
-      id: 'overview',
-      title: _t('Overview'),
-      component: markRaw(AutonomousSystemSlideInOverview),
-      load: () => networkFlowContextApi.autonomousSystemContext(asn)
-    }
-  ]
+  return {
+    component: markRaw(AutonomousSystemSlideInOverview),
+    load: () => networkFlowContextApi.autonomousSystemContext(asn)
+  }
 })
 </script>
 
 <template>
-  <CmkSlideInTabbed :open="open" :tabs="tabs" :header="header" @close="emit('close')" />
+  <CmkSlideInDialog :open="open" :header="header" @close="emit('close')">
+    <CmkAsyncContent v-if="content" v-bind="content" />
+  </CmkSlideInDialog>
 </template>

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import CmkSlideInTabbed from './CmkSlideInTabbed.vue'
+import CmkAsyncContent from './CmkAsyncContent.vue'
 
-export default CmkSlideInTabbed
-export type { CmkSlideInTabbedProps, SlideInTab } from './types'
+export default CmkAsyncContent
+export type { CmkAsyncContentProps } from './types'

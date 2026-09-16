@@ -196,6 +196,9 @@ describe('ServiceSlideIn', () => {
     const { rerender } = render(ServiceSlideIn, {
       props: { service: makeService(), host: HOST }
     })
+    // The tab body loads once it is mounted, so there is a request to go stale
+    // only after the panel is on screen.
+    await vi.waitFor(() => expect(client.GET).toHaveBeenCalledTimes(1))
     await rerender({ service: makeService({ name: 'Memory' }), host: HOST })
 
     resolveStale()

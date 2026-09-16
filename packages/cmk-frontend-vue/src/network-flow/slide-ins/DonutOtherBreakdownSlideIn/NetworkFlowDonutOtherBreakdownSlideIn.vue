@@ -4,8 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkSlideInTabbed from 'cmk-ui-library/components/CmkSlideInTabbed'
-import type { SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
+import CmkAsyncContent from 'cmk-ui-library/components/CmkAsyncContent'
+import type { CmkAsyncContentProps } from 'cmk-ui-library/components/CmkAsyncContent'
+import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
@@ -38,25 +39,23 @@ const header = computed(() => ({
   closeButton: true
 }))
 
-const tabs = computed<SlideInTab[]>(() => {
+const content = computed<CmkAsyncContentProps | null>(() => {
   const target = props.target
   if (target === null) {
-    return []
+    return null
   }
-  return [
-    {
-      id: 'breakdown',
-      title: _t('Breakdown'),
-      component: markRaw(DonutOtherBreakdownOverview),
-      load: () =>
-        networkFlowContextApi.donutOtherBreakdown(target.content, target.context, target.window),
-      // The panel's own table heads its comparison the way the legend does.
-      props: { previousLabel: previousWindowLabel(target.window) }
-    }
-  ]
+  return {
+    component: markRaw(DonutOtherBreakdownOverview),
+    load: () =>
+      networkFlowContextApi.donutOtherBreakdown(target.content, target.context, target.window),
+    // The panel's own table heads its comparison the way the legend does.
+    props: { previousLabel: previousWindowLabel(target.window) }
+  }
 })
 </script>
 
 <template>
-  <CmkSlideInTabbed :open="open" :tabs="tabs" :header="header" @close="emit('close')" />
+  <CmkSlideInDialog :open="open" :header="header" @close="emit('close')">
+    <CmkAsyncContent v-if="content" v-bind="content" />
+  </CmkSlideInDialog>
 </template>

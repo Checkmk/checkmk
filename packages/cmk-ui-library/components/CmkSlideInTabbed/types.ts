@@ -3,48 +3,25 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { CmkAsyncContentProps } from 'cmk-ui-library/components/CmkAsyncContent'
 import type { CmkIconProps } from 'cmk-ui-library/components/CmkIcon'
 import type { SlideInVariants } from 'cmk-ui-library/components/CmkSlideIn'
 import type { CmkTabProps } from 'cmk-ui-library/components/CmkTabs/CmkTab.vue'
-import type { Component } from 'vue'
 
 /**
- * A single tab rendered inside {@link CmkSlideInTabbed}.
- *
- * The consuming page owns the tab's content component and its data loading, so
- * the generic container never imports feature-specific code. When the tab is
- * activated for the first time, `load` is awaited and its result is handed to
- * `component` via a `data` prop; the container renders a loading indicator
- * until the promise settles and an error message if it rejects.
+ * A single tab rendered inside {@link CmkSlideInTabbed}: a body with a name to
+ * reach it by. What it renders, and how that is loaded, is the body's own
+ * business - the panel only says where it goes.
  */
-export interface SlideInTab {
+export interface SlideInTab extends CmkAsyncContentProps {
   /** Stable identifier, also used as the tab's routing value. */
   id: string
   /** Human readable, translated label shown on the tab trigger. */
   title: string
-  /** The component rendered in the tab body, receiving the loaded `data`. */
-  component: Component
-  /** Optional async data loader; the resolved value is passed as `data`. */
-  load?: (() => Promise<unknown>) | undefined
-  /**
-   * Optional skeleton component shown while `load` is pending. Falls back to a
-   * generic loading indicator when not provided.
-   */
-  skeleton?: Component | undefined
-  /** Static props forwarded verbatim to `component`. */
-  props?: Record<string, unknown> | undefined
   /** Optional colour variant for the tab trigger. */
   variant?: CmkTabProps['variant']
   /** Whether the tab is disabled. */
   disabled?: boolean | undefined
-}
-
-export type SlideInTabStatus = 'loading' | 'loaded' | 'error'
-
-export interface SlideInTabState {
-  status: SlideInTabStatus
-  data?: unknown
-  error?: unknown
 }
 
 export interface CmkSlideInTabbedProps {

@@ -1505,6 +1505,8 @@ class Site:
                         "cmdline": proc.info["cmdline"],
                     },
                 )
+            # The option is declared by the cmk_package plugin, which this module
+            # cannot reach for the parsed value.
             if "--ignore-running-procs" in sys.argv:
                 return
             raise AssertionError(

@@ -55,6 +55,8 @@ def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginMa
         pluginmanager, faked_artifacts
     )  # the crash report needs to know about faked artifacts
     parser.addoption(
+        # Declared here so pytest accepts it; Site.stop() reads it off sys.argv,
+        # see tests/testlib/system/site.py.
         "--ignore-running-procs",
         action="store_true",
         default=False,

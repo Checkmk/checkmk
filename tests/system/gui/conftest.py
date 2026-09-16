@@ -228,8 +228,8 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 
 def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
-    # The playwright fixtures and options are only wanted for the GUI tests, so they are
-    # registered here instead of via `pytest_plugins` in the root conftest.
+    # The playwright fixtures and options are only wanted for the GUI tests, so this is
+    # the only suite that registers them.
     register_pytest_plugins(pluginmanager, playwright_plugin)
     parser.addoption(
         "--update-rules",

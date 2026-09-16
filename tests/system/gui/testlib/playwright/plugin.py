@@ -119,21 +119,6 @@ def cmk_page(
     browser_storage_state.update(context.storage_state())
 
 
-# Making test result information available in fixtures
-# https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
-# NOTE: hookimpl is poorly typed, so the decorator effectively removes the types from the decorated function!
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any]:  # type: ignore[misc]
-    """Set a report attribute for each phase of a pytest test execution call.
-
-    Phases can be "setup", "call", "teardown.
-    """
-    # execute all other hooks to obtain the report object
-    outcome = yield
-    rep = outcome.get_result()
-    setattr(item, "rep_" + rep.when, rep)
-
-
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom CLI arguments to GUI end to end testing framework."""
     group = parser.getgroup("playwright", "Playwright")

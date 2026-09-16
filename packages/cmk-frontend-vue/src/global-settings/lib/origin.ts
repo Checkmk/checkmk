@@ -7,6 +7,8 @@ import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global
 
 import type { GlobalSettingsScope } from '../api'
 
+export type ModificationFilter = 'all' | 'modified' | 'site'
+
 export function isModified(variable: GlobalSettingsVariable): boolean {
   return variable.origin !== 'factory'
 }

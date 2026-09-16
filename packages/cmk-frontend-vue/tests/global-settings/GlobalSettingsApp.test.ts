@@ -309,7 +309,7 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.queryByText(/\d+ modified/)).not.toBeInTheDocument()
   })
 
-  test('tabbing through expanded topics reaches each edit button', async () => {
+  test('tabbing through expanded topics reaches each tag and edit button', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
     await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
     screen.getByRole('button', { name: 'Toggle accordion item User management' }).focus()
@@ -322,6 +322,8 @@ describe('GlobalSettingsApp accordion', () => {
     expect(
       screen.getByRole('button', { name: 'Toggle accordion item Site management' })
     ).toHaveFocus()
+    await userEvent.tab()
+    expect(screen.getByRole('button', { name: '1 modified' })).toHaveFocus()
     await userEvent.tab()
     expect(screen.getByRole('button', { name: 'Edit Site setting' })).toHaveFocus()
   })
@@ -1022,6 +1024,11 @@ describe('GlobalSettingsApp search', () => {
       await user.click(screen.getByRole('button', { name: `Toggle ${label}` }))
     }
 
+    const mixedTopic: GlobalSettingsTopic = {
+      ...searchData.topics[0]!,
+      variables: [searchData.topics[0]!.variables[0]!, { ...secondVariable, origin: 'global' }]
+    }
+
     test('modified only hides the rows that still use their default', async () => {
       const user = setup()
       await filterBy(user, 'Modified only')
@@ -1107,6 +1114,43 @@ describe('GlobalSettingsApp search', () => {
       await filterBy(user, 'All variables')
       await vi.advanceTimersByTimeAsync(200)
       expect(window.location.search).toBe('')
+    })
+
+    test('the modified tag filters the page down to the modified settings', async () => {
+      const user = setup({ ...searchData, topics: [mixedTopic, secondTopic] })
+
+      await user.click(within(topic('User management')).getByRole('button', { name: '1 modified' }))
+
+      expect(screen.getByRole('button', { name: 'Toggle Modified only' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+      expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+      expect(
+        screen.queryByText(label('Lock user accounts after N login failures'))
+      ).not.toBeInTheDocument()
+    })
+
+    test('a tag collapses every topic but its own', async () => {
+      const user = setup({ ...searchData, topics: [mixedTopic, secondTopic] })
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+      expect(screen.getByText(label('Site setting'))).toBeInTheDocument()
+
+      await user.click(within(topic('User management')).getByRole('button', { name: '1 modified' }))
+
+      expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
+      expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
+    })
+
+    test('the site override tag filters the page down to the overridden settings', async () => {
+      const user = setup({ ...searchData, topics: [overriddenTopic, secondTopic] })
+
+      await user.click(screen.getByRole('button', { name: '1 overridden on sites' }))
+
+      expect(
+        screen.getByText(label('Lock user accounts after N login failures'))
+      ).toBeInTheDocument()
+      expect(screen.queryByText(label('Site management'))).not.toBeInTheDocument()
     })
 
     test('the empty state resets the search and the filter together', async () => {

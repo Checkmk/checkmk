@@ -10,12 +10,12 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { GlobalSettingsScope } from '../api'
-import { isModified, isSiteOverride } from '../lib/origin'
+import { type ModificationFilter, isModified, isSiteOverride } from '../lib/origin'
 import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 
 const { _t } = usei18n()
@@ -31,6 +31,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [variable: GlobalSettingsVariable]
+  filter: [filter: ModificationFilter]
 }>()
 
 // Only the variable array is filtered, so the header counts below stay totals.
@@ -51,6 +52,11 @@ const siteOverrideCountLabel = computed(() =>
     ? _t('%{count} overridden on this site', { count: siteOverrideCount.value })
     : _t('%{count} overridden on sites', { count: siteOverrideCount.value })
 )
+const siteOverrideFilterLabel = computed(() =>
+  props.scope.type === 'site'
+    ? _t('Show only the settings this site overrides')
+    : _t('Show only the settings the sites override')
+)
 </script>
 
 <template>
@@ -62,22 +68,26 @@ const siteOverrideCountLabel = computed(() =>
       </div>
     </template>
     <template #header-right>
-      <CmkTag
+      <CmkButton
         v-if="modifiedCount > 0"
-        size="medium"
-        variant="fill"
-        class="global-settings-topic__count"
-        :content="modifiedCountLabel"
-        :title="modifiedCountLabel"
-      />
-      <CmkTag
+        size="small"
+        variant="optional"
+        class="global-settings-topic__filter"
+        :title="_t('Show only the modified settings')"
+        @click="emit('filter', 'modified')"
+      >
+        {{ modifiedCountLabel }}
+      </CmkButton>
+      <CmkButton
         v-if="siteOverrideCount > 0"
-        size="medium"
-        variant="fill"
-        class="global-settings-topic__count"
-        :content="siteOverrideCountLabel"
-        :title="siteOverrideCountLabel"
-      />
+        size="small"
+        variant="optional"
+        class="global-settings-topic__filter"
+        :title="siteOverrideFilterLabel"
+        @click="emit('filter', 'site')"
+      >
+        {{ siteOverrideCountLabel }}
+      </CmkButton>
     </template>
     <template #content>
       <CmkAlertBox v-if="topic.warning !== null" variant="warning" size="small">
@@ -114,8 +124,8 @@ const siteOverrideCountLabel = computed(() =>
   font-weight: var(--font-weight-default);
 }
 
-.global-settings-topic__count {
+.global-settings-topic__filter {
   min-width: 90px;
-  text-align: center;
+  font-size: var(--font-size-normal);
 }
 </style>

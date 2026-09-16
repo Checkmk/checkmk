@@ -22,11 +22,9 @@ import { GLOBAL_SETTINGS_SERVICE, GLOBAL_SETTINGS_TOGGLE, globalSettingsService 
 import ExpandCollapseButtons from './components/ExpandCollapseButtons.vue'
 import GlobalSettingsEditor from './components/GlobalSettingsEditor.vue'
 import GlobalSettingsEmptyState from './components/GlobalSettingsEmptyState.vue'
-import GlobalSettingsModificationFilter, {
-  type ModificationFilter
-} from './components/GlobalSettingsModificationFilter.vue'
+import GlobalSettingsModificationFilter from './components/GlobalSettingsModificationFilter.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
-import { isModified, isSiteOverride } from './lib/origin'
+import { type ModificationFilter, isModified, isSiteOverride } from './lib/origin'
 import { type VariableFilter, buildSearchIndex, matchTopics } from './lib/search'
 import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
 
@@ -106,7 +104,7 @@ function openedItemsForQuery(): string[] {
   return searchActive.value ? shownTopics.value.map((topic) => topic.headline) : []
 }
 
-// Only the search touches the open sections; the filter leaves them as they are.
+// Only the search and the topic tags touch the open sections, the filter leaves them as they are.
 const openedItems = ref<string[]>(openedItemsForQuery())
 
 watch(debouncedQuery, () => {
@@ -134,6 +132,11 @@ async function toggleSetting(
 }
 
 provide(GLOBAL_SETTINGS_TOGGLE, toggleSetting)
+
+function showOnly(headline: string, filter: ModificationFilter): void {
+  modification.value = filter
+  openedItems.value = [headline]
+}
 
 function resetSearchAndFilters(): void {
   query.value = ''
@@ -176,6 +179,7 @@ function resetSearchAndFilters(): void {
         :match="shownVariablesOf(topic.headline)"
         :query="debouncedQuery"
         @edit="openEditor"
+        @filter="showOnly(topic.headline, $event)"
       />
     </CmkAccordion>
     <CmkSlideInDialog

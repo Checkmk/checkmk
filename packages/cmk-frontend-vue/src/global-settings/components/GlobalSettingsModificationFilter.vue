@@ -8,7 +8,7 @@ import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-export type ModificationFilter = 'all' | 'modified' | 'site'
+import type { ModificationFilter } from '../lib/origin'
 
 const { _t } = usei18n()
 

@@ -213,34 +213,19 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             :disabled="disabled"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
-            <div class="monitoring-table-header__sort-icon-wrapper">
-              <CmkMultitoneIcon
-                name="chevron-up"
-                class="monitoring-table-header__sort-icon"
-                :class="{
-                  'monitoring-table-header__sort-icon--active':
-                    header.column.getIsSorted() === 'asc'
-                }"
-                primary-color="font"
-                aria-hidden="true"
-                size="xsmall"
-              />
-              <CmkMultitoneIcon
-                name="chevron-down"
-                class="monitoring-table-header__sort-icon"
-                :class="{
-                  'monitoring-table-header__sort-icon--active':
-                    header.column.getIsSorted() === 'desc'
-                }"
-                primary-color="font"
-                aria-hidden="true"
-                size="xsmall"
-              />
-            </div>
-
             <span class="monitoring-table-header__label">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </span>
+
+            <CmkMultitoneIcon
+              v-if="header.column.getIsSorted() !== false"
+              name="dashlet-resize"
+              class="monitoring-table-header__sort-icon"
+              :rotate="header.column.getIsSorted() === 'asc' ? 180 : 0"
+              primary-color="font"
+              aria-hidden="true"
+              size="xsmall"
+            />
           </button>
           <span
             v-else-if="!header.isPlaceholder && header.column.columnDef.meta?.headerHelp"
@@ -472,24 +457,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   bottom: -10%;
 }
 
-.monitoring-table-header__sort-icon-wrapper {
-  flex-shrink: 0;
-  margin-right: var(--dimension-2);
-}
-
 .monitoring-table-header__sort-icon {
-  opacity: 0.4;
-
-  &:first-child {
-    margin-top: calc(-1 * var(--dimension-2));
-  }
-
-  &:last-child {
-    margin-top: calc(-1 * var(--dimension-3));
-  }
-
-  &.monitoring-table-header__sort-icon--active {
-    opacity: 1;
-  }
+  flex-shrink: 0;
 }
 </style>

@@ -56,12 +56,12 @@ def register(inv_paint_funtions: InvPaintFunctions) -> None:
 def inv_paint_generic(value: SDValue) -> PaintResult:
     if value == "" or value is None:
         return "", ""
+    if isinstance(value, bool):
+        return "", _("Yes") if value else _("No")
     if isinstance(value, float):
         return "number", "%.2f" % value
     if isinstance(value, int):
         return "number", "%d" % value
-    if isinstance(value, bool):  # type: ignore[unreachable]
-        return "", _("Yes") if value else _("No")  # type: ignore[unreachable]
     return "", escape_text("%s" % value)
 
 

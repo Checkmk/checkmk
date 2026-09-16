@@ -105,7 +105,6 @@ from cmk.gui.watolib.groups_io import (
     load_contact_group_information,
 )
 from cmk.gui.watolib.host_rename import RenameHostInRuleValue, RenameHostInRuleValueRegistry
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import Rule
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupAgent,
@@ -2811,9 +2810,10 @@ def find_usages_of_contact_group_in_default_user_profile(
         used_in.append(
             (
                 "%s" % (_("Default user profile")),
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [("mode", "edit_configvar"), ("varname", "default_user_profile")],
+                    [("varname", "default_user_profile")],
+                    filename="global_settings.py",
                 ),
             )
         )
@@ -4775,7 +4775,7 @@ def _valuespec_custom_service_attributes() -> ListOf:
         title=_("Custom service attributes"),
         help=_('Use this rule set to assign <a href="%(url)s">%(label)s</a> to services.')
         % {
-            "url": "wato.py?mode=edit_configvar&varname=custom_service_attributes",
+            "url": "global_settings.py?varname=custom_service_attributes",
             "label": _("Custom service attributes"),
         },
         allow_empty=False,
@@ -5281,7 +5281,7 @@ def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # noqa: A002
     empty_text = _(
         "In order to be able to choose actions here, you need to "
         '<a href="%(url)s">define your own actions</a>.'
-    ) % {"url": "wato.py?mode=edit_configvar&varname=user_icons_and_actions"}
+    ) % {"url": "global_settings.py?varname=user_icons_and_actions"}
 
     return DropdownChoice(
         title=title,
@@ -6356,8 +6356,8 @@ def _validate_max_cache_age_and_validity_period(
 def _valuespec_piggybacked_host_files() -> Migrate:
     global_max_cache_age_uri = makeuri_contextless(
         request,
-        [("mode", "edit_configvar"), ("varname", "piggyback_max_cachefile_age")],
-        filename="wato.py",
+        [("varname", "piggyback_max_cachefile_age")],
+        filename="global_settings.py",
     )
 
     global_max_cache_age_title = _(

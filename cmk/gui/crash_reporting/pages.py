@@ -156,11 +156,8 @@ def _show_automatic_upload_hint(request: Request, contact_email: str | None) -> 
                     "type": "redirect",
                     "url": makeuri_contextless(
                         request,
-                        [
-                            ("mode", "edit_configvar"),
-                            ("varname", "automatic_crash_report_upload"),
-                        ],
-                        filename="wato.py",
+                        [("varname", "automatic_crash_report_upload")],
+                        filename="global_settings.py",
                     ),
                 },
             },

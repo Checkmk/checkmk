@@ -160,7 +160,7 @@ class HTMLGenerator(HTMLWriter):
         return None
 
     def show_localization_hint(self) -> None:
-        url = "wato.py?mode=edit_configvar&varname=user_localizations"
+        url = "global_settings.py?varname=user_localizations"
         self._write(
             self._render_message(
                 HTMLWriter.render_sup("*")

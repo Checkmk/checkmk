@@ -50,7 +50,6 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
-from cmk.gui.watolib.mode import mode_url
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
@@ -448,7 +447,11 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
                     result = _("Background job timed out after 3 minutes.")
                 else:
                     global_setting_name = "snmp_walk_download_timeout"
-                    url = mode_url("edit_configvar", varname=global_setting_name)
+                    url = makeuri_contextless(
+                        request,
+                        [("varname", global_setting_name)],
+                        filename="global_settings.py",
+                    )
                     result = (
                         _("Background job timed out due to the global setting ")
                         + f"'<a href=\"{url}\">{global_setting_name}</a>'. "

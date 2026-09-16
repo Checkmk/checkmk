@@ -28,14 +28,10 @@ def _without_setup(config: Config) -> Config:
 
 @pytest.mark.usefixtures("with_admin_login")
 def test_all_links_offered_to_admin(load_config: Config) -> None:
-    assert (
-        acknowledge_presets_url(load_config)
-        == "wato.py?mode=edit_configvar&varname=acknowledge_problems"
-    )
+    assert acknowledge_presets_url(load_config) == "global_settings.py?varname=acknowledge_problems"
     assert notification_rules_url(load_config) == "wato.py?mode=notifications"
     assert (
-        downtime_presets_url(load_config)
-        == "wato.py?mode=edit_configvar&varname=user_downtime_timeranges"
+        downtime_presets_url(load_config) == "global_settings.py?varname=user_downtime_timeranges"
     )
 
 

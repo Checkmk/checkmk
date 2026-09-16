@@ -716,12 +716,9 @@ class PainterSvcLongPluginOutput(Painter):
             .get("max_long_output_size", 0)
         ) and long_output_len > max_long_output_size:
             setting_link_tag = self.url_renderer.link_from_filename(
-                "wato.py",
+                "global_settings.py",
                 html_text="(%s)" % _("Increase limit"),
-                query_args=[
-                    ("mode", "edit_configvar"),
-                    ("varname", "max_long_output_size"),
-                ],
+                query_args=[("varname", "max_long_output_size")],
             )
             content = (
                 _("Lost data due to truncation of long output to ")
@@ -5392,12 +5389,9 @@ class PainterLogDetailsHistory(Painter):
         escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
         if long_output_len > max_len and escape_plugin_output and non_displayable_html:
             setting_link_tag = self.url_renderer.link_from_filename(
-                "wato.py",
+                "global_settings.py",
                 html_text="(%s)" % _("Increase limit for future entries"),
-                query_args=[
-                    ("mode", "edit_configvar"),
-                    ("varname", "max_long_output_size"),
-                ],
+                query_args=[("varname", "max_long_output_size")],
             )
             content = (
                 _("HTML output cannot be rendered because of truncated data. ")

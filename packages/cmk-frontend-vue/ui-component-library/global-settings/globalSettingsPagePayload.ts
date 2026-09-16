@@ -570,12 +570,12 @@ export const globalSettingsPagePayload = {
             {
               site_id: 'muc',
               title: 'Munich site',
-              url: 'wato.py?mode=edit_site_globals&site=muc'
+              url: 'site_specific_settings.py?site=muc'
             },
             {
               site_id: 'ber',
               title: 'Berlin site',
-              url: 'wato.py?mode=edit_site_globals&site=ber'
+              url: 'site_specific_settings.py?site=ber'
             }
           ],
           hints: []

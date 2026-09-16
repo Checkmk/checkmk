@@ -1372,7 +1372,7 @@ class ModeEditUser(WatoMode):
                 "that is not known to the monitoring. "
                 "This can happen when you forward notifications from the Event Console. "
                 "<br><br>Notification fallback can also configured in the global "
-                'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
+                'setting <a href="global_settings.py?varname=notification_fallback_email">'
                 "Fallback email address for notifications</a>."
             )
         )

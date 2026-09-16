@@ -13,6 +13,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.web.utils.urls import makeuri_contextless
 
 
 class UsagesOfContactGroupInMkeventdNotifyContactGroupFinder:
@@ -31,12 +32,10 @@ class UsagesOfContactGroupInMkeventdNotifyContactGroupFinder:
             return [
                 (
                     self._title,
-                    folder_preserving_link(
+                    makeuri_contextless(
                         request,
-                        [
-                            ("mode", "edit_configvar"),
-                            ("varname", "mkeventd_notify_contactgroup"),
-                        ],
+                        [("varname", "mkeventd_notify_contactgroup")],
+                        filename="global_settings.py",
                     ),
                 )
             ]

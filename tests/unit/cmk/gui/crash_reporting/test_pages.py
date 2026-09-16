@@ -99,7 +99,7 @@ def test_automatic_upload_hint_shown_when_upload_disabled() -> None:
     rendered = _render_automatic_upload_hint(None)
 
     assert "cmk-dialog" in rendered
-    assert "mode=edit_configvar" in rendered
+    assert "global_settings.py" in rendered
     assert "varname=automatic_crash_report_upload" in rendered
 
 

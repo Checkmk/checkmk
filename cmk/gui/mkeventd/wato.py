@@ -835,7 +835,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                 title=_("Custom event limit"),
                 help=_(
                     "Use this option to override the "
-                    '<a href="wato.py?mode=mkeventd_edit_configvar&site=&varname=event_limit">'
+                    '<a href="event_console_settings.py?varname=event_limit">'
                     "global rule event limit</a>"
                 ),
                 elements=[
@@ -5525,7 +5525,7 @@ def _sl_help() -> str:
         "with the rule set <i>Service level of services</i>. Assigning no service level "
         "is equal to defining a level of 0.<br><br>The list of available service "
         "levels is configured via a <a href='%(url)s'>global option.</a>"
-    ) % {"url": "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"}
+    ) % {"url": "global_settings.py?varname=mkeventd_service_levels"}
 
 
 def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:

@@ -1081,8 +1081,8 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
 def _action_defaults_url() -> str:
     return makeuri_contextless(
         request,
-        [("mode", "edit_configvar"), ("varname", "acknowledge_problems")],
-        filename="wato.py",
+        [("varname", "acknowledge_problems")],
+        filename="global_settings.py",
     )
 
 
@@ -1676,8 +1676,8 @@ class CommandScheduleDowntimesForm:
     def _get_presets_url(self) -> str:
         return makeuri_contextless(
             request,
-            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
-            filename="wato.py",
+            [("varname", "user_downtime_timeranges")],
+            filename="global_settings.py",
         )
 
     def _get_onclick(

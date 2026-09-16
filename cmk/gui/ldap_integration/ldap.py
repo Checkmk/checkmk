@@ -266,7 +266,7 @@ class LDAPConnectionValuespec(Dictionary):
                     title=_("Use SSL"),
                     help=_(
                         "Connect to the LDAP server with a SSL encrypted connection. The "
-                        '<a href="wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities">trusted '
+                        '<a href="global_settings.py?varname=trusted_certificate_authorities">trusted '
                         "certificates authorities</a> configured in Checkmk will be used to validate the "
                         "certificate provided by the LDAP server."
                     ),

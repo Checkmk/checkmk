@@ -141,7 +141,7 @@ class ModeCertificateOverview(WatoMode):
                     "This page provides a comprehensive overview of the certificates Checkmk uses internally. "
                     "Trusted CAs for TLS are managed in the <a href='%(url)s'>settings</a>."
                 )
-                % {"url": "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"}
+                % {"url": "global_settings.py?varname=trusted_certificate_authorities"}
             ),
             class_="info",
         )
@@ -178,7 +178,7 @@ class ModeCertificateOverview(WatoMode):
                                     title=_("Trusted certificate authorities for SSL"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"
+                                        "global_settings.py?varname=trusted_certificate_authorities"
                                     ),
                                 ),
                             ],

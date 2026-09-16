@@ -5,7 +5,7 @@
 """The setup links the action dialogs offer next to their options.
 
 The links the classic command forms render (see cmk.gui.views.command.commands),
-but offered only where wato.py would actually serve the mode behind them - the
+but offered only where the page behind them would actually serve them - the
 classic forms link some of them into a permission error instead.
 """
 
@@ -15,15 +15,15 @@ from cmk.gui.logged_in import user
 from cmk.web.utils.urls import makeuri_contextless
 
 
-def _may_reach(config: Config, mode_permission: str) -> bool:
-    """Whether wato.py would serve the mode, rather than refuse it.
+def _may_reach(config: Config, permission: str) -> bool:
+    """Whether the page would serve the request, rather than refuse it.
 
     Mirrors `ensure_static_permissions`: Setup as a whole has to be reachable,
-    and the mode's own permission is waived for those who may see all of it.
+    and the page's own permission is waived for those who may see all of it.
     """
     if not config.wato_enabled or not user.may("wato.use"):
         return False
-    return user.may("wato.seeall") or user.may(f"wato.{mode_permission}")
+    return user.may("wato.seeall") or user.may(f"wato.{permission}")
 
 
 def acknowledge_presets_url(config: Config) -> str | None:
@@ -32,8 +32,8 @@ def acknowledge_presets_url(config: Config) -> str | None:
         return None
     return makeuri_contextless(
         request,
-        [("mode", "edit_configvar"), ("varname", "acknowledge_problems")],
-        filename="wato.py",
+        [("varname", "acknowledge_problems")],
+        filename="global_settings.py",
     )
 
 
@@ -50,6 +50,6 @@ def downtime_presets_url(config: Config) -> str | None:
         return None
     return makeuri_contextless(
         request,
-        [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
-        filename="wato.py",
+        [("varname", "user_downtime_timeranges")],
+        filename="global_settings.py",
     )

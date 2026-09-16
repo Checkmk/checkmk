@@ -88,7 +88,7 @@ class VirtualHostTree(SidebarSnapin):
     def show(self, config: Config) -> None:
         self._load(config.virtual_host_trees)
         if not config.virtual_host_trees:
-            url = "wato.py?varname=virtual_host_trees&mode=edit_configvar"
+            url = "global_settings.py?varname=virtual_host_trees"
             html.p(
                 _(
                     "You have not defined any virtual host trees. You can do this "

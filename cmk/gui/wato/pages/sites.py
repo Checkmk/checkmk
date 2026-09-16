@@ -2257,7 +2257,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             raise MKUserError(
                 None,
                 _('The CA is already a <a href="%(url)s">trusted CA</a>.')
-                % {"url": "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"},
+                % {"url": "global_settings.py?varname=trusted_certificate_authorities"},
             )
 
         trusted_cas.append(cert_str)

@@ -366,7 +366,7 @@ class ACTestLivestatusSecured(ACTest):
             "gathered in one site to the central site. Since Checkmk 1.6, it is natively "
             "possible and highly recommended to encrypt this Livestatus traffic.</p> "
             "<p>This can be enabled using the global setting "
-            '<a href="wato.py?mode=edit_configvar&varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
+            '<a href="global_settings.py?varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
             "are able to handle the SSL encrypted Livestatus communication. Have a look at "
             '<a href="werk.py?werk=7017">Werk #7017</a> for further information.</p>'
         )
@@ -613,7 +613,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
                 % {
                     "service_url": "wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "host_url": "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
-                    "global_url": "wato.py?mode=edit_configvar&varname=escape_plugin_output",
+                    "global_url": "global_settings.py?varname=escape_plugin_output",
                 },
                 site_id=site_id,
             )
@@ -621,7 +621,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_('Escaping is <a href="%(url)s">enabled globally</a>')
-                % {"url": "wato.py?mode=edit_configvar&varname=escape_plugin_output"},
+                % {"url": "global_settings.py?varname=escape_plugin_output"},
                 site_id=site_id,
             )
 
@@ -676,7 +676,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "<p>Please note that this value is only a rough estimation, because the memory "
             "usage of the Apache processes may vary with the requests being processed.</p>"
             "<p>Possible actions:<ul>"
-            '<li>Change the <a href="wato.py?mode=edit_configvar&varname=apache_process_tuning">number of Apache processes</a></li>'
+            '<li>Change the <a href="global_settings.py?varname=apache_process_tuning">number of Apache processes</a></li>'
             "</ul>"
             "</p>"
             "<p>Once you have verified your settings, you can acknowledge this test. The "
@@ -829,7 +829,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -897,7 +897,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -978,7 +978,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -1059,7 +1059,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_check_helpers">number of check helpers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_check_helpers">number of check helpers</a></li>'
             "</ul>"
             "</p>"
         )

@@ -995,12 +995,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Fallback email address for notifications"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "notification_fallback_email"),
-                    ],
+                    [("varname", "notification_fallback_email")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1009,12 +1007,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Failed notification horizon"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "failed_notification_horizon"),
-                    ],
+                    [("varname", "failed_notification_horizon")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1023,12 +1019,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Notification log level"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "notification_logging"),
-                    ],
+                    [("varname", "notification_logging")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1037,12 +1031,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Logging of the notification mechanics"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "cmc_debug_notifications"),
-                    ],
+                    [("varname", "cmc_debug_notifications")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1311,19 +1303,13 @@ def _get_vue_data() -> Notifications:
                 ),
                 setup_link=makeuri_contextless(
                     request,
-                    [
-                        ("varname", "notification_fallback_email"),
-                        ("mode", "edit_configvar"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "notification_fallback_email")],
+                    filename="global_settings.py",
                 ),
                 do_not_show_again_link=makeuri_contextless(
                     request,
-                    [
-                        ("varname", "notification_fallback_email"),
-                        ("mode", "edit_configvar"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "notification_fallback_email")],
+                    filename="global_settings.py",
                 ),
             )
             if not _fallback_mail_contacts_configured()
@@ -1520,12 +1506,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Store notifications for rule analysis"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "notification_backlog"),
-                                            ],
+                                            [("varname", "notification_backlog")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1533,12 +1517,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Notification log level"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "notification_logging"),
-                                            ],
+                                            [("varname", "notification_logging")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1546,12 +1528,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Logging of the notification mechanics"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "cmc_debug_notifications"),
-                                            ],
+                                            [("varname", "cmc_debug_notifications")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1944,12 +1924,10 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Notification log level"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "notification_logging"),
-                                            ],
+                                            [("varname", "notification_logging")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1957,12 +1935,10 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Logging of the notification mechanics"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "cmc_debug_notifications"),
-                                            ],
+                                            [("varname", "cmc_debug_notifications")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),

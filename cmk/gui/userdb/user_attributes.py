@@ -77,11 +77,8 @@ class TemperatureUnitUserAttribute(UserAttribute):
             % {
                 "configvar_url": makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "default_temperature_unit"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "default_temperature_unit")],
+                    filename="global_settings.py",
                 ),
                 "ruleset_url": makeuri_contextless(
                     request,
@@ -534,11 +531,8 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
             % {
                 "configvar_url": makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "graph_timeranges"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "graph_timeranges")],
+                    filename="global_settings.py",
                 ),
             },
             elements=[

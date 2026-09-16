@@ -12,11 +12,43 @@ from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Literal, TypedDict
 
+import botocore.exceptions
+
 from cmk.server_side_programs.v1 import Storage
 
 AGENT = "aws"
 
 LOGGER = logging.getLogger(f"agent_{AGENT}")
+
+
+AWS_DOC_URL = "https://docs.checkmk.com/latest/en/monitoring_aws.html"
+
+
+class AwsAccessError(Exception):
+    pass
+
+
+def describe_credential_failure(error: Exception) -> str:
+    """Turn a botocore error into a message the user can act on.
+
+    Most of those messages already name the provider or the setting that failed, so they
+    only need the documentation link. NoCredentialsError is the exception: it says no
+    more than "Unable to locate credentials", so it gets the chain spelled out.
+    """
+    if isinstance(error, botocore.exceptions.NoCredentialsError):
+        return (
+            "No AWS credentials found. Tried, in this order: environment variables,"
+            " a role assumed via the shared config file, a web identity token, AWS SSO,"
+            " the shared credentials file, an external credential_process,"
+            " the shared config file, the container credentials endpoint,"
+            " and the EC2 instance metadata service."
+            f" See {AWS_DOC_URL}"
+        )
+    if isinstance(error, botocore.exceptions.BotoCoreError):
+        # A client-side failure: credentials, configuration or transport.
+        return f"{error} See {AWS_DOC_URL}"
+    # An error AWS itself returned. The docs on setting up access do not help here.
+    return str(error)
 
 
 class RawTag(TypedDict):

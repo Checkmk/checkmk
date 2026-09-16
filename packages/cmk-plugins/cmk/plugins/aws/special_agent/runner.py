@@ -21,7 +21,12 @@ import boto3
 import botocore
 from botocore.client import BaseClient
 
-from .config import AWSConfig, LOGGER
+from .config import (
+    AwsAccessError,
+    AWSConfig,
+    describe_credential_failure,
+    LOGGER,
+)
 from .sections.aws_lambda import (
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
@@ -232,6 +237,12 @@ class AWSSections(abc.ABC):
                 {"client_key": client_key, "error": e},
             )
             raise
+        except botocore.exceptions.BotoCoreError as e:
+            # Credentials are resolved here, not in the session constructor, so a broken
+            # credential chain surfaces at this call. The clause above already took the
+            # errors that mean a bug in Checkmk rather than a problem reaching AWS, so
+            # what is left is a genuine access failure.
+            raise AwsAccessError(describe_credential_failure(e))
 
     def run(self, use_cache: bool = True) -> None:
         exceptions: list[AssertionError | Exception] = []

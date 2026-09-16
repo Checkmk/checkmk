@@ -25,7 +25,15 @@ from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_optio
 from cmk.plugins.aws.constants import AWS_REGIONS
 from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
-from .config import AGENT, AWSConfig, LOGGER, NamingConvention, TagsImportPatternOption
+from .config import (
+    AGENT,
+    AwsAccessError,
+    AWSConfig,
+    describe_credential_failure,
+    LOGGER,
+    NamingConvention,
+    TagsImportPatternOption,
+)
 from .runner import AWSSectionsGeneric, AWSSectionsUSEast
 from .sections.s3 import ResultDistributorS3Limits
 
@@ -402,24 +410,27 @@ def _create_anonymous_session(
     region: str,
     config: botocore.config.Config | None,  # noqa: ARG001
 ) -> boto3.session.Session:
-    try:
-        # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
-        # However this does not work and has to be left out (a reported bug on github).
-        # Leave it here for potential future bugfix of the AWS botocore.
-        # https://github.com/boto/botocore/issues/1395
-        # https://github.com/boto/botocore/issues/2442
-        # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
-        # ---------------------------------
-        # if config is None:
-        #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-        # else:
-        #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
+    # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
+    # However this does not work and has to be left out (a reported bug on github).
+    # Leave it here for potential future bugfix of the AWS botocore.
+    # https://github.com/boto/botocore/issues/1395
+    # https://github.com/boto/botocore/issues/2442
+    # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
+    # ---------------------------------
+    # if config is None:
+    #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    # else:
+    #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
 
-        return boto3.session.Session(
-            region_name=region,
-        )
-    except Exception as e:
-        raise AwsAccessError(e)
+    # No try/except here, but not because this cannot fail. The constructor does not
+    # resolve credentials, so it raises nothing about them, yet it does read the shared
+    # config: a missing AWS_PROFILE gives ProfileNotFound and an unparsable file gives
+    # ConfigParseError. Both are BotoCoreError, and every caller builds the session
+    # inside its own try, so they are reported there together with the errors from
+    # session.client(...).
+    return boto3.session.Session(
+        region_name=region,
+    )
 
 
 def _create_session(
@@ -431,14 +442,13 @@ def _create_session(
     if access_key_id is None or secret_access_key is None:
         return _create_anonymous_session(region=region, config=config)
 
-    try:
-        return boto3.session.Session(
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
-            region_name=region,
-        )
-    except Exception as e:
-        raise AwsAccessError(e)
+    # See _create_anonymous_session on why there is no try/except here, and on what
+    # this constructor can still raise.
+    return boto3.session.Session(
+        aws_access_key_id=access_key_id,
+        aws_secret_access_key=secret_access_key,
+        region_name=region,
+    )
 
 
 def _sts_assume_role(
@@ -481,7 +491,7 @@ def _sts_assume_role(
             region_name=region,
         )
     except Exception as e:
-        raise AwsAccessError(e)
+        raise AwsAccessError(describe_credential_failure(e))
 
 
 def _sanitize_aws_services_params(
@@ -655,15 +665,11 @@ def _create_session_from_args(
 
 
 def _get_account_id(args: argparse.Namespace, config: botocore.config.Config | None) -> str:
-    session = _create_session_from_args(args, args.global_service_region, config)
     try:
+        session = _create_session_from_args(args, args.global_service_region, config)
         account_id = session.client("sts", config=config).get_caller_identity()["Account"]
-    except (
-        botocore.exceptions.ClientError,
-        botocore.exceptions.NoCredentialsError,
-        botocore.exceptions.ProxyConnectionError,
-    ) as e:
-        raise AwsAccessError(e)
+    except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+        raise AwsAccessError(describe_credential_failure(e))
     return account_id
 
 
@@ -744,10 +750,6 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                     raise
 
     return 1 if has_exceptions else 0
-
-
-class AwsAccessError(Exception):
-    pass
 
 
 @report_agent_crashes(AGENT, __version__)

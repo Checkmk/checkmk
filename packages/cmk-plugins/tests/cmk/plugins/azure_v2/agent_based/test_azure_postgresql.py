@@ -18,7 +18,6 @@ from cmk.plugins.azure_v2.agent_based.azure_postgresql import (
     check_plugin_azure_postgresql_network,
     check_plugin_azure_postgresql_replication,
     check_plugin_azure_postgresql_storage,
-    check_replication,
     inventory_plugin_azure_postgresql,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
@@ -112,13 +111,15 @@ from .inventory import get_inventory_value
         ),
     ],
 )
-def test_check_replication(  # type: ignore[misc]
+def test_replication_lag_is_checked_against_levels(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
     assert (
-        list(check_replication()("Replication", params, {"Replication": section}))
+        list(
+            check_plugin_azure_postgresql_replication.check_function("Replication", params, section)
+        )
         == expected_result
     )
 

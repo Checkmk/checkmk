@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -20,14 +20,13 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,
-    create_check_metrics_function,
+    CheckFunctionWithoutItem,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
     create_inventory_function,
     MetricData,
     Resource,
-    Section,
 )
 
 DB_POSTGRESQL_RESOURCE_TYPES = [
@@ -91,8 +90,8 @@ def discover_azure_postgresql_replication(section: Resource) -> DiscoveryResult:
     )({"Replication": section})
 
 
-def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return create_check_metrics_function(
+def check_replication() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "maximum_pg_replica_log_delay_in_seconds",  # single server metric name
@@ -112,12 +111,20 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     )
 
 
+def check_azure_postgresql_replication(
+    item: str,  # noqa: ARG001
+    params: Mapping[str, Any],
+    section: Resource,
+) -> CheckResult:
+    yield from check_replication()(params, section)
+
+
 check_plugin_azure_postgresql_replication = CheckPlugin(
     name="azure_v2_postgresql_replication",
     sections=["azure_v2_servers"],
     service_name="Azure/DB for PostgreSQL %s",
     discovery_function=discover_azure_postgresql_replication,
-    check_function=check_replication(),
+    check_function=check_azure_postgresql_replication,
     check_ruleset_name="replication_lag",
     check_default_parameters={
         "levels": (60, 600),

@@ -45,6 +45,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
     ensure_authentication,
@@ -211,7 +212,9 @@ class CheckmkApp(AbstractWSGIApp):
             #                 Flask.make_response()
             #                     AbstractWSGIApp.__call__()
             #                         CheckmkApp.wsgi_app()
-            context = pages.PageContext(config=active_config, request=request)
+            context = pages.PageContext(
+                config=active_config, request=request, transactions=transactions
+            )
             return _process_request(
                 context, environ, start_response, debug=self.debug, testing=self.testing
             )

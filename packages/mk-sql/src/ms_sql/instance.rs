@@ -74,6 +74,41 @@ fn inaccessible_database_error() -> anyhow::Error {
     anyhow::anyhow!("database is not accessible")
 }
 
+/// The sections served from a per-database connection.
+///
+/// Naming them keeps every place that has to know them - the query, the error
+/// rendering - exhaustive, so a section added here cannot be forgotten in one
+/// of them and silently produce nothing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+enum DbSection {
+    TableSpaces,
+    TransactionLog,
+    Datafiles,
+}
+
+impl DbSection {
+    /// `None` for a section that is not served per database, CLUSTERS being one.
+    fn from_name(name: &str) -> Option<Self> {
+        match name {
+            names::TABLE_SPACES => Some(Self::TableSpaces),
+            names::TRANSACTION_LOG => Some(Self::TransactionLog),
+            names::DATAFILES => Some(Self::Datafiles),
+            _ => None,
+        }
+    }
+}
+
+/// One per-database section, resolved for the instance at hand.
+///
+/// Carries everything a per-database connection needs to serve that section, so
+/// that several of them can be served from the same connection.
+#[derive(Debug)]
+struct DbSectionRequest {
+    section: DbSection,
+    query: String,
+    sep: char,
+}
+
 /// Splits the databases so that each chunk is handled by its own thread.
 ///
 /// The thresholds cap the thread count: one chunk below 8 databases, two up to
@@ -694,7 +729,7 @@ impl SqlInstance {
                 names::TRANSACTION_LOG
                 | names::TABLE_SPACES
                 | names::DATAFILES
-                | names::CLUSTERS => self.generate_database_indexed_section_threading(
+                | names::CLUSTERS => self.generate_per_database_section_threading(
                     databases, endpoint, section, &query, sep, &edition,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
@@ -848,8 +883,54 @@ impl SqlInstance {
         sep: char,
         edition: &Edition,
     ) -> String {
+        self.generate_single_per_database_section(
+            endpoint,
+            databases,
+            DbSection::TableSpaces,
+            query,
+            sep,
+            edition,
+        )
+        .await
+    }
+
+    /// Serves one per-database section on its own.
+    ///
+    /// Thin wrapper over [`Self::generate_per_database_sections`], which is built
+    /// to serve several sections from the same per-database connection.
+    async fn generate_single_per_database_section(
+        &self,
+        endpoint: &Endpoint,
+        databases: &[String],
+        section: DbSection,
+        query: &str,
+        sep: char,
+        edition: &Edition,
+    ) -> String {
+        let requests = [DbSectionRequest {
+            section,
+            query: query.to_owned(),
+            sep,
+        }];
+        self.generate_per_database_sections(endpoint, databases, &requests, edition)
+            .await
+            .remove(&section)
+            .unwrap_or_default()
+    }
+
+    /// Runs every request against each database, one connection per database.
+    ///
+    /// The per-database login is what costs, not the queries on top of it: a
+    /// connection is opened once and then serves all of `requests`.
+    async fn generate_per_database_sections(
+        &self,
+        endpoint: &Endpoint,
+        databases: &[String],
+        requests: &[DbSectionRequest],
+        edition: &Edition,
+    ) -> HashMap<DbSection, String> {
         let tasks = databases.iter().map(move |database| {
-            self.generate_table_spaces_section_database(endpoint, database, query, sep, edition)
+            self.generate_sections_for_database(endpoint, database, requests, edition)
         });
 
         let results = stream::iter(tasks)
@@ -857,7 +938,93 @@ impl SqlInstance {
             .collect::<Vec<_>>()
             .await;
 
-        results.join("")
+        let mut bodies: HashMap<DbSection, String> = HashMap::new();
+        for per_database in results {
+            for (section, body) in per_database {
+                bodies.entry(section).or_default().push_str(&body);
+            }
+        }
+        bodies
+    }
+
+    /// One connection, every request.
+    async fn generate_sections_for_database(
+        &self,
+        endpoint: &Endpoint,
+        database: &str,
+        requests: &[DbSectionRequest],
+        edition: &Edition,
+    ) -> Vec<(DbSection, String)> {
+        match self
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
+            .await
+        {
+            Ok(mut client) => {
+                let mut entries = Vec::with_capacity(requests.len());
+                for request in requests {
+                    entries.push((
+                        request.section,
+                        self.run_section_query(&mut client, database, request).await,
+                    ));
+                }
+                entries
+            }
+            Err(err) => requests
+                .iter()
+                .map(|request| {
+                    (
+                        request.section,
+                        self.format_per_database_connect_error(request, database, &err),
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    /// Runs one section's query on an already open per-database connection.
+    async fn run_section_query(
+        &self,
+        client: &mut UniClient,
+        database: &str,
+        request: &DbSectionRequest,
+    ) -> String {
+        let sep = request.sep;
+        match request.section {
+            DbSection::TableSpaces => match run_custom_query(client, &request.query).await {
+                Ok(rows) => to_table_spaces_entry(&self.mssql_name(), database, &rows, sep),
+                Err(err) => {
+                    // fallback on simple query sp_spaceused for very old SQL Servers
+                    log::info!("Failed to get table spaces: {}", err);
+                    run_custom_query(client, sqls::query::SPACE_USED_SIMPLE)
+                        .await
+                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), database, &rows, sep))
+                        .unwrap_or_else(|e| self.format_table_spaces_error(database, &e))
+                }
+            },
+            DbSection::TransactionLog => run_custom_query(client, &request.query)
+                .await
+                .map(|rows| to_transaction_logs_entries(&self.name, database, &rows, sep))
+                .unwrap_or_else(|e| self.format_some_file_error(database, &e, sep)),
+            DbSection::Datafiles => run_custom_query(client, &request.query)
+                .await
+                .map(|rows| to_datafiles_entries(&self.name, database, &rows, sep))
+                .unwrap_or_else(|e| self.format_some_file_error(database, &e, sep)),
+        }
+    }
+
+    /// The per-section rendering of a failed connection to `database`.
+    fn format_per_database_connect_error(
+        &self,
+        request: &DbSectionRequest,
+        database: &str,
+        err: &anyhow::Error,
+    ) -> String {
+        match request.section {
+            DbSection::TableSpaces => self.format_table_spaces_error(database, err),
+            DbSection::TransactionLog | DbSection::Datafiles => {
+                self.format_some_file_error(database, err, request.sep)
+            }
+        }
     }
 
     fn format_table_spaces_error(&self, d: &str, e: &anyhow::Error) -> String {
@@ -867,33 +1034,6 @@ impl SqlInstance {
             d.replace(' ', "_"),
             prepare_error(e)
         )
-    }
-
-    pub async fn generate_table_spaces_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-        edition: &Edition,
-    ) -> String {
-        match self
-            .create_client(endpoint, Some(database.to_owned()), Some(edition))
-            .await
-        {
-            Ok(mut c) => match run_custom_query(&mut c, query).await {
-                Ok(rows) => to_table_spaces_entry(&self.mssql_name(), database, &rows, sep),
-                Err(err) => {
-                    // fallback on simple query sp_spaceused for very old SQL Servers
-                    log::info!("Failed to get table spaces: {}", err);
-                    run_custom_query(&mut c, sqls::query::SPACE_USED_SIMPLE)
-                        .await
-                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), database, &rows, sep))
-                        .unwrap_or_else(|e| self.format_table_spaces_error(database, &e))
-                }
-            },
-            Err(err) => self.format_table_spaces_error(database, &err),
-        }
     }
 
     pub async fn generate_backup_section(
@@ -978,7 +1118,7 @@ impl SqlInstance {
             .collect()
     }
 
-    pub fn generate_database_indexed_section_threading(
+    pub fn generate_per_database_section_threading(
         &self,
         databases: &[DatabaseEntry],
         endpoint: &Endpoint,
@@ -1005,42 +1145,31 @@ impl SqlInstance {
                         let simulated =
                             self.format_inaccessible_databases(section.name(), &inaccessible, sep);
                         let rt = tokio::runtime::Runtime::new().unwrap();
-                        let real = match section.name() {
-                            names::TRANSACTION_LOG => {
-                                rt.block_on(self.generate_transaction_logs_section(
+                        let real = match DbSection::from_name(section.name()) {
+                            Some(db_section) => {
+                                rt.block_on(self.generate_single_per_database_section(
                                     endpoint,
                                     &accessible,
+                                    db_section,
                                     query,
                                     sep,
                                     edition,
                                 ))
                             }
-                            names::TABLE_SPACES => rt.block_on(self.generate_table_spaces_section(
-                                endpoint,
-                                &accessible,
-                                query,
-                                sep,
-                                edition,
-                            )),
-                            names::DATAFILES => rt.block_on(self.generate_datafiles_section(
-                                endpoint,
-                                &accessible,
-                                query,
-                                sep,
-                                edition,
-                            )),
                             // Unlike above, CLUSTERS handles its own simulated
                             // entries internally (needs live is_clustered state).
                             // `simulated` below is always "" for it.
-                            names::CLUSTERS => rt.block_on(self.generate_clusters_section(
-                                endpoint,
-                                &accessible,
-                                &inaccessible,
-                                query,
-                                sep,
-                                edition,
-                            )),
-                            _ => format!("{} not implemented\n", section.name()),
+                            None if section.name() == names::CLUSTERS => {
+                                rt.block_on(self.generate_clusters_section(
+                                    endpoint,
+                                    &accessible,
+                                    &inaccessible,
+                                    query,
+                                    sep,
+                                    edition,
+                                ))
+                            }
+                            None => format!("{} not implemented\n", section.name()),
                         };
                         real + &simulated
                     })
@@ -1061,35 +1190,15 @@ impl SqlInstance {
         sep: char,
         edition: &Edition,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_transaction_logs_section_database(endpoint, database, query, sep, edition)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
-    }
-    pub async fn generate_transaction_logs_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-        edition: &Edition,
-    ) -> String {
-        match self
-            .create_client(endpoint, Some(database.to_owned()), Some(edition))
-            .await
-        {
-            Ok(mut c) => run_custom_query(&mut c, query)
-                .await
-                .map(|rows| to_transaction_logs_entries(&self.name, database, &rows, sep))
-                .unwrap_or_else(|e| self.format_some_file_error(database, &e, sep)),
-            Err(err) => self.format_some_file_error(database, &err, sep),
-        }
+        self.generate_single_per_database_section(
+            endpoint,
+            databases,
+            DbSection::TransactionLog,
+            query,
+            sep,
+            edition,
+        )
+        .await
     }
 
     fn format_some_file_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
@@ -1110,36 +1219,15 @@ impl SqlInstance {
         sep: char,
         edition: &Edition,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_datafiles_section_database(endpoint, database, query, sep, edition)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
-    }
-
-    pub async fn generate_datafiles_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-        edition: &Edition,
-    ) -> String {
-        match self
-            .create_client(endpoint, Some(database.to_owned()), Some(edition))
-            .await
-        {
-            Ok(mut c) => run_custom_query(&mut c, query)
-                .await
-                .map(|rows| to_datafiles_entries(&self.name, database, &rows, sep))
-                .unwrap_or_else(|e| self.format_some_file_error(database, &e, sep)),
-            Err(err) => self.format_some_file_error(database, &err, sep),
-        }
+        self.generate_single_per_database_section(
+            endpoint,
+            databases,
+            DbSection::Datafiles,
+            query,
+            sep,
+            edition,
+        )
+        .await
     }
 
     pub async fn generate_databases_section(
@@ -2904,7 +2992,7 @@ mod tests {
     use super::{
         chunk_databases, generate_instance_entries, generate_signaling_blocks,
         get_active_local_instances, parse_has_access, partition_by_access, DatabaseEntry,
-        SqlInstance, SqlInstanceBuilder,
+        DbSection, DbSectionRequest, SqlInstance, SqlInstanceBuilder,
     };
     use crate::args::Args;
     use crate::config::ms_sql::{Authentication, Connection, Endpoint};
@@ -2983,6 +3071,52 @@ mod tests {
     #[test]
     fn test_chunk_databases_empty() {
         assert_eq!(chunk_databases(&[]).count(), 0);
+    }
+
+    /// A failed connection is rendered in each section's own error format.
+    #[test]
+    fn test_format_per_database_connect_error() {
+        let i = SqlInstanceBuilder::new()
+            .name("test_name")
+            .build(&Endpoint::default());
+        let err = anyhow::anyhow!("boom");
+        let request = |section: DbSection, sep: char| DbSectionRequest {
+            section,
+            query: String::new(),
+            sep,
+        };
+
+        // TABLE_SPACES has its own layout, keyed by the MSSQL_ name.
+        let spaces = i.format_per_database_connect_error(
+            &request(DbSection::TableSpaces, ' '),
+            "db one",
+            &err,
+        );
+        assert!(spaces.starts_with("MSSQL_TEST_NAME db_one"), "{spaces}");
+
+        // The file sections share a layout keyed by the bare instance name.
+        for section in [DbSection::TransactionLog, DbSection::Datafiles] {
+            let out = i.format_per_database_connect_error(&request(section, '|'), "db one", &err);
+            assert!(out.starts_with("TEST_NAME|db_one|"), "{section:?}: {out}");
+        }
+    }
+
+    /// Only the per-database sections resolve; CLUSTERS has its own path.
+    #[test]
+    fn test_db_section_from_name() {
+        assert_eq!(
+            DbSection::from_name(names::TABLE_SPACES),
+            Some(DbSection::TableSpaces)
+        );
+        assert_eq!(
+            DbSection::from_name(names::TRANSACTION_LOG),
+            Some(DbSection::TransactionLog)
+        );
+        assert_eq!(
+            DbSection::from_name(names::DATAFILES),
+            Some(DbSection::Datafiles)
+        );
+        assert_eq!(DbSection::from_name(names::CLUSTERS), None);
     }
 
     // An excluded database is dropped entirely - neither connected to nor reported

@@ -2564,7 +2564,8 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "Ein Host mit diesem Namen existiert in diesem Ordner bereits."
 
-msgid "A human-readable alias for this relay configuration."
+#, fuzzy
+msgid "A human-readable alias for this Relay configuration."
 msgstr "Ein für Menschen lesbarer Alias für diese Relay-Konfiguration."
 
 #, fuzzy
@@ -10422,14 +10423,15 @@ msgid "Bulk discovery currently running in <a href=\"%s\">background</a>."
 msgstr ""
 "Bulk-Erkennung, wird derzeit im <a href=\"%s\">Hintergrund</a> ausgeführt."
 
+#, fuzzy
+msgid "Bulk discovery finished"
+msgstr "Bulk-Erkennung abgeschlossen."
+
 msgid "Bulk discovery finished."
 msgstr "Bulk-Erkennung abgeschlossen."
 
 msgid "Bulk discovery started..."
 msgstr "Bulk-Erkennung gestartet..."
-
-msgid "Bulk discovery successful"
-msgstr "Bulk-Erkennung erfolgreich"
 
 msgid "Bulk edit of hosts"
 msgstr "Bulk-Bearbeitung von Hosts"
@@ -42536,6 +42538,10 @@ msgstr "Maximale gleichzeitige Livestatus-Verbindungen"
 msgid "Maximum concurrent active checks"
 msgstr "Maximalzahl gleichzeitiger aktiver Checks"
 
+#, fuzzy
+msgid "Maximum concurrent active-check helpers"
+msgstr "Maximalzahl gleichzeitiger aktiver Checks"
+
 msgid "Maximum concurrent executions"
 msgstr "Maximal gleichzeitige Ausführungen"
 
@@ -70788,6 +70794,17 @@ msgstr ""
 "des aktuellen Benutzers (Identität) abgeleitet werden, aber dies ist für den "
 "aktuellen Benutzer nicht konfiguriert."
 
+#, fuzzy
+msgid ""
+"The number of Relay checkhelper processes used to run the active checks of "
+"this Relay's hosts, scheduled and on demand. Be aware that each process "
+"consumes resources, primarily memory."
+msgstr ""
+"Die optimale Anzahl von Relay-Fetcher-Prozessen hängt in erster Linie von "
+"der Anzahl der Hosts und Services ab, die Sie überwachen möchten, sowie von "
+"der Reaktionsfähigkeit und Latenz dieser Hosts. Beachten Sie, dass jeder "
+"Fetcher-Prozess Ressourcen verbraucht, vor allem Arbeitsspeicher."
+
 #, python-format
 msgid "The number of elements in the tuple must be exactly %d."
 msgstr "Anzahl der Elemente im Tuple muss genau %d sein."
@@ -88407,6 +88424,19 @@ msgstr ""
 "Ob Sie die Nummer oder den Namen brauchen, hängt vom Check ab. Schauen Sie "
 "dazu einfach auf den Service-Namen."
 
+msgid ""
+"Which IP protocol family Checkmk uses to contact this host. Choosing one of "
+"the IP options asserts that the host <i>has</i> an address of that family: "
+"Checkmk resolves the host name via DNS unless an explicit IP address is "
+"configured. If neither is available, service discovery and monitoring of "
+"this host will fail.<br><br><b>No IP:</b><br>The host has no network address "
+"at all. Choose this for hosts that are monitored without being contacted "
+"directly, for example via piggyback data from another host, a push agent, an "
+"individual program call, or a special agent that authenticates against an "
+"external API. No name resolution is attempted for such a host, and its host "
+"check reports UP by default."
+msgstr ""
+
 msgid "Who"
 msgstr "Wer"
 
@@ -97520,6 +97550,9 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
+msgid "PENDING"
+msgstr "PENDING"
+
 msgid "Number of services in OK state"
 msgstr "Anzahl von Services im Zustand OK"
 
@@ -97549,9 +97582,6 @@ msgstr "Zurück zur Detailansicht des Hosts"
 
 msgid "Select host %{name}"
 msgstr "Host %{name} auswählen"
-
-msgid "PENDING"
-msgstr "PENDING"
 
 msgid "%{count} sec"
 msgstr "%{count} sec"
@@ -98804,6 +98834,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Bulk discovery successful"
+#~ msgstr "Bulk-Erkennung erfolgreich"
 
 #~ msgid "Databases needing attention (unhandled, non-OK)"
 #~ msgstr "Datenbanken, die Aufmerksamkeit erfordern (unbearbeitet, nicht OK)"

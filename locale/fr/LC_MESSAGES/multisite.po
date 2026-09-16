@@ -2544,7 +2544,7 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "Un hôte portant ce nom existe déjà dans ce dossier."
 
-msgid "A human-readable alias for this relay configuration."
+msgid "A human-readable alias for this Relay configuration."
 msgstr ""
 
 #, fuzzy
@@ -10917,14 +10917,15 @@ msgid "Bulk discovery currently running in <a href=\"%s\">background</a>."
 msgstr ""
 "La découverte en vrac est en cours dans <a href=\"%s\">arrière-plan</a>."
 
+#, fuzzy
+msgid "Bulk discovery finished"
+msgstr "Découverte en vrac terminée."
+
 msgid "Bulk discovery finished."
 msgstr "Découverte en vrac terminée."
 
 msgid "Bulk discovery started..."
 msgstr "La découverte du vrac a commencé..."
-
-msgid "Bulk discovery successful"
-msgstr "Découverte en vrac réussie"
 
 #, fuzzy
 msgid "Bulk edit of hosts"
@@ -44557,6 +44558,10 @@ msgstr "Nombre maximal de connexions Livestatus simultanées"
 msgid "Maximum concurrent active checks"
 msgstr "Nombre maximal de contrôles actifs simultanés"
 
+#, fuzzy
+msgid "Maximum concurrent active-check helpers"
+msgstr "Nombre maximal de contrôles actifs simultanés"
+
 msgid "Maximum concurrent executions"
 msgstr "Nombre maximum d'exécutions simultanées"
 
@@ -74126,6 +74131,12 @@ msgstr ""
 "les paramètres de l'utilisateur actuel (identité) mais ceci n'est pas défini "
 "pour l'utilisateur actuel."
 
+msgid ""
+"The number of Relay checkhelper processes used to run the active checks of "
+"this Relay's hosts, scheduled and on demand. Be aware that each process "
+"consumes resources, primarily memory."
+msgstr ""
+
 #, python-format
 msgid "The number of elements in the tuple must be exactly %d."
 msgstr "Le nombre d'éléments dans le tuple doit être exactement %d."
@@ -92583,6 +92594,19 @@ msgstr ""
 "Le fait que vous ayez besoin du numéro ou du nom dépend du contrôle. Il "
 "suffit de jeter un coup d'œil à la description du service."
 
+msgid ""
+"Which IP protocol family Checkmk uses to contact this host. Choosing one of "
+"the IP options asserts that the host <i>has</i> an address of that family: "
+"Checkmk resolves the host name via DNS unless an explicit IP address is "
+"configured. If neither is available, service discovery and monitoring of "
+"this host will fail.<br><br><b>No IP:</b><br>The host has no network address "
+"at all. Choose this for hosts that are monitored without being contacted "
+"directly, for example via piggyback data from another host, a push agent, an "
+"individual program call, or a special agent that authenticates against an "
+"external API. No name resolution is attempted for such a host, and its host "
+"check reports UP by default."
+msgstr ""
+
 msgid "Who"
 msgstr "Qui"
 
@@ -102102,6 +102126,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "PENDING"
+msgstr "PEND"
+
+#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Nombre de services dans l'État OK"
 
@@ -102139,10 +102167,6 @@ msgstr "Détails de l'hôte Ntop"
 #, fuzzy
 msgid "Select host %{name}"
 msgstr "Supprimer l'hôte"
-
-#, fuzzy
-msgid "PENDING"
-msgstr "PEND"
 
 #, fuzzy
 msgid "%{count} sec"
@@ -103337,6 +103361,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Bulk discovery successful"
+#~ msgstr "Découverte en vrac réussie"
 
 #, fuzzy
 #~ msgid "Allow agent deployment as root"

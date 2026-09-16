@@ -65,6 +65,13 @@ def test_backup_timestamp(backup_time: str, tz_info: timezone, expected: datetim
                         " written: Expected 4096 but transferred 0"
                     ),
                 ],
+                [
+                    "incremental data backup",
+                    "2022-05-20 08:00:00.000000000",
+                    "successful",
+                    "",
+                    "<ok>",
+                ],
             ],
             {
                 "Crap its broken - data snapshot": sap_hana_backup.Backup(
@@ -78,6 +85,12 @@ def test_backup_timestamp(backup_time: str, tz_info: timezone, expected: datetim
                     state_name="failed",
                     comment="",
                     message="[447] backup could not be completed, [110507] Backint exited with exit code 1 instead of 0. console output: No additional Information was received, [110203] Not all data could be written: Expected 4096 but transferred 0",
+                ),
+                "Crap its broken - incremental data backup": sap_hana_backup.Backup(
+                    end_time=datetime(2022, 5, 20, 8, 0, tzinfo=sap_hana_backup.LOCAL_TIMEZONE),
+                    state_name="successful",
+                    comment="",
+                    message="<ok>",
                 ),
             },
         )

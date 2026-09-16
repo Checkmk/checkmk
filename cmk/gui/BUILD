@@ -409,7 +409,6 @@ py_library(
     name = "general_pages",
     srcs = [
         "activate_menu.py",
-        "graphing_main.py",
         "help.py",
         "help_menu.py",
     ],
@@ -427,7 +426,6 @@ py_library(
         ":core_toolkit",
         ":html_toolkit",
         ":page_toolkit",
-        "//cmk/gui/graphing",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
@@ -435,7 +433,6 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-licensing",
-        "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
     ],

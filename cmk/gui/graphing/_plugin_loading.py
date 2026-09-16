@@ -9,15 +9,15 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
-from cmk.gui.graphing import (
-    graphing_plugins,
-    GraphingPlugins,
+from cmk.gui.log import logger
+
+from ._from_api import (
     graphs_from_api,
     metrics_from_api,
     parse_metric_from_api,
     perfometers_from_api,
 )
-from cmk.gui.log import logger
+from ._plugins import graphing_plugins, GraphingPlugins
 
 
 def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
@@ -46,7 +46,7 @@ def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
             graphs_from_api.register(plugin)
 
 
-def register() -> None:
+def register_plugins() -> None:
     plugins = graphing_plugins()
     for exc in plugins.errors:
         logger.error(exc)

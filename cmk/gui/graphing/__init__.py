@@ -152,6 +152,7 @@ from ._perfometers import (
     perfometer_label,
     perfometer_sort_value,
 )
+from ._plugin_loading import register_plugins
 from ._plugins import (
     graphing_plugins,
     GraphingPlugins,
@@ -336,6 +337,7 @@ __all__ = [
     "QueryLimitReached",
     "RawPerformanceData",
     "registered_graphs",
+    "register_plugins",
     "registered_metric_ids_and_titles",
     "registered_metrics",
     "registered_translations",

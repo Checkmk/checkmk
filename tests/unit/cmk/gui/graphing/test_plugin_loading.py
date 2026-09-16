@@ -15,7 +15,7 @@ from cmk.gui.graphing import (
     graphs_from_api,
     metrics_from_api,
 )
-from cmk.gui.graphing_main import _add_graphing_plugins
+from cmk.gui.graphing._plugin_loading import _add_graphing_plugins
 from cmk.gui.unit_formatter import StrictPrecision
 
 

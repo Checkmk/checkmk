@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
-
 
 import contextlib
 import itertools
@@ -22,7 +19,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, assert_never
+from typing import assert_never
 
 import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
@@ -88,6 +85,10 @@ _SDPATH_CLUSTER_NODES = (
 )
 
 
+def _parse_monitoring_state(raw_state: object, default: int) -> int:
+    return int(raw_state) if isinstance(raw_state, int | float | str) else default
+
+
 @dataclass(frozen=True)
 class HWSWInventoryParameters:
     hw_changes: int
@@ -102,13 +103,13 @@ class HWSWInventoryParameters:
     status_data_inventory: bool
 
     @classmethod
-    def from_raw(cls, raw_parameters: Mapping[str, Any]) -> HWSWInventoryParameters:
+    def from_raw(cls, raw_parameters: Mapping[str, object]) -> HWSWInventoryParameters:
         return cls(
-            hw_changes=int(raw_parameters.get("hw-changes", 0)),
-            sw_changes=int(raw_parameters.get("sw-changes", 0)),
-            sw_missing=int(raw_parameters.get("sw-missing", 0)),
-            nw_changes=int(raw_parameters.get("nw-changes", 0)),
-            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
+            hw_changes=_parse_monitoring_state(raw_parameters.get("hw-changes"), 0),
+            sw_changes=_parse_monitoring_state(raw_parameters.get("sw-changes"), 0),
+            sw_missing=_parse_monitoring_state(raw_parameters.get("sw-missing"), 0),
+            nw_changes=_parse_monitoring_state(raw_parameters.get("nw-changes"), 0),
+            fail_status=_parse_monitoring_state(raw_parameters.get("inv-fail-status"), 1),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
 
@@ -235,7 +236,9 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
 
 
 def _no_data_or_files(
-    host_name: HostName, host_sections: Iterable[HostSections], omd_root: Path
+    host_name: HostName,
+    host_sections: Iterable[HostSections[Mapping[SectionName, Sequence[object]]]],
+    omd_root: Path,
 ) -> bool:
     inv_paths = InventoryPaths(omd_root)
     archive_host = inv_paths.archive_host(host_name)

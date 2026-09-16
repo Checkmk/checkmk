@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
+# ChoiceField is generic in the plug-in API, but this module dispatches on SDValue at runtime
+# and cannot commit to one type argument. Remove once cmk.inventory_ui.v1_unstable.ChoiceField
+# no longer needs one.
 # mypy: disable-error-code="type-arg"
 
 
@@ -1409,7 +1411,7 @@ class DisplayHints:
     def get_node_hint(self, path: SDPath) -> NodeDisplayHint:
         if not path:
             return self._nodes_by_path[()]
-        if (abc_path := self._find_abc_path(path)) in self._nodes_by_path:
+        if (abc_path := self._find_abc_path(path)) is not None:
             return self._nodes_by_path[abc_path]
         title = path[-1].replace("_", " ").title()
         return NodeDisplayHint(

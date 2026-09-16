@@ -36,7 +36,7 @@ test('renders the current limit and offers a choice', () => {
   renderSelector(makeServiceStub([1000, 5000]))
 
   expect(screen.getByText('Show:')).toBeInTheDocument()
-  expect(screen.getByRole('combobox', { name: 'Row limit' })).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: 'Show:' })).toBeInTheDocument()
 })
 
 test('does not render when only a single limit is offered', () => {
@@ -49,7 +49,7 @@ test('offers the "All" option only when removing the limit is permitted', async 
   const user = userEvent.setup()
   renderSelector(makeServiceStub([1000, 5000, null]))
 
-  await user.click(screen.getByRole('combobox', { name: 'Row limit' }))
+  await user.click(screen.getByRole('combobox', { name: 'Show:' }))
 
   expect(await screen.findByRole('option', { name: 'All' })).toBeInTheDocument()
 })
@@ -58,7 +58,7 @@ test('does not offer "All" when removing the limit is not permitted', async () =
   const user = userEvent.setup()
   renderSelector(makeServiceStub([1000, 5000]))
 
-  await user.click(screen.getByRole('combobox', { name: 'Row limit' }))
+  await user.click(screen.getByRole('combobox', { name: 'Show:' }))
 
   expect(screen.queryByRole('option', { name: 'All' })).not.toBeInTheDocument()
 })
@@ -68,7 +68,7 @@ test('switching the selection updates the requested limit', async () => {
   const stub = makeServiceStub([1000, 5000, null])
   renderSelector(stub)
 
-  await user.click(screen.getByRole('combobox', { name: 'Row limit' }))
+  await user.click(screen.getByRole('combobox', { name: 'Show:' }))
   await user.click(await screen.findByRole('option', { name: '5000' }))
 
   expect(stub.setRequestedLimit).toHaveBeenCalledWith(5000)
@@ -79,7 +79,7 @@ test('selecting "All" requests the unlimited row limit', async () => {
   const stub = makeServiceStub([1000, 5000, null])
   renderSelector(stub)
 
-  await user.click(screen.getByRole('combobox', { name: 'Row limit' }))
+  await user.click(screen.getByRole('combobox', { name: 'Show:' }))
   await user.click(await screen.findByRole('option', { name: 'All' }))
 
   expect(stub.setRequestedLimit).toHaveBeenCalledWith(null)

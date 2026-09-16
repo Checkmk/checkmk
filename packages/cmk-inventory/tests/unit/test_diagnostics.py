@@ -16,6 +16,8 @@ from cmk.plugins.inventory.diagnostics.checkmk_overview import (
     diagnostics_plugin_checkmk_overview,
 )
 
+from ._logger import null_logger
+
 
 def _make_context(
     omd_root: Path,
@@ -31,7 +33,7 @@ def _make_context(
         base_config={},
         resolve_checkmk_server_host=lambda: checkmk_server_host,
         site_internal_auth_header=lambda: "InternalToken deadbeef",
-        log=None,  # type: ignore[arg-type]  # not used
+        log=null_logger(),
     )
 
 

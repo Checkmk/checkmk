@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
 import gzip
 import json
 import shutil
@@ -1601,7 +1599,7 @@ def test_filter_real_tree(
 )
 def test_filter_networking_tree(
     filters: Sequence[SDFilterChoice],
-    amount_if_entries: int,
+    amount_if_entries: int | None,
 ) -> None:
     filtered = filter_tree(
         _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),

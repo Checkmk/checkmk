@@ -1590,8 +1590,8 @@ class ModeDistributedMonitoring(WatoMode):
             html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
         if site_globals_editable(site_configs, site):
-            globals_url = folder_preserving_link(
-                request, [("mode", "edit_site_globals"), ("site", site_id)]
+            globals_url = makeuri_contextless(
+                request, [("site", site_id)], filename="site_specific_settings.py"
             )
 
             has_site_globals = bool(site.get("globals"))
@@ -2417,7 +2417,9 @@ def _page_menu_entries_site_details(
             title=_("Global settings"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                makeuri_contextless(request, [("mode", "edit_site_globals"), ("site", site_id)]),
+                makeuri_contextless(
+                    request, [("site", site_id)], filename="site_specific_settings.py"
+                ),
             ),
         )
 

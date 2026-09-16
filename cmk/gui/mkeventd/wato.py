@@ -3996,7 +3996,9 @@ def _page_menu_entry_settings(is_suggested: bool) -> PageMenuEntry:
         icon_name=StaticIcon(IconNames.configuration),
         is_shortcut=is_suggested,
         is_suggested=is_suggested,
-        item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
+        item=make_simple_link(
+            makeuri_contextless(request, [], filename="event_console_settings.py")
+        ),
     )
 
 

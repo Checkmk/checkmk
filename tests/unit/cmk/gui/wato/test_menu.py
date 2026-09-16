@@ -32,7 +32,7 @@ def expected_items() -> dict[str, list[str]]:
         ],
         "general": [
             "rule_search",
-            "globalvars",
+            "global_settings.py",
             "read_only",
             "predefined_conditions",
             "timeperiods",

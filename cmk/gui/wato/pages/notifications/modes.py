@@ -91,7 +91,7 @@ from cmk.gui.site_config import (
     site_is_local,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, Users
+from cmk.gui.type_defs import ActionResult, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -208,7 +208,7 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 OPTIMIZE_NOTIFICATIONS_ENTRIES: dict[str, list[str]] = {
     _("Balance short-term spikes"): [
@@ -800,13 +800,13 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         else:
             mode = "notification_rule_quick_setup"
 
-        back_mode: HTTPVariables = []
+        back_mode: list[HTTPVariable] = []
         mode_from_vars = request.var("mode")
         if mode_from_vars:
             back_mode.append(("back_mode", mode_from_vars))
 
         def _delete_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", listmode),
                 ("user", userid),
                 ("_delete", nr),
@@ -821,7 +821,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             )
 
         def _drag_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", listmode),
                 ("analyse", anavar),
                 ("user", userid),
@@ -832,7 +832,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return make_action_link(request, httpvars + back_mode)
 
         def _edit_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", mode),
                 ("edit", nr),
                 ("user", userid),
@@ -842,7 +842,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return folder_preserving_link(request, httpvars + back_mode)
 
         def _clone_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", mode),
                 ("clone", nr),
                 ("user", userid),
@@ -895,7 +895,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         menu = PageMenu(
@@ -1870,7 +1870,7 @@ class ModeTestNotifications(ModeNotifications):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         menu = PageMenu(
@@ -2949,7 +2949,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         return PageMenu(
@@ -3033,7 +3033,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         return PageMenu(
@@ -4111,7 +4111,7 @@ class ABCNotificationParameterMode(WatoMode):
     def _back_mode(self) -> ActionResult:
         raise NotImplementedError
 
-    def _search_vars(self) -> HTTPVariables:
+    def _search_vars(self) -> list[HTTPVariable]:
         if search := request.get_str_input("search"):
             return [("search", search)]
         return []
@@ -4535,7 +4535,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         listmode = "notification_parameters"
         mode = "edit_notification_parameter"
 
-        additional_vars: HTTPVariables = [
+        additional_vars: list[HTTPVariable] = [
             ("back_mode", "notification_parameters"),
             ("method", self._method()),
         ]

@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import HTTPVariables, VisualName, VisualPublic, VisualTypeName
+from cmk.gui.type_defs import VisualName, VisualPublic, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.visuals.type import visual_type_registry
@@ -37,7 +37,7 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link, make_confirm_l
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.icons import IconNames, StaticIcon
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless, urlencode
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless, urlencode
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._store import (
@@ -187,7 +187,7 @@ def page_list(
                     owner == user.id
                     or (owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what))
                 ) and not is_packaged:
-                    edit_vars: HTTPVariables
+                    edit_vars: list[HTTPVariable]
                     if what == "dashboards":
                         edit_vars = [
                             ("mode", "edit_settings"),
@@ -266,7 +266,7 @@ def page_list(
                     and (owner == user.id or user.may("general.delete_foreign_%s" % what))
                     and not is_packaged
                 ):
-                    add_vars: HTTPVariables = [("_delete", visual_name)]
+                    add_vars: list[HTTPVariable] = [("_delete", visual_name)]
                     confirm_message = _("ID: %(visual_name)s") % {"visual_name": visual_name}
                     if owner != user.id:
                         add_vars.append(("_user_id", owner))

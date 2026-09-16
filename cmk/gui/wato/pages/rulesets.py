@@ -79,7 +79,7 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, RenderMode
+from cmk.gui.type_defs import ActionResult, RenderMode
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
@@ -209,7 +209,7 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 from ._rule_conditions import DictHostTagCondition
 
@@ -400,7 +400,7 @@ class ABCRulesetMode(WatoMode):
                     html.open_div(class_=["ruleset"], title=strip_tags(ruleset.help() or ""))
                     html.open_div(class_="text")
 
-                    url_vars: HTTPVariables = [
+                    url_vars: list[HTTPVariable] = [
                         ("mode", "edit_ruleset"),
                         ("varname", ruleset.name),
                         ("back_mode", self.name()),
@@ -1643,7 +1643,7 @@ class ModeEditRuleset(WatoMode):
         g.setdefault("host_label_sync", {})[cache_id] = True
 
     def _action_url(self, action: str, folder: Folder, rule_id: str) -> str:
-        vars_: HTTPVariables = [
+        vars_: list[HTTPVariable] = [
             ("mode", request.var("mode", "edit_ruleset")),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
@@ -2357,7 +2357,7 @@ class ABCEditRuleMode(WatoMode):
     def _back_url(self) -> str:
         # TODO: Is this still needed + for which case?
         if self._back_mode == "edit_ruleset":
-            var_list: HTTPVariables = [
+            var_list: list[HTTPVariable] = [
                 ("mode", "edit_ruleset"),
                 (self.VAR_RULE_SPEC_NAME, self._name),
                 ("host", request.get_ascii_input_mandatory("host", "")),

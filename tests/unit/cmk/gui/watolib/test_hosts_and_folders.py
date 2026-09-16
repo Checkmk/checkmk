@@ -40,7 +40,6 @@ from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search.matchers import MatchItem
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
@@ -57,6 +56,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.redis import disable_redis
+from cmk.web.utils.urls import HTTPVariable
 
 # Cheap in-memory acting user with all permissions. Avoids the expensive
 # with_admin_login fixture (which creates a real user on disk) for tests that
@@ -323,7 +323,7 @@ def test_create_nested_folders(tree: FolderTree) -> None:
 
 def test_url_does_not_mutate_the_passed_variables(tree: FolderTree) -> None:
     """A debug request used to append its marker to the caller's list."""
-    add_vars: HTTPVariables = [("mode", "edit_host")]
+    add_vars: list[HTTPVariable] = [("mode", "edit_host")]
 
     root = tree.root_folder()
     request = Request(create_environ(query_string="debug=1"))

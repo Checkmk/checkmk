@@ -15,15 +15,15 @@ from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
+from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.livestatus_client import MKLivestatusNotFoundError
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 from ..base import RelativeLayoutConstraints, WidgetSize
 from ..figure_dashlet import ABCFigureDashlet
 
 
-def view_url(url_vars: HTTPVariables) -> str:
+def view_url(url_vars: Sequence[HTTPVariable]) -> str:
     return makeuri_contextless(request, url_vars, filename="view.py")
 
 
@@ -33,14 +33,16 @@ class HostStats(NamedTuple):
     unreachable: int
     down: int
 
-    def get_parts_data(self, general_url_vars: HTTPVariables) -> list[tuple[str, str, int, str]]:
+    def get_parts_data(
+        self, general_url_vars: Sequence[HTTPVariable]
+    ) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("Up"),
                 "ok",
                 self.up,
                 view_url(
-                    general_url_vars + [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")]
+                    [*general_url_vars, ("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")]
                 ),
             ),
             (
@@ -48,7 +50,7 @@ class HostStats(NamedTuple):
                 "downtime",
                 self.downtime,
                 view_url(
-                    general_url_vars + [("search", "1"), ("is_host_scheduled_downtime_depth", "1")]
+                    [*general_url_vars, ("search", "1"), ("is_host_scheduled_downtime_depth", "1")]
                 ),
             ),
             (
@@ -56,7 +58,7 @@ class HostStats(NamedTuple):
                 "unknown",
                 self.unreachable,
                 view_url(
-                    general_url_vars + [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")]
+                    [*general_url_vars, ("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")]
                 ),
             ),
             (
@@ -64,7 +66,7 @@ class HostStats(NamedTuple):
                 "critical",
                 self.down,
                 view_url(
-                    general_url_vars + [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")]
+                    [*general_url_vars, ("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")]
                 ),
             ),
         ]
@@ -78,29 +80,31 @@ class ServiceStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(self, general_url_vars: HTTPVariables) -> list[tuple[str, str, int, str]]:
+    def get_parts_data(
+        self, general_url_vars: Sequence[HTTPVariable]
+    ) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("OK"),
                 "ok",
                 self.ok,
                 view_url(
-                    general_url_vars + [("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")]
+                    [*general_url_vars, ("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")]
                 ),
             ),
             (
                 _("In downtime"),
                 "downtime",
                 self.downtime,
-                view_url(general_url_vars + [("is_in_downtime", "1")]),
+                view_url([*general_url_vars, ("is_in_downtime", "1")]),
             ),
             (
                 _("On down host"),
                 "host_down",
                 self.host_down,
                 view_url(
-                    general_url_vars
-                    + [
+                    [
+                        *general_url_vars,
                         ("hst1", "on"),
                         ("hst2", "on"),
                         ("hstp", "on"),
@@ -113,7 +117,7 @@ class ServiceStats(NamedTuple):
                 "warning",
                 self.warning,
                 view_url(
-                    general_url_vars + [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")]
+                    [*general_url_vars, ("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")]
                 ),
             ),
             (
@@ -121,7 +125,7 @@ class ServiceStats(NamedTuple):
                 "unknown",
                 self.unknown,
                 view_url(
-                    general_url_vars + [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")]
+                    [*general_url_vars, ("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")]
                 ),
             ),
             (
@@ -129,7 +133,7 @@ class ServiceStats(NamedTuple):
                 "critical",
                 self.critical,
                 view_url(
-                    general_url_vars + [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")]
+                    [*general_url_vars, ("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")]
                 ),
             ),
         ]
@@ -141,31 +145,33 @@ class EventStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(self, general_url_vars: HTTPVariables) -> list[tuple[str, str, int, str]]:
+    def get_parts_data(
+        self, general_url_vars: Sequence[HTTPVariable]
+    ) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("Ok"),
                 "ok",
                 self.ok,
-                view_url(general_url_vars + [("event_state_0", "on")]),
+                view_url([*general_url_vars, ("event_state_0", "on")]),
             ),
             (
                 _("Warning"),
                 "warning",
                 self.warning,
-                view_url(general_url_vars + [("event_state_1", "on")]),
+                view_url([*general_url_vars, ("event_state_1", "on")]),
             ),
             (
                 _("Unknown"),
                 "unknown",
                 self.unknown,
-                view_url(general_url_vars + [("event_state_3", "on")]),
+                view_url([*general_url_vars, ("event_state_3", "on")]),
             ),
             (
                 _("Critical"),
                 "critical",
                 self.critical,
-                view_url(general_url_vars + [("event_state_2", "on")]),
+                view_url([*general_url_vars, ("event_state_2", "on")]),
             ),
         ]
 
@@ -348,7 +354,7 @@ class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.AB
     def _get_stats_element(
         cls,
         parts_data: list[tuple[str, str, int, str]],
-        general_url_vars: HTTPVariables,
+        general_url_vars: Sequence[HTTPVariable],
     ) -> StatsElement:
         parts = []
         total_count = 0
@@ -371,7 +377,7 @@ class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.AB
         raise NotImplementedError
 
     @classmethod
-    def _general_url_vars(cls, context: VisualContext) -> HTTPVariables:
+    def _general_url_vars(cls, context: VisualContext) -> list[HTTPVariable]:
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
@@ -500,7 +506,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator[EventStats]):
 
     @classmethod
     @override
-    def _general_url_vars(cls, context: VisualContext) -> HTTPVariables:
+    def _general_url_vars(cls, context: VisualContext) -> list[HTTPVariable]:
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),

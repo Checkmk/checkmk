@@ -31,7 +31,6 @@ from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    HTTPVariables,
     Row,
     Rows,
     SingleInfos,
@@ -79,7 +78,7 @@ from cmk.utils.statename import short_service_state_name
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
-from cmk.web.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri_contextless, urlencode_vars
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices
@@ -1113,7 +1112,7 @@ def paint_event_icons(
 def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
-    urlvars: HTTPVariables = []
+    urlvars: list[HTTPVariable] = []
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.

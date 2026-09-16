@@ -30,7 +30,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
 from cmk.gui.log import logger
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.valuespec import (
     DEF_VALUE,
     Dictionary,
@@ -58,7 +57,7 @@ from cmk.utils import paths
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, makeuri_contextless_rulespec_group
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless_rulespec_group
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
@@ -1389,7 +1388,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
         vars_copy[self.tp_toggle_var] = str(int(not is_active))
 
-        url_vars: HTTPVariables = []
+        url_vars: list[HTTPVariable] = []
         url_vars += vars_copy.items()
         toggle_url = makeuri(request, url_vars)
 

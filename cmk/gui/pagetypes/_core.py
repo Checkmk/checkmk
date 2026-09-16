@@ -79,7 +79,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
 )
 from cmk.gui.table import init_rowselect, Table, table_element
-from cmk.gui.type_defs import AnnotatedUserId, HTTPVariables, Visual, VisualPublic
+from cmk.gui.type_defs import AnnotatedUserId, Visual, VisualPublic
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
@@ -117,7 +117,7 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.speaklater import LazyString
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 SubPagesSpec = list[tuple[str, str, StaticIcon]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
@@ -679,7 +679,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return user.may("general.edit_foreign_%s" % self.type_name())
 
     def edit_url(self) -> str:
-        http_vars: HTTPVariables = [("load_name", self.name())]
+        http_vars: list[HTTPVariable] = [("load_name", self.name())]
         if not self.is_mine():
             http_vars.append(("owner", self.owner()))
 
@@ -698,7 +698,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         )
 
     def delete_url(self) -> str:
-        add_vars: HTTPVariables = [("_delete", self.name())]
+        add_vars: list[HTTPVariable] = [("_delete", self.name())]
         if not self.is_mine():
             add_vars.append(("_owner", self.owner()))
 
@@ -2075,7 +2075,7 @@ class PageRenderer[T_PageRendererConfig: PageRendererConfig](
         )
 
     def view_url(self) -> str:
-        http_vars: HTTPVariables = [(self.ident_attr(), self.name())]
+        http_vars: list[HTTPVariable] = [(self.ident_attr(), self.name())]
         if not self.is_mine():
             http_vars.append(("owner", self.owner()))
         return makeuri_contextless(request, http_vars, filename="%s.py" % self.type_name())

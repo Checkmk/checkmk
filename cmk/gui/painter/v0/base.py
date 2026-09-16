@@ -33,7 +33,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    HTTPVariables,
     PainterName,
     PainterParameters,
     PermittedViewSpecs,
@@ -55,7 +54,7 @@ from cmk.gui.view_utils import (
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri
+from cmk.web.utils.urls import HTTPVariable, makeuri
 
 from ..v1.painter_lib import (
     experimental_painter_registry,
@@ -515,7 +514,7 @@ class Cell:
         onclick = ""
         title = ""
         if display_options.enabled(display_options.L) and self._sort_url_parameter:
-            params: HTTPVariables = [
+            params: list[HTTPVariable] = [
                 ("sort", self._sort_url_parameter),
                 ("_show_filter_form", 0),
             ]

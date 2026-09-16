@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from dataclasses import asdict
 from typing import override
 
@@ -13,14 +13,13 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.top_heading import show_license_banner, show_license_expiry
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
-from cmk.web.utils.urls import is_allowed_url, makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, is_allowed_url, makeuri, makeuri_contextless
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -129,7 +128,7 @@ def _welcome_page(ctx: PageContext) -> None:
     html.footer()
 
 
-def _make_url(addvars: HTTPVariables, filename: str) -> str:
+def _make_url(addvars: Sequence[HTTPVariable], filename: str) -> str:
     return makeuri(request, addvars=addvars, filename=filename)
 
 

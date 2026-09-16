@@ -45,14 +45,7 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.theme import Theme
-from cmk.gui.type_defs import (
-    ColumnName,
-    HTTPVariables,
-    PainterParameters,
-    Row,
-    SorterName,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.valuespec import (
@@ -87,6 +80,7 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter
@@ -6628,7 +6622,7 @@ class _PainterHostKubernetes(Painter):
         if labels.get("cmk/kubernetes/object") != self._kubernetes_object_type:
             return "", ""
 
-        links: HTTPVariables = []
+        links: list[HTTPVariable] = []
         for link_key in self._constraints:
             if (link_value := labels.get(f"cmk/kubernetes/{link_key}")) is None:
                 # a requested filter can not be set, so better don't show anything

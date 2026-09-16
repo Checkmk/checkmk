@@ -43,7 +43,6 @@ _ContactgroupName = str
 SizePT = NewType("SizePT", float)
 SizeMM = float
 type VerticalAxisWidth = Literal["fixed"] | tuple[Literal["explicit"], SizePT]
-HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
 RoleName = str
 ChoiceMapping = Mapping[str, ChoiceText]

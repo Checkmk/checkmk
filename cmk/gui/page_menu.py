@@ -25,7 +25,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
@@ -46,6 +45,7 @@ from cmk.web.utils.doc_references import (
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import (
+    HTTPVariable,
     is_allowed_url,
     makeuri,
     requested_file_name,
@@ -440,7 +440,7 @@ def _make_filtered_url(request_: Request, *, exclude: tuple[str, ...] = ()) -> s
     raw query string). Keep the two in sync.
     """
     sensitive_markers = ("_password", "_passphrase", "_secret")
-    vars_: HTTPVariables = [
+    vars_: list[HTTPVariable] = [
         (v, val)
         for v, val in request_.itervars()
         if v[0] != "_" and v not in exclude and not any(marker in v for marker in sensitive_markers)

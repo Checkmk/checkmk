@@ -33,7 +33,7 @@ from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
@@ -87,6 +87,7 @@ from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable
 
 
 def register(
@@ -372,7 +373,7 @@ class ModeEditConfigurationBundles(WatoMode):
         raise MKGeneralException("Not implemented")
 
     def _action_url(self, action: str, bundle_id: BundleId) -> str:
-        vars_: HTTPVariables = [
+        vars_: list[HTTPVariable] = [
             ("mode", request.var("mode", self.name())),
             (self.VAR_NAME, self._name),
             (self.VAR_BUNDLE_ID, bundle_id),

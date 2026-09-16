@@ -18,7 +18,6 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -36,7 +35,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopicEntryToggle,
 )
 from cmk.web.utils.icons import IconNames
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 
 def register(
@@ -287,7 +286,7 @@ class ModeAjaxSetStartURL(AjaxPage):
                 if name == "welcome.py":
                     set_user_attribute("start_url", repr(name))
                 else:
-                    variables: HTTPVariables = [("name", name)]
+                    variables: list[HTTPVariable] = [("name", name)]
                     if (owner := ctx.request.get_str_input("owner")) is not None:
                         variables.append(("owner", owner))
                     url = makeuri_contextless(ctx.request, variables, "dashboard.py")

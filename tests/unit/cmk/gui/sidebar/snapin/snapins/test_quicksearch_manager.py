@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import override
 
 import pytest
 
 from cmk.gui.search.quicksearch import ABCQuicksearchConductor, FilterBehaviour
 from cmk.gui.sidebar._snapin._quicksearch_manager import SnapinQuicksearchManager, TooManyRowsError
-from cmk.gui.type_defs import HTTPVariables, SearchResult
+from cmk.gui.type_defs import SearchResult
+from cmk.web.utils.urls import HTTPVariable
 
 
 def test_conduct_search_raises_too_many_rows_error_when_over_limit() -> None:
@@ -69,7 +71,7 @@ class _FakeConductor(ABCQuicksearchConductor):
         return self._exceeded
 
     @override
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         return []
 
     @override
@@ -77,5 +79,5 @@ class _FakeConductor(ABCQuicksearchConductor):
         return []
 
 
-def _noop_build_url(addvars: HTTPVariables) -> str:  # noqa: ARG001
+def _noop_build_url(addvars: Sequence[HTTPVariable]) -> str:  # noqa: ARG001
     return ""

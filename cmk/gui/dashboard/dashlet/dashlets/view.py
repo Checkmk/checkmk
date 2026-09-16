@@ -26,14 +26,9 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    SingleInfos,
-    ViewSpec,
-    VisualContext,
-)
+from cmk.gui.type_defs import SingleInfos, ViewSpec, VisualContext
 from cmk.gui.views.store import get_all_views, get_permitted_views
-from cmk.web.utils.urls import makeuri_contextless, requested_file_name
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless, requested_file_name
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
@@ -90,9 +85,9 @@ def copy_view_into_dashlet(
     # Overwrite the views default title with the context specific title
     dashlet["title"] = visuals.visual_title("view", view, dashlet["context"])
     # TODO: Shouldn't we use the self._dashlet_context_vars() here?
-    name_part: HTTPVariables = [("view_name", view_name)]
+    name_part: list[HTTPVariable] = [("view_name", view_name)]
     singlecontext_vars = cast(
-        HTTPVariables,
+        list[HTTPVariable],
         list(
             visuals.get_singlecontext_vars(
                 view["context"],

@@ -12,12 +12,7 @@ from cmk.gui.data_source import query_livestatus
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.num_split import key_num_split
-from cmk.gui.type_defs import (
-    FilterHeader,
-    HTTPVariables,
-    ViewProcessTracking,
-    VisualContext,
-)
+from cmk.gui.type_defs import FilterHeader, ViewProcessTracking, VisualContext
 from cmk.gui.view_utils import cmp_service_name_equiv
 from cmk.gui.watolib.groups_io import all_groups
 from cmk.livestatus_client import (
@@ -26,7 +21,7 @@ from cmk.livestatus_client import (
     Query,
     QuerySpecification,
 )
-from cmk.web.utils.urls import urlencode_vars
+from cmk.web.utils.urls import HTTPVariable, urlencode_vars
 
 from .annotations import reclassify_history_by_annotations
 from .options import get_outage_statistic_options
@@ -665,7 +660,7 @@ def history_url_of(av_object: AVHostOrServiceObjectSpec, time_range: AVTimeRange
     site, host, service = av_object
     from_time, until_time = time_range
 
-    history_url_vars: HTTPVariables = [
+    history_url_vars: list[HTTPVariable] = [
         ("site", site),
         ("host", host),
         ("logtime_from_range", "unix"),  # absolute timestamp

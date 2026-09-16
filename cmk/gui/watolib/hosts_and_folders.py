@@ -72,7 +72,7 @@ from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, HTTPVariables, SetOnceDict
+from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, SetOnceDict
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -129,6 +129,7 @@ from cmk.web.utils import urls
 from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable
 
 from .tls_registration_help import remove_tls_registration_help
 
@@ -1517,7 +1518,7 @@ def disk_or_search_base_folder_from_request(
     return folder
 
 
-def _makeuri_to_wato(vars_: HTTPVariables) -> str:
+def _makeuri_to_wato(vars_: Sequence[HTTPVariable]) -> str:
     """Build a "wato.py" URL without depending on the request global proxy.
 
     This is equivalent to ``urls.makeuri_contextless(request, vars_, filename="wato.py")``,
@@ -2462,11 +2463,11 @@ class Folder:
                 % {"folder": self.title()}
             )
 
-    def url(self, request: Request, add_vars: HTTPVariables | None = None) -> str:
+    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        url_vars: HTTPVariables = [("folder", self.path())]
+        url_vars: list[HTTPVariable] = [("folder", self.path())]
         have_mode = False
         for varname, _value in add_vars:
             if varname == "mode":
@@ -3545,11 +3546,11 @@ class SearchFolder:
             return self._base_folder.path() + "//search:" + self._name  # type: ignore[unreachable]
         return self._base_folder.path() + "//search"
 
-    def url(self, request: Request, add_vars: HTTPVariables | None = None) -> str:
+    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        url_vars: HTTPVariables = [("host_search", "1"), *add_vars]
+        url_vars: list[HTTPVariable] = [("host_search", "1"), *add_vars]
 
         for varname, value in request.itervars():
             if varname.startswith(("host_search_", "_change")):
@@ -4305,18 +4306,18 @@ def _collect_hosts(folder: Folder) -> Mapping[HostName, CollectedHostAttributes]
     return hosts_attributes
 
 
-def folder_preserving_link(request: Request, add_vars: HTTPVariables) -> str:
+def folder_preserving_link(request: Request, add_vars: Sequence[HTTPVariable]) -> str:
     return folder_from_request(
         folder_tree(), request.var("folder"), request.get_ascii_input("host")
     ).url(request, add_vars)
 
 
-def make_action_link(request: Request, vars_: HTTPVariables) -> str:
-    session_vars: HTTPVariables = [("_transid", transactions.get())]
+def make_action_link(request: Request, vars_: Sequence[HTTPVariable]) -> str:
+    session_vars: list[HTTPVariable] = [("_transid", transactions.get())]
     if (csrf_token := get_session_csrf_token()) is not None:
         session_vars.append(("_csrf_token", csrf_token))
 
-    return folder_preserving_link(request, vars_ + session_vars)
+    return folder_preserving_link(request, [*vars_, *session_vars])
 
 
 @request_memoize()

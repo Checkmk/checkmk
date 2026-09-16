@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.type_defs import HTTPVariables, LinkFromSpec, Rows, SingleInfos, Visual
+from cmk.gui.type_defs import LinkFromSpec, Rows, SingleInfos, Visual
 from cmk.gui.views.visual_type import _compute_link_from_result
 from cmk.inventory.structured_data import SDNodeName, SDPath
+from cmk.web.utils.urls import HTTPVariable
 
 
 def _make_visual(link_from: LinkFromSpec) -> Visual:
@@ -41,7 +44,7 @@ def _base_returns_true(
     single_infos: SingleInfos,  # noqa: ARG001
     rows: Rows,  # noqa: ARG001
     visual: Visual,  # noqa: ARG001
-    context_vars: HTTPVariables,  # noqa: ARG001
+    context_vars: Sequence[HTTPVariable],  # noqa: ARG001
 ) -> bool:
     return True
 
@@ -50,7 +53,7 @@ def _base_checks_rows(
     single_infos: SingleInfos,  # noqa: ARG001
     rows: Rows,
     visual: Visual,  # noqa: ARG001
-    context_vars: HTTPVariables,  # noqa: ARG001
+    context_vars: Sequence[HTTPVariable],  # noqa: ARG001
 ) -> bool:
     return bool(rows)
 
@@ -115,7 +118,7 @@ def test_non_inventory_link_from_delegates_to_base_with_empty_rows() -> None:
 
 def test_inventory_tree_link_empty_rows() -> None:
     visual = _make_visual({"has_inventory_tree": _path("hardware", "cpu")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -131,7 +134,7 @@ def test_inventory_tree_link_empty_rows() -> None:
 
 def test_inventory_tree_history_link_empty_rows() -> None:
     visual = _make_visual({"has_inventory_tree_history": _path("hardware")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -153,7 +156,7 @@ def test_label_filter_suppresses_link_when_rows_empty() -> None:
             "has_inventory_tree": _path("hardware"),
         }
     )
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             ["host"],
@@ -175,14 +178,14 @@ def test_label_filter_suppresses_link_when_label_mismatches() -> None:
             "has_inventory_tree": _path("hardware"),
         }
     )
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     row: dict[str, object] = {}
 
     def _base_rejects(
         single_infos: SingleInfos,  # noqa: ARG001
         rows: Rows,  # noqa: ARG001
         visual: Visual,  # noqa: ARG001
-        context_vars: HTTPVariables,  # noqa: ARG001
+        context_vars: Sequence[HTTPVariable],  # noqa: ARG001
     ) -> bool:
         return False
 
@@ -207,7 +210,7 @@ def test_label_and_inventory_both_match_shows_link() -> None:
             "has_inventory_tree": _path("hardware"),
         }
     )
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     row: dict[str, object] = {}
     assert (
         _compute_link_from_result(
@@ -230,7 +233,7 @@ def test_label_matches_but_inventory_missing_suppresses_link() -> None:
             "has_inventory_tree": _path("hardware"),
         }
     )
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     row: dict[str, object] = {}
     assert (
         _compute_link_from_result(
@@ -247,7 +250,7 @@ def test_label_matches_but_inventory_missing_suppresses_link() -> None:
 
 def test_single_infos_not_matching_returns_false() -> None:
     visual = _make_visual({"single_infos": ["host"], "has_inventory_tree": _path("hardware")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "s")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "s")]
     assert (
         _compute_link_from_result(
             [],
@@ -263,7 +266,7 @@ def test_single_infos_not_matching_returns_false() -> None:
 
 def test_single_infos_matching_proceeds() -> None:
     visual = _make_visual({"single_infos": ["host"], "has_inventory_tree": _path("hardware")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             ["host"],
@@ -296,7 +299,7 @@ def test_single_infos_partially_matching_returns_false() -> None:
 
 def test_no_single_infos_condition_proceeds() -> None:
     visual = _make_visual({"has_inventory_tree": _path("hardware")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -402,7 +405,7 @@ def test_valid_hostname_but_empty_site_returns_false() -> None:
 
 def test_returns_true_when_path_exists_in_tree() -> None:
     visual = _make_visual({"has_inventory_tree": _path("hardware", "cpu")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -418,7 +421,7 @@ def test_returns_true_when_path_exists_in_tree() -> None:
 
 def test_returns_false_when_path_missing_in_tree() -> None:
     visual = _make_visual({"has_inventory_tree": _path("hardware", "cpu")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -434,7 +437,7 @@ def test_returns_false_when_path_missing_in_tree() -> None:
 
 def test_history_returns_true_when_path_exists() -> None:
     visual = _make_visual({"has_inventory_tree_history": _path("hardware")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -450,7 +453,7 @@ def test_history_returns_true_when_path_exists() -> None:
 
 def test_history_returns_false_when_path_missing() -> None:
     visual = _make_visual({"has_inventory_tree_history": _path("hardware")})
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
     assert (
         _compute_link_from_result(
             [],
@@ -471,7 +474,7 @@ def test_returns_true_when_either_tree_or_history_matches() -> None:
             "has_inventory_tree_history": _path("hardware"),
         }
     )
-    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    context_vars: list[HTTPVariable] = [("host", "myhost"), ("site", "mysite")]
 
     def only_history(
         hostname: HostName,  # noqa: ARG001

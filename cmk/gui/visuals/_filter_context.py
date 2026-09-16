@@ -13,12 +13,12 @@ from cmk.gui.http import request
 from cmk.gui.type_defs import (
     FilterHTTPVariables,
     FilterName,
-    HTTPVariables,
     InfoName,
     SingleInfos,
     Visual,
     VisualContext,
 )
+from cmk.web.utils.urls import HTTPVariable
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 from .filter import Filter, filter_registry
@@ -110,7 +110,7 @@ def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list
     return show_filters
 
 
-def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
+def context_to_uri_vars(context: VisualContext) -> list[HTTPVariable]:
     """Produce key/value tuples for HTTP variables from the visual context"""
     return list(
         chain.from_iterable(

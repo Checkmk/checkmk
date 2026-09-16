@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from typing import cast
 
@@ -17,7 +17,6 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import Request, request, response
 from cmk.gui.type_defs import (
     FilterName,
-    HTTPVariables,
     InfoName,
     Row,
     SingleInfos,
@@ -31,7 +30,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 
 def render_link_to_view(
@@ -172,7 +171,7 @@ def make_linked_visual_url(
 
     # Include visual default context. This comes from the hard_filters. Linked
     # view would have no _active flag. Thus prepend the default context
-    required_vars: HTTPVariables = [(visual_type.ident_attr, name)]
+    required_vars: list[HTTPVariable] = [(visual_type.ident_attr, name)]
     required_vars += visuals.context_to_uri_vars(visual.get("context", {}))
 
     # add context link to this visual. For reports we put in
@@ -197,7 +196,7 @@ def make_linked_visual_url(
     )
 
 
-def _replace_group_vars(vars_: HTTPVariables) -> HTTPVariables:
+def _replace_group_vars(vars_: Sequence[HTTPVariable]) -> list[HTTPVariable]:
     """
     This is only needed for VisualTypeDashboards to get the correct http vars
     for host and service groups. Dashboards have no datasource so this is
@@ -206,7 +205,7 @@ def _replace_group_vars(vars_: HTTPVariables) -> HTTPVariables:
     Replace hostgroup and servicegroup variables with opthost_group /
     optservice_group
     """
-    filtered_vars: HTTPVariables = []
+    filtered_vars: list[HTTPVariable] = []
     for var in vars_:
         value = var[1]
         if var[0] == "hostgroup":
@@ -229,8 +228,8 @@ def _translate_filters(visual: Visual) -> Callable[[str], str]:
 
 def get_linked_visual_request_vars(
     visual: Visual, singlecontext_request_vars: dict[str, str]
-) -> HTTPVariables:
-    vars_values: HTTPVariables = []
+) -> list[HTTPVariable]:
+    vars_values: list[HTTPVariable] = []
 
     filters = visuals.get_single_info_keys(visual["single_infos"])
 

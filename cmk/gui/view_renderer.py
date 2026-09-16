@@ -46,7 +46,7 @@ from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.top_heading import top_heading
-from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec, VisualContext
+from cmk.gui.type_defs import InfoName, Rows, ViewSpec, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
@@ -60,7 +60,7 @@ from cmk.gui.visuals.filter import Filter
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
-from cmk.web.utils.urls import makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 _NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
     {"_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name", "name"}
@@ -720,7 +720,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
         if display_options.enabled(display_options.E) and user.may("general.edit_views"):
-            url_vars: HTTPVariables = [
+            url_vars: list[HTTPVariable] = [
                 ("back", request.requested_url),
                 ("load_name", self.view.name),
             ]

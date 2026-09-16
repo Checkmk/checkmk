@@ -18,7 +18,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
+from cmk.gui.type_defs import FilterHTTPVariables, Row
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label
 from cmk.gui.utils.loading_transition import with_loading_transition
 from cmk.livestatus_client import SiteConfigurations
@@ -29,7 +29,7 @@ from cmk.utils.macros import replace_macros_in_str
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
-from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless, urlencode
 
 
 def cmp_service_name_equiv(r: str) -> int:
@@ -209,7 +209,7 @@ def _render_url(token: str, last_char: str) -> Iterator[str]:
 def get_host_list_links(site: SiteId, hosts: list[str], *, request: Request) -> list[HTML]:
     entries = []
     for host in hosts:
-        args: HTTPVariables = [
+        args: list[HTTPVariable] = [
             ("view_name", "hoststatus"),
             ("site", site),
             ("host", host),
@@ -413,7 +413,7 @@ def _render_tag_group(
         return span
 
     if label_type == "tag_group":
-        type_filter_vars: HTTPVariables = [
+        type_filter_vars: list[HTTPVariable] = [
             ("%s_tag_0_grp" % object_type, tag_group_id_or_label_key),
             ("%s_tag_0_op" % object_type, "is"),
             ("%s_tag_0_val" % object_type, tag_id_or_label_value),
@@ -428,7 +428,7 @@ def _render_tag_group(
     else:
         raise NotImplementedError
 
-    url_vars: HTTPVariables = [
+    url_vars: list[HTTPVariable] = [
         ("filled_in", "filter"),
         ("search", "Search"),
         ("view_name", "searchhost" if object_type == "host" else "searchsvc"),

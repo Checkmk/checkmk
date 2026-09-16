@@ -26,10 +26,11 @@ from cmk.gui.search._engines._livestatus import (
     UrlBuilder,
     UsedFilters,
 )
-from cmk.gui.type_defs import HTTPVariables, SearchResult
+from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import ProviderName
+from cmk.web.utils.urls import HTTPVariable
 
 
 def _build_url(query_string: str = "q=myhost") -> UrlBuilder:
@@ -707,7 +708,7 @@ class _FakeConductor(ABCQuicksearchConductor):
         return len(self.titles) > self._row_limit
 
     @override
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         raise NotImplementedError
 
     @override

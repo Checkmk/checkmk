@@ -15,13 +15,14 @@ from cmk.gui.search.quicksearch import (
     LivestatusQuicksearchConductor,
 )
 from cmk.gui.sidebar._snapin._quicksearch_manager import SnapinQuicksearchManager
-from cmk.gui.type_defs import HTTPVariables, SearchResult
+from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.urls import HTTPVariable
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 
-def _build_url(addvars: HTTPVariables) -> str:
+def _build_url(addvars: Sequence[HTTPVariable]) -> str:
     return "view.py?" + "&".join(f"{k}={v}" for k, v in addvars)
 
 
@@ -56,7 +57,7 @@ class _FakeConductor(ABCQuicksearchConductor):
         return False
 
     @override
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         return [("view_name", "searched")]
 
     @override

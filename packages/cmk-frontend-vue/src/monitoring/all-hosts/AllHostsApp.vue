@@ -5,10 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
-import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
@@ -18,14 +16,13 @@ import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
-import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
@@ -178,7 +175,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
 const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
 
-const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
 const actionRegistry = createActionRegistry([
   useAcknowledgeHostsAction(
@@ -197,7 +194,7 @@ const actionRegistry = createActionRegistry([
 ])
 
 onMounted(() => {
-  hostService.onFocusSearch(() => searchInput.value?.focus())
+  hostService.onFocusSearch(() => toolbar.value?.focus())
 })
 
 onBeforeUnmount(() => {
@@ -296,43 +293,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       :url="legacy_view_button.url"
     />
     <div class="monitoring-all-hosts-app">
-      <div class="monitoring-all-hosts-app__header">
-        <div class="monitoring-all-hosts-app__toolbar">
-          <CmkSearchInput
-            ref="searchInput"
-            v-model="hostService.searchQuery.value"
-            class="monitoring-all-hosts-app__search"
-            :placeholder="_t('Search hosts…')"
-            @search="hostService.updateSearch($event)"
-            @focusin="hostService.beginAutoPause()"
-            @focusout="hostService.endAutoPause()"
-          />
-          <div class="monitoring-all-hosts-app__quick-filters">
-            <QuickFilterChip
-              v-for="chip in hostService.filters.quickFilters"
-              :key="chip.label"
-              :label="chip.label"
-              :tooltip="chip.tooltip"
-              :active="chip.isActive.value"
-              @activate="hostService.activateQuickFilter(chip)"
-              @deactivate="hostService.deactivateQuickFilter(chip)"
-            />
-          </div>
-          <CmkButton variant="text" size="small" @click="hostService.clearAllFilters()">
-            {{ _t('Reset all filters') }}
-          </CmkButton>
-        </div>
-        <div class="monitoring-all-hosts-app__header-end">
-          <RefreshCountdown
-            :remaining="hostService.secondsRemaining.value"
-            :interval="hostService.pollIntervalSeconds"
-            :paused="hostService.paused.value"
-            :manual-paused="hostService.manualPaused.value"
-            size="small"
-            @toggle="hostService.togglePause()"
-          />
-        </div>
-      </div>
+      <MonitoringToolbar
+        ref="toolbar"
+        :service="hostService"
+        :search-placeholder="_t('Search hosts…')"
+      />
       <MonitoringSplitPane
         :service="hostService"
         :actions="actionRegistry"
@@ -381,36 +346,5 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   min-height: 0;
   padding-bottom: var(--spacing);
   padding-right: var(--spacing);
-}
-
-.monitoring-all-hosts-app__header {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.monitoring-all-hosts-app__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-all-hosts-app__header-end {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-all-hosts-app__search {
-  flex: 1;
-  max-width: 360px;
-}
-
-.monitoring-all-hosts-app__quick-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dimension-4);
 }
 </style>

@@ -5,10 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
-import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
-import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
@@ -19,14 +17,13 @@ import type { HostRef, HostServiceEntry, ServiceState } from '@/monitoring/share
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
-import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
@@ -183,10 +180,10 @@ const actionRegistry = createActionRegistry<string>([
   )
 ])
 
-const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
 onMounted(() => {
-  hostServicesService.onFocusSearch(() => searchInput.value?.focus())
+  hostServicesService.onFocusSearch(() => toolbar.value?.focus())
 })
 
 onBeforeUnmount(() => {
@@ -288,49 +285,15 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       :url="legacy_view_button.url"
     />
     <div class="monitoring-host-services-app">
-      <HostHeader
-        v-if="hostServicesService.hostEntry.value"
-        class="monitoring-host-services-app__host"
-        :host="hostServicesService.hostEntry.value"
-        :url="host_url"
-      />
-      <div class="monitoring-host-services-app__header">
-        <div class="monitoring-host-services-app__toolbar">
-          <CmkSearchInput
-            ref="searchInput"
-            v-model="hostServicesService.searchQuery.value"
-            class="monitoring-host-services-app__search"
-            :placeholder="_t('Search services…')"
-            @search="hostServicesService.updateSearch($event)"
-            @focusin="hostServicesService.beginAutoPause()"
-            @focusout="hostServicesService.endAutoPause()"
-          />
-          <div class="monitoring-host-services-app__quick-filters">
-            <QuickFilterChip
-              v-for="chip in hostServicesService.filters.quickFilters"
-              :key="chip.label"
-              :label="chip.label"
-              :tooltip="chip.tooltip"
-              :active="chip.isActive.value"
-              @activate="hostServicesService.activateQuickFilter(chip)"
-              @deactivate="hostServicesService.deactivateQuickFilter(chip)"
-            />
-          </div>
-          <CmkButton variant="text" size="small" @click="hostServicesService.clearAllFilters()">
-            {{ _t('Reset all filters') }}
-          </CmkButton>
-        </div>
-        <div class="monitoring-host-services-app__header-end">
-          <RefreshCountdown
-            :remaining="hostServicesService.secondsRemaining.value"
-            :interval="hostServicesService.pollIntervalSeconds"
-            :paused="hostServicesService.paused.value"
-            :manual-paused="hostServicesService.manualPaused.value"
-            size="small"
-            @toggle="hostServicesService.togglePause()"
-          />
-        </div>
-      </div>
+      <MonitoringToolbar
+        ref="toolbar"
+        :service="hostServicesService"
+        :search-placeholder="_t('Search services…')"
+      >
+        <template v-if="hostServicesService.hostEntry.value" #subject>
+          <HostHeader :host="hostServicesService.hostEntry.value" :url="host_url" />
+        </template>
+      </MonitoringToolbar>
       <MonitoringSplitPane
         :service="hostServicesService"
         :actions="actionRegistry"
@@ -380,41 +343,5 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   min-height: 0;
   padding-bottom: var(--spacing);
   padding-right: var(--spacing);
-}
-
-.monitoring-host-services-app__host {
-  flex: 0 0 auto;
-  padding-bottom: var(--spacing);
-}
-
-.monitoring-host-services-app__header {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.monitoring-host-services-app__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-host-services-app__header-end {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-host-services-app__search {
-  flex: 1;
-  max-width: 360px;
-}
-
-.monitoring-host-services-app__quick-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dimension-4);
 }
 </style>

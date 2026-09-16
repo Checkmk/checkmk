@@ -59,7 +59,7 @@ class AllHostsExperimental(CmkPage):
     @property
     def search_input(self) -> Locator:
         """The host search input in the toolbar."""
-        return self.main_area.locator(".monitoring-all-hosts-app__search")
+        return self.main_area.locator(".monitoring-toolbar__search")
 
     def column_header(self, name: str) -> Locator:
         """Return the table column header with the given (exact) name.

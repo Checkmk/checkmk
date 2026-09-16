@@ -154,6 +154,35 @@ void main() {
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                             ];
                             break;
+                        case "System tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/heavy/test-system-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                                // mk-oracle is edition-independent; this suite runs against a
+                                // Docker Oracle Free container and never builds a site, so
+                                // EDITION/DISTRO are only here because the job declares them
+                                // required.
+                                EDITION: "ultimatemt",
+                                DISTRO: "ubuntu-24.04",
+                                VERSION: "daily",
+                            ];
+                            break;
+                        case "Windows on-VM component tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/heavy/winagt-test-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
+                        case "Linux/Solaris/AIX on-VM component tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/builders/test-component-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                                // mk-oracle is edition-independent; ultimatemt matches
+                                // the nightly chain's choice (one edition saves resources)
+                                EDITION: "ultimatemt",
+                                VERSION: "daily",
+                            ];
+                            break;
                         case "GitHub actions":
                             relative_job_name = "${branch_base_folder}/cv/test-github-actions";
                             build_params = [

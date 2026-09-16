@@ -10,7 +10,7 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
@@ -164,7 +164,7 @@ ConfigVariableInventoryCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="inventory_cleanup",
-    form_spec=lambda context: Dictionary(  # noqa: ARG005
+    form_spec=lambda _context: Dictionary(
         title=Title("HW/SW inventory cleanup"),
         elements={
             "for_hosts": DictElement(
@@ -271,6 +271,14 @@ class _ArchiveBundle:
     timestamp: int
 
 
+class _CleanupParams(Protocol):
+    def file_is_too_old(self, now: int, timestamp: int) -> bool: ...
+
+    def compute_removable_bundles(
+        self, now: int, bundles: Sequence[_File | _ArchiveBundle]
+    ) -> Sequence[_File | _ArchiveBundle]: ...
+
+
 @dataclass(frozen=True)
 class _ParamsFileAge:
     file_age: int
@@ -326,7 +334,7 @@ class _ParamFileAgeNumberHistoryEntries:
 
 def _compute_params(
     params: InvCleanupParamsChoice,
-) -> _ParamsFileAge | _ParamsNumberHistoryEntries | _ParamFileAgeNumberHistoryEntries:
+) -> _CleanupParams:
     match params[0]:
         case "file_age":
             return _ParamsFileAge(params[1])
@@ -347,7 +355,7 @@ def _compute_host_params(
     hosts_params: Sequence[InvCleanupParamsOfHosts],
     default_params: InvCleanupParamsDefaultCombined | None,
     host_name: HostName,
-) -> _ParamsFileAge | _ParamsNumberHistoryEntries | _ParamFileAgeNumberHistoryEntries | None:
+) -> _CleanupParams | None:
     for host_params in hosts_params:
         for regex_or_name in host_params["regex_or_explicit"]:
             if matches(regex_or_name=regex_or_name, host_name=host_name):

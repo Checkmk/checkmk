@@ -27,10 +27,10 @@ def _has_inventory(host_name: HostName) -> bool:
 def _render_inventory_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],  # noqa: ARG001
-    custom_vars: Mapping[str, str],  # noqa: ARG001
+    _tags: Sequence[TagID],
+    _custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
-    icon_config: IconConfig,  # noqa: ARG001
+    _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if (
         what == "host"
@@ -80,10 +80,10 @@ def _has_inventory_history(host_name: HostName) -> bool:
 def _render_inventory_history_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],  # noqa: ARG001
-    custom_vars: Mapping[str, str],  # noqa: ARG001
+    _tags: Sequence[TagID],
+    _custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
-    icon_config: IconConfig,  # noqa: ARG001
+    _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if (
         what == "host"

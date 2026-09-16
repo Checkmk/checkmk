@@ -157,7 +157,7 @@ PaintFunctionFromAPI = Callable[[float, SDValue], PaintResultFromAPI]
 
 
 def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
-    def _wrap(now: float, value: SDValue) -> PaintResultFromAPI:  # noqa: ARG001
+    def _wrap(_now: float, value: SDValue) -> PaintResultFromAPI:
         css_class, rendered_value = paint_function(value)
         return (
             TDStyles(
@@ -524,7 +524,6 @@ def _make_attribute_filter(
             return FilterInvChoice(
                 ident=filter_ident,
                 title=long_title,
-                inventory_path=inventory_path,
                 options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
                 is_show_more=True,
             )
@@ -564,7 +563,6 @@ def _parse_attr_field_from_api(
 
 def _parse_col_field_from_api(
     node_title: str,
-    key: str,  # noqa: ARG001
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
 ) -> ColumnDisplayHint:
     title = _make_str(field_from_api.title)
@@ -686,8 +684,7 @@ def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
     if node.table.view is None:
         table = Table(
             columns={
-                SDKey(k): _parse_col_field_from_api(title, k, v)
-                for k, v in node.table.columns.items()
+                SDKey(k): _parse_col_field_from_api(title, v) for k, v in node.table.columns.items()
             },
         )
     else:
@@ -800,7 +797,7 @@ def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]
         # TODO Do we still need this?
         return title  # type: ignore[unreachable]
 
-    return lambda word: str(title)  # noqa: ARG005
+    return lambda _word: str(title)
 
 
 def _make_long_title(parent_title: str, title: str) -> str:

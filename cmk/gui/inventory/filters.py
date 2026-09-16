@@ -71,7 +71,7 @@ class FilterInvBool(FilterOption):
             info="host",
             query_filter=query_filters.TristateQuery(
                 ident=ident,
-                filter_code=lambda x: "",  # No Livestatus filtering right now  # noqa: ARG005
+                filter_code=lambda _x: "",  # No Livestatus filtering right now
                 filter_row=_make_filter_row_bool(inventory_path),
             ),
             is_show_more=is_show_more,
@@ -252,7 +252,7 @@ class _FilterNumberRange(Filter):
 def _make_filter_row_float(
     inventory_path: InventoryPath,
 ) -> Callable[[Row, str, _MaybeBounds], bool]:
-    def row_filter(row: Row, column: str, bounds: _MaybeBounds) -> bool:  # noqa: ARG001
+    def row_filter(row: Row, _column: str, bounds: _MaybeBounds) -> bool:
         if not isinstance(
             invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
             int | float,
@@ -445,7 +445,6 @@ class FilterInvChoice(FilterOption):
         *,
         ident: str,
         title: str,
-        inventory_path: InventoryPath,  # noqa: ARG002
         options: Sequence[tuple[str, str]],
         is_show_more: bool = True,
     ) -> None:
@@ -456,7 +455,7 @@ class FilterInvChoice(FilterOption):
             query_filter=query_filters.SingleOptionQuery(
                 ident=ident,
                 options=list(options),
-                filter_code=lambda x: "",  # noqa: ARG005
+                filter_code=lambda _x: "",
                 filter_row=lambda selection, row: (selection == "yes") == row.get(ident),
             ),
             is_show_more=is_show_more,
@@ -839,7 +838,7 @@ class FilterInvtableAdminStatus(FilterOption):
                     ("2", _("down")),
                     ("-1", _("(ignore)")),
                 ],
-                filter_code=lambda x: "",  # noqa: ARG005
+                filter_code=lambda _x: "",
                 filter_row=lambda selection, row: (
                     str(row.get("invinterface_admin_status", "")) == selection
                 ),
@@ -861,7 +860,7 @@ class FilterInvtableAvailable(FilterOption):
                     ("yes", _("free")),
                     ("", _("(ignore)")),
                 ],
-                filter_code=lambda x: "",  # noqa: ARG005
+                filter_code=lambda _x: "",
                 filter_row=lambda selection, row: (
                     (selection == "yes") == row.get("invinterface_available")
                 ),
@@ -870,7 +869,7 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-def port_types(info: str) -> list[tuple[str, str]]:  # noqa: ARG001
+def port_types(_info: str) -> list[tuple[str, str]]:
     return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
 
 
@@ -907,7 +906,7 @@ class FilterHasInv(FilterOption):
             info="host",
             query_filter=query_filters.TristateQuery(
                 ident="has_inv",
-                filter_code=lambda x: "",  # No Livestatus filtering right now  # noqa: ARG005
+                filter_code=lambda _x: "",  # No Livestatus filtering right now
                 filter_row=query_filters.has_inventory,
             ),
             is_show_more=True,

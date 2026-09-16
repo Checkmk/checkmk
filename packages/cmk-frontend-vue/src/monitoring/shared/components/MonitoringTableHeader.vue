@@ -258,6 +258,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             "
             :definition="header.column.columnDef.meta.filter"
             :label="columnLabel(header.column)"
+            anchor="th"
             :model-value="filterValue(header.column)"
             @update:model-value="setFilterValue(header.column, $event)"
           >

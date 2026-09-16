@@ -25,7 +25,15 @@ import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import useId from 'cmk-ui-library/lib/useId'
-import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
+import {
+  type CSSProperties,
+  type Component,
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  ref
+} from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
@@ -58,6 +66,11 @@ const props = defineProps<{
   /** Human-readable column name, used for the accessible popover label. */
   label: string
   clearLabel?: string
+  /**
+   * Selector of the ancestor the panel lines up with, resolved with `closest`.
+   * Unset, the panel lines up with the trigger itself.
+   */
+  anchor?: string
 }>()
 
 const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
@@ -73,7 +86,7 @@ const monitoringService = inject(MONITORING_SERVICE, null)
 
 const isOpen = ref(false)
 const flipUp = ref(false)
-const flipLeft = ref(false)
+const alignment = ref<CSSProperties>({})
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
 // Whether the press behind the current click started within the funnel.
@@ -191,20 +204,34 @@ function positionPanel(): void {
   const triggerRect = triggerEl.getBoundingClientRect()
   const spaceBelow = window.innerHeight - triggerRect.bottom
   flipUp.value = spaceBelow < panelEl.offsetHeight && triggerRect.top > spaceBelow
-  const clipLeft = clippingLeft(triggerEl)
-  flipLeft.value = triggerRect.right - clipLeft >= panelEl.offsetWidth
+
+  const anchorRect = anchorElement(triggerEl).getBoundingClientRect()
+  const clipping = clippingBounds(triggerEl)
+  const alignLeft = Math.max(anchorRect.left, clipping.left)
+  const alignRight = Math.min(anchorRect.right, clipping.right)
+  const overflowsRight = alignLeft + panelEl.offsetWidth > clipping.right
+  const fitsLeftwards = alignRight - clipping.left >= panelEl.offsetWidth
+  alignment.value =
+    overflowsRight && fitsLeftwards
+      ? { left: 'auto', right: `${triggerRect.right - alignRight}px` }
+      : { left: `${alignLeft - triggerRect.left}px`, right: 'auto' }
 }
 
-function clippingLeft(el: HTMLElement): number {
+function anchorElement(el: HTMLElement): HTMLElement {
+  return props.anchor === undefined ? el : (el.closest<HTMLElement>(props.anchor) ?? el)
+}
+
+function clippingBounds(el: HTMLElement): { left: number; right: number } {
   let node: HTMLElement | null = el.parentElement
   while (node) {
     const overflowX = getComputedStyle(node).overflowX
     if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
-      return node.getBoundingClientRect().left
+      const rect = node.getBoundingClientRect()
+      return { left: rect.left, right: rect.right }
     }
     node = node.parentElement
   }
-  return 0
+  return { left: 0, right: window.innerWidth }
 }
 
 // The focusable rows are whatever the mounted filter component renders (search
@@ -310,10 +337,8 @@ onBeforeUnmount(() => {
       ref="panel"
       v-click-outside="onClickOutside"
       class="monitoring-filter-dropdown__panel"
-      :class="{
-        'monitoring-filter-dropdown__panel--up': flipUp,
-        'monitoring-filter-dropdown__panel--left': flipLeft
-      }"
+      :class="{ 'monitoring-filter-dropdown__panel--up': flipUp }"
+      :style="alignment"
       role="group"
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
@@ -394,11 +419,6 @@ onBeforeUnmount(() => {
   bottom: 100%;
   margin-top: 0;
   margin-bottom: var(--dimension-2);
-}
-
-.monitoring-filter-dropdown__panel--left {
-  left: auto;
-  right: 0;
 }
 
 .monitoring-filter-dropdown__footer {

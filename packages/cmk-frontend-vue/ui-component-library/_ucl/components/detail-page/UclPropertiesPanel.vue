@@ -92,7 +92,7 @@ onMounted(() => {
     <CmkSpace size="small" />
 
     <div
-      v-for="[key, def] in Object.entries(config)"
+      v-for="[key, def] in Object.entries(config).filter(([, def]) => !def.hiddenWhen?.(state))"
       :key="key"
       class="ucl-properties-panel__prop-control"
     >

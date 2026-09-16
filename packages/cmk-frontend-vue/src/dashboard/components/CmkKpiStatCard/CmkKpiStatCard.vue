@@ -171,6 +171,7 @@ const hasData = computed(() => props.value !== undefined)
 const tintColor = computed(() =>
   hasData.value && props.state?.tintBackground ? stateColor.value : undefined
 )
+const curveColor = computed(() => stateColor.value ?? props.color)
 
 const lastRealSample = computed<TimestampedSample | undefined>(() =>
   [...props.series].reverse().find((d) => d.value !== null)
@@ -543,7 +544,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
       <KpiSparkLine
         ref="sparkLine"
         :series="series"
-        :color="color"
+        :color="curveColor"
         :fade-to-floor="tintColor !== undefined"
         :range="range"
         @focus="onSparkLineFocus"

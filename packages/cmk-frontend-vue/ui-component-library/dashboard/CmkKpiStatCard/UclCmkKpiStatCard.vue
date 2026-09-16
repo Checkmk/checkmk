@@ -40,7 +40,7 @@ export const panelConfig = {
   color: {
     type: 'list' as const,
     title: 'Accent color',
-    help: 'CSS color of the value and the spark line.',
+    help: 'CSS color of the value and the spark line. Only used when no state is shown - a shown state always colors them instead.',
     options: [
       { title: 'Blue', name: 'var(--color-light-blue-50)' },
       { title: 'Green', name: 'var(--color-corporate-green-50)' },
@@ -51,7 +51,8 @@ export const panelConfig = {
       { title: 'Red', name: 'var(--color-light-red-50)' },
       { title: 'Yellow', name: 'var(--color-yellow-50)' }
     ],
-    initialState: 'var(--color-corporate-green-50)' as const
+    initialState: 'var(--color-corporate-green-50)' as const,
+    hiddenWhen: (s) => s.colorMode === 'state'
   },
   showDelta: {
     type: 'boolean' as const,
@@ -100,11 +101,15 @@ export const panelConfig = {
     }),
     initialState: 'complete' as const
   },
-  showState: {
-    type: 'boolean' as const,
-    title: 'Show state',
-    help: 'Renders the monitoring state of whatever the value was measured on, as a badge beside it.',
-    initialState: false
+  colorMode: {
+    type: 'list' as const,
+    title: 'Display mode',
+    help: 'Color: the value and spark line use the accent color. State: they follow the monitoring state instead, shown as a badge beside the value.',
+    options: listOptions<'color' | 'state'>({
+      color: 'Color',
+      state: 'State'
+    }),
+    initialState: 'color' as const
   },
   stateSeverity: {
     type: 'list' as const,
@@ -116,13 +121,15 @@ export const panelConfig = {
       unknown: 'UNKN',
       pending: 'PEND'
     }),
-    initialState: 'warn' as const
+    initialState: 'warn' as const,
+    hiddenWhen: (s) => s.colorMode === 'color'
   },
   tintBackground: {
     type: 'boolean' as const,
     title: 'Tint background',
-    help: 'Colors the whole card in the state color. Needs a state to be shown.',
-    initialState: false
+    help: 'Colors the whole card in the state color too, not just the value and spark line.',
+    initialState: false,
+    hiddenWhen: (s) => s.colorMode === 'color'
   },
   showRangeLimits: {
     type: 'boolean' as const,
@@ -172,7 +179,7 @@ export const panelConfig = {
   comparisonBasis: ListPropDef<ComparisonBasis>
   pointCount: NumberPropDef
   dataState: ListPropDef<DataState>
-  showState: BoolPropDef
+  colorMode: ListPropDef<'color' | 'state'>
   stateSeverity: ListPropDef<KpiStateSeverity>
   tintBackground: BoolPropDef
   showRangeLimits: BoolPropDef
@@ -242,7 +249,7 @@ const series = computed<TimestampedSample[]>(() => {
 })
 
 const state = computed<KpiState | undefined>(() =>
-  propState.value.showState
+  propState.value.colorMode === 'state'
     ? {
         severity: propState.value.stateSeverity,
         tintBackground: propState.value.tintBackground

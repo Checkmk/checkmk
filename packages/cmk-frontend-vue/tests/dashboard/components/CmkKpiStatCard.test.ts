@@ -139,6 +139,17 @@ test('the value and sparkline take the given accent color', () => {
   )
 })
 
+test('the sparkline follows the state color instead of the accent color when a state is shown', () => {
+  const { container } = renderCard({
+    color: 'var(--color-light-red-50)',
+    state: { severity: 'warn' }
+  })
+
+  expect(container.querySelector<SVGElement>('.db-kpi-spark-line')?.style.color).toBe(
+    'var(--color-warning)'
+  )
+})
+
 test('draws a line and an area path for the series', () => {
   const { container } = renderCard()
 

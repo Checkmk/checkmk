@@ -25,17 +25,17 @@ def host_sorter(sorters: Sequence[HostSort]) -> Callable[[Host], Any]:
             case HostSortColumn.STATE:
                 return host.state
             case HostSortColumn.NUM_SERVICES:
-                return 0 if host.service_counts is None else host.service_counts.total
+                return host.num_services or 0
             case HostSortColumn.NUM_SERVICES_OK:
-                return 0 if host.service_counts is None else host.service_counts.ok
+                return host.num_services_ok or 0
             case HostSortColumn.NUM_SERVICES_WARN:
-                return 0 if host.service_counts is None else host.service_counts.warn
+                return host.num_services_warn or 0
             case HostSortColumn.NUM_SERVICES_CRIT:
-                return 0 if host.service_counts is None else host.service_counts.crit
+                return host.num_services_crit or 0
             case HostSortColumn.NUM_SERVICES_UNKNOWN:
-                return 0 if host.service_counts is None else host.service_counts.unknown
+                return host.num_services_unknown or 0
             case HostSortColumn.NUM_SERVICES_PENDING:
-                return 0 if host.service_counts is None else host.service_counts.pending
+                return host.num_services_pending or 0
             case HostSortColumn.NUM_RELATIONS:
                 return host.num_relations or 0
             case HostSortColumn.FOLDER:

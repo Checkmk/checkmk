@@ -165,7 +165,12 @@ class LiveStatusHostRepository:
                         address=row.get("address"),
                         state=_host_state(row),
                         site_id=row["site"],
-                        service_counts=_optional_service_counts(row),
+                        num_services=_int_or_none(row.get("num_services")),
+                        num_services_ok=_int_or_none(row.get("num_services_ok")),
+                        num_services_warn=_int_or_none(row.get("num_services_warn")),
+                        num_services_crit=_int_or_none(row.get("num_services_crit")),
+                        num_services_unknown=_int_or_none(row.get("num_services_unknown")),
+                        num_services_pending=_int_or_none(row.get("num_services_pending")),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
@@ -254,7 +259,12 @@ class LiveStatusHostRepository:
             address=row["address"],
             state=_host_state(row),
             site_id=row["site"],
-            service_counts=_service_counts(row),
+            num_services=row["num_services"],
+            num_services_ok=row["num_services_ok"],
+            num_services_warn=row["num_services_warn"],
+            num_services_crit=row["num_services_crit"],
+            num_services_unknown=row["num_services_unknown"],
+            num_services_pending=row["num_services_pending"],
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
@@ -643,11 +653,6 @@ def _timestamp(value: float | None) -> UnixTimestamp | None:
     return None if value is None else int(value)
 
 
-def _optional_service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
-    """The counts are read as a block, so one missing column means none were asked for."""
-    return _service_counts(row) if "num_services" in row else None
-
-
 #: Every column :func:`_service_counts` reads, for the queries that want them.
 _SERVICE_COUNT_COLUMNS: tuple[Column, ...] = (
     Hosts.num_services,
@@ -673,6 +678,10 @@ def _service_counts(row: Mapping[str, object]) -> ServiceCounts:
         unknown=int(row["num_services_unknown"]),  # type: ignore[call-overload]
         pending=int(row["num_services_pending"]),  # type: ignore[call-overload]
     )
+
+
+def _int_or_none(value: object | None) -> int | None:
+    return None if value is None else int(value)  # type: ignore[call-overload]
 
 
 # Sorting by state hits the same limit-window imprecision as folder above: a host that has never

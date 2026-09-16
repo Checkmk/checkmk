@@ -762,3 +762,43 @@ def test_fetch_leaves_a_counterpart_the_core_does_not_answer_for_out_of_the_coun
 
     with mock_livestatus(expect_status_query=True):
         assert _fetch_relation_counts() == [0]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_keeps_a_hidden_service_count_column_independent_of_the_others() -> None:
+    """Hiding one num_services* column must not blank out the ones still shown.
+
+    Each of the six counts is independently hideable via the column picker, so the row
+    Livestatus returns only carries the columns that were actually asked for.
+    """
+    row = _host_row(num_services_ok=5)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.NUM_SERVICES_OK}),
+            visible_relations=None,
+        )
+
+    assert hosts[0].num_services_ok == 5
+    assert hosts[0].num_services is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_does_not_crash_when_only_the_total_count_was_asked_for() -> None:
+    """Asking for num_services alone must not crash reading the other counts."""
+    row = _host_row(num_services=15)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.NUM_SERVICES}),
+            visible_relations=None,
+        )
+
+    assert hosts[0].num_services == 15
+    assert hosts[0].num_services_ok is None

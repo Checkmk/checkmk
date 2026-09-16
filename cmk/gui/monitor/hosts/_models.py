@@ -124,7 +124,12 @@ class Host:
     address: str | None
     alias: str | None
     site_id: str
-    service_counts: ServiceCounts | None
+    num_services: int | None
+    num_services_ok: int | None
+    num_services_warn: int | None
+    num_services_crit: int | None
+    num_services_unknown: int | None
+    num_services_pending: int | None
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool

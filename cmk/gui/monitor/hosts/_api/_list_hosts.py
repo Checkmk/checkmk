@@ -198,7 +198,6 @@ class HostEntry:
             """Return the value only if it was asked for and therefore actually read."""
             return value if field in fields and value is not None else ApiOmitted()
 
-        counts = host.service_counts
         return cls(
             name=host.name,
             state=host.state_label,
@@ -207,23 +206,15 @@ class HostEntry:
             site_id=host.site_id,
             address=included(HostOptionalField.ADDRESS, host.address),
             alias=included(HostOptionalField.ALIAS, host.alias),
-            num_services=included(
-                HostOptionalField.NUM_SERVICES, None if counts is None else counts.total
-            ),
-            num_services_ok=included(
-                HostOptionalField.NUM_SERVICES_OK, None if counts is None else counts.ok
-            ),
-            num_services_warn=included(
-                HostOptionalField.NUM_SERVICES_WARN, None if counts is None else counts.warn
-            ),
-            num_services_crit=included(
-                HostOptionalField.NUM_SERVICES_CRIT, None if counts is None else counts.crit
-            ),
+            num_services=included(HostOptionalField.NUM_SERVICES, host.num_services),
+            num_services_ok=included(HostOptionalField.NUM_SERVICES_OK, host.num_services_ok),
+            num_services_warn=included(HostOptionalField.NUM_SERVICES_WARN, host.num_services_warn),
+            num_services_crit=included(HostOptionalField.NUM_SERVICES_CRIT, host.num_services_crit),
             num_services_unknown=included(
-                HostOptionalField.NUM_SERVICES_UNKNOWN, None if counts is None else counts.unknown
+                HostOptionalField.NUM_SERVICES_UNKNOWN, host.num_services_unknown
             ),
             num_services_pending=included(
-                HostOptionalField.NUM_SERVICES_PENDING, None if counts is None else counts.pending
+                HostOptionalField.NUM_SERVICES_PENDING, host.num_services_pending
             ),
             folder=included(HostOptionalField.FOLDER, host.folder),
             last_check=included(HostOptionalField.LAST_CHECK, host.last_check),

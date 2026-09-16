@@ -53,19 +53,16 @@ def test_single_column_sorting() -> None:
 
 def test_multi_column_sorting() -> None:
     hosts = [
-        HostFactory.build(address="127.0.0.1", service_counts={"total": 5}),
-        HostFactory.build(address="127.0.0.2", service_counts={"total": 10}),
-        HostFactory.build(address="127.0.0.1", service_counts={"total": 15}),
+        HostFactory.build(address="127.0.0.1", num_services=5),
+        HostFactory.build(address="127.0.0.2", num_services=10),
+        HostFactory.build(address="127.0.0.1", num_services=15),
     ]
     sorters = [
         HostSort(column=HostSortColumn.ADDRESS, direction=HostSortDirection.ASC),
         HostSort(column=HostSortColumn.NUM_SERVICES, direction=HostSortDirection.DESC),
     ]
 
-    value = [
-        (host.address, None if host.service_counts is None else host.service_counts.total)
-        for host in sorted(hosts, key=host_sorter(sorters))
-    ]
+    value = [(host.address, host.num_services) for host in sorted(hosts, key=host_sorter(sorters))]
     expected = [
         ("127.0.0.1", 15),
         ("127.0.0.1", 5),

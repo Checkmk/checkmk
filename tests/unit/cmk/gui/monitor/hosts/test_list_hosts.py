@@ -8,7 +8,8 @@ import pytest
 
 import cmk.utils.paths
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
-from cmk.gui.monitor.hosts._models import HostState
+from cmk.gui.monitor.hosts._models import HostOptionalField, HostState
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (
     init_setup_git_repo,
@@ -81,3 +82,19 @@ def test_list_hosts_does_not_commit_the_setup_git_repo(
 
     assert resp.status_code == 200, resp.text
     assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]
+
+
+def test_handle_list_hosts_keeps_a_hidden_service_count_column_independent() -> None:
+    """A count field that wasn't asked for must be omitted without blanking out the others."""
+    hosts = [HostFactory.build(num_services_ok=5, num_services=None)]
+    host_repo = get_fake_host_repository(hosts=hosts)
+
+    response = _handle_list_hosts(
+        host_repo,
+        host_repo.count_total(),
+        fields=frozenset({HostOptionalField.NUM_SERVICES_OK}),
+    )
+
+    host = response.hosts[0]
+    assert host.num_services_ok == 5
+    assert isinstance(host.num_services, ApiOmitted)

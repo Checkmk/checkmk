@@ -221,7 +221,6 @@ py_cmk_test(
         requirement("redis"),
         requirement("responses"),
         requirement("time-machine"),
-        requirement("types-python-dateutil"),
         requirement("werkzeug"),
     ],
 )

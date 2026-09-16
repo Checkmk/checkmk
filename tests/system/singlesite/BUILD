@@ -28,7 +28,6 @@ py_library(
         requirement("clickhouse_connect"),
         requirement("cryptography"),
         requirement("python-dateutil"),
-        requirement("types-python-dateutil"),
         requirement("pysnmp"),
         requirement("psutil"),
         requirement("semver"),

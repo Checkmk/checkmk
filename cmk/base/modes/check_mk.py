@@ -66,6 +66,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, 
 from cmk.ccc.store import activation_lock
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
@@ -151,7 +152,6 @@ from cmk.server_side_calls_backend import (
     load_secrets_file,
 )
 from cmk.utils import config_warnings, ip_lookup, log, timeperiod
-from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import ConfiguredIPLookup

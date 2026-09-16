@@ -132,6 +132,7 @@ from cmk.ccc.i18n import _
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine import agent_protocol
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
@@ -220,7 +221,6 @@ from cmk.server_side_calls_backend import (
     SpecialAgentCommandLine,
 )
 from cmk.utils import config_warnings, ip_lookup, man_pages
-from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.macros import replace_macros_in_str

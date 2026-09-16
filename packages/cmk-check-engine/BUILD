@@ -231,6 +231,7 @@ py_library(
 py_library(
     name = "lib",
     srcs = [
+        "cmk/checkengine/auto_queue.py",
         "cmk/checkengine/submitters.py",
         "cmk/checkengine/summarize.py",
         "cmk/checkengine/value_store.py",
@@ -371,6 +372,7 @@ py_cmk_test(
     name = "lib-tests",
     size = "small",
     srcs = [
+        "tests/cmk/checkengine/test_auto_queue.py",
         "tests/cmk/checkengine/test_submitters.py",
         "tests/cmk/checkengine/test_summarizers.py",
         "tests/cmk/checkengine/test_value_store.py",

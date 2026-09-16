@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -43,7 +44,6 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
-from cmk.utils.auto_queue import AutoQueue
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):

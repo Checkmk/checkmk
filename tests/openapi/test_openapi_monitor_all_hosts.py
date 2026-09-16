@@ -170,6 +170,19 @@ class TestMonitorHostsQueryParamValidation:
                 },
                 id="site_id nested under 'or'",
             ),
+            pytest.param(
+                {"type": "condition", "field": "name", "op": "contains", "value": "x\n"},
+                id="newline in string value",
+            ),
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "labels",
+                    "op": "one_of",
+                    "value": ["key:val\nue"],
+                },
+                id="newline in label choice value",
+            ),
         ],
     )
     def test_filters_validation_errors(

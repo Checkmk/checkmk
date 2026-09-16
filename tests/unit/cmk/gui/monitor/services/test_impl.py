@@ -169,6 +169,25 @@ def test_count_matched_applies_filters() -> None:
         )
 
 
+def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
+    # Regression test: a "\r" embedded in a filter value must not turn into a Livestatus line
+    # break when the hand-assembled Stats query is joined with "\n" - only a real "\n" may do
+    # that. Livestatus itself treats "\r" as ordinary data, and so must this query.
+    with expect_single_query(
+        f"GET services\nStats: state >= 0\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n"
+        "Filter: state = evil\rmore",
+        match_type="strict",
+    ) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        repo.count_matched(
+            _UNKNOWN_HOSTNAME,
+            query="",
+            filters=ServiceFilter("Filter: state = evil\rmore"),
+            fields=frozenset(),
+        )
+
+
 def test_host_exists_returns_false_for_unknown_host() -> None:
     with expect_single_query(
         f"GET hosts\nColumns: name\nFilter: name = {_UNKNOWN_HOSTNAME}\nLimit: 1",

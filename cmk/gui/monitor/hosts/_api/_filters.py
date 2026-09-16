@@ -20,7 +20,11 @@ from cmk.livestatus_client.expressions import LqSafe
 
 from .._folder import folder_matching_filters
 from .._models import HostFilter, HostState, HostStateLabel
-from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
+from ._validators import (
+    validate_label_pairs,
+    validate_uniqueness,
+    validate_unix_timestamp,
+)
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
 # that this functionality is tied to the field names or the state choice enum. This information
@@ -182,7 +186,7 @@ class LabelChoiceCondition:
     field: LabelField = api_field(description="Key/value host field to filter on", example="labels")
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
     value: Annotated[
-        list[str],
+        list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
         MinLen(1),
         AfterValidator(validate_uniqueness),
         AfterValidator(validate_label_pairs),

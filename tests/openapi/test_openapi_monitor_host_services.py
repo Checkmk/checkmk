@@ -114,6 +114,15 @@ class TestMonitorHostServicesQueryParamValidation:
             ),
             pytest.param(
                 {
+                    "type": "condition",
+                    "field": "labels",
+                    "op": "one_of",
+                    "value": ["key:val\nue"],
+                },
+                id="newline in label choice value",
+            ),
+            pytest.param(
+                {
                     "type": "and",
                     "children": [
                         {"type": "condition", "field": "state", "op": "one_of", "value": ["OK"]},

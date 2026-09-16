@@ -193,6 +193,20 @@ def test_build_query_filter_leaves_out_a_hidden_field() -> None:
     ]
 
 
+def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
+    # Regression test: a "\r" embedded in a filter value must not turn into a Livestatus line
+    # break when the hand-assembled Stats query is joined with "\n" - only a real "\n" may do
+    # that. Livestatus itself treats "\r" as ordinary data, and so must this query.
+    filters = HostFilter("Filter: name ~~ evil\rmore")
+    with expect_single_query(
+        "GET hosts\nStats: state >= 0\nFilter: name ~~ evil\rmore",
+        match_type="strict",
+        tables={"hosts": []},
+    ) as live:
+        repo = LiveStatusHostRepository(connection=live)
+        repo.count_matched(query="", filters=filters, fields=frozenset())
+
+
 @pytest.mark.parametrize(
     "staleness, threshold, expected_stale",
     [

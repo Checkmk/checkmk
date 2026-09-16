@@ -320,7 +320,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("spec label"),
                 placeholder="myname",
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. To use a custom host attribute, prefix its name with 'HOST_', e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
                 ),
                 validate=_legacy_custom_text_validate,
                 allow_empty=False,
@@ -956,7 +956,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 monospaced=True,
                 title=_("my title"),
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. To use a custom host attribute, prefix its name with 'HOST_', e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
                 ),
                 label=_("label"),
                 default_value="default text",

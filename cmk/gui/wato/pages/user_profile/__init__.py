@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuTopic
+from cmk.gui.oauth.wato._user_tokens_page import register as register_user_oauth_tokens_page
 from cmk.gui.pages import PageRegistry
 from cmk.gui.utils.roles import UserPermissions
 
@@ -21,6 +22,7 @@ def register(
     main_menu.register(page_registry, main_menu_registry, user_menu_topics)
     two_factor.register(page_registry)
     two_factor.register(page_registry)
+    register_user_oauth_tokens_page(page_registry)
     edit_profile.register(page_registry)
     change_password.register(page_registry)
     async_replication.register(page_registry)

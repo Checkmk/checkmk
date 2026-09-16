@@ -139,6 +139,17 @@ def default_user_menu_topics(
             ),
         )
 
+    if user.may("general.edit_profile"):
+        entries.append(
+            MainMenuItem(
+                name="oauth_tokens",
+                title=_("OAuth access tokens"),
+                url="user_oauth_tokens.py",
+                sort_index=35,
+                icon=StaticIcon(IconNames.passwords),
+            ),
+        )
+
     entries.append(
         MainMenuItem(
             name="logout",

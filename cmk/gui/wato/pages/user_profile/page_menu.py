@@ -75,6 +75,18 @@ def _page_menu_entries_related(
         )
 
     if (
+        page_name != "user_oauth_tokens"
+        and user.may("general.edit_profile")
+        and not must_change_password
+    ):
+        yield PageMenuEntry(
+            title=_("OAuth access tokens"),
+            icon_name=StaticIcon(IconNames.passwords),
+            item=make_simple_link("user_oauth_tokens.py"),
+            is_shortcut=show_shortcuts,
+        )
+
+    if (
         page_name != "user_profile"
         and user.may("general.edit_profile")
         and not must_change_password

@@ -188,7 +188,7 @@ COSMOS_DATABASE_METRICS = [
         dimension_filters=(
             DimensionFilter(
                 name="StatusCode",
-                value="200",
+                value="404",
             ),
             DimensionFilter(
                 name="DatabaseName",

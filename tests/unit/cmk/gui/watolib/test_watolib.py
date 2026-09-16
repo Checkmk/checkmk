@@ -310,7 +310,7 @@ def test_registered_configvars() -> None:
             "reporting_time_format",
             "reporting_use",
             "reporting_view_limit",
-            "site_ai_agent_engine",
+            "site_ai_control_plane",
             "site_liveproxyd",
             "site_mcp_server",
             "site_mcp_trace_forward",

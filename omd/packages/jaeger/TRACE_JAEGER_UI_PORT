@@ -24,7 +24,7 @@ case "$1" in
         cat <<EOF >"$OMD_ROOT"/etc/jaeger/apache.conf
 # Written by TRACE_JAEGER_UI_PORT hook
 # Guard the LoadModule directives: conf.d is read in alphabetical order and other
-# hooks (AI_AGENT_ENGINE, MCP_SERVER) load these proxy modules too. Without the
+# hooks (AI_CONTROL_PLANE, MCP_SERVER) load these proxy modules too. Without the
 # guards Apache logs "AH01574: module ... is already loaded, skipping" on startup.
 <IfModule !proxy_module>
 LoadModule proxy_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy.so

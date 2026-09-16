@@ -744,7 +744,7 @@ fastapi==0.138.2 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-agent-engine/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -2539,7 +2539,7 @@ pydantic==2.12.5 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-agent-engine/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
@@ -3769,7 +3769,7 @@ uvicorn==0.38.0 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-agent-engine/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp

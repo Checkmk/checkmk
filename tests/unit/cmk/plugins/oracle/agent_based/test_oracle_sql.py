@@ -338,17 +338,14 @@ def test_oracle_sql_check(info: StringTable, item: str, expected: Sequence[Resul
 
 
 def test_oracle_sql_check_empty_long() -> None:
-    with pytest.raises(ValueError):
-        result = list(
-            check_oracle_sql(
-                "YOBLE1 SQL NBA SESSIONS", {}, parse_oracle_sql(AGENT_OUTPUT_EMPTY_LONG)
-            )
-        )
-        assert result == [
-            Result(state=State.OK, summary="0 keine Job sind auf Fehler gelaufen!"),
-            Metric("job_count", 0.0),
-            Metric("elapsed_time", 0.31431),
-        ]
+    result = list(
+        check_oracle_sql("YOBLE1 SQL NBA SESSIONS", {}, parse_oracle_sql(AGENT_OUTPUT_EMPTY_LONG))
+    )
+    assert result == [
+        Result(state=State.OK, summary="0 keine Job sind auf Fehler gelaufen!"),
+        Metric("job_count", 0.0),
+        Metric("elapsed_time", 0.31431),
+    ]
 
 
 def test_check_oracle_sql_cached() -> None:

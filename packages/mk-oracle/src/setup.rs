@@ -714,7 +714,14 @@ pub struct RuntimeEnv {
 pub enum RuntimeError {
     NoConfig,
     NotFound,
-    Rejected { dir: PathBuf },
+    /// `reason` names what made the runtime unsafe - the offending path and,
+    /// on Windows, the principal that may write it. It is part of the message
+    /// because this text is all the user gets: it goes to the agent output as
+    /// an `oracle_instance` FAILURE row.
+    Rejected {
+        dir: PathBuf,
+        reason: String,
+    },
 }
 
 impl std::fmt::Display for RuntimeError {
@@ -722,11 +729,11 @@ impl std::fmt::Display for RuntimeError {
         match self {
             Self::NoConfig => write!(f, "No Config"),
             Self::NotFound => write!(f, "No Oracle client runtime found"),
-            Self::Rejected { dir } => write!(
+            Self::Rejected { dir, reason } => write!(
                 f,
                 "{dir:?} - Execution is blocked because you try to load an unsafe Oracle client \
-                 library as a privileged user. Please, disable write access to the files by \
-                 non-privileged users."
+                 library as a privileged user. {reason}. Please, disable write access to the \
+                 files by non-privileged users, or take ownership of them."
             ),
         }
     }
@@ -753,8 +760,11 @@ pub fn detect_runtime_env(config: &OracleConfig) -> Result<RuntimeEnv, RuntimeEr
         ora_sql.conn().grid(),
     )
     .ok_or(RuntimeError::NotFound)?;
-    if !runtime_permissions_ok(&client, ora_sql.options()) {
-        return Err(RuntimeError::Rejected { dir: client.dir });
+    if let Err(reason) = check_runtime_permissions(&client, ora_sql.options()) {
+        return Err(RuntimeError::Rejected {
+            dir: client.dir,
+            reason,
+        });
     }
     Ok(RuntimeEnv {
         oracle_home: effective_oracle_home(Some(&client), inherited),
@@ -762,16 +772,13 @@ pub fn detect_runtime_env(config: &OracleConfig) -> Result<RuntimeEnv, RuntimeEr
     })
 }
 
-fn runtime_permissions_ok(runtime: &ClientRuntime, options: &Options) -> bool {
-    if validate_permissions(
+fn check_runtime_permissions(runtime: &ClientRuntime, options: &Options) -> Result<(), String> {
+    validate_permissions(
         &runtime.dir,
         options.permissions_check(),
         options.permissions_safe_entries(),
-    ) {
-        return true;
-    }
-    log::error!("Runtime path {:?} has wrong permissions", runtime.dir);
-    false
+    )
+    .inspect_err(|reason| log::error!("Runtime rejected: {reason}"))
 }
 
 pub fn effective_oracle_home(
@@ -875,8 +882,10 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// Enterprise Admins) or a listed safe entry, whenever the plugin runs elevated:
 /// the owner implicitly holds `WRITE_DAC`, so validating the DACL alone would let
 /// a non-privileged owner rewrite it. In both cases a non-privileged caller
-/// always passes, and `check` turns the validation off entirely.
-pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> bool {
+/// always passes, and `check` turns the validation off entirely. The `Err`
+/// carries the reason for the refusal, so that the caller can show it to the
+/// user instead of leaving it in the log.
+pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
     #[cfg(unix)]
     {
         crate::permissions_linux::validate(p, check, safe_entries)
@@ -1443,5 +1452,20 @@ mod tests {
     #[test]
     fn test_format_runtime_env_nothing_detected() {
         assert_eq!(format_runtime_env(&RuntimeEnv::default(), "/some/path"), "");
+    }
+
+    // The refusal is the only thing the user sees - it travels to the agent
+    // output as an oracle_instance FAILURE row - so it has to carry the reason
+    // the permission check produced, not just the directory.
+    #[test]
+    fn test_rejected_runtime_states_the_reason() {
+        let reason =
+            "Path \"C:/oic\" grants write access to non-privileged BUILTIN\\Users (S-1-5-32-545)";
+        let message = RuntimeError::Rejected {
+            dir: PathBuf::from("C:/oic"),
+            reason: reason.to_string(),
+        }
+        .to_string();
+        assert!(message.contains(reason), "{message}");
     }
 }

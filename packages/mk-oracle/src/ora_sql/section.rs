@@ -438,12 +438,12 @@ fn read_versioned_query(
         .into_iter()
         .find(|(min_version, _)| instance_version >= InstanceNumVersion::from(*min_version))
         .and_then(|(_, sql_file)| {
-            if !validate_permissions(
+            if let Err(reason) = validate_permissions(
                 &sql_file,
                 options.permissions_check(),
                 options.permissions_safe_entries(),
             ) {
-                log::warn!("SQL file {:?} rejected: wrong permissions", &sql_file);
+                log::warn!("SQL file {:?} rejected: {reason}", &sql_file);
                 return None;
             }
             read_to_string(&sql_file)

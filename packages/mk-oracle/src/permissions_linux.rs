@@ -280,22 +280,30 @@ fn validate_tree(path: &Path, safe: &SafeIds) -> bool {
 /// the path, its direct entries (for a directory) and its parent directories
 /// must only be writable by root, by `oracle:oinstall`, or by a user or group
 /// listed in `safe_entries`.
-pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
+///
+/// The `Err` names the checked path only; which entry of it is writable, and by
+/// whom, stays in the log the walk writes.
+pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
     if !check {
         log::info!(
             "Permission check disabled; skipping validation for {:?}",
             path
         );
-        return true;
+        return Ok(());
     }
     if !is_running_as_root() {
         log::info!(
             "Not running as root; skipping permission validation for {:?}",
             path
         );
-        return true;
+        return Ok(());
     }
-    validate_tree(path, &SafeIds::new(safe_entries))
+    if validate_tree(path, &SafeIds::new(safe_entries)) {
+        return Ok(());
+    }
+    Err(format!(
+        "{path:?} is writable by a user other than root or the Oracle owner"
+    ))
 }
 
 #[cfg(test)]
@@ -460,6 +468,6 @@ mod tests {
         // The `check` flag is honoured before the root check, so this holds
         // whether or not the test itself runs as root. The path does not even
         // have to exist: nothing is looked at once the check is off.
-        assert!(validate(Path::new("/no/such/runtime"), false, &[]));
+        assert!(validate(Path::new("/no/such/runtime"), false, &[]).is_ok());
     }
 }

@@ -710,7 +710,15 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     @override
     def default_globals(self) -> GlobalSettings:
-        return self._from_omd_config(self._load_site_config())
+        settings = self._from_omd_config(self._load_site_config())
+        # site.conf holds the *current* omd config, not the factory default (it gets
+        # fully rewritten on every "omd config change"). This is a known bug coming from
+        # omd owning the active settings that can be changed via its CLI without
+        # exposing their defaults. This will be fixed in CMK-38451.
+        # MCP-related settings set here manually for a minimal and backportable fix.
+        settings["site_mcp_server"] = False
+        settings["site_mcp_trace_forward"] = False
+        return settings
 
     def save(
         self,

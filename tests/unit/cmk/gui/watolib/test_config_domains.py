@@ -20,7 +20,7 @@ from omdlib.contexts import SiteContext
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import load_text_from_file
 from cmk.gui.watolib import config_domains
-from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainOMD
 
 remote1_newer = (
     "-----BEGIN CERTIFICATE-----\n"
@@ -290,3 +290,16 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
         "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
         "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE",
     )
+
+
+def test_default_globals_reports_fixed_mcp_defaults(mocker: MockerFixture, tmp_path: Path) -> None:
+    """Unlike every other "omd config" setting, whose default_globals() still mirrors
+    whatever site.conf currently holds, the MCP settings have a fixed factory default."""
+    omd_config = ConfigDomainOMD()
+    mocker.patch.object(omd_config, "omd_config_dir", tmp_path)
+    (tmp_path / "site.conf").write_text("CONFIG_MCP_SERVER='on'\nCONFIG_MCP_TRACE_FORWARD='on'\n")
+
+    default_globals = omd_config.default_globals()
+
+    assert default_globals["site_mcp_server"] is False
+    assert default_globals["site_mcp_trace_forward"] is False

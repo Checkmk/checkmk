@@ -29,13 +29,13 @@ from cmk.gui.graphing import (
 from cmk.gui.graphing._metric_data import (
     map_metric_names,
     merge_series,
-    RawPerformanceValue,
     resample,
     rrd_originals,
     RRDOriginal,
     scaled_series,
     translate_performance_data,
 )
+from cmk.gui.graphing._performance_data import RawPerformanceValue
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 

@@ -54,8 +54,9 @@ from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_codec import ensure_type
 from ._graph_display_config import GraphDisplayConfigHTML
-from ._metric_data import parse_performance_data, translate_metric_names
+from ._metric_data import translate_metric_names
 from ._metrics import get_metric_spec, registered_metric_ids_and_titles
+from ._performance_data import parse_performance_data
 from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,

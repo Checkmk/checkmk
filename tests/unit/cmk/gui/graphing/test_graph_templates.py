@@ -38,7 +38,7 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.graphing._built_graphs import BuiltGraph
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
-from cmk.gui.graphing._metric_data import RawPerformanceValue
+from cmk.gui.graphing._performance_data import RawPerformanceValue
 
 _SERVICE = Service(
     host_name=HostName("h"), service_name=ServiceName("svc"), site_id=SiteID("mysite")

@@ -97,9 +97,6 @@ from ._metric_data import (
     evaluated_metrics,
     EvaluatedMetric,
     merge_rrd_columns,
-    parse_check_command,
-    parse_performance_data,
-    RawPerformanceData,
     reverse_translated_names,
     rrd_column_names,
     split_predict_prefix,
@@ -145,6 +142,11 @@ from ._perfometers import (
     evaluated_perfometer,
     perfometer_label,
     perfometer_sort_value,
+)
+from ._performance_data import (
+    parse_check_command,
+    parse_performance_data,
+    RawPerformanceData,
 )
 from ._plugin_loading import register_plugins
 from ._plugins import (

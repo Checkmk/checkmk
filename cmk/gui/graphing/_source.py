@@ -39,14 +39,13 @@ from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFou
 from ._metric_data import (
     map_metric_names,
     merge_series,
-    parse_performance_data,
-    RawPerformanceData,
     resample,
     rrd_column_name,
     rrd_originals,
     scaled_series,
     translate_performance_data,
 )
+from ._performance_data import parse_performance_data, RawPerformanceData
 
 HOST_PSEUDO_SERVICE: Final = ServiceName("_HOST_")
 

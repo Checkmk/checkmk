@@ -213,16 +213,28 @@ def _rebuild_manifest(repo_root: Path, hashes: dict[str, str] | None = None) -> 
     script = (
         repo_root / "packages" / "cmk-dev-deploy" / "cmk" / "dev_deploy" / "manifest" / "update.py"
     )
-    run_checked(
-        [sys.executable, str(script)],
-        cwd=repo_root,
-        timeout=600,
-        error_cls=ManifestBuildError,
-        description="Manifest rebuild",
-        recovery="This usually means Bazel is stuck. Try:\n"
-        "  1. bazel clean --expunge\n"
-        "  2. cmk-dev-deploy --rebuild-manifest",
-    )
+    try:
+        run_checked(
+            [sys.executable, str(script)],
+            cwd=repo_root,
+            timeout=600,
+            error_cls=ManifestBuildError,
+            description="Manifest rebuild",
+            recovery="This usually means Bazel is stuck. Try:\n"
+            "  1. bazel clean --expunge\n"
+            "  2. cmk-dev-deploy --rebuild-manifest",
+        )
+    except ManifestBuildError as exc:
+        # A stale .venv (e.g. right after `bazel clean --expunge`) is missing
+        # the sitecustomize.py that normally puts cmk.dev_deploy on sys.path
+        # for this subprocess, which fails before Bazel is ever invoked.
+        if "ModuleNotFoundError: No module named 'cmk.dev_deploy'" in exc.message:
+            raise ManifestBuildError(
+                exc.message,
+                recovery="Your venv is stale (cmk.dev_deploy isn't importable).\n"
+                "Rebuild it: make .venv",
+            ) from exc
+        raise
     # update.py already saves hashes in the child process; save again so
     # the parent records the snapshot its staleness verdict was based on
     # (a BUILD file edited mid-rebuild then re-triggers on the next run).

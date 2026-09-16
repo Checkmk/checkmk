@@ -17,13 +17,9 @@ from cmk.graphing_engine import (
     TimeRange,
 )
 
+from ._decoding import ensure_type
 from ._from_api import GraphFromAPI
-from ._graph_codec import (
-    consolidation_function_of,
-    ensure_type,
-    GraphCodec,
-    time_range_of,
-)
+from ._graph_codec import consolidation_function_of, GraphCodec, time_range_of
 from ._source import FetchDiagnostics
 
 

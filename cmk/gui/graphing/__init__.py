@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
+from ._decoding import context_from_json, ensure_type
 from ._drawn_curves import (
     drawn_curves,
     DrawnCurve,
@@ -39,8 +40,6 @@ from ._frontend import (
 from ._graph_choices import graph_choices, GraphChoices, GraphPluginChoice
 from ._graph_codec import (
     COMMUNITY_QUANTITY_SPECS,
-    context_from_json,
-    ensure_type,
     graph_codec,
     GraphCodec,
     QuantityCodec,

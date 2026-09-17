@@ -174,6 +174,7 @@ class CMKOpenApiSession(requests.Session):
         self.relays = RelayAPI(self)
         self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
         self.data_backend = DataBackendAPI(self)
+        self.global_settings = GlobalSettingsAPI(self)
         self.graph = GraphAPI(self)
         self.custom_graph = CustomGraphAPI(self)
         self.dashboard = DashboardAPI(self)

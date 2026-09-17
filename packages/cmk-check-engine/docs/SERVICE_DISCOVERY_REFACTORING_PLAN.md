@@ -74,8 +74,16 @@ start_scan()                  # async, contacts the host
 poll status                   # job status only
 ```
 
-Once those exist, a Vue page over the REST API is a thin client. So CMK-37497 ships first,
-scope unchanged, and the epic builds on its output.
+Once those exist, a Vue page over the REST API is a thin client. So CMK-37497 is absorbed into
+Phase 3 (see correction), where the epic builds on its analysis.
+
+**Correction (2026-09-17): CMK-37497 moves to Phase 3, it is not a standalone Phase 1.** A does not
+reduce complexity on its own. Baseline `get_check_table` is already a _single_ read path; because the
+GUI still consumes `job_status`, a behaviour-preserving change can only _add_ a job-free read beside
+it or restate the fork more explicitly — the job-coupled read cannot go until the legacy page is
+deleted (Phase 5). The three primitives above are the _target_, not something A delivers in isolation.
+The A→C→B analysis (D is dead — D11 supersedes it) is the read-side seam of the Phase 3 core swap;
+land it there, where the new core is written job-free and the old read is deleted in Phase 5.
 
 ---
 
@@ -83,7 +91,7 @@ scope unchanged, and the epic builds on its output.
 
 | #   | Decision                                                                                                                                                          | Consequence                                                                                                                                                                                                                                                                                                                                              |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | CMK-37497 ships first, as scoped (A→C→B→D), strictly behaviour-preserving                                                                                         | Cold-cache "empty" behaviour stays 1:1; not fixed there. Two of its premises need correcting — Phase 1                                                                                                                                                                                                                                                   |
+| D1  | CMK-37497 is absorbed into Phase 3 (overlaps the core swap substantially); not a standalone Phase 1                                                               | Its A→C→B analysis is the read-side seam of the swap (D is dead — D11 supersedes it). Premise corrections and reasoning live in the hand-off; cold-cache "empty" behaviour stays 1:1                                                                                                                                                                     |
 | D2  | Then the contract; then backend and frontend proceed independently                                                                                                | The contract is the only synchronisation point                                                                                                                                                                                                                                                                                                           |
 | D3  | UI is a **column board**: services move between columns, decisions are revisable, submitted in bulk                                                               | Confirms the PoC's interaction principle                                                                                                                                                                                                                                                                                                                 |
 | D4  | **Attention-first**: board defaults to undecided / changed / vanished; Monitored is a collapsed count, virtualized on expand                                      | Addresses clutter-at-scale without hiding data                                                                                                                                                                                                                                                                                                           |
@@ -164,7 +172,12 @@ corrected a §10 severity claim that had been derived by reading — §10.17's `
 silent no-op, not a cluster outage, because the write path restores what the transition drops. See
 R5.
 
-### Phase 1 — CMK-37497, as scoped
+### Phase 1 — CMK-37497 (absorbed into Phase 3)
+
+> **Revised (2026-09-17): CMK-37497 is absorbed into Phase 3** — see the §1 correction. Its analysis
+> (A→C→B; D is dead) is the read-side seam of the core swap, not a standalone phase; the read is
+> written job-free there and the old job-coupled read is deleted in Phase 5 with the legacy page.
+> The material below is retained as that analysis.
 
 Follow its hand-off: **A → C → B → D**.
 
@@ -175,9 +188,9 @@ Follow its hand-off: **A → C → B → D**.
 - **B:** make the pre/post-write reads two explicit `compute_discovery_preview()` calls.
 - **D:** scope the `job_snapshot` 409-guard to actions that can actually collide.
 
-No behaviour change, including "empty on cold cache". Note the ticket's own warning that the
-OpenAPI tests for this endpoint run via `tests/run_tests.sh`, **not** bazel — they are the
-guard for the schema-unchanged claim.
+No behaviour change, including "empty on cold cache". The OpenAPI tests for this endpoint run under
+bazel (`bazel test //tests/openapi:repo_community`) — they are the guard for the schema-unchanged
+claim.
 
 **Two premises need correcting first, both from Phase 0.**
 
@@ -340,7 +353,7 @@ Then, as separate work: **CMK-35050** (faithful source failures — reopens D7),
 
 | Ticket                            | Role                                                                                            |
 | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| CMK-37497                         | Phase 1. Ships first, scope unchanged except Idea D — see Phase 1                               |
+| CMK-37497                         | Phase 3. Absorbed into the core swap; A→C→B read-side seam, D dead                              |
 | CMK-34150                         | Phase 0. Promoted to prerequisite. **Done**                                                     |
 | CMK-38599 (§10.5)                 | **Before Phase 1** (D15)                                                                        |
 | CMK-38587 … CMK-38598             | The other 12 divergence tickets — indexed below                                                 |
@@ -412,7 +425,7 @@ board.
 | R4  | **Column board degrades at scale** worse than a table                                                                          | D4 plus the Phase 4 large-host fixture, exercised before the model is locked                                                                                                                                                                                                                                   |
 | R5  | **Remote-site behaviour is the historical blind spot** — where the PoC broke and where the tests weren't                       | Phase 0's tier 4 via `test-system-multisite`, at every phase exit rather than at the end. But a parity assertion is **blind to any defect symmetric across sites** — of the 19 §10 items only §10.10 is asymmetric — so "parity" must mean pinning **absolute per-site outcomes**, not comparing the two sites |
 | R6  | **Deletion never happens.** Phase 5 slips and both implementations live on — the very complexity this epic exists to remove    | Deletion commit written up front; toggle window bounded to one release cycle; D10 means the legacy code was never improved, so keeping it is unattractive                                                                                                                                                      |
-| R7  | **Not a roadmap priority** — the plan stalls mid-way and leaves things half-migrated                                           | Every phase is independently shippable and leaves the tree defensible. Phase 1 alone is a net win even if nothing follows                                                                                                                                                                                      |
+| R7  | **Not a roadmap priority** — the plan stalls mid-way and leaves things half-migrated                                           | Every phase is independently shippable and leaves the tree defensible — except CMK-37497, which standalone only adds a seam (§1 correction, 2026-09-17), so it is absorbed into Phase 3 (deleted in Phase 5 with the GUI)                                                                                      |
 
 ---
 

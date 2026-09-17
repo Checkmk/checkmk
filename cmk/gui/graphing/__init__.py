@@ -128,8 +128,8 @@ from ._metric_query import (
     SumLastRaw,
     SumRate,
 )
+from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
 from ._metric_visitor import MetricVisitor
-from ._metrics import get_metric_spec, registered_metric_ids_and_titles
 from ._notification_graph_images import (
     AjaxGraphImagesForNotifications,
 )

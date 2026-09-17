@@ -43,7 +43,7 @@ def _fallback_metric_spec(
     )
 
 
-def get_metric_spec_with_color(
+def _get_metric_spec_with_color(
     metric_name: str,
     color_counter: Counter[Literal["metric", "predictive"]],
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -106,7 +106,7 @@ def get_metric_spec(
     metric_name: str,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> MetricSpec:
-    return get_metric_spec_with_color(metric_name, Counter(), registered_metrics)
+    return _get_metric_spec_with_color(metric_name, Counter(), registered_metrics)
 
 
 def registered_metric_ids_and_titles(

@@ -8,7 +8,7 @@ from typing import Literal
 
 from cmk.gui.color import parse_color_into_hexrgb
 from cmk.gui.graphing import ConvertibleUnitSpecification, DecimalNotation
-from cmk.gui.graphing._metrics import _fallback_metric_spec, MetricSpec
+from cmk.gui.graphing._metric_spec import _fallback_metric_spec, MetricSpec
 from cmk.gui.unit_formatter import AutoPrecision
 
 

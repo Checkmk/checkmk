@@ -11,7 +11,7 @@ from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._from_api import metrics_from_api
-from ._metrics import registered_metric_ids_and_titles
+from ._metric_spec import registered_metric_ids_and_titles
 
 
 class MetricVisitor(StringVisitor):

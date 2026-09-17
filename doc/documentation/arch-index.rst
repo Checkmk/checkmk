@@ -62,6 +62,7 @@ Components
    arch-comp-otel-monitoring-custom-query.rst
    arch-comp-mcp.rst
    arch-comp-oauth.rst
+   arch-comp-product-usage-analytics.rst
 
    arch-comp-agent-abstract.rst
    arch-comp-agent-linux.rst

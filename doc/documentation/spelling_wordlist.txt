@@ -1,3 +1,4 @@
+anonymized
 ansible
 apache
 api
@@ -6,6 +7,7 @@ Auth
 backend
 Backend
 backends
+backoff
 Bazel
 cAdvisor
 changelog
@@ -20,6 +22,7 @@ configurability
 cron
 crontab
 Crontab
+datasource
 DCD
 de
 decrypt
@@ -44,6 +47,7 @@ icmpsender
 IdP
 init
 installable
+integrations
 introspection
 IPv
 Jira
@@ -62,6 +66,7 @@ Makefile
 Makefiles
 MCP
 md
+MiB
 microcore
 mk
 mkbackup
@@ -96,6 +101,7 @@ ramdisk
 reachability
 realpath
 Redis
+repo
 Reproducibility
 robotmk
 rrdcached

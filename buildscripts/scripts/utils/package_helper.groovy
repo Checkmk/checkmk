@@ -34,10 +34,6 @@ LinkedHashMap<String, List> directory_sha256sum(directories) {
 
 static LinkedHashMap<String, List> dependency_paths_mapping() {
     return [
-        "build-linux-agent-updater": [
-            "agents",
-            "non-free/packages/cmk-update-agent",
-        ],
         "build-mk-oracle": [
             "packages/mk-oracle",
             "Cargo.toml",
@@ -98,29 +94,6 @@ void provide_agent_binaries(Map args) {
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
     // For now it's nearly JSON like and can be treated as such.
     def upstream_job_details = [
-        "build-linux-agent-updater": [
-            // NOTE: We're stripping of "Testing/..." if present, because
-            //       Windows can't handle long folder names so we take the absolute
-            //       (production) jobs to build our upstream stuff (both Linux and
-            //       Windows for consistency).
-            //       As 'soon' as this problem does not exist anymore we could run
-            //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
-            /// no Linux agent updaters for community edition..
-            skip: test_binaries_only || fake_artifacts,
-            retry: 1,
-            dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
-            additional_build_params: [],
-            install_cmd: """\
-                # check-mk-agent-*.{deb,rpm}
-                cp *.deb *.rpm ${checkout_dir}/agents/
-                # artifact file flags are not being kept - building a tar would be better..
-                if [ "${args.edition}" != "community" ]; then
-                    echo "edition is ${args.edition} => copy Linux agent updater binary"
-                    install -m 755 -D cmk-update-agent -t ${checkout_dir}/non-free/packages/cmk-update-agent/
-                fi
-                """.stripIndent(),
-        ],
         "build-mk-oracle-aix-solaris": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],

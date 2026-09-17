@@ -758,6 +758,39 @@ describe('GlobalSettingsApp', () => {
     ).not.toBeInTheDocument()
   })
 
+  test('the inline switch on a site page writes the site override, not the global value', async () => {
+    const siteSettingUrl = `${location.protocol}//${location.host}/api/internal/objects/site_connection/remote_1/global_setting/site_piggyback_hub`
+    const siteRequests: Recorded[] = []
+    server.use(
+      http.put(siteSettingUrl, async ({ request }) => {
+        siteRequests.push({
+          method: 'PUT',
+          ifMatch: request.headers.get('If-Match'),
+          body: await request.json()
+        })
+        return HttpResponse.json(
+          { varname: 'site_piggyback_hub', value: true, origin: 'site' },
+          { headers: { ETag: '"sb2"' } }
+        )
+      })
+    )
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [booleanTopic] }
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Distributed monitoring' })
+    )
+    const inlineSwitch = screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })
+
+    await userEvent.click(inlineSwitch)
+
+    await waitFor(() => expect(siteRequests).toHaveLength(1))
+    expect(siteRequests[0]).toMatchObject({ ifMatch: '*', body: { value: true } })
+    // the global endpoint of the same variable was left alone
+    expect(requests).toEqual([])
+    await waitFor(() => expect(inlineSwitch).toHaveAttribute('aria-checked', 'true'))
+  })
+
   test('a load response arriving after its editor was closed does not leak into the next editor', async () => {
     const secondSettingUrl = `${location.protocol}//${location.host}/api/internal/objects/global_setting/site_setting`
     let releaseStaleLoad: () => void = () => {}

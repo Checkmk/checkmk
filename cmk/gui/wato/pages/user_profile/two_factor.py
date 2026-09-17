@@ -110,12 +110,12 @@ from cmk.gui.utils.urls import (
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.watolib.mode import redirect
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
 
 from .page_menu import page_menu_dropdown_user_related
-from .verify_requirements import verify_requirements
 
 # NOTE: In fido2 >= 2.0.0, this feature has been removed and is enabled per default, see
 # https://github.com/Yubico/python-fido2/blob/main/doc/Migration_1-2.adoc#removal-of-featureswebauthn_json_mapping

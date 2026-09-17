@@ -32,6 +32,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import (
     get_enabled_remote_sites_for_logged_in_user,
@@ -40,7 +41,6 @@ from cmk.gui.watolib.users import (
 from cmk.utils.log.security_event import log_security_event
 
 from .page_menu import user_profile_page_menu
-from .verify_requirements import verify_requirements
 
 
 def register(page_registry: PageRegistry) -> None:

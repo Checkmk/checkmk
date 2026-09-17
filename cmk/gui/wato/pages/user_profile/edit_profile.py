@@ -30,11 +30,11 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.wato.pages.users import select_language
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 from .page_menu import user_profile_page_menu
-from .verify_requirements import verify_requirements
 
 
 def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:

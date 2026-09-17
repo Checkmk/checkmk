@@ -802,7 +802,7 @@ def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]
 
     if callable(title := legacy_hint["title"]):
         # TODO Do we still need this?
-        return title  # type: ignore[unreachable]
+        return title
 
     return lambda _word: str(title)
 

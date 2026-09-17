@@ -29,7 +29,7 @@ SortFunction = Callable[[SDValue, SDValue], int]
 
 
 class InventoryHintSpec(TypedDict, total=False):
-    title: str | LazyString
+    title: str | LazyString | Callable[[str], str]
     short: str | LazyString
     icon: DynamicIconName
     paint: str

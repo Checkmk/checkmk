@@ -16,6 +16,7 @@ from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint, TableWit
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _make_title_function,
     _PaintBool,
     _PaintChoice,
     _PaintNumber,
@@ -611,3 +612,15 @@ def test_sort_choice() -> None:
     )
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(1, 2) == 1
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(2, 1) == -1
+
+
+def test__make_title_function_of_a_callable_legacy_title() -> None:
+    assert _make_title_function({"title": lambda word: f"<{word}>"})("key") == "<key>"
+
+
+def test__make_title_function_of_a_plain_legacy_title() -> None:
+    assert _make_title_function({"title": "Title"})("key") == "Title"
+
+
+def test__make_title_function_without_a_legacy_title() -> None:
+    assert _make_title_function({})("some_key") == "Some Key"

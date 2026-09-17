@@ -50,6 +50,7 @@ from cmk.shared_typing.global_settings import (
     IconNames,
 )
 from cmk.utils import paths
+from cmk.web.utils.flashed_messages import get_flashed_messages_with_categories
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -129,6 +130,8 @@ def site_settings(
 def render_settings_page(config: Config, data: GlobalSettingsApp) -> None:
     MainNavigation.render(config, data.title)
     html.begin_page_content(enable_scrollbar=True)
+    for message in get_flashed_messages_with_categories():
+        html.show_message_by_msg_type(msg=message.msg, msg_type=message.msg_type, flashed=True)
     if read_only.is_enabled(config.wato_read_only):
         html.show_warning(read_only.message(config.wato_read_only))
     html.vue_component(component_name="cmk-global-settings", data=asdict(data))

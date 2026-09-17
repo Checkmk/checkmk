@@ -24,8 +24,14 @@ from cmk.gui.utils import permission_verification as permissions
 
 class DefaultStatusCodeDescription(enum.Enum):
     Code406 = "The requests accept headers can not be satisfied."
-    Code401 = "The user is not authorized to do this request."
-    Code403 = "Configuration via Setup is disabled."
+    Code401 = (
+        "No authentication credentials were provided, or the provided credentials are invalid. "
+        "Retry with valid credentials."
+    )
+    Code403 = (
+        "The user is authenticated but lacks a permission required for this request. "
+        "Retrying with the same user will not help."
+    )
     Code404 = "The requested object has not be found."
     Code422 = "The request could not be processed."
     Code423 = "The resource is currently locked."

@@ -292,7 +292,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     query_params=[FORCE_PARAM],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[401, 409],
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""

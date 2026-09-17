@@ -4,80 +4,75 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import time
+from collections.abc import Iterator
 
 import pytest
 from playwright.sync_api import BrowserContext, expect, Page
 
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
-from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
-from tests.system.gui.testlib.playwright.pom.setup.global_settings import GlobalSettings
-from tests.system.gui.testlib.playwright.pom.setup.session_management import (
-    SessionManagementPage,
-    TimeoutValues,
-)
+from tests.system.gui.testlib.playwright.pom.setup.users import Users
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(name="short_session_timeouts")
+def fixture_short_session_timeouts(test_site: Site) -> Iterator[None]:
+    test_site.openapi.global_settings.update(
+        "session_mgmt",
+        {
+            "max_duration": {
+                "enforce_reauth": 80.0,
+                "enforce_reauth_warning_threshold": 60.0,
+            },
+            "user_idle_timeout": 100.0,
+        },
+    )
+    try:
+        yield
+    finally:
+        test_site.openapi.global_settings.reset("session_mgmt")
+        test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+
+
+@pytest.mark.usefixtures("short_session_timeouts")
 def test_session_expiry_warning_and_logout(
     credentials: CmkCredentials,
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,
 ) -> None:
     """
-    Validate that if session timeouts are set as follows:
-        advise re-authentication to 1 min
-        and max duration to 2 min
-        user idle timeout to 3 min
+    Validate that with the session timeouts set to
+        advise re-authentication after 60 sec,
+        max duration 80 sec
+        and user idle timeout 100 sec
     then
-        after 1 minute:
+        after 60 seconds:
             session expiration warning is shown;
-        after 2 minutes:
+        after 80 seconds:
             session expires and user is redirected to login page.
     """
 
     _, page = new_browser_context_and_page
     login_page = LoginPage(page, test_site.internal_url)
     login_page.login(credentials)
-    linux_hosts_dashboard = LinuxHostsDashboard(page)
+    users_page = Users(page)
 
+    logger.info("Waiting 60 seconds for session expiration warning...")
+    time.sleep(62)
+    users_page.page.reload()
+    expect(
+        users_page.session_warning_message,
+        "Session expiration warning was not shown after 60 seconds",
+    ).to_be_visible()
+
+    logger.info("Waiting another 20 seconds for session to expire...")
+    time.sleep(22)
+    users_page.page.reload()
+    login_page = LoginPage(users_page.page, navigate_to_page=False)
     try:
-        session_page = SessionManagementPage(linux_hosts_dashboard.page)
-
-        logger.info(
-            "Setting session timeouts:"
-            "\n\tmax duration 2 min, advise re-authentication 1 min, idle timeout 3 min"
-        )
-        session_page.set_max_duration_values(TimeoutValues(days=0, hours=0, minutes=2))
-        session_page.set_advise_reauth_values(TimeoutValues(days=0, hours=0, minutes=1))
-        session_page.set_idle_timeout_values(TimeoutValues(days=0, hours=0, minutes=3))
-        session_page.save_options()
-        session_page.navigate_from_global_settings(
-            GlobalSettings(session_page.page, navigate_to_page=False)
-        )
-        assert session_page.get_max_duration_values() == TimeoutValues(days=0, hours=0, minutes=2)
-        assert session_page.get_advise_reauth_values() == TimeoutValues(days=0, hours=0, minutes=1)
-        assert session_page.get_idle_timeout_values() == TimeoutValues(days=0, hours=0, minutes=3)
-
-        logger.info("Waiting 1 minute for session expiration warning...")
-        time.sleep(62)
-        session_page.page.reload()
-        expect(
-            session_page.session_warning_message,
-            "Session expiration warning was not shown after 1 minute",
-        ).to_be_visible()
-
-        logger.info("Waiting another minute for session to expire...")
-        time.sleep(62)
-        linux_hosts_dashboard.page.reload()
-        login_page = LoginPage(linux_hosts_dashboard.page, navigate_to_page=False)
-        try:
-            login_page.validate_page()
-            login_page.login(credentials)
-        except AssertionError:
-            pytest.fail("Login page was not shown after session expiry")
-    finally:
-        session_page = SessionManagementPage(linux_hosts_dashboard.page)
-        session_page.reset_to_default()
+        login_page.validate_page()
+        login_page.login(credentials)
+    except AssertionError:
+        pytest.fail("Login page was not shown after session expiry")

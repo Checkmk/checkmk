@@ -145,6 +145,7 @@ class CMKOpenApiSession(requests.Session):
         self.set_authentication_header(user, password)
 
         self.changes = ChangesAPI(self)
+        self.global_settings = GlobalSettingsAPI(self)
         self.users = UsersAPI(self)
         self.user_role = UserRoleAPI(self)
         self.folders = FoldersAPI(self)
@@ -576,6 +577,27 @@ class ChangesAPI(BaseAPI):
                 )
                 time.sleep(interval)
         raise AssertionError("unreachable")
+
+
+class GlobalSettingsAPI(BaseAPI):
+    def update(self, varname: str, value: object) -> None:
+        response = self.session.put(
+            f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": "*"},
+            json={"value": value},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def reset(self, varname: str) -> None:
+        response = self.session.delete(
+            f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
 
 class UsersAPI(BaseAPI):

@@ -12,7 +12,6 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.change_password import ChangePassword
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.system.gui.testlib.playwright.pom.password_policy import PasswordPolicy
 from tests.testlib.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
@@ -42,26 +41,20 @@ def navigate_to_edit_user_page(dashboard_page: MainDashboard, user_name: str) ->
 
 @pytest.fixture(name="char_groups_number_password_policy")
 def set_number_of_character_groups_password_policy(
-    request: pytest.FixtureRequest, dashboard_page: MainDashboard
+    request: pytest.FixtureRequest, test_site: Site
 ) -> Iterator[None]:
     """Set the number of character groups required in the password policy.
 
-    Navigate to the global settings for the password policy. Set it to require
-    N(parameter) character groups and disable the policy again when done.
+    Require N(parameter) character groups and reset the policy again when done.
 
     This fixture uses indirect pytest parametrization to define the number of character groups.
     """
-
-    # enable the policy
-    password_policy_page = PasswordPolicy(dashboard_page.page)
-    password_policy_page.set_the_number_of_character_groups(request.param)
-
-    _ = MainDashboard(dashboard_page.page)
-
-    yield
-
-    password_policy_page.navigate()
-    password_policy_page.disable_the_number_of_charachter_groups()
+    test_site.openapi.global_settings.update("password_policy", {"num_groups": request.param})
+    try:
+        yield
+    finally:
+        test_site.openapi.global_settings.reset("password_policy")
+        test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def change_user_password_and_check_success(
@@ -121,7 +114,7 @@ def test_user_change_password_success(
 @pytest.mark.parametrize(
     "char_groups_number_password_policy, password",
     [
-        pytest.param("4", "012abcDEF-=#*&$@", id="4_groups-correct_password"),
+        pytest.param(4, "012abcDEF-=#*&$@", id="4_groups-correct_password"),
     ],
     indirect=["char_groups_number_password_policy"],
 )
@@ -167,9 +160,9 @@ def test_user_change_password_errors(
 @pytest.mark.parametrize(
     "char_groups_number_password_policy, expected_groups_number, password",
     [
-        pytest.param("2", 2, "012345678910", id="2_groups-digits"),
-        pytest.param("4", 4, "ABCD56789xyz", id="4_groups-uppercase_digits_lowercase"),
-        pytest.param("4", 4, "012abc-=#*&$@", id="4_groups-digits_lowercase_special_chars"),
+        pytest.param(2, 2, "012345678910", id="2_groups-digits"),
+        pytest.param(4, 4, "ABCD56789xyz", id="4_groups-uppercase_digits_lowercase"),
+        pytest.param(4, 4, "012abc-=#*&$@", id="4_groups-digits_lowercase_special_chars"),
     ],
     indirect=["char_groups_number_password_policy"],
 )
@@ -253,7 +246,7 @@ def test_default_wordlist(
 @pytest.mark.parametrize(
     "char_groups_number_password_policy, expected_groups_number, password",
     [
-        pytest.param("2", 2, "cmkcmkcmkcmk", id="2_groups-lowercase"),
+        pytest.param(2, 2, "cmkcmkcmkcmk", id="2_groups-lowercase"),
     ],
     indirect=["char_groups_number_password_policy"],
 )

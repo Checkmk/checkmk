@@ -210,8 +210,11 @@ allows = [
   "cmk.automations",
   "cmk.cli.engine",
   "cmk.discover_plugins",
+  "cmk.inventory",
   "cmk.licensing.basics.finder",
+  "cmk.piggyback",
   "cmk.profiling",
+  "cmk.relay_fetcher_trigger",
   "cmk.trace",
   # The agent_controller_connections core bakelet reads the site certificate.
   "cmk.crypto",

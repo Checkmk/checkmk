@@ -955,19 +955,6 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "port": 6555,
         },
     },
-    "ntop_connection": {
-        "[enable]": {
-            "is_activated": True,
-            "is_host_filter_activated": True,
-            "hostaddress": "",
-            "port": 3000,
-            "protocol": "https",
-            "no-cert-check": True,
-            "admin_username": "",
-            "admin_password": NoSaveableDefault(),
-            "use_custom_attribute_as_ntop_username": False,
-        },
-    },
     "password_policy": {
         "max_age": 31536000,
         "min_length": 12,
@@ -1330,7 +1317,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "outgoing": [],
         "concurrency": [],
     },
-    "ntop_connection": None,
+    "ntop_connection": NoSaveableDefault(),
     "password_policy": {},
     "product_usage_analytics": {
         "enabled": "enabled",
@@ -2343,7 +2330,21 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "notification_spooling": choice_cases("both", "everywhere"),
     "ntop_connection": [
-        CasePass("disabled", None),
+        CaseMigrates(
+            "disabled-legacy-none",
+            None,
+            {
+                "is_activated": False,
+                "is_host_filter_activated": True,
+                "hostaddress": "",
+                "port": 3000,
+                "protocol": "https",
+                "no-cert-check": True,
+                "admin_username": "",
+                "admin_password": ("password", ""),
+                "use_custom_attribute_as_ntop_username": False,
+            },
+        ),
         CasePass(
             "configured",
             {
@@ -2369,6 +2370,20 @@ CASES: Mapping[str, list[Case]] = {
                 "no-cert-check": True,
                 "admin_username": "admin",
                 "admin_password": ("store", "ntop_secret"),
+                "use_custom_attribute_as_ntop_username": False,
+            },
+        ),
+        CaseFail(
+            "active-without-connection-parameters",
+            {
+                "is_activated": True,
+                "is_host_filter_activated": True,
+                "hostaddress": "",
+                "port": 3000,
+                "protocol": "https",
+                "no-cert-check": True,
+                "admin_username": "admin",
+                "admin_password": ("password", "hunter2"),
                 "use_custom_attribute_as_ntop_username": False,
             },
         ),
@@ -2935,7 +2950,7 @@ class ConfigVariableSuite:
                 if round_trip_disk_value(config_variable, global_settings_context, value) != value:
                     mutated.add(ident)
             except MKGeneralException as e:
-                if "input hint" not in str(e):
+                if "input hint" not in str(e) and "No password provided" not in str(e):
                     crashed[ident] = repr(e)
             except Exception as e:
                 crashed[ident] = repr(e)
@@ -2956,7 +2971,7 @@ class ConfigVariableSuite:
             try:
                 value = default_disk_value(config_variable, global_settings_context)
             except MKGeneralException as e:
-                if "input hint" in str(e):
+                if "input hint" in str(e) or "No password provided" in str(e):
                     continue
                 raise
             visitor = get_visitor(

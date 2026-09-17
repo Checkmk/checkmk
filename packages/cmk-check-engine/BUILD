@@ -150,6 +150,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
         "//non-free/packages/cmk-telemetry:__pkg__",
         "//packages/cmk-check-engine:__pkg__",
     ],

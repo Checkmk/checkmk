@@ -84,6 +84,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
     ],
     deps = [
         "//cmk/base/config",

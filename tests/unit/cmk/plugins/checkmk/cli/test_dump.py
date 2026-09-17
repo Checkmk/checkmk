@@ -17,7 +17,6 @@ import cmk.checkengine.fetchers.snmp._fetcher as _snmp_module
 import cmk.utils.paths as cmk_paths
 from cmk.base import config
 from cmk.base.community_app import make_app
-from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
@@ -30,6 +29,7 @@ from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
 from cmk.cli.engine.modes import make_mode, Options
 from cmk.cli.internal import GlobalOptions
+from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.trace import Context
 from tests.testlib.common.empty_config import EMPTY_CONFIG
@@ -125,7 +125,7 @@ class TestModeDumpAgent:
 
         call(
             app,
-            make_mode(check_mk.cli_command_dump_agent),
+            make_mode(cli_command_dump_agent),
             GlobalOptions(),
             hostname,
             [],
@@ -239,7 +239,7 @@ class TestModeDumpAgentSnmpBackend:
         )
         call(
             app,
-            make_mode(check_mk.cli_command_dump_agent),
+            make_mode(cli_command_dump_agent),
             GlobalOptions(),
             hostname,
             options,

@@ -7,6 +7,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { select } from 'd3-selection'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { defineComponent, ref } from 'vue'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
 import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
@@ -385,6 +386,24 @@ describe('TimeSeriesGraph', () => {
     })
     window.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, clientY: 50 }))
     window.dispatchEvent(new MouseEvent('mouseup', { clientX: 200, clientY: 50 }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
+  })
+
+  // A fetch, not a gesture, can be what finds the floor; the host then has the renderer say so.
+  test('states the reason when the host reports that a fetch hit the time floor', async () => {
+    const host = defineComponent({
+      components: { TimeSeriesGraph },
+      setup() {
+        const renderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
+        return { renderer, rendererProps: { ...DEFAULT_PROPS, zoomEnabled: true } }
+      },
+      template: `<TimeSeriesGraph ref="renderer" v-bind="rendererProps" />
+        <button @click="renderer?.showMaxZoomHint()">report floor</button>`
+    })
+    render(host)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'report floor' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
   })

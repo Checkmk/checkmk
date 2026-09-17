@@ -23,7 +23,10 @@ export const VALUE_LABEL_TICK_OFFSET = 9
 export const CANVAS_MARGIN_LEFT = PLOT_INSET_X + VALUE_AXIS_ROOM_MIN
 export const CANVAS_MARGIN_HORIZONTAL = CANVAS_MARGIN_LEFT + PLOT_INSET_X
 
+// The zoom floor at the base RRD resolution of a minute; a coarser one raises it (`minZoomSpan`).
 export const MIN_ZOOM_TIME_RANGE_SECONDS = 180
+// Served samples the narrowest window keeps: three at the base resolution is the span above.
+export const MIN_ZOOM_SAMPLES = 3
 
 export const LEADING_NEIGHBOUR_STEPS = 2
 export const TRAILING_NEIGHBOUR_STEPS = 1

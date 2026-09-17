@@ -4,7 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { TimeRange } from '../components/TimeSeriesGraph'
-import { LEADING_NEIGHBOUR_STEPS, TRAILING_NEIGHBOUR_STEPS } from '../components/constants'
+import {
+  LEADING_NEIGHBOUR_STEPS,
+  MIN_ZOOM_SAMPLES,
+  MIN_ZOOM_TIME_RANGE_SECONDS,
+  TRAILING_NEIGHBOUR_STEPS
+} from '../components/constants'
 import type { RequestedTimeRange } from '../types'
 
 export function sameRequestedTimeRange(a: RequestedTimeRange, b: RequestedTimeRange): boolean {
@@ -44,4 +49,13 @@ export function drawnTimeRange(requested: RequestedTimeRange, served: TimeRange)
     end: Math.min(snapDownToGrid(requested.end, step), served.end),
     step
   }
+}
+
+// A fetch is answered at its RRA's resolution, coarser the further back it reaches; fewer than
+// MIN_ZOOM_SAMPLES of those is too narrow to label. Without a step the configured minimum stands.
+export function minZoomSpan(served: TimeRange | undefined): number {
+  if (served === undefined || !hasUsableStep(served)) {
+    return MIN_ZOOM_TIME_RANGE_SECONDS
+  }
+  return Math.max(MIN_ZOOM_TIME_RANGE_SECONDS, MIN_ZOOM_SAMPLES * served.step)
 }

@@ -74,7 +74,10 @@ const MAX_ZOOM_HINT_CURSOR_OFFSET = 12
 const maxZoomHintAt = ref<{ x: number; y: number } | null>(null)
 let maxZoomHintTimer: ReturnType<typeof setTimeout> | null = null
 
-function showMaxZoomHint(point: { x: number; y: number }): void {
+// Also the host's to call when a fetch, not a press, hit the floor; then it sits at the centre.
+function showMaxZoomHint(
+  point: { x: number; y: number } = { x: plotWidth.value / 2, y: plotHeight.value / 2 }
+): void {
   maxZoomHintAt.value = point
   if (maxZoomHintTimer !== null) {
     clearTimeout(maxZoomHintTimer)
@@ -520,6 +523,8 @@ watch(
 )
 
 watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
+
+defineExpose({ showMaxZoomHint })
 </script>
 
 <template>

@@ -4,39 +4,52 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { nextTick } from 'vue'
 
 import { loadMenu } from '@/graphing/api/burgerMenu.ts'
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
+import { MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 import type { BurgerMenuCallable, GraphPanelProps, RequestedTimeRange } from '@/graphing/types'
+import { minZoomSpan } from '@/graphing/utils/timeRange'
 
 vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 
 // Mock renders received metric titles and view props as text so tests can assert on
 // visibility filtering and the interaction loop. Click targets are spans (not buttons)
 // to keep the "panel renders no button" assertions meaningful.
-vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
-  default: {
-    inheritAttrs: false,
-    props: [
-      'metrics',
-      'view_time_range',
-      'inspecting',
-      'highlightedMetricNames',
-      'pinEnabled',
-      'pinTime',
-      'atMinTimeZoom',
-      'consolidationFunction',
-      'options',
-      'showTimeAxis',
-      'showValueAxis',
-      'minValueAxisWidth'
-    ],
-    emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
-    template: `<div data-testid="time-series-graph">
+vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
+  const { ref } = await import('vue')
+  return {
+    default: {
+      inheritAttrs: false,
+      // The panel calls the hint on the renderer instance, so the stub exposes one that counts.
+      setup() {
+        const maxZoomHintRequests = ref(0)
+        const showMaxZoomHint = () => {
+          maxZoomHintRequests.value += 1
+        }
+        return { maxZoomHintRequests, showMaxZoomHint }
+      },
+      props: [
+        'metrics',
+        'view_time_range',
+        'inspecting',
+        'highlightedMetricNames',
+        'pinEnabled',
+        'pinTime',
+        'atMinTimeZoom',
+        'consolidationFunction',
+        'options',
+        'showTimeAxis',
+        'showValueAxis',
+        'minValueAxisWidth'
+      ],
+      emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
+      template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
       <span data-testid="renderer-y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
       <span data-testid="renderer-y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
@@ -47,6 +60,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="show-pin">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
       <span data-testid="at-min-time-zoom">{{ atMinTimeZoom }}</span>
+      <span data-testid="max-zoom-hint-requests">{{ maxZoomHintRequests }}</span>
       <span data-testid="renderer-consolidation">{{ consolidationFunction }}</span>
       <span data-testid="renderer-show-time-axis">{{ showTimeAxis }}</span>
       <span data-testid="renderer-show-value-axis">{{ showValueAxis }}</span>
@@ -71,8 +85,9 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       />
       <span data-testid="emit-reset" @click="$emit('reset')" />
     </div>`
+    }
   }
-}))
+})
 
 vi.mock('@/graphing/components/GraphBrush/GraphBrush.vue', () => ({
   default: {
@@ -417,12 +432,18 @@ test('reports time zoom at its floor once the requested window is the narrowest 
     props: {
       metrics: [CPU],
       interaction: INTERACTION_NONE,
-      // A minute apart: exactly MIN_ZOOM_TIME_RANGE_SECONDS.
-      requestedTimeRange: { start: 1_781_524_800, end: 1_781_524_860 },
+      requestedTimeRange: {
+        start: 1_781_524_800,
+        end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS
+      },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       // Served a step wider, as the backend does.
-      dataTimeRange: { start: 1_781_524_800, end: 1_781_524_920, step: 60 }
+      dataTimeRange: {
+        start: 1_781_524_800,
+        end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS + 60,
+        step: 60
+      }
     }
   })
 
@@ -442,6 +463,117 @@ test('does not report time zoom at its floor while the requested window is still
   })
 
   expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
+})
+
+const SIX_HOURS = 21_600
+// The fixtures' start doubles as a boundary of the six-hourly grid.
+const SIX_HOURLY_GRID_BOUNDARY = TIME_RANGE.start
+const SERVED_SIX_HOURLY: TimeRange = {
+  start: SIX_HOURLY_GRID_BOUNDARY - 8 * SIX_HOURS,
+  end: SIX_HOURLY_GRID_BOUNDARY + 8 * SIX_HOURS,
+  step: SIX_HOURS
+}
+// Ten minutes, mid-step: narrower than a single six-hourly step.
+const REQUEST_NARROWER_THAN_A_STEP: RequestedTimeRange = {
+  start: SIX_HOURLY_GRID_BOUNDARY + 1_000,
+  end: SIX_HOURLY_GRID_BOUNDARY + 1_600
+}
+
+function renderPanelServedSixHourly(overrides: Partial<GraphPanelProps> = {}) {
+  return render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: SERVED_SIX_HOURLY,
+      requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: { ...INTERACTION_NONE, zoom: 'enabled' },
+      ...overrides
+    }
+  })
+}
+
+// The resolution a window is served at is only known once a fetch has answered, so the floor
+// follows the data on screen: a coarse answer raises it above the configured minimum.
+test('reports time zoom at its floor once the requested window holds the fewest samples the served resolution fills', () => {
+  const floor = minZoomSpan(SERVED_SIX_HOURLY)
+
+  renderPanelServedSixHourly({
+    requestedTimeRange: { start: SIX_HOURLY_GRID_BOUNDARY, end: SIX_HOURLY_GRID_BOUNDARY + floor }
+  })
+
+  expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('true')
+})
+
+test('does not hold the requested window to the resolution of the data a fetch is replacing', () => {
+  renderPanelServedSixHourly({ awaitingData: true })
+
+  expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
+})
+
+// A window the served resolution cannot fill stays the user's: the sample covering it is what
+// there is to draw, and moving the window would be a zoom they did not make.
+test('leaves a window the served resolution cannot fill where it was asked', () => {
+  const { emitted } = renderPanelServedSixHourly()
+
+  expect(emitted()['update:requestedTimeRange']).toBeUndefined()
+  expect(screen.getByTestId('view-start')).toHaveTextContent(
+    String(REQUEST_NARROWER_THAN_A_STEP.start)
+  )
+})
+
+// A fetch, not a gesture, can be what finds the floor. The renderer states it once, on entering:
+// an answer that keeps the window there has nothing new to say.
+test('does not have the renderer state the floor while a fetch is out', () => {
+  renderPanelServedSixHourly({ awaitingData: true })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('0')
+})
+
+test('does not have the renderer state the floor of a graph that cannot be zoomed', async () => {
+  renderPanelServedSixHourly({ interaction: INTERACTION_NONE })
+
+  await nextTick()
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('0')
+})
+
+test('has the renderer state the floor once a fetch lands too coarse for the request', async () => {
+  const { rerender } = renderPanelServedSixHourly({ awaitingData: true })
+
+  await rerender({ awaitingData: false })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
+})
+
+test('has the renderer state the floor for a window mounted at it', async () => {
+  renderPanelServedSixHourly()
+
+  await waitFor(() => expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1'))
+})
+
+test('does not have the floor restated when a refresh answers at the same resolution', async () => {
+  const { rerender } = renderPanelServedSixHourly()
+
+  await rerender({ awaitingData: true })
+  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
+})
+
+test('has the floor stated again once a later fetch lands the window back at it', async () => {
+  const { rerender } = renderPanelServedSixHourly()
+  const wideEnough: RequestedTimeRange = {
+    start: SIX_HOURLY_GRID_BOUNDARY,
+    end: SIX_HOURLY_GRID_BOUNDARY + 4 * SIX_HOURS
+  }
+
+  await rerender({ awaitingData: true, requestedTimeRange: wideEnough })
+  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({ awaitingData: true, requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP })
+  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('2')
 })
 
 test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {

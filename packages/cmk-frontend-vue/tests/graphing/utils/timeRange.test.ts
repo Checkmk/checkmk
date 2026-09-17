@@ -6,7 +6,8 @@
 import { describe, expect, test } from 'vitest'
 
 import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
-import { drawnTimeRange, withEdgeNeighbours } from '@/graphing/utils/timeRange'
+import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
+import { drawnTimeRange, minZoomSpan, withEdgeNeighbours } from '@/graphing/utils/timeRange'
 
 describe('withEdgeNeighbours', () => {
   const WINDOW = { start: 1_000_020, end: 1_000_620, step: 60 }
@@ -121,5 +122,36 @@ describe('drawnTimeRange', () => {
 
     expect(drawn.start).toBeLessThanOrEqual(straddlingABoundary.start)
     expect(drawn.end).toBeGreaterThanOrEqual(straddlingABoundary.end)
+  })
+})
+
+describe('minZoomSpan', () => {
+  test.each([
+    ['no fetch has resolved a step', undefined],
+    ['the resolved step is unusable', { start: 0, end: 1_000, step: 0 }]
+  ])('is the configured minimum while %s', (_case, served) => {
+    const span = minZoomSpan(served)
+
+    expect(span).toBe(MIN_ZOOM_TIME_RANGE_SECONDS)
+  })
+
+  test('stays at the configured minimum at the resolution it was configured for', () => {
+    const servedAtBaseResolution = {
+      start: 0,
+      end: 3_600,
+      step: MIN_ZOOM_TIME_RANGE_SECONDS / MIN_ZOOM_SAMPLES
+    }
+
+    const span = minZoomSpan(servedAtBaseResolution)
+
+    expect(span).toBe(MIN_ZOOM_TIME_RANGE_SECONDS)
+  })
+
+  test('keeps a window at a coarse resolution wide enough to hold its samples', () => {
+    const servedSixHourly = { start: 0, end: 864_000, step: 21_600 }
+
+    const span = minZoomSpan(servedSixHourly)
+
+    expect(span / servedSixHourly.step).toBeGreaterThanOrEqual(MIN_ZOOM_SAMPLES)
   })
 })

@@ -5532,7 +5532,9 @@ setuptools==84.0.0 \
 setuptools-scm==10.2.3 \
     --hash=sha256:7fcf8ff55c95eb8b572a23c81495e5559b9b90f3e82fcf0952bb76c37de27a81 \
     --hash=sha256:f179ed3e2a63cf5823e5ee9aa9ca08386219400443a0553224d72dde3f206b44
-    # via -r cmk/requirements.in
+    # via
+    #   -c constraints.txt
+    #   -r cmk/requirements.in
 sgmllib3k==1.0.0 \
     --hash=sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9
     # via feedparser

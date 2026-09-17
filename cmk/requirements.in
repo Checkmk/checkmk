@@ -60,8 +60,7 @@ requests-oauthlib
 roman
 setproctitle
 setuptools
-# 10.3.0, 10.3.1 and 10.3.2 are yanked on PyPI.
-setuptools-scm!=10.3.0,!=10.3.1,!=10.3.2
+setuptools-scm
 starlette
 tzlocal
 urllib3

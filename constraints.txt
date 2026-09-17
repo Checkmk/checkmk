@@ -4,3 +4,4 @@ feedparser<6.0.13 # CMK-37383, problems with conflicting __init__.py files due t
 kubernetes<36.0.0 # CMK-37075, some unit tests below //packages/cmk-plugins/tests/cmk/plugins/kube fail
 marshmallow<4 # CMK-25251, breaking changes
 pysmi<2.0.0 # CMK-37075, bazel build //omd/packages/net-snmp:generate_python_mibs fails with "Could not compile mib NET-SNMP-PASS-MIB"
+setuptools-scm!=10.3.0,!=10.3.1,!=10.3.2 # CMK-39346, 10.3.0, 10.3.1 and 10.3.2 are yanked on PyPI.

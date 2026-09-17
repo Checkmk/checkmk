@@ -98,4 +98,28 @@ describe('drawnTimeRange', () => {
     expect(drawn.start).toBe(window.start)
     expect(drawn.end).toBe(window.end)
   })
+
+  // Both edges of a window inside one served step snap to the same boundary; the value covering
+  // the window is what there is to draw, so the window is drawn as it was asked for.
+  test('keeps a window narrower than the served step drawable', () => {
+    const insideOneStep = { start: 1_000_037, end: 1_000_059 }
+    const served = { start: 1_000_020, end: 1_000_740, step: STEP }
+
+    const drawn = drawnTimeRange(insideOneStep, served)
+
+    expect(drawn.end - drawn.start).toBeGreaterThan(0)
+  })
+
+  test('keeps a window narrower than the served step where it was asked', () => {
+    const straddlingABoundary = {
+      start: GRID_BOUNDARY_BEFORE_START - 10,
+      end: GRID_BOUNDARY_BEFORE_START + 10
+    }
+    const served = { start: 1_000_020 - STEP, end: 1_000_740, step: STEP }
+
+    const drawn = drawnTimeRange(straddlingABoundary, served)
+
+    expect(drawn.start).toBeLessThanOrEqual(straddlingABoundary.start)
+    expect(drawn.end).toBeGreaterThanOrEqual(straddlingABoundary.end)
+  })
 })

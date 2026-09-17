@@ -27,9 +27,16 @@ export function withEdgeNeighbours(window: TimeRange): TimeRange {
   }
 }
 
+// Whether the user's window is shorter than the interval between two values the backend served.
+function isNarrowerThanServedStep(requested: RequestedTimeRange, served: TimeRange): boolean {
+  return requested.end - requested.start < served.step
+}
+
+// A window narrower than the served step has no grid boundary of its own to snap to: snapping
+// would collapse it to nothing drawable, while the value covering it draws across it as it is.
 export function drawnTimeRange(requested: RequestedTimeRange, served: TimeRange): TimeRange {
   const { step } = served
-  if (!hasUsableStep(served)) {
+  if (!hasUsableStep(served) || isNarrowerThanServedStep(requested, served)) {
     return { start: requested.start, end: requested.end, step }
   }
   return {

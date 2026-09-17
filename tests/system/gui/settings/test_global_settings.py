@@ -9,70 +9,26 @@ Covers the round trip of a global setting toggled on the overview and reset in i
 and the round trip of a site-specific override saved and removed on a site's settings page.
 """
 
-import logging
-from collections.abc import Iterator
-from pathlib import Path
 from typing import cast
 
 import pytest
 
+from tests.system.gui.settings.settings_files import (
+    GUI_SETTINGS_REL_PATH,
+    SITE_SPECIFIC_SETTINGS_REL_PATH,
+)
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.setup.global_settings import (
     GlobalSettings,
     SiteSpecificSettings,
 )
 from tests.testlib.common.utils import wait_until
-from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site, SiteFactory
-
-logger = logging.getLogger(__name__)
-
-
-GUI_SETTINGS_REL_PATH = Path("etc/check_mk/multisite.d/wato/global.mk")
-SITE_SPECIFIC_SETTINGS_REL_PATH = Path("etc/check_mk/multisite.d/sites.mk")
+from tests.testlib.site import Site
 
 SOUNDS_SETTING = "Sounds in views"
 SOUNDS_VARNAME = "enable_sounds"
 
 STORAGE_TIMEOUT = 10
-
-
-@pytest.fixture(name="remote_site_wato_disabled", scope="module")
-def fixture_remote_site_wato_disabled(test_site: Site, site_factory: SiteFactory) -> Iterator[Site]:
-    """Return a second Checkmk site object for a distributed setup, shared across this module.
-
-    WATO is disabled on the remote site (disable_remote_configuration=True).
-
-    This overrides the function-scoped fixture of the same name from the top-level conftest.
-    """
-    with site_factory.connected_remote_site(
-        "remote", test_site, "test_global_settings"
-    ) as remote_site:
-        yield remote_site
-
-
-@pytest.fixture(name="backed_up_settings")
-def fixture_backed_up_settings(test_site: Site) -> Iterator[None]:
-    setting_files = [GUI_SETTINGS_REL_PATH, SITE_SPECIFIC_SETTINGS_REL_PATH]
-    list_of_files = ", ".join(map(str, setting_files))
-    logger.info("Backup settings within: '%s'", list_of_files)
-    backed_settings = {
-        setting_file: test_site.read_file(setting_file)
-        for setting_file in setting_files
-        if test_site.file_exists(setting_file)
-    }
-    try:
-        yield
-    finally:
-        if is_cleanup_enabled():
-            logger.info("Restore settings within: '%s'", list_of_files)
-            for setting_file in setting_files:
-                if setting_file in backed_settings:
-                    test_site.write_file(setting_file, backed_settings[setting_file])
-                elif test_site.file_exists(setting_file):
-                    test_site.delete_file(setting_file)
-            logger.info("Activate the restored settings so no pending change is left behind")
-            test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def _global_settings(central_site: Site) -> dict[str, object]:
@@ -88,10 +44,10 @@ def _site_globals(central_site: Site, site_id: str) -> dict[str, object]:
     return cast(dict[str, object], sites.get(site_id, {}).get("globals", {}))
 
 
+@pytest.mark.usefixtures("backed_up_settings")
 def test_setting_toggled_on_the_overview_is_stored_and_reset_in_the_editor(
     test_site: Site,
     dashboard_page: MainDashboard,
-    backed_up_settings: None,  # noqa: ARG001
 ) -> None:
     initial_settings = _global_settings(test_site)
     settings = GlobalSettings(dashboard_page.page)
@@ -113,11 +69,11 @@ def test_setting_toggled_on_the_overview_is_stored_and_reset_in_the_editor(
     )
 
 
+@pytest.mark.usefixtures("backed_up_settings")
 def test_site_override_comes_and_goes_alone(
     test_site: Site,
     remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
-    backed_up_settings: None,  # noqa: ARG001
 ) -> None:
     initial_settings = _global_settings(test_site)
     initial_site_globals = _site_globals(test_site, remote_site_wato_disabled.id)

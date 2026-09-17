@@ -147,10 +147,11 @@
     --tag-font-color-dark: var(--color-conference-grey-100);
 
     /* Cmk Toggle Button Group */
-    --toggle-button-group-active-bg-color: var(--ux-theme-10);
-    --toggle-button-group-inactive-bg-color: var(--ux-theme-6);
+    --toggle-button-group-active-bg-color: var(--ux-theme-8);
+    --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
     --toggle-button-group-border-color: var(--color-mid-grey-50);
-    --toggle-button-group-active-text-color: var(--color-white-100);
+    --toggle-button-group-inactive-border-color: var(--color-mid-grey-10);
+    --toggle-button-group-active-text-color: var(--color-conference-grey-100);
     --toggle-button-group-inactive-text-color: var(--color-conference-grey-100);
     --toggle-button-group-disabled-text-color: var(--color-conference-grey-70);
     --toggle-button-group-hover-bg-color: var(--color-daylight-grey-80);
@@ -300,7 +301,8 @@
     /* Cmk Toggle Button Group */
     --toggle-button-group-active-bg-color: var(--ux-theme-8);
     --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
-    --toggle-button-group-border-color: var(--color-mid-grey-60);
+    --toggle-button-group-border-color: var(--color-mid-grey-50);
+    --toggle-button-group-inactive-border-color: var(--color-mid-grey-90);
     --toggle-button-group-active-text-color: var(--color-white-100);
     --toggle-button-group-inactive-text-color: var(--color-white-100);
     --toggle-button-group-disabled-text-color: var(--color-white-50);

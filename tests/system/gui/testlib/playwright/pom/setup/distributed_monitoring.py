@@ -133,7 +133,8 @@ class DistributedMonitoring(CmkPage):
             site_id: The ID of the site connection to edit.
         """
         logger.info("Open the edit form of site connection '%s'", site_id)
-        # Pencil link in the row's Actions column (distinct from `clone=` and `edit_site_globals`).
+        # Pencil link in the row's Actions column (distinct from `clone=` and the
+        # link to the site-specific settings).
         self._get_table_row(site_id).locator(f"a[href*='mode=edit_site&site={site_id}']").click()
         # URL stays SPA-encoded; the page object's validate_page waits on the title instead.
         return AddSiteConnection(self.page, navigate_to_page=False, edit_site_id=site_id)
@@ -215,9 +216,10 @@ class DistributedMonitoring(CmkPage):
         login_page.fill_login_form(credentials)
         login_page.login_button.click()
 
-    def site_specific_global_configuration(self, site_id: str) -> Locator:
-        """Configure the site-specific global settings"""
-        return self.main_area.locator(f"a[href*='mode=edit_site_globals&site={site_id}']")
+    def site_specific_settings_link(self, site_id: str) -> Locator:
+        return self._get_table_row(site_id).get_by_role(
+            "link", name="Site-specific global configuration"
+        )
 
     def is_remote_site_licensed(self, site_id: str) -> bool | None:
         """Check if a remote site is licensed.

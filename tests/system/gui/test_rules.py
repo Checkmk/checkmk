@@ -25,6 +25,10 @@ from tests.system.gui.testlib.playwright.pom.setup.add_rule_periodic_discovery i
 )
 from tests.system.gui.testlib.playwright.pom.setup.cpu_load_value_levels import CPULoadValueLevels
 from tests.system.gui.testlib.playwright.pom.setup.diskstat_value_levels import DiskstatValueLevels
+from tests.system.gui.testlib.playwright.pom.setup.global_settings import (
+    GlobalSettings,
+    SettingEditor,
+)
 from tests.system.gui.testlib.playwright.pom.setup.host_effective_parameters import (
     HostEffectiveParameters,
 )
@@ -173,23 +177,15 @@ def test_create_rules(
             ),
             navigate=True,
         )
-        dashboard_page.main_area.locator().get_by_role(role="button", name="Add new entry").click()
+        editor = SettingEditor(dashboard_page.page, GlobalSettings.editor_title)
+        editor.wait_until_loaded()
+        editor.container.get_by_role(role="button", name="Add new entry").click()
 
-        # Locator corresponding to (added) elements for 'current settings'.
-        current_setting = (
-            dashboard_page.main_area.locator()
-            .get_by_role("row")
-            .filter(has=dashboard_page.main_area.locator().get_by_title("Current setting"))
-            .locator("td[class='content']")
-        )
-
-        current_setting.get_by_role("textbox").fill("test")
-        current_setting.get_by_role("link", name="Choose another Icon").click()
-        current_setting.get_by_role("link", name="Built-in").click()
-        current_setting.get_by_title("2fa", exact=True).first.click()
-        dashboard_page.click_and_wait(
-            dashboard_page.main_area.get_suggestion("Save"), navigate=True
-        )
+        editor.container.get_by_role("textbox", name="ID").fill("test")
+        editor.container.get_by_role("link", name="Choose another Icon").click()
+        editor.container.get_by_role("link", name="Built-in").click()
+        editor.container.get_by_title("2fa", exact=True).first.click()
+        editor.save()
 
         existing_rules = {
             ruleset_title: len(test_site.openapi.rules.get_all(ruleset.get("id", "")))

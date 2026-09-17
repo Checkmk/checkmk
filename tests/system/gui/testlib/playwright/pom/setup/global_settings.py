@@ -5,7 +5,7 @@
 
 import logging
 import re
-from abc import ABC
+from re import Pattern
 from typing import override
 
 from playwright.sync_api import expect, Locator, Page
@@ -18,315 +18,133 @@ from tests.system.gui.testlib.playwright.pom.setup.distributed_monitoring import
 
 logger = logging.getLogger(__name__)
 
+RESET_BUTTON_NAME = re.compile(r"^Remove (modification|explicit setting|site-specific value)$")
+FAILURE_ALERT_HEADING = re.compile(r"^(Saving|Resetting|Loading) failed$")
 
-class GlobalSettings(CmkPage):
-    page_title: str = "Global settings"
-    dropdown_buttons: list[str] = ["Related", "Display", "Help"]
+
+class SettingEditor:
+    def __init__(self, page: Page, editor_title: str) -> None:
+        self.container = page.get_by_role("region", name=editor_title)
+
+    @property
+    def save_button(self) -> Locator:
+        return self.container.get_by_role("button", name="Save")
+
+    @property
+    def error(self) -> Locator:
+        return self.container.get_by_role("alert", name=FAILURE_ALERT_HEADING)
+
+    def wait_until_loaded(self) -> None:
+        expect(
+            self.save_button,
+            message="The setting editor did not load: save stays disabled until its value arrives",
+        ).to_be_enabled()
+
+    def save(self, expect_success: bool = True) -> None:
+        logger.info("Save the setting")
+        self.save_button.click()
+        self._expect_outcome(expect_success)
+
+    def reset(self, expect_success: bool = True) -> None:
+        logger.info("Reset the setting")
+        reset_button = self.container.get_by_role("button", name=RESET_BUTTON_NAME)
+        expect(
+            reset_button,
+            message="The setting holds no explicit value in this scope, so it cannot be reset",
+        ).to_be_visible()
+        reset_button.click()
+        self.container.get_by_role("button", name="Remove", exact=True).click()
+        self._expect_outcome(expect_success)
+
+    def _expect_outcome(self, expect_success: bool) -> None:
+        if expect_success:
+            expect(self.container, message="The setting editor did not close").to_be_hidden()
+        else:
+            expect(self.error, message="The setting editor reports no failure").to_be_visible()
+
+
+class SettingsOverview(CmkPage):
+    page_title: str | Pattern[str]
+    editor_title: str
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is '%s' page", self.page_title)
+        expect(self.page, message="Unexpected page title").to_have_title(self.page_title)
+        expect(self._searchbox, message="The settings search box is not shown").to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    def _wait_for_url(self, url_suffix: str) -> None:
+        # A login redirect carries the target page in `_origtarget`; anchor on the path separator.
+        self.page.wait_for_url(
+            re.compile(r"/" + re.escape(url_suffix) + r"([?&].*)?$"), wait_until="load"
+        )
+
+    @property
+    def _searchbox(self) -> Locator:
+        return self.main_area.locator().get_by_role("searchbox", name="Search settings…")
+
+    def search(self, search_text: str) -> None:
+        logger.info("Search for setting: %s", search_text)
+        self._searchbox.fill(search_text)
+
+    def switch(self, title: str) -> Locator:
+        return self.main_area.locator().get_by_role("switch", name=f"Toggle {title}", exact=True)
+
+    def toggle_error(self, title: str) -> Locator:
+        return self.switch(title).locator("xpath=following-sibling::*[@role='alert']")
+
+    def toggle(self, title: str, expect_success: bool = True) -> None:
+        logger.info("Toggle setting: %s", title)
+        self.search(title)
+        switch = self.switch(title)
+        toggled_state = "false" if switch.get_attribute("aria-checked") == "true" else "true"
+        switch.click()
+        if expect_success:
+            expect(switch, message=f"The setting '{title}' was not toggled").to_have_attribute(
+                "aria-checked", toggled_state
+            )
+        else:
+            expect(
+                self.toggle_error(title),
+                message=f"Toggling the setting '{title}' was not rejected",
+            ).to_be_visible()
+
+    def open_editor(self, title: str) -> SettingEditor:
+        logger.info("Open the editor of setting: %s", title)
+        self.search(title)
+        self.main_area.locator().get_by_role("button", name=f"Edit {title}", exact=True).click()
+        editor = SettingEditor(self.page, self.editor_title)
+        editor.wait_until_loaded()
+        return editor
+
+
+class GlobalSettings(SettingsOverview):
+    page_title: str | Pattern[str] = "Global settings"
+    editor_title: str = "Edit global setting"
 
     @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Global settings' page")
-        self.main_menu.setup_menu(self.page_title).click()
+        self.main_menu.setup_menu("Global settings").click()
+        self._wait_for_url("global_settings.py")
         self.validate_page()
 
-    @override
-    def validate_page(self) -> None:
-        logger.info("Validate that current page is 'Global settings' page")
-        _url_pattern = re.escape("wato.py?mode=globalvars")
-        self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
-        self.main_area.check_page_title(self.page_title)
 
-    @override
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
+class SiteSpecificSettings(SettingsOverview):
+    page_title: str | Pattern[str] = re.compile("^Site-specific settings of ")
+    editor_title: str = "Edit site-specific setting"
 
-    @property
-    def _searchbar(self) -> Locator:
-        return self.main_area.locator().get_by_role(role="textbox", name="Find on this page ...")
-
-    def setting_link(self, setting_name: str) -> Locator:
-        return self.get_link(setting_name)
-
-    def search_settings(self, search_text: str) -> None:
-        """Search for a setting using the searchbar."""
-        logger.info("Search for setting: %s", search_text)
-        self._searchbar.fill(search_text)
-        self.main_area.locator().get_by_role(role="button", name="Submit").click()
-
-    def _toggle_button(self, var_name: str) -> Locator:
-        self.search_settings(var_name)
-        return self.main_area.locator().get_by_role("link", name="Click to toggle this setting")
-
-    def toggle(self, var_name: str) -> None:
-        """Toggle a setting on or off."""
-        logger.info("Toggle setting: %s", var_name)
-        self._toggle_button(var_name).click()
-
-
-class EditGlobalSetting(CmkPage, ABC):
-    """General "edit global settings" page"""
-
-    page_title: str = "Edit global setting"
-    dropdown_buttons: list[str] = ["Setting", "Display", "Help"]
-
-    @override
-    def validate_page(self) -> None:
-        logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
-
-    @override
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
-
-    @property
-    def save_button(self) -> Locator:
-        return self.main_area.get_suggestion("Save")
-
-    @property
-    def factory_settings_button(self) -> Locator:
-        # button is named differently depending on current settings
-        return self.main_area.get_suggestion("Reset to default").or_(
-            self.main_area.get_suggestion("Remove explicit setting")
-        )
-
-    @property
-    def reset_confirmation_window(self) -> Locator:
-        return self.main_area.locator("div[class*='confirm_popup']")
-
-    @property
-    def reset_confirmation_button(self) -> Locator:
-        return self.reset_confirmation_window.get_by_role("button", name="Reset")
-
-    def to_factory_settings(self, expect_success: bool = True) -> None:
-        """Reset the setting to default and confirm the reset.
-
-        The setting is expected to be explicitly configured; resetting an
-        unconfigured setting is not possible and fails here.
-
-        Args:
-            expect_success: the reset form submit either redirects to the
-                'Global settings' page (success) or re-renders this page with
-                a validation error (e.g. reset not permitted). Pass True to
-                wait for and validate the redirect. Pass False when the reset
-                is expected to fail; the caller is then responsible for
-                checking the resulting validation error.
-        """
-        expect(
-            self.factory_settings_button,
-            message="Neither 'Reset to default' nor 'Remove explicit setting' is visible.",
-        ).to_be_visible()
-        expect(
-            self.factory_settings_button,
-            message="The setting is not explicitly configured, so it cannot be reset.",
-        ).not_to_contain_class("disabled")
-        self.factory_settings_button.click()
-        expect(
-            self.reset_confirmation_window, message="The reset confirmation popup did not appear."
-        ).to_be_visible()
-        self.reset_confirmation_button.click()
-        if expect_success:
-            GlobalSettings(self.page, navigate_to_page=False)
-        else:
-            self.page.wait_for_load_state("load")
-
-
-class EditPiggybackHubGlobally(EditGlobalSetting):
-    """Page to edit the global setting 'Enable piggyback-hub'"""
+    def __init__(self, page: Page, site_id: str, navigate_to_page: bool = True) -> None:
+        self._site_id = site_id
+        super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        _setting_name = "Enable piggyback-hub"
-        logger.info("Navigate to '%s' setting page", _setting_name)
-        settings_page = GlobalSettings(self.page)
-        settings_page.search_settings(_setting_name)
-        settings_page.setting_link(_setting_name).click()
-        self.page.wait_for_url(
-            url=re.compile(re.escape("varname=site_piggyback_hub")), wait_until="load"
-        )
-
-    @property
-    def _current_setting_checkbox(self) -> Locator:
-        return self.main_area.locator().get_by_role("checkbox")
-
-    def enable_hub(self) -> None:
-        self._current_setting_checkbox.set_checked(True)
-
-    def disable_hub(self) -> None:
-        self._current_setting_checkbox.set_checked(False)
-
-
-class SiteSpecificGlobalSettings(CmkPage):
-    """Site-specific global settings page"""
-
-    dropdown_buttons: list[str] = ["Connections", "Display", "Help"]
-
-    def __init__(
-        self,
-        page: Page,
-        site_id: str,
-        navigate_to_page: bool = True,
-        contain_filter_sidebar: bool = False,
-    ):
-        self._site_id = site_id
-        super().__init__(page, navigate_to_page, contain_filter_sidebar)
-
-    @property
-    def page_title(self) -> str:
-        return f"Edit site-specific global settings of {self._site_id}"
-
-    @override
-    def navigate(self) -> None:
-        logger.info("Navigate to 'Edit site-specific global settings of %s' page", self._site_id)
-
-        distributed_monitoring_page = DistributedMonitoring(self.page)
-        distributed_monitoring_page.site_specific_global_configuration(self._site_id).click()
-        _edit_sites_url_pattern = re.escape(
-            f"wato.py?folder=&mode=edit_site_globals&site={self._site_id}"
-        )
-        self.page.wait_for_url(re.compile(f"{_edit_sites_url_pattern}$"), wait_until="load")
-
-    @override
-    def validate_page(self) -> None:
-        logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
-
-    @override
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
-
-    @property
-    def _searchbar(self) -> Locator:
-        return self.main_area.locator().get_by_role(role="textbox", name="Find on this page ...")
-
-    def setting_link(self, setting_name: str) -> Locator:
-        return self.get_link(setting_name)
-
-    def search_settings(self, search_text: str) -> None:
-        """Search for a setting using the searchbar."""
-        logger.info("Search for setting: %s", search_text)
-        self._searchbar.fill(search_text)
-        self.main_area.locator().get_by_role(role="button", name="Submit").click()
-
-    def _toggle_button(self, var_name: str) -> Locator:
-        self.search_settings(var_name)
-        return self.main_area.locator().get_by_role("link", name="Click to toggle this setting")
-
-    def toggle(self, var_name: str) -> None:
-        """Toggle a setting on or off."""
-        logger.info("Toggle setting: %s", var_name)
-        self._toggle_button(var_name).click()
-
-
-class EditSiteSpecificGlobalSetting(CmkPage, ABC):
-    """General "edit global settings" page for site-specific settings"""
-
-    dropdown_buttons: list[str] = ["Setting", "Display", "Help"]
-
-    def __init__(
-        self,
-        page: Page,
-        site_id: str,
-        navigate_to_page: bool = True,
-        contain_filter_sidebar: bool = False,
-    ):
-        self._site_id = site_id
-        super().__init__(page, navigate_to_page, contain_filter_sidebar)
-
-    @property
-    def page_title(self) -> str:
-        return f"Site-specific global configuration for {self._site_id}"
-
-    @override
-    def validate_page(self) -> None:
-        logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
-
-    @override
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
-
-    @property
-    def save_button(self) -> Locator:
-        return self.main_area.get_suggestion("Save")
-
-    @property
-    def factory_settings_button(self) -> Locator:
-        # button is named differently depending on current settings
-        return self.main_area.get_suggestion("Reset to default").or_(
-            self.main_area.get_suggestion("Remove explicit setting")
-        )
-
-    @property
-    def reset_confirmation_window(self) -> Locator:
-        return self.main_area.locator("div[class*='confirm_popup']")
-
-    @property
-    def reset_confirmation_button(self) -> Locator:
-        return self.reset_confirmation_window.get_by_role("button", name="Reset")
-
-    def to_factory_settings(self, expect_success: bool = True) -> None:
-        """Reset the setting to default and confirm the reset.
-
-        The setting is expected to be explicitly configured; resetting an
-        unconfigured setting is not possible and fails here.
-
-        Args:
-            expect_success: the reset form submit either redirects to the
-                'Site-specific global settings' page (success) or re-renders
-                this page with a validation error (e.g. reset not permitted).
-                Pass True to wait for and validate the redirect. Pass False
-                when the reset is expected to fail; the caller is then
-                responsible for checking the resulting validation error.
-        """
-        expect(
-            self.factory_settings_button,
-            message="Neither 'Reset to default' nor 'Remove explicit setting' is visible.",
-        ).to_be_visible()
-        expect(
-            self.factory_settings_button,
-            message="The setting is not explicitly configured, so it cannot be reset.",
-        ).not_to_contain_class("disabled")
-        self.factory_settings_button.click()
-        expect(
-            self.reset_confirmation_window, message="The reset confirmation popup did not appear."
-        ).to_be_visible()
-        self.reset_confirmation_button.click()
-        if expect_success:
-            SiteSpecificGlobalSettings(self.page, self._site_id, navigate_to_page=False)
-        else:
-            self.page.wait_for_load_state("load")
-
-
-class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):
-    """Page to edit the site-specific global setting 'Enable piggyback-hub'"""
-
-    def __init__(
-        self,
-        page: Page,
-        site_id: str,
-        navigate_to_page: bool = True,
-        contain_filter_sidebar: bool = False,
-    ):
-        self._site_id = site_id
-        super().__init__(page, site_id, navigate_to_page, contain_filter_sidebar)
-
-    @override
-    def navigate(self) -> None:
-        _setting_name = "Enable piggyback-hub"
-        logger.info("Navigate to '%s' setting page", _setting_name)
-        settings_page = SiteSpecificGlobalSettings(self.page, self._site_id)
-        settings_page.search_settings(_setting_name)
-        settings_page.setting_link(_setting_name).click()
-        self.page.wait_for_url(
-            url=re.compile(re.escape("varname=site_piggyback_hub")), wait_until="load"
-        )
-
-    @property
-    def _current_setting_checkbox(self) -> Locator:
-        return self.main_area.locator().get_by_role("checkbox")
-
-    def enable_hub(self) -> None:
-        self._current_setting_checkbox.set_checked(True)
-
-    def disable_hub(self) -> None:
-        self._current_setting_checkbox.set_checked(False)
+        logger.info("Navigate to the site-specific settings of site '%s'", self._site_id)
+        DistributedMonitoring(self.page).site_specific_settings_link(self._site_id).click()
+        self._wait_for_url(f"site_specific_settings.py?site={self._site_id}")
+        self.validate_page()

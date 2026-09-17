@@ -12,6 +12,14 @@ common --downloader_config=bazel_downloader.cfg
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
 common:linux --experimental_disk_cache_gc_max_size=100G
 
+# Share fetched external repos across workspaces instead of extracting a private copy into every
+# output base.  Bazel 8 ships this disabled (the flag defaults to the empty string); Bazel 9 enables
+# it by default, at which point this can go. Entries unused for --repo_contents_cache_gc_max_age
+# (default 14d) are collected, so external/ stops growing without bound. CI has ephemeral runners,
+# the content would be thrown away anyways.
+common:linux --repo_contents_cache=~/.cache/bazel/repo_contents_cache
+common:ci --repo_contents_cache=
+
 # WORKSPACE support is fully removed; everything is defined via Bzlmod (MODULE.bazel)
 common --noenable_workspace
 

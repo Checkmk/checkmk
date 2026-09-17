@@ -147,6 +147,16 @@ class LoggedInUser:
             raise AttributeError("No user_id on this instance.")
         return self.id
 
+    @property
+    def is_anonymous(self) -> bool:
+        """Whether the request was not authenticated at all.
+
+        Not the same as having no user id: the superuser and a remote site are
+        pseudo users for requests authenticated by the site-internal or the
+        remote-site secret, and have no user id either.
+        """
+        return False
+
     def _gather_roles(self, user_id: UserId | None) -> list[str]:
         return self._user_permissions.roles_of_user(user_id)
 
@@ -596,6 +606,11 @@ class LoggedInNobody(LoggedInUser):
         super().__init__(None, UserPermissions({}, {}, {}, []), defaults=_NO_USERS)
         self.alias = "Unauthenticated user"
         self.email = "nobody"
+
+    @property
+    @override
+    def is_anonymous(self) -> bool:
+        return True
 
     @override
     def _gather_roles(self, _user_id: UserId | None) -> list[str]:

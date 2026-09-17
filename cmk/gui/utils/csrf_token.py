@@ -8,7 +8,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.session import SessionProtocol
 from cmk.utils.security_event import log_security_event, SecurityEvent
 
@@ -46,7 +45,7 @@ class CSRFTokenMissingEvent(SecurityEvent):
 def check_csrf_token(
     session: SessionProtocol, request: Request, *, token: str | None = None
 ) -> None:
-    if isinstance(session.user, LoggedInNobody):
+    if session.user.is_anonymous:
         return
 
     csrf_token = token or request.get_str_input("_csrf_token")

@@ -275,6 +275,13 @@ def test_logged_in_remote_site_permissions() -> None:
         user.need_permission("any_permission")
 
 
+def test_only_nobody_is_anonymous() -> None:
+    """The CSRF check skips anonymous users, and these three all have no user id."""
+    assert LoggedInNobody().is_anonymous is True
+    assert LoggedInSuperUser().is_anonymous is False
+    assert LoggedInRemoteSite(site_name="site_id").is_anonymous is False
+
+
 MONITORING_USER_CACHED_PROFILE = {
     "alias": "Test user",
     "authorized_sites": ["heute", "heute_slave_1"],

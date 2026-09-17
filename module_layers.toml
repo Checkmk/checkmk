@@ -867,6 +867,16 @@ allows = [
 [components."cmk.mcp"]
 allows = ["@ccc", "@trace", "@crash"]
 
+[components."cmk.mcp.gui"]
+allows = [
+  "cmk.web.utils",
+  "@ccc",
+  "cmk.gui",
+  "cmk.gui_plugins.internal",
+  "cmk.rulesets",
+  "cmk.utils",
+]
+
 [components."cmk.messaging"]
 allows = ["@ccc"]
 

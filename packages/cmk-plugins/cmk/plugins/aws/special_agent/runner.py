@@ -200,13 +200,29 @@ class AWSSections(abc.ABC):
     ) -> None:
         self._hostname = hostname
         self._session = session
+        # None until init_sections runs. boto3 then falls back to the session's own
+        # region, which is what happened before the region moved onto the client.
+        self._region: str | None = None
         self._debug = debug
         self._sections: list[AWSSection] = []
         self.config = config
         self.account_id = account_id
 
-    @abc.abstractmethod
     def init_sections(
+        self,
+        services: Sequence[str],
+        region: str,
+        config: AWSConfig,
+        s3_limits_distributor: ResultDistributorS3Limits,
+    ) -> None:
+        # Remember the region before building anything, so that every client created
+        # below lands in it. One session serves all regions; the client decides where it
+        # talks to.
+        self._region = region
+        self._build_sections(services, region, config, s3_limits_distributor)
+
+    @abc.abstractmethod
+    def _build_sections(
         self,
         services: Sequence[str],
         region: str,
@@ -219,7 +235,7 @@ class AWSSections(abc.ABC):
         try:
             # TODO: The signature of the client() method depends on the literal(!) value of its
             # first argument, so using a plain str here is wrong.
-            return self._session.client(client_key, config=self.config)
+            return self._session.client(client_key, region_name=self._region, config=self.config)
         except (
             ValueError,
             botocore.exceptions.ClientError,
@@ -374,7 +390,7 @@ class AWSSectionsUSEast(AWSSections):
     """
 
     @override
-    def init_sections(
+    def _build_sections(
         self,
         services: Sequence[str],
         region: str,
@@ -493,7 +509,7 @@ def _create_route53_sections(
 
 class AWSSectionsGeneric(AWSSections):
     @override
-    def init_sections(
+    def _build_sections(
         self,
         services: Sequence[str],
         region: str,

@@ -664,18 +664,61 @@ def _create_session_from_args(
     return _create_session(args.access_key_identity, secret_access_key, region, config=config)
 
 
-def _get_account_id(args: argparse.Namespace, config: botocore.config.Config | None) -> str:
-    try:
-        session = _create_session_from_args(args, args.global_service_region, config)
-        account_id = session.client("sts", config=config).get_caller_identity()["Account"]
-    except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
-        raise AwsAccessError(describe_credential_failure(e))
-    return account_id
+class AwsCredentials:
+    """Owns the credentials for one agent run.
+
+    One base session is built, and every region shares it. Credentials are therefore
+    resolved once per run instead of once per region. That costs nothing with a static
+    access key, but with AssumeRole it is one STS call instead of N, and with the boto3
+    credential provider chain it is one provider lookup instead of N. A
+    `credential_process` or IAM Roles Anywhere setup pays a subprocess or a signed HTTPS
+    round trip for each of those lookups.
+
+    The base session is pinned to --global-service-region. Clients override the region
+    individually, so a shared session does not force a shared region. Keeping the base
+    session in the configured global region also keeps the AssumeRole STS call inside the
+    partition being monitored, which is what us-gov-* and cn-* setups need.
+    """
+
+    def __init__(
+        self, args: argparse.Namespace, proxy_config: botocore.config.Config | None
+    ) -> None:
+        self._args = args
+        self._proxy_config = proxy_config
+        self._session: boto3.session.Session | None = None
+        self._account_id: str | None = None
+
+    def session(self) -> boto3.session.Session:
+        """The single session of this run, built on first use and then reused."""
+        if self._session is None:
+            self._session = _create_session_from_args(
+                self._args, self._args.global_service_region, self._proxy_config
+            )
+        return self._session
+
+    def account_id(self) -> str:
+        """The account the credentials belong to. One STS call per run, then cached."""
+        if self._account_id is None:
+            try:
+                # The session is built inside the try on purpose. It does not resolve
+                # credentials, but it does read the shared config, so a missing
+                # AWS_PROFILE or an unparsable config file raises here rather than at the
+                # client call below.
+                self._account_id = (
+                    self.session()
+                    .client("sts", config=self._proxy_config)
+                    .get_caller_identity()["Account"]
+                )
+            except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+                # BotoCoreError covers every client-side failure, including all the
+                # credential ones. ClientError is not a BotoCoreError, so it stays listed.
+                raise AwsAccessError(describe_credential_failure(e))
+        return self._account_id
 
 
-def _test_connection(args: argparse.Namespace, proxy_config: botocore.config.Config | None) -> int:
+def _test_connection(credentials: AwsCredentials) -> int:
     try:
-        _get_account_id(args, proxy_config)
+        credentials.account_id()
     except AwsAccessError as ae:
         error_msg = f"Connection failed with: {ae}\n"
         sys.stderr.write(error_msg)
@@ -687,12 +730,15 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     _setup_logging(args.debug, args.verbose)
 
     proxy_config = _get_proxy(args)
+    # One credential owner for the whole run. The connection test and the agent run take
+    # the same one, so both resolve credentials through the same path.
+    credentials = AwsCredentials(args, proxy_config)
 
     if args.connection_test:
-        return _test_connection(args, proxy_config)
+        return _test_connection(credentials)
 
     try:
-        account_id = _get_account_id(args, proxy_config)
+        account_id = credentials.account_id()
     except AwsAccessError as ae:
         # can not access AWS, retreat
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -729,9 +775,14 @@ def agent_aws_main(args: argparse.Namespace) -> int:
 
         for region in aws_regions:
             try:
-                session = _create_session_from_args(args, region, proxy_config)
+                # The same session for every region. init_sections below tells the
+                # sections which region their clients belong to.
                 sections = aws_sections(
-                    args.hostname, session, account_id, debug=args.debug, config=proxy_config
+                    args.hostname,
+                    credentials.session(),
+                    account_id,
+                    debug=args.debug,
+                    config=proxy_config,
                 )
                 sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)

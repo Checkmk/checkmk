@@ -18,7 +18,6 @@
 #    => These already bear all information about the contact, the plug-in
 #       to call and its parameters.
 
-import ast
 import contextlib
 import datetime
 import io
@@ -44,7 +43,6 @@ import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 import cmk.utils.timeperiod
-from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
 from cmk.automations.results import (
     NotificationAnalyseResult,
     NotificationGetBulksResult,
@@ -57,13 +55,12 @@ from cmk.base.automations.automations import Automation, load_config, load_plugi
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout, raise_mkterminate_on_sigint
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -104,8 +101,7 @@ from cmk.events.notify_types import (
 from cmk.livestatus_client import MKLivestatusException
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher, RuleSpec
-from cmk.utils import http_proxy_config, log, timeperiod
-from cmk.utils.http_proxy_config import make_http_proxy_getter
+from cmk.utils import http_proxy_config, log
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.timeperiod import (
@@ -358,94 +354,6 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   +----------------------------------------------------------------------+
 #   |  Main code entry point.                                              |
 #   '----------------------------------------------------------------------'
-
-
-def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
-    return dict.fromkeys(parsed, True)
-
-
-def _mode_notify(
-    app: CheckmkBaseApp, _global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
-    options = _notify_flags(parsed)
-    community_edition = app.edition is Edition.COMMUNITY
-    if not community_edition and "spoolfile" in args:
-        return (
-            _do_notify_via_automation(
-                options=options,
-                args=list(args),
-            )
-            or 0
-        )
-
-    if keepalive := not community_edition and "keepalive" in options:
-        raise_mkterminate_on_sigint()
-
-    with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(
-            with_conf_d=True,
-            validate_hosts=False,
-        )
-
-    exit_status = do_notify(
-        options,
-        list(args),
-        notification_config=make_notification_config(
-            app.edition,
-            loading_result.loaded_config,
-            loading_result.config_cache.ruleset_matcher,
-            loading_result.config_cache.label_manager,
-        ),
-        define_servicegroups=loading_result.loaded_config.define_servicegroups,
-        get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-        ensure_nagios=make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-        config_contacts=loading_result.loaded_config.contacts,
-        keepalive=keepalive,
-        all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
-        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
-            livestatus.get_optional_timeperiods_active_map, logger.warning
-        ),
-    )
-    return exit_status or 0
-
-
-def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
-    log_to_stdout = False
-    if options.get("log-to-stdout"):
-        args.insert(0, "--log-to-stdout")
-        log_to_stdout = True
-
-    try:
-        result = HelperExecutor().execute(
-            command=AutomationID("notify"),
-            args=args,
-            stdin="",
-            timeout=None,
-        )
-    except AutomationHelperUnavailable:
-        logger.exception(
-            "The automation-helper service is required for the notification spooler. "
-            "Please make sure all site services are started."
-        )
-        return 1
-    except Exception:
-        logger.exception("Error running automation call 'notify'")
-        return 1
-
-    try:
-        data = ast.literal_eval(result.output)
-    except SyntaxError, ValueError, TypeError:
-        logger.exception("Could not parse automation result %(output)r", {"output": result.output})
-        return 2
-
-    if isinstance(data, dict):
-        if log_to_stdout:
-            sys.stdout.write(data["output"])
-            sys.stdout.flush()
-        return data.get("exit_code")
-
-    logger.error("Unexpected automation result format: %(data)r", {"data": data})
-    return 2
 
 
 def notify_usage() -> None:
@@ -969,25 +877,6 @@ def _automation_get_bulks(
         )
     )
 
-
-cli_command_notify = CLICommand(
-    long_option="notify",
-    handler_function=_mode_notify,
-    argument=True,
-    argument_descr="MODE",
-    argument_optional=True,
-    sub_options=[
-        CLIOption(
-            long_option="log-to-stdout",
-            short_help="Also write log messages to console",
-        ),
-        CLIOption(
-            long_option="keepalive",
-            short_help="Execute in keepalive mode (Commercial editions only)",
-        ),
-    ],
-    short_help="Used to send notifications from core",
-)
 
 automation_notification_replay = Automation(
     name=AutomationID("notification-replay"),

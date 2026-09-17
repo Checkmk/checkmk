@@ -113,6 +113,7 @@ py_library(
         "//cmk/base:__subpackages__",
         "//cmk/cli/engine:__pkg__",
         "//cmk/config_anonymizer:__pkg__",
+        "//cmk/plugins:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
         "//tests:__subpackages__",
     ],
@@ -135,6 +136,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

@@ -625,9 +625,10 @@ def test_reserved_endpoint_auth(
         "/NO_SITE/check_mk/api/1.0/i_am_reserved",
         "",
         {"Accept": "application/json"},
-        status=401,
+        status=403,
     )
 
+    assert res.json["title"] == "Forbidden"
     assert res.json["detail"] == "This endpoint is reserved for Checkmk."
 
     mocked_secret_path = tmp_path / "siteinternal.secret"

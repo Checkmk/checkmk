@@ -88,7 +88,9 @@ const selected = computed<string[]>({
     <CmkInput
       v-else
       v-model="value"
+      class="monitoring-filter-string-input__element"
       field-size="medium"
+      :placeholder="_t('Contains ...')"
       :aria-label="_t('Value')"
       @update:model-value="createFilterNode($event)"
     />
@@ -97,6 +99,11 @@ const selected = computed<string[]>({
 
 <style scoped>
 .monitoring-filter-string-input__container {
-  margin: 4px 2px;
+  margin: 0 var(--dimension-5) var(--dimension-4) var(--dimension-5);
+
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(.monitoring-filter-string-input__element) {
+    width: 100%;
+  }
 }
 </style>

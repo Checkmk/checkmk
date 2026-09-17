@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-15 05:58+0000\n"
+"PO-Revision-Date: 2026-09-16 17:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -23112,7 +23112,8 @@ msgstr "レプリケーションを有効にする"
 msgid "Enable Caching"
 msgstr "キャッシュを有効にする"
 
-msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+#, fuzzy
+msgid "Enable Checkmk's AI assistant, powered by the AI control plane daemon."
 msgstr ""
 "AIエージェントエンジンデーモンによって駆動されるCheckmkのAIアシスタントを有効"
 "にします。"
@@ -23387,7 +23388,6 @@ msgstr "トレンド計算を有効にする"
 msgid "Enable unique piggyback host name computation"
 msgstr "ホスト名条件のピギーバック"
 
-#, fuzzy
 msgid "Enable/disable active checks"
 msgstr "アクティブチェックを有効/無効にする"
 
@@ -23403,13 +23403,12 @@ msgstr "ホストのフラッピング検出を有効/無効にする"
 msgid "Enable/disable flapping detection for services"
 msgstr "サービスのフラッピング検出を有効/無効にする"
 
-#, fuzzy
 msgid ""
 "Enable/disable logging to Windows debugging interface. Off by default. View "
 "with <i>WinDbg</i>"
 msgstr ""
 "Windows デバッグ インターフェースへのログ出力を有効または無効にします。デフォ"
-"ルトでは無効になっています。<i>WinDbg</i> で表示してください"
+"ルトは無効です。<i>WinDbg</i> で表示してください"
 
 msgid "Enable/disable notifications"
 msgstr "通知を有効/無効にする"
@@ -23420,7 +23419,6 @@ msgstr "ホストの通知を有効/無効にする"
 msgid "Enable/disable notifications for services"
 msgstr "サービスの通知を有効/無効にする"
 
-#, fuzzy
 msgid "Enable/disable passive checks"
 msgstr "パッシブチェックを有効/無効にする"
 
@@ -23501,14 +23499,15 @@ msgstr ""
 "ティビティの詳細なログエントリが作成されます。無効にすると、問題のみがログに"
 "記録されます。"
 
-#, fuzzy
 msgid ""
 "Enabling this option will enforce two-factor authentication for all users. "
 "Enabling this setting will override role based two-factor enforcement. "
 "Automation users are exempt, as they cannot use two-factor authentication."
 msgstr ""
-"このオプションを有効にすると、すべてのユーザーに二要素認証が適用されます。こ"
-"の設定を有効にすると、ロールベースの二要素認証が無効になります。"
+"このオプションを有効にすると、すべてのユーザーに対して二要素認証が強制されま"
+"す。この設定を有効にすると、ロールに基づく二要素認証の強制設定が上書きされま"
+"す。オートメーションユーザーは二要素認証を利用できないため、この対象外となり"
+"ます。"
 
 msgid ""
 "Enabling this option will result in an additional service for every RMON-"
@@ -23566,7 +23565,6 @@ msgstr "Enc-Outフレームレート"
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
 
-#, fuzzy
 msgid "Enclosure stats"
 msgstr "エンクロージャー統計"
 
@@ -23626,9 +23624,8 @@ msgstr "終わり"
 msgid "End growing here"
 msgstr "ここで成長終了"
 
-#, fuzzy
 msgid "End time"
-msgstr "ノータイム"
+msgstr "終了時刻"
 
 #, fuzzy
 msgid "End-to-end errors (id 184)"

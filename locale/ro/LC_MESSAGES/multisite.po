@@ -24935,7 +24935,7 @@ msgstr "Activați replicarea"
 msgid "Enable Caching"
 msgstr "Activați Caching"
 
-msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+msgid "Enable Checkmk's AI assistant, powered by the AI control plane daemon."
 msgstr ""
 
 #, fuzzy

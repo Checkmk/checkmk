@@ -25054,7 +25054,7 @@ msgstr "Activer la réplication"
 msgid "Enable Caching"
 msgstr "Activer la mise en cache"
 
-msgid "Enable Checkmk's AI assistant, powered by the AI agent engine daemon."
+msgid "Enable Checkmk's AI assistant, powered by the AI control plane daemon."
 msgstr ""
 
 #, fuzzy

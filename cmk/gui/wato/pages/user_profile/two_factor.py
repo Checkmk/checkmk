@@ -97,6 +97,7 @@ from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.wato.pages._user_security_message import (
     SecurityNotificationEvent,
     send_security_message,
@@ -113,7 +114,6 @@ from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .page_menu import page_menu_dropdown_user_related
-from .verify_requirements import verify_requirements
 
 # NOTE: In fido2 >= 2.0.0, this feature has been removed and is enabled per default, see
 # https://github.com/Yubico/python-fido2/blob/main/doc/Migration_1-2.adoc#removal-of-featureswebauthn_json_mapping

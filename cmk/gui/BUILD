@@ -527,6 +527,7 @@ py_library(
         "login.py",
         "saml2_login.py",
         "session.py",
+        "verify_requirements.py",
     ],
     imports = ["../.."],
     visibility = [

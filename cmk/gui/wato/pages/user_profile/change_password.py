@@ -31,6 +31,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.wato.pages._user_security_message import (
     SecurityNotificationEvent,
     send_security_message,
@@ -46,7 +47,6 @@ from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.urls import makeuri_contextless
 
 from .page_menu import user_profile_page_menu
-from .verify_requirements import verify_requirements
 
 
 def register(edition: Edition, page_registry: PageRegistry) -> None:

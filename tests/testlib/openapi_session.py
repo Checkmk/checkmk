@@ -2326,6 +2326,9 @@ class DataBackendAPI(BaseAPI):
     # register PUT and their Apache config rejects PATCH at the mod_rewrite
     # layer with 405.
     _PATCH_SINCE = CMKVersion("2.5.0p2")
+    # The domain type was renamed from `metric_backend` to `data_backend` on master
+    # only, so older sites still serve the old name and answer the new one with 404.
+    _DATA_BACKEND_DOMAIN_SINCE = CMKVersion("3.0.0b1")
 
     def _request(self, site_id: str, config_type: str) -> None:
         method = (
@@ -2333,8 +2336,13 @@ class DataBackendAPI(BaseAPI):
             if self.session.site_version >= self._PATCH_SINCE
             else self.session.put
         )
+        domain_type = (
+            "data_backend"
+            if self.session.site_version >= self._DATA_BACKEND_DOMAIN_SINCE
+            else "metric_backend"
+        )
         response = method(
-            "domain-types/data_backend/actions/update/invoke",
+            f"domain-types/{domain_type}/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,

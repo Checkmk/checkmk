@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-import enum
 import itertools
 import logging
 import os
@@ -133,7 +132,6 @@ from cmk.cli.engine.modes import (
     write_stdout,
 )
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
-from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,
@@ -143,19 +141,15 @@ from cmk.inventory.structured_data import (
     RawIntervalFromConfig,
     SDPath,
 )
-from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.piggyback import backend as piggyback_backend
-from cmk.profiling import backend as profiling
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
 )
-from cmk.ruleset_matcher.tags import HostTags, TagID
-from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
+from cmk.ruleset_matcher.tags import HostTags
 from cmk.server_side_calls_backend import (
     ExecutableFinder,
-    load_active_checks,
     load_secrets_file,
 )
 from cmk.utils import config_warnings, ip_lookup, timeperiod
@@ -163,7 +157,6 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console, section
-from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
 tracer = trace.get_tracer()
@@ -312,285 +305,6 @@ _SNMP_BACKEND_OPTION: Final = CLIOption(
     short_help="Override default SNMP backend",
     argument=True,
     argument_descr="inline|classic|stored-walk",
-)
-
-# .
-#   .--list-hosts----------------------------------------------------------.
-#   |              _ _     _        _               _                      |
-#   |             | (_)___| |_     | |__   ___  ___| |_ ___                |
-#   |             | | / __| __|____| '_ \ / _ \/ __| __/ __|               |
-#   |             | | \__ \ ||_____| | | | (_) \__ \ |_\__ \               |
-#   |             |_|_|___/\__|    |_| |_|\___/|___/\__|___/               |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-# TODO: Does not care about internal group "check_mk"
-def _list_all_hosts(
-    config_cache: ConfigCache,
-    hosts_config: Hosts,
-    core_objects_config: config.CoreObjectsConfig,
-    hostgroups: Sequence[str],
-    options: Mapping[str, object],
-) -> list[HostName]:
-    hostnames: Iterable[HostName]
-
-    all_sites = options.get("all-sites")
-    offline = "include-offline" in options
-
-    if all_sites:
-        hostnames = filter(
-            lambda hn: offline or config_cache.is_online(hn),
-            itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts),
-        )
-    else:
-        hostnames = filter(
-            lambda hn: config_cache.is_active(hn) and (offline or config_cache.is_online(hn)),
-            itertools.chain(hosts_config.hosts, hosts_config.clusters),
-        )
-
-    hostnames = sorted(set(hostnames))
-    if not hostgroups:
-        return hostnames
-
-    hostlist = []
-    for hn in hostnames:
-        for hg in core_objects_config.hostgroups(hn):
-            if hg in hostgroups:
-                hostlist.append(hn)
-                break
-
-    return hostlist
-
-
-def _mode_list_hosts(
-    _app: object, _global_options: GlobalOptions, options: Options, args: Args
-) -> int:
-    loading_result = config.load()
-    config_cache = loading_result.config_cache
-    core_objects_config = config.CoreObjectsConfig(
-        loading_result.loaded_config,
-        config_cache.ruleset_matcher,
-        config_cache.label_manager,
-    )
-    hosts = _list_all_hosts(
-        config_cache,
-        loading_result.hosts_config,
-        core_objects_config,
-        args,
-        options,
-    )
-    with suppress(IOError):
-        sys.stdout.write("\n".join(hosts) + "\n")
-        sys.stdout.flush()
-    return 0
-
-
-cli_command_list_hosts = CLICommand(
-    long_option="list-hosts",
-    short_option="l",
-    handler_function=_mode_list_hosts,
-    argument=True,
-    argument_descr="G1 G2...",
-    argument_optional=True,
-    sub_options=[
-        CLIOption(
-            long_option="all-sites",
-            short_help="Include hosts of foreign sites",
-        ),
-        CLIOption(
-            long_option="include-offline",
-            short_help="Include offline hosts",
-        ),
-    ],
-    short_help="Print list of all hosts or members of host groups",
-    long_help=[
-        (
-            "Called without argument lists all hosts. You may "
-            "specify one or more host groups to restrict the output to hosts "
-            "that are in at least one of those groups."
-        ),
-    ],
-)
-
-# .
-#   .--list-tag------------------------------------------------------------.
-#   |                   _ _     _        _                                 |
-#   |                  | (_)___| |_     | |_ __ _  __ _                    |
-#   |                  | | / __| __|____| __/ _` |/ _` |                   |
-#   |                  | | \__ \ ||_____| || (_| | (_| |                   |
-#   |                  |_|_|___/\__|     \__\__,_|\__, |                   |
-#   |                                             |___/                    |
-#   '----------------------------------------------------------------------'
-
-
-def _list_all_hosts_with_tags(
-    tags: Sequence[TagID],
-    config_cache: ConfigCache,
-    hosts_config: Hosts,
-    host_tags: HostTags,
-) -> Sequence[HostName]:
-
-    if "offline" in tags:
-        hostnames = filter(
-            lambda hn: config_cache.is_active(hn) and config_cache.is_offline(hn),
-            itertools.chain(hosts_config.hosts, hosts_config.clusters),
-        )
-    else:
-        hostnames = filter(
-            lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn),
-            itertools.chain(hosts_config.hosts, hosts_config.clusters),
-        )
-
-    hosts = []
-    for h in set(hostnames):
-        if hosttags_match_taglist(host_tags.tag_list(h), tags):
-            hosts.append(h)
-    return hosts
-
-
-def _mode_list_tag(
-    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
-    loading_result = config.load()
-    hosts = _list_all_hosts_with_tags(
-        tuple(TagID(_) for _ in args),
-        loading_result.config_cache,
-        loading_result.hosts_config,
-        loading_result.host_tags,
-    )
-    write_stdout("\n".join(sorted(hosts)))
-    if hosts:
-        write_stdout("\n")
-    return 0
-
-
-cli_command_list_tag = CLICommand(
-    long_option="list-tag",
-    handler_function=_mode_list_tag,
-    argument=True,
-    argument_descr="TAG1 TAG2...",
-    argument_optional=True,
-    short_help="List hosts having certain tags",
-    long_help=["Prints all hosts that have all of the specified tags at once."],
-)
-
-# .
-#   .--list-checks---------------------------------------------------------.
-#   |           _ _     _             _               _                    |
-#   |          | (_)___| |_       ___| |__   ___  ___| | _____             |
-#   |          | | / __| __|____ / __| '_ \ / _ \/ __| |/ / __|            |
-#   |          | | \__ \ ||_____| (__| | | |  __/ (__|   <\__ \            |
-#   |          |_|_|___/\__|     \___|_| |_|\___|\___|_|\_\___/            |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class _DSType(enum.Enum):
-    ACTIVE = enum.auto()
-    SNMP = enum.auto()
-    AGENT = enum.auto()
-    AGENT_SNMP = enum.auto()
-
-
-@dataclasses.dataclass(frozen=True)
-class _TableRow:
-    name: str
-    ds_type: _DSType
-    title: str
-
-    def render_tty(self) -> str:
-        return f"{self._render_name()}{self._render_ds_type()}{self._render_title()}"
-
-    def _render_name(self) -> str:
-        return f"{tty.bold}{self.name!s:44}"
-
-    def _render_ds_type(self) -> str:
-        match self.ds_type:
-            case _DSType.ACTIVE:
-                return f"{tty.blue}{'active':10}"
-            case _DSType.SNMP:
-                return f"{tty.magenta}{'snmp':10}"
-            case _DSType.AGENT:
-                return f"{tty.yellow}{'agent':10}"
-            case _DSType.AGENT_SNMP:
-                return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
-
-    def _render_title(self) -> str:
-        return f"{tty.normal}{self.title}"
-
-
-def _get_ds_type(
-    check: CheckPlugin, sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin]
-) -> _DSType:
-    raw_section_is_snmp = {
-        isinstance(s, SNMPSectionPlugin)
-        for s in filter_relevant_raw_sections(
-            consumers=(check,),
-            sections=sections,
-        ).values()
-    }
-    if all(raw_section_is_snmp):
-        return _DSType.SNMP
-    if not any(raw_section_is_snmp):
-        return _DSType.AGENT
-    return _DSType.AGENT_SNMP
-
-
-def _mode_list_checks(
-    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
-    from cmk.utils import man_pages
-
-    plugins = load_checks()
-    section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
-        *plugins.agent_sections.values(),
-        *plugins.snmp_sections.values(),
-    ]
-
-    all_check_manuals = {
-        n: man_pages.parse_man_page(n, p)
-        for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()),
-            PluginGroup.CHECKMAN.value,
-        ).items()
-    }
-
-    def _get_title(plugin_name: str) -> str:
-        try:
-            return all_check_manuals[plugin_name].title
-        except KeyError:
-            return "(no man page present)"
-
-    table = [
-        *(
-            _TableRow(
-                name=(name := f"check_{p.name}"),
-                ds_type=_DSType.ACTIVE,
-                title=_get_title(name),
-            )
-            for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
-        ),
-        *(
-            _TableRow(
-                name=str(plugin.name),
-                ds_type=_get_ds_type(plugin, section_plugins),
-                title=_get_title(str(plugin.name)),
-            )
-            for plugin in plugins.check_plugins.values()
-        ),
-    ]
-
-    for e in sorted(table, key=lambda e: e.name):
-        write_stdout(f"{e.render_tty()}\n")
-    return 0
-
-
-cli_command_list_checks = CLICommand(
-    long_option="list-checks",
-    short_option="L",
-    handler_function=_mode_list_checks,
-    short_help="List all available Check_MK checks",
 )
 
 # .
@@ -931,38 +645,6 @@ cli_command_dump = CLICommand(
     ],
 )
 
-
-# .
-#   .--package-------------------------------------------------------------.
-#   |                                 _                                    |
-#   |                _ __   __ _  ___| | ____ _  __ _  ___                 |
-#   |               | '_ \ / _` |/ __| |/ / _` |/ _` |/ _ \                |
-#   |               | |_) | (_| | (__|   < (_| | (_| |  __/                |
-#   |               | .__/ \__,_|\___|_|\_\__,_|\__, |\___|                |
-#   |               |_|                         |___/                      |
-#   '----------------------------------------------------------------------'
-
-
-_DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
-
-
-def _fail_with_deprecation_msg(
-    _app: object, _global_options: GlobalOptions, _options: Options, argv: Args
-) -> int:
-    sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
-    return 1
-
-
-cli_command_package = CLICommand(
-    long_option="package",
-    short_option="P",
-    handler_function=_fail_with_deprecation_msg,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
-    short_help="DEPRECATED: Do package operations",
-    long_help=[_DEPRECATION_MSG % ""],
-)
 
 # .
 #   .--update-dns-cache----------------------------------------------------.
@@ -1995,167 +1677,6 @@ cli_command_reload = CLICommand(
     ],
 )
 
-# .
-#   .--man-----------------------------------------------------------------.
-#   |                                                                      |
-#   |                        _ __ ___   __ _ _ __                          |
-#   |                       | '_ ` _ \ / _` | '_ \                         |
-#   |                       | | | | | | (_| | | | |                        |
-#   |                       |_| |_| |_|\__,_|_| |_|                        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _mode_man(_app: object, _global_options: GlobalOptions, options: Options, args: Args) -> int:
-    from cmk.utils import man_pages
-
-    man_page_path_map = man_pages.make_man_page_path_map(
-        discover_families(raise_errors=cmk.ccc.debug.enabled()),
-        PluginGroup.CHECKMAN.value,
-        blocked_paths=blocked_feature_files(omd_root),
-    )
-    if not args:
-        man_pages.print_man_page_table(man_page_path_map)
-        return 0
-
-    if (man_page_path := man_page_path_map.get(args[0])) is None:
-        raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
-
-    man_page = man_pages.parse_man_page(args[0], man_page_path)
-    renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
-    match options.get("renderer", "console"):
-        case "console":
-            renderer = man_pages.ConsoleManPageRenderer
-        case "nowiki":
-            renderer = man_pages.NowikiManPageRenderer
-        case other:
-            raise ValueError(other)
-
-    try:
-        rendered = renderer(man_page).render_page()
-    except Exception as exc:
-        sys.stdout.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
-        return 0
-
-    man_pages.write_output(rendered)
-    return 0
-
-
-cli_command_man = CLICommand(
-    long_option="man",
-    short_option="M",
-    handler_function=_mode_man,
-    argument=True,
-    argument_descr="CHECKTYPE",
-    argument_optional=True,
-    sub_options=[
-        CLIOption(
-            long_option="renderer",
-            short_option="r",
-            argument=True,
-            argument_descr="RENDERER",
-            short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
-        ),
-    ],
-    short_help="Show manpage for check CHECKTYPE",
-    long_help=[
-        (
-            "Shows documentation about a check type. If /usr/bin/less is "
-            "available it is used as pager. Exit by pressing Q. "
-            "Use -M without an argument to show a list of all manual pages."
-        )
-    ],
-)
-
-# .
-#   .--browse-man----------------------------------------------------------.
-#   |    _                                                                 |
-#   |   | |__  _ __ _____      _____  ___       _ __ ___   __ _ _ __       |
-#   |   | '_ \| '__/ _ \ \ /\ / / __|/ _ \_____| '_ ` _ \ / _` | '_ \      |
-#   |   | |_) | | | (_) \ V  V /\__ \  __/_____| | | | | | (_| | | | |     |
-#   |   |_.__/|_|  \___/ \_/\_/ |___/\___|     |_| |_| |_|\__,_|_| |_|     |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _mode_browse_man(
-    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
-    from cmk.utils import man_pages
-
-    man_pages.print_man_page_browser(
-        man_pages.load_man_page_catalog(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()),
-            PluginGroup.CHECKMAN.value,
-            blocked_paths=blocked_feature_files(omd_root),
-        )
-    )
-    return 0
-
-
-cli_command_browse_man = CLICommand(
-    long_option="browse-man",
-    short_option="m",
-    handler_function=_mode_browse_man,
-    short_help="Open interactive manpage browser",
-)
-
-# .
-#   .--automation----------------------------------------------------------.
-#   |                   _                        _   _                     |
-#   |        __ _ _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __          |
-#   |       / _` | | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \         |
-#   |      | (_| | |_| | || (_) | | | | | | (_| | |_| | (_) | | | |        |
-#   |       \__,_|\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _mode_automation(
-    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
-    from cmk.automations.types import AutomationID
-    from cmk.base.automations.automations import (
-        AutomationError,
-        Automations,
-        discover_automations,
-        MKAutomationError,
-    )
-
-    if not args:
-        raise MKAutomationError("You need to provide arguments")
-
-    name, automation_args = AutomationID(args[0]), list(args[1:])
-    automations = Automations(discover_automations())
-    with tracer.span(
-        f"mode_automation[{name}]",
-        attributes={
-            "cmk.automation.name": name,
-            "cmk.automation.args": automation_args,
-        },
-    ):
-        try:
-            result = automations.execute(app, name, automation_args)
-        finally:
-            profiling.output_profile(cmk.utils.paths.profiles_dir)
-        if isinstance(result, AutomationError):
-            return result
-        with suppress(IOError):
-            sys.stdout.write(
-                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)) + "\n"
-            )
-            sys.stdout.flush()
-        return 0
-
-
-cli_command_automation = CLICommand(
-    long_option="automation",
-    handler_function=_mode_automation,
-    argument=True,
-    argument_descr="COMMAND...",
-    argument_optional=True,
-    short_help="Internal helper to invoke Check_MK actions",
-)
 
 # .
 #   .--check-discovery-----------------------------------------------------.
@@ -3822,53 +3343,4 @@ cli_command_inventorize_marked_hosts = CLICommand(
         "Run actual service HW/SW Inventory on all hosts that had no tree data",
         "in the previous run",
     ],
-)
-
-# .
-#   .--version-------------------------------------------------------------.
-#   |                                     _                                |
-#   |                 __   _____ _ __ ___(_) ___  _ __                     |
-#   |                 \ \ / / _ \ '__/ __| |/ _ \| '_ \                    |
-#   |                  \ V /  __/ |  \__ \ | (_) | | | |                   |
-#   |                   \_/ \___|_|  |___/_|\___/|_| |_|                   |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _mode_version(
-    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
-    write_stdout(
-        """This is %s version %s
-Copyright (C) 2009 Checkmk GmbH
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; see the file COPYING.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
-
-"""
-        % (
-            app.edition.title,
-            cmk_version.__version__,
-        )
-    )
-    return 0
-
-
-cli_command_version = CLICommand(
-    long_option="version",
-    short_option="V",
-    handler_function=_mode_version,
-    short_help="Print the version of Checkmk",
 )

@@ -205,8 +205,14 @@ allows = [
   "cmk.ccc",
   "cmk.checkengine",
   "cmk.checkengine.fetchers",
-  # The "cmk" commands (cli) use the engine's shared option helpers.
+  # The "cmk" commands (cli) drive the whole base: automations, man pages
+  # (feature filter), plug-in discovery, profiling and tracing.
+  "cmk.automations",
   "cmk.cli.engine",
+  "cmk.discover_plugins",
+  "cmk.licensing.basics.finder",
+  "cmk.profiling",
+  "cmk.trace",
   # The agent_controller_connections core bakelet reads the site certificate.
   "cmk.crypto",
   # "cmk --handle-alerts" works on the event types of the alert handling.

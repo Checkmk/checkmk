@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type ModeHostFormKeys, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -342,7 +342,7 @@ async function startTest(): Promise<void> {
       :text="_t('Testing SNMP connection ...')"
     />
 
-    <CmkAlertBox
+    <CmkAlertBoxDeprecated
       v-if="isSuccess"
       variant="success"
       size="small"
@@ -372,9 +372,9 @@ async function startTest(): Promise<void> {
           <CmkInput :id="snmpRetriesId" v-model="snmpRetries" type="number" min="0" />
         </span>
       </span>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
 
-    <CmkAlertBox
+    <CmkAlertBoxDeprecated
       v-if="isError"
       variant="warning"
       size="small"
@@ -421,7 +421,7 @@ async function startTest(): Promise<void> {
           </span>
         </span>
       </div>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </Teleport>
 </template>
 

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
@@ -78,10 +78,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="unified-search-empty-results">
-    <CmkAlertBox v-if="error" class="unified-search-empty-results__error" variant="error">
+    <CmkAlertBoxDeprecated v-if="error" class="unified-search-empty-results__error" variant="error">
       <!-- eslint-disable-next-line vue/no-v-html -->
       <div v-html="error.message"></div>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
     <template v-else>
       <div class="shruggy">{{ _t('¯\\_(ツ)_/¯') }}</div>
       <CmkParagraph>

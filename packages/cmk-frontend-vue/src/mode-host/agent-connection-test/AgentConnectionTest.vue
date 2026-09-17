@@ -11,7 +11,7 @@ import {
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -587,7 +587,12 @@ const showSettings = ref(false)
         :text="_t('Testing agent connection ...')"
       />
 
-      <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
+      <CmkAlertBoxDeprecated
+        v-if="isSuccess"
+        variant="success"
+        size="small"
+        class="success-container"
+      >
         {{ _t('Successfully connected to agent.') }}
         <span class="success-button-container">
           <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
@@ -606,9 +611,9 @@ const showSettings = ref(false)
             <CmkInput :id="agentPortId" v-model="agentPort" type="number" />
           </div>
         </span>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
 
-      <CmkAlertBox
+      <CmkAlertBoxDeprecated
         v-if="isError"
         variant="warning"
         size="small"
@@ -656,7 +661,7 @@ const showSettings = ref(false)
             </div>
           </span>
         </div>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
     </template>
 
     <CmkSlideInDialog

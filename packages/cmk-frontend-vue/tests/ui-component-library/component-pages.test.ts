@@ -47,7 +47,6 @@ import UclCmkParagraph from '@ucl/components/foundation-elements/typography/UclC
 import UclArrowDown from '@ucl/components/graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlert from '@ucl/components/system-feedback/CmkAlert/UclCmkAlert.vue'
-import UclCmkAlertBox from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkCopy from '@ucl/components/system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkErrorBoundary from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelpText from '@ucl/components/system-feedback/CmkHelpText/UclCmkHelpText.vue'
@@ -317,11 +316,6 @@ test('CmkPopup page renders its component', () => {
 
 test('CmkAlert page renders its component', () => {
   render(UclCmkAlert, { props: { screenshotMode: false } })
-  within(componentPreview()).getByRole('heading', { name: 'Alert Heading' })
-})
-
-test('CmkAlertBox page renders its component', () => {
-  render(UclCmkAlertBox, { props: { screenshotMode: false } })
   within(componentPreview()).getByRole('heading', { name: 'Alert Heading' })
 })
 

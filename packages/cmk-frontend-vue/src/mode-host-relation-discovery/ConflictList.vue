@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { CmkRadioButton, CmkRadioGroup } from 'cmk-ui-library/components/user-input/CmkRadioButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -59,9 +59,9 @@ function resolve(conflict: RelationConflict, picked: string): void {
 
 <template>
   <div class="mode-host-relation-discovery-conflict-list">
-    <CmkAlertBox v-if="failed" variant="error" size="small">
+    <CmkAlertBoxDeprecated v-if="failed" variant="error" size="small">
       {{ _t('The conflicts could not be read.') }}
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
     <ul v-else-if="page" class="mode-host-relation-discovery-conflict-list__list">
       <li
         v-for="conflict in page.conflicts"

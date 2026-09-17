@@ -9,7 +9,7 @@ import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connec
 import type { TwoColumnDictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { getWizardContext } from 'cmk-ui-library/components/CmkWizard/utils.ts'
@@ -345,9 +345,9 @@ immediateWatch(
           {{ _t('Saving this connection will create three entries in the password store.') }}
         </span>
       </template>
-      <CmkAlertBox v-else variant="error" :heading="errorTitle">
+      <CmkAlertBoxDeprecated v-else variant="error" :heading="errorTitle">
         <template v-if="errorDetails !== null">{{ errorDetails }}</template>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
 
       <CmkAlert v-if="saving" variant="loading" :text="_t('Saving OAuth2 connection')" />
     </template>

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import { type AjaxResponseError, cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onBeforeMount, ref, watch } from 'vue'
@@ -177,9 +177,9 @@ const errorRows = computed<RankedTableRow[]>(() =>
         {{ _t('No entries') }}
       </div>
       <template v-if="errorRows.length">
-        <CmkAlertBox variant="error">
+        <CmkAlertBoxDeprecated variant="error">
           <div class="db-content-top-list__error-msg">{{ errorMessage }}</div>
-        </CmkAlertBox>
+        </CmkAlertBoxDeprecated>
         <CmkRankedTable :columns="errorColumns" :rows="errorRows" />
       </template>
     </div>

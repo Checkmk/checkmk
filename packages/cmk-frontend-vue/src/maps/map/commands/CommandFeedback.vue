@@ -10,7 +10,7 @@ Checkmk's rejections are sometimes several lines, and a hint may be appended to
 one, so the failure keeps its line breaks rather than running together.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 defineProps<{
@@ -23,9 +23,9 @@ defineProps<{
 </script>
 
 <template>
-  <CmkAlertBox v-if="error" variant="error" size="small">
+  <CmkAlertBoxDeprecated v-if="error" variant="error" size="small">
     <span class="maps-command-feedback__error">{{ error }}</span>
-  </CmkAlertBox>
+  </CmkAlertBoxDeprecated>
   <p v-if="succeeded" class="maps-command-feedback__success">{{ succeededText }}</p>
 </template>
 

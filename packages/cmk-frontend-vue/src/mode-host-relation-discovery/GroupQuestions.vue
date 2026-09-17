@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
@@ -55,9 +55,9 @@ function noun(group: RelationGroup): string {
 
 <template>
   <div class="mode-host-relation-discovery-group-questions">
-    <CmkAlertBox v-if="failed" variant="error" size="small">
+    <CmkAlertBoxDeprecated v-if="failed" variant="error" size="small">
       {{ _t('The questions could not be read.') }}
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
     <ul v-else-if="page" class="mode-host-relation-discovery-group-questions__list">
       <li
         v-for="group in page.groups"

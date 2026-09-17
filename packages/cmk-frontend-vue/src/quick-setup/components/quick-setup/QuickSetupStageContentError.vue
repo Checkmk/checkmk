@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -30,7 +30,7 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 </script>
 
 <template>
-  <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
+  <CmkAlertBoxDeprecated v-for="error in detailedErrors" :key="error.details" variant="error">
     <div class="qs-stage-content-error__message">
       <CmkHtml :html="error.message" />
     </div>
@@ -38,14 +38,14 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
     <div v-else>
       <pre>{{ error.details }}</pre>
     </div>
-  </CmkAlertBox>
-  <CmkAlertBox v-if="validationErrors.length > 0" variant="error">
+  </CmkAlertBoxDeprecated>
+  <CmkAlertBoxDeprecated v-if="validationErrors.length > 0" variant="error">
     <div v-for="error in validationErrors" :key="error">
       <div class="qs-stage-content-error__message">
         <CmkHtml :html="error" />
       </div>
     </div>
-  </CmkAlertBox>
+  </CmkAlertBoxDeprecated>
 </template>
 
 <style scoped>

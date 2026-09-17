@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
@@ -185,7 +185,7 @@ const handleUpdate = async () => {
 <template>
   <CmkCatalogPanel :title="_t('Public access')" variant="padded">
     <CmkHeading type="h3">{{ _t('Anyone with this link can view the dashboard') }}</CmkHeading>
-    <CmkAlertBox variant="info">
+    <CmkAlertBoxDeprecated variant="info">
       <ul class="db-public-access__info">
         <li>{{ _t('Navigation and menus are hidden.') }}</li>
         <li>
@@ -196,7 +196,7 @@ const handleUpdate = async () => {
         </li>
         <li>{{ _t('Sidebar widgets are not available on shared dashboards.') }}</li>
       </ul>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
 
     <div v-if="displayReviewFilterDialog">
       <ContentSpacer :dimension="4" />

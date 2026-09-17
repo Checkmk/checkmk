@@ -4,6 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+/**
+ * @deprecated Use CmkAlert instead. This component only remains for the existing call sites
+ * that fill its slot with custom markup, which CmkAlert does not allow. Do not add new usages.
+ */
 import { type VariantProps, cva } from 'class-variance-authority'
 import type { ButtonVariants } from 'cmk-ui-library/components/CmkButton'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
@@ -22,8 +26,8 @@ const { _t } = usei18n()
 const propsCva = cva('', {
   variants: {
     size: {
-      small: 'cmk-alert-box--small',
-      medium: 'cmk-alert-box--medium'
+      small: 'cmk-alert-box-deprecated--small',
+      medium: 'cmk-alert-box-deprecated--medium'
     }
   },
   defaultVariants: {
@@ -53,14 +57,14 @@ type BaseProps = {
   optionalButton?: { title: TranslatedString; icon?: SimpleIcons; onclick: () => void }
 }
 
-export type CmkAlertBoxProps = BaseProps &
+export type CmkAlertBoxDeprecatedProps = BaseProps &
   (
     | { variant?: DismissibleVariants; dismissible?: boolean }
     | { variant: 'error' | 'warning'; dismissible?: false }
     | { variant: 'loading'; dismissible?: false; mainButton?: never; optionalButton?: never }
   )
 
-const props = defineProps<CmkAlertBoxProps>()
+const props = defineProps<CmkAlertBoxDeprecatedProps>()
 
 const open = defineModel<boolean>('open', { default: true })
 
@@ -123,22 +127,22 @@ const alertIconColor = computed(() => {
 <template>
   <div
     v-if="open"
-    class="cmk-alert-box"
+    class="cmk-alert-box-deprecated"
     :class="propsCva({ size })"
     :style="{ background: `var(--cmk-alert-box-${variant ?? 'info'}-bg-color)` }"
     :role="variant === 'error' || variant === 'warning' ? 'alert' : 'status'"
     :aria-labelledby="heading ? headingId : undefined"
   >
-    <div class="cmk-alert-box__icon">
+    <div class="cmk-alert-box-deprecated__icon">
       <CmkIcon v-if="variant === 'loading'" name="load-graph" size="large" />
       <CmkMultitoneIcon v-else :name="alertIconName" :primary-color="alertIconColor" size="large" />
     </div>
-    <div class="cmk-alert-box__text">
+    <div class="cmk-alert-box-deprecated__text">
       <CmkHeading v-if="heading" :id="headingId" type="h4">{{ heading }}</CmkHeading>
-      <div class="cmk-alert-box__body">
+      <div class="cmk-alert-box-deprecated__body">
         <slot />
       </div>
-      <div v-if="mainButton || optionalButton" class="cmk-alert-box__actions">
+      <div v-if="mainButton || optionalButton" class="cmk-alert-box-deprecated__actions">
         <CmkButton v-if="mainButton" :variant="mainButtonVariant" @click="mainButton.onclick">
           {{ mainButton.title }}
         </CmkButton>
@@ -150,7 +154,7 @@ const alertIconColor = computed(() => {
     </div>
     <button
       v-if="showCloseButton"
-      class="cmk-alert-box__close"
+      class="cmk-alert-box-deprecated__close"
       type="button"
       :aria-label="_t('Close')"
       @click="open = false"
@@ -163,7 +167,7 @@ const alertIconColor = computed(() => {
 <style scoped>
 /* TODO: try to unify this component with component CmkInlineValidation. the styling should be the same
          for all error messages, so the same base component should be used. */
-.cmk-alert-box {
+.cmk-alert-box-deprecated {
   color: var(--font-color);
   display: flex;
   align-items: flex-start;
@@ -173,7 +177,7 @@ const alertIconColor = computed(() => {
   gap: var(--dimension-4);
 }
 
-.cmk-alert-box__icon {
+.cmk-alert-box-deprecated__icon {
   flex-shrink: 0;
   width: 20px;
   display: flex;
@@ -181,7 +185,7 @@ const alertIconColor = computed(() => {
   justify-content: center;
 }
 
-.cmk-alert-box__text {
+.cmk-alert-box-deprecated__text {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -192,19 +196,19 @@ const alertIconColor = computed(() => {
   min-width: 0;
 }
 
-.cmk-alert-box__body {
+.cmk-alert-box-deprecated__body {
   width: 100%;
   white-space: pre-line;
   color: var(--cmk-alert-box-text-color);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.cmk-alert-box__text :deep(.cmk-heading) {
+.cmk-alert-box-deprecated__text :deep(.cmk-heading) {
   width: 100%;
   font-size: var(--font-size-large);
 }
 
-.cmk-alert-box__close {
+.cmk-alert-box-deprecated__close {
   flex-shrink: 0;
   background: none;
   border: none;
@@ -214,15 +218,15 @@ const alertIconColor = computed(() => {
   justify-content: center;
 }
 
-.cmk-alert-box--small {
+.cmk-alert-box-deprecated--small {
   padding: var(--dimension-1) var(--dimension-5);
 
-  .cmk-alert-box__icon {
+  .cmk-alert-box-deprecated__icon {
     width: 14px;
   }
 }
 
-.cmk-alert-box__actions {
+.cmk-alert-box-deprecated__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-4);

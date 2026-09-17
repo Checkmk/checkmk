@@ -18,7 +18,7 @@ import type {
   ValidationMessage,
   VueFormspecComponents
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
@@ -658,9 +658,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     v-model:form="form"
                   />
 
-                  <CmkAlertBox v-if="errorMessages.length" variant="error">
+                  <CmkAlertBoxDeprecated v-if="errorMessages.length" variant="error">
                     <div v-for="message in errorMessages" :key="message">{{ message }}</div>
-                  </CmkAlertBox>
+                  </CmkAlertBoxDeprecated>
                 </div>
               </CmkTabContent>
 

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { TwoFactorAuth } from 'cmk-shared-typing/typescript/two_factor_auth'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, onMounted, ref } from 'vue'
@@ -251,11 +251,11 @@ async function clearAndRefocus() {
       />
     </div>
 
-    <CmkAlertBox v-if="message" :variant="messageVariant" :heading="message.title">
+    <CmkAlertBoxDeprecated v-if="message" :variant="messageVariant" :heading="message.title">
       <p v-for="(line, index) in message.lines" :key="index">
         {{ line }}
       </p>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
 
     <CmkButton
       v-if="currentMode !== 'webauthn_credentials' && currentMode !== 'multipleEnabled'"

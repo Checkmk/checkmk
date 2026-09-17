@@ -21,7 +21,7 @@ const VARIANT_ICON = {
   info: 'info-circle'
 } as const satisfies Record<DialogVariant, SimpleIcons>
 
-// The confirm button colour follows the variant, the way CmkAlertBox derives it
+// The confirm button colour follows the variant, the way CmkAlert derives it
 // from its own, so the caller needs no separate prop.
 const VARIANT_BUTTON = {
   error: 'danger',

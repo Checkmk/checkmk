@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkProgressbar from 'cmk-ui-library/components/progress/CmkProgressbar.vue'
@@ -413,9 +413,9 @@ async function scanAgain(): Promise<void> {
             <div v-if="suggesting" class="mode-host-relation-discovery-app__running">
               <CmkProgressbar max="unknown" />
             </div>
-            <CmkAlertBox v-else-if="suggestFailed" variant="error">
+            <CmkAlertBoxDeprecated v-else-if="suggestFailed" variant="error">
               {{ _t('The hosts could not be read.') }}
-            </CmkAlertBox>
+            </CmkAlertBoxDeprecated>
             <CmkParagraph
               v-else-if="lookIn.length === 0"
               class="mode-host-relation-discovery-app__dimmed"
@@ -475,9 +475,9 @@ async function scanAgain(): Promise<void> {
               @remove-value="removeValue"
             />
           </div>
-          <CmkAlertBox v-if="suggestFailed || scanFailed" variant="error">
+          <CmkAlertBoxDeprecated v-if="suggestFailed || scanFailed" variant="error">
             {{ _t('The hosts could not be read.') }}
-          </CmkAlertBox>
+          </CmkAlertBoxDeprecated>
           <div v-if="scanning" class="mode-host-relation-discovery-app__running">
             <CmkProgressbar max="unknown" />
             <CmkParagraph>{{ scanProgress }}</CmkParagraph>
@@ -593,9 +593,9 @@ async function scanAgain(): Promise<void> {
             <CmkProgressbar max="unknown" />
             <CmkParagraph>{{ runProgress }}</CmkParagraph>
           </div>
-          <CmkAlertBox v-else-if="runFailed" variant="error">
+          <CmkAlertBoxDeprecated v-else-if="runFailed" variant="error">
             {{ _t('The relations could not be stored.') }} {{ runText }}
-          </CmkAlertBox>
+          </CmkAlertBoxDeprecated>
           <RunResult
             v-else-if="run"
             :job-id="runId"

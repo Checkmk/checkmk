@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -193,7 +193,7 @@ async function submit() {
           />
         </template>
         <template v-else>
-          <CmkAlertBox variant="warning" size="small">
+          <CmkAlertBoxDeprecated variant="warning" size="small">
             {{ _t('No connections configured yet — create one first.') }}
             <!-- Connections live in Checkmk global settings; link out to WATO
                  (maps.py and wato.py share the /<site>/check_mk/ directory). -->
@@ -203,7 +203,7 @@ async function submit() {
             >
               {{ _t('Manage connections →') }}
             </a>
-          </CmkAlertBox>
+          </CmkAlertBoxDeprecated>
         </template>
       </div>
       <div class="maps-create-map-modal__field">

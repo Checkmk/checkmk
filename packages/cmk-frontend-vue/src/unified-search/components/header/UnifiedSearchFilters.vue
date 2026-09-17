@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
@@ -153,7 +153,7 @@ function getFilterOptions(): FilterOption[] {
       class="unified-search-filters__suggestions-info not-found"
       :text="_t('No filters can be applied to your current search query.')"
     />
-    <CmkAlertBox variant="info" class="unified-search-filters__suggestions-info">
+    <CmkAlertBoxDeprecated variant="info" class="unified-search-filters__suggestions-info">
       {{
         _t(
           'Search with regular expressions for menu entries, hosts, services or host and service groups.'
@@ -162,7 +162,7 @@ function getFilterOptions(): FilterOption[] {
       <br />
 
       {{ _t("Note that for simplicity '*' will be substituted with '.*'.") }}
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 </template>
 

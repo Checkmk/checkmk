@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -28,9 +28,9 @@ const NOTHING_EXCLUDED: ReadonlyMap<string, string> = new Map()
 
 <template>
   <div class="mode-host-relation-discovery-run-result">
-    <CmkAlertBox :variant="props.run.failed > 0 ? 'warning' : 'success'" size="small">
+    <CmkAlertBoxDeprecated :variant="props.run.failed > 0 ? 'warning' : 'success'" size="small">
       {{ props.summary }}
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
     <ul class="mode-host-relation-discovery-run-result__findings">
       <li
         v-for="finding in props.run.findings.filter((f) => countedOutcomes(f.counts) !== '')"

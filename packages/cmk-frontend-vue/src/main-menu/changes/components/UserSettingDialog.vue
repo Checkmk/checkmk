@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
@@ -81,7 +81,7 @@ function goToFullPage() {
     "
   />
   <CmkAlert v-if="loading" variant="loading" :text="_t('Applying user setting...')" />
-  <CmkAlertBox
+  <CmkAlertBoxDeprecated
     v-if="successSlideout"
     variant="success"
     :title="_t('Preference saved.')"
@@ -90,7 +90,7 @@ function goToFullPage() {
     {{ _t("Clicking on 'Changes' will continue to open the quick activation.") }}
     <br />
     {{ _t('You can change this at any time in your profile settings.') }}
-  </CmkAlertBox>
+  </CmkAlertBoxDeprecated>
   <CmkAlert
     v-if="successFullPage"
     variant="success"

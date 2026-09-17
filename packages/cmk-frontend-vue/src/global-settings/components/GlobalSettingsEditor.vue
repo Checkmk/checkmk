@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { GlobalSettingsHint } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import type { CmkAlertBoxProps } from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import type { CmkAlertBoxDeprecatedProps } from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkCopy from 'cmk-ui-library/components/CmkCopy.vue'
@@ -129,7 +129,7 @@ const resetConfirmation = computed<{
       }
 })
 
-function hintAlertProps(hint: GlobalSettingsHint): CmkAlertBoxProps {
+function hintAlertProps(hint: GlobalSettingsHint): CmkAlertBoxDeprecatedProps {
   return hint.variant === 'info' ? { variant: 'info' } : { variant: 'warning' }
 }
 
@@ -175,14 +175,14 @@ const currentStateText = computed<TranslatedString>(() => {
     </div>
 
     <div class="global-settings-editor__alerts">
-      <CmkAlertBox
+      <CmkAlertBoxDeprecated
         v-if="error !== null"
         variant="error"
         :heading="error.heading"
         class="global-settings-editor__alert"
       >
         <span class="global-settings-editor__error">{{ error.message }}</span>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
 
       <CmkAlert
         v-if="validationMessages.length > 0"
@@ -213,7 +213,7 @@ const currentStateText = computed<TranslatedString>(() => {
         class="global-settings-editor__alert"
       />
 
-      <CmkAlertBox
+      <CmkAlertBoxDeprecated
         v-for="(hint, index) in variable.hints"
         :key="index"
         v-bind="hintAlertProps(hint)"
@@ -232,7 +232,7 @@ const currentStateText = computed<TranslatedString>(() => {
             </CmkCopy>
           </template>
         </span>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
     </div>
 
     <FormHelp :help="variable.spec.help" />

@@ -132,6 +132,9 @@ def test_ucl_parity() -> None:
     # components depend on it; not (yet) showcased in the UCL
     components.remove("FormAutocompleter")
 
+    # deprecated in favour of CmkAlert, so deliberately not showcased in the UCL
+    components.remove("CmkAlertBoxDeprecated")
+
     # those components do not follow the usual path pattern,
     # but are stored inside CmkIcon
     ucl.remove("CmkMultitoneIcon")

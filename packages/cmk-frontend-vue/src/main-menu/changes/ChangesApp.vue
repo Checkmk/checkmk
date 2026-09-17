@@ -14,7 +14,7 @@ import type {
   SitesAndChanges
 } from 'cmk-shared-typing/typescript/changes'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -463,13 +463,13 @@ onMounted(async () => {
           :text="activationError.detail"
         />
 
-        <CmkAlertBox
+        <CmkAlertBoxDeprecated
           v-if="sitesAndChanges.licenseMessage !== null"
           variant="warning"
           class="cmk-alert-box"
         >
           <CmkHtml :html="sitesAndChanges.licenseMessage" />
-        </CmkAlertBox>
+        </CmkAlertBoxDeprecated>
         <ChangesActivating
           v-if="activateChangesInProgress"
           :activating-on-sites="

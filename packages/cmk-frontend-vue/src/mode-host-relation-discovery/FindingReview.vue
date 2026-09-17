@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
@@ -153,7 +153,7 @@ const counted = computed(() =>
           )
         }}
       </CmkParagraph>
-      <CmkAlertBox v-if="questions > QUESTIONS_BY_HAND" variant="info" size="small">
+      <CmkAlertBoxDeprecated v-if="questions > QUESTIONS_BY_HAND" variant="info" size="small">
         {{
           _t(
             'Rather than answering %{count} questions, go back and say how to recognise the %{noun} - by a word in its name or a label only it carries.',
@@ -163,7 +163,7 @@ const counted = computed(() =>
         <CmkButton variant="optional" @click="emit('back')">{{
           _t('Back to the findings')
         }}</CmkButton>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
       <GroupQuestions
         :job-id="props.jobId"
         :finding="props.summary.id"

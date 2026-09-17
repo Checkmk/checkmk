@@ -19,7 +19,7 @@ export interface ActionItemStatus {
 
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -229,7 +229,7 @@ defineExpose({ runActions })
       <CmkAlert variant="success" size="small" :text="untranslated(successText)" />
       <slot name="success-summary" />
     </template>
-    <CmkAlertBox
+    <CmkAlertBoxDeprecated
       v-else-if="state === 'error'"
       variant="error"
       size="small"
@@ -239,7 +239,7 @@ defineExpose({ runActions })
       <span v-if="revertedOnError" class="mode-otel-finalize-configuration__revert-note">
         {{ _t('Any changes that were already saved have been reverted.') }}
       </span>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 </template>
 

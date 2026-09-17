@@ -74,6 +74,7 @@ from ._graph_specification import (
     GraphExportRequest,
     GraphSpecification,
     parse_graph_specification,
+    StoredGraphSpecification,
 )
 from ._graph_templates import (
     build_template_graphs,
@@ -278,6 +279,7 @@ __all__ = [
     "graphs_from_api",
     "GraphSpec",
     "GraphSpecification",
+    "StoredGraphSpecification",
     "GraphTitleFormat",
     "HistogramCountDelta",
     "HistogramCountRate",

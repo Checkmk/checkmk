@@ -164,8 +164,8 @@ def test_add_to_visual_rejects_an_unparseable_specification(clients: ClientRegis
 def test_add_to_visual_rejects_a_graph_kind_without_an_add_to_action(
     clients: ClientRegistry,
 ) -> None:
-    # A forecast graph is rendered from its own saved page and declares no add_visual_type, so there
-    # is nothing the backends could store and replay.
+    # A forecast graph is rendered from its own saved page and has no storable form, so there is
+    # nothing the backends could store and replay.
     resp = clients.Graph.add_to_visual(
         specification={"graph_type": "forecast", "id": "my_forecast"},
         family="dashboards",

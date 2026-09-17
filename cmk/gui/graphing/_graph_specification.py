@@ -47,9 +47,29 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type(self) -> str:
         return self.graph_type_name()
 
-    @classmethod
-    def add_visual_type(cls) -> str | None:
+    def for_storage(self) -> StoredGraphSpecification | None:
         return None
+
+
+class StoredGraphSpecification(BaseModel, ABC, frozen=True):
+    id: str | None
+
+    @staticmethod
+    @abstractmethod
+    def graph_type_name() -> str: ...
+
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    @final
+    def graph_type(self) -> str:
+        return self.graph_type_name()
+
+    @classmethod
+    @abstractmethod
+    def element_type(cls) -> str: ...
 
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):

@@ -34,10 +34,14 @@ from cmk.gui.graphing import (
     build_template_graphs,
     CommonGraphOptions,
     FetchDiagnostics,
+    parse_graph_specification,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._built_graphs import BuiltGraph
-from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
+from cmk.gui.graphing._graph_templates import (
+    _EvaluateTemplateGraphs,
+    StoredTemplateGraphSpecification,
+)
 from cmk.gui.graphing._performance_data import RawPerformanceValue
 
 _SERVICE = Service(
@@ -307,3 +311,43 @@ def test_template_graphs_cannot_be_built_from_a_service_resolved_on_two_sites() 
     # this is the crash a service view hits.
     with pytest.raises(ValueError, match="too many values to unpack"):
         _build_template_graphs(["site_a", "site_b"])
+
+
+def test_a_stored_specification_parses_without_a_site() -> None:
+    specification = parse_graph_specification(
+        {"graph_type": "template", "host_name": "h", "service_description": "svc"}
+    )
+
+    assert specification == TemplateGraphSpecification(
+        host_name=HostAddress("h"), service_description="svc"
+    )
+
+
+_FULL_SPECIFICATION = TemplateGraphSpecification(
+    site=SiteId("mysite"),
+    host_name=HostAddress("h"),
+    service_description="svc",
+    graph_id="cpu_load",
+    destination="view",
+)
+
+
+def test_a_stored_specification_identifies_the_graph_without_its_site() -> None:
+    assert _FULL_SPECIFICATION.for_storage() == StoredTemplateGraphSpecification(
+        id=None,
+        host_name=HostAddress("h"),
+        service_description="svc",
+        graph_id="cpu_load",
+        destination="view",
+    )
+
+
+def test_a_new_field_has_to_decide_whether_it_is_stored() -> None:
+    assert set(TemplateGraphSpecification.model_fields) == {
+        "id",
+        "site",
+        "host_name",
+        "service_description",
+        "graph_id",
+        "destination",
+    }

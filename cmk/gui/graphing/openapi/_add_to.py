@@ -48,8 +48,8 @@ def parse_specification(specification: Mapping[str, object]) -> GraphSpecificati
 class AddableGraph:
     # Most add-to backends address a graph by its legacy specification, not by the engine's graph
     # definition: they store the specification and replay it whenever the target is rendered. Only
-    # the graph kinds that declare an add_visual_type can be stored that way. A container that
-    # stores what a graph is made of takes the built graph instead, so both travel along.
+    # the graph kinds that have a storable form can be stored that way. A container that stores
+    # what a graph is made of takes the built graph instead, so both travel along.
     def __init__(
         self, specification: GraphSpecification, add_type: str, built: Graph | None = None
     ) -> None:
@@ -62,17 +62,19 @@ class AddableGraph:
         cls, specification: Mapping[str, object], internal: Mapping[str, object] | None = None
     ) -> AddableGraph:
         parsed = parse_specification(specification)
-        if (add_type := parsed.add_visual_type()) is None:
+        if (stored := parsed.for_storage()) is None:
             raise ProblemException(
                 status=400,
                 title="Graph cannot be added",
                 detail=(
                     f"Graphs of type '{parsed.graph_type}' offer no add-to action. Only graphs "
-                    "carrying a specification with an add-to type can be stored in a visual or "
+                    "carrying a specification a target can keep can be stored in a visual or "
                     "container."
                 ),
             )
-        return cls(parsed, add_type, None if internal is None else parse_built_graph(internal))
+        return cls(
+            parsed, stored.element_type(), None if internal is None else parse_built_graph(internal)
+        )
 
     def parameters(self) -> dict[str, object]:
         # The envelope the legacy "Add to ..." popup posts, of which most backends (dashboard,

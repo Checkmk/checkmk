@@ -41,7 +41,7 @@ from ._graph_dispatch import (
     GraphDispatcher,
     legacy_graph_id,
 )
-from ._graph_specification import AnnotatedHostName, GraphSpecification
+from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
 from ._graphs_order import sort_registered_graph_plugins
 from ._plugins import registered_graphs, registered_metrics, registered_translations
 from ._source import RRDFetchData, RRDFetchMetricNames
@@ -89,8 +89,25 @@ def get_graph_plugin_from_id(
     )
 
 
+class StoredTemplateGraphSpecification(StoredGraphSpecification, frozen=True):
+    host_name: AnnotatedHostName
+    service_description: GUIServiceName
+    graph_id: str | None
+    destination: str | None
+
+    @staticmethod
+    @override
+    def graph_type_name() -> Literal["template"]:
+        return "template"
+
+    @classmethod
+    @override
+    def element_type(cls) -> Literal["pnpgraph"]:
+        return "pnpgraph"
+
+
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
-    site: SiteId | None
+    site: SiteId | None = None
     host_name: AnnotatedHostName
     service_description: GUIServiceName
     graph_id: str | None = None
@@ -101,10 +118,15 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    @classmethod
     @override
-    def add_visual_type(cls) -> Literal["pnpgraph"]:
-        return "pnpgraph"
+    def for_storage(self) -> StoredTemplateGraphSpecification:
+        return StoredTemplateGraphSpecification(
+            id=self.id,
+            host_name=self.host_name,
+            service_description=self.service_description,
+            graph_id=self.graph_id,
+            destination=self.destination,
+        )
 
 
 TEMPLATE_KIND: Final = "template"

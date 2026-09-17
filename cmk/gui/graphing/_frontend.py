@@ -135,12 +135,14 @@ STATIC_INTERACTION = Interaction(
 
 
 def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | None:
-    # A graph offers an add-to action exactly if its specification declares an add-to type: the type
-    # is what the context menu is assembled for, the specification is what most actions replay, and
-    # the built graph is what a custom graph stores instead of replaying anything.
-    if specification is None or (add_type := specification.add_visual_type()) is None:
+    # A graph offers an add-to action exactly if a target can keep its specification: the element
+    # type is what the context menu is assembled for, the specification is what most actions
+    # replay, and the built graph is what a custom graph stores instead of replaying anything.
+    if specification is None or (stored := specification.for_storage()) is None:
         return None
-    return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
+    return AddTo(
+        type=stored.element_type(), specification=specification.model_dump(), internal=internal
+    )
 
 
 def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:

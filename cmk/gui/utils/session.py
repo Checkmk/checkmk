@@ -14,22 +14,39 @@ from typing import cast, Protocol
 
 import flask
 
-from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import SessionInfo
+from cmk.ccc.user import UserId
+
+
+class SessionUserProtocol(Protocol):
+    """The part of the logged-in user a session hands to a page handler."""
+
+    @property
+    def id(self) -> UserId | None: ...
+
+    @property
+    def is_anonymous(self) -> bool: ...
+
+
+class SessionInfoProtocol(Protocol):
+    """The part of the session info a page handler reads."""
+
+    @property
+    def csrf_token(self) -> str: ...
 
 
 class SessionProtocol(Protocol):
     """The part of the session a page handler is given.
 
     Kept to what callers actually read so that a page need not know the whole
-    session implementation.
+    session implementation, and free of cmk.gui types so the readers can move
+    out of it.
     """
 
     @property
-    def user(self) -> LoggedInUser: ...
+    def user(self) -> SessionUserProtocol: ...
 
     @property
-    def session_info(self) -> SessionInfo: ...
+    def session_info(self) -> SessionInfoProtocol: ...
 
 
 # The same request-local object as cmk.gui.session.session, seen through the

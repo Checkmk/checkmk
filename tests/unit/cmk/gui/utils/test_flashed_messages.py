@@ -11,9 +11,9 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui import login
+from cmk.gui.session import session
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.session import session
 from cmk.gui.wsgi.app import (
     application_and_request_context,
     request_context,

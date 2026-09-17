@@ -6,8 +6,8 @@
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.session import session
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.session import session
 
 
 def verify_requirements(

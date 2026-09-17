@@ -12,6 +12,7 @@ import CmkSuggestions, {
   type Suggestions,
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -49,6 +50,7 @@ const vClickOutside = useClickOutside()
 
 const open = ref(false)
 const popupId = useId()
+const labelId = useId()
 const selectedOption = ref<SuggestionValue>(new NoSelection())
 const buttonLabel = ref<TranslatedString>(inputHint)
 
@@ -130,13 +132,14 @@ function handleSelect(selected: Suggestion | null): void {
       role="combobox"
       class="cmk-chip-select__trigger"
       :class="{ 'cmk-chip-select__trigger--disabled': disabled }"
-      :aria-label="label"
+      :aria-labelledby="labelId"
       aria-haspopup="listbox"
       :aria-expanded="open"
       :aria-controls="open ? popupId : undefined"
       :disabled="disabled"
       @click.prevent="toggle"
     >
+      <CmkVisuallyHidden :id="labelId" :text="label" />
       <span class="cmk-chip-select__label">{{ buttonLabel }}</span>
       <span class="cmk-chip-select__caret">
         <ArrowDown

@@ -78,7 +78,7 @@ ENDPOINT_DELETE_FOLDER = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=delete_folder_v1,
-            additional_status_codes=[401, 409],
+            additional_status_codes=[409],
         )
     },
 )

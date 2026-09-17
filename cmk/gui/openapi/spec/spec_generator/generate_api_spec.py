@@ -490,7 +490,22 @@ _REDOC_API_DESCRIPTION = """
 
     <SecurityDefinitions />
 
+    ## Authentication and authorization status codes
 
+    Two status codes report that a request was rejected before, or because of, an access check.
+    They mean different things and call for different reactions from a client:
+
+     * `401` - the request carried no authentication information, or the credentials presented
+       were invalid. Every endpoint of this API can answer `401`, because authentication is
+       enforced before the endpoint itself is reached. Retrying with valid credentials is the
+       correct response.
+     * `403` - the credentials were accepted, but the authenticated user has not been granted a
+       permission that the endpoint requires. The response body names the missing permission.
+       Retrying the same request as the same user will fail again; the user needs to be granted
+       the permission, or the request has to be made as a different user.
+
+    A client that reacts to `401` by re-authenticating must therefore not treat `403` the same
+    way, as that would retry indefinitely.
 
     # Queries through the REST API
 

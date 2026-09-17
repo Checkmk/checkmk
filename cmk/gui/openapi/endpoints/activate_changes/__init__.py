@@ -91,17 +91,17 @@ PERMISSIONS = permissions.AllPerm(
             "The activation has been started and is still running. Redirecting to the "
             "'Wait for completion' endpoint."
         ),
-        401: (
-            "The API user may not activate another users changes, "
-            "or the user may and activation was not forced explicitly."
+        403: (
+            "Activation not possible because of licensing issues, or the API user may not "
+            "activate another users changes, or the user may and activation was not forced "
+            "explicitly."
         ),
-        403: "Activation not possible because of licensing issues.",
         409: "Some sites could not be activated.",
         422: "There are no changes to be activated.",
         423: "There is already an activation running.",
         503: "The ui-job-scheduler is currently unavailable.",
     },
-    additional_status_codes=[303, 401, 403, 409, 422, 423, 503],
+    additional_status_codes=[303, 403, 409, 422, 423, 503],
     etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,

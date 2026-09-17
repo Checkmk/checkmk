@@ -30,6 +30,9 @@ def identify_expected_status_codes(
     """Identify which status codes are expected to be returned by an endpoint."""
     expected_status_codes = set(additional_status_codes)
     expected_status_codes.add(406)
+    # Authentication is enforced by the WSGI layer before any endpoint code runs, so every
+    # endpoint can answer 401 for a caller that presents no or invalid credentials.
+    expected_status_codes.add(401)
 
     if content_type is None:
         expected_status_codes.add(204)

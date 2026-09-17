@@ -178,6 +178,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
 
+    - NAME: CHANGED_CMK_AI_CONTROL_PLANE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-ai-control-plane/' || true"
+
     - NAME: CHANGED_CMK_CCC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-ccc/' || true"
 
@@ -192,6 +195,9 @@ VARIABLES:
 
     - NAME: CHANGED_CMK_EC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-ec/' || true"
+
+    - NAME: CHANGED_CMK_MCP_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-mcp/' || true"
 
     - NAME: CHANGED_CMK_MESSAGING_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-messaging/' || true"
@@ -597,6 +603,14 @@ STAGES:
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
 
+    - NAME: "Package cmk-ai-control-plane"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AI_CONTROL_PLANE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "non-free/packages/cmk-ai-control-plane"
+      COMMAND: "./run &> ${RESULTS}/cmk-ai-control-plane.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-ai-control-plane files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-ai-control-plane.txt"
+
     - NAME: "Package cmk-ccc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-ccc"
@@ -652,6 +666,14 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
+
+    - NAME: "Package cmk-mcp"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MCP_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "non-free/packages/cmk-mcp"
+      COMMAND: "./run &> ${RESULTS}/cmk-mcp.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-mcp files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-mcp.txt"
 
     - NAME: "Package cmk-messaging"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MESSAGING_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS

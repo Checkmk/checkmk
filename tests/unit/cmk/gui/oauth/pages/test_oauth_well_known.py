@@ -16,8 +16,8 @@ from cmk.gui.utils.transaction_manager import transactions
 
 @pytest.mark.usefixtures("request_context")
 class TestOAuthAuthorizationServerMetadataPage:
-    def test_returns_metadata_when_enabled(self) -> None:
-        OAuthAuthorizationServerMetadataPage(lambda: True).handle_page(
+    def test_returns_metadata(self) -> None:
+        OAuthAuthorizationServerMetadataPage().handle_page(
             PageContext(
                 config=Config(),
                 request=Request(create_environ()),
@@ -38,15 +38,3 @@ class TestOAuthAuthorizationServerMetadataPage:
             "code_challenge_methods_supported": ["S256"],
             "scopes_supported": ["read", "write"],
         }
-
-    def test_returns_404_when_disabled(self) -> None:
-        OAuthAuthorizationServerMetadataPage(lambda: False).handle_page(
-            PageContext(
-                config=Config(),
-                request=Request(create_environ()),
-                transactions=transactions,
-                session=session,
-            )
-        )
-
-        assert response.status_code == 404

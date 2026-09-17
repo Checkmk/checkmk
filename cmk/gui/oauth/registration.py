@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-
 from cmk.gui.oauth.pages._authorize import OAuthAuthorizePage
 from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
 from cmk.gui.oauth.pages._introspect import OAuthIntrospectPage
@@ -24,31 +22,18 @@ def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
-    *,
-    enabled: Callable[[], bool],
 ) -> None:
-    """Register the OAuth authorization server pages of this site.
-
-    enabled decides whether any OAuth-consuming feature (currently only the
-    MCP server) is active for the site; while it returns False, every page
-    answers 404.
-
-    The Setup pages for managing already-registered clients and already-issued
-    tokens are always available, independent of enabled -- an admin may still
-    need to review or delete them after disabling the feature.
-    """
+    """Register the OAuth authorization server pages of this site."""
 
     page_registry.register(
-        PageEndpoint(
-            "noauth:oauth_authorization_server", OAuthAuthorizationServerMetadataPage(enabled)
-        )
+        PageEndpoint("noauth:oauth_authorization_server", OAuthAuthorizationServerMetadataPage())
     )
-    page_registry.register(PageEndpoint("oauth_authorize", OAuthAuthorizePage(enabled)))
+    page_registry.register(PageEndpoint("oauth_authorize", OAuthAuthorizePage()))
     page_registry.register(
-        PageEndpoint("noauth:oauth_client_registration", OAuthClientRegistrationPage(enabled))
+        PageEndpoint("noauth:oauth_client_registration", OAuthClientRegistrationPage())
     )
-    page_registry.register(PageEndpoint("noauth:oauth_token", OAuthTokenPage(enabled)))
-    page_registry.register(PageEndpoint("noauth:oauth_introspect", OAuthIntrospectPage(enabled)))
+    page_registry.register(PageEndpoint("noauth:oauth_token", OAuthTokenPage()))
+    page_registry.register(PageEndpoint("noauth:oauth_introspect", OAuthIntrospectPage()))
     register_registered_clients_mode(mode_registry)
     register_user_tokens_mode(mode_registry)
     register_main_module(main_module_registry)

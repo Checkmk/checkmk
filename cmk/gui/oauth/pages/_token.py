@@ -8,7 +8,6 @@ import hashlib
 import hmac
 import http.client as http_client
 import re
-from collections.abc import Callable
 from datetime import datetime, timedelta, UTC
 from typing import Literal, override
 
@@ -70,9 +69,7 @@ class OAuthTokenPage(Page):
     """RFC 6749 section 3.2 token endpoint for this site.
 
     Accessed unauthenticated, referenced via the "token_endpoint" field of the
-    RFC 8414 authorization server metadata document. Returns 404 while no
-    OAuth-consuming feature is enabled for the site (the enabled predicate is
-    injected at registration).
+    RFC 8414 authorization server metadata document.
 
     The request shape is validated (POST, form encoding, grant_type, required
     parameters, code_verifier syntax), authorization codes are redeemed
@@ -89,15 +86,8 @@ class OAuthTokenPage(Page):
     (see cmk.gui.oauth.token.token_store).
     """
 
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
-
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         # RFC 6749 section 5.1/5.2: token endpoint responses carry tokens or
         # error details and MUST NOT be cached. Set up front to cover every
         # exit path below.

@@ -56,7 +56,7 @@ class TestOAuthIntrospectPage:
         token = _issue_token(user_id, client_id, expires_at)
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -75,7 +75,7 @@ class TestOAuthIntrospectPage:
             flask_app.test_request_context(method="POST", data={"token": token}),
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -96,7 +96,7 @@ class TestOAuthIntrospectPage:
     ) -> None:
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -116,7 +116,7 @@ class TestOAuthIntrospectPage:
 
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -135,7 +135,7 @@ class TestOAuthIntrospectPage:
             token = _issue_token(user_id, client_id, datetime.now(UTC) + _TOKEN_TTL)
             with flask_app.test_request_context(method="POST", data={"token": token}):
                 flask_app.preprocess_request()
-                OAuthIntrospectPage(lambda: True).handle_page(
+                OAuthIntrospectPage().handle_page(
                     PageContext(
                         config=Config(), request=request, transactions=transactions, session=session
                     )
@@ -152,7 +152,7 @@ class TestOAuthIntrospectPage:
             method="POST", data=data, content_type=_FORM_CONTENT_TYPE
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -170,7 +170,7 @@ class TestOAuthIntrospectPage:
             f"/oauth_introspect.py?token={token}", method="POST", content_type=_FORM_CONTENT_TYPE
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -182,7 +182,7 @@ class TestOAuthIntrospectPage:
     def test_returns_405_when_method_is_not_post(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -197,7 +197,7 @@ class TestOAuthIntrospectPage:
             content_type="application/json",
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
+            OAuthIntrospectPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -205,16 +205,3 @@ class TestOAuthIntrospectPage:
 
             assert response.status_code == 400
             assert response.json == {"error": "invalid_request"}
-
-    def test_returns_404_when_disabled(self, flask_app: Flask) -> None:
-        with flask_app.test_request_context(
-            method="POST", data={"token": "cmko1.tXWlEdCFwyWyLLD9AoSvBaLl6HXhFsEEJ4kUcgQvzKY"}
-        ):
-            flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: False).handle_page(
-                PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
-                )
-            )
-
-            assert response.status_code == 404

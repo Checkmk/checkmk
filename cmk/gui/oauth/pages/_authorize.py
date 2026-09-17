@@ -6,7 +6,6 @@
 import http.client as http_client
 import secrets
 import urllib.parse
-from collections.abc import Callable
 from typing import override
 
 from cmk.ccc.site import omd_site
@@ -55,15 +54,8 @@ class OAuthAuthorizePage(Page):
     client's raw scope string never reaches the token.
     """
 
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
-
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         redirect_uri = request.var("redirect_uri")
         if redirect_uri is None or urllib.parse.urlsplit(redirect_uri).scheme not in (
             "http",

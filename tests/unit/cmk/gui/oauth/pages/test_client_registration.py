@@ -17,7 +17,7 @@ from cmk.gui.utils.transaction_manager import transactions
 
 @pytest.mark.usefixtures("request_context")
 class TestOAuthClientRegistrationPage:
-    def test_returns_client_id_when_enabled(self, flask_app: Flask) -> None:
+    def test_returns_client_id(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST",
             json={
@@ -26,7 +26,7 @@ class TestOAuthClientRegistrationPage:
             },
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -48,7 +48,7 @@ class TestOAuthClientRegistrationPage:
         }
         with flask_app.test_request_context(method="POST", json=submitted):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -64,7 +64,7 @@ class TestOAuthClientRegistrationPage:
             method="POST", json={"redirect_uris": ["https://client.example/callback"]}
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -72,7 +72,7 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(response.json, dict)
             first_client_id = response.json["client_id"]
 
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -82,21 +82,10 @@ class TestOAuthClientRegistrationPage:
 
         assert first_client_id != second_client_id
 
-    def test_returns_404_when_disabled(self, flask_app: Flask) -> None:
-        with flask_app.test_request_context(method="POST"):
-            flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: False).handle_page(
-                PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
-                )
-            )
-
-            assert response.status_code == 404
-
     def test_returns_405_when_method_is_not_post(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -107,7 +96,7 @@ class TestOAuthClientRegistrationPage:
     def test_returns_400_when_no_body_is_sent(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST"):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -121,7 +110,7 @@ class TestOAuthClientRegistrationPage:
     def test_returns_400_when_redirect_uris_missing(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST", json={}):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -134,7 +123,7 @@ class TestOAuthClientRegistrationPage:
     def test_returns_400_when_redirect_uris_empty(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST", json={"redirect_uris": []}):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -151,7 +140,7 @@ class TestOAuthClientRegistrationPage:
             method="POST", json={"redirect_uris": ["javascript:alert(1)"]}
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -168,7 +157,7 @@ class TestOAuthClientRegistrationPage:
             json={"redirect_uris": [f"https://client.example/{i}" for i in range(11)]},
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -184,7 +173,7 @@ class TestOAuthClientRegistrationPage:
             json={"redirect_uris": ["https://client.example/callback"], "client_name": 123},
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -200,7 +189,7 @@ class TestOAuthClientRegistrationPage:
             json={"redirect_uris": ["https://client.example/callback"]},
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -227,7 +216,7 @@ class TestOAuthClientRegistrationPage:
             json={"redirect_uris": ["https://client.example/callback"]},
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -243,7 +232,7 @@ class TestOAuthClientRegistrationPage:
             json={"redirect_uris": ["https://client.example/" + "a" * 2048]},
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )
@@ -262,7 +251,7 @@ class TestOAuthClientRegistrationPage:
             },
         ):
             flask_app.preprocess_request()
-            OAuthClientRegistrationPage(lambda: True).handle_page(
+            OAuthClientRegistrationPage().handle_page(
                 PageContext(
                     config=Config(), request=request, transactions=transactions, session=session
                 )

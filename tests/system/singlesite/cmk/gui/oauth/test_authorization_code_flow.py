@@ -18,9 +18,6 @@ against the registered-client store: that's a security boundary (rejecting
 requests for unregistered clients or mismatched redirect_uris) worth proving
 holds over real HTTP, not just through the Flask test client, so it gets its
 own narrow coverage here too.
-
-Enabling the MCP server -- the only current oauth.registration.register() caller -- is
-handled by the ``mcp_enabled_site`` fixture in conftest.py.
 """
 
 import base64
@@ -131,9 +128,9 @@ def _redirect_target(html_text: str) -> str:
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMKWebSession) -> None:
+def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) -> None:
     """Register a client, run the consent screen, and redeem the issued code for a token."""
-    client_id = _register_client(mcp_enabled_site)
+    client_id = _register_client(site)
     code_verifier, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
 
@@ -150,7 +147,7 @@ def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMK
     assert query["state"] == [state]
     code = query["code"][0]
 
-    token_url = mcp_enabled_site.internal_url + _TOKEN_ENDPOINT_PATH
+    token_url = site.internal_url + _TOKEN_ENDPOINT_PATH
     token_response = requests.post(
         token_url,
         data={
@@ -170,11 +167,9 @@ def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMK
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_authorize_deny_redirects_with_access_denied(
-    mcp_enabled_site: Site, web: CMKWebSession
-) -> None:
+def test_authorize_deny_redirects_with_access_denied(site: Site, web: CMKWebSession) -> None:
     """Denying consent redirects back with error=access_denied, not a code."""
-    client_id = _register_client(mcp_enabled_site)
+    client_id = _register_client(site)
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
 
@@ -194,7 +189,6 @@ def test_authorize_deny_redirects_with_access_denied(
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-@pytest.mark.usefixtures("mcp_enabled_site")
 def test_authorize_returns_400_for_unknown_client_id(web: CMKWebSession) -> None:
     """A client_id that was never dynamically registered must not reach the consent screen."""
     _, code_challenge = _make_pkce_pair()
@@ -211,10 +205,10 @@ def test_authorize_returns_400_for_unknown_client_id(web: CMKWebSession) -> None
 
 @pytest.mark.skip_if_edition("community", "cloud")
 def test_authorize_returns_400_for_redirect_uri_not_registered_to_client(
-    mcp_enabled_site: Site, web: CMKWebSession
+    site: Site, web: CMKWebSession
 ) -> None:
     """redirect_uri must be one of the client's own registered URIs, not just well-formed."""
-    client_id = _register_client(mcp_enabled_site)
+    client_id = _register_client(site)
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
 

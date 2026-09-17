@@ -8,9 +8,9 @@ AGENT_LINUX="${UNIT_SH_AGENTS_DIR}/check_mk_agent.linux"
 # shellcheck source=agents/check_mk_agent.linux
 MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 
-# section_job() copies the content of every job file into the agent output verbatim, so a
-# user who can write a file below ${MK_VARDIR}/job/<user>/ decides what the agent reports.
-# CMK-38538 tracks the fix (sanitizing/encoding).
+# section_job() copied the content of every job file into the agent output verbatim, so a
+# user who could write a file below ${MK_VARDIR}/job/<user>/ decided what the agent reports.
+# CMK-38538 fixed that: the agent now escapes the markers below while reading a job file.
 #
 # The agent parser knows four marker forms, and job file content reaches all of them. Each
 # has its own effect, measured against cmk.checkengine.parser.AgentParser:
@@ -31,21 +31,12 @@ MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 #
 # The two empty-name forms are the ones an escaping rule is most likely to miss, which is
 # why they get their own tests rather than being folded into the named ones.
-#
-# assert_injection_still_possible gives these tests pytest's xfail(strict=True) semantics,
-# which shunit2 does not offer: they stay green while the defect is present and turn red the
-# moment it is fixed, so the fix cannot land without someone turning them into real
-# assertions. With the fix, replace each call with
-#     assertNotContains "..." "${output}" "${marker}"
-# and delete the helper together with this paragraph.
-assert_injection_still_possible() {
+assert_marker_not_emitted() {
     marker="$1"
     output="$2"
 
-    if ! printf '%s\n' "${output}" | grep -qxF "${marker}"; then
-        fail "CMK-38538 looks fixed: '${marker}' no longer reaches the agent output as a\
- marker line. Turn this test into a real assertion and remove assert_injection_still_possible."
-    fi
+    assertEquals "job file content reached the agent output as a marker line" \
+        "" "$(printf '%s\n' "${output}" | grep -xF "${marker}")"
 }
 
 oneTimeSetUp() {
@@ -90,35 +81,51 @@ test_injected_section_header_does_not_open_a_new_section() {
 
     output="$(section_job_with_injected_line "<<<uptime>>>")"
 
-    assert_injection_still_possible "<<<uptime>>>" "${output}"
+    assert_marker_not_emitted "<<<uptime>>>" "${output}"
 }
 
 test_injected_section_footer_does_not_truncate_the_job_section() {
 
     output="$(section_job_with_injected_line "<<<>>>")"
 
-    assert_injection_still_possible "<<<>>>" "${output}"
+    assert_marker_not_emitted "<<<>>>" "${output}"
 }
 
 test_injected_piggyback_header_does_not_divert_the_agent_output() {
 
     output="$(section_job_with_injected_line "<<<<victim-host>>>>")"
 
-    assert_injection_still_possible "<<<<victim-host>>>>" "${output}"
+    assert_marker_not_emitted "<<<<victim-host>>>>" "${output}"
 }
 
 test_injected_piggyback_footer_does_not_truncate_the_job_section() {
 
     output="$(section_job_with_injected_line "<<<<>>>>")"
 
-    assert_injection_still_possible "<<<<>>>>" "${output}"
+    assert_marker_not_emitted "<<<<>>>>" "${output}"
 }
 
 test_injected_job_header_does_not_create_a_second_job() {
 
     output="$(section_job_with_injected_line "==> payroll <==")"
 
-    assert_injection_still_possible "==> payroll <==" "${output}"
+    assert_marker_not_emitted "==> payroll <==" "${output}"
+}
+
+test_job_header_indented_by_the_attacker_does_not_create_a_second_job() {
+
+    output="$(section_job_with_injected_line "   ==> payroll <==")"
+
+    assertEquals "job file content reached the agent output as a job header" \
+        "" "$(printf '%s\n' "${output}" | grep -E '^[[:space:]]*==> payroll <==$')"
+}
+
+test_sanitizing_does_not_cost_the_job_its_own_data() {
+
+    output="$(section_job_with_injected_line "<<<uptime>>>")"
+
+    assertEquals "start_time 1547301201
+exit_code 0" "$(printf '%s\n' "${output}" | grep -E '^(start_time|exit_code)')"
 }
 
 # shellcheck disable=SC1090

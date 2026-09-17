@@ -5,7 +5,8 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from pathlib import Path
 
 import pytest
 from flask import Flask
@@ -17,6 +18,7 @@ from cmk.gui import login
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib import git
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.redis import disable_redis
@@ -102,3 +104,16 @@ def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 @pytest.fixture()
 def wsgi_app(flask_app: Flask) -> Iterator[WebTestAppForCMK]:
     yield from create_wsgi_app(flask_app)
+
+
+@pytest.fixture(name="init_setup_git_repo")
+def fixture_init_setup_git_repo() -> Callable[[Path], None]:
+    def init(config_dir: Path) -> None:
+        git._git_command(["init"], config_dir)  # noqa: SLF001
+        git._git_command(["config", "user.email", "check_mk"], config_dir)  # noqa: SLF001
+        git._git_command(["config", "user.name", "check_mk"], config_dir)  # noqa: SLF001
+        git._write_gitignore_files(config_dir)  # noqa: SLF001
+        git._git_add_files(config_dir)  # noqa: SLF001
+        git._git_command(["commit", "-m", "init"], config_dir)  # noqa: SLF001
+
+    return init

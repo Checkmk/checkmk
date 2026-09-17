@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import cmk.utils.paths
@@ -80,6 +80,22 @@ def do_git_commit() -> None:
             message = _("Unknown configuration change")
 
         _git_command(["commit", "--author", author, "-F", "-"], config_dir, stdin=message)
+
+
+def commit_paths(config_dir: Path, message: str, paths: Sequence[str]) -> None:
+    """Stage and commit the given paths. Runs offline (no request context);
+    a no-op when config_dir is not a git repository."""
+    if not (config_dir / ".git").exists():
+        return
+
+    _git_command(["add", "--all", *paths], config_dir)
+    if _git_has_staged_changes(config_dir):
+        _git_command(["commit", "-m", message], config_dir)
+
+
+def _git_has_staged_changes(config_dir: Path) -> bool:
+    completed = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=config_dir, check=False)
+    return completed.returncode != 0
 
 
 def _git_add_files(config_dir: Path) -> None:

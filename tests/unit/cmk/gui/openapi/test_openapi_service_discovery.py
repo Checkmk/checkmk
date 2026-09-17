@@ -14,6 +14,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils import version
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
@@ -1438,7 +1439,8 @@ def fixture_denied_permission(clients: ClientRegistry) -> Callable[[str], None]:
         clients.User.create(
             username="restricted",
             fullname="restricted",
-            customer="provider",  # 2.3.0 requires it; the CME schema has no default
+            # customer_field() only builds a field under CME.
+            customer="provider" if version.edition() is version.Edition.CME else None,
             roles=["adminx"],
             auth_option={"auth_type": "password", "password": "supersecretish"},
         )

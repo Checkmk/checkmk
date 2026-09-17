@@ -2091,7 +2091,7 @@ allows = [
 ]
 
 [components."cmk.web"]
-allows = ["@ccc", "cmk.shared_typing"]
+allows = ["@ccc", "cmk.shared_typing", "cmk.utils.security_event"]
 
 [components."cmk.werk_ids_server"]
 allows = ["cmk.ccc.log"]

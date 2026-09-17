@@ -182,26 +182,25 @@ function selectTickProducer(
   return (start, end) => monthsProducer(start, end, 96)
 }
 
+// Ticks cover the whole drawn window. The legacy axis trimmed a step off either end to drop the
+// RRD's padding samples from the fetched range; the drawn window carries none, so the same trim
+// would leave its first and last sample untickable, which at a coarse step is most of the plot.
 export function computeTimeAxis(
   startTime: number,
   endTime: number,
   plotWidth: number,
-  step: number,
   measureLabel: MeasureLabel,
   timeZone: string = getLocalTimeZone()
 ): TimeAxisTick[] {
-  const secondsPerPixel = (endTime - startTime) / Math.max(plotWidth, 1)
-  const positionToX = (position: number): number => (position - startTime) / secondsPerPixel
-
-  const firstTickTime = startTime + step
-  const lastTickTime = endTime - step
-  const timeRange = lastTickTime - firstTickTime
+  const timeRange = endTime - startTime
   if (timeRange <= 0) {
     return []
   }
+  const secondsPerPixel = timeRange / Math.max(plotWidth, 1)
+  const positionToX = (position: number): number => (position - startTime) / secondsPerPixel
 
-  const startZoned = fromAbsolute(firstTickTime * 1000, timeZone)
-  const endZoned = fromAbsolute(lastTickTime * 1000, timeZone)
+  const startZoned = fromAbsolute(startTime * 1000, timeZone)
+  const endZoned = fromAbsolute(endTime * 1000, timeZone)
   const timeRangeDays = timeRange / SECONDS_PER_DAY
 
   const labelling = pickLabelling(startZoned, endZoned, timeRangeDays)

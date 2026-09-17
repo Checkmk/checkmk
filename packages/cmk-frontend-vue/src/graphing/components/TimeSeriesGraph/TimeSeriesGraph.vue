@@ -291,7 +291,6 @@ function draw(): void {
     props.view_time_range.start,
     props.view_time_range.end,
     plotWidth.value,
-    props.view_time_range.step,
     measureLabel
   )
 

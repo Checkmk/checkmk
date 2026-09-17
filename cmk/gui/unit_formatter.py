@@ -5,13 +5,17 @@
 
 import abc
 import math
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal, override
 
 from pydantic import BaseModel
 
 _MAX_DIGITS: Final = 5
+
+_MIN_LABELS_PER_AXIS: Final = 2
+
+_ON_MULTIPLE_TOLERANCE: Final = 1e-9
 
 
 @dataclass(frozen=True)
@@ -73,6 +77,36 @@ class StrictPrecision(BaseModel, frozen=True):
     digits: int
 
 
+def _decimals_needed_to_write(spacing: float) -> int:
+    return max(0, math.ceil(-math.log10(spacing)))
+
+
+def precision_for_spacing(
+    unit_precision: AutoPrecision | StrictPrecision, spacing: float
+) -> AutoPrecision | StrictPrecision:
+    return unit_precision.model_copy(
+        update={"digits": max(unit_precision.digits, _decimals_needed_to_write(spacing))}
+    )
+
+
+def _displayed_resolution(
+    resolution: float, raw_value: int | float, part: _PreFormattedPart
+) -> float:
+    """The resolution in the unit `part` is displayed in.
+
+    `_preformat` scaled the raw value by a prefix factor (2 000 000 B reads as 2 MB), and a
+    resolution of 2 000 B scales with it to 0.002 MB; counting the raw resolution's decimals
+    would round 1.996 MB and 1.998 MB both to 2 MB.
+    """
+    return resolution if raw_value == 0 else resolution * abs(part.value / raw_value)
+
+
+def _multiples_within(start: float, end: float, spacing: float) -> Sequence[float]:
+    first_index = math.ceil(start / spacing - _ON_MULTIPLE_TOLERANCE)
+    last_index = math.floor(end / spacing + _ON_MULTIPLE_TOLERANCE)
+    return [index * spacing for index in range(first_index, last_index + 1)]
+
+
 @dataclass(frozen=True, kw_only=True)
 class PositiveYRange:
     start: float
@@ -121,17 +155,17 @@ class NotationFormatter(abc.ABC):
     def _apply_precision(
         self,
         value: int | float,
-        compute_auto_precision_digits: Callable[[int, int], int],
+        precision: AutoPrecision | StrictPrecision,
         use_max_digits_for_labels: bool,
     ) -> float:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
-        digits = self.precision.digits
-        if isinstance(self.precision, AutoPrecision) and (
+        digits = precision.digits
+        if isinstance(precision, AutoPrecision) and (
             exponent := abs(math.ceil(math.log10(value - value_floor)))
         ):
-            digits = compute_auto_precision_digits(exponent, self.precision.digits)
+            digits = max(exponent + 1, precision.digits)
         return (
             round(value, min(digits, _MAX_DIGITS))
             if use_max_digits_for_labels
@@ -158,16 +192,22 @@ class NotationFormatter(abc.ABC):
     def _postformat(
         self,
         pre_formatted_parts: Sequence[_PreFormattedPart],
-        compute_auto_precision_digits: Callable[[int, int], int],
+        raw_value: int | float,
+        resolution: float | None,
         use_max_digits_for_labels: bool,
     ) -> Iterator[FormattedPart]:
+        """`raw_value` is the value the parts were preformatted from; `resolution` the gap in raw
+        units two rendered values must stay apart by, or None for the unit's own precision."""
         for part in pre_formatted_parts:
-            text = self._stringify_formatted_value(
-                self._apply_precision(
-                    part.value,
-                    compute_auto_precision_digits,
-                    use_max_digits_for_labels,
+            precision = (
+                self.precision
+                if resolution is None
+                else precision_for_spacing(
+                    self.precision, _displayed_resolution(resolution, raw_value, part)
                 )
+            )
+            text = self._stringify_formatted_value(
+                self._apply_precision(part.value, precision, use_max_digits_for_labels)
             )
             yield self._format_text_and_unit(
                 text=text.rstrip("0").rstrip(".") if "." in text else text,
@@ -175,16 +215,12 @@ class NotationFormatter(abc.ABC):
                 symbol=part.symbol,
             )
 
-    def render(self, value: int | float) -> str:
+    def render(self, value: int | float, resolution: float | None = None) -> str:
+        """`resolution` is the gap two rendered values must stay apart by, such as a graph's axis
+        spacing; None renders at the unit's own precision."""
         return Formatted(
             sign="" if value >= 0 else "-",
-            parts=list(
-                self._postformat(
-                    self._preformat(abs(value)),
-                    lambda exponent, digits: max(exponent + 1, digits),
-                    True,
-                )
-            ),
+            parts=list(self._postformat(self._preformat(abs(value)), abs(value), resolution, True)),
         ).render()
 
     @abc.abstractmethod
@@ -192,6 +228,22 @@ class NotationFormatter(abc.ABC):
 
     @abc.abstractmethod
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
+
+    def _select_label_spacing(self, span: float, target_number_of_labels: float) -> float:
+        def label_count(atom: int | float) -> int:
+            return math.floor(span / atom)
+
+        def atoms_filling_the_span(atoms: Sequence[int | float]) -> Sequence[int | float]:
+            return [atom for atom in atoms if label_count(atom) >= _MIN_LABELS_PER_AXIS]
+
+        notation_atoms = (
+            self._compute_small_y_label_atoms if span < 1 else self._compute_large_y_label_atoms
+        )(span)
+        return min(
+            atoms_filling_the_span(notation_atoms) or atoms_filling_the_span(_decimal_atoms(span)),
+            key=lambda atom: abs(label_count(atom) - target_number_of_labels),
+            default=span / _MIN_LABELS_PER_AXIS,
+        )
 
     def render_y_labels(
         self,
@@ -201,66 +253,64 @@ class NotationFormatter(abc.ABC):
         assert target_number_of_labels >= 0
 
         if isinstance(y_range, PositiveYRange):
-            y_start_pos_rounded = math.floor(y_range.start)
-            y_end_pos = y_range.end
+            low_magnitude, high_magnitude = y_range.start, y_range.end
             sign_text: Literal["", "-"] = ""
             sign_number = 1
         else:
-            y_start_pos_rounded = math.floor(-y_range.end)
-            y_end_pos = -y_range.start
+            low_magnitude, high_magnitude = -y_range.end, -y_range.start
             sign_text = "-"
             sign_number = -1
 
-        delta = y_end_pos - y_start_pos_rounded
-        if delta == 0 or target_number_of_labels == 0:
+        span = high_magnitude - low_magnitude
+        if span <= 0 or target_number_of_labels == 0:
             return []
 
-        atoms = (
-            self._compute_small_y_label_atoms if delta < 1 else self._compute_large_y_label_atoms
-        )(delta)
-
-        if possible_atoms := [
-            (a, n_labels_for_atom) for a in atoms if (n_labels_for_atom := int(delta // a))
-        ]:
-            selected_atom, _n_labels_for_selected_atom = min(
-                possible_atoms, key=lambda t: abs(t[1] - target_number_of_labels)
-            )
-        else:
-            selected_atom = int(delta / target_number_of_labels)
-
-        position_of_first_label = y_start_pos_rounded - y_start_pos_rounded % selected_atom
-        n_labels = int((y_end_pos - position_of_first_label) // selected_atom)
-        first_formatted_label = self._preformat(
-            position_of_first_label or (position_of_first_label + selected_atom)
+        spacing = self._select_label_spacing(span, target_number_of_labels)
+        positions = _multiples_within(low_magnitude, high_magnitude, spacing)
+        shared_unit = self._preformat(
+            next((position for position in positions if position != 0), spacing)
         )[0]
 
         return [
             Label(0, "0")
-            if label_position == 0
+            if position == 0
             else Label(
-                sign_number * label_position,
-                Formatted(
-                    sign=sign_text,
-                    parts=list(
-                        self._postformat(
-                            self._preformat(
-                                label_position,
-                                use_prefix=first_formatted_label.prefix,
-                                use_symbol=first_formatted_label.symbol,
-                            ),
-                            lambda exponent, digits: exponent + digits,
-                            self.use_max_digits_for_labels,
-                        )
-                    ),
-                ).render(),
+                sign_number * position,
+                self._render_label_text(position, shared_unit, spacing, sign_text),
             )
-            for label_position in (
-                position_of_first_label + selected_atom * i for i in range(n_labels + 1)
-            )
+            for position in positions
         ]
+
+    def _render_label_text(
+        self,
+        position: float,
+        shared_unit: _PreFormattedPart,
+        spacing: float,
+        sign_text: Literal["", "-"],
+    ) -> str:
+        return Formatted(
+            sign=sign_text,
+            parts=list(
+                self._postformat(
+                    self._preformat(
+                        position,
+                        use_prefix=shared_unit.prefix,
+                        use_symbol=shared_unit.symbol,
+                    ),
+                    position,
+                    spacing,
+                    self.use_max_digits_for_labels,
+                )
+            ),
+        ).render()
 
 
 _BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]
+
+
+def _decimal_atoms(span: float) -> Sequence[float]:
+    factor = pow(10, math.floor(math.log10(span)) - 1)
+    return [atom * factor for atom in _BASIC_DECIMAL_ATOMS]
 
 
 def _stringify_small_decimal_number(value: float) -> str:
@@ -317,13 +367,11 @@ class DecimalFormatter(NotationFormatter):
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
 
 _SI_SMALL_PREFIXES: Final = [
@@ -390,13 +438,11 @@ class SIFormatter(NotationFormatter):
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
 
 _IEC_LARGE_PREFIXES: Final = [
@@ -446,8 +492,7 @@ class IECFormatter(NotationFormatter):
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -485,13 +530,11 @@ class StandardScientificFormatter(NotationFormatter):
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
 
 class EngineeringScientificFormatter(NotationFormatter):
@@ -524,13 +567,11 @@ class EngineeringScientificFormatter(NotationFormatter):
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
 
 _ONE_YEAR: Final = 31536000  # We use always 365 * 86400
@@ -648,8 +689,7 @@ class TimeFormatter(NotationFormatter):
 
     @override
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        factor = pow(10, math.floor(math.log10(max_y)) - 1)
-        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:

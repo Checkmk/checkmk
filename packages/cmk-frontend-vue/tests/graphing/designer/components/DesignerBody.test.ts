@@ -36,7 +36,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
     props: ['metrics', 'highlightedMetricNames', 'panEnabled', 'view_time_range', 'options'],
-    emits: ['pan'],
+    emits: ['pan', 'update:valueResolution'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
       <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
@@ -46,6 +46,10 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="curve-units">{{
         metrics.map((m) => m.metadata.unit.symbol).join(',')
       }}</span>
+      <button
+        data-testid="report-value-resolution"
+        @click="$emit('update:valueResolution', 0.005)"
+      />
       <button
         data-testid="pan-back"
         @click="$emit('pan', {
@@ -166,7 +170,12 @@ function graphObject(dataSources: unknown[] = [rrdSource('A'), rrdSource('B')]):
   } as unknown as CustomGraphObject
 }
 
-function metric(sourceId: string, name: string, title: string): unknown {
+function metric(
+  sourceId: string,
+  name: string,
+  title: string,
+  dataPoints: number[] = [1, 2]
+): unknown {
   return {
     source_id: sourceId,
     metadata: {
@@ -181,16 +190,18 @@ function metric(sourceId: string, name: string, title: string): unknown {
       color: '#28a2f3'
     },
     render: { stack: null, inverse: false, hidden: false },
-    data_points: [1, 2]
+    data_points: dataPoints
   }
 }
 
 /** The fetch_data POST returns two series, one per (visible) data source. */
-function fetchDataResponse(): unknown {
+function fetchDataResponse(
+  metrics: unknown[] = [metric('A', 'metric-a', 'CPU'), metric('B', 'metric-b', 'Memory')]
+): unknown {
   return {
     data: {
       time_range: { start: 0, end: 3600, step: 60 },
-      metrics: [metric('A', 'metric-a', 'CPU'), metric('B', 'metric-b', 'Memory')],
+      metrics,
       group_titles: [],
       horizontal_lines: [],
       warnings: [],
@@ -306,6 +317,44 @@ test('hiding a metric in the detached view-mode legend removes it from the previ
   await fireEvent.click(screen.getByRole('button', { name: 'CPU' }))
   await waitFor(() => expect(chart).not.toHaveTextContent('CPU'))
   expect(chart).toHaveTextContent('Memory')
+})
+
+/** Two series the unit's own precision prints identically; only a finer resolution tells apart. */
+function closeValuesResponse(): unknown {
+  return fetchDataResponse([
+    metric('A', 'metric-a', 'CPU', [0.196]),
+    metric('B', 'metric-b', 'Memory', [0.198])
+  ])
+}
+
+/** The stat cells that close a legend or appearance row. */
+function statsOfRow(title: string, scope: HTMLElement = document.body): string[] {
+  const row = within(scope).getByText(title).closest('tr')!
+  return [...row.querySelectorAll('td')].slice(-4).map((cell) => cell.textContent!.trim())
+}
+
+test('the detached view-mode legend prints values at the resolution the preview reports', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(closeValuesResponse() as never)
+  renderBody('view')
+  await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
+  expect(statsOfRow('CPU')).toEqual(statsOfRow('Memory'))
+
+  await fireEvent.click(screen.getByTestId('report-value-resolution'))
+
+  await waitFor(() => expect(statsOfRow('CPU')).not.toEqual(statsOfRow('Memory')))
+})
+
+test('the appearance table prints values at the resolution the preview reports', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(closeValuesResponse() as never)
+  renderBody('edit')
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
+  const table = screen.getByRole('tabpanel')
+  expect(statsOfRow('CPU', table)).toEqual(statsOfRow('Memory', table))
+
+  await fireEvent.click(screen.getByTestId('report-value-resolution'))
+
+  await waitFor(() => expect(statsOfRow('CPU', table)).not.toEqual(statsOfRow('Memory', table)))
 })
 
 test('hovering a metric in the detached legend highlights it in the preview', async () => {

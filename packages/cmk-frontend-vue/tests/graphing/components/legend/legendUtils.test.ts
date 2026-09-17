@@ -42,3 +42,17 @@ test('last reports the final present sample of a series ending in a gap', () => 
 
   expect(stats.last).toBe(renderedAlone(finalSample))
 })
+
+test('stats tell apart two values one axis step apart', () => {
+  const valueResolution = 0.005
+
+  const stats = metricStats(makeMetric([0.195, 0.2]), valueResolution)
+
+  expect([stats.min, stats.max]).toEqual(['0.195', '0.2'])
+})
+
+test('stats fall back to the unit precision without an axis resolution', () => {
+  const stats = metricStats(makeMetric([0.195]))
+
+  expect(stats.last).toBe('0.2')
+})

@@ -52,13 +52,16 @@ function backendMetric(name: string): Metric {
 function renderTable(
   seed: DesignerItem[],
   metricsBySource: Map<ItemId, Metric[]>,
-  resolvedTitles: Map<ItemId, string> = new Map()
+  resolvedTitles: Map<ItemId, string> = new Map(),
+  valueResolution: number | null = null
 ) {
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
   return {
     store,
-    ...render(AppearanceTable, { props: { store, metricsBySource, resolvedTitles } })
+    ...render(AppearanceTable, {
+      props: { store, metricsBySource, resolvedTitles, valueResolution }
+    })
   }
 }
 
@@ -86,6 +89,22 @@ test('shows the stats of rows that map to exactly one series', () => {
   expect(statsOf(rowOf('Single'))).toEqual(['10', '20', '30', '20'])
   // Row B fans into two series, so its own row attributes none of them.
   expect(statsOf(rowOf('Fanned'))).toEqual(['', '', '', ''])
+})
+
+test('prints stats at the value-axis resolution, telling close values apart', () => {
+  const rows = [rrdMetricItem('A', { title: 'Lower' }), rrdMetricItem('B', { title: 'Upper' })]
+  const series = new Map([
+    ['A', [metric('a', [0.196])]],
+    ['B', [metric('b', [0.198])]]
+  ])
+
+  const { unmount } = renderTable(rows, series)
+  // The unit alone prints both rows the same.
+  expect(statsOf(rowOf('Lower'))).toEqual(statsOf(rowOf('Upper')))
+  unmount()
+
+  renderTable(rows, series, new Map(), 0.005)
+  expect(statsOf(rowOf('Lower'))).not.toEqual(statsOf(rowOf('Upper')))
 })
 
 test('opens the rows that fan out into lines, leaving single-line rows without a toggle', () => {

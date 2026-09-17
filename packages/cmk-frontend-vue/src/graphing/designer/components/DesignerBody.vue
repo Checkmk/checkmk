@@ -107,6 +107,7 @@ function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKi
 const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
 const highlightedMetricNames = ref<string[]>([])
+const valueResolution = ref<number | null>(null)
 
 const graphContainer = ref<HTMLElement | null>(null)
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
@@ -313,6 +314,7 @@ const addTo = computed<AddTo | null>(() =>
         :brush-snapshot="drawnBrushSnapshot"
         :add-to="addTo"
         @update:requested-time-range="onPanelTimeRange"
+        @update:value-resolution="valueResolution = $event"
         @inspect="pauseRefresh"
       />
       <GraphNotice
@@ -334,6 +336,7 @@ const addTo = computed<AddTo | null>(() =>
         :metrics="drawnMetrics"
         :horizontal-lines="data.horizontalLines.value"
         :consolidation-fn="consolidationFn"
+        :value-resolution="valueResolution"
         @hover-metrics="highlightedMetricNames = $event"
       />
 
@@ -366,6 +369,7 @@ const addTo = computed<AddTo | null>(() =>
               :store="store"
               :metrics-by-source="data.metricsBySource.value"
               :resolved-titles="data.resolvedTitles.value"
+              :value-resolution="valueResolution"
               @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>

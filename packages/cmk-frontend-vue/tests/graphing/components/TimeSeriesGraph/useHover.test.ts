@@ -78,6 +78,7 @@ interface HoverOverrides {
   plotWidth?: number
   /** Widen to cover the mirrored half of the plot when a metric is inverse. */
   valueDomain?: [number, number]
+  valueResolution?: number | null
 }
 
 function mountHover(
@@ -94,6 +95,7 @@ function mountHover(
       api = useHover({
         metrics: () => metrics,
         consolidation: () => consolidation,
+        valueResolution: () => overrides.valueResolution ?? null,
         plotWidth: ref(plotWidth),
         plotHeight: ref(PLOT_HEIGHT),
         xScale,
@@ -203,6 +205,33 @@ describe('useHover — hit-test', () => {
 
     const samples = hover.hoverState.value!.samples
     expect(samples.map((sample) => sample.formattedValue).sort()).toEqual(['10', '90'])
+  })
+
+  test('tells apart two values one axis step apart', () => {
+    const valueResolution = 0.005
+    const hover = mountHover(
+      [makeLineMetric('low', constantPoints(0.195)), makeLineMetric('high', constantPoints(0.2))],
+      TIME_RANGE,
+      { valueDomain: [0.19, 0.21], valueResolution }
+    )
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const valueByMetric = Object.fromEntries(
+      hover.hoverState.value!.samples.map((sample) => [sample.metricName, sample.formattedValue])
+    )
+    expect(valueByMetric).toEqual({ low: '0.195', high: '0.2' })
+  })
+
+  test('falls back to the unit precision without an axis resolution', () => {
+    const hover = mountHover([makeLineMetric('low', constantPoints(0.195))], TIME_RANGE, {
+      valueDomain: [0.19, 0.21]
+    })
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const samples = hover.hoverState.value!.samples
+    expect(samples.map((sample) => sample.formattedValue)).toEqual(['0.2'])
   })
 
   test('a plot with no metrics yields no hover state', () => {

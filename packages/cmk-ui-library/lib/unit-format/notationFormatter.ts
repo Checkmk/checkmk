@@ -10,23 +10,23 @@
 // Vue stack. Until then, output here must stay byte-identical with the
 // Python equivalent so server- and client-rendered values agree.
 import {
-  type AutoPrecisionDigits,
   BASIC_DECIMAL_ATOMS,
   BASIC_TIME_ATOMS,
   Formatted,
   IEC_LARGE_PREFIXES,
   MAX_DIGITS,
+  MIN_LABELS_PER_AXIS,
   ONE_DAY,
   ONE_HOUR,
   ONE_MINUTE,
   ONE_YEAR,
+  ON_MULTIPLE_TOLERANCE,
   Preformatted,
-  RENDER_AUTO_DIGITS,
   SI_LARGE_PREFIXES,
   SI_SMALL_PREFIXES,
   TIME_LARGE_SYMBOLS,
   TIME_SMALL_PREFIXES,
-  Y_LABELS_AUTO_DIGITS,
+  decimalAtoms,
   findPrefixPower,
   joinValueAndUnit,
   pow10,
@@ -36,6 +36,36 @@ import {
 } from 'cmk-ui-library/lib/unit-format/notationFormatterInternals'
 
 export type Precision = { type: 'auto' | 'strict'; digits: number }
+
+function decimalsNeededToWrite(spacing: number): number {
+  return Math.max(0, Math.ceil(-Math.log10(spacing)))
+}
+
+export function precisionForSpacing(unitPrecision: Precision, spacing: number): Precision {
+  return {
+    type: unitPrecision.type,
+    digits: Math.max(unitPrecision.digits, decimalsNeededToWrite(spacing))
+  }
+}
+
+/**
+ * The resolution in the unit `part` is displayed in. `preformat` scaled the raw value by a prefix
+ * factor (2 000 000 B reads as 2 MB), and a resolution of 2 000 B scales with it to 0.002 MB;
+ * counting the raw resolution's decimals would round 1.996 MB and 1.998 MB both to 2 MB.
+ */
+function displayedResolution(resolution: number, rawValue: number, part: Preformatted): number {
+  return rawValue === 0 ? resolution : resolution * Math.abs(part.value / rawValue)
+}
+
+export function multiplesWithin(start: number, end: number, spacing: number): number[] {
+  const firstIndex = Math.ceil(start / spacing - ON_MULTIPLE_TOLERANCE)
+  const lastIndex = Math.floor(end / spacing + ON_MULTIPLE_TOLERANCE)
+  const multiples: number[] = []
+  for (let index = firstIndex; index <= lastIndex; index++) {
+    multiples.push(index * spacing)
+  }
+  return multiples
+}
 
 /** A single y-axis label produced by `renderYLabels`. */
 export type Label = { value: number; text: string }
@@ -101,7 +131,7 @@ export abstract class NotationFormatter {
 
   protected applyPrecision(
     value: number,
-    computeAutoPrecisionDigits: AutoPrecisionDigits,
+    precision: Precision,
     useMaxDigitsForLabels: boolean
   ): number {
     const valueFloor = Math.floor(value)
@@ -111,12 +141,12 @@ export abstract class NotationFormatter {
     // Clamp at the boundary: toFixed throws RangeError for out-of-range or
     // non-integer digit counts. Backend wire format is trusted to be sane,
     // but we don't want a malformed value to take down a graph render.
-    const requestedDigits = Math.max(0, Math.min(100, Math.trunc(this.precision.digits)))
+    const requestedDigits = Math.max(0, Math.min(100, Math.trunc(precision.digits)))
     let digits = requestedDigits
-    if (this.precision.type === 'auto') {
+    if (precision.type === 'auto') {
       const exponent = Math.abs(Math.ceil(Math.log10(value - valueFloor)))
       if (exponent > 0) {
-        digits = computeAutoPrecisionDigits(exponent, requestedDigits)
+        digits = Math.max(exponent + 1, requestedDigits)
       }
     }
     const finalDigits = useMaxDigitsForLabels ? Math.min(digits, MAX_DIGITS) : Math.min(digits, 100)
@@ -137,15 +167,24 @@ export abstract class NotationFormatter {
     return this.preformatLargeNumber(value, usePrefix, useSymbol)
   }
 
+  /**
+   * `rawValue` is the value the parts were preformatted from; `resolution` the gap in raw units
+   * two rendered values must stay apart by, or null for the unit's own precision.
+   */
   protected postformat(
     parts: Preformatted[],
-    computeAutoPrecisionDigits: AutoPrecisionDigits,
+    rawValue: number,
+    resolution: number | null,
     useMaxDigitsForLabels: boolean
   ): string[] {
     const results: string[] = []
     for (const part of parts) {
+      const precision =
+        resolution === null
+          ? this.precision
+          : precisionForSpacing(this.precision, displayedResolution(resolution, rawValue, part))
       let text = this.stringifyFormattedValue(
-        this.applyPrecision(part.value, computeAutoPrecisionDigits, useMaxDigitsForLabels)
+        this.applyPrecision(part.value, precision, useMaxDigitsForLabels)
       )
       if (text.includes('.')) {
         text = sanitize(text)
@@ -155,7 +194,11 @@ export abstract class NotationFormatter {
     return results
   }
 
-  public render(value: number): string {
+  /**
+   * `resolution` is the gap two rendered values must stay apart by, such as a graph's axis
+   * spacing; null renders at the unit's own precision.
+   */
+  public render(value: number, resolution: number | null = null): string {
     // The legacy cmk-frontend port skipped the abs() below and produced
     // garbage for negative inputs; fixed here.
     let sign = ''
@@ -164,85 +207,72 @@ export abstract class NotationFormatter {
       sign = '-'
       absValue = -value
     }
-    const parts = this.postformat(this.preformat(absValue), RENDER_AUTO_DIGITS, true)
+    const parts = this.postformat(this.preformat(absValue), absValue, resolution, true)
     return sign + parts.join(' ')
+  }
+
+  protected selectLabelSpacing(span: number, targetNumberOfLabels: number): number {
+    const labelCount = (atom: number): number => Math.floor(span / atom)
+    const atomsFillingTheSpan = (atoms: number[]): number[] =>
+      atoms.filter((atom) => labelCount(atom) >= MIN_LABELS_PER_AXIS)
+
+    const notationAtoms =
+      span < 1 ? this.computeSmallYLabelAtoms(span) : this.computeLargeYLabelAtoms(span)
+    const fromNotation = atomsFillingTheSpan(notationAtoms)
+    const candidates =
+      fromNotation.length > 0 ? fromNotation : atomsFillingTheSpan(decimalAtoms(span))
+    if (candidates.length === 0) {
+      return span / MIN_LABELS_PER_AXIS
+    }
+    return candidates.reduce((best, atom) =>
+      Math.abs(labelCount(atom) - targetNumberOfLabels) <
+      Math.abs(labelCount(best) - targetNumberOfLabels)
+        ? atom
+        : best
+    )
+  }
+
+  private renderLabelText(
+    position: number,
+    sharedUnit: Preformatted,
+    spacing: number,
+    signText: string
+  ): string {
+    const parts = this.postformat(
+      this.preformat(position, sharedUnit.prefix, sharedUnit.symbol),
+      position,
+      spacing,
+      this.useMaxDigitsForLabels
+    )
+    return signText + parts.join(' ')
   }
 
   public renderYLabels(yRange: YRange, targetNumberOfLabels: number): Label[] {
     if (targetNumberOfLabels < 0) {
       throw new Error('targetNumberOfLabels must be >= 0')
     }
+    const [lowMagnitude, highMagnitude] =
+      yRange.kind === 'positive' ? [yRange.start, yRange.end] : [-yRange.end, -yRange.start]
+    const signText = yRange.kind === 'positive' ? '' : '-'
+    const signNumber = yRange.kind === 'positive' ? 1 : -1
 
-    let yStartPosRounded: number
-    let yEndPos: number
-    let signText: '' | '-' = ''
-    let signNumber = 1
-    if (yRange.kind === 'positive') {
-      yStartPosRounded = Math.floor(yRange.start)
-      yEndPos = yRange.end
-    } else {
-      yStartPosRounded = Math.floor(-yRange.end)
-      yEndPos = -yRange.start
-      signText = '-'
-      signNumber = -1
-    }
-
-    const delta = yEndPos - yStartPosRounded
-    if (delta === 0 || targetNumberOfLabels === 0) {
+    const span = highMagnitude - lowMagnitude
+    if (span <= 0 || targetNumberOfLabels === 0) {
       return []
     }
 
-    const atoms =
-      delta < 1 ? this.computeSmallYLabelAtoms(delta) : this.computeLargeYLabelAtoms(delta)
+    const spacing = this.selectLabelSpacing(span, targetNumberOfLabels)
+    const positions = multiplesWithin(lowMagnitude, highMagnitude, spacing)
+    const sharedUnit = this.preformat(positions.find((position) => position !== 0) ?? spacing)[0]!
 
-    const possibleAtoms: Array<[number, number]> = []
-    for (const a of atoms) {
-      const n = Math.floor(delta / a)
-      if (n) {
-        possibleAtoms.push([a, n])
-      }
-    }
-
-    let selectedAtom: number
-    if (possibleAtoms.length > 0) {
-      let best = possibleAtoms[0]!
-      let bestDist = Math.abs(best[1] - targetNumberOfLabels)
-      for (const candidate of possibleAtoms.slice(1)) {
-        const dist = Math.abs(candidate[1] - targetNumberOfLabels)
-        if (dist < bestDist) {
-          best = candidate
-          bestDist = dist
-        }
-      }
-      selectedAtom = best[0]
-    } else {
-      selectedAtom = Math.floor(delta / targetNumberOfLabels)
-    }
-
-    const positionOfFirstLabel = yStartPosRounded - (yStartPosRounded % selectedAtom)
-    const nLabels = Math.floor((yEndPos - positionOfFirstLabel) / selectedAtom)
-    const firstFormatted = this.preformat(
-      positionOfFirstLabel || positionOfFirstLabel + selectedAtom
-    )[0]!
-
-    const labels: Label[] = []
-    for (let i = 0; i <= nLabels; i++) {
-      const labelPosition = positionOfFirstLabel + selectedAtom * i
-      if (labelPosition === 0) {
-        labels.push({ value: 0, text: '0' })
-        continue
-      }
-      const parts = this.postformat(
-        this.preformat(labelPosition, firstFormatted.prefix, firstFormatted.symbol),
-        Y_LABELS_AUTO_DIGITS,
-        this.useMaxDigitsForLabels
-      )
-      labels.push({
-        value: signNumber * labelPosition,
-        text: signText + parts.join(' ')
-      })
-    }
-    return labels
+    return positions.map((position) =>
+      position === 0
+        ? { value: 0, text: '0' }
+        : {
+            value: signNumber * position,
+            text: this.renderLabelText(position, sharedUnit, spacing, signText)
+          }
+    )
   }
 }
 
@@ -273,13 +303,11 @@ export class DecimalFormatter extends NotationFormatter {
   }
 
   protected computeSmallYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 
   protected computeLargeYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 }
 
@@ -317,13 +345,11 @@ export class SIFormatter extends NotationFormatter {
   }
 
   protected computeSmallYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 
   protected computeLargeYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 }
 
@@ -351,8 +377,7 @@ export class IECFormatter extends NotationFormatter {
   }
 
   protected computeSmallYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 
   protected computeLargeYLabelAtoms(maxY: number): number[] {
@@ -381,13 +406,11 @@ export class StandardScientificFormatter extends NotationFormatter {
   }
 
   protected computeSmallYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 
   protected computeLargeYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 }
 
@@ -407,13 +430,11 @@ export class EngineeringScientificFormatter extends NotationFormatter {
   }
 
   protected computeSmallYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 
   protected computeLargeYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 }
 
@@ -497,8 +518,7 @@ export class TimeFormatter extends NotationFormatter {
   }
 
   protected computeSmallYLabelAtoms(maxY: number): number[] {
-    const factor = pow10(Math.floor(Math.log10(maxY)) - 1)
-    return BASIC_DECIMAL_ATOMS.map((a) => a * factor)
+    return decimalAtoms(maxY)
   }
 
   protected computeLargeYLabelAtoms(maxY: number): number[] {

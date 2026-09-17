@@ -30,12 +30,19 @@ import { type ItemId, isSingleLine, parseLineType } from '../types'
 import AutomaticColorCell from './AutomaticColorCell.vue'
 import StatsCells from './StatsCells.vue'
 
-const { store, metricsBySource, resolvedTitles } = defineProps<{
+const {
+  store,
+  metricsBySource,
+  resolvedTitles,
+  valueResolution = null
+} = defineProps<{
   store: GraphItemsStore
   /** Fetched series per data-source row, for the live-data columns. */
   metricsBySource: Map<ItemId, Metric[]>
   /** The title each row resolved to in the last fetch; rows that resolved to none are absent. */
   resolvedTitles: ReadonlyMap<ItemId, string>
+  /** Value-axis resolution of the preview graph; stats print at least this precisely. */
+  valueResolution?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -94,7 +101,7 @@ const statsBySource = computed(() => {
   const stats = new Map<ItemId, MetricStats>()
   for (const [id, series] of metricsBySource) {
     if (series.length === 1) {
-      stats.set(id, metricStats(series[0]!))
+      stats.set(id, metricStats(series[0]!, valueResolution))
     }
   }
   return stats
@@ -108,7 +115,7 @@ const linesBySource = computed(() => {
       id,
       orderMetricsTopToBottom([...series]).map((metric) => ({
         metric,
-        stats: metricStats(metric)
+        stats: metricStats(metric, valueResolution)
       }))
     )
   }

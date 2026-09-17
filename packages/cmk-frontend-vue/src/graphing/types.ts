@@ -128,5 +128,7 @@ export interface GraphPanelProps {
 // `update:consolidationFn` is absent by necessity: `defineModel` already declares it in the panel.
 export type GraphPanelEmits = {
   'update:requestedTimeRange': [value: RequestedTimeRange, kind: TimeRangeCommitKind]
+  /** The smallest gap between the value-axis labels the graph currently draws. */
+  'update:valueResolution': [value: number | null]
   inspect: []
 }

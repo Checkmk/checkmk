@@ -48,7 +48,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
         'showValueAxis',
         'minValueAxisWidth'
       ],
-      emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
+      emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction', 'update:valueResolution'],
       template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
       <span data-testid="renderer-y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
@@ -84,6 +84,10 @@ vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
         @click="$emit('pan', { timeRange: { start: 342, end: 4002, step: 10 } })"
       />
       <span data-testid="emit-reset" @click="$emit('reset')" />
+      <span
+        data-testid="emit-value-resolution"
+        @click="$emit('update:valueResolution', 0.005)"
+      />
     </div>`
     }
   }
@@ -291,6 +295,24 @@ test('renders the legend when showLegend is true', () => {
     }
   })
   expect(document.querySelector('.graphing-graph-panel__legend')).toBeInTheDocument()
+})
+
+test('hands the value resolution the renderer reports up to the host', async () => {
+  const { emitted } = render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE
+    }
+  })
+  expect(emitted()['update:valueResolution']).toBeUndefined()
+
+  await fireEvent.click(screen.getByTestId('emit-value-resolution'))
+
+  expect(emitted()['update:valueResolution']).toEqual([[0.005]])
 })
 
 test('the brush bar shows the committed window, not the range the curves are drawn against', () => {

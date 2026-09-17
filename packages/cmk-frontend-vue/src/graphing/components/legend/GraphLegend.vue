@@ -43,6 +43,7 @@ const props = withDefaults(
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
     fillHeight?: boolean
+    valueResolution?: number | null
   }>(),
   {
     horizontalLines: () => [],
@@ -50,7 +51,8 @@ const props = withDefaults(
     consolidationFn: DEFAULT_CONSOLIDATION_FN,
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
-    fillHeight: false
+    fillHeight: false,
+    valueResolution: null
   }
 )
 
@@ -107,7 +109,7 @@ function toggleAll() {
 const metricStats = computed((): Map<string, MetricStats> => {
   const map = new Map<string, MetricStats>()
   for (const m of props.metrics) {
-    map.set(m.metadata.name, computeMetricStats(m))
+    map.set(m.metadata.name, computeMetricStats(m, props.valueResolution))
   }
   return map
 })
@@ -267,7 +269,7 @@ function toggleLine(name: string) {
             <td></td>
             <td></td>
             <td class="graphing-graph-legend__stat">
-              {{ horizontalLineValue(line) }}
+              {{ horizontalLineValue(line, valueResolution) }}
             </td>
           </tr>
           <tr

@@ -239,6 +239,8 @@ const brushWindow = computed<TimeInterval | undefined>(
 // The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
 // it so the strip stays under the plot.
 const plotLeft = ref(CANVAS_MARGIN_LEFT)
+const valueResolution = ref<number | null>(null)
+watch(valueResolution, (resolution) => emit('update:valueResolution', resolution))
 const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_INSET_X)
 </script>
 
@@ -310,6 +312,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
             @pin-create="onPinCreate"
             @pin-action="clearPin"
             @update:plot-left="plotLeft = $event"
+            @update:value-resolution="valueResolution = $event"
           />
           <CmkAlertBox
             v-if="dataTimeRange && hasPlottableData(metrics) && !anyMetricShown"
@@ -345,6 +348,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
         :consolidation-fn="consolidationFn"
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
+        :value-resolution="valueResolution"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"

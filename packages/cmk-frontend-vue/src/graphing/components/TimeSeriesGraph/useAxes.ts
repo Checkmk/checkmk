@@ -200,6 +200,17 @@ export function useAxes(
     return valueLabels().map((label) => label.text)
   }
 
+  function valueResolution(): number {
+    const sortedPositions = valueLabels()
+      .map((label) => label.position)
+      .sort((first, second) => first - second)
+    const gapsBetweenLabels = sortedPositions
+      .slice(1)
+      .map((position, index) => position - sortedPositions[index]!)
+      .filter((gap) => gap > 0)
+    return gapsBetweenLabels.length > 0 ? Math.min(...gapsBetweenLabels) : yStep.value
+  }
+
   function drawValueGrid(): void {
     if (!axisGroupRef.value) {
       return
@@ -293,5 +304,12 @@ export function useAxes(
       .text((tick) => tick.text)
   }
 
-  return { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawTimeAxis }
+  return {
+    prepareValueDomain,
+    valueTickLabels,
+    valueResolution,
+    drawValueGrid,
+    drawValueAxis,
+    drawTimeAxis
+  }
 }

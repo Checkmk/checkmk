@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { bisector } from 'd3-array'
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import { type Ref, onBeforeUnmount, ref } from 'vue'
@@ -17,6 +16,7 @@ import { consolidatedSampleTime, selectConsolidatedValue } from './render/bucket
 import { valueAt } from './render/polyline'
 import type { StackedColumn, StackedSeries } from './render/stacked'
 import type { Metric } from './types'
+import { valueRenderer } from './valueRenderer'
 
 const HOVER_CLEAR_DELAY_MS = 150
 
@@ -87,6 +87,7 @@ const coversTime = (buckets: M4Cache, time: number): boolean =>
 export interface HoverOptions {
   metrics: () => Metric[]
   consolidation: () => ConsolidationFn
+  valueResolution: () => number | null
   plotWidth: Ref<number>
   plotHeight: Ref<number>
   xScale: ScaleTime<number, number>
@@ -167,10 +168,10 @@ export function useHover(options: HoverOptions) {
       const drawnTopPixel = options.yScale(edge.upper)
       const drawnBottomPixel = options.yScale(edge.lower)
       hitDistances.push(metricHitDistance(cursorY, drawnTopPixel, drawnBottomPixel))
-      const { formatter } = userSpecificUnit(metric.metadata.unit, 'celsius')
+      const renderValue = valueRenderer(metric.metadata.unit, options.valueResolution())
       return {
         ...sampleBase,
-        formattedValue: formatter.render(value),
+        formattedValue: renderValue(value),
         pixelY: drawnTopPixel,
         snapTime: time
       }

@@ -3,9 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
-
 import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
+import { valueRenderer } from '../TimeSeriesGraph/valueRenderer'
 
 export interface MetricStats {
   min: string
@@ -14,10 +13,8 @@ export interface MetricStats {
   last: string
 }
 
-/** Formatted min/avg/max/last over the series' present data points; 'n/a' where absent. */
-export function metricStats(metric: Metric): MetricStats {
-  const { formatter } = userSpecificUnit(metric.metadata.unit, 'celsius')
-  const fmt = (value: number): string => formatter.render(value)
+export function metricStats(metric: Metric, valueResolution: number | null = null): MetricStats {
+  const fmt = valueRenderer(metric.metadata.unit, valueResolution)
   const points = metric.data_points
   if (points.length === 0) {
     return { min: 'n/a', avg: 'n/a', max: 'n/a', last: 'n/a' }
@@ -48,10 +45,11 @@ export function metricStats(metric: Metric): MetricStats {
   }
 }
 
-/** The line's value rendered with its own unit, as the metric stats are. */
-export function horizontalLineValue(line: HorizontalLine): string {
-  const { formatter } = userSpecificUnit(line.unit, 'celsius')
-  return formatter.render(line.value)
+export function horizontalLineValue(
+  line: HorizontalLine,
+  valueResolution: number | null = null
+): string {
+  return valueRenderer(line.unit, valueResolution)(line.value)
 }
 
 export function withNameToggled(hiddenNames: string[], name: string): string[] {

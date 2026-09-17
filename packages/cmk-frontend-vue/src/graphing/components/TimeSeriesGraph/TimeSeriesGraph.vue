@@ -60,6 +60,7 @@ const emit = defineEmits<{
   pinCreate: [PinPayload]
   pinAction: [PinPayload]
   'update:plotLeft': [number]
+  'update:valueResolution': [number | null]
 }>()
 
 const consolidationFn = computed<ConsolidationFn>(
@@ -171,11 +172,19 @@ const yFormatter = computed((): NotationFormatter | null => {
   return unit ? userSpecificUnit(unit, 'celsius').formatter : null
 })
 const isMirroredGraph = computed(() => hasMirroredMetric(props.metrics))
+const valueResolution = ref<number | null>(null)
 
 const xScale = scaleTime()
 const yScale = scaleLinear()
 
-const { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawTimeAxis } = useAxes(
+const {
+  prepareValueDomain,
+  valueTickLabels,
+  valueResolution: axisValueResolution,
+  drawValueGrid,
+  drawValueAxis,
+  drawTimeAxis
+} = useAxes(
   axesContainer,
   xScale,
   yScale,
@@ -196,6 +205,7 @@ const {
 } = useHover({
   metrics: () => props.metrics,
   consolidation: () => consolidationFn.value,
+  valueResolution: () => valueResolution.value,
   plotWidth,
   plotHeight,
   xScale,
@@ -300,6 +310,7 @@ function draw(): void {
   const valueRangeMode: ValueRangeMode =
     explicitRange !== null && props.valueRange === null ? 'explicit' : 'aligned'
   prepareValueDomain(rawYMin, rawYMax, valueRangeMode)
+  valueResolution.value = axisValueResolution()
   fitMarginToValueLabels()
 
   // Setting width/height resets the 2d context state; setTransform must follow.
@@ -517,6 +528,7 @@ watch(
 )
 
 watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
+watch(valueResolution, (resolution) => emit('update:valueResolution', resolution))
 
 defineExpose({ showMaxZoomHint })
 </script>

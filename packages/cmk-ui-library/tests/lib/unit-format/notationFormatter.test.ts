@@ -15,6 +15,8 @@ import {
   SIFormatter,
   StandardScientificFormatter,
   TimeFormatter,
+  multiplesWithin,
+  precisionForSpacing,
   stringifySmallDecimalNumber
 } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 
@@ -280,7 +282,6 @@ describe('renderYLabels', () => {
       formatter: () => new DecimalFormatter('u', auto(2)),
       yRange: neg(-11.19, -2.123),
       expected: [
-        { value: -2, text: '-2 u' },
         { value: -4, text: '-4 u' },
         { value: -6, text: '-6 u' },
         { value: -8, text: '-8 u' },
@@ -320,7 +321,6 @@ describe('renderYLabels', () => {
       formatter: () => new SIFormatter('u', auto(2)),
       yRange: neg(-1.12e5, -423),
       expected: [
-        { value: 0, text: '0' },
         { value: -20000, text: '-20 ku' },
         { value: -40000, text: '-40 ku' },
         { value: -60000, text: '-60 ku' },
@@ -362,7 +362,6 @@ describe('renderYLabels', () => {
       formatter: () => new IECFormatter('u', auto(2)),
       yRange: neg(-0.144, -4.432e-4),
       expected: [
-        { value: 0, text: '0' },
         { value: -0.02, text: '-0.02 u' },
         { value: -0.04, text: '-0.04 u' },
         { value: -0.06, text: '-0.06 u' },
@@ -445,7 +444,6 @@ describe('renderYLabels', () => {
       formatter: () => new EngineeringScientificFormatter('u', auto(2)),
       yRange: neg(-5e10, -1e2),
       expected: [
-        { value: 0, text: '0' },
         { value: -10000000000, text: '-10e+9 u' },
         { value: -20000000000, text: '-20e+9 u' },
         { value: -30000000000, text: '-30e+9 u' },
@@ -535,7 +533,6 @@ describe('renderYLabels', () => {
       formatter: () => new TimeFormatter('s', auto(2)),
       yRange: neg(-10.123, -5.11),
       expected: [
-        { value: -5, text: '-5 s' },
         { value: -6, text: '-6 s' },
         { value: -7, text: '-7 s' },
         { value: -8, text: '-8 s' },
@@ -548,7 +545,6 @@ describe('renderYLabels', () => {
       formatter: () => new TimeFormatter('s', auto(2)),
       yRange: neg(-25552000.123, -15552000.123),
       expected: [
-        { value: -15552000, text: '-180 d' },
         { value: -17280000, text: '-200 d' },
         { value: -19008000, text: '-220 d' },
         { value: -20736000, text: '-240 d' },
@@ -571,18 +567,19 @@ describe('DecimalFormatter renderYLabels with min y', () => {
       'decimal-small',
       pos(0.00123, 0.00456),
       [
-        { value: 0, text: '0' },
-        { value: 0.001, text: '0.001 u' },
+        { value: 0.0015, text: '0.0015 u' },
         { value: 0.002, text: '0.002 u' },
+        { value: 0.0025, text: '0.0025 u' },
         { value: 0.003, text: '0.003 u' },
-        { value: 0.004, text: '0.004 u' }
+        { value: 0.0035, text: '0.0035 u' },
+        { value: 0.004, text: '0.004 u' },
+        { value: 0.0045000000000000005, text: '0.0045 u' }
       ]
     ],
     [
       'decimal-large',
       pos(123.456, 456.789),
       [
-        { value: 100, text: '100 u' },
         { value: 150, text: '150 u' },
         { value: 200, text: '200 u' },
         { value: 250, text: '250 u' },
@@ -596,7 +593,6 @@ describe('DecimalFormatter renderYLabels with min y', () => {
       'decimal-negative',
       neg(-456.789, -123.456),
       [
-        { value: -100, text: '-100 u' },
         { value: -150, text: '-150 u' },
         { value: -200, text: '-200 u' },
         { value: -250, text: '-250 u' },
@@ -617,13 +613,156 @@ describe('renderYLabels small range large offset', () => {
   test('TimeFormatter with use_max_digits_for_labels=true', () => {
     const formatter = new TimeFormatter('s', auto(2), true)
     expect(formatter.renderYLabels(pos(1.0011975, 1.2515224999999999), 5.0)).toEqual([
-      { value: 0.9500000000000001, text: '0.95 s' },
-      { value: 1.0, text: '1 s' },
       { value: 1.05, text: '1.05 s' },
       { value: 1.1, text: '1.1 s' },
       { value: 1.1500000000000001, text: '1.15 s' },
       { value: 1.2000000000000002, text: '1.2 s' },
       { value: 1.25, text: '1.25 s' }
     ])
+  })
+})
+
+describe('multiplesWithin', () => {
+  test('includes both bounds when they are multiples', () => {
+    const [start, end, spacing] = [0.19, 0.21, 0.01]
+
+    const multiples = multiplesWithin(start, end, spacing)
+
+    expect(multiples).toEqual([0.19, 0.2, 0.21])
+  })
+
+  test('starts at the first multiple at or above the start', () => {
+    const [start, end, spacing] = [123.456, 456.789, 50]
+
+    const multiples = multiplesWithin(start, end, spacing)
+
+    expect(multiples[0]).toBe(150)
+  })
+
+  test('stops at the last multiple at or below the end', () => {
+    const [start, end, spacing] = [123.456, 456.789, 50]
+
+    const multiples = multiplesWithin(start, end, spacing)
+
+    expect(multiples[multiples.length - 1]).toBe(450)
+  })
+
+  test('includes a bound a floating-point hair off a multiple', () => {
+    const [start, end, spacing] = [1.001, 1.005, 0.001]
+
+    const multiples = multiplesWithin(start, end, spacing)
+
+    expect(multiples[multiples.length - 1]).toBeCloseTo(end, 12)
+  })
+})
+
+describe('precisionForSpacing', () => {
+  test('adds the decimals a finer spacing needs', () => {
+    const unitPrecision = auto(2)
+
+    const precision = precisionForSpacing(unitPrecision, 0.005)
+
+    expect(precision).toEqual(auto(3))
+  })
+
+  test('keeps the unit digits for a coarser spacing', () => {
+    const unitPrecision = auto(2)
+
+    const precision = precisionForSpacing(unitPrecision, 20)
+
+    expect(precision).toEqual(auto(2))
+  })
+
+  test('keeps a strict precision strict', () => {
+    const unitPrecision = strict(0)
+
+    const precision = precisionForSpacing(unitPrecision, 0.5)
+
+    expect(precision).toEqual(strict(1))
+  })
+})
+
+describe('renderYLabels on a range tight around data', () => {
+  const TIGHT_RANGES: Array<[string, NotationFormatter, PositiveYRange]> = [
+    ['decimal below one', new DecimalFormatter('u', auto(2)), pos(0.19, 0.21)],
+    ['decimal above one', new DecimalFormatter('u', auto(2)), pos(1.19, 1.21)],
+    ['decimal at a thousand', new DecimalFormatter('u', auto(2)), pos(1000.19, 1000.21)],
+    ['si below one', new SIFormatter('u', auto(2)), pos(0.19, 0.21)],
+    ['si above one', new SIFormatter('u', auto(2)), pos(1.19, 1.21)],
+    ['time below one', new TimeFormatter('s', auto(2)), pos(0.19, 0.21)],
+    ['time above one', new TimeFormatter('s', auto(2)), pos(1.19, 1.21)],
+    // Far from zero the label text carries a prefix or exponent; the precision has to follow the
+    // displayed mantissa, not the raw value.
+    ['si in the millions', new SIFormatter('u', auto(2)), pos(1_190_000, 1_210_000)],
+    ['iec in the mebi range', new IECFormatter('u', auto(2)), pos(1.19 * 2 ** 20, 1.21 * 2 ** 20)],
+    [
+      'standard scientific in the ten thousands',
+      new StandardScientificFormatter('u', auto(2)),
+      pos(11_900, 12_100)
+    ],
+    [
+      'engineering scientific in the millions',
+      new EngineeringScientificFormatter('u', auto(2)),
+      pos(1_190_000, 1_210_000)
+    ]
+  ]
+
+  test.each(TIGHT_RANGES)('%s: fills the range with labels inside it', (_, formatter, yRange) => {
+    const labels = formatter.renderYLabels(yRange, 4)
+
+    const values = labels.map((label) => label.value)
+    expect(values.length).toBeGreaterThanOrEqual(2)
+    expect(Math.min(...values)).toBeGreaterThanOrEqual(yRange.start)
+    expect(Math.max(...values)).toBeLessThanOrEqual(yRange.end)
+  })
+
+  test.each(TIGHT_RANGES)('%s: gives every label its own text', (_, formatter, yRange) => {
+    const labels = formatter.renderYLabels(yRange, 4)
+
+    const texts = labels.map((label) => label.text)
+    expect(new Set(texts).size).toBe(texts.length)
+  })
+})
+
+describe('renderYLabels', () => {
+  test("falls back to decimal steps below the notation's own atoms", () => {
+    const formatter = new TimeFormatter('s', auto(2))
+
+    const labels = formatter.renderYLabels(pos(0, 1.5), 4)
+
+    expect(labels.map((label) => label.value)).toEqual([0, 0.5, 1.0, 1.5])
+  })
+
+  test("keeps a negative range's labels inside the range", () => {
+    const formatter = new DecimalFormatter('u', auto(2))
+    const yRange = neg(-10.123, -5.11)
+
+    const labels = formatter.renderYLabels(yRange, 5)
+
+    const values = labels.map((label) => label.value)
+    expect(Math.min(...values)).toBeGreaterThanOrEqual(yRange.start)
+    expect(Math.max(...values)).toBeLessThanOrEqual(yRange.end)
+  })
+})
+
+describe('render at a resolution', () => {
+  test('tells two values one resolution apart even after prefixing', () => {
+    const formatter = new SIFormatter('B', auto(2))
+    const resolution = 2_000
+
+    const [low, high] = [1_196_000, 1_198_000].map((value) => formatter.render(value, resolution))
+
+    expect(low).not.toBe(high)
+    expect(low).toMatch(/MB$/)
+  })
+
+  test('keeps the unit precision for a resolution the unit already resolves', () => {
+    const formatter = new SIFormatter('B', auto(2))
+
+    expect(formatter.render(1_196_000, 500_000)).toBe(formatter.render(1_196_000))
+  })
+
+  test('keeps the unit precision without a resolution', () => {
+    expect(new SIFormatter('B', auto(2)).render(1_196_000)).toBe('1.2 MB')
   })
 })

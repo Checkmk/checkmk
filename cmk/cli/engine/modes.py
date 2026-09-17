@@ -19,11 +19,7 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import CLICommand, CLIOption, entry_point_prefixes, GlobalOptions
-from cmk.discover_plugins import (
-    discover_all_plugins,
-    discover_plugins_from_modules,
-    PluginGroup,
-)
+from cmk.discover_plugins import discover_all_plugins, PluginGroup
 from cmk.utils.log import console
 
 OptionSpec = str
@@ -378,19 +374,7 @@ def discover_modes() -> Sequence[Mode]:
         skip_wrong_types=False,
         raise_errors=True,
     )
-    # Transitional: commands that have not been moved to cmk/plugins/<family>/cli/ yet.
-    # This list shrinks with every move and goes away with the last one.
-    legacy = discover_plugins_from_modules(
-        plugin_prefixes=entry_point_prefixes(),
-        module_names_by_priority=[
-            "cmk.base.modes.check_mk",
-        ],
-        skip_wrong_types=True,
-        raise_errors=True,
-    )
-    return tuple(
-        make_mode(command) for command in (*discovered.plugins.values(), *legacy.plugins.values())
-    )
+    return tuple(make_mode(command) for command in discovered.plugins.values())
 
 
 def write_stdout(txt: str) -> None:

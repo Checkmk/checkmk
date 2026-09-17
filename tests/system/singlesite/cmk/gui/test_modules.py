@@ -15,6 +15,8 @@ from tests.testlib.site import Site
 
 @pytest.fixture(name="plugin_path")
 def fixture_plugin_path(site: Site) -> Iterator[str]:
+    assert not site.file_exists("tmp/dashboard_test")
+
     base_dir = "local/lib/python3/cmk/gui/plugins/dashboard"
     site.makedirs(base_dir)
     plugin_path = f"{base_dir}/test_plugin.py"
@@ -32,19 +34,11 @@ with open("%s", "w") as f:
         yield plugin_path
     finally:
         site.delete_file(plugin_path)
-
-
-@pytest.fixture(name="result_file")
-def fixture_result_file(site: Site) -> Iterator[None]:
-    assert not site.file_exists("tmp/dashboard_test")
-    try:
-        yield
-    finally:
         if site.file_exists("tmp/dashboard_test"):
             site.delete_file("tmp/dashboard_test")
 
 
-@pytest.mark.usefixtures("plugin_path", "result_file", "request")
+@pytest.mark.usefixtures("plugin_path", "request")
 @pytest.mark.skip_if_edition("cloud")
 def test_load_dashboard_plugin_omd_restart(site: Site) -> None:
     # Restart apache so new WSGI workers pick up the plugin.

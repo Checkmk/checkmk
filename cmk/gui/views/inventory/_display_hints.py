@@ -3,12 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ChoiceField is generic in the plug-in API, but this module dispatches on SDValue at runtime
-# and cannot commit to one type argument. Remove once cmk.inventory_ui.v1_unstable.ChoiceField
-# no longer needs one.
-# mypy: disable-error-code="type-arg"
-
-
 import abc
 from collections.abc import (
     Callable,
@@ -102,6 +96,11 @@ from .registry import (
     PaintFunction,
     SortFunction,
 )
+
+# The value type of a choice field is constrained to these three, so this is the whole set.
+# Keep it in step with OrderedAttributes and OrderedColumns in cmk.inventory_ui.v1_unstable.
+type _AnyChoiceField = ChoiceFieldFromAPI[int] | ChoiceFieldFromAPI[float] | ChoiceFieldFromAPI[str]
+type _AnyField = BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | _AnyChoiceField
 
 
 def load_inventory_ui_plugins() -> DiscoveredPlugins[NodeFromAPI]:
@@ -331,8 +330,12 @@ class _PaintText:
         )
 
 
+def _label_of(field: _AnyChoiceField, value: object) -> LabelFromAPI | str | None:
+    return next((label for key, label in field.mapping.items() if key == value), None)
+
+
 class _PaintChoice:
-    def __init__(self, field_from_api: ChoiceFieldFromAPI) -> None:
+    def __init__(self, field_from_api: _AnyChoiceField) -> None:
         self._field = field_from_api
 
     @property
@@ -344,20 +347,21 @@ class _PaintChoice:
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
-                self._field.style(value),
+                # Which of the three value types this field fixes is not knowable here.
+                self._field.style(value),  # type: ignore[arg-type]
                 self.default_alignment,
                 prevent_line_break=False,
             ),
             (
                 f"<{value}> (%s)" % _("No such value")
-                if (rendered := self._field.mapping.get(value)) is None
+                if (rendered := _label_of(self._field, value)) is None
                 else _make_str(rendered)
             ),
         )
 
 
 def _make_paint_function(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> PaintFunctionFromAPI:
     match field_from_api:
         case BoolFieldFromAPI():
@@ -392,7 +396,7 @@ class _SortFunctionText:
 
 
 class _SortFunctionChoice:
-    def __init__(self, choice_field: ChoiceFieldFromAPI) -> None:
+    def __init__(self, choice_field: _AnyChoiceField) -> None:
         self._choice_field = choice_field
 
     def __call__(self, val_a: SDValue, val_b: SDValue) -> int:
@@ -412,7 +416,7 @@ class _SortFunctionChoice:
 
 
 def _make_sort_function(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> SortFunction:
     match field_from_api:
         case BoolFieldFromAPI():
@@ -491,7 +495,7 @@ def _get_unit_choices_from_number_field(
 
 
 def _make_attribute_filter(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
     *,
     filter_ident: str,
     long_title: str,
@@ -531,7 +535,7 @@ def _make_attribute_filter(
             return FilterInvChoice(
                 ident=filter_ident,
                 title=long_title,
-                options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                options=[(str(k), _make_str(v)) for k, v in field_from_api.mapping.items()],
                 is_show_more=True,
             )
         case other:
@@ -543,7 +547,7 @@ def _parse_attr_field_from_api(
     node_ident: str,
     node_title: str,
     key: str,
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> AttributeDisplayHint:
     name = _make_attr_name(node_ident, key)
     title = _make_str(field_from_api.title)
@@ -570,7 +574,7 @@ def _parse_attr_field_from_api(
 
 def _parse_col_field_from_api(
     node_title: str,
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> ColumnDisplayHint:
     title = _make_str(field_from_api.title)
     return ColumnDisplayHint(
@@ -586,7 +590,7 @@ def _is_choice(len_mapping: int) -> bool:
 
 
 def _make_column_filter(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
     *,
     table_view_name: str,
     filter_ident: str,
@@ -645,7 +649,7 @@ def _make_column_filter(
                     inv_info=table_view_name,
                     ident=filter_ident,
                     title=long_title,
-                    options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                    options=[(str(k), _make_str(v)) for k, v in field_from_api.mapping.items()],
                 )
             return FilterInvtableDualChoice(
                 inv_info=table_view_name,
@@ -661,7 +665,7 @@ def _parse_col_field_of_view_from_api(
     table_view_name: str,
     node_title: str,
     key: str,
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> ColumnDisplayHintOfView:
     name = _make_col_name(table_view_name, key)
     title = _make_str(field_from_api.title)

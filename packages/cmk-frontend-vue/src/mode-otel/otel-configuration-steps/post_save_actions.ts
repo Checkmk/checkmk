@@ -114,7 +114,7 @@ async function isCollectorEnabled(siteId: string): Promise<boolean> {
  */
 async function isDataBackendEnabled(siteId: string): Promise<boolean> {
   const response = await fetchRestAPIDeprecated(
-    `api/internal/domain-types/metric_backend/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
+    `api/internal/domain-types/data_backend/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
     'GET'
   )
   await response.raiseForStatus()
@@ -296,7 +296,7 @@ export const enableDataBackendAction: PostSaveAction = {
     try {
       const wasEnabled = await isDataBackendEnabled(ctx.siteId)
       const response = await fetchRestAPIDeprecated(
-        'api/internal/domain-types/metric_backend/actions/update/invoke',
+        'api/internal/domain-types/data_backend/actions/update/invoke',
         'PATCH',
         {
           site_id: ctx.siteId,
@@ -311,7 +311,7 @@ export const enableDataBackendAction: PostSaveAction = {
         ok: true,
         rollback: async () => {
           await fetchRestAPIDeprecated(
-            'api/internal/domain-types/metric_backend/actions/update/invoke',
+            'api/internal/domain-types/data_backend/actions/update/invoke',
             'PATCH',
             { site_id: ctx.siteId, config: { type: 'disabled' } }
           )

@@ -160,7 +160,7 @@ describe('POST_SAVE_ACTIONS', () => {
 
       expect(result.ok).toBe(true)
       expect(spy).toHaveBeenCalledWith(
-        'api/internal/domain-types/metric_backend/actions/update/invoke',
+        'api/internal/domain-types/data_backend/actions/update/invoke',
         'PATCH',
         { site_id: 'prod', config: { type: 'enabled' } }
       )
@@ -195,7 +195,7 @@ describe('POST_SAVE_ACTIONS', () => {
         expect(result.rollback).toBeDefined()
         await result.rollback!()
         expect(spy).toHaveBeenLastCalledWith(
-          'api/internal/domain-types/metric_backend/actions/update/invoke',
+          'api/internal/domain-types/data_backend/actions/update/invoke',
           'PATCH',
           { site_id: 'prod', config: { type: 'disabled' } }
         )

@@ -63,6 +63,7 @@ from cmk.gui.openapi.utils import (
     GeneralRestAPIException,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIPermissionException,
     RestAPIRequestGeneralException,
     RestAPIResponseGeneralException,
@@ -749,13 +750,18 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # the header methods.
             _ensure_authenticated()
 
-            # A Checmk Reserved endpoint can only be accessed with the site secret
+            # A Checmk Reserved endpoint can only be accessed with the site secret. The caller is
+            # authenticated at this point and merely lacks the rights for this endpoint, so this
+            # is forbidden (403), not unauthorized (401).
             if (
                 isinstance(wsgi_endpoint, LegacyEndpointAdapter)
                 and wsgi_endpoint.endpoint.internal_user_only
                 and not isinstance(session.session.user, LoggedInSuperUser)
             ):
-                raise MKAuthException("This endpoint is reserved for Checkmk.")
+                raise RestAPIForbiddenException(
+                    title=http.client.responses[403],
+                    detail="This endpoint is reserved for Checkmk.",
+                )
 
             return wsgi_endpoint(environ, start_response)
 

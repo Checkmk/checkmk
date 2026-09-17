@@ -202,28 +202,28 @@ def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
             raise ValueError(backend)
 
 
-def _host_address(raw_host_address: str) -> HostAddress:
+def host_address(raw_host_address: str) -> HostAddress:
     try:
         return HostAddress(raw_host_address)
     except HostNameValidationError as exc:
         raise MKBailOut(str(exc)) from exc
 
 
-def _host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
-    return [_host_address(raw_host_address) for raw_host_address in raw_host_addresses]
+def host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
+    return [host_address(raw_host_address) for raw_host_address in raw_host_addresses]
 
 
-def _set_fake_dns(raw_address: str | None) -> None:
+def set_fake_dns(raw_address: str | None) -> None:
     """Remember --fake-dns for the ip lookup of this command.
 
     The engine hands the raw value to every handler; the ones that look up IP
-    addresses store it here, where _forced_ip_lookup() picks it up.
+    addresses store it here, where forced_ip_lookup() picks it up.
     """
     global _fake_dns
-    _fake_dns = None if raw_address is None else _host_address(raw_address)
+    _fake_dns = None if raw_address is None else host_address(raw_address)
 
 
-def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
+def forced_ip_lookup() -> ip_lookup.IPLookup | None:
     if _fake_dns is not None:
         return lambda hn, family: _fake_dns  # noqa: ARG005
     if _enforce_localhost:
@@ -254,7 +254,7 @@ def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
 # .
 
 
-def _handle_fetcher_options(
+def handle_fetcher_options(
     options: Mapping[str, object], *, defaults: FileCacheOptions | None = None
 ) -> FileCacheOptions:
     file_cache_options = defaults or FileCacheOptions()
@@ -279,7 +279,7 @@ def _handle_fetcher_options(
     return file_cache_options
 
 
-_FETCHER_OPTIONS: Final = [
+FETCHER_OPTIONS: Final = [
     CLIOption(
         long_option="cache",
         short_help="Read info from data source cache files when existent, even when it "
@@ -300,7 +300,7 @@ _FETCHER_OPTIONS: Final = [
     ),
 ]
 
-_SNMP_BACKEND_OPTION: Final = CLIOption(
+SNMP_BACKEND_OPTION: Final = CLIOption(
     long_option="snmp-backend",
     short_help="Override default SNMP backend",
     argument=True,
@@ -321,10 +321,10 @@ _SNMP_BACKEND_OPTION: Final = CLIOption(
 def _mode_dump_agent(
     app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
-    hostname = _host_address(raw_host_name)
-    file_cache_options = _handle_fetcher_options(options)
+    hostname = host_address(raw_host_name)
+    file_cache_options = handle_fetcher_options(options)
 
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -362,13 +362,13 @@ def _mode_dump_agent(
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
-    ip_address_of_bare = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of_bare = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_address_of_bare,
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
@@ -533,7 +533,7 @@ cli_command_dump_agent = CLICommand(
     handler_function=_mode_dump_agent,
     argument=True,
     argument_descr="HOSTNAME|ADDRESS",
-    sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
+    sub_options=[*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION],
     short_help="Show raw information from agent",
     long_help=[
         (
@@ -558,8 +558,8 @@ cli_command_dump_agent = CLICommand(
 def _mode_dump_hosts(
     _app: object, global_options: GlobalOptions, _options: Options, args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
-    hostlist: Iterable[HostName] = _host_addresses(args)
+    set_fake_dns(global_options.fake_dns)
+    hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
     loading_result = config.load()
@@ -572,11 +572,11 @@ def _mode_dump_hosts(
     ip_lookup_config = config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
 
@@ -660,7 +660,7 @@ cli_command_dump = CLICommand(
 def _mode_update_dns_cache(
     _app: object, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     loading_result = config.load()
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
@@ -673,7 +673,7 @@ def _mode_update_dns_cache(
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         lookup_ip_address=(
-            _forced_ip_lookup()  # this makes little sense.
+            forced_ip_lookup()  # this makes little sense.
             or ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ),
     )
@@ -876,7 +876,7 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 def _mode_snmpwalk(
     _app: object, global_options: GlobalOptions, options: Options, hostnames: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     oids = option_strings(options, "oid")
     extra_oids = option_strings(options, "extraoid")
     if oids and extra_oids:
@@ -898,7 +898,7 @@ def _mode_snmpwalk(
 
     config_cache = config.load().config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
@@ -926,7 +926,7 @@ cli_command_snmpwalk = CLICommand(
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
     sub_options=[
-        _SNMP_BACKEND_OPTION,
+        SNMP_BACKEND_OPTION,
         CLIOption(
             long_option="extraoid",
             argument=True,
@@ -969,7 +969,7 @@ cli_command_snmpwalk = CLICommand(
 
 
 def _mode_snmpget(_app: object, global_options: GlobalOptions, options: Options, args: Args) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     if not args:
         raise MKBailOut("You need to specify an OID.")
     try:
@@ -982,7 +982,7 @@ def _mode_snmpget(_app: object, global_options: GlobalOptions, options: Options,
     hosts_config = loading_result.hosts_config
 
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
     if not hostnames:
@@ -1023,7 +1023,7 @@ cli_command_snmpget = CLICommand(
     argument=True,
     argument_descr="OID [HOST1 HOST2...]",
     argument_optional=True,
-    sub_options=[_SNMP_BACKEND_OPTION],
+    sub_options=[SNMP_BACKEND_OPTION],
     short_help="Fetch single OID from one or multiple hosts",
     long_help=[
         (
@@ -1045,7 +1045,7 @@ cli_command_snmpget = CLICommand(
 
 
 def _mode_flush(_app: object, _global_options: GlobalOptions, _options: Options, args: Args) -> int:
-    hosts = _host_addresses(args)
+    hosts = host_addresses(args)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1176,8 +1176,8 @@ cli_command_flush = CLICommand(
 def _mode_dump_nagios_config(
     app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
-    args = _host_addresses(raw_host_names)
+    set_fake_dns(global_options.fake_dns)
+    args = host_addresses(raw_host_names)
 
     from cmk.base.core.nagios import create_config
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
@@ -1266,7 +1266,7 @@ def _mode_dump_nagios_config(
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
@@ -1337,7 +1337,7 @@ def _make_configured_notify_relay(
 def _mode_update(
     app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1349,7 +1349,7 @@ def _mode_update(
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -1394,7 +1394,7 @@ def _mode_update(
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=_forced_ip_lookup()
+                ip_address_of_mgmt=forced_ip_lookup()
                 or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
@@ -1459,8 +1459,8 @@ cli_command_update = CLICommand(
 def _mode_restart(
     app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
-    args = _host_addresses(raw_host_names)
+    set_fake_dns(global_options.fake_dns)
+    args = host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1473,11 +1473,11 @@ def _mode_restart(
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
@@ -1575,8 +1575,8 @@ cli_command_restart = CLICommand(
 def _mode_reload(
     app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
-    args = _host_addresses(raw_host_names)
+    set_fake_dns(global_options.fake_dns)
+    args = host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load()
     loaded_config = loading_result.loaded_config
@@ -1589,11 +1589,11 @@ def _mode_reload(
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = _forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
@@ -1699,10 +1699,10 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 def _mode_check_discovery(
     app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
-    hostname = _host_address(raw_host_name)
-    file_cache_options = _handle_fetcher_options(options)
+    hostname = host_address(raw_host_name)
+    file_cache_options = handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
@@ -1760,7 +1760,7 @@ def _mode_check_discovery(
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -1800,7 +1800,7 @@ def _mode_check_discovery(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mgmt=_forced_ip_lookup()
+        ip_address_of_mgmt=forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
         simulation_mode=loaded_config.simulation_mode,
@@ -1906,7 +1906,7 @@ cli_command_check_discovery = CLICommand(
     handler_function=_mode_check_discovery,
     argument=True,
     argument_descr="HOSTNAME",
-    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
+    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
     short_help="Check for not yet monitored services",
     long_help=[
         (
@@ -1938,7 +1938,7 @@ def _convert_sections_argument(arg: str) -> set[SectionName]:
         raise MKBailOut("Error in --detect-sections argument: %s" % exc)
 
 
-_option_sections = CLIOption(
+option_sections = CLIOption(
     long_option="detect-sections",
     short_help=(
         "Comma separated list of sections. The provided sections (but no more) will be"
@@ -1950,7 +1950,7 @@ _option_sections = CLIOption(
 )
 
 
-def _get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, SectionName)](
+def get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, SectionName)](
     type_: type[TName],
 ) -> CLIOption:
     def _convert_plugins_argument(arg: str) -> set[TName]:
@@ -1978,7 +1978,7 @@ def _convert_detect_plugins_argument(arg: str) -> set[str]:
         raise MKBailOut("Error in --detect-plugins argument: %s" % exc) from exc
 
 
-_option_detect_plugins = CLIOption(
+option_detect_plugins = CLIOption(
     long_option="detect-plugins",
     deprecated_long_options=frozenset({"checks"}),
     short_help="Same as '--plugins', but implies a best efford guess for --detect-sections",
@@ -1997,8 +1997,8 @@ def _lookup_plugin[PluginName: (CheckPluginName, InventoryPluginName)](
         raise MKBailOut(f"Unknown check plugin '{plugin_name}'") from exc
 
 
-_CheckingOptions = TypedDict(
-    "_CheckingOptions",
+CheckingOptions = TypedDict(
+    "CheckingOptions",
     {
         "cache": Literal[True],
         "snmp-backend": str,
@@ -2015,8 +2015,8 @@ _CheckingOptions = TypedDict(
 )
 
 
-_DiscoveryOptions = TypedDict(
-    "_DiscoveryOptions",
+DiscoveryOptions = TypedDict(
+    "DiscoveryOptions",
     {
         "cache": Literal[True],
         "snmp-backend": str,
@@ -2033,8 +2033,8 @@ _DiscoveryOptions = TypedDict(
 )
 
 
-_InventoryOptions = TypedDict(
-    "_InventoryOptions",
+InventoryOptions = TypedDict(
+    "InventoryOptions",
     {
         "cache": Literal[True],
         "snmp-backend": str,
@@ -2050,7 +2050,7 @@ _InventoryOptions = TypedDict(
 )
 
 
-def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
+def extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
     *,
     detect_plugins: frozenset[str] | None,
     detect_sections: frozenset[SectionName] | None,
@@ -2088,8 +2088,8 @@ def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)
     )
 
 
-def _discovery_options(parsed: Mapping[str, object]) -> _DiscoveryOptions:
-    options = _DiscoveryOptions()
+def _discovery_options(parsed: Mapping[str, object]) -> DiscoveryOptions:
+    options = DiscoveryOptions()
     if "cache" in parsed:
         options["cache"] = True
     if "no-cache" in parsed:
@@ -2142,7 +2142,7 @@ def _preprocess_hostnames(
 def _mode_discover(
     app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     options = _discovery_options(parsed)
     plugins = load_checks()
     loading_result = config.load()
@@ -2182,7 +2182,7 @@ def _mode_discover(
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2198,14 +2198,14 @@ def _mode_discover(
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)
 
-    file_cache_options = _handle_fetcher_options(options, defaults=file_cache_options)
+    file_cache_options = handle_fetcher_options(options, defaults=file_cache_options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
-    selected_sections, run_plugin_names = _extract_plugin_selection(
+    selected_sections, run_plugin_names = extract_plugin_selection(
         detect_plugins=options.get("detect-plugins"),
         detect_sections=options.get("detect-sections"),
         selected_plugins=options.get("plugins"),
@@ -2263,7 +2263,7 @@ def _mode_discover(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mgmt=_forced_ip_lookup()
+        ip_address_of_mgmt=forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
@@ -2353,17 +2353,17 @@ cli_command_discover = CLICommand(
     argument_descr="[-I] HOST1 HOST2...",
     argument_optional=True,
     sub_options=[
-        *_FETCHER_OPTIONS,
-        _SNMP_BACKEND_OPTION,
+        *FETCHER_OPTIONS,
+        SNMP_BACKEND_OPTION,
         CLIOption(
             long_option="discover",
             short_option="I",
             short_help="Delete existing services before starting discovery",
             repeat=True,
         ),
-        _option_sections,
-        _get_plugins_option(CheckPluginName),
-        _option_detect_plugins,
+        option_sections,
+        get_plugins_option(CheckPluginName),
+        option_detect_plugins,
         CLIOption(
             long_option="only-host-labels",
             short_option="L",
@@ -2408,8 +2408,8 @@ cli_command_discover = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _checking_options(parsed: Mapping[str, object]) -> _CheckingOptions:
-    options = _CheckingOptions()
+def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
+    options = CheckingOptions()
     if "cache" in parsed:
         options["cache"] = True
     if "no-cache" in parsed:
@@ -2445,14 +2445,14 @@ def run_checking(
     host_tags: HostTags,
     monitoring_core: Literal["cmc", "nagios"],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    options: _CheckingOptions,
+    options: CheckingOptions,
     args: Sequence[str],
     *,
     secrets_config_relay: AdHocSecrets | StoredSecrets,
     secrets_config_site: StoredSecrets,
     trusted_ca_file: Path,
 ) -> ServiceState:
-    file_cache_options = _handle_fetcher_options(options)
+    file_cache_options = handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
@@ -2475,12 +2475,12 @@ def run_checking(
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    selected_sections, run_plugin_names = _extract_plugin_selection(
+    selected_sections, run_plugin_names = extract_plugin_selection(
         detect_plugins=options.get("detect-plugins"),
         detect_sections=options.get("detect-sections"),
         selected_plugins=options.get("plugins"),
@@ -2553,9 +2553,9 @@ def run_checking(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
+        ip_address_of_mandatory=forced_ip_lookup()
         or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=_forced_ip_lookup()
+        ip_address_of_mgmt=forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
@@ -2690,7 +2690,7 @@ def run_checking(
 def _mode_check(
     app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     options = _checking_options(parsed)
     plugins = load_checks()
     loading_result = config.load()
@@ -2736,8 +2736,8 @@ cli_command_check = CLICommand(
     argument_descr="HOST [IPADDRESS]",
     argument_optional=True,
     sub_options=[
-        *_FETCHER_OPTIONS,
-        _SNMP_BACKEND_OPTION,
+        *FETCHER_OPTIONS,
+        SNMP_BACKEND_OPTION,
         CLIOption(
             long_option="no-submit",
             short_option="n",
@@ -2748,9 +2748,9 @@ cli_command_check = CLICommand(
             short_option="p",
             short_help="Also show performance data (use with -v)",
         ),
-        _option_sections,
-        _get_plugins_option(CheckPluginName),
-        _option_detect_plugins,
+        option_sections,
+        get_plugins_option(CheckPluginName),
+        option_detect_plugins,
     ],
     short_help="Check all services on the given HOST",
     long_help=[
@@ -2786,8 +2786,8 @@ cli_command_check = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
-def _inventory_options(parsed: Mapping[str, object]) -> _InventoryOptions:
-    options = _InventoryOptions()
+def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
+    options = InventoryOptions()
     if "cache" in parsed:
         options["cache"] = True
     if "no-cache" in parsed:
@@ -2812,9 +2812,9 @@ def _inventory_options(parsed: Mapping[str, object]) -> _InventoryOptions:
 def _mode_inventory(
     app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
+    set_fake_dns(global_options.fake_dns)
     options = _inventory_options(parsed)
-    file_cache_options = _handle_fetcher_options(options)
+    file_cache_options = handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
@@ -2844,7 +2844,7 @@ def _mode_inventory(
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2869,7 +2869,7 @@ def _mode_inventory(
     if "force" in options:
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
-    selected_sections, run_plugin_names = _extract_plugin_selection(
+    selected_sections, run_plugin_names = extract_plugin_selection(
         detect_plugins=options.get("detect-plugins"),
         detect_sections=options.get("detect-sections"),
         selected_plugins=options.get("plugins"),
@@ -2917,9 +2917,9 @@ def _mode_inventory(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
+        ip_address_of_mandatory=forced_ip_lookup()
         or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=_forced_ip_lookup()
+        ip_address_of_mgmt=forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
@@ -3026,16 +3026,16 @@ cli_command_inventory = CLICommand(
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
     sub_options=[
-        *_FETCHER_OPTIONS,
-        _SNMP_BACKEND_OPTION,
+        *FETCHER_OPTIONS,
+        SNMP_BACKEND_OPTION,
         CLIOption(
             long_option="force",
             short_option="f",
             short_help="Use cached agent data even if it's outdated.",
         ),
-        _option_sections,
-        _get_plugins_option(InventoryPluginName),
-        _option_detect_plugins,
+        option_sections,
+        get_plugins_option(InventoryPluginName),
+        option_detect_plugins,
     ],
     short_help="Do a HW/SW Inventory on some or all hosts",
     long_help=[
@@ -3163,8 +3163,8 @@ def execute_active_check_inventory(
 def _mode_inventorize_marked_hosts(
     app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, _args: Args
 ) -> int:
-    _set_fake_dns(global_options.fake_dns)
-    file_cache_options = _handle_fetcher_options(options)
+    set_fake_dns(global_options.fake_dns)
+    file_cache_options = handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
@@ -3201,7 +3201,7 @@ def _mode_inventorize_marked_hosts(
     )  # not obvious to me why/if we *really* need this
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -3250,9 +3250,9 @@ def _mode_inventorize_marked_hosts(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
+        ip_address_of_mandatory=forced_ip_lookup()
         or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=_forced_ip_lookup()
+        ip_address_of_mgmt=forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=loaded_config.simulation_mode,
@@ -3337,7 +3337,7 @@ def _mode_inventorize_marked_hosts(
 cli_command_inventorize_marked_hosts = CLICommand(
     long_option="inventorize-marked-hosts",
     handler_function=_mode_inventorize_marked_hosts,
-    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
+    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
     short_help="Run inventory for hosts which previously had no tree data",
     long_help=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",

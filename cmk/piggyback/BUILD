@@ -31,6 +31,7 @@ py_library(
         ":backend",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-messaging",
     ],
 )

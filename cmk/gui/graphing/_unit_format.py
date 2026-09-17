@@ -21,7 +21,7 @@ from cmk.graphing_engine import (
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
-from ._unit import user_specific_unit_from_unit_format
+from ._user_specific_unit import user_specific_unit_from_unit_format
 
 type NotationName = Literal[
     "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"

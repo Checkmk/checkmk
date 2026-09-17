@@ -6,9 +6,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import assert_never, Literal
-
-from pydantic import BaseModel, Field
+from typing import assert_never
 
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.unit_formatter import (
@@ -25,73 +23,16 @@ from cmk.gui.unit_formatter import (
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
 
-
-class DecimalNotation(BaseModel, frozen=True):
-    type: Literal["decimal"] = "decimal"
-    symbol: str
-
-
-class SINotation(BaseModel, frozen=True):
-    type: Literal["si"] = "si"
-    symbol: str
-
-
-class IECNotation(BaseModel, frozen=True):
-    type: Literal["iec"] = "iec"
-    symbol: str
-
-
-class StandardScientificNotation(BaseModel, frozen=True):
-    type: Literal["standard_scientific"] = "standard_scientific"
-    symbol: str
-
-
-class EngineeringScientificNotation(BaseModel, frozen=True):
-    type: Literal["engineering_scientific"] = "engineering_scientific"
-    symbol: str
-
-
-class TimeNotation(BaseModel, frozen=True):
-    type: Literal["time"] = "time"
-    symbol: str
-
-
-class ConvertibleUnitSpecification(BaseModel, frozen=True):
-    type: Literal["convertible"] = "convertible"
-    notation: (
-        DecimalNotation
-        | SINotation
-        | IECNotation
-        | StandardScientificNotation
-        | EngineeringScientificNotation
-        | TimeNotation
-    ) = Field(
-        ...,
-        discriminator="type",
-    )
-    precision: AutoPrecision | StrictPrecision = Field(
-        ...,
-        discriminator="type",
-    )
-
-
-class NonConvertibleUnitSpecification(BaseModel, frozen=True):
-    type: Literal["non_convertible"] = "non_convertible"
-    notation: (
-        DecimalNotation
-        | SINotation
-        | IECNotation
-        | StandardScientificNotation
-        | EngineeringScientificNotation
-        | TimeNotation
-    ) = Field(
-        ...,
-        discriminator="type",
-    )
-    precision: AutoPrecision | StrictPrecision = Field(
-        ...,
-        discriminator="type",
-    )
+from ._unit_specification import (
+    ConvertibleUnitSpecification,
+    DecimalNotation,
+    EngineeringScientificNotation,
+    IECNotation,
+    NonConvertibleUnitSpecification,
+    SINotation,
+    StandardScientificNotation,
+    TimeNotation,
+)
 
 
 @dataclass(frozen=True)

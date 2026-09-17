@@ -17,7 +17,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.unit_formatter import AutoPrecision
 
 from ._from_api import RegisteredMetric
-from ._unit import ConvertibleUnitSpecification, DecimalNotation
+from ._unit_specification import ConvertibleUnitSpecification, DecimalNotation
 
 
 @dataclass(frozen=True)

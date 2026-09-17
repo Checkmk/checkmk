@@ -44,7 +44,7 @@ from ._prediction_graphs import (
 )
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
 from ._prediction_source import Direction
-from ._unit import get_temperature_unit
+from ._user_specific_unit import get_temperature_unit
 
 
 class ServiceBreadcrumbFunc(Protocol):

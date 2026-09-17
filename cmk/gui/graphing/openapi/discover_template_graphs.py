@@ -22,7 +22,7 @@ from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
 from .._graph_templates import discover_template_graphs, TemplateGraphSpecification
-from .._unit import get_temperature_unit
+from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from .models import GraphsDiscoverResponse
 

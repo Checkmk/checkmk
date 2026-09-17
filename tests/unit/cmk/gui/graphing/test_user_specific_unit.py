@@ -16,7 +16,7 @@ from cmk.gui.graphing import (
     user_specific_unit,
     user_specific_unit_from_unit_format,
 )
-from cmk.gui.graphing._unit import NonConvertibleUnitSpecification
+from cmk.gui.graphing._unit_specification import NonConvertibleUnitSpecification
 from cmk.gui.unit_formatter import (
     AutoPrecision,
     DecimalFormatter,

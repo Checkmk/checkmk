@@ -19,7 +19,7 @@ from cmk.utils.servicename import ServiceName
 
 from ._frontend import EngineDisplayOptions, render_engine_graph_group
 from ._graph_templates import TemplateGraphSpecification
-from ._unit import get_temperature_unit
+from ._user_specific_unit import get_temperature_unit
 
 tracer = trace.get_tracer()
 

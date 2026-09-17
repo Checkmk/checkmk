@@ -172,19 +172,21 @@ from ._telemetry_metrics_registry import (
     TELEMETRY_METRICS_KEY,
     TelemetryMetricsBackend,
 )
-from ._unit import (
+from ._unit_format import unit_to_unit_format
+from ._unit_specification import (
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,
-    get_temperature_unit,
     IECNotation,
     SINotation,
     StandardScientificNotation,
     TimeNotation,
+)
+from ._user_specific_unit import (
+    get_temperature_unit,
     user_specific_unit,
     user_specific_unit_from_unit_format,
 )
-from ._unit_format import unit_to_unit_format
 from ._valuespecs import (
     id_from_unit_spec,
     LivestatusQueryFunc,

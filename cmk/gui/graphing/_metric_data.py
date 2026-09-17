@@ -36,8 +36,8 @@ from ._performance_data import (
     RawPerformanceData,
     RawPerformanceValue,
 )
-from ._unit import user_specific_unit_from_unit_format
 from ._unit_format import unit_to_unit_format
+from ._user_specific_unit import user_specific_unit_from_unit_format
 
 _PREDICT_PREFIXES = ("predict_lower_", "predict_")
 

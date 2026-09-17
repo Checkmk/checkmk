@@ -58,17 +58,16 @@ from ._graph_display_config import GraphDisplayConfigHTML
 from ._metric_data import translate_metric_names
 from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
 from ._performance_data import parse_performance_data
-from ._unit import (
+from ._unit_specification import (
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,
-    get_temperature_unit,
     IECNotation,
     SINotation,
     StandardScientificNotation,
     TimeNotation,
-    user_specific_unit,
 )
+from ._user_specific_unit import get_temperature_unit, user_specific_unit
 
 type LivestatusQueryFunc = Callable[
     [Literal["host", "service"], VisualContext, list[str]], Sequence[Mapping[str, object]]

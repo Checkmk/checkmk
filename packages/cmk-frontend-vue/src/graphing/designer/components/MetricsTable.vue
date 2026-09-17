@@ -45,7 +45,7 @@ import {
   scalarColor
 } from '../drafts'
 import { customServiceModelFor } from '../telemetryMetrics'
-import { type ItemId, isSingleLine, parseLineType } from '../types'
+import { type ItemId, isFormula, isSingleLine, parseLineType } from '../types'
 import type { RowIssue } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import RowEditor from './forms/RowEditor.vue'
@@ -79,6 +79,7 @@ const {
 
 const emit = defineEmits<{
   'add-calculation': []
+  'edit-calculation': [id: ItemId]
   /** The series the hovered element stands for. */
   hoverMetrics: [names: string[]]
 }>()
@@ -191,8 +192,13 @@ const rowActions: CellAction[] = [
   { id: 'delete', label: _t('Delete'), icon: 'delete' }
 ]
 
-/** Metric-backend rows gain a "Create custom service" action once their query is complete. */
+const editCalculation: CellAction = { id: 'edit', label: _t('Edit calculation'), icon: 'edit' }
+
+/** Calculations are edited in the slideout; a complete metric-backend row can become a service. */
 function rowActionsFor(row: DesignerItem): CellAction[] {
+  if (isFormula(row)) {
+    return [editCalculation, ...rowActions]
+  }
   if (
     telemetryMetricsAvailable &&
     createServicesAvailable &&
@@ -214,7 +220,9 @@ const rowDelete = useDeleteWithDependents(store, () => {
 })
 
 function onRowAction(row: DesignerItem, action: CellAction): void {
-  if (action.id === 'clone') {
+  if (action.id === 'edit') {
+    emit('edit-calculation', row.id)
+  } else if (action.id === 'clone') {
     const [created] = store.clone([row.id])
     if (created !== undefined) {
       void scrollToRow(created)

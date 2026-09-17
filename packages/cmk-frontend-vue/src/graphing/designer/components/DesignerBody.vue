@@ -209,7 +209,8 @@ function onTabChange(value: string | number): void {
   }
 }
 
-const slideoutOpen = ref(false)
+/** null closes the slideout; `editing` names the calculation to load, or null for a fresh form. */
+const calculationSlideout = ref<{ editing: ItemId | null } | null>(null)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
   if (refVisibility !== null) {
@@ -352,7 +353,8 @@ const yAxis = computed<YAxis | null>(() => {
               :issues-by-row="issuesByRow"
               :resolved-titles="data.resolvedTitles.value"
               :metrics-by-source="data.metricsBySource.value"
-              @add-calculation="slideoutOpen = true"
+              @add-calculation="calculationSlideout = { editing: null }"
+              @edit-calculation="calculationSlideout = { editing: $event }"
               @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>
@@ -362,14 +364,15 @@ const yAxis = computed<YAxis | null>(() => {
 
     <template v-if="mode === 'edit'">
       <MetricsCalculationSlideout
-        :open="slideoutOpen"
+        :open="calculationSlideout !== null"
+        :editing="calculationSlideout?.editing ?? null"
         :items="validItems"
         :next-id="store.nextId.value"
         :next-color="store.nextColor.value"
         @add="onCalculationAdd"
         @update="onCalculationUpdate"
         @delete="(id) => calculationDelete.request([id])"
-        @close="slideoutOpen = false"
+        @close="calculationSlideout = null"
       />
 
       <DeleteWithDependentsPopup

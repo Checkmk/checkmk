@@ -15,7 +15,9 @@ const NEXT_ID = 'F'
 const NEXT_COLOR = '#ffd703'
 
 function renderTab(tabItems: GraphItem[] = items) {
-  return render(RrdTab, { props: { items: tabItems, nextId: NEXT_ID, nextColor: NEXT_COLOR } })
+  return render(RrdTab, {
+    props: { editing: null, items: tabItems, nextId: NEXT_ID, nextColor: NEXT_COLOR }
+  })
 }
 
 function formulaInput(): HTMLInputElement {

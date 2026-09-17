@@ -49,6 +49,7 @@ afterEach(() => {
 })
 
 const CREATE_SERVICE_LABEL = 'Create custom service'
+const EDIT_CALCULATION_LABEL = 'Edit calculation'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400', '#ec48b6', '#ffd703']
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
@@ -356,6 +357,16 @@ test('clicking the create-custom-service action opens the slide-in prefilled fro
   const slideIn = await screen.findByTestId('create-custom-service-slidein')
   expect(slideIn).toHaveAttribute('data-metric-name', 'span.latency')
   expect(slideIn).toHaveAttribute('data-service-name', '$METRIC_NAME$ - $SERIES_ID$')
+})
+
+test('a calculation row offers the edit-calculation action', () => {
+  renderTable([rrdMetricItem('A'), formulaItem('B')])
+  expect(screen.getByRole('button', { name: EDIT_CALCULATION_LABEL })).toBeInTheDocument()
+})
+
+test('the edit-calculation action is absent on source rows', () => {
+  renderTable([rrdMetricItem('A'), telemetryMetricsItem('B')])
+  expect(screen.queryByRole('button', { name: EDIT_CALCULATION_LABEL })).not.toBeInTheDocument()
 })
 
 describe('a blocked row', () => {

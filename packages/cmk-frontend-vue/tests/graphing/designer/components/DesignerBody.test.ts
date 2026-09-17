@@ -98,6 +98,19 @@ function rrdQuerySource(id: string): unknown {
   }
 }
 
+function formulaSource(id: string, ast: unknown): unknown {
+  return {
+    type: 'rrd_formula',
+    id,
+    title: id,
+    line_type: 'line',
+    mirrored: false,
+    visible: true,
+    color: '#ec48b6',
+    ast
+  }
+}
+
 // A metric_backend source in the API's nested wire shape, not the designer's flat one.
 function telemetryMetricsSource(
   id: string,
@@ -769,4 +782,26 @@ test('switching mode drops a highlight the unmounted legend left behind', async 
   setMode('edit')
 
   await waitFor(() => expect(screen.getByTestId('highlighted').textContent).toBe(''))
+})
+
+test('the edit action on a calculation row opens the slideout on that calculation', async () => {
+  renderBody('edit', {
+    graph: graphObject([
+      rrdSource('A'),
+      rrdSource('B'),
+      formulaSource('C', {
+        op: 'difference',
+        operands: [
+          { op: 'ref', id: 'A' },
+          { op: 'ref', id: 'B' }
+        ]
+      })
+    ])
+  })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Edit calculation' }))
+
+  expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
 })

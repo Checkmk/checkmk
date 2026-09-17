@@ -510,5 +510,6 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   padding: var(--dimension-4) var(--dimension-5);
   align-items: center;
+  border-top: 1px solid var(--ux-theme-4);
 }
 </style>

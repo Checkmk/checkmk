@@ -31,3 +31,19 @@ else:
 )
 def test_host_to_filename(host: str, expected_result: str) -> None:
     assert mtr.host_to_filename(host) == expected_result
+
+
+@pytest.mark.parametrize(
+    "host, expected_result",
+    [
+        pytest.param("www.google.com", "www.google.com", id="plain host name"),
+        pytest.param("192.168.1.1", "192.168.1.1", id="IPv4 address"),
+        pytest.param("2001:db8::1", "2001:db8::1", id="IPv6 address"),
+        pytest.param("foo.example.com (IPv6)", "foo.example.com", id="with derived suffix"),
+        pytest.param(
+            "2001:db8::1 (TCP port 8080)", "2001:db8::1", id="suffix built from several settings"
+        ),
+    ],
+)
+def test_mtr_target(host: str, expected_result: str) -> None:
+    assert mtr.mtr_target(host) == expected_result

@@ -162,6 +162,15 @@ def host_to_filename(host, delim="-"):
     )
 
 
+def mtr_target(host):
+    """Section name minus the part that only distinguishes several runs of one host.
+
+    Everything up to the first space is handed to mtr; host names and IP addresses
+    never contain one, so a section like "example.com (IPv6)" is unambiguous.
+    """
+    return ensure_str(host).split(" ", 1)[0]
+
+
 def check_mtr_pid(pid):
     """Check for the existence of a unix pid and if the process matches."""
     try:
@@ -372,7 +381,7 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
         options.append("-m")
         options.append(str(max_hops))
 
-    options.append(str(host))
+    options.append(mtr_target(host))
     if debug:
         sys.stdout.write("Startin MTR: %s\n" % (" ".join(options)))
     reportfile = report_filepre + host_to_filename(host)

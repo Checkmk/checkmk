@@ -23,12 +23,9 @@ from ._from_api import (
 from ._frontend import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
-    empty_graph_spec,
     EngineDisplayOptions,
-    evaluated_to_graph_spec,
     global_time_picker_props,
     global_time_picker_refresh,
-    GraphSpec,
     render_engine_graph_group,
     render_global_time_picker,
     render_graph_error_html,
@@ -91,6 +88,7 @@ from ._graph_templates import (
     TemplateGraphSpecification,
 )
 from ._graphs_order import sort_registered_graph_plugins
+from ._legacy_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._line_types import DrawnLineType, LineType
 from ._metric_data import (
     evaluated_metrics,

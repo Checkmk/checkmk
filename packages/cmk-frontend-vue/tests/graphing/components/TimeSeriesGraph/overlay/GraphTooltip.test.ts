@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import type {
   HoverSample,
@@ -49,6 +50,10 @@ function renderGraphTooltip(hoverState: HoverState | null): ReturnType<typeof re
 }
 
 describe('GraphTooltip', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   test('renders one sample per metric with label and formatted value', () => {
     renderGraphTooltip(
       makeHoverState({
@@ -105,6 +110,18 @@ describe('GraphTooltip', () => {
     // exact regression the previous reka-ui portal shipped with.
     const attributeNames = Array.from(tooltip!.attributes).map((attribute) => attribute.name)
     expect(attributeNames.some((name) => name.startsWith('data-v-'))).toBe(true)
+  })
+
+  test('opens the tooltip as a manual popover', async () => {
+    const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover')
+
+    renderGraphTooltip(makeHoverState({}))
+    await nextTick()
+
+    const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
+    expect(tooltip!.getAttribute('popover')).toBe('manual')
+    expect(showPopover).toHaveBeenCalledOnce()
+    expect(showPopover.mock.instances[0]).toBe(tooltip)
   })
 
   test("lists the hovered line's attributes grouped by kind", () => {

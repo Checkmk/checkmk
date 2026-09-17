@@ -1434,6 +1434,13 @@ tr.hidden {
 }
 
 div#row_info {
+  // #data_container is min-width: min-content, so a full width block would push the
+  // right aligned count out of view as soon as the table overflows horizontally.
+  // Shrink to the text and keep it stuck to the edge of the scroll port instead.
+  position: sticky;
+  right: $spacing;
+  width: fit-content;
+  margin-left: auto;
   padding-bottom: $spacing-half;
   font-weight: $font-weight-default;
   text-align: right;

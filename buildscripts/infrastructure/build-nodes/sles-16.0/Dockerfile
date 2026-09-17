@@ -51,6 +51,7 @@ RUN zypper ref -s && \
         libltdl7 \
         libmariadb-devel \
         libopenssl-devel \
+        libopenssl3 \
         libpcap-devel \
         libpng16-devel \
         libtiff-devel \

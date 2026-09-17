@@ -5,8 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkGhostWidth from 'cmk-ui-library/components/CmkGhostWidth.vue'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 
 import { type SegmentedFieldApi, selectInputOnFocus } from './useSegmentedField'
 
@@ -25,6 +27,11 @@ withDefaults(
 )
 
 const { _t } = usei18n()
+
+const fieldId = useId()
+function segmentLabelId(key: string): string {
+  return `${fieldId}-${key}`
+}
 </script>
 
 <template>
@@ -41,6 +48,7 @@ const { _t } = usei18n()
       <span v-if="view.separator" class="cmk-segmented-field__separator" aria-hidden="true">{{
         view.separator
       }}</span>
+      <CmkVisuallyHidden :id="segmentLabelId(view.key)" :text="view.ariaLabel" />
       <CmkGhostWidth :variants="view.options">
         <input
           :ref="(el) => api.registerInput(view.key, el as HTMLInputElement | null)"
@@ -55,7 +63,7 @@ const { _t } = usei18n()
           :style="{ minInlineSize: `${view.widthCh}ch` }"
           :value="view.text"
           :disabled="disabled"
-          :aria-label="view.ariaLabel"
+          :aria-labelledby="segmentLabelId(view.key)"
           :aria-valuenow="view.valueNow"
           :aria-valuemin="view.valueMin"
           :aria-valuemax="view.valueMax"

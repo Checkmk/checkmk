@@ -6,10 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
+import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import { type Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
 const props = withDefaults(
@@ -52,6 +55,9 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
+const monthId = useId()
+const yearId = useId()
+
 const monthOptions = computed<Suggestions>(() => ({
   type: 'fixed',
   suggestions: props.monthNamesDisplay.map((name, index) => ({ name: `${index + 1}`, title: name }))
@@ -93,22 +99,33 @@ function onYearUpdate(value: string | null): void {
       :disabled="!showPrev"
       @click="emit('prev')"
     >
-      <ArrowDown class="cmk-calendar-controls__nav-icon cmk-calendar-controls__nav-icon--prev" />
+      <ArrowDown
+        class="cmk-calendar-controls__nav-icon cmk-calendar-controls__nav-icon--prev"
+        aria-hidden="true"
+      />
     </CmkButton>
 
     <div class="cmk-calendar-controls__dropdowns">
+      <CmkLabel v-if="showMonthDropdown" :for="monthId"
+        ><CmkVisuallyHidden :text="_t('Month')"
+      /></CmkLabel>
       <CmkDropdown
         v-if="showMonthDropdown"
         :model-value="`${month}`"
         :options="monthOptions"
-        :label="_t('Month')"
+        :component-id="monthId"
+        :label="untranslated('')"
         @update:model-value="onMonthUpdate"
       />
+      <CmkLabel v-if="showYearDropdown" :for="yearId"
+        ><CmkVisuallyHidden :text="_t('Year')"
+      /></CmkLabel>
       <CmkDropdown
         v-if="showYearDropdown"
         :model-value="`${year}`"
         :options="yearOptions"
-        :label="_t('Year')"
+        :component-id="yearId"
+        :label="untranslated('')"
         @update:model-value="onYearUpdate"
       />
     </div>
@@ -122,7 +139,10 @@ function onYearUpdate(value: string | null): void {
       :disabled="!showNext"
       @click="emit('next')"
     >
-      <ArrowDown class="cmk-calendar-controls__nav-icon cmk-calendar-controls__nav-icon--next" />
+      <ArrowDown
+        class="cmk-calendar-controls__nav-icon cmk-calendar-controls__nav-icon--next"
+        aria-hidden="true"
+      />
     </CmkButton>
   </div>
 </template>

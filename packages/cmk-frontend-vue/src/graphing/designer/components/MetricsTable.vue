@@ -136,7 +136,7 @@ const columns: ColumnDef<DesignerItem>[] = [
   { id: 'display_name', header: _t('Display name'), meta: { stretch: true, justify: 'left' } },
   { id: 'line_style', header: _t('Line style'), meta: { justify: 'left' } },
   { id: 'mirrored', header: _t('Mirrored'), meta: { justify: 'center' } },
-  { id: 'actions', header: _t('Actions') }
+  { id: 'actions', header: _t('Actions'), meta: { justify: 'right' } }
 ]
 
 const sourceColumnIndex = columns.findIndex((column) => column.id === 'source')
@@ -200,8 +200,8 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
     isValid(row)
   ) {
     return [
-      ...rowActions,
-      { id: 'create-custom-service', label: _t('Create custom service'), icon: 'add-rule' }
+      { id: 'create-custom-service', label: _t('Create custom service'), icon: 'add-rule' },
+      ...rowActions
     ]
   }
   return rowActions

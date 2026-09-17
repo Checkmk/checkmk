@@ -22,6 +22,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _compute_graph_recipes,
+    StoredTemplateGraphSpecification,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._translated_metrics import (
@@ -2279,3 +2280,44 @@ def test_template_recipes_fs() -> None:
             ),
         ),
     ]
+
+
+def test_a_stored_specification_parses_without_a_site() -> None:
+    specification = TemplateGraphSpecification.model_validate(
+        {"host_name": "h", "service_description": "svc"}
+    )
+
+    assert specification == TemplateGraphSpecification(
+        host_name=HostName("h"), service_description="svc"
+    )
+
+
+_FULL_SPECIFICATION = TemplateGraphSpecification(
+    site=SiteId("mysite"),
+    host_name=HostName("h"),
+    service_description="svc",
+    graph_index=0,
+    graph_id="cpu_load",
+    destination="view",
+)
+
+
+def test_a_stored_specification_identifies_the_graph_without_its_site() -> None:
+    assert _FULL_SPECIFICATION.for_storage() == StoredTemplateGraphSpecification(
+        host_name=HostName("h"),
+        service_description="svc",
+        graph_index=0,
+        graph_id="cpu_load",
+        destination="view",
+    )
+
+
+def test_a_new_field_has_to_decide_whether_it_is_stored() -> None:
+    assert set(TemplateGraphSpecification.model_fields) == {
+        "site",
+        "host_name",
+        "service_description",
+        "graph_index",
+        "graph_id",
+        "destination",
+    }

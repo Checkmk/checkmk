@@ -433,7 +433,7 @@ onBeforeUnmount(() => {
   z-index: var(--z-index-dropdown-offset, 100);
   box-sizing: border-box;
   width: max-content;
-  min-width: 180px;
+  min-width: 330px;
   max-width: min(90vw, 32rem);
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-4);

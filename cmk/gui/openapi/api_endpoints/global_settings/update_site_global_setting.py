@@ -69,11 +69,7 @@ def update_site_global_setting_v1(
         site_globals, varname, global_settings=load_configuration_settings()
     )
     if api_context.etag.enabled:
-        api_context.etag.verify(
-            site_global_setting_etag(
-                site_id, varname, value_to_json(form_spec, old_value), old_origin
-            )
-        )
+        api_context.etag.verify(site_global_setting_etag(site_id, varname, old_value, old_origin))
 
     new_value = value_from_json(form_spec, body.value)
     site_globals[varname] = new_value
@@ -104,7 +100,7 @@ def update_site_global_setting_v1(
             origin=GlobalSettingsOrigin.site,
         ),
         status_code=200,
-        etag=site_global_setting_etag(site_id, varname, json_value, GlobalSettingsOrigin.site),
+        etag=site_global_setting_etag(site_id, varname, new_value, GlobalSettingsOrigin.site),
     )
 
 

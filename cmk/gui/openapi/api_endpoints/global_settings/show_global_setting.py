@@ -50,7 +50,7 @@ def show_global_setting_v1(
     return ApiResponse(
         body=GlobalSettingModel(varname=varname, value=json_value, origin=origin),
         status_code=200,
-        etag=global_setting_etag(varname, json_value, origin),
+        etag=global_setting_etag(varname, value, origin),
     )
 
 

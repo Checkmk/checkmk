@@ -60,7 +60,7 @@ def show_site_global_setting_v1(
             site_id=site_id, varname=varname, value=json_value, origin=origin
         ),
         status_code=200,
-        etag=site_global_setting_etag(site_id, varname, json_value, origin),
+        etag=site_global_setting_etag(site_id, varname, value, origin),
     )
 
 

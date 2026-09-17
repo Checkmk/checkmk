@@ -65,9 +65,7 @@ def update_global_setting_v1(
     settings = dict(load_configuration_settings())
     old_value, old_origin = effective_value(settings, varname)
     if api_context.etag.enabled:
-        api_context.etag.verify(
-            global_setting_etag(varname, value_to_json(form_spec, old_value), old_origin)
-        )
+        api_context.etag.verify(global_setting_etag(varname, old_value, old_origin))
 
     new_value = value_from_json(form_spec, body.value)
     settings[varname] = new_value
@@ -94,7 +92,7 @@ def update_global_setting_v1(
             varname=varname, value=json_value, origin=GlobalSettingsOrigin.global_
         ),
         status_code=200,
-        etag=global_setting_etag(varname, json_value, GlobalSettingsOrigin.global_),
+        etag=global_setting_etag(varname, new_value, GlobalSettingsOrigin.global_),
     )
 
 

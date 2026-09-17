@@ -25,6 +25,7 @@ from cmk.gui.customer import (
     CustomerIdOrGlobal,
     SCOPE_GLOBAL,
 )
+from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example,
@@ -35,6 +36,7 @@ from cmk.gui.openapi.endpoints.global_settings.schemas import (
     IconSchema,
 )
 from cmk.gui.type_defs import ReadOnlySpec
+from cmk.gui.valuespec import TextInput
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -239,6 +241,17 @@ def fixture_piggyback_hub_var(monkeypatch: pytest.MonkeyPatch) -> str:
     return CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 
 
+@pytest.fixture(name="legacy_valuespec_var")
+def fixture_legacy_valuespec_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    yield from _register_variable(
+        monkeypatch,
+        "test_legacy_valuespec",
+        ConfigDomainGUI,
+        LegacyValueSpec.wrap(TextInput(title="Legacy text")),
+        "",
+    )
+
+
 @pytest.fixture(name="var_without_factory_default")
 def fixture_var_without_factory_default() -> Iterator[str]:
     varname = "test_no_default"
@@ -411,6 +424,16 @@ def test_the_etag_returned_by_an_update_is_still_valid(clients: ClientRegistry) 
         body={"value": 43},
         headers={"If-Match": etag},
     ).assert_status_code(200)
+
+
+def test_a_legacy_valuespec_does_not_move_the_etag_of_its_setting(
+    clients: ClientRegistry, legacy_valuespec_var: str
+) -> None:
+    """A legacy valuespec renders a fresh element ID into the form spec representation of the
+    value on every request. A tag taken from that representation never matches the next one,
+    leaving the setting readable but no longer writable."""
+    etag = clients.GlobalSetting.get(legacy_valuespec_var).headers["ETag"]
+    assert clients.GlobalSetting.get(legacy_valuespec_var).headers["ETag"] == etag
 
 
 def test_setting_a_variable_to_its_default_value_changes_the_etag(

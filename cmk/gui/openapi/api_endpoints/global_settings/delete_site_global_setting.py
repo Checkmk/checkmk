@@ -30,7 +30,6 @@ from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
     ensure_setup_access,
-    form_spec_of,
     global_settings_context_of,
     GlobalSettingVarName,
     load_configured_sites,
@@ -39,7 +38,6 @@ from ._utils import (
     site_global_setting_etag,
     SITE_RW_PERMISSIONS,
     SiteIdPathParam,
-    value_to_json,
 )
 
 
@@ -56,7 +54,6 @@ def delete_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_write_permission(config_variable)
     ensure_changes_allowed(api_context)
-    form_spec = form_spec_of(config_variable, site_id, api_context)
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
@@ -64,11 +61,7 @@ def delete_site_global_setting_v1(
         site_globals, varname, global_settings=load_configuration_settings()
     )
     if api_context.etag.enabled:
-        api_context.etag.verify(
-            site_global_setting_etag(
-                site_id, varname, value_to_json(form_spec, old_value), old_origin
-            )
-        )
+        api_context.etag.verify(site_global_setting_etag(site_id, varname, old_value, old_origin))
 
     if old_origin is not GlobalSettingsOrigin.site:
         # There is no override to remove, so DELETE stays idempotent and records no change.

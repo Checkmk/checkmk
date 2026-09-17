@@ -172,30 +172,30 @@ def value_from_json(form_spec: FormSpec[object], json_value: object) -> object:
     return visitor.to_disk(RawFrontendData(json_value))
 
 
-def _etag_value(json_value: object) -> str:
+def _etag_value(value: object) -> str:
     """Not hash_of_dict(): that assumes string dict keys and repr()s in insertion order."""
-    return json.dumps(json_value, sort_keys=True, default=repr)
+    return json.dumps(value, sort_keys=True, default=repr)
 
 
-def global_setting_etag(varname: str, json_value: object, origin: GlobalSettingsOrigin) -> ETag:
+def global_setting_etag(varname: str, value: object, origin: GlobalSettingsOrigin) -> ETag:
     # Must cover the origin too, so that "unset -> explicitly set to the default" changes the tag.
     return ETag(
         {
             "varname": varname,
-            "value": _etag_value(json_value),
+            "value": _etag_value(value),
             "origin": origin.value,
         }
     )
 
 
 def site_global_setting_etag(
-    site_id: SiteId, varname: str, json_value: object, origin: GlobalSettingsOrigin
+    site_id: SiteId, varname: str, value: object, origin: GlobalSettingsOrigin
 ) -> ETag:
     return ETag(
         {
             "site_id": site_id,
             "varname": varname,
-            "value": _etag_value(json_value),
+            "value": _etag_value(value),
             "origin": origin.value,
         }
     )

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, computed, ref, watch } from 'vue'
 
 import { useDebounceRef } from '@/lib/useDebounce'
 
@@ -22,11 +22,7 @@ export function useComputeWidgetTitles(
 ) {
   const widgetTitles = ref<WidgetTitles>({})
 
-  async function computeTitles() {
-    if (Object.keys(widgetCores.value).length === 0) {
-      widgetTitles.value = {}
-      return
-    }
+  const request = computed<ComputeWidgetTitlesRequest>(() => {
     const widgets: ComputeWidgetTitlesRequest['widgets'] = {}
     for (const [widgetId, widget] of Object.entries(widgetCores.value)) {
       widgets[widgetId] = {
@@ -38,16 +34,32 @@ export function useComputeWidgetTitles(
         }
       }
     }
-    const response = await dashboardAPI.computeWidgetTitles({
-      widgets
-    })
-    widgetTitles.value = response.extensions.titles
-  }
+    return { widgets }
+  })
+  // The sources hand out a new object on every recompute, so compare what we would send.
+  const requestKey = computed<string>(() => JSON.stringify(request.value))
+  // One operation changes widgets and filters a microtask apart; that must not be two requests.
+  const debouncedRequestKey = useDebounceRef(requestKey, 50)
 
   watch(
-    [widgetCores, baseFilters],
-    () => {
-      void computeTitles()
+    debouncedRequestKey,
+    async () => {
+      const payload = request.value
+      const key = requestKey.value
+      if (Object.keys(payload.widgets).length === 0) {
+        widgetTitles.value = {}
+        return
+      }
+      try {
+        const response = await dashboardAPI.computeWidgetTitles(payload)
+        if (requestKey.value !== key) {
+          // A newer request is already on its way.
+          return
+        }
+        widgetTitles.value = response.extensions.titles
+      } catch (error) {
+        console.error('Error computing widget titles:', error)
+      }
     },
     { immediate: true }
   )

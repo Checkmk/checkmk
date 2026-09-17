@@ -249,14 +249,13 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
 
-  // Reset runtime filters when switching dashboards via dropdown
-  dashboardFilters.handleResetRuntimeFilters()
-
   const key: DashboardKey = {
     name: dashboard.name,
     owner: dashboard.owner || '' // built-in conversion: null -> ""
   }
   await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout)
+  // After the load, otherwise the title computation runs once for the dashboard we left
+  dashboardFilters.handleResetRuntimeFilters()
   selectedDashboardBreadcrumb.value =
     dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
   urlHandler.pushCurrentUrl(urlHandler.getDashboardUrl(key, {}))

@@ -285,11 +285,6 @@ const rows: HostEntry[] = [
 
     <UclDetailPageComponent>
       <div class="ucl-table-column-filters__stack">
-        <!--
-          The table scrolls its own overflow, so the open dropdown needs vertical
-          room inside the table box; give the viewport enough height that the
-          popover is not clipped in this demo.
-        -->
         <div class="ucl-table-column-filters__viewport">
           <MonitoringTable
             :rows="rows"
@@ -349,9 +344,8 @@ const rows: HostEntry[] = [
 }
 
 .ucl-table-column-filters__viewport {
-  /* The table clips its own overflow, so a definite height (not min-height) is
-     needed for the table's height:100% to resolve and leave room for the open
-     dropdown below the header. */
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 420px;
 }

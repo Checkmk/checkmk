@@ -38,10 +38,10 @@ class _ArchiveBundle:
 
 
 class _CleanupParams(Protocol):
-    def file_is_too_old(self, now: int, timestamp: int) -> bool: ...
+    def file_is_too_old(self, now: int, timestamp: int, /) -> bool: ...
 
     def compute_removable_bundles(
-        self, now: int, bundles: Sequence[_File | _ArchiveBundle]
+        self, now: int, bundles: Sequence[_File | _ArchiveBundle], /
     ) -> Sequence[_File | _ArchiveBundle]: ...
 
 
@@ -62,12 +62,12 @@ class _ParamsFileAge:
 class _ParamsNumberHistoryEntries:
     number_of_history_entries: int
 
-    def file_is_too_old(self, now: int, timestamp: int) -> bool:  # noqa: ARG002
+    def file_is_too_old(self, _now: int, _timestamp: int) -> bool:
         return False
 
     def compute_removable_bundles(
         self,
-        now: int,  # noqa: ARG002
+        _now: int,
         bundles: Sequence[_File | _ArchiveBundle],
     ) -> Sequence[_File | _ArchiveBundle]:
         return sorted(bundles, key=lambda b: b.timestamp, reverse=True)[

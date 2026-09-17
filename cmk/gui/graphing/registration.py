@@ -12,10 +12,10 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from ._autocompleter import monitored_metrics_autocompleter
 from ._graph_codec import community_graph_codec, GraphCodec
 from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
-from ._graph_images import AjaxGraphImagesForNotifications
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import template_graph_dispatcher, TemplateGraphSpecification
 from ._metric_visitor import MetricVisitor
+from ._notification_graph_images import AjaxGraphImagesForNotifications
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._prediction_page import PredictionPage, ServiceBreadcrumbFunc
 from ._settings import ConfigVariableGraphTimeranges

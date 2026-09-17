@@ -53,6 +53,8 @@ from ._graph_dispatch import (
     legacy_graph_id,
 )
 from ._graph_display_config import (
+    compute_image_graph_ranges,
+    graph_image_render_options,
     GraphDestinations,
     GraphDisplayConfigHTML,
     GraphDisplayConfigImage,
@@ -60,11 +62,6 @@ from ._graph_display_config import (
     GraphTitleFormat,
     HTML_SIZE_PER_EX,
     resolve_size,
-)
-from ._graph_images import (
-    AjaxGraphImagesForNotifications,
-    compute_image_graph_ranges,
-    graph_image_render_options,
 )
 from ._graph_png import compute_png_size_mm, mm_per_ex, render_png, render_png_ex
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
@@ -133,6 +130,9 @@ from ._metric_query import (
 )
 from ._metric_visitor import MetricVisitor
 from ._metrics import get_metric_spec, registered_metric_ids_and_titles
+from ._notification_graph_images import (
+    AjaxGraphImagesForNotifications,
+)
 from ._perfometers import (
     drawn_segments,
     DrawnSegment,

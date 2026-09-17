@@ -9,7 +9,6 @@ This is needed for the graphs sent with mail notifications."""
 import base64
 import itertools
 import time
-from collections.abc import Mapping
 from typing import override
 
 import cmk.livestatus_client as livestatus
@@ -25,20 +24,17 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
 
 from . import _plugins as engine_plugins
 from ._graph_dispatch import evaluate_built_graphs
 from ._graph_display_config import (
-    get_mm_per_ex,
+    compute_image_graph_ranges,
+    graph_image_render_options,
     GraphDestinations,
     GraphDisplayConfigImage,
-    GraphRenderOptions,
-    GraphTitleFormat,
 )
 from ._graph_png import render_png
-from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import GraphEnvironment
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
@@ -138,39 +134,3 @@ def _answer_graph_image_request(
         # guaranteed for every GraphSpecification kind in general.
         for _graph, evaluated_graph in zip(graphs, evaluated.graphs, strict=True)
     ]
-
-
-def compute_image_graph_ranges(
-    display_config: GraphDisplayConfigImage, start_time: int, end_time: int
-) -> GraphRanges:
-    mm_per_ex = get_mm_per_ex(display_config.font_size)
-    width_mm = display_config.size[0] * mm_per_ex
-    return compute_graph_ranges_for_width(width_mm, start_time, end_time)
-
-
-def graph_image_render_options(
-    api_request: Mapping[str, object] | None = None,
-) -> GraphRenderOptions:
-    graph_render_options = GraphRenderOptions(
-        font_size=SizePT(8.0),
-        resizable=False,
-        show_controls=False,
-        title_format=GraphTitleFormat(
-            plain=True,
-            add_host_name=False,
-            add_host_alias=False,
-            add_service_description=True,
-        ),
-        size=(80, 30),  # ex
-        # Specific for PDF rendering.
-        color_gradient=20.0,
-        show_title=True,
-        border_width=0.05,
-    )
-    # Enforce settings optionally setable via request
-    if api_request and (render_opts := api_request.get("render_options")):
-        if not isinstance(render_opts, dict):
-            raise TypeError(f"render_options must be a dict, got {type(render_opts)}")
-        graph_render_options = graph_render_options.model_copy(update=render_opts)
-
-    return graph_render_options

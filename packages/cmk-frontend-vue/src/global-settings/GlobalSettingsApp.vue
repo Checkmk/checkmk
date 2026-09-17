@@ -157,6 +157,7 @@ function resetSearchAndFilters(): void {
       <div class="global-settings-app__toolbar-right">
         <GlobalSettingsModificationFilter
           v-model="modification"
+          :scope="scope"
           :show-site-overrides="hasSiteOverrides"
         />
         <ExpandCollapseButtons

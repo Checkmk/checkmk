@@ -1111,7 +1111,7 @@ describe('GlobalSettingsApp search', () => {
       await vi.advanceTimersByTimeAsync(200)
       expect(window.location.search).toBe('?filter=modified')
 
-      await filterBy(user, 'All variables')
+      await filterBy(user, 'All settings')
       await vi.advanceTimersByTimeAsync(200)
       expect(window.location.search).toBe('')
     })
@@ -1162,7 +1162,7 @@ describe('GlobalSettingsApp search', () => {
       await vi.advanceTimersByTimeAsync(200)
 
       expect(screen.getByRole('searchbox')).toHaveValue('')
-      expect(screen.getByRole('button', { name: 'Toggle All variables' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Toggle All settings' })).toHaveAttribute(
         'aria-pressed',
         'true'
       )

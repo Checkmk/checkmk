@@ -114,12 +114,14 @@ watch(
   flex-direction: column;
   gap: var(--dimension-3);
   padding: var(--dimension-2);
+  margin-bottom: var(--dimension-3);
 }
 
 .monitoring-filter-date-time-range__row {
   display: flex;
   align-items: center;
-  gap: var(--dimension-4);
+  gap: var(--dimension-5);
+  margin: var(--dimension-2) var(--dimension-5);
 }
 
 .monitoring-filter-date-time-range__label {

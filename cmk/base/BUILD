@@ -165,12 +165,12 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
         "//cmk/automations",
         "//cmk/base/automations",
-        "//cmk/cli/engine",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",

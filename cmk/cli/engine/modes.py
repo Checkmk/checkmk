@@ -384,7 +384,6 @@ def discover_modes() -> Sequence[Mode]:
         plugin_prefixes=entry_point_prefixes(),
         module_names_by_priority=[
             "cmk.base.modes.check_mk",
-            "cmk.base.diagnostics",
             "cmk.base.notify",
         ],
         skip_wrong_types=True,

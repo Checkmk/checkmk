@@ -6,14 +6,13 @@
 
 import io
 import logging
-import sys
 import tarfile
 import textwrap
 import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
-from dataclasses import dataclass, fields
+from dataclasses import fields
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
@@ -26,16 +25,12 @@ from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.config import LoadingResult
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
-from cmk.cli.engine.modes import option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,
-    resolve_selection,
 )
 from cmk.diagnostics.internal import (
     CollectContext,
@@ -60,154 +55,6 @@ DiagnosticsCLParameters = Sequence[str]
 DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 
 SUFFIX = ".tar.gz"
-
-_CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
-    "off": None,
-    "low": Sensitivity.LOW,
-    "medium": Sensitivity.MEDIUM,
-    "high": Sensitivity.HIGH,
-}
-
-
-@dataclass(frozen=True)
-class _CliSelection:
-    list_plugins: bool
-    all_topics: str | None
-    plugins: str | None
-    checkmk_server_host: str
-
-
-def _cli_selection(parsed: Mapping[str, object]) -> _CliSelection:
-    return _CliSelection(
-        list_plugins="list" in parsed,
-        all_topics=option_string(parsed, "all-topics"),
-        plugins=option_string(parsed, "plugins"),
-        checkmk_server_host=option_string(parsed, "checkmk-server-host") or "",
-    )
-
-
-def _parse_cli_threshold(raw: str) -> Sensitivity | None:
-    try:
-        return _CLI_THRESHOLDS[raw]
-    except KeyError:
-        raise MKGeneralException(
-            "Invalid sensitivity threshold {!r} (allowed: {})".format(
-                raw, ", ".join(_CLI_THRESHOLDS)
-            )
-        ) from None
-
-
-def _resolve_cli_selection(
-    catalogue: Mapping[str, DiagnosticsPlugin], options: _CliSelection
-) -> DumpSelection:
-    default_threshold = (
-        _parse_cli_threshold(options.all_topics) if options.all_topics is not None else None
-    )
-    thresholds: dict[Topic, Sensitivity | None] = dict.fromkeys(
-        (plugin.topic for plugin in catalogue.values()), default_threshold
-    )
-
-    selected = set(resolve_selection(catalogue.values(), thresholds))
-    for name in options.plugins.split(",") if options.plugins is not None else []:
-        if name not in catalogue:
-            raise MKGeneralException("Unknown plugin %r (see --list for available plugins)" % name)
-        selected.add(name)
-
-    return DumpSelection(
-        plugins=sorted(selected),
-        checkmk_server_host=options.checkmk_server_host,
-    )
-
-
-def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None:
-    by_topic: dict[Topic, list[DiagnosticsPlugin]] = {}
-    for plugin in catalogue.values():
-        by_topic.setdefault(plugin.topic, []).append(plugin)
-    for topic in sorted(by_topic, key=lambda t: t.localize(str)):
-        plugins = by_topic[topic]
-        sys.stdout.write(f"{topic.localize(_)}\n")
-        for plugin in sorted(plugins, key=lambda p: p.name):
-            flags = [plugin.sensitivity.name.lower()]
-            if plugin.always:
-                flags.append("always")
-            sys.stdout.write(
-                f"  {plugin.name} ({', '.join(flags)}): {plugin.description.localize(_)}\n"
-            )
-
-
-def _mode_create_diagnostics_dump(
-    _app: object, _global_options: GlobalOptions, parsed: Options, _args: Args
-) -> int:
-    options = _cli_selection(parsed)
-    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    loading_result = load_config()
-    catalogue = _load_plugin_catalogue(logger=ConsoleLogger())
-
-    if options.list_plugins:
-        _print_available_plugins(catalogue)
-        return 0
-
-    dump = create_diagnostics_dump_v2(
-        omd_root=cmk.utils.paths.omd_root,
-        diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-        selection=_resolve_cli_selection(catalogue, options),
-        loading_result=loading_result,
-    )
-    logger = ConsoleLogger()
-    logger.section_step("Creating diagnostics dump", verbose=False)
-    if dump.tarfile_created:
-        logger.filepath(
-            dump.tarfile_path.relative_to(cmk.utils.paths.omd_root),
-            verbose=False,
-        )
-    else:
-        logger.message("No dump")
-    return 0
-
-
-cli_command_create_diagnostics_dump = CLICommand(
-    long_option="create-diagnostics-dump",
-    handler_function=_mode_create_diagnostics_dump,
-    sub_options=[
-        CLIOption(
-            long_option="list",
-            short_help="List the available topics and plugins and exit",
-        ),
-        CLIOption(
-            long_option="all-topics",
-            short_help=(
-                "Select all plugins of all topics up to the given sensitivity threshold "
-                "(off, low, medium or high)"
-            ),
-            argument=True,
-            argument_descr="THRESHOLD",
-        ),
-        CLIOption(
-            long_option="plugins",
-            short_help="Additionally select the given plugins, regardless of topic thresholds",
-            argument=True,
-            argument_descr="NAME,NAME...",
-        ),
-        CLIOption(
-            long_option="checkmk-server-host",
-            short_help=(
-                "The name of the host monitoring the Checkmk server; needed by some plugins"
-            ),
-            argument=True,
-            argument_descr="HOST",
-        ),
-    ],
-    short_help="Create diagnostics dump",
-    long_help=[
-        (
-            "Create a dump containing information for diagnostic analysis "
-            "in the folder var/check_mk/diagnostics. The dump content is "
-            "provided by discoverable plugins grouped into topics; use --list "
-            "to see what is available on this site. Without any option only "
-            "the always collected plugins are packed."
-        )
-    ],
-)
 
 
 def handler(
@@ -324,7 +171,7 @@ def _create_dump(
     omd_config = get_omd_config(omd_root)
     logger = ConsoleLogger()
 
-    catalogue = _load_plugin_catalogue(logger=logger)
+    catalogue = load_plugin_catalogue(logger=logger)
     for unknown in sorted(selected_names - set(catalogue)):
         message = f"Plugin '{unknown}' is not available on this site"
         logger.info(message)
@@ -359,7 +206,7 @@ def _create_dump(
     )
 
 
-def _load_plugin_catalogue(*, logger: ConsoleLogger) -> Mapping[str, DiagnosticsPlugin]:
+def load_plugin_catalogue(*, logger: ConsoleLogger) -> Mapping[str, DiagnosticsPlugin]:
     """All available plugins by name, as discovered on this site"""
     discovered = load_diagnostics_plugins(raise_errors=False)
     for error in discovered.errors:

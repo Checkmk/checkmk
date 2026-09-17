@@ -170,6 +170,14 @@ allows = [
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
+  # The "cmk --create-diagnostics-dump" command drives the dump engine.
+  "cmk.base.automations.automations",
+  "cmk.base.diagnostics",
+  "cmk.ccc.exceptions",
+  "cmk.ccc.i18n",
+  "cmk.cli.engine",
+  "cmk.diagnostics.engine",
+  "cmk.utils.paths",
 ]
 
 # These plugins are tightly coupled to Checkmk.

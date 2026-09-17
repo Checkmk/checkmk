@@ -666,6 +666,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "cpu_utilization_os": "CPU utilization",
     "cups_queues": "CUPS Queue %s",
     "telemetry_metrics_custom_query": "%s",
+    "data_backend_omd": "OMD %s data backend",
     "datadog_events": "Datadog Events",
     "datadog_logs": "Datadog logs",
     "datadog_monitors": "Datadog Monitor %s",

@@ -5,10 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { CustomServicesWizard } from 'cmk-shared-typing/typescript/mode_custom_services'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import { createCustomService } from './save'
@@ -94,7 +95,7 @@ async function createService(): Promise<void> {
             v-model:service-name="model.serviceName"
             v-model:host-name="model.hostName"
           />
-          <CmkAlertBox v-if="saveError" variant="error" size="small">{{ saveError }}</CmkAlertBox>
+          <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
         </template>
         <template #actions>
           <CmkWizardButton

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkWizard, {
   CmkWizardButton,
   CmkWizardModeToggle,
@@ -239,9 +239,12 @@ async function onSaveClick(): Promise<void> {
       </template>
       <template #actions>
         <div class="mode-otel-mode-create-prometheus-conf-app__actions">
-          <CmkAlertBox v-if="overviewValidationFailed" variant="error" size="small">
-            {{ _t('The form still contains invalid data. Please correct them and try again.') }}
-          </CmkAlertBox>
+          <CmkAlert
+            v-if="overviewValidationFailed"
+            variant="error"
+            size="small"
+            :text="_t('The form still contains invalid data. Please correct them and try again.')"
+          />
           <div class="mode-otel-mode-create-prometheus-conf-app__actions-buttons">
             <CmkWizardButton
               type="finish"

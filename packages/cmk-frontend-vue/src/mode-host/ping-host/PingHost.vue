@@ -7,8 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import axios from 'axios'
 import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
-import CmkAlertBox, { type Variants } from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert, { type Variants } from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { type Ref, computed, onMounted, ref } from 'vue'
 
@@ -401,14 +402,12 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
     defer
   >
     <span class="mh-ping-host__status-box">
-      <CmkAlertBox
-        :title="status.tooltip"
+      <CmkAlert
         :variant="status.status"
         size="small"
         class="mh-ping-host__status-box-alert"
-      >
-        {{ status.tooltip }}
-      </CmkAlertBox>
+        :text="untranslated(status.tooltip)"
+      />
     </span>
   </Teleport>
 </template>

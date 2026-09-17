@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type ModeHostFormKeys, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -333,14 +334,13 @@ async function startTest(): Promise<void> {
       </span>
     </span>
 
-    <CmkAlertBox
+    <CmkAlert
       v-if="isLoading"
       variant="loading"
       size="small"
       class="mh-snmp-connection-test__loading"
-    >
-      {{ _t('Testing SNMP connection ...') }}
-    </CmkAlertBox>
+      :text="_t('Testing SNMP connection ...')"
+    />
 
     <CmkAlertBox
       v-if="isSuccess"

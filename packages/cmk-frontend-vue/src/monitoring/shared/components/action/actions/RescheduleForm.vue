@@ -11,7 +11,7 @@ export interface RescheduleValues {
 </script>
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
@@ -42,15 +42,17 @@ watch(
 
 <template>
   <div class="monitoring-reschedule-form">
-    <CmkAlertBox v-if="targetCount > 1" variant="warning" size="small">
-      {{
+    <CmkAlert
+      v-if="targetCount > 1"
+      variant="warning"
+      :text="
         _t(
           'Rescheduling %{count} checks at once puts extra load on the monitoring server and the ' +
             'monitored hosts. Spread the execution over a longer period to soften the peak.',
           { count: targetCount }
         )
-      }}
-    </CmkAlertBox>
+      "
+    />
 
     <div class="monitoring-reschedule-form__section">
       <label class="monitoring-reschedule-form__field">

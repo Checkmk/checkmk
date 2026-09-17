@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible'
 import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
@@ -104,6 +104,10 @@ const needsToken = computed(() =>
  */
 const generationFailed = ref(false)
 
+const tokenFailedWarning = _t(
+  'The registration command is hidden until a token has been generated successfully. You can register with the agent_registration user instead - see "Troubleshooting registration issues" below.'
+)
+
 const waitingForToken = computed(
   () => !generationFailed.value && rendered.value.tokenState === 'missing'
 )
@@ -174,24 +178,24 @@ function reset() {
           }"
           :description="_t('This requires the generation of a registration token.')"
         />
-        <CmkAlertBox v-if="rendered.tokenState === 'failed'" variant="warning" size="small">
-          {{
-            _t(
-              'The registration command is hidden until a token has been generated successfully. You can register with the agent_registration user instead - see "Troubleshooting registration issues" below.'
-            )
-          }}
-        </CmkAlertBox>
+        <CmkAlert
+          v-if="rendered.tokenState === 'failed'"
+          variant="warning"
+          :text="tokenFailedWarning"
+        />
         <template v-if="commandShown">
           <ShellToggle v-if="variants" v-model="shellId" :choices="variants" />
           <CmkParagraph>{{ spec.msg }}</CmkParagraph>
           <CommandBlockList :blocks="rendered.blocks" />
-          <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
-            {{
+          <CmkAlert
+            v-if="agentReceiverPortIsDefault"
+            variant="warning"
+            :text="
               _t(
                 'The agent receiver port could not be determined from the remote site. The command uses the default port (8000). Adjust the --server port if your site uses a different agent receiver port.'
               )
-            }}
-          </CmkAlertBox>
+            "
+          />
         </template>
       </div>
       <div v-else>

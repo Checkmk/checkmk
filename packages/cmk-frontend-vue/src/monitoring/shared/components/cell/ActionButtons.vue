@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
@@ -161,14 +161,12 @@ function select(action: CellAction): void {
               <CmkSkeleton type="text" />
               <CmkSkeleton type="text" />
             </div>
-            <CmkAlertBox
+            <div
               v-else-if="failed && loadedActions === null && !overflowActions.length"
-              variant="error"
-              size="small"
               class="monitoring-action-buttons__menu-status"
             >
-              {{ _t('Could not load actions.') }}
-            </CmkAlertBox>
+              <CmkAlert variant="error" size="small" :text="_t('Could not load actions.')" />
+            </div>
             <div
               v-else-if="failed && loadedActions === null"
               class="monitoring-action-buttons__menu-status monitoring-action-buttons__menu-hint"

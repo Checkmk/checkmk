@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
@@ -91,16 +91,15 @@ function messagesFor(field: RowField): TranslatedString[] {
       :ast-errors="messagesFor('ast')"
     />
     <template v-else>
-      <CmkAlertBox
+      <CmkAlert
         v-if="alertText !== null"
         class="graphing-row-editor__alert"
         variant="success"
         size="small"
         auto-dismiss
+        :text="alertText"
         @update:open="alert = null"
-      >
-        {{ alertText }}
-      </CmkAlertBox>
+      />
 
       <RrdForm
         v-if="row.type === 'rrd_metric' || row.type === 'rrd_query'"
@@ -160,9 +159,5 @@ function messagesFor(field: RowField): TranslatedString[] {
   top: var(--dimension-5);
   right: var(--dimension-4);
   z-index: 1;
-  white-space: nowrap;
-  margin: 0;
-  padding: var(--dimension-2) var(--dimension-4);
-  align-items: center;
 }
 </style>

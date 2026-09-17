@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import { createCustomService } from './save'
@@ -58,7 +59,7 @@ async function save(): Promise<void> {
   >
     <div class="mode-custom-services-create-custom-service-slide-in">
       <AssignHostStep v-model:service-name="model.serviceName" v-model:host-name="model.hostName" />
-      <CmkAlertBox v-if="saveError" variant="error" size="small">{{ saveError }}</CmkAlertBox>
+      <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       <div class="mode-custom-services-create-custom-service-slide-in__actions">
         <CmkButton variant="primary" :disabled="!canSave || saving" @click="save">
           {{ _t('Save') }}

@@ -21,7 +21,7 @@ derives its state from the live topology, which is what keeps an open card or
 slide-in ticking rather than frozen at the moment it was opened.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -485,9 +485,11 @@ watch(serviceLayout, () => {
         />
 
         <div v-if="topologyError && !preview" class="maps-flow-map-view__stale">
-          <CmkAlertBox variant="warning" size="small">
-            {{ _t('Topology update failed — showing the last one that arrived') }}
-          </CmkAlertBox>
+          <CmkAlert
+            variant="warning"
+            size="small"
+            :text="_t('Topology update failed — showing the last one that arrived')"
+          />
         </div>
 
         <MapSearch

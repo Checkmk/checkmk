@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
 import { useMapsApis } from '@/maps/services/context'
@@ -85,7 +86,7 @@ async function remove(dt: DowntimeEntry) {
       </div>
     </CmkScrollContainer>
 
-    <CmkAlertBox v-if="error" variant="error" size="small">{{ error }}</CmkAlertBox>
+    <CmkAlert v-if="error" variant="error" :text="untranslated(error)" />
 
     <template #footer>
       <CmkButton variant="secondary" @click="$emit('close')">

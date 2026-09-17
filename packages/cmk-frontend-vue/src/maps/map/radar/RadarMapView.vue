@@ -13,7 +13,7 @@ lookup the placed map types work from. What a click on a card leads to is the
 map view's, like everywhere else.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -117,24 +117,21 @@ const counts = computed(() => radarStateCounts(matching.value))
         <template v-else>
           <!-- In flow above the grid rather than over it: a banner across the
                cards would cover the very states it is warning about. -->
-          <CmkAlertBox
+          <CmkAlert
             v-if="!preview && !statesStore.connected.value"
             variant="warning"
             size="small"
-          >
-            {{ _t('Connection lost — showing last known state') }}
-          </CmkAlertBox>
-          <CmkAlertBox
+            :text="_t('Connection lost — showing last known state')"
+          />
+          <CmkAlert
             v-else-if="!preview && statesStore.deadSites.value.length"
             variant="warning"
-            size="small"
-          >
-            {{
+            :text="
               _t('Site unreachable: %{sites} — showing last known state for its hosts', {
                 sites: statesStore.deadSites.value.join(', ')
               })
-            }}
-          </CmkAlertBox>
+            "
+          />
 
           <!-- Live: objects come and go as the filter's members change. -->
           <div class="maps-radar-map-view__summary" role="status" :aria-label="_t('Radar summary')">

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -81,17 +81,16 @@ function onAlertOpenChange(open: boolean): void {
         <span class="graphing-item-list-section__title">
           {{ describeItem(item) }}
         </span>
-        <CmkAlertBox
+        <CmkAlert
           v-if="alert !== null && alert.id === item.id"
           :key="alert.nonce"
           class="graphing-item-list-section__alert"
           variant="success"
           size="small"
           auto-dismiss
+          :text="alert.text"
           @update:open="onAlertOpenChange"
-        >
-          {{ alert.text }}
-        </CmkAlertBox>
+        />
         <span v-if="showActions" class="graphing-item-list-section__actions">
           <CmkButton
             size="iconOnly"
@@ -150,10 +149,6 @@ function onAlertOpenChange(open: boolean): void {
 /* Narrow the alert box to row size. */
 .graphing-item-list-section__alert {
   flex-shrink: 0;
-  white-space: nowrap;
-  margin: 0;
-  padding: var(--dimension-2) var(--dimension-4);
-  align-items: center;
 }
 
 .graphing-item-list-section__actions {

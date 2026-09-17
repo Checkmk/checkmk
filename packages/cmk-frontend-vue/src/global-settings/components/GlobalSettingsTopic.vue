@@ -9,9 +9,10 @@ import type {
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { GlobalSettingsScope } from '../api'
@@ -86,9 +87,11 @@ const siteOverrideFilterLabel = computed(() =>
       </CmkChip>
     </template>
     <template #content>
-      <CmkAlertBox v-if="topic.warning !== null" variant="warning" size="small">
-        {{ topic.warning }}
-      </CmkAlertBox>
+      <CmkAlert
+        v-if="topic.warning !== null"
+        variant="warning"
+        :text="untranslated(topic.warning)"
+      />
       <GlobalSettingsVariableRow
         v-for="variable in shownVariables"
         :key="variable.name"

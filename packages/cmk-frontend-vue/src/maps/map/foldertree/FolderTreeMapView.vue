@@ -15,7 +15,7 @@ a leaf leads to is the map view's, like everywhere else -- but a leaf is not in
 the state stream, so it is handed up with the state its tree node carries.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
@@ -280,24 +280,21 @@ function closeBulkModal(): void {
 
       <!-- In flow rather than floating: a banner over the drawing would cover
            the very tiles it is warning about. -->
-      <CmkAlertBox
+      <CmkAlert
         v-if="!preview && root && !states.connected.value"
         variant="warning"
         size="small"
-      >
-        {{ _t('Connection lost — showing last known state') }}
-      </CmkAlertBox>
-      <CmkAlertBox
+        :text="_t('Connection lost — showing last known state')"
+      />
+      <CmkAlert
         v-else-if="!preview && root && states.deadSites.value.length"
         variant="warning"
-        size="small"
-      >
-        {{
+        :text="
           _t('Site unreachable: %{sites} — showing last known state for its hosts', {
             sites: states.deadSites.value.join(', ')
           })
-        }}
-      </CmkAlertBox>
+        "
+      />
 
       <div v-if="!root" class="maps-folder-tree-map-view__note">
         {{ _t('Waiting for folder data…') }}

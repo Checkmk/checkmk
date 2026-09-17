@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import StateTag from 'cmk-ui-library/components/StateTag.vue'
@@ -150,9 +150,7 @@ watch(
       >
         {{ showMoreLabel }}
       </CmkButton>
-      <CmkAlertBox v-if="moreRelations" variant="info" size="small">
-        {{ truncationNotice }}
-      </CmkAlertBox>
+      <CmkAlert v-if="moreRelations" variant="info" size="small" :text="truncationNotice" />
     </template>
   </section>
 </template>

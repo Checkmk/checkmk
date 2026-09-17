@@ -10,6 +10,7 @@ import {
   type ModeHostServerPerSite,
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -578,9 +579,13 @@ const showSettings = ref(false)
         </div>
       </span>
 
-      <CmkAlertBox v-if="isLoading" variant="loading" size="small" class="loading-container">
-        {{ _t('Testing agent connection ...') }}
-      </CmkAlertBox>
+      <CmkAlert
+        v-if="isLoading"
+        variant="loading"
+        size="small"
+        class="loading-container"
+        :text="_t('Testing agent connection ...')"
+      />
 
       <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
         {{ _t('Successfully connected to agent.') }}

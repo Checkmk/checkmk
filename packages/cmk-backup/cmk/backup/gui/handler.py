@@ -93,7 +93,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import AbsoluteDirname, ID, SchedulePeriod
@@ -126,6 +125,7 @@ from cmk.utils.certs import CertManagementEvent
 from cmk.utils.keypair_store import Key, KeyId, KeypairMap
 from cmk.utils.paths import omd_root
 from cmk.web.utils.confirm_links import make_confirm_delete_link, make_confirm_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML

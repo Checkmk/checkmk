@@ -5,6 +5,8 @@
 from collections.abc import Iterator, Mapping, Sequence
 from typing import overload, Protocol
 
+from cmk.ccc.user import UserId
+
 
 class RequestProtocol(Protocol):
     @property
@@ -40,6 +42,37 @@ class RequestProtocol(Protocol):
 
     @property
     def is_secure(self) -> bool: ...
+
+
+class SessionUserProtocol(Protocol):
+    """The part of the logged-in user a session hands to a page handler."""
+
+    @property
+    def id(self) -> UserId | None: ...
+
+    @property
+    def is_anonymous(self) -> bool: ...
+
+
+class SessionInfoProtocol(Protocol):
+    """The part of the session info a page handler reads."""
+
+    @property
+    def csrf_token(self) -> str: ...
+
+
+class SessionProtocol(Protocol):
+    """The part of the session a page handler is given.
+
+    Kept to what callers actually read so that a page need not know the whole
+    session implementation.
+    """
+
+    @property
+    def user(self) -> SessionUserProtocol: ...
+
+    @property
+    def session_info(self) -> SessionInfoProtocol: ...
 
 
 class ResponseProtocol(Protocol):

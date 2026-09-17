@@ -18,10 +18,10 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.session import session
 from cmk.utils.encryption import fetch_certificate_details
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 
 from .definitions import (

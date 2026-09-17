@@ -45,13 +45,13 @@ from cmk.gui.product_usage_analytics.popup import render_product_usage_analytics
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import load_custom_attr
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.shared_typing.main_menu import NavItemTopic
 from cmk.shared_typing.sidebar import SidebarConfig
 from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless

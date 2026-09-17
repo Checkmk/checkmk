@@ -53,7 +53,6 @@ py_library(
     deps = [
         ":base",
         "//cmk/gui:core_toolkit",
-        "//cmk/utils",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
@@ -61,6 +60,7 @@ py_library(
         "//packages/cmk-web",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
+        "//cmk/utils:security_event",
     ],
 )
 
@@ -69,7 +69,6 @@ py_library(
     srcs = [
         "compatibility.py",
         "confirm_with_preview.py",
-        "csrf_token.py",
         "encrypter.py",
         "htpasswd.py",
         "json.py",
@@ -96,8 +95,6 @@ py_library(
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
-        "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
@@ -110,6 +107,7 @@ py_library(
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
+        "//cmk/utils:security_event",
     ],
 )
 

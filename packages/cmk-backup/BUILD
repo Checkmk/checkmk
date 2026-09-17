@@ -56,7 +56,6 @@ py_library(
         "//cmk/gui:key_mgmt",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/form_specs",
-        "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",

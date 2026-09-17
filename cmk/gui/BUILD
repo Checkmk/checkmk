@@ -470,13 +470,13 @@ py_library(
         ":core_toolkit",
         ":scopes",
         "//cmk/gui/utils:middle",
-        "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
+        "//cmk/utils:security_event",
     ],
 )
 

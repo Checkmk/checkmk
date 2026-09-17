@@ -19,7 +19,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.livestatus_client import (
     Command,
     LivestatusClient,
@@ -27,6 +26,7 @@ from cmk.livestatus_client import (
     ScheduleForcedHostCheck,
     ScheduleForcedServiceCheck,
 )
+from cmk.web.utils.csrf_token import check_csrf_token
 
 
 class PageRescheduleCheck(AjaxPage):

@@ -7,9 +7,8 @@ from dataclasses import dataclass
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-from cmk.gui.utils.session import SessionProtocol
 from cmk.utils.security_event import log_security_event, SecurityEvent
-from cmk.web.context import RequestProtocol
+from cmk.web.context import RequestProtocol, SessionProtocol
 
 
 @dataclass

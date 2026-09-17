@@ -28,6 +28,24 @@ py_library(
 )
 
 py_library(
+    name = "security_event",
+    srcs = [
+        "jsontype.py",
+        "security_event.py",
+    ],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [":paths"],
+)
+
+py_library(
     name = "man_pages",
     srcs = ["man_pages.py"],
     visibility = [
@@ -155,11 +173,13 @@ py_library(
             "**/nonfree/**",
             "caching_redis.py",
             "encryption.py",
+            "jsontype.py",
             "man_pages.py",
             "msi_engine.py",
             "msi_patch.py",
             "paths.py",
             "redis.py",
+            "security_event.py",
             "unixsocket_http.py",
             "werks/**",
         ],
@@ -209,6 +229,7 @@ py_library(
         requirement("cryptography"),
         requirement("pydantic"),
         requirement("python-dateutil"),
+        ":security_event",
     ],
 )
 

@@ -29,7 +29,6 @@ from cmk.gui.i18n import _
 from cmk.gui.livestatus_utils.commands import acknowledgments, comment, downtimes, force_schedule
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.livestatus_client import (
     Command,
     DisableHostCheck,
@@ -48,6 +47,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.services import Services
 from cmk.maps.gui._tickets import COMMAND_ACTION_PERMISSIONS
+from cmk.web.utils.csrf_token import check_csrf_token
 
 # Verbs Maps can issue — the single source of truth is the ticket permission map
 # (the same verbs the GUI bakes into a ticket's capabilities). Deriving it here

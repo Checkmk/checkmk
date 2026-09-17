@@ -43,7 +43,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui/utils",
         "//cmk/gui/watolib",
         "//cmk/utils:paths",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",

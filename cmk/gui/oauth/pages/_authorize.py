@@ -27,12 +27,12 @@ from cmk.gui.scopes import (
     ScopeId,
 )
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils import escaping
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 
 _SCOPE_REQUESTED_VARNAME = "scope"

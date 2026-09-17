@@ -26,7 +26,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -49,6 +48,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.permission_verification import PermissionName
 
 from ._bulk_actions import get_hostnames_from_checkboxes

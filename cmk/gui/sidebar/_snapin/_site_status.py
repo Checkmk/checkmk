@@ -15,8 +15,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import RoleName
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.session import session
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 

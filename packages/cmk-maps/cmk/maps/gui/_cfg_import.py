@@ -23,7 +23,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.maps.gui._settings import connection_choices
 from cmk.maps.shared.map_payload import (
     FlowView,
@@ -40,6 +39,7 @@ from cmk.maps.shared.map_payload import (
     WorldmapView,
 )
 from cmk.maps.shared.validators import coerce_color
+from cmk.web.utils.csrf_token import check_csrf_token
 
 # A NagVis .cfg is a small text file; cap the upload before the whole-file regex
 # scan + multi-pass reference resolver run over it, mirroring the icon/background

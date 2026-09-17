@@ -29,7 +29,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.profiling.backend import (
     build_flamegraph_tree,
@@ -47,6 +46,7 @@ from cmk.shared_typing.profiling_flamegraph import (
 )
 from cmk.shared_typing.profiling_flamegraph import ProfilingFlamegraphData
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri_contextless, makeuri_contextless

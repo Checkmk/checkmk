@@ -54,7 +54,8 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":hub",
-        "//cmk/utils",
+        "//cmk/utils:paths",
+        "//cmk/utils:security_event",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",

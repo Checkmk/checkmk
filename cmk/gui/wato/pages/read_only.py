@@ -32,7 +32,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, ReadOnlySpec
 from cmk.gui.userdb._user_selection import generate_wato_users_elements_function
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.session import session
 from cmk.gui.valuespec import AbsoluteDate
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -50,6 +49,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     MultilineText,
 )
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.permission_verification import PermissionName
 

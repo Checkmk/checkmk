@@ -20,6 +20,7 @@ py_library(
     ],
     imports = ["."],
     visibility = ["//packages/cmk-web:__subpackages__"],
+    deps = ["//packages/cmk-ccc:user"],
 )
 
 py_library(

@@ -59,7 +59,6 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb.store import load_users
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -88,6 +87,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.utils import render
 from cmk.web.utils import escaping
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon

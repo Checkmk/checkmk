@@ -27,7 +27,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.maps.gui._image_security import (
     BACKGROUND_MIME_TYPES,
     BACKGROUND_SUFFIXES,
@@ -38,6 +37,7 @@ from cmk.maps.gui._image_security import (
     safe_image_stem,
 )
 from cmk.maps.gui.store import get_permitted_map, get_permitted_maps, is_valid_map_name
+from cmk.web.utils.csrf_token import check_csrf_token
 
 _MAX_ICON_BYTES = 2 * 1024 * 1024  # 2 MB
 _MAX_BACKGROUND_BYTES = 10 * 1024 * 1024  # 10 MB

@@ -5,7 +5,6 @@
  */
 import type {
   GlobalSettingsApp,
-  GlobalSettingsOrigin,
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
@@ -17,6 +16,8 @@ import type { InjectionKey } from 'vue'
 import type { ValidationMessages } from '@/form'
 
 export type GlobalSettingsScope = GlobalSettingsApp['scope']
+
+export type GlobalSettingsOrigin = components['schemas']['GlobalSettingsOrigin']
 
 export type ToggleSetting = (
   variable: GlobalSettingsVariable,

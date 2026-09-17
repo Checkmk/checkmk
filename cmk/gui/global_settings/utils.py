@@ -26,6 +26,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.global_settings import (
     effective_site_value,
     effective_value,
+    GlobalSettingsOrigin,
     is_available_in_global_settings,
     load_configuration_settings,
     make_global_settings_context,
@@ -37,17 +38,19 @@ from cmk.gui.watolib.sites import load_site_globals, site_management_registry
 from cmk.livestatus_client import SiteConfigurations
 from cmk.shared_typing.global_settings import (
     Components,
+    GlobalLayerValue,
+    GlobalScopeValue,
     GlobalSettingsApp,
     GlobalSettingsBreadcrumbItem,
     GlobalSettingsHint,
     GlobalSettingsHintVariant,
-    GlobalSettingsOrigin,
     GlobalSettingsScopeGlobal,
     GlobalSettingsScopeSite,
     GlobalSettingsSiteOverride,
     GlobalSettingsTopic,
     GlobalSettingsVariable,
     IconNames,
+    SiteScopeValue,
 )
 from cmk.utils import paths
 from cmk.web.utils.flashed_messages import get_flashed_messages_with_categories
@@ -56,24 +59,19 @@ from cmk.web.utils.urls import makeuri_contextless
 
 
 @dataclass(frozen=True)
-class _ShownSettings:
-    """The settings a page shows and what it takes to render them.
-
-    inherited_settings names the settings the shown ones override; it is None on the
-    page that owns them.
-    """
-
-    scope: GlobalSettingsScopeGlobal | GlobalSettingsScopeSite
-    target_site_id: SiteId
-    shows: Callable[[ConfigVariable], bool]
+class _GlobalScope:
     settings: Mapping[str, object]
-    inherited_settings: Mapping[str, object] | None
-    override_sites: SiteConfigurations
+    sites: SiteConfigurations
 
-    def resolve(self, varname: str) -> tuple[object, GlobalSettingsOrigin]:
-        if self.inherited_settings is None:
-            return effective_value(self.settings, varname)
-        return effective_site_value(self.settings, varname, global_settings=self.inherited_settings)
+
+@dataclass(frozen=True)
+class _SiteScope:
+    site_id: SiteId
+    global_settings: Mapping[str, object]
+    site_settings: Mapping[str, object]
+
+
+type _Scope = _GlobalScope | _SiteScope
 
 
 def ensure_page_access(config: Config, permissions: Iterable[PermissionName]) -> None:
@@ -93,14 +91,11 @@ def central_settings(
         config,
         title,
         breadcrumb,
-        _ShownSettings(
-            scope=GlobalSettingsScopeGlobal(),
-            target_site_id=omd_site(),
-            shows=shows,
+        _GlobalScope(
             settings=load_configuration_settings(),
-            inherited_settings=None,
-            override_sites=site_management_registry["site_management"].load_sites(),
+            sites=site_management_registry["site_management"].load_sites(),
         ),
+        shows,
     )
 
 
@@ -116,14 +111,12 @@ def site_settings(
         config,
         title,
         breadcrumb,
-        _ShownSettings(
-            scope=GlobalSettingsScopeSite(site_id=site_id),
-            target_site_id=site_id,
-            shows=lambda _config_variable: True,
-            settings=load_site_globals(sites, site_id),
-            inherited_settings=load_configuration_settings(),
-            override_sites=SiteConfigurations({}),
+        _SiteScope(
+            site_id=site_id,
+            global_settings=load_configuration_settings(),
+            site_settings=load_site_globals(sites, site_id),
         ),
+        lambda _config_variable: True,
     )
 
 
@@ -139,13 +132,21 @@ def render_settings_page(config: Config, data: GlobalSettingsApp) -> None:
 
 
 def _app_data(
-    config: Config, title: str, breadcrumb: Breadcrumb, shown: _ShownSettings
+    config: Config,
+    title: str,
+    breadcrumb: Breadcrumb,
+    scope: _Scope,
+    shows: Callable[[ConfigVariable], bool],
 ) -> GlobalSettingsApp:
     return GlobalSettingsApp(
         title=title,
         breadcrumb=_breadcrumb_items(breadcrumb),
-        scope=shown.scope,
-        topics=list(_topics(config, shown)),
+        scope=(
+            GlobalSettingsScopeGlobal()
+            if isinstance(scope, _GlobalScope)
+            else GlobalSettingsScopeSite(site_id=scope.site_id)
+        ),
+        topics=list(_topics(config, scope, shows)),
     )
 
 
@@ -155,17 +156,19 @@ def _breadcrumb_items(breadcrumb: Breadcrumb) -> list[GlobalSettingsBreadcrumbIt
     ]
 
 
-def _topics(config: Config, shown: _ShownSettings) -> Iterator[GlobalSettingsTopic]:
+def _topics(
+    config: Config, scope: _Scope, shows: Callable[[ConfigVariable], bool]
+) -> Iterator[GlobalSettingsTopic]:
     context = make_global_settings_context(
         edition(paths.omd_root),
-        shown.target_site_id,
+        omd_site() if isinstance(scope, _GlobalScope) else scope.site_id,
         sites=config.sites,
         graph_timeranges=config.graph_timeranges,
     )
     default_values = dict(ABCConfigDomain.get_all_default_globals())
     is_activated = get_global_config().global_settings.is_activated
     for group in sorted(config_variable_group_registry.values(), key=lambda g: g.sort_index()):
-        variables = list(_variables(group, shown, context, default_values, is_activated))
+        variables = list(_variables(group, scope, shows, context, default_values, is_activated))
         if not variables:
             continue
         yield GlobalSettingsTopic(
@@ -181,14 +184,15 @@ def _topics(config: Config, shown: _ShownSettings) -> Iterator[GlobalSettingsTop
 
 def _variables(
     group: ConfigVariableGroup,
-    shown: _ShownSettings,
+    scope: _Scope,
+    shows: Callable[[ConfigVariable], bool],
     context: GlobalSettingsContext,
     default_values: Mapping[str, object],
     is_activated: Callable[[str], bool],
 ) -> Iterator[GlobalSettingsVariable]:
     for config_variable in group.config_variables():
         varname = config_variable.ident()
-        if not shown.shows(config_variable):
+        if not shows(config_variable):
             continue
         if not is_available_in_global_settings(
             config_variable, default_values=default_values, is_activated=is_activated
@@ -198,14 +202,32 @@ def _variables(
             continue
         form_spec = config_variable.value_model(context)
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-        value, origin = shown.resolve(varname)
-        spec, vue_value = visitor.to_vue(RawDiskData(value))
-        _, vue_default_value = visitor.to_vue(RawDiskData(default_values[varname]))
-        if shown.inherited_settings is None:
-            vue_inherited_value = None
+        _, vue_factory_value = visitor.to_vue(RawDiskData(default_values[varname]))
+        current: GlobalScopeValue | SiteScopeValue
+        # Legacy valuespecs render the value into the spec, so the spec has to come from the
+        # scope the page edits.
+        if isinstance(scope, _GlobalScope):
+            value, origin = effective_value(scope.settings, varname)
+            spec, vue_value = visitor.to_vue(RawDiskData(value))
+            current = GlobalScopeValue(
+                value=vue_value,
+                explicit=origin is GlobalSettingsOrigin.global_,
+                site_overrides=_site_overrides(varname, scope.sites),
+            )
         else:
-            _, vue_inherited_value = visitor.to_vue(
-                RawDiskData(effective_value(shown.inherited_settings, varname)[0])
+            global_value, global_origin = effective_value(scope.global_settings, varname)
+            value, origin = effective_site_value(
+                scope.site_settings, varname, global_settings=scope.global_settings
+            )
+            _, vue_global_value = visitor.to_vue(RawDiskData(global_value))
+            spec, vue_value = visitor.to_vue(RawDiskData(value))
+            current = SiteScopeValue(
+                value=vue_value,
+                explicit=origin is GlobalSettingsOrigin.site,
+                global_layer=GlobalLayerValue(
+                    value=vue_global_value,
+                    explicit=global_origin is GlobalSettingsOrigin.global_,
+                ),
             )
         yield GlobalSettingsVariable(
             name=varname,
@@ -215,11 +237,8 @@ def _variables(
             # vue_formspec dataclasses instead of importing them, making the
             # visitor output nominally incompatible with Components either way.
             spec=cast(Components, spec),
-            value=vue_value,
-            default_value=vue_default_value,
-            global_value=vue_inherited_value,
-            origin=origin,
-            site_overrides=_site_overrides(varname, shown.override_sites),
+            factory_value=vue_factory_value,
+            current=current,
             hints=[
                 GlobalSettingsHint(
                     text=str(hint.text),

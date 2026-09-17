@@ -15,7 +15,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { GlobalSettingsScope } from '../api'
-import { type ModificationFilter, isModified, isSiteOverride } from '../lib/origin'
+import { type ModificationFilter, isModified, isSiteOverride } from '../lib/values'
 import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 
 const { _t } = usei18n()
@@ -43,9 +43,7 @@ const shownVariables = computed(() => {
 })
 
 const modifiedCount = computed(() => props.topic.variables.filter(isModified).length)
-const siteOverrideCount = computed(
-  () => props.topic.variables.filter((variable) => isSiteOverride(variable, props.scope)).length
-)
+const siteOverrideCount = computed(() => props.topic.variables.filter(isSiteOverride).length)
 const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modifiedCount.value }))
 const siteOverrideCountLabel = computed(() =>
   props.scope.type === 'site'

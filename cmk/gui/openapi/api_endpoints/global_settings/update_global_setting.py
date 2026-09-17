@@ -22,11 +22,11 @@ from cmk.gui.watolib.global_settings import (
     affected_sites,
     effective_value,
     global_settings_diff_text,
+    GlobalSettingsOrigin,
     load_configuration_settings,
     need_write_permission,
     save_global_settings,
 )
-from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY

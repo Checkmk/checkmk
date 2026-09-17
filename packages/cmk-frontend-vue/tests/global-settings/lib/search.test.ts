@@ -4,12 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type {
+  GlobalSettingsSiteOverride,
   GlobalSettingsTopic,
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import { describe, expect, test } from 'vitest'
 
 import { buildSearchIndex, matchTopics, splitOnQuery } from '@/global-settings/lib/search'
+
+const global = (
+  value: unknown,
+  explicit = false,
+  siteOverrides: GlobalSettingsSiteOverride[] = []
+) => ({ type: 'global', value, explicit, site_overrides: siteOverrides }) as const
 
 function variable(name: string, title: string, help: string = ''): GlobalSettingsVariable {
   return {
@@ -23,11 +30,8 @@ function variable(name: string, title: string, help: string = ''): GlobalSetting
       unit: null,
       input_hint: null
     },
-    value: 10,
-    default_value: 10,
-    global_value: null,
-    origin: 'factory',
-    site_overrides: [],
+    factory_value: 10,
+    current: global(10),
     hints: []
   }
 }
@@ -112,12 +116,15 @@ describe('matchTopics', () => {
 })
 
 describe('matchTopics with a variable filter', () => {
-  const modifiedOnly = (variable: GlobalSettingsVariable) => variable.origin === 'global'
-  const defaultOnly = (variable: GlobalSettingsVariable) => variable.origin !== 'global'
+  const modifiedOnly = (variable: GlobalSettingsVariable) => variable.current.explicit
+  const defaultOnly = (variable: GlobalSettingsVariable) => !variable.current.explicit
   const filterTopics: GlobalSettingsTopic[] = [
     topic('User management', 'Configures user/authentication settings', [
       variable('lock_on_logon_failures', 'Lock user accounts after N login failures'),
-      { ...variable('user_idle_timeout', 'Login session idle timeout'), origin: 'global' }
+      {
+        ...variable('user_idle_timeout', 'Login session idle timeout'),
+        current: global(10, true)
+      }
     ]),
     topic('Site management', 'Configures site settings', [variable('site_setting', 'Site setting')])
   ]

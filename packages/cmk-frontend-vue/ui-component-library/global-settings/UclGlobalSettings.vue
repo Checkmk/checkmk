@@ -5,10 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { useMswWorker } from '@ucl/_ucl/composables/useMswWorker'
-import type { GlobalSettingsOrigin } from 'cmk-shared-typing/typescript/global_settings'
 import { HttpResponse, http } from 'msw'
 
 import GlobalSettingsApp from '@/global-settings/GlobalSettingsApp.vue'
+import type { GlobalSettingsOrigin } from '@/global-settings/api'
 
 import { globalSettingsPagePayload as data } from './globalSettingsPagePayload'
 
@@ -25,11 +25,14 @@ const variables = data.topics.flatMap((topic) => topic.variables)
 const stored = new Map<string, StoredValue>(
   variables.map((variable) => [
     variable.name,
-    { value: structuredClone(variable.value), origin: variable.origin }
+    {
+      value: structuredClone(variable.current.value),
+      origin: variable.current.explicit ? 'global' : 'factory'
+    }
   ])
 )
 const defaults = new Map<string, unknown>(
-  variables.map((variable) => [variable.name, variable.default_value])
+  variables.map((variable) => [variable.name, variable.factory_value])
 )
 
 function respond(varname: string): Response {

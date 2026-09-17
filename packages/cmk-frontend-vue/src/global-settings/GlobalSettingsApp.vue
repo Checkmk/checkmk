@@ -24,8 +24,8 @@ import GlobalSettingsEditor from './components/GlobalSettingsEditor.vue'
 import GlobalSettingsEmptyState from './components/GlobalSettingsEmptyState.vue'
 import GlobalSettingsModificationFilter from './components/GlobalSettingsModificationFilter.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
-import { type ModificationFilter, isModified, isSiteOverride } from './lib/origin'
 import { type VariableFilter, buildSearchIndex, matchTopics } from './lib/search'
+import { type ModificationFilter, isModified, isSiteOverride } from './lib/values'
 import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
 
 const { _t } = usei18n()
@@ -43,9 +43,7 @@ function urlParam(name: string): string | null {
 }
 
 const hasSiteOverrides =
-  props.topics.some((topic) =>
-    topic.variables.some((variable) => isSiteOverride(variable, props.scope))
-  ) || props.scope.type === 'site'
+  props.topics.some((topic) => topic.variables.some(isSiteOverride)) || props.scope.type === 'site'
 
 function parseModificationFilter(value: string | null): ModificationFilter {
   switch (value) {
@@ -67,7 +65,7 @@ function setOrDelete(params: URLSearchParams, name: string, value: string | null
 }
 
 const editableTopics = ref(structuredClone(toRaw(props.topics)))
-const { session, openEditor, closeEditor } = useGlobalSettingsEditor(service, props.scope)
+const { session, openEditor, closeEditor } = useGlobalSettingsEditor(service)
 const inSiteScope = computed(() => props.scope.type === 'site')
 const query = ref(urlParam(SEARCH_URL_PARAM) ?? '')
 const debouncedQuery = useDebounceRef(query, 100)
@@ -79,7 +77,7 @@ const variableFilter = computed<VariableFilter | null>(() => {
     case 'modified':
       return isModified
     case 'site':
-      return (variable) => isSiteOverride(variable, props.scope)
+      return isSiteOverride
     default:
       return null
   }

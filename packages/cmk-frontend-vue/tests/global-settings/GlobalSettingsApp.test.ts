@@ -6,8 +6,9 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type {
+  GlobalLayerValue,
   GlobalSettingsApp as GlobalSettingsAppData,
-  GlobalSettingsOrigin,
+  GlobalSettingsSiteOverride,
   GlobalSettingsTopic
 } from 'cmk-shared-typing/typescript/global_settings'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
@@ -18,8 +19,18 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import GlobalSettingsApp from '@/global-settings/GlobalSettingsApp.vue'
+import type { GlobalSettingsOrigin } from '@/global-settings/api'
 
 initializeComponentRegistry()
+
+const global = (
+  value: unknown,
+  explicit = false,
+  siteOverrides: GlobalSettingsSiteOverride[] = []
+) => ({ type: 'global', value, explicit, site_overrides: siteOverrides }) as const
+
+const site = (value: unknown, explicit: boolean, globalLayer: GlobalLayerValue) =>
+  ({ type: 'site', value, explicit, global_layer: globalLayer }) as const
 
 const SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/lock_on_logon_failures`
 const BOOLEAN_SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/site_piggyback_hub`
@@ -50,11 +61,8 @@ const data: GlobalSettingsAppData = {
             unit: null,
             input_hint: null
           },
-          value: 10,
-          default_value: 10,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: 10,
+          current: global(10),
           hints: []
         }
       ]
@@ -81,11 +89,8 @@ const booleanTopic: GlobalSettingsTopic = {
         text_on: 'on',
         text_off: 'off'
       },
-      value: false,
-      default_value: false,
-      global_value: null,
-      origin: 'factory',
-      site_overrides: [],
+      factory_value: false,
+      current: global(false),
       hints: []
     }
   ]
@@ -99,8 +104,8 @@ const resettableTopic: GlobalSettingsTopic = {
   subline: 'Everything in here was modified',
   warning: null,
   variables: [
-    { ...data.topics[0]!.variables[0]!, origin: 'global' },
-    { ...booleanTopic.variables[0]!, value: true, origin: 'global' }
+    { ...data.topics[0]!.variables[0]!, current: global(10, true) },
+    { ...booleanTopic.variables[0]!, current: global(true, true) }
   ]
 }
 
@@ -109,22 +114,43 @@ const overriddenTopic: GlobalSettingsTopic = {
   variables: [
     {
       ...data.topics[0]!.variables[0]!,
-      site_overrides: [
+      current: global(10, false, [
         {
           site_id: 'remote_1',
           title: 'Remote site 1',
           url: '/remote_1/check_mk/site_specific_settings.py?site=remote_1'
         }
-      ]
+      ])
     }
   ]
 }
 
+function withSiteValues(topic: GlobalSettingsTopic): GlobalSettingsTopic {
+  return {
+    ...topic,
+    variables: topic.variables.map((variable) => ({
+      ...variable,
+      current: site(variable.current.value, false, {
+        value: variable.current.value,
+        explicit: variable.current.explicit
+      })
+    }))
+  }
+}
+
+const siteInheritedTopic = withSiteValues(resettableTopic)
+
 const siteMixedTopic: GlobalSettingsTopic = {
   ...resettableTopic,
   variables: [
-    { ...resettableTopic.variables[0]!, global_value: 15 },
-    { ...resettableTopic.variables[1]!, origin: 'site', global_value: false }
+    {
+      ...resettableTopic.variables[0]!,
+      current: site(15, false, { value: 15, explicit: true })
+    },
+    {
+      ...resettableTopic.variables[1]!,
+      current: site(true, true, { value: false, explicit: false })
+    }
   ]
 }
 
@@ -244,7 +270,7 @@ const secondTopic: GlobalSettingsTopic = {
       ...data.topics[0]!.variables[0]!,
       name: 'site_setting',
       spec: { ...data.topics[0]!.variables[0]!.spec, title: 'Site setting' },
-      origin: 'global'
+      current: global(10, true)
     }
   ]
 }
@@ -499,9 +525,8 @@ describe('GlobalSettingsApp', () => {
           ...data.topics[0]!.variables[0]!,
           name: 'api_key',
           spec: pageSpec,
-          value: 'old_key',
-          default_value: 'old_key',
-          origin: 'global'
+          factory_value: 'old_key',
+          current: global('old_key', true)
         }
       ]
     }
@@ -776,7 +801,11 @@ describe('GlobalSettingsApp', () => {
       })
     )
     render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'site', site_id: 'remote_1' } }
+      props: {
+        ...data,
+        scope: { type: 'site', site_id: 'remote_1' },
+        topics: [withSiteValues(data.topics[0]!)]
+      }
     })
     await userEvent.click(
       screen.getByRole('button', { name: 'Toggle accordion item User management' })
@@ -800,7 +829,7 @@ describe('GlobalSettingsApp', () => {
 
   test('a site page counts a value modified in the global settings as modified', () => {
     render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [resettableTopic] }
+      props: { ...data, scope: { type: 'site', site_id: 'remote_1' }, topics: [siteInheritedTopic] }
     })
 
     expect(screen.getByText('2 modified')).toBeInTheDocument()
@@ -1248,7 +1277,10 @@ describe('GlobalSettingsApp search', () => {
 
     const mixedTopic: GlobalSettingsTopic = {
       ...searchData.topics[0]!,
-      variables: [searchData.topics[0]!.variables[0]!, { ...secondVariable, origin: 'global' }]
+      variables: [
+        searchData.topics[0]!.variables[0]!,
+        { ...secondVariable, current: global(10, true) }
+      ]
     }
 
     test('modified only hides the rows that still use their default', async () => {

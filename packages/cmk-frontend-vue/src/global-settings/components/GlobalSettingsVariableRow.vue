@@ -11,7 +11,7 @@ import { computed } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
-import { isModified } from '../lib/origin'
+import { isModified } from '../lib/values'
 import GlobalSettingsHighlightedText from './GlobalSettingsHighlightedText.vue'
 import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
@@ -27,6 +27,7 @@ const emit = defineEmits<{ edit: [] }>()
 
 const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_choice')
 const modified = computed(() => isModified(props.variable))
+const value = computed(() => props.variable.current.value)
 </script>
 
 <template>
@@ -41,12 +42,7 @@ const modified = computed(() => isModified(props.variable))
       <template #default>
         <div class="global-settings-variable-row__value">
           <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
-          <FormReadonly
-            v-else
-            :spec="variable.spec"
-            :data="variable.value"
-            :backend-validation="[]"
-          />
+          <FormReadonly v-else :spec="variable.spec" :data="value" :backend-validation="[]" />
           <span v-if="modified" class="global-settings-variable-row__modified">
             {{ _t('(modified)') }}
           </span>

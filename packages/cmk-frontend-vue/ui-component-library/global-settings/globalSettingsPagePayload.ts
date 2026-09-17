@@ -485,19 +485,21 @@ export const globalSettingsPagePayload = {
             ],
             type: 'dictionary'
           },
-          value: {
+          factory_value: {
             for_hosts: [],
             default: ['alternative_no_defaults', null],
             abandoned_file_age: 2592000.0
           },
-          default_value: {
-            for_hosts: [],
-            default: ['alternative_no_defaults', null],
-            abandoned_file_age: 2592000.0
+          current: {
+            type: 'global',
+            value: {
+              for_hosts: [],
+              default: ['alternative_no_defaults', null],
+              abandoned_file_age: 2592000.0
+            },
+            explicit: false,
+            site_overrides: []
           },
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
           hints: []
         },
         {
@@ -556,28 +558,30 @@ export const globalSettingsPagePayload = {
             ],
             type: 'dictionary'
           },
-          value: {
+          factory_value: {
             use_system_wide_cas: true,
             trusted_cas: []
           },
-          default_value: {
-            use_system_wide_cas: true,
-            trusted_cas: []
-          },
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [
-            {
-              site_id: 'muc',
-              title: 'Munich site',
-              url: 'site_specific_settings.py?site=muc'
+          current: {
+            type: 'global',
+            value: {
+              use_system_wide_cas: true,
+              trusted_cas: []
             },
-            {
-              site_id: 'ber',
-              title: 'Berlin site',
-              url: 'site_specific_settings.py?site=ber'
-            }
-          ],
+            explicit: false,
+            site_overrides: [
+              {
+                site_id: 'muc',
+                title: 'Munich site',
+                url: 'site_specific_settings.py?site=muc'
+              },
+              {
+                site_id: 'ber',
+                title: 'Berlin site',
+                url: 'site_specific_settings.py?site=ber'
+              }
+            ]
+          },
           hints: []
         },
         {
@@ -603,11 +607,13 @@ export const globalSettingsPagePayload = {
             no_element_label: 'No entries',
             type: 'list'
           },
-          value: [],
-          default_value: [],
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: [],
+          current: {
+            type: 'global',
+            value: [],
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         },
         {
@@ -670,15 +676,17 @@ export const globalSettingsPagePayload = {
             ],
             type: 'dictionary'
           },
-          value: {
+          factory_value: {
             lifetime_in_months: '39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9'
           },
-          default_value: {
-            lifetime_in_months: '39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9'
+          current: {
+            type: 'global',
+            value: {
+              lifetime_in_months: '39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9'
+            },
+            explicit: false,
+            site_overrides: []
           },
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
           hints: []
         },
         {
@@ -692,11 +700,13 @@ export const globalSettingsPagePayload = {
             text_off: 'off',
             type: 'boolean_choice'
           },
-          value: true,
-          default_value: true,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: true,
+          current: {
+            type: 'global',
+            value: true,
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         },
         {
@@ -710,11 +720,13 @@ export const globalSettingsPagePayload = {
             text_off: 'off',
             type: 'boolean_choice'
           },
-          value: false,
-          default_value: false,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: false,
+          current: {
+            type: 'global',
+            value: false,
+            explicit: false,
+            site_overrides: []
+          },
           hints: [
             {
               text: 'Changing this setting triggers a full restart of all affected sites during activate changes.',
@@ -745,11 +757,13 @@ export const globalSettingsPagePayload = {
               }
             ]
           },
-          value: null,
-          default_value: null,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: null,
+          current: {
+            type: 'global',
+            value: null,
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         },
         {
@@ -897,11 +911,13 @@ export const globalSettingsPagePayload = {
             },
             type: 'optional_choice'
           },
-          value: null,
-          default_value: null,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: null,
+          current: {
+            type: 'global',
+            value: null,
+            explicit: false,
+            site_overrides: []
+          },
           hints: [
             {
               text: "Once enabled, your site's Livestatus port is reachable at ",
@@ -1061,15 +1077,17 @@ export const globalSettingsPagePayload = {
             ],
             type: 'dictionary'
           },
-          value: {
+          factory_value: {
             cleanup_abandoned_host_files: 2592000.0
           },
-          default_value: {
-            cleanup_abandoned_host_files: 2592000.0
+          current: {
+            type: 'global',
+            value: {
+              cleanup_abandoned_host_files: 2592000.0
+            },
+            explicit: false,
+            site_overrides: []
           },
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
           hints: []
         },
         {
@@ -1083,11 +1101,13 @@ export const globalSettingsPagePayload = {
             text_off: 'off',
             type: 'boolean_choice'
           },
-          value: false,
-          default_value: false,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: false,
+          current: {
+            type: 'global',
+            value: false,
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         },
         {
@@ -1144,21 +1164,23 @@ export const globalSettingsPagePayload = {
             ],
             type: 'optional_choice'
           },
-          value: [
+          factory_value: [
             {
               name: 'SYSLOG',
               title: 'Receive Syslog messages (UDP/514)'
             }
           ],
-          default_value: [
-            {
-              name: 'SYSLOG',
-              title: 'Receive Syslog messages (UDP/514)'
-            }
-          ],
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          current: {
+            type: 'global',
+            value: [
+              {
+                name: 'SYSLOG',
+                title: 'Receive Syslog messages (UDP/514)'
+              }
+            ],
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         }
       ]
@@ -1210,15 +1232,17 @@ export const globalSettingsPagePayload = {
             ],
             type: 'dictionary'
           },
-          value: {
+          factory_value: {
             rule_render_mode: '28e1990ecf99f31c23d958ae87836e94b41bae5a19717b30ad1b77c3dcd9dca4'
           },
-          default_value: {
-            rule_render_mode: '28e1990ecf99f31c23d958ae87836e94b41bae5a19717b30ad1b77c3dcd9dca4'
+          current: {
+            type: 'global',
+            value: {
+              rule_render_mode: '28e1990ecf99f31c23d958ae87836e94b41bae5a19717b30ad1b77c3dcd9dca4'
+            },
+            explicit: false,
+            site_overrides: []
           },
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
           hints: []
         },
         {
@@ -1232,11 +1256,13 @@ export const globalSettingsPagePayload = {
             text_off: 'off',
             type: 'boolean_choice'
           },
-          value: false,
-          default_value: false,
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: false,
+          current: {
+            type: 'global',
+            value: false,
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         },
         {
@@ -1322,17 +1348,19 @@ export const globalSettingsPagePayload = {
             ],
             type: 'dictionary'
           },
-          value: {
+          factory_value: {
             enabled: false,
             max_count: 100
           },
-          default_value: {
-            enabled: false,
-            max_count: 100
+          current: {
+            type: 'global',
+            value: {
+              enabled: false,
+              max_count: 100
+            },
+            explicit: false,
+            site_overrides: []
           },
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
           hints: []
         },
         {
@@ -1357,11 +1385,13 @@ export const globalSettingsPagePayload = {
               }
             ]
           },
-          value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
-          default_value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
-          global_value: null,
-          origin: 'factory',
-          site_overrides: [],
+          factory_value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
+          current: {
+            type: 'global',
+            value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
+            explicit: false,
+            site_overrides: []
+          },
           hints: []
         }
       ]

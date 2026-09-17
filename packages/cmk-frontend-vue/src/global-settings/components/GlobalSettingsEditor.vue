@@ -20,7 +20,6 @@ import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
 
-import { isExplicitIn } from '../lib/origin'
 import type { EditorSession } from '../useGlobalSettingsEditor'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
@@ -35,17 +34,23 @@ const emit = defineEmits<{
 }>()
 
 const variable = computed(() => props.session.variable)
-const inSiteScope = computed(() => props.session.scope.type === 'site')
-const removable = computed(() => isExplicitIn(variable.value, props.session.scope))
+const siteScope = computed(() =>
+  variable.value.current.type === 'site' ? variable.value.current : null
+)
+const globalScope = computed(() =>
+  variable.value.current.type === 'global' ? variable.value.current : null
+)
+const inSiteScope = computed(() => siteScope.value !== null)
+const removable = computed(() => variable.value.current.explicit)
 const error = computed(() => props.session.error)
 const validationMessages = computed(() => props.session.validationMessages)
 const specWithoutTopLevelHelp = computed(() => ({ ...variable.value.spec, help: '' }))
 
-const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.value)))
+const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.current.value)))
 const confirmResetOpen = ref(false)
 
 watch(
-  () => props.session.variable.value,
+  () => props.session.variable.current.value,
   (value) => {
     draft.value = structuredClone(toRaw(value))
   }
@@ -84,7 +89,7 @@ const isExplicitDefault = computed(
   () =>
     !inSiteScope.value &&
     removable.value &&
-    valuesEqual(variable.value.value, variable.value.default_value)
+    valuesEqual(variable.value.current.value, variable.value.factory_value)
 )
 
 const resetButtonLabel = computed<TranslatedString>(() => {
@@ -128,16 +133,18 @@ function hintAlertProps(hint: GlobalSettingsHint): CmkAlertBoxProps {
 }
 
 const currentStateText = computed<TranslatedString>(() => {
-  switch (variable.value.origin) {
-    case 'site':
+  const site = siteScope.value
+  if (site !== null) {
+    if (site.explicit) {
       return _t('This variable is overridden on this site.')
-    case 'global':
-      return inSiteScope.value
-        ? _t('This variable inherits the value from Global settings.')
-        : _t('This variable has been modified.')
-    default:
-      return _t('This variable is at factory settings.')
+    }
+    return site.global_layer.explicit
+      ? _t('This variable inherits the value from Global settings.')
+      : _t('This variable is at factory settings.')
   }
+  return variable.value.current.explicit
+    ? _t('This variable has been modified.')
+    : _t('This variable is at factory settings.')
 })
 </script>
 
@@ -250,11 +257,11 @@ const currentStateText = computed<TranslatedString>(() => {
         </GlobalSettingsRow>
       </CmkCatalogPanel>
 
-      <CmkCatalogPanel v-if="inSiteScope" :title="_t('Global settings')">
+      <CmkCatalogPanel v-if="siteScope !== null" :title="_t('Global settings')">
         <GlobalSettingsRow :label="_t('Global setting')">
           <FormReadonly
             :spec="variable.spec"
-            :data="variable.global_value"
+            :data="siteScope.global_layer.value"
             :backend-validation="[]"
           />
         </GlobalSettingsRow>
@@ -264,19 +271,22 @@ const currentStateText = computed<TranslatedString>(() => {
         <GlobalSettingsRow :label="_t('Factory setting')">
           <FormReadonly
             :spec="variable.spec"
-            :data="variable.default_value"
+            :data="variable.factory_value"
             :backend-validation="[]"
           />
         </GlobalSettingsRow>
       </CmkCatalogPanel>
 
-      <CmkCatalogPanel v-if="variable.site_overrides.length > 0" :title="_t('Site overrides')">
+      <CmkCatalogPanel
+        v-if="globalScope !== null && globalScope.site_overrides.length > 0"
+        :title="_t('Site overrides')"
+      >
         <p class="global-settings-editor__overrides-intro">
           {{ _t('This setting is overridden by the following sites:') }}
         </p>
         <ul class="global-settings-editor__overrides">
           <li
-            v-for="override in variable.site_overrides"
+            v-for="override in globalScope.site_overrides"
             :key="override.site_id"
             class="global-settings-editor__override"
           >

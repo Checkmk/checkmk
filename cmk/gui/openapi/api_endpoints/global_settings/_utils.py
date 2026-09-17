@@ -27,6 +27,7 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import (
+    GlobalSettingsOrigin,
     is_available_in_global_settings,
     make_global_settings_context,
 )
@@ -42,7 +43,6 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
 from cmk.web.utils.escaping import strip_tags

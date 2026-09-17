@@ -74,25 +74,23 @@
       "required": ["icon", "headline", "subline", "warning", "variables"]
     },
     "global_settings_variable": {
+      "description": "A configuration variable with its value in the three layers: the factory value, the global layer, and a site's own layer. The page's scope decides which layers are shown.",
       "type": "object",
       "properties": {
         "name": {
           "type": "string"
         },
         "spec": { "$ref": "vue_formspec/components.json#/$defs/components" },
-        "value": {},
-        "default_value": {},
-        "global_value": {
-          "description": "The installation-wide value a site inherits; null on the page that shows the installation's own settings.",
+        "factory_value": {
+          "description": "The built-in value, in effect wherever no layer configures one.",
           "tsType": "unknown"
         },
-        "origin": {
-          "$ref": "#/$defs/global_settings_origin"
-        },
-        "site_overrides": {
-          "description": "Sites that configure their own explicit value for this variable.",
-          "type": "array",
-          "items": { "$ref": "#/$defs/global_settings_site_override" }
+        "current": {
+          "description": "The variable as the page's scope sees it: the value in effect there, whether the scope configures it itself, and what that scope shows besides. Its type always equals the type of the app's scope.",
+          "anyOf": [
+            { "$ref": "#/$defs/global_scope_value" },
+            { "$ref": "#/$defs/site_scope_value" }
+          ]
         },
         "hints": {
           "description": "Notes shown above the form of the setting.",
@@ -100,21 +98,66 @@
           "items": { "$ref": "#/$defs/global_settings_hint" }
         }
       },
-      "required": [
-        "name",
-        "spec",
-        "value",
-        "default_value",
-        "global_value",
-        "origin",
-        "site_overrides",
-        "hints"
-      ]
+      "required": ["name", "spec", "factory_value", "current", "hints"]
     },
-    "global_settings_origin": {
-      "title": "GlobalSettingsOrigin",
-      "description": "The layer the shown value comes from.",
-      "enum": ["factory", "global", "site"]
+    "global_scope_value": {
+      "description": "What the global settings page shows and edits.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "global"
+        },
+        "value": {
+          "description": "The value in effect for the installation.",
+          "tsType": "unknown"
+        },
+        "explicit": {
+          "description": "Whether the installation configures the value itself instead of leaving it at the factory value. True even when the configured value equals the factory value.",
+          "type": "boolean"
+        },
+        "site_overrides": {
+          "description": "Sites that configure the variable themselves and thereby override this value.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/global_settings_site_override" }
+        }
+      },
+      "required": ["type", "value", "explicit", "site_overrides"]
+    },
+    "site_scope_value": {
+      "description": "What the site-specific settings page shows and edits.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "site"
+        },
+        "value": {
+          "description": "The value in effect for the site.",
+          "tsType": "unknown"
+        },
+        "explicit": {
+          "description": "Whether the site configures the value itself instead of inheriting the global layer. True even when the configured value equals the inherited one.",
+          "type": "boolean"
+        },
+        "global_layer": { "$ref": "#/$defs/global_layer_value" }
+      },
+      "required": ["type", "value", "explicit", "global_layer"]
+    },
+    "global_layer_value": {
+      "description": "The global layer as a site sees it: what the site inherits unless it configures the variable itself.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "The value in effect for the installation.",
+          "tsType": "unknown"
+        },
+        "explicit": {
+          "description": "Whether the installation configures the value itself instead of leaving it at the factory value.",
+          "type": "boolean"
+        }
+      },
+      "required": ["value", "explicit"]
     },
     "global_settings_hint": {
       "type": "object",

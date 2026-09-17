@@ -10,7 +10,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { GlobalSettingsScope } from '../api'
-import type { ModificationFilter } from '../lib/origin'
+import type { ModificationFilter } from '../lib/values'
 
 const { _t } = usei18n()
 

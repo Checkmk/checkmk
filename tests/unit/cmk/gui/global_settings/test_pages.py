@@ -170,8 +170,8 @@ def test_a_variable_the_user_may_not_read_is_left_out(
 def test_an_unset_variable_comes_from_the_factory_defaults(load_config: Config) -> None:
     variable = shown_variables(global_settings(load_config))["test_var_a"]
 
-    assert variable.value == 1
-    assert variable.origin is shared.GlobalSettingsOrigin.factory
+    assert variable.factory_value == 1
+    assert variable.current == shared.GlobalScopeValue(value=1, explicit=False, site_overrides=[])
 
 
 @pytest.mark.usefixtures("test_variables", "with_admin_login")
@@ -182,26 +182,24 @@ def test_a_centrally_configured_variable_comes_from_the_global_settings(
 
     variable = shown_variables(global_settings(load_config))["test_var_a"]
 
-    assert variable.value == 5
-    assert variable.origin is shared.GlobalSettingsOrigin.global_
-
-
-@pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
-def test_the_global_page_shows_no_inherited_value(load_config: Config) -> None:
-    assert shown_variables(global_settings(load_config))["test_var_a"].global_value is None
+    assert variable.current == shared.GlobalScopeValue(value=5, explicit=True, site_overrides=[])
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
 def test_the_global_page_links_the_site_that_overrides_a_variable(load_config: Config) -> None:
     variable = shown_variables(global_settings(load_config))["test_var_a"]
 
-    assert variable.site_overrides == [
-        shared.GlobalSettingsSiteOverride(
-            site_id=REMOTE_SITE,
-            title="Remote site",
-            url="site_specific_settings.py?site=remote",
-        )
-    ]
+    assert variable.current == shared.GlobalScopeValue(
+        value=1,
+        explicit=False,
+        site_overrides=[
+            shared.GlobalSettingsSiteOverride(
+                site_id=REMOTE_SITE,
+                title="Remote site",
+                url="site_specific_settings.py?site=remote",
+            )
+        ],
+    )
 
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
@@ -243,14 +241,14 @@ def test_the_read_only_message_is_shown_on_the_page(
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
-def test_a_site_specific_value_is_shown_as_a_modification_of_the_inherited_one(
-    load_config: Config,
-) -> None:
+def test_a_site_override_is_shown_beside_the_global_layer(load_config: Config) -> None:
     variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_a"]
 
-    assert variable.value == 5
-    assert variable.origin is shared.GlobalSettingsOrigin.site
-    assert variable.global_value == 1
+    assert variable.current == shared.SiteScopeValue(
+        value=5,
+        explicit=True,
+        global_layer=shared.GlobalLayerValue(value=1, explicit=False),
+    )
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
@@ -259,19 +257,25 @@ def test_a_site_inherits_a_centrally_configured_value(load_config: Config) -> No
 
     variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
 
-    assert variable.value == 7
-    assert variable.origin is shared.GlobalSettingsOrigin.global_
-    assert variable.global_value == 7
+    assert variable.current == shared.SiteScopeValue(
+        value=7,
+        explicit=False,
+        global_layer=shared.GlobalLayerValue(value=7, explicit=True),
+    )
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
-def test_a_site_that_inherits_an_unconfigured_variable_comes_from_the_factory_defaults(
+def test_a_site_inherits_the_factory_value_when_nothing_configures_it(
     load_config: Config,
 ) -> None:
     variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
 
-    assert variable.value == 2
-    assert variable.origin is shared.GlobalSettingsOrigin.factory
+    assert variable.factory_value == 2
+    assert variable.current == shared.SiteScopeValue(
+        value=2,
+        explicit=False,
+        global_layer=shared.GlobalLayerValue(value=2, explicit=False),
+    )
 
 
 @pytest.mark.usefixtures("patch_omd_site", "with_admin_login")

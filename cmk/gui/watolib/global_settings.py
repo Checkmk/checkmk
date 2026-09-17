@@ -5,6 +5,7 @@
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager, ExitStack
+from enum import StrEnum
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -36,7 +37,6 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
-from cmk.shared_typing.global_settings import GlobalSettingsOrigin
 from cmk.utils import paths
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
@@ -96,6 +96,12 @@ def load_configuration_settings(
         else:
             settings.update(domain.load())
     return settings
+
+
+class GlobalSettingsOrigin(StrEnum):
+    factory = "factory"
+    global_ = "global"
+    site = "site"
 
 
 def effective_value(

@@ -288,6 +288,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-messaging",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         requirement("cryptography"),
         requirement("flask"),

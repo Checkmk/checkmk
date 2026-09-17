@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.shared_typing.global_settings import GlobalSettingsOrigin
+from cmk.gui.watolib.global_settings import GlobalSettingsOrigin
 
 
 @api_model

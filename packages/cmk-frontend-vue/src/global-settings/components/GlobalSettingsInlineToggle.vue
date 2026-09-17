@@ -29,7 +29,7 @@ type ToggleState =
 
 const state = ref<ToggleState>({ variant: 'idle' })
 
-const checked = computed(() => variable.value === true)
+const checked = computed(() => variable.current.value === true)
 
 async function toggle(): Promise<void> {
   if (state.value.variant === 'pending') {

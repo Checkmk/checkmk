@@ -11,7 +11,7 @@ import { type Ref, reactive, shallowRef } from 'vue'
 
 import type { ValidationMessages } from '@/form'
 
-import type { GlobalSettingsScope, GlobalSettingsService, ReceivedValue } from './api'
+import type { GlobalSettingsService, ReceivedValue } from './api'
 
 const { _t } = usei18n()
 
@@ -31,9 +31,9 @@ export function describeError(error: unknown, fallback: TranslatedString): Trans
 }
 
 export function applyReceived(variable: GlobalSettingsVariable, received: ReceivedValue): void {
-  variable.value = received.value
+  variable.current.value = received.value
   variable.spec = received.spec
-  variable.origin = received.origin
+  variable.current.explicit = received.origin === variable.current.type
 }
 
 export class EditorSession {
@@ -50,7 +50,6 @@ export class EditorSession {
   constructor(
     readonly variable: GlobalSettingsVariable,
     private readonly service: GlobalSettingsService,
-    readonly scope: GlobalSettingsScope,
     private readonly requestClose: (session: EditorSession) => void
   ) {}
 
@@ -130,10 +129,7 @@ export class EditorSession {
   }
 }
 
-export function useGlobalSettingsEditor(
-  service: GlobalSettingsService,
-  scope: GlobalSettingsScope
-): {
+export function useGlobalSettingsEditor(service: GlobalSettingsService): {
   session: Ref<EditorSession | null>
   openEditor: (variable: GlobalSettingsVariable) => Promise<void>
   closeEditor: () => void
@@ -147,7 +143,7 @@ export function useGlobalSettingsEditor(
   }
 
   async function openEditor(variable: GlobalSettingsVariable): Promise<void> {
-    const editorSession = new EditorSession(variable, service, scope, closeWhenCurrent)
+    const editorSession = new EditorSession(variable, service, closeWhenCurrent)
     session.value = editorSession
     await editorSession.load()
   }

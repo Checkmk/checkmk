@@ -21,7 +21,7 @@ from cmk.maps.gui._config_domain import (
     ConfigDomainMaps,
 )
 from cmk.maps.gui._settings_page import maps_settings
-from cmk.shared_typing.global_settings import GlobalSettingsOrigin
+from cmk.shared_typing.global_settings import GlobalScopeValue
 from tests.testlib.unit.gui.global_settings import (
     logged_in,
     patch_factory_defaults,
@@ -57,10 +57,11 @@ def test_the_page_shows_the_maps_variables_in_their_two_topics(load_config: Conf
 
 @pytest.mark.usefixtures("maps_and_gui_variables", "with_admin_login")
 def test_a_fresh_site_lists_its_own_connection_unmodified(load_config: Config) -> None:
-    connections = shown_variables(maps_settings(load_config))[CONFIG_VAR_CONNECTIONS]
+    current = shown_variables(maps_settings(load_config))[CONFIG_VAR_CONNECTIONS].current
 
-    assert connections.origin is GlobalSettingsOrigin.factory
-    assert connections.value
+    assert isinstance(current, GlobalScopeValue)
+    assert not current.explicit
+    assert current.value
 
 
 @pytest.mark.usefixtures("maps_and_gui_variables")

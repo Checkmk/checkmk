@@ -23,9 +23,10 @@ FROM ${IMAGE_BASE}
 # to get "sort --zero-terminated" and "grep --binary-files=", requires +2MB
 # rsync is required to upload artifacts to tstbuilds, requires +1MB
 # openssh is required to login with rsync to remote servers, requires +5MB
+# curl is required to upload artifacts to Nexus, requires +1MB
 # cache removal saves 3MB
 RUN apk update && \
-    apk add bash git make coreutils grep rsync openssh jq && \
+    apk add bash git make coreutils grep rsync openssh jq curl && \
     rm -rf /var/cache/apk/*
 
 # install checkmk-dev-tools to run ci-artifacts

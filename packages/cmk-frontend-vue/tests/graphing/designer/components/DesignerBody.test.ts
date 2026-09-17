@@ -22,16 +22,6 @@ import type { RowIssue } from '@/graphing/designer/validation'
 
 import { filterDefinitions } from '../fixtures'
 
-vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
-  default: defineComponent({
-    name: 'CmkSlideIn',
-    props: { open: { type: Boolean, required: true } },
-    setup(props, { slots }) {
-      return () => (props.open ? h('div', { 'data-testid': 'slide-in' }, slots.default?.()) : null)
-    }
-  })
-}))
-
 const PAN_SECONDS = 1800
 const PAN_REFETCH_TIMEOUT_MS = 2000
 const PAST_WINDOW: DateTimeRange = {

@@ -6,8 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
-import CmkSlideIn from 'cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue'
+import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
@@ -61,20 +60,13 @@ const handleUpdate = () => {
 </script>
 
 <template>
-  <CmkSlideIn :open="open" size="small" @close="closeSlideIn">
+  <CmkSlideInDialog
+    :open="open"
+    size="small"
+    :header="{ title: _t('Custom graph settings'), closeButton: true }"
+    @close="closeSlideIn"
+  >
     <div class="graphing-designer-settings__area">
-      <CmkHeading type="h1">{{ _t('Custom graph settings') }}</CmkHeading>
-      <div class="graphing-designer-settings__close-button">
-        <CmkIconButton
-          name="close"
-          size="small"
-          data-testid="icon-x-close-button"
-          @click="closeSlideIn"
-        />
-      </div>
-
-      <CmkSpace direction="vertical" />
-
       <div class="graphing-designer-settings__action-bar">
         <CmkButton variant="primary" @click="handleUpdate">{{ _t('Accept') }}</CmkButton>
         <CmkButton variant="optional" @click="closeSlideIn"
@@ -124,7 +116,7 @@ const handleUpdate = () => {
         </TableForm>
       </div>
     </div>
-  </CmkSlideIn>
+  </CmkSlideInDialog>
 </template>
 
 <style scoped>
@@ -134,15 +126,8 @@ const handleUpdate = () => {
   gap: var(--dimension-4);
 }
 
-.graphing-designer-settings__close-button {
-  position: absolute;
-  top: 25px;
-  right: 10px;
-}
-
 .graphing-designer-settings__area {
-  position: relative;
-  padding: var(--dimension-8);
+  padding-bottom: var(--dimension-8);
 }
 
 .graphing-designer-settings__block {

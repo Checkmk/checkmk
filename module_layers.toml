@@ -131,7 +131,6 @@ clean = [
 # azure_v2 — Edition, HostAddress
 # datadog — bypasses APIs to talk to the EC
 # jolokia — import hack, resolve by migrating the bakery plugin
-# data_backend — cmk.data_backend, cmk.utils.paths
 # otel
 # vnx_quotas — TODO: make the authorized keys configurable?
 
@@ -274,9 +273,6 @@ allows = [
   "cmk.ec.syslog",
   "cmk.logwatch",
 ]
-
-[plugin_families.violations.data_backend]
-allows = ["cmk.data_backend"]
 
 [plugin_families.violations.telemetry_metrics_connector]
 allows = [

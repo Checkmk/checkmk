@@ -106,6 +106,7 @@ vi.mock('@/graphing/components/GraphBrush/GraphBrush.vue', () => ({
     template: `<div class="graphing-graph-brush">
       <span data-testid="brush-window">{{ window.start }}-{{ window.end }}</span>
       <span data-testid="brush-domain">{{ domain.start }}-{{ domain.end }}</span>
+      <span data-testid="brush-min-span">{{ minSpan }}</span>
       <span
         data-testid="emit-brush-move"
         @click="$emit('update:requestedTimeRange', { start: 300, end: 400 }, 'translated_timerange')"
@@ -574,6 +575,26 @@ test('has the floor stated again once a later fetch lands the window back at it'
   await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('2')
+})
+
+// The resolution of a window the brush selects is not known until it is fetched, so the brush is
+// held only to the configured minimum; a coarse answer is drawn and stated like any other.
+test('holds the brush to the configured minimum span', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: { ...INTERACTION_NONE, brush: 'enabled' },
+      brushSnapshot: BRUSH_SNAPSHOT
+    }
+  })
+
+  expect(screen.getByTestId('brush-min-span')).toHaveTextContent(
+    String(MIN_ZOOM_TIME_RANGE_SECONDS)
+  )
 })
 
 test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {

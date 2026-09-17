@@ -28,7 +28,7 @@ pub struct AliasInfo {
     pub service_name: Option<ServiceName>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocalInstance {
     pub name: InstanceName,
     pub home: PathBuf,

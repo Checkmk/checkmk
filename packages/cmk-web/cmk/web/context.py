@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import overload, Protocol
 
 
@@ -27,7 +27,11 @@ class RequestProtocol(Protocol):
 
     def get_integer_input_mandatory(self, varname: str, deflt: int | None = None) -> int: ...
 
+    def get_str_input(self, varname: str, deflt: str | None = None) -> str | None: ...
+
     def get_str_input_mandatory(self, varname: str, deflt: str | None = None) -> str: ...
+
+    def get_request(self, exclude_vars: list[str] | None = None) -> Mapping[str, object]: ...
 
     @property
     def remote_ip(self) -> str | None: ...

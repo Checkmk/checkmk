@@ -6,10 +6,10 @@ from dataclasses import dataclass
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.utils.session import SessionProtocol
 from cmk.utils.security_event import log_security_event, SecurityEvent
+from cmk.web.context import RequestProtocol
 
 
 @dataclass
@@ -43,14 +43,16 @@ class CSRFTokenMissingEvent(SecurityEvent):
 
 
 def check_csrf_token(
-    session: SessionProtocol, request: Request, *, token: str | None = None
+    session: SessionProtocol, request: RequestProtocol, *, token: str | None = None
 ) -> None:
     if session.user.is_anonymous:
         return
 
     csrf_token = token or request.get_str_input("_csrf_token")
     if csrf_token is None:
-        csrf_token = request.get_request().get("_csrf_token")
+        # The token may also arrive in the request body rather than as a variable.
+        from_body = request.get_request().get("_csrf_token")
+        csrf_token = from_body if isinstance(from_body, str) else None
 
     if csrf_token is None:
         log_security_event(

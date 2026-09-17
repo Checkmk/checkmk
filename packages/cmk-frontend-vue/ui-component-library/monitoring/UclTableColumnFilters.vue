@@ -46,7 +46,12 @@ export const panelConfig = {
 </script>
 
 <script setup lang="ts">
-import { type ColumnDef, type ColumnFiltersState } from '@tanstack/vue-table'
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState
+} from '@tanstack/vue-table'
 import {
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
@@ -56,17 +61,19 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { ColumnFilterNode, FilterField, HostEntry } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type {
   CheckboxListFilter,
   DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -208,6 +215,21 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
 
 const filterState = ref<ColumnFiltersState>([])
 
+const sortState = ref<SortingState>([])
+
+const demoService = {
+  sortState,
+  columnVisibility: ref<VisibilityState>({}),
+  rowToReveal: ref<string | null>(null),
+  updateSort(next: SortingState) {
+    sortState.value = next
+  },
+  beginAutoPause() {},
+  endAutoPause() {}
+}
+
+provide(MONITORING_SERVICE, demoService as unknown as MonitoringService<unknown>)
+
 function describeNode(node: ColumnFilterNode<FilterField>): string {
   if (node.type === 'and') {
     return node.children.map(describeNode).join(' and ')
@@ -294,6 +316,37 @@ const rows: HostEntry[] = [
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03'
   }
 ]
+
+function compareValues(left: unknown, right: unknown): number {
+  if (left === undefined) {
+    return right === undefined ? 0 : -1
+  }
+  if (right === undefined) {
+    return 1
+  }
+  if (typeof left === 'number' && typeof right === 'number') {
+    return left - right
+  }
+  return String(left).localeCompare(String(right))
+}
+
+const sortedRows = computed<HostEntry[]>(() => {
+  if (sortState.value.length === 0) {
+    return rows
+  }
+  return [...rows].sort((left, right) => {
+    for (const entry of sortState.value) {
+      const order = compareValues(
+        left[entry.id as keyof HostEntry],
+        right[entry.id as keyof HostEntry]
+      )
+      if (order !== 0) {
+        return entry.desc ? -order : order
+      }
+    }
+    return 0
+  })
+})
 </script>
 
 <template>
@@ -304,11 +357,10 @@ const rows: HostEntry[] = [
       <div class="ucl-table-column-filters__stack">
         <div class="ucl-table-column-filters__viewport">
           <MonitoringTable
-            :rows="rows"
+            :rows="sortedRows"
             :fetch-state="'idle'"
             :has-loaded="true"
             :columns="columns"
-            :sort-state="[]"
             :filter-state="filterState"
             :get-row-key="(row) => `${row.site_id}/${row.name}`"
             @update:filter-state="filterState = $event"

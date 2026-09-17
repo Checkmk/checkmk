@@ -25,6 +25,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.valuespec import (
     Alternative,
     FixedValue,
@@ -349,7 +350,7 @@ class Bookmarks(SidebarSnapin):
         return sorted(topics.items())
 
     def _ajax_add_bookmark(self, ctx: PageContext) -> None:
-        check_csrf_token()
+        check_csrf_token(session, request)
         title = request.var("title")
         url = request.var("url")
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)

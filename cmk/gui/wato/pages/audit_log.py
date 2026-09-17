@@ -61,6 +61,7 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb.store import load_users
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
 from cmk.gui.valuespec import Integer as IntegerVS
@@ -382,7 +383,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if not transactions.check_transaction(request):
             return None
 

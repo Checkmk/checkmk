@@ -63,6 +63,7 @@ from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
@@ -383,7 +384,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         user.need_permission("wato.hosts")
 
         try:
@@ -2227,7 +2228,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         self._handle_http_request(ctx.config.sites)
-        check_csrf_token()
+        check_csrf_token(session, request)
         try:
             active_check_result = active_check(
                 make_automation_config(ctx.config.sites[self._site]),

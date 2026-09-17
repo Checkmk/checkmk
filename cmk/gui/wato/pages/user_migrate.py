@@ -39,6 +39,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -183,7 +184,7 @@ class ModeUserMigrate(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return None

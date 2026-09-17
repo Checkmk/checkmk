@@ -85,6 +85,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -2416,7 +2417,7 @@ class ABCEditRuleMode(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(self._back_url())
@@ -4031,7 +4032,7 @@ class ModeUnknownRulesets(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         d_cp_rule_ids = [
             vn.split("_c_unknown_cp_rule_")[-1]

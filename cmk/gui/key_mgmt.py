@@ -35,6 +35,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -116,7 +117,7 @@ class ModeKeyManagement(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if self._may_edit_config() and request.has_var("_delete"):
             key_id = request.get_validated_type_input_mandatory(KeyId, "_delete")
@@ -223,7 +224,7 @@ class ModeEditKey(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if transactions.check_transaction(request):
             value = self._vs_key().from_html_vars("key")
@@ -330,7 +331,7 @@ class ModeUploadKey(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if transactions.check_transaction(request):
             value = self._vs_key().from_html_vars("key")
@@ -500,7 +501,7 @@ class ModeDownloadKey(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if transactions.check_transaction(request):
             keys = self.key_store.load()

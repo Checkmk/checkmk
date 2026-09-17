@@ -35,7 +35,7 @@ class PageRescheduleCheck(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         api_request = ctx.request.get_request()
-        return self._do_reschedule(api_request, ctx.config.reschedule_timeout)
+        return self._do_reschedule(ctx, api_request, ctx.config.reschedule_timeout)
 
     @staticmethod
     def _wait_for(
@@ -72,11 +72,13 @@ class PageRescheduleCheck(AjaxPage):
                 logger.error(err)
                 raise MKGeneralException("The check to reschedule was not found.")
 
-    def _do_reschedule(self, api_request: dict[str, Any], reschedule_timeout: float) -> PageResult:
+    def _do_reschedule(
+        self, ctx: PageContext, api_request: dict[str, Any], reschedule_timeout: float
+    ) -> PageResult:
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 
-        check_csrf_token()
+        check_csrf_token(ctx.session, ctx.request)
 
         site = api_request.get("site")
         host = api_request.get("host")

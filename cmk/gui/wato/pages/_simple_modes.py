@@ -63,6 +63,7 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, RenderMode
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -814,7 +815,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.transaction_valid(request):
             return redirect(mode_url(self._mode_type.list_mode_name()))

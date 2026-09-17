@@ -16,6 +16,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -133,7 +134,7 @@ class SiteStatus(SidebarSnapin):
         }
 
     def _ajax_switch_site(self, ctx: PageContext) -> None:
-        check_csrf_token()
+        check_csrf_token(session, request)
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
         if not user.may("sidesnap.sitestatus"):

@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from flask import session
-
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.utils.session import SessionProtocol
 from cmk.utils.security_event import log_security_event, SecurityEvent
 
 
@@ -44,10 +43,9 @@ class CSRFTokenMissingEvent(SecurityEvent):
         )
 
 
-def check_csrf_token(token: str | None = None) -> None:
-    # We have to assert the attributes, due to importing flask.session because of
-    # circular imports.
-    assert hasattr(session, "user")  # mypy
+def check_csrf_token(
+    session: SessionProtocol, request: Request, *, token: str | None = None
+) -> None:
     if isinstance(session.user, LoggedInNobody):
         return
 
@@ -64,7 +62,6 @@ def check_csrf_token(token: str | None = None) -> None:
         )
         raise MKGeneralException(_("No CSRF token received"))
 
-    assert hasattr(session, "session_info")  # mypy
     if csrf_token != session.session_info.csrf_token:
         log_security_event(
             CSRFTokenValidationFailureEvent(

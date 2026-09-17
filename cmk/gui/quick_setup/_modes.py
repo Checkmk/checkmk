@@ -37,6 +37,7 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
 from cmk.gui.wato import TileMenuRenderer
@@ -382,7 +383,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
@@ -973,7 +974,7 @@ class ModeConfigurationBundle(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(bundle_id=self._bundle_id))

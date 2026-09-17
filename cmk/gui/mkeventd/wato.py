@@ -83,6 +83,7 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Age,
@@ -2404,7 +2405,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
@@ -3390,7 +3391,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
@@ -3568,7 +3569,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not request.uploaded_file("_upload_mib"):
             return None  # type: ignore[unreachable]

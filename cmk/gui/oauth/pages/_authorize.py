@@ -30,6 +30,7 @@ from cmk.gui.scopes import (
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils import escaping
@@ -216,7 +217,7 @@ class OAuthAuthorizePage(Page):
         client_id: str,
         code_challenge: str,
     ) -> None:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if not transactions.check_transaction(request):
             # In the seconds it takes to click Authorize, this transaction id
             # can only already be used -- a double submit or a replay, not

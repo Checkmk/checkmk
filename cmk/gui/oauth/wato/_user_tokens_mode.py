@@ -23,6 +23,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuDropdown
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -72,7 +73,7 @@ class ModeOAuthTokens(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
         revoke_tokens_from_request(request, user_id=None)

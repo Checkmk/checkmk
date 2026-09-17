@@ -33,6 +33,7 @@ from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, ReadOnlySpec
 from cmk.gui.userdb._user_selection import generate_wato_users_elements_function
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.valuespec import AbsoluteDate
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.utils import multisite_dir
@@ -221,7 +222,7 @@ class ModeManageReadOnly(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         adapter = _ReadOnlyFormSpecAdapter()
         raw_settings = parse_data_from_field_id(adapter.form_spec(), self._vue_field_id())

@@ -1025,7 +1025,7 @@ class ModeEditBackupJob(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(self._ctx.session, self._ctx.request)
 
         if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
@@ -2004,7 +2004,7 @@ class ModeEditBackupTarget(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(self._ctx.session, self._ctx.request)
 
         if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))

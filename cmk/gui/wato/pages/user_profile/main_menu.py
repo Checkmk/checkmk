@@ -228,7 +228,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(ctx.request.get_json()["_csrf_token"])
+        check_csrf_token(ctx.session, ctx.request, token=ctx.request.get_json()["_csrf_token"])
         themes = [theme for theme, _title in theme_choices()]
         # TODO: avoid global theme if possible
         current_theme = theme.get()
@@ -251,7 +251,7 @@ class ModeAjaxChangesAction(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         body = ctx.request.get_json()
-        check_csrf_token(body["_csrf_token"])
+        check_csrf_token(ctx.session, ctx.request, token=body["_csrf_token"])
 
         action = body.get("action")
         if action not in self._VALID_ACTIONS:
@@ -266,7 +266,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(ctx.request.get_json()["_csrf_token"])
+        check_csrf_token(ctx.session, ctx.request, token=ctx.request.get_json()["_csrf_token"])
         set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
@@ -280,7 +280,7 @@ class ModeAjaxSetStartURL(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         try:
-            check_csrf_token()
+            check_csrf_token(ctx.session, ctx.request)
             if ctx.request.var("name"):
                 name = ctx.request.get_str_input_mandatory("name")
                 if name == "welcome.py":

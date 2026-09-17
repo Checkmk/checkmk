@@ -57,6 +57,7 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Alternative,
@@ -353,7 +354,7 @@ class ModeBIEditPack(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if transactions.check_transaction(request):
             vs_config = self._vs_pack().from_html_vars("bi_pack")
@@ -1260,7 +1261,7 @@ class ModeBIEditRule(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
@@ -1886,7 +1887,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction(request):

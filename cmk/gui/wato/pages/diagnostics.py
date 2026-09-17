@@ -56,6 +56,7 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Dictionary,
@@ -230,7 +231,7 @@ class ModeDiagnostics(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return None

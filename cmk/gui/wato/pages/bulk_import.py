@@ -48,6 +48,7 @@ from cmk.gui.type_defs import ActionResult, CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -449,7 +450,7 @@ class ModeBulkImport(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if transactions.transaction_valid(request):
             if request.has_var("_do_upload"):

@@ -1071,7 +1071,7 @@ class AjaxMapsParseCfg(AjaxPage):
             raise MKUserError(None, _("You are not allowed to create or edit maps."))
         # State-changing upload from the SPA — CSRF-guarded like the other
         # session-authenticated GUI upload endpoints.
-        check_csrf_token()
+        check_csrf_token(ctx.session, ctx.request)
         filename, _mimetype, content_bytes = ctx.request.uploaded_file("file")
         if not filename or not filename.lower().endswith(".cfg"):
             raise MKUserError("file", _("Only .cfg files are accepted."))

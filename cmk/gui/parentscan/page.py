@@ -35,6 +35,7 @@ from cmk.gui.parentscan.background_job import (
 )
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages._bulk_actions import get_hosts_from_checkboxes
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -153,7 +154,7 @@ class ModeParentScan(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         try:
             transactions.check_transaction(request)

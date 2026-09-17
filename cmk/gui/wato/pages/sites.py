@@ -69,6 +69,7 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import distributed_saml_supported
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages._html_elements import wato_html_head
@@ -1088,7 +1089,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction(request):

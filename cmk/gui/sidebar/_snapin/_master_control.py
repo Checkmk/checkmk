@@ -21,6 +21,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.livestatus_client import (
     DisableEventHandlers,
@@ -196,7 +197,7 @@ class MasterControlSnapin(SidebarSnapin):
         }
 
     def _ajax_switch_masterstate(self, ctx: PageContext) -> None:
-        check_csrf_token()
+        check_csrf_token(session, request)
         response.set_content_type("text/plain")
 
         if not user.may("sidesnap.master_control"):

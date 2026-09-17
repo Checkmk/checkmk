@@ -96,6 +96,7 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -1070,7 +1071,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if request.has_var("_show_user"):
             if transactions.check_transaction(request):
@@ -1759,7 +1760,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if request.has_var("_show_bulks") and transactions.check_transaction(request):
             self._show_bulks = bool(request.var("_show_bulks"))
@@ -1959,7 +1960,7 @@ class ModeTestNotifications(ModeNotifications):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if request.has_var("_show_user") and transactions.check_transaction(request):
             self._show_user_rules = bool(request.var("_show_user"))
@@ -3622,7 +3623,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return self._back_mode()
@@ -4212,7 +4213,7 @@ class ABCNotificationParameterMode(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         self._parameters = self._load_parameters()
         if (method_parameters := self._parameters.get(self._method())) is None:
@@ -4615,7 +4616,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return self._back_mode()

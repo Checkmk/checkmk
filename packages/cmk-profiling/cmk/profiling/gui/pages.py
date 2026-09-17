@@ -185,7 +185,7 @@ class ModePerformanceProfiles(WatoMode[None]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(self._ctx.session, self._ctx.request)
         if not self._ctx.transactions.check_transaction(request):
             return None
 

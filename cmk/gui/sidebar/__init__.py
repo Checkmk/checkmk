@@ -48,6 +48,7 @@ from cmk.gui.userdb import load_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.shared_typing.main_menu import NavItemTopic
 from cmk.shared_typing.sidebar import SidebarConfig
 from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
@@ -892,7 +893,7 @@ def ajax_snapin(ctx: PageContext) -> None:
 class AjaxFoldSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         response.set_content_type("application/json")
         user_config = UserSidebarConfig(
             user, ctx.config.sidebar, UserPermissions.from_config(ctx.config, permission_registry)
@@ -905,7 +906,7 @@ class AjaxFoldSnapin(AjaxPage):
 class AjaxOpenCloseSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         response.set_content_type("application/json")
         if not user.may("general.configure_sidebar"):
             return None
@@ -1104,7 +1105,7 @@ class AjaxGetAvialableSnapins(AjaxPage):
 class AjaxAddSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if not user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 

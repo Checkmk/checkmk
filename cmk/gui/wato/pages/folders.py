@@ -60,6 +60,7 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -667,7 +668,7 @@ class ModeFolder(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if request.var("_search"):  # just commit to search form
             return None
@@ -1592,7 +1593,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
@@ -1808,7 +1809,7 @@ class ModeCreateFolder(ABCFolderMode):
 class PageAjaxSetFoldertree(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         api_request = ctx.request.get_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
 

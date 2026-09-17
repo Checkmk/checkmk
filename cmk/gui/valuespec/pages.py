@@ -20,6 +20,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.utils.encryption import fetch_certificate_details
 from cmk.web.utils.html import HTML
 
@@ -70,7 +71,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
 class AjaxFetchCA(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         user.need_permission("general.server_side_requests")
 
         try:

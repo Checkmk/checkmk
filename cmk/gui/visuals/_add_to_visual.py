@@ -35,6 +35,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils import paths
@@ -172,7 +173,7 @@ class CreateInfoModel(BaseModel):
 
 
 def ajax_add_visual(ctx: PageContext) -> None:
-    check_csrf_token()
+    check_csrf_token(session, request)
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
     try:
         visual_type = visual_type_registry[visual_type_name]()

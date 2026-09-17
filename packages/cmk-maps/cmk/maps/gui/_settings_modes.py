@@ -57,6 +57,7 @@ from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -174,7 +175,7 @@ class _ABCMapsSettingsMode(WatoMode[None]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if not transactions.check_transaction(request):
             return redirect(_MAPS_HOME_URL)
 

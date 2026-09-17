@@ -55,6 +55,7 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserRole
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import builtin_role_id_from_str
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -310,7 +311,7 @@ class ModeRoleTwoFactor(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
         if request.var("_action") != "confirm":
             return None
         if request.get_ascii_input_mandatory("two_factor_enforce") != "enforce":
@@ -388,7 +389,7 @@ class ModeEditRole(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if html.form_submitted("search"):
             return None

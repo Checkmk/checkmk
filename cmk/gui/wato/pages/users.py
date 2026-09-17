@@ -67,6 +67,7 @@ from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyn
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Alternative,
@@ -321,7 +322,7 @@ class ModeUsers(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
@@ -1004,7 +1005,7 @@ class ModeEditUser(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("users"))

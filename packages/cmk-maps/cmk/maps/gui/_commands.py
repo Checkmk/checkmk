@@ -281,7 +281,7 @@ class AjaxMapsCommand(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("maps.use")
         # State-changing POST: same CSRF guard as the save endpoint.
-        check_csrf_token()
+        check_csrf_token(ctx.session, ctx.request)
         api_request = ctx.request.get_request()
         run_map_command(api_request)
         return {"ok": True}

@@ -185,7 +185,7 @@ def _show_results(
                 " to removed hosts or could not be assigned to the current list of available hosts."
                 " In the first case you can safely remove these files. In the second case they may"
                 " be transformed with the next go or you can also try to transform these files via"
-                " 'cmk-transform-inventory-files <HOST> [<HOST> ...]'."
+                " 'cmk-transform-inventory-trees --host-name <HOST> [<HOST> ...]'."
             )
         ]
         sys.stdout.write(f"{'\n'.join(info)}\n")

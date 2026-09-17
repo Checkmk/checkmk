@@ -350,7 +350,7 @@ class Bookmarks(SidebarSnapin):
         return sorted(topics.items())
 
     def _ajax_add_bookmark(self, ctx: PageContext) -> None:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         title = request.var("title")
         url = request.var("url")
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)

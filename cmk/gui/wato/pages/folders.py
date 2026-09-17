@@ -669,7 +669,7 @@ class ModeFolder(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if request.var("_search"):  # just commit to search form
             return None
@@ -1598,7 +1598,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
@@ -1814,7 +1814,7 @@ class ModeCreateFolder(ABCFolderMode):
 class PageAjaxSetFoldertree(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         api_request = ctx.request.get_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
 

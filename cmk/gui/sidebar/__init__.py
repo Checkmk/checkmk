@@ -893,7 +893,7 @@ def ajax_snapin(ctx: PageContext) -> None:
 class AjaxFoldSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         response.set_content_type("application/json")
         user_config = UserSidebarConfig(
             user, ctx.config.sidebar, UserPermissions.from_config(ctx.config, permission_registry)
@@ -906,7 +906,7 @@ class AjaxFoldSnapin(AjaxPage):
 class AjaxOpenCloseSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         response.set_content_type("application/json")
         if not user.may("general.configure_sidebar"):
             return None
@@ -1105,7 +1105,7 @@ class AjaxGetAvialableSnapins(AjaxPage):
 class AjaxAddSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         if not user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 

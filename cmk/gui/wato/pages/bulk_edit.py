@@ -99,7 +99,7 @@ class ModeBulkEdit(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -235,7 +235,7 @@ class ModeBulkCleanup(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None

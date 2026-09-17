@@ -2,11 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-from cmk.gui.i18n import _
 from cmk.gui.utils.session import SessionProtocol
 from cmk.utils.security_event import log_security_event, SecurityEvent
 from cmk.web.context import RequestProtocol
@@ -43,7 +43,11 @@ class CSRFTokenMissingEvent(SecurityEvent):
 
 
 def check_csrf_token(
-    session: SessionProtocol, request: RequestProtocol, *, token: str | None = None
+    session: SessionProtocol,
+    request: RequestProtocol,
+    *,
+    i18n: Callable[[str], str],
+    token: str | None = None,
 ) -> None:
     if session.user.is_anonymous:
         return
@@ -61,7 +65,7 @@ def check_csrf_token(
                 remote_ip=request.remote_ip,
             )
         )
-        raise MKGeneralException(_("No CSRF token received"))
+        raise MKGeneralException(i18n("No CSRF token received"))
 
     if csrf_token != session.session_info.csrf_token:
         log_security_event(
@@ -71,5 +75,5 @@ def check_csrf_token(
             )
         )
         raise MKGeneralException(
-            _("Invalid CSRF token (%(csrf_token)r)") % {"csrf_token": csrf_token}
+            i18n("Invalid CSRF token (%(csrf_token)r)") % {"csrf_token": csrf_token}
         )

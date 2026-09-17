@@ -815,7 +815,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.transaction_valid(request):
             return redirect(mode_url(self._mode_type.list_mode_name()))

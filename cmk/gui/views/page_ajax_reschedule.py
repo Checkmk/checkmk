@@ -78,7 +78,7 @@ class PageRescheduleCheck(AjaxPage):
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 
-        check_csrf_token(ctx.session, ctx.request)
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
 
         site = api_request.get("site")
         host = api_request.get("host")

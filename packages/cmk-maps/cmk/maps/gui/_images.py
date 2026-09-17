@@ -177,7 +177,7 @@ class AjaxMapsImageUpload(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("maps.configure")
-        check_csrf_token(ctx.session, ctx.request)
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
         filename, content_type, contents = ctx.request.uploaded_file("file")
         if content_type not in ICON_MIME_TYPES:
             raise MKUserError("file", _("Unsupported image type."))
@@ -235,7 +235,7 @@ class AjaxMapsImageDelete(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("maps.configure")
-        check_csrf_token(ctx.session, ctx.request)
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
         name = ctx.request.get_ascii_input_mandatory("name")
         force = ctx.request.get_ascii_input("force") == "true"
         require_valid_image_name(name)
@@ -335,7 +335,7 @@ class AjaxMapsBackgroundUpload(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("maps.use")
-        check_csrf_token(ctx.session, ctx.request)
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
         name = ctx.request.get_ascii_input_mandatory("name")
         owner = _editable_map_owner(name)
         filename, content_type, contents = ctx.request.uploaded_file("file")
@@ -367,7 +367,7 @@ class AjaxMapsBackgroundDelete(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("maps.use")
-        check_csrf_token(ctx.session, ctx.request)
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
         name = ctx.request.get_ascii_input_mandatory("name")
         owner = _editable_map_owner(name)
         bg_dir = _backgrounds_dir()

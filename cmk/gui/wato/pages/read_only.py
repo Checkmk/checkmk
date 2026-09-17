@@ -222,7 +222,7 @@ class ModeManageReadOnly(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         adapter = _ReadOnlyFormSpecAdapter()
         raw_settings = parse_data_from_field_id(adapter.form_spec(), self._vue_field_id())

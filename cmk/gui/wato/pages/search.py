@@ -78,7 +78,7 @@ class ModeSearch(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         return redirect(
             makeuri_contextless(

@@ -1071,7 +1071,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if request.has_var("_show_user"):
             if transactions.check_transaction(request):
@@ -1760,7 +1760,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if request.has_var("_show_bulks") and transactions.check_transaction(request):
             self._show_bulks = bool(request.var("_show_bulks"))
@@ -1960,7 +1960,7 @@ class ModeTestNotifications(ModeNotifications):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if request.has_var("_show_user") and transactions.check_transaction(request):
             self._show_user_rules = bool(request.var("_show_user"))
@@ -3623,7 +3623,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return self._back_mode()
@@ -4213,7 +4213,7 @@ class ABCNotificationParameterMode(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         self._parameters = self._load_parameters()
         if (method_parameters := self._parameters.get(self._method())) is None:
@@ -4616,7 +4616,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return self._back_mode()

@@ -2417,7 +2417,7 @@ class ABCEditRuleMode(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self._back_url())
@@ -4032,7 +4032,7 @@ class ModeUnknownRulesets(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         d_cp_rule_ids = [
             vn.split("_c_unknown_cp_rule_")[-1]

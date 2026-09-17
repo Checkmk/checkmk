@@ -2405,7 +2405,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
@@ -3391,7 +3391,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
@@ -3569,7 +3569,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not request.uploaded_file("_upload_mib"):
             return None  # type: ignore[unreachable]

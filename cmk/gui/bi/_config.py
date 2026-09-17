@@ -354,7 +354,7 @@ class ModeBIEditPack(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.check_transaction(request):
             vs_config = self._vs_pack().from_html_vars("bi_pack")
@@ -1261,7 +1261,7 @@ class ModeBIEditRule(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
@@ -1887,7 +1887,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction(request):

@@ -173,7 +173,7 @@ class CreateInfoModel(BaseModel):
 
 
 def ajax_add_visual(ctx: PageContext) -> None:
-    check_csrf_token(session, request)
+    check_csrf_token(session, request, i18n=_)
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
     try:
         visual_type = visual_type_registry[visual_type_name]()

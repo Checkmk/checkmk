@@ -197,7 +197,7 @@ class MasterControlSnapin(SidebarSnapin):
         }
 
     def _ajax_switch_masterstate(self, ctx: PageContext) -> None:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         response.set_content_type("text/plain")
 
         if not user.may("sidesnap.master_control"):

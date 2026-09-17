@@ -71,7 +71,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
 class AjaxFetchCA(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         user.need_permission("general.server_side_requests")
 
         try:

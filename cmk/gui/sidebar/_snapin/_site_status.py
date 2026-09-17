@@ -134,7 +134,7 @@ class SiteStatus(SidebarSnapin):
         }
 
     def _ajax_switch_site(self, ctx: PageContext) -> None:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
         if not user.may("sidesnap.sitestatus"):

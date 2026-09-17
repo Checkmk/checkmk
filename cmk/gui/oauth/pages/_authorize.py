@@ -209,7 +209,7 @@ class OAuthAuthorizePage(Page):
         client_id: str,
         code_challenge: str,
     ) -> None:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             # In the seconds it takes to click Authorize, this transaction id
             # can only already be used -- a double submit or a replay, not

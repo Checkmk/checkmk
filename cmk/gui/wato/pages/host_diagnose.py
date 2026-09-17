@@ -177,7 +177,7 @@ class ModeDiagHost(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -542,7 +542,7 @@ def _vs_rules(
 class PageAjaxDiagHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 

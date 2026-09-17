@@ -311,7 +311,7 @@ class ModeRoleTwoFactor(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         if request.var("_action") != "confirm":
             return None
         if request.get_ascii_input_mandatory("two_factor_enforce") != "enforce":
@@ -389,7 +389,7 @@ class ModeEditRole(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
 
         if html.form_submitted("search"):
             return None

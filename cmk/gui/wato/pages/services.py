@@ -384,7 +384,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         user.need_permission("wato.hosts")
 
         try:
@@ -2228,7 +2228,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         self._handle_http_request(ctx.config.sites)
-        check_csrf_token(session, request)
+        check_csrf_token(session, request, i18n=_)
         try:
             active_check_result = active_check(
                 make_automation_config(ctx.config.sites[self._site]),

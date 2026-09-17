@@ -120,6 +120,7 @@ function toggleAll(): void {
     <FilterSearchInput
       v-if="showSearch"
       v-model="searchText"
+      class="monitoring-filter-checkbox-list__search"
       :placeholder="_t('Filter values')"
       :aria-label="_t('Filter values')"
     />
@@ -164,6 +165,11 @@ function toggleAll(): void {
   gap: var(--dimension-2);
 }
 
+.monitoring-filter-checkbox-list__search {
+  margin: var(--dimension-3) var(--dimension-5);
+  width: auto;
+}
+
 .monitoring-filter-checkbox-list__options {
   display: flex;
   flex-direction: column;
@@ -176,13 +182,14 @@ function toggleAll(): void {
   height: 0;
   border: 0;
   border-top: 1px dashed var(--ux-theme-4);
-  margin: var(--dimension-3) 0;
+  margin: 0;
 }
 
 .monitoring-filter-checkbox-list__row {
   display: flex;
   align-items: center;
-  padding: var(--dimension-2) var(--dimension-5);
+  padding: var(--dimension-3) var(--dimension-5);
+  line-height: 17px;
 
   &:hover,
   &:focus-within {
@@ -191,7 +198,8 @@ function toggleAll(): void {
 }
 
 .monitoring-filter-checkbox-list__empty {
-  padding: var(--dimension-2) var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-5);
+  line-height: 17px;
   margin: 0;
   font-style: italic;
   opacity: 0.7;

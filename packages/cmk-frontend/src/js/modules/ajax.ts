@@ -11,7 +11,13 @@ declare global {
 
 type OptionalArgs<HandlerData = any> = PartialK<
   Args<HandlerData>,
-  'method' | 'post_data' | 'handler_data' | 'add_ajax_id' | 'plain_error' | 'sync'
+  | 'method'
+  | 'post_data'
+  | 'handler_data'
+  | 'add_ajax_id'
+  | 'plain_error'
+  | 'sync'
+  | 'reload_on_unauthenticated'
 >
 
 interface Args<HandlerData = any> {
@@ -28,6 +34,7 @@ interface Args<HandlerData = any> {
   add_ajax_id: boolean
   plain_error: boolean
   sync: boolean
+  reload_on_unauthenticated: boolean
   authorization?: string
 }
 
@@ -44,6 +51,7 @@ export function call_ajax<HandlerData = any>(
     method: 'GET',
     post_data: null,
     sync: false,
+    reload_on_unauthenticated: true,
     authorization: undefined
   }
   const args: Args<HandlerData> = {
@@ -92,7 +100,7 @@ export function call_ajax<HandlerData = any>(
       if (AJAX && AJAX.readyState == 4) {
         if (AJAX.status == 200) {
           if (args.response_handler) args.response_handler(args.handler_data!, AJAX.responseText)
-        } else if (AJAX.status == 401) {
+        } else if (AJAX.status == 401 && args.reload_on_unauthenticated) {
           // This is reached when someone is not authenticated anymore
           // but has some webservices running which are still fetching
           // infos via AJAX. Reload the whole page in that case.

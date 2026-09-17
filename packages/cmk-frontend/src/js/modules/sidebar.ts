@@ -595,6 +595,14 @@ let g_seconds_to_update: null | number = null
 let g_sidebar_scheduler_timer: null | number = null
 let g_sidebar_full_reload = false
 
+function stop_polling_when_unauthenticated(_handler_data: any, status: number) {
+  if (status !== 401) {
+    return
+  }
+  pause_sidebar_scheduler()
+  pause_pending_changes_update()
+}
+
 export function refresh_single_snapin(name: string) {
   const url = 'sidebar_snapin.py?names=' + name
   const ids = ['snapin_' + name]
@@ -652,7 +660,9 @@ export function execute_sidebar_scheduler() {
       if (g_seconds_to_update && g_seconds_to_update <= 0) {
         call_ajax(url, {
           response_handler: update_contents,
-          handler_data: 'snapin_' + name
+          handler_data: 'snapin_' + name,
+          error_handler: stop_polling_when_unauthenticated,
+          reload_on_unauthenticated: false
         })
       }
     } else {
@@ -681,7 +691,9 @@ export function execute_sidebar_scheduler() {
 
     call_ajax(url, {
       response_handler: bulk_update_contents,
-      handler_data: ids
+      handler_data: ids,
+      error_handler: stop_polling_when_unauthenticated,
+      reload_on_unauthenticated: false
     })
   }
 
@@ -1142,7 +1154,9 @@ function handle_update_messages(_data: any, response_text: string) {
 function update_messages() {
   // retrieve new messages
   call_ajax('ajax_sidebar_get_messages.py', {
-    response_handler: handle_update_messages
+    response_handler: handle_update_messages,
+    error_handler: stop_polling_when_unauthenticated,
+    reload_on_unauthenticated: false
   })
 }
 
@@ -1208,7 +1222,9 @@ function handle_pending_changes(_data: any, response_text: string) {
 
 function update_pending_changes() {
   call_ajax('ajax_sidebar_get_number_of_pending_changes.py', {
-    response_handler: handle_pending_changes
+    response_handler: handle_pending_changes,
+    error_handler: stop_polling_when_unauthenticated,
+    reload_on_unauthenticated: false
   })
 }
 
@@ -1242,7 +1258,9 @@ function handle_update_unack_incomp_werks(_data: any, response_text: string) {
 function update_unack_incomp_werks() {
   // retrieve number of unacknowledged incompatible werks
   call_ajax('ajax_sidebar_get_unack_incomp_werks.py', {
-    response_handler: handle_update_unack_incomp_werks
+    response_handler: handle_update_unack_incomp_werks,
+    error_handler: stop_polling_when_unauthenticated,
+    reload_on_unauthenticated: false
   })
 }
 

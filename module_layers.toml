@@ -744,6 +744,9 @@ allows = [
   "cmk.checkengine.filecache",
   "cmk.checkengine.helper_interface",
   "cmk.checkengine.source_abc",
+  # the metrics section specs are compiled here, during config generation, where the
+  # plugins are loaded anyway; the fetcher must never discover them itself (CMK-38919)
+  "cmk.telemetry.fetcher._python_plugins",
 ]
 
 [components."cmk.core_client"]
@@ -995,6 +998,7 @@ excludes = ["cmk.checkengine.fetchers.telemetry_metrics"]
 # renders belongs to the telemetry layer.
 [components."cmk.checkengine.fetchers.telemetry_metrics"]
 allows = [
+  "cmk.agent_based.v3_unstable",
   "cmk.checkengine.fetcher_abc",
   "cmk.checkengine.helper_interface",
   "cmk.telemetry.custom_query_rule_value",

@@ -12,12 +12,13 @@ no anchor to sit next to. Which properties it shows follows from the object's
 type — the sections decide that for themselves.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import { useObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
@@ -283,7 +284,7 @@ function onConfirmDelete(): void {
         <TemplatesSection v-model:form="form" />
       </CmkScrollContainer>
 
-      <CmkAlertBox v-if="saveError" variant="error">{{ saveError }}</CmkAlertBox>
+      <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
 
       <div class="maps-object-properties-modal__footer">
         <CmkButton variant="danger" @click="confirmDelete = true">{{ _t('Delete') }}</CmkButton>

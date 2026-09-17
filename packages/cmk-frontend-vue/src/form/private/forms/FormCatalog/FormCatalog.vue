@@ -11,7 +11,7 @@ import type {
   TopicElement,
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -152,9 +152,7 @@ function computeDictionaries(topic: Topic): DictionaryData[] {
         />
       </div>
       <div v-else>
-        <CmkAlertBox variant="warning">
-          {{ topic.locked.message }}
-        </CmkAlertBox>
+        <CmkAlert variant="warning" :text="untranslated(topic.locked.message)" />
         <FormReadonly
           v-for="dictionary in computeDictionaries(topic)"
           :key="dictionary.id"

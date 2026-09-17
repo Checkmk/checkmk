@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
 import type {
@@ -100,7 +100,7 @@ function onSliceActivate(key: string): void {
   >
     <div class="db-content-network-flow-donut__wrapper">
       <div v-if="error" class="db-content-network-flow-donut__error">
-        <CmkAlertBox :variant="error.variant">{{ error.message }}</CmkAlertBox>
+        <CmkAlert :variant="error.variant" :text="untranslated(error.message)" />
       </div>
       <CmkLoading v-else-if="slices === undefined" />
       <CmkDonutChart

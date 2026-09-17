@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Ref, computed, onMounted, ref, watch } from 'vue'
 
@@ -277,13 +277,12 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
             @update:plot-left="plotLeft = $event"
             @update:value-resolution="valueResolution = $event"
           />
-          <CmkAlertBox
+          <CmkAlert
             v-if="dataTimeRange && hasPlottableData(metrics) && !anyMetricShown"
             class="graphing-graph-panel__empty-state"
             variant="info"
-          >
-            {{ _t('All metrics are hidden') }}
-          </CmkAlertBox>
+            :text="_t('All metrics are hidden')"
+          />
           <slot name="notice" />
         </div>
 

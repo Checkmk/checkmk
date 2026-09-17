@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -17,7 +17,7 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
@@ -221,24 +221,30 @@ async function validate(): Promise<boolean> {
               :has-error="patternErrors.length > 0"
             />
           </div>
-          <CmkAlertBox v-for="error in patternErrors" :key="error" variant="error" size="small">
-            {{ error }}
-          </CmkAlertBox>
+          <CmkAlert
+            v-for="error in patternErrors"
+            :key="error"
+            variant="error"
+            size="small"
+            :text="untranslated(error)"
+          />
         </div>
 
-        <CmkAlertBox v-if="searchError" variant="error" size="small">
-          {{ searchError }}
-        </CmkAlertBox>
+        <CmkAlert
+          v-if="searchError"
+          variant="error"
+          size="small"
+          :text="untranslated(searchError)"
+        />
 
         <CmkLoading v-if="searching" />
 
-        <CmkAlertBox
+        <CmkAlert
           v-else-if="noMatches"
           :variant="displayErrors ? 'error' : 'warning'"
           size="small"
-        >
-          {{ _t('No custom service matches this name.') }} {{ noMatchHint }}
-        </CmkAlertBox>
+          :text="untranslated(`${_t('No custom service matches this name.')} ${noMatchHint}`)"
+        />
 
         <div v-else-if="matches" class="mode-alerts-name-and-services-step__results">
           <div class="mode-alerts-name-and-services-step__results-header">
@@ -255,14 +261,17 @@ async function validate(): Promise<boolean> {
               {{ showAllMatches ? _t('show preview') : _t('show all') }}
             </CmkButton>
           </div>
-          <CmkAlertBox v-if="matches.truncated" variant="warning" size="small">
-            {{
+          <CmkAlert
+            v-if="matches.truncated"
+            variant="warning"
+            size="small"
+            :text="
               _t(
                 'Only the first %{count} matches are shown. Refine the service name to narrow them down.',
                 { count: MAX_MATCHES }
               )
-            }}
-          </CmkAlertBox>
+            "
+          />
           <CmkScrollContainer max-height="240px">
             <ul class="mode-alerts-name-and-services-step__list">
               <li

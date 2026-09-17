@@ -9,7 +9,7 @@ import type {
   FormSpec,
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -119,7 +119,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 <template>
   <div class="form-edit-async__wrapper">
     <CmkErrorBoundary>
-      <CmkAlertBox
+      <CmkAlert
         v-if="alertShown"
         class="form-edit-async__dialog"
         :optional-button="{
@@ -127,14 +127,13 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
           icon: 'cancel',
           onclick: dismissAlert
         }"
-      >
-        {{
+        :text="
           props.permanentChoiceWarning ??
           _t(
             'Changes submitted through this form will be immediately applied to your configuration. However, you may still need to activate them for them to take effect.'
           )
-        }}
-      </CmkAlertBox>
+        "
+      />
       <div class="form-edit-async__buttons">
         <CmkButton variant="secondary" @click="save">
           <CmkIcon variant="inline" name="save" />
@@ -151,9 +150,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
           }}</CmkButton
         >
         <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
-        <CmkAlertBox v-if="backendValidation.length !== 0" variant="error">
-          {{ _t('Could not validate form, errors are shown in the form') }}
-        </CmkAlertBox>
+        <CmkAlert
+          v-if="backendValidation.length !== 0"
+          variant="error"
+          :text="_t('Could not validate form, errors are shown in the form')"
+        />
         <div v-if="saving" class="form-edit-async__saving">
           <CmkIcon name="load-graph" size="large" /> {{ _t('Saving') }}
         </div>

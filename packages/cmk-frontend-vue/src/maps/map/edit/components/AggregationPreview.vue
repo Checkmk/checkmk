@@ -12,7 +12,7 @@ expanded aggregation runs to hundreds of nodes, which would make every
 keystroke in the field above re-render all of them.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -45,13 +45,15 @@ const unreachable = computed(() => !props.connectionOk && !!props.aggregationId 
 </script>
 
 <template>
-  <CmkAlertBox v-if="unreachable" variant="warning">
-    {{
+  <CmkAlert
+    v-if="unreachable"
+    variant="warning"
+    :text="
       _t(
         'Preview unavailable — the Checkmk connection is unhealthy. Check the connection status and reload.'
       )
-    }}
-  </CmkAlertBox>
+    "
+  />
   <div v-else-if="tree" class="maps-aggregation-preview">
     <p class="maps-aggregation-preview__title">{{ _t('Preview (live state)') }}</p>
     <div class="maps-aggregation-preview__counts">
@@ -73,7 +75,7 @@ const unreachable = computed(() => !props.connectionOk && !!props.aggregationId 
         {{ _t('…%{count} more', { count: beyondSample }) }}
       </li>
     </ul>
-    <CmkAlertBox v-if="crowding" variant="warning">{{ crowding }}</CmkAlertBox>
+    <CmkAlert v-if="crowding" variant="warning" :text="crowding" />
   </div>
 </template>
 

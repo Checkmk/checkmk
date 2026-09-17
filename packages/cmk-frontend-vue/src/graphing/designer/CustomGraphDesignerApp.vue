@@ -8,11 +8,11 @@ import type {
   CustomGraphDesigner,
   CustomGraphDesignerMode
 } from 'cmk-shared-typing/typescript/custom_graph_designer'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
@@ -381,13 +381,12 @@ const saveFailureButtons = computed(() => {
     </header>
 
     <div class="graphing-custom-graph-designer-app__content">
-      <CmkAlertBox
+      <CmkAlert
         v-if="loadError !== null || filtersError !== null"
         variant="error"
         :main-button="{ title: _t('Retry'), onclick: onRetry }"
-      >
-        {{ loadError ?? filtersError }}
-      </CmkAlertBox>
+        :text="untranslated(loadError ?? filtersError ?? '')"
+      />
       <CmkIcon
         v-else-if="isLoading || loaded === null || graphOptions === null || !filtersReady"
         name="load-graph"
@@ -412,21 +411,19 @@ const saveFailureButtons = computed(() => {
       >
         <template #alerts>
           <div v-if="mode === 'edit' && showsAlerts" ref="issuesAlert" tabindex="-1">
-            <CmkAlertBox
+            <CmkAlert
               v-if="showsSaveIssues"
               class="graphing-custom-graph-designer-app__issues-alert"
               variant="error"
-            >
-              {{ blockedSummary }}
-            </CmkAlertBox>
-            <CmkAlertBox
+              :text="blockedSummary"
+            />
+            <CmkAlert
               v-if="saveFailure !== null"
               variant="error"
               :heading="saveFailure.detail !== null ? saveFailure.message : undefined"
               v-bind="saveFailureButtons"
-            >
-              {{ saveFailure.detail ?? saveFailure.message }}
-            </CmkAlertBox>
+              :text="saveFailure.detail ?? saveFailure.message"
+            />
           </div>
         </template>
       </DesignerBody>

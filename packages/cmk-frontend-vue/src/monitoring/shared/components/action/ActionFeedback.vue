@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox, { type CmkAlertBoxProps } from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert, { type CmkAlertProps } from 'cmk-ui-library/components/CmkAlert.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
@@ -21,13 +21,19 @@ const props = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false })
 
-const alertProps = computed<CmkAlertBoxProps>(() =>
+const alertProps = computed<CmkAlertProps>(() =>
   props.feedback.variant === 'success'
-    ? { variant: 'success', dismissible: true, autoDismiss: true, heading: props.feedback.heading }
-    : { variant: 'error', heading: props.feedback.heading }
+    ? {
+        variant: 'success',
+        dismissible: true,
+        autoDismiss: true,
+        heading: props.feedback.heading,
+        text: props.feedback.message
+      }
+    : { variant: 'error', heading: props.feedback.heading, text: props.feedback.message }
 )
 </script>
 
 <template>
-  <CmkAlertBox v-bind="alertProps" v-model:open="open">{{ feedback.message }}</CmkAlertBox>
+  <CmkAlert v-bind="alertProps" v-model:open="open" />
 </template>

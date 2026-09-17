@@ -10,7 +10,7 @@ import type {
   FormSpec,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
@@ -101,13 +101,15 @@ immediateWatch(
           'Open the Redirect URIs or navigate to the Authentication settings and register the following Web redirect URI'
         )
       }}
-      <CmkAlertBox v-if="!redirectUriValid" variant="warning">
-        {{
+      <CmkAlert
+        v-if="!redirectUriValid"
+        variant="warning"
+        :text="
           _t(
             'Only valid redirect URIs starting with https:// or http://localhost can be used. Please check if either of these two options can be applied.'
           )
-        }}
-      </CmkAlertBox>
+        "
+      />
       <CmkCode
         class="mode-oauth2-connection-redirect-u-r-i__cmk-code"
         :code-text="

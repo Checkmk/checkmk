@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { onMounted } from 'vue'
 
 import type {
@@ -24,7 +25,7 @@ onMounted(() => {
 
 <template>
   <div :data-testid="`ai-conversation-alert-${variant}`">
-    <CmkAlertBox :variant="variant">{{ text }}</CmkAlertBox>
+    <CmkAlert :variant="variant" :text="untranslated(text)" />
   </div>
 </template>
 

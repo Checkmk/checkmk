@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -15,7 +15,7 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInlineButton from 'cmk-ui-library/components/user-input/CmkInlineButton.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import { AjaxResponseError, cmkAjax } from 'cmk-ui-library/lib/ajax'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useId from 'cmk-ui-library/lib/useId'
 import { ref, shallowRef } from 'vue'
@@ -181,9 +181,11 @@ const useCertificate = (): void => {
           {{ _t('Fetch') }}
         </CmkButton>
       </div>
-      <CmkAlertBox v-if="fetchState instanceof FetchFailed" variant="error">
-        {{ fetchState.message }}
-      </CmkAlertBox>
+      <CmkAlert
+        v-if="fetchState instanceof FetchFailed"
+        variant="error"
+        :text="untranslated(fetchState.message)"
+      />
       <CmkHeading type="h4">{{ _t('Certificate') }}</CmkHeading>
       <template v-if="fetchState instanceof Fetched">
         <dl class="form-ca-certificate__details">

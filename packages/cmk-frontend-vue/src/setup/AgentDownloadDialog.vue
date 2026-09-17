@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkTooltip, {
   CmkTooltipContent,
@@ -72,7 +72,7 @@ const triggerRescan = () => {
           :width="6"
           :height="6"
         />
-        <CmkAlertBox
+        <CmkAlert
           :heading="dialogTitle"
           variant="info"
           :main-button="{
@@ -89,9 +89,8 @@ const triggerRescan = () => {
             }
           }"
           class="setup-agent-download-dialog__dialog"
-        >
-          {{ dialogMessage }}
-        </CmkAlertBox>
+          :text="dialogMessage"
+        />
       </CmkTooltipContent>
     </CmkTooltip>
   </CmkTooltipProvider>

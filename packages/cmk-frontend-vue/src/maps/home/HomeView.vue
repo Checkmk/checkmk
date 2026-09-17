@@ -8,7 +8,7 @@ The map launcher: which maps this user has, as cards or as a table, and the
 actions that create, copy, import or remove one.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, ref } from 'vue'
@@ -123,9 +123,11 @@ onMounted(async () => {
           {{ _t('Loading…') }}
         </div>
 
-        <CmkAlertBox v-else-if="maps.error.value" variant="error">
-          {{ maps.error.value }}
-        </CmkAlertBox>
+        <CmkAlert
+          v-else-if="maps.error.value"
+          variant="error"
+          :text="untranslated(maps.error.value)"
+        />
 
         <MapListEmptyState v-else-if="displayedMaps.length === 0" :search-query="searchQuery" />
 

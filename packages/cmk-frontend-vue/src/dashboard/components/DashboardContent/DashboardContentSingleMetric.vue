@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import useTimer from 'cmk-ui-library/lib/useTimer'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -126,7 +126,7 @@ function formatValue(value: number): string {
   >
     <div class="db-content-single-metric__wrapper">
       <div v-if="fetchingErrorMessage" class="db-content-single-metric__error">
-        <CmkAlertBox variant="error">{{ fetchingErrorMessage }}</CmkAlertBox>
+        <CmkAlert variant="error" :text="untranslated(fetchingErrorMessage)" />
       </div>
       <CmkLoading v-else-if="data === undefined" />
       <CmkKpiStatCard

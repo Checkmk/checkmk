@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import type { TwoColumnDictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
@@ -316,18 +317,17 @@ immediateWatch(
         {{ countDownValue / 1000 }}
         {{ _t('seconds remaining') }}
       </CmkParagraph>
-      <CmkAlertBox v-if="loading" variant="loading">
-        {{ loadingTitle }}
-      </CmkAlertBox>
+      <CmkAlert v-if="loading" variant="loading" :text="loadingTitle" />
 
       <template v-else-if="authSucceeded">
-        <CmkAlertBox variant="success">
-          {{
+        <CmkAlert
+          variant="success"
+          :text="
             isEditMode
               ? _t('You can save the connection as is, or go back to reauthenticate.')
               : _t('OAuth2 connection parameters requested successfully!')
-          }}
-        </CmkAlertBox>
+          "
+        />
         <FormEdit
           v-model:data="filteredData"
           :backend-validation="filteredValidation"
@@ -349,9 +349,7 @@ immediateWatch(
         <template v-if="errorDetails !== null">{{ errorDetails }}</template>
       </CmkAlertBox>
 
-      <CmkAlertBox v-if="saving" variant="loading">
-        {{ _t('Saving OAuth2 connection') }}
-      </CmkAlertBox>
+      <CmkAlert v-if="saving" variant="loading" :text="_t('Saving OAuth2 connection')" />
     </template>
 
     <template #actions>

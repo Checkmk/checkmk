@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import { CmkWizardButton } from 'cmk-ui-library/components/CmkWizard'
 import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue'
@@ -119,9 +119,7 @@ const cmdsResolved = computed(() => isResolved(rendered.value.tokenState))
           />
         </div>
         <template v-else>
-          <CmkAlertBox v-if="spec.kind === 'unbaked-fallback'" variant="warning">
-            {{ spec.intro }}
-          </CmkAlertBox>
+          <CmkAlert v-if="spec.kind === 'unbaked-fallback'" variant="warning" :text="spec.intro" />
           <div v-else class="download_install__token">
             <CmkParagraph>{{ intro }}</CmkParagraph>
             <GenerateToken

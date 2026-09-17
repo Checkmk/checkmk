@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
@@ -38,9 +38,11 @@ const {
 
 <template>
   <div class="trial-mode-selection-app">
-    <CmkAlertBox v-if="saveFailed" variant="error">
-      {{ _t('Saving your selection failed. Please try again.') }}
-    </CmkAlertBox>
+    <CmkAlert
+      v-if="saveFailed"
+      variant="error"
+      :text="_t('Saving your selection failed. Please try again.')"
+    />
 
     <TrialModeSelectionEntryChoice
       v-if="screen === 'choice'"

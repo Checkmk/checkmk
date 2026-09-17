@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
@@ -167,9 +167,7 @@ onUnmounted(() => {
 
   <ContentSpacer :dimension="11" />
 
-  <CmkAlertBox v-if="configurationError" variant="error">
-    {{ configurationError }}
-  </CmkAlertBox>
+  <CmkAlert v-if="configurationError" variant="error" :text="untranslated(configurationError)" />
   <iframe v-else ref="view-editor" class="db-stage-contents__view-editor" :src="iframeUrl" />
 </template>
 

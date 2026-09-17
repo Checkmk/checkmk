@@ -4,9 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
 
 import { getCsrfToken } from '@/lib/csrf'
@@ -60,7 +61,7 @@ function goToFullPage() {
 }
 </script>
 <template>
-  <CmkAlertBox
+  <CmkAlert
     v-if="!currentChangesAction && !loading"
     :heading="_t('Working with a complex environment?')"
     :main-button="{
@@ -72,15 +73,14 @@ function goToFullPage() {
       onclick: () => setChangesAction('full_page')
     }"
     class="mm-user-setting-dialog"
-  >
-    {{
+    :text="
       _t(
         `In complex environments, activation issues are more common and may require closer review.\n` +
           `The full 'Activation changes' page gives you better visibility before activating.`
       )
-    }}
-  </CmkAlertBox>
-  <CmkAlertBox v-if="loading" variant="loading">{{ _t('Applying user setting...') }}</CmkAlertBox>
+    "
+  />
+  <CmkAlert v-if="loading" variant="loading" :text="_t('Applying user setting...')" />
   <CmkAlertBox
     v-if="successSlideout"
     variant="success"
@@ -91,7 +91,7 @@ function goToFullPage() {
     <br />
     {{ _t('You can change this at any time in your profile settings.') }}
   </CmkAlertBox>
-  <CmkAlertBox
+  <CmkAlert
     v-if="successFullPage"
     variant="success"
     :heading="_t('Preference saved.')"
@@ -100,15 +100,17 @@ function goToFullPage() {
       onclick: goToFullPage
     }"
     class="mm-user-setting-dialog"
-  >
-    {{
+    :text="
       _t(
         `Clicking on 'Changes' will now open the full 'Activate changes' page.\n` +
           `You can change this at any time in your profile settings.`
       )
-    }}
-  </CmkAlertBox>
-  <CmkAlertBox v-if="error" variant="error" :title="_t('Could not apply user setting.')">
-    {{ error }}
-  </CmkAlertBox>
+    "
+  />
+  <CmkAlert
+    v-if="error"
+    variant="error"
+    :title="_t('Could not apply user setting.')"
+    :text="untranslated(error)"
+  />
 </template>

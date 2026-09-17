@@ -5,7 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Dialog, DialogAction } from 'cmk-shared-typing/typescript/dialog'
-import CmkAlertBox, { type CmkAlertBoxProps } from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert, {
+  type CmkAlertOptionalButton,
+  type CmkAlertProps
+} from 'cmk-ui-library/components/CmkAlert.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import { computed } from 'vue'
@@ -23,39 +26,41 @@ function getDialogAction(action: DialogAction): () => void {
 
 const { isShown, dismiss: dismissAlert } = useDismissDialog(props.optional_button?.dismissal?.key)
 
-const alertBoxProps = computed<CmkAlertBoxProps>(() => {
-  const baseProps: CmkAlertBoxProps = {}
-
-  if (props.title) {
-    baseProps.heading = props.title
+const optionalButton = computed<CmkAlertOptionalButton | undefined>(() => {
+  if (!props.optional_button) {
+    return undefined
   }
-
-  if (props.main_button) {
-    baseProps.mainButton = {
-      title: props.main_button.title as TranslatedString,
-      onclick: getDialogAction(props.main_button.action)
+  if (props.optional_button.dismissal) {
+    return {
+      title: props.optional_button.title as TranslatedString,
+      icon: 'cancel',
+      onclick: dismissAlert
     }
   }
-
-  if (props.optional_button) {
-    if (props.optional_button.dismissal) {
-      baseProps.optionalButton = {
-        title: props.optional_button.title as TranslatedString,
-        icon: 'cancel',
-        onclick: dismissAlert
-      }
-    } else if (props.optional_button.action) {
-      baseProps.optionalButton = {
-        title: props.optional_button.title as TranslatedString,
-        onclick: getDialogAction(props.optional_button.action)
-      }
+  if (props.optional_button.action) {
+    return {
+      title: props.optional_button.title as TranslatedString,
+      onclick: getDialogAction(props.optional_button.action)
     }
   }
-
-  return baseProps
+  return undefined
 })
+
+const alertBoxProps = computed<CmkAlertProps>(() => ({
+  text: props.message as TranslatedString,
+  ...(props.title ? { heading: props.title as TranslatedString } : {}),
+  ...(props.main_button
+    ? {
+        mainButton: {
+          title: props.main_button.title as TranslatedString,
+          onclick: getDialogAction(props.main_button.action)
+        }
+      }
+    : {}),
+  ...(optionalButton.value ? { optionalButton: optionalButton.value } : {})
+}))
 </script>
 
 <template>
-  <CmkAlertBox v-if="isShown" v-bind="alertBoxProps">{{ props.message }}</CmkAlertBox>
+  <CmkAlert v-if="isShown" v-bind="alertBoxProps" />
 </template>

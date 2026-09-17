@@ -9,7 +9,7 @@ backgrounds, plus the built-in ones. The only administration surface that stays
 inside the SPA — connections and defaults live in Checkmk's global settings.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
@@ -60,9 +60,11 @@ const deleteTitle = computed(() =>
       <ImageUploadButton :label="_t('Upload image')" @change="library.uploadFiles" />
     </div>
 
-    <CmkAlertBox v-if="library.errorMessage.value" variant="error">
-      {{ library.errorMessage.value }}
-    </CmkAlertBox>
+    <CmkAlert
+      v-if="library.errorMessage.value"
+      variant="error"
+      :text="library.errorMessage.value"
+    />
 
     <div v-if="library.loading.value" class="maps-images-view__loading">
       <CmkLoading />

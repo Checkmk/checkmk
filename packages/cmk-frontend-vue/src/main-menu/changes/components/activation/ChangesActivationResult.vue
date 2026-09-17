@@ -5,30 +5,29 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 
 const props = defineProps<{ type: 'success' | 'warning'; title: string; info: string }>()
 </script>
 
 <template>
   <div>
-    <CmkAlertBox
+    <CmkAlert
       v-if="props.type === 'success'"
       variant="success"
       class="mm-changes-activation-result"
       :dismissible="true"
-      :heading="props.title"
-    >
-      {{ props.info }}
-    </CmkAlertBox>
-    <CmkAlertBox
+      :heading="untranslated(props.title)"
+      :text="untranslated(props.info)"
+    />
+    <CmkAlert
       v-else
       variant="warning"
       class="mm-changes-activation-result"
-      :heading="props.title"
-    >
-      {{ props.info }}
-    </CmkAlertBox>
+      :heading="untranslated(props.title)"
+      :text="untranslated(props.info)"
+    />
   </div>
 </template>
 

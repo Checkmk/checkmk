@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
@@ -81,6 +82,14 @@ const validityText = computed<TranslatedString | null>(() => {
   return _t('This token remains valid for %{duration}.', { duration: unit }) as TranslatedString
 })
 
+const successText = computed<TranslatedString>(() =>
+  props.showValidityText && validityText.value
+    ? validityText.value
+    : untranslated(
+        `${_t('Successfully generated one-time token')} ${_t(`(Expires: ${ottExpiry.value?.toLocaleString() || 'never'})`)}`
+      )
+)
+
 /** The `watch(ott)` above resets the rest when the value goes back to null. */
 function retry() {
   ott.value = null
@@ -130,13 +139,14 @@ async function generateOTT() {
       {{ _t('Generate one-time token') }}
     </CmkButton>
 
-    <CmkAlertBox v-else variant="loading">{{ _t('Generating one-time token') }}</CmkAlertBox>
+    <CmkAlert v-else variant="loading" :text="_t('Generating one-time token')" />
   </template>
   <template v-else>
     <template v-if="ottError">
-      <CmkAlertBox variant="error">{{
-        _t(`Error generating one-time token: ${ottError.message}`)
-      }}</CmkAlertBox>
+      <CmkAlert
+        variant="error"
+        :text="_t(`Error generating one-time token: ${ottError.message}`)"
+      />
       <!-- `ottGenerated` stays true after a failure, so without this there is
            no way back to the generate button. -->
       <CmkButton variant="secondary" class="mh-generate-token__button" @click="retry">
@@ -145,13 +155,7 @@ async function generateOTT() {
       </CmkButton>
     </template>
     <template v-else>
-      <CmkAlertBox variant="success">
-        <template v-if="showValidityText && validityText">{{ validityText }}</template>
-        <template v-else>
-          {{ _t('Successfully generated one-time token') }}
-          {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}
-        </template>
-      </CmkAlertBox>
+      <CmkAlert variant="success" :text="successText" />
     </template>
   </template>
 </template>

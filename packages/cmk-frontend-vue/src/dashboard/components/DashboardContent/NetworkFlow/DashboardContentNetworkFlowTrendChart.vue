@@ -4,8 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, inject, ref, watch } from 'vue'
 
@@ -170,7 +171,7 @@ const graphOptions = computed(
   >
     <div class="db-content-network-flow-trend-chart__wrapper">
       <div v-if="error" class="db-content-network-flow-trend-chart__error">
-        <CmkAlertBox :variant="error.variant">{{ error.message }}</CmkAlertBox>
+        <CmkAlert :variant="error.variant" :text="untranslated(error.message)" />
       </div>
       <CmkLoading v-else-if="data === undefined" />
       <template v-else>

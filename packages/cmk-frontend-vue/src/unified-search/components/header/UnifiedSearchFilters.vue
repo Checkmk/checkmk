@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
@@ -146,13 +147,12 @@ function getFilterOptions(): FilterOption[] {
         @keydown.enter.stop="() => handleFilterSelect(opt)"
       ></FilterOptionEntry>
     </ul>
-    <CmkAlertBox
+    <CmkAlert
       v-if="getFilterOptions().length === 0"
       variant="info"
       class="unified-search-filters__suggestions-info not-found"
-    >
-      {{ _t('No filters can be applied to your current search query.') }}
-    </CmkAlertBox>
+      :text="_t('No filters can be applied to your current search query.')"
+    />
     <CmkAlertBox variant="info" class="unified-search-filters__suggestions-info">
       {{
         _t(

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import CmkAccordionStepPanelItem from 'cmk-ui-library/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
@@ -48,12 +48,14 @@ const emit = defineEmits(['step-completed'])
         )
       }}
     </StepParagraph>
-    <CmkAlertBox :heading="_t('Spotting pending changes')">
-      {{
-        _t(`If there are pending changes, you’ll see a yellow badge on the “Changes” menu item in the main navigation,
-      reminding you that your setup is not yet active.`)
-      }}
-    </CmkAlertBox>
+    <CmkAlert
+      :heading="_t('Spotting pending changes')"
+      :text="
+        _t(
+          `If there are pending changes, you’ll see a yellow badge on the “Changes” menu item in the main navigation, reminding you that your setup is not yet active.`
+        )
+      "
+    />
 
     <StepCardsRow>
       <CmkLinkCard

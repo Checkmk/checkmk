@@ -213,7 +213,7 @@ class ModePerformanceProfiles(WatoMode[None]):
                 _handle_profile_upload(store)
             except MKUserError as exc:
                 # Surface the parse error to the next page render via a query
-                # param; the Vue component turns it into a CmkAlertBox instead
+                # param; the Vue component turns it into a CmkAlert instead
                 # of the framework's default red error bar.
                 return redirect(
                     makeuri_contextless(

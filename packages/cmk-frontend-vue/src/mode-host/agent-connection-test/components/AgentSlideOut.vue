@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
@@ -87,7 +87,7 @@ function saveHostAction(packageId: string) {
     <CmkIcon name="frameurl" />
     {{ hostExists ? _t('View host agents') : _t('View all agents') }}
   </CmkButton>
-  <CmkAlertBox
+  <CmkAlert
     v-if="alertShown"
     :buttons="[
       {
@@ -96,9 +96,8 @@ function saveHostAction(packageId: string) {
         onclick: dismissAlert
       }
     ]"
-  >
-    {{ dialogMsg }}
-  </CmkAlertBox>
+    :text="dialogMsg"
+  />
   <CmkHeading type="h4" class="select-heading">
     {{ _t('Select the type of system you want to monitor') }}
   </CmkHeading>

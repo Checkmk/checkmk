@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 
 import { type DialogWidgetProps } from './widget_types'
 
@@ -12,5 +12,5 @@ const props = defineProps<DialogWidgetProps>()
 </script>
 
 <template>
-  <CmkAlertBox>{{ props.text }}</CmkAlertBox>
+  <CmkAlert :text="props.text" />
 </template>

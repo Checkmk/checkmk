@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalSettingsHint } from 'cmk-shared-typing/typescript/global_settings'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import type { CmkAlertBoxProps } from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
@@ -183,15 +184,14 @@ const currentStateText = computed<TranslatedString>(() => {
         <span class="global-settings-editor__error">{{ error.message }}</span>
       </CmkAlertBox>
 
-      <CmkAlertBox
+      <CmkAlert
         v-if="validationMessages.length > 0"
         variant="error"
+        :text="_t('Could not save this setting, the errors are shown in the form.')"
         class="global-settings-editor__alert"
-      >
-        {{ _t('Could not save this setting, the errors are shown in the form.') }}
-      </CmkAlertBox>
+      />
 
-      <CmkAlertBox
+      <CmkAlert
         v-if="confirmResetOpen"
         variant="warning"
         :heading="resetConfirmation.heading"
@@ -201,19 +201,17 @@ const currentStateText = computed<TranslatedString>(() => {
           icon: 'cancel',
           onclick: () => (confirmResetOpen = false)
         }"
+        :text="resetConfirmation.body"
         class="global-settings-editor__alert"
-      >
-        {{ resetConfirmation.body }}
-      </CmkAlertBox>
+      />
 
-      <CmkAlertBox
+      <CmkAlert
         v-if="isExplicitDefault"
         variant="info"
         dismissible
+        :text="_t('This setting is stored explicitly with a value equal to the factory setting.')"
         class="global-settings-editor__alert"
-      >
-        {{ _t('This setting is stored explicitly with a value equal to the factory setting.') }}
-      </CmkAlertBox>
+      />
 
       <CmkAlertBox
         v-for="(hint, index) in variable.hints"

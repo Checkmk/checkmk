@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
@@ -80,9 +80,12 @@ const handleSave = () => {
 
   <ContentSpacer />
 
-  <CmkAlertBox v-if="displaySuccessMessage" :dismissible="true" variant="success">{{
-    _t('Link settings saved.')
-  }}</CmkAlertBox>
+  <CmkAlert
+    v-if="displaySuccessMessage"
+    :dismissible="true"
+    variant="success"
+    :text="_t('Link settings saved.')"
+  />
 
   <TableForm>
     <TableFormRow>

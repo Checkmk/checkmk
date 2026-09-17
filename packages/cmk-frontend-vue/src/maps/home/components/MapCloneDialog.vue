@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 Naming the copy of a map: its id (a file name on the site) and its display name.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -59,9 +59,7 @@ const aliasId = useId()
           @keydown.enter="emit('confirm')"
         />
       </div>
-      <CmkAlertBox v-if="props.error" variant="error" :dismissible="false">
-        {{ props.error }}
-      </CmkAlertBox>
+      <CmkAlert v-if="props.error" variant="error" :text="props.error" />
     </div>
 
     <template #footer>

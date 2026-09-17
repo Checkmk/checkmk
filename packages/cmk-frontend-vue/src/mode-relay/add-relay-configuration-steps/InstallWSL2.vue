@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
@@ -33,20 +33,23 @@ const installScript = `wsl --install --web-download --no-distribution; Restart-C
       <CmkParagraph>
         {{ _t('Run the command below in an elevated PowerShell to install it.') }}
       </CmkParagraph>
-      <CmkAlertBox>
-        {{
+      <CmkAlert
+        :text="
           _t(
             'For running WSL2 your system needs to have virtualization enabled. ' +
               'If Windows runs on a VM, the VM must support nested virtualization. ' +
               'This is usually disabled by default and must be enabled at the ' +
               'hypervisor/cloud level, not inside Windows.'
           )
-        }}
-      </CmkAlertBox>
+        "
+      />
       <CmkCode :code-text="installScript" data-testid="install-wsl2-command"></CmkCode>
-      <CmkAlertBox variant="warning">
-        {{ _t('This command will prompt you to restart the computer to finish the installation.') }}
-      </CmkAlertBox>
+      <CmkAlert
+        variant="warning"
+        :text="
+          _t('This command will prompt you to restart the computer to finish the installation.')
+        "
+      />
     </template>
 
     <template #actions>

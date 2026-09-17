@@ -9,13 +9,13 @@ import {
   type UnifiedSearchApiResponse,
   type UnifiedSearchResultItem
 } from 'cmk-shared-typing/typescript/unified_search'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkDynamicIcon from 'cmk-ui-library/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
@@ -294,14 +294,13 @@ function isMonitoringSearch(): boolean {
         ></CmkCheckbox>
       </CmkHeading>
     </div>
-    <CmkAlertBox
+    <CmkAlert
       v-for="message in result?.messages"
       :key="`${message.header || ''}-${message.detail}`"
       :type="message.message_variant"
-      :heading="message.header"
-    >
-      {{ message.detail }}
-    </CmkAlertBox>
+      :heading="message.header === undefined ? undefined : untranslated(message.header)"
+      :text="untranslated(message.detail)"
+    />
     <CmkScrollContainer>
       <template v-if="searchUtils.result.grouping.value">
         <template v-for="(group, gdx) of groupedResults" :key="group.id">

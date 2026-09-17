@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -39,14 +39,16 @@ const missingSingleInfosString = computed(() => {
       <span>{{ _t('to load data') }}</span>
     </div>
   </div>
-  <CmkAlertBox v-else-if="missingSingleInfosString!!" variant="warning">
-    {{
+  <CmkAlert
+    v-else-if="missingSingleInfosString!!"
+    variant="warning"
+    :text="
       _t(
         'This widget cannot be displayed because required context information is missing (%{ missingSingleInfosString }). Please add dashboard or widget filters to provide the missing context.',
         { missingSingleInfosString }
       )
-    }}
-  </CmkAlertBox>
+    "
+  />
   <slot v-else />
 </template>
 

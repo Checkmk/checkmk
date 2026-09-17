@@ -17,17 +17,7 @@ function renderAlertContent(
     text: 'Something went wrong'
   }
 ) {
-  return render(AlertContent, {
-    props: { content_type: 'alert', ...props },
-    global: {
-      stubs: {
-        CmkAlertBox: {
-          props: ['variant'],
-          template: '<div data-testid="alert-box" :data-variant="variant"><slot /></div>'
-        }
-      }
-    }
-  })
+  return render(AlertContent, { props: { content_type: 'alert', ...props } })
 }
 
 describe('AlertContent', () => {
@@ -37,10 +27,10 @@ describe('AlertContent', () => {
     expect(emitted('done')).toHaveLength(1)
   })
 
-  test('passes the variant to the alert box', () => {
+  test('announces a warning as an alert', () => {
     renderAlertContent({ variant: 'warning', text: 'Watch out' })
 
-    expect(screen.getByTestId('alert-box')).toHaveAttribute('data-variant', 'warning')
+    expect(screen.getByRole('alert')).toHaveTextContent('Watch out')
   })
 
   test('renders the alert text', () => {

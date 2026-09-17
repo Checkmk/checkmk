@@ -35,6 +35,7 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
     MinimalVerticalRange,
+    StoredGraphSpecification,
 )
 from ._graphs_order import GRAPHS_ORDER
 from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
@@ -901,8 +902,20 @@ def _matching_graph_templates(
     )
 
 
+class StoredTemplateGraphSpecification(StoredGraphSpecification, frozen=True):
+    host_name: AnnotatedHostName
+    service_description: ServiceName
+    graph_index: int | None
+    graph_id: str | None
+    destination: str | None
+
+    @staticmethod
+    def graph_type_name() -> Literal["template"]:
+        return "template"
+
+
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
-    site: SiteId | None
+    site: SiteId | None = None
     host_name: AnnotatedHostName
     service_description: ServiceName
     graph_index: int | None = None
@@ -912,6 +925,15 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     @staticmethod
     def graph_type_name() -> Literal["template"]:
         return "template"
+
+    def for_storage(self) -> StoredTemplateGraphSpecification:
+        return StoredTemplateGraphSpecification(
+            host_name=self.host_name,
+            service_description=self.service_description,
+            graph_index=self.graph_index,
+            graph_id=self.graph_id,
+            destination=self.destination,
+        )
 
     def _get_graph_data_from_livestatus(self) -> Row:
         return get_graph_data_from_livestatus(

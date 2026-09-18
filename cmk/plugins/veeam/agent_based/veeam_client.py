@@ -11,6 +11,7 @@ from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -76,39 +77,32 @@ def discover_veeam_client(section: Section) -> DiscoveryResult:
     yield from (Service(item=job) for job in section)
 
 
-def _check_backup_age(
-    data: dict[str, str], params: Mapping[str, Any], state: State
-) -> tuple[State, str | None]:
+def _check_backup_age(data: dict[str, str], params: Mapping[str, Any]) -> CheckResult:
     age = _parse_float(data.get("LastBackupAge"))
     if age is None:
-        # This section (StopTime) is kept for compatibility with old agent versions
-        # that were reporting StopTime and not LastBackupAge
+        # StopTime is kept for compatibility with old agent versions that reported
+        # StopTime instead of LastBackupAge.
         if (stop_time := data.get("StopTime")) is None:
-            return State.CRIT, "No complete Backup(!!)"
+            yield Result(state=State.CRIT, summary="No complete backup")
+            return
 
-        # If the Backup is currently running, the stop time is strange
+        # While a backup is running the stop time is not meaningful.
         if stop_time == "01.01.1900 00:00:00":
-            return state, None
+            return
 
         try:
             stop_time_epoch = time.mktime(time.strptime(stop_time, "%d.%m.%Y %H:%M:%S"))
         except ValueError:
-            return State.CRIT, "No complete Backup(!!)"
+            yield Result(state=State.CRIT, summary="No complete backup")
+            return
         age = time.time() - stop_time_epoch
 
-    warn, crit = params["age"]
-    levels = ""
-    label = ""
-    if age >= crit:
-        state = State.CRIT
-        label = "(!!)"
-        levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
-    elif age >= warn:
-        state = State.worst(state, State.WARN)
-        label = "(!)"
-        levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
-
-    return state, f"Last backup: {render.timespan(age)} ago{label}{levels}"
+    yield from check_levels(
+        age,
+        levels_upper=params["age"],
+        render_func=render.timespan,
+        label="Time since last backup",
+    )
 
 
 def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -124,7 +118,7 @@ def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -
     # Append current Status to Output
     if data["Status"] == "Warning":
         state = State.WARN
-    if data["Status"] == "Failed":
+    elif data["Status"] == "Failed":
         state = State.CRIT
     infotexts.append(f"Status: {data['Status']}")
 
@@ -151,18 +145,13 @@ def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -
     if size_info:
         infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
 
-    # Check duration only if currently not running
-    if data["Status"] not in ["InProgress", "Pending"]:
-        # when status is "InProgress" or "Pending"
-        # lastBackupAge and StopTime have strange values
-        state, info = _check_backup_age(data, params, state)
-        if info is not None:
-            infotexts.append(info)
+    # LastBackupAge and StopTime are only meaningful when the job is not running.
+    check_age = data["Status"] not in ["InProgress", "Pending"]
 
-        # Information may missing
-        if (duration := _parse_duration(data.get("DurationDDHHMMSS"))) is not None:
-            infotexts.append(f"Duration: {render.timespan(duration)}")
-            metrics.append(Metric("duration", duration))
+    # Information may be missing
+    if check_age and (duration := _parse_duration(data.get("DurationDDHHMMSS"))) is not None:
+        infotexts.append(f"Duration: {render.timespan(duration)}")
+        metrics.append(Metric("duration", duration))
 
     if (avg_speed_bps := _parse_int(data.get("AvgSpeedBps"))) is not None:
         metrics.append(Metric("avgspeed", avg_speed_bps))
@@ -173,6 +162,10 @@ def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -
         infotexts.append(f"Backup server: {data['BackupServer']}")
 
     yield Result(state=state, summary=", ".join(infotexts))
+
+    if check_age:
+        yield from _check_backup_age(data, params)
+
     yield from metrics
 
 
@@ -188,6 +181,6 @@ check_plugin_veeam_client = CheckPlugin(
     check_function=check_veeam_client,
     check_ruleset_name="veeam_backup",
     check_default_parameters={
-        "age": (108000, 172800),  # 30h/2d
+        "age": ("fixed", (108000.0, 172800.0)),  # 30h/2d
     },
 )

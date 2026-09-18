@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Mapping
 from pathlib import Path
 from types import TracebackType
 from typing import Any, NamedTuple, Self
@@ -53,6 +54,7 @@ class GraphApiClient:
         storage: Storage,
         initial_access_token: str,
         initial_refresh_token: str,
+        proxies: Mapping[str, str] | None = None,
     ):
         self._login_url = authority_urls.login
         self._resource_url = authority_urls.resource
@@ -74,6 +76,7 @@ class GraphApiClient:
 
         self._initial_access_token = Secret(initial_access_token)
         self._initial_refresh_token = Secret(initial_refresh_token)
+        self._proxies = proxies
 
     def __enter__(self) -> Self:
         if self._session is None or self._session_closed:
@@ -183,6 +186,7 @@ class GraphApiClient:
             client,
             secret,
             f"{self._login_url}/{tenant}",
+            proxies=self._proxies,
         )
         if access_token_expiry := self._storage.read("access_token_expiry", None):
             if int(access_token_expiry) > int(time.time()) + self.EXPIRY_OVERLAP:
@@ -259,5 +263,6 @@ class GraphApiClient:
         if self._session is None or self._session_closed:
             session = requests.Session()
             session.headers.update(self._headers)
+            session.proxies.update(self._proxies or {})
             return session
         return self._session

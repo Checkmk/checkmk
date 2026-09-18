@@ -182,8 +182,12 @@ allows = [
   "cmk.ccc",
   "cmk.checkengine",
   "cmk.checkengine.fetchers",
+  # The "cmk" commands (cli) use the engine's shared option helpers.
+  "cmk.cli.engine",
   # The agent_controller_connections core bakelet reads the site certificate.
   "cmk.crypto",
+  # "cmk --handle-alerts" works on the event types of the alert handling.
+  "cmk.events",
   "cmk.gui",
   "cmk.messaging",
   "cmk.ruleset_matcher",

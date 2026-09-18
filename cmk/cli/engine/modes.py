@@ -386,8 +386,6 @@ def discover_modes() -> Sequence[Mode]:
             "cmk.base.modes.check_mk",
             "cmk.base.diagnostics",
             "cmk.base.notify",
-            "cmk.base.nonfree.alert_handling",
-            "cmk.base.nonfree.cmc_helpers",
         ],
         skip_wrong_types=True,
         raise_errors=True,

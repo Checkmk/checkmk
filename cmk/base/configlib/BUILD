@@ -10,6 +10,7 @@ py_library(
         "//cmk/base:__subpackages__",
         "//cmk/config_anonymizer:__pkg__",
         "//non-free/packages/cmk-bakery:__pkg__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

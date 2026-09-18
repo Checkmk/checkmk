@@ -33,7 +33,7 @@ TABLE_CATALYST: Sequence[StringTable] = [
     ],
     [],
     [],
-    [["30", "TenGigabitEthernet2/0/22", "1"]],
+    [["30", "TenGigabitEthernet2/0/22", "1", "1"]],
     [["2262.0", ".1.3.6.1.2.1.2.2.1.1.30"]],
 ]
 
@@ -57,7 +57,7 @@ TABLE_ASR: Sequence[StringTable] = [
     ],
     [],
     [],
-    [["1", "GigabitEthernet0/0/0", "1"]],
+    [["1", "GigabitEthernet0/0/0", "1", "1"]],
     [["1048.0", ".1.3.6.1.2.1.2.2.1.1.1"]],
 ]
 
@@ -78,7 +78,7 @@ TABLE_NEXUS: Sequence[StringTable] = [
     ],
     [],
     [],
-    [["436207616", "Ethernet1/1", "1"]],
+    [["436207616", "Ethernet1/1", "1", "1"]],
     [["4950.0", ".1.3.6.1.2.1.2.2.1.1.436207616"]],
 ]
 
@@ -121,7 +121,7 @@ TABLE_NEXUS_ADMIN_DOWN: Sequence[StringTable] = [
     ],
     [],
     [],
-    [["436207616", "Ethernet1/1", "2"], ["436215808", "Ethernet1/3", "1"]],
+    [["436207616", "Ethernet1/1", "2", "2"], ["436215808", "Ethernet1/3", "1", "1"]],
     [
         ["4950.0", ".1.3.6.1.2.1.2.2.1.1.436207616"],
         ["4952.0", ".1.3.6.1.2.1.2.2.1.1.436215808"],
@@ -145,7 +145,7 @@ TABLE_FALLBACK: Sequence[StringTable] = [
     ],
     [],
     [],
-    [["436207616", "Ethernet1/1", "1"]],
+    [["436207616", "Ethernet1/1", "1", "1"]],
     [],
 ]
 
@@ -176,6 +176,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ".1.3.6.1.4.1.9.9.91.1.1.1.1.*": "8",
                 ".1.3.6.1.2.1.2.2.1.2.30": "TenGigabitEthernet2/0/22",
                 ".1.3.6.1.2.1.2.2.1.7.30": "1",
+                ".1.3.6.1.2.1.2.2.1.8.30": "1",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.2262": "2083",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.2263": "2262",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.2264": "2262",
@@ -222,7 +223,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Te2/0/22 Module Temperature Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": 24.0,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -233,7 +234,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Te2/0/22 Transmit Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -1.4000000000000001,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -242,7 +243,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Te2/0/22 Receive Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -4.800000000000001,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -257,6 +258,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ".1.3.6.1.4.1.9.9.91.1.1.1.1.*": "8",
                 ".1.3.6.1.2.1.2.2.1.2.1": "GigabitEthernet0/0/0",
                 ".1.3.6.1.2.1.2.2.1.7.1": "1",
+                ".1.3.6.1.2.1.2.2.1.8.1": "1",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.1046": "1015",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.1047": "1046",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.1048": "1047",
@@ -307,7 +309,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "subslot 0/0 transceiver 0 Temperature Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": 29.218,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -318,7 +320,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "subslot 0/0 transceiver 0 Tx Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -6.1000000000000005,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -327,7 +329,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "subslot 0/0 transceiver 0 Rx Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -5.4,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -342,6 +344,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ".1.3.6.1.4.1.9.9.91.1.1.1.1.*": "3",
                 ".1.3.6.1.2.1.2.2.1.2.436207616": "Ethernet1/1",
                 ".1.3.6.1.2.1.2.2.1.7.436207616": "1",
+                ".1.3.6.1.2.1.2.2.1.8.436207616": "1",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.300000002": "4950",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.300000004": "4950",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.300000007": "4950",
@@ -386,7 +389,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -0.002,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -395,7 +398,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -0.002,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -406,7 +409,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": 0.03,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -423,6 +426,8 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ".1.3.6.1.2.1.2.2.1.2.436215808": "Ethernet1/3",
                 ".1.3.6.1.2.1.2.2.1.7.436207616": "2",
                 ".1.3.6.1.2.1.2.2.1.7.436215808": "1",
+                ".1.3.6.1.2.1.2.2.1.8.436207616": "2",
+                ".1.3.6.1.2.1.2.2.1.8.436215808": "1",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.31958": "4950",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.31960": "4952",
                 ".1.3.6.1.2.1.47.1.1.1.1.7.300000003": "Ethernet1/1 Lane 1 Transceiver Voltage Sensor",
@@ -503,7 +508,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
             {
                 "14": {
                     "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor": {
-                        "admin_state": "down",
+                        "admin_state": ["down", "down"],
                         "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -512,7 +517,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "reading": -33.01,
                     },
                     "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor": {
-                        "admin_state": "down",
+                        "admin_state": ["down", "down"],
                         "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -521,7 +526,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "reading": -10.788,
                     },
                     "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor": {
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "descr": "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -530,7 +535,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "reading": -2.862,
                     },
                     "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor": {
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "descr": "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -541,7 +546,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 },
                 "8": {
                     "Ethernet1/1 Lane 1 Transceiver Temperature Sensor": {
-                        "admin_state": "down",
+                        "admin_state": ["down", "down"],
                         "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -550,7 +555,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "reading": 26.757,
                     },
                     "Ethernet1/3 Lane 1 Transceiver Temperature Sensor": {
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "descr": "Ethernet1/3 Lane 1 Transceiver Temperature Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -568,6 +573,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ".1.3.6.1.4.1.9.9.91.1.1.1.1.*": "3",
                 ".1.3.6.1.2.1.2.2.1.2.436207616": "Ethernet1/1",
                 ".1.3.6.1.2.1.2.2.1.7.436207616": "1",
+                ".1.3.6.1.2.1.2.2.1.8.436207616": "1",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.300000002": "4950",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.300000004": "4950",
                 ".1.3.6.1.2.1.47.1.1.1.1.4.300000007": "4950",
@@ -611,7 +617,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -0.002,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -620,7 +626,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": -0.002,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -631,7 +637,7 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
                         "raw_dev_state": "1",
                         "dev_state": (0, "OK"),
-                        "admin_state": "up",
+                        "admin_state": ["up", "up"],
                         "reading": 0.03,
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
@@ -747,7 +753,7 @@ def test_parse_admin_state_mapping(
             {
                 "14": {
                     "TenGigabitEthernet1/1/7 Transmit Power Sensor": {
-                        "admin_state": None,
+                        "admin_state": (None, None),
                         "descr": "TenGigabitEthernet1/1/7 Transmit Power Sensor",
                         "dev_state": (3, "unavailable"),
                         "raw_dev_state": "2",
@@ -988,12 +994,12 @@ def _get_section_dom() -> ct.Section:
             ],
             [],
             [
-                ["20", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor", "1"],
-                ["21", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor", "1"],
-                ["43", "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor", "2"],
-                ["44", "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor", "2"],
-                ["70", "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor", "3"],
-                ["71", "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor", "3"],
+                ["20", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor", "1", "1"],
+                ["21", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor", "1", "1"],
+                ["43", "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor", "2", "2"],
+                ["44", "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor", "2", "2"],
+                ["70", "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor", "3", "3"],
+                ["71", "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor", "3", "3"],
             ],
             [],
         ]
@@ -1004,7 +1010,11 @@ def test_discovery_dom(section_dom: ct.Section) -> None:
     assert not list(ct.discover_cisco_temperature(section_dom))
 
     assert sorted(
-        ct.discover_cisco_temperature_dom({"admin_states": ["1", "3"]}, section_dom)
+        ct.discover_cisco_temperature_dom(
+            {
+                "admin_states": ["1", "3"],
+                "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"]
+            }, section_dom)
     ) == sorted(
         [
             Service(item="Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"),
@@ -1018,7 +1028,11 @@ def test_discovery_dom(section_dom: ct.Section) -> None:
 def test_discovery_not_ok_sensors(section_not_ok_sensors: ct.Section) -> None:
     assert not list(ct.discover_cisco_temperature(section_not_ok_sensors))
     assert not list(
-        ct.discover_cisco_temperature_dom({"admin_states": ["1", "3"]}, section_not_ok_sensors)
+        ct.discover_cisco_temperature_dom(
+            {
+                "admin_states": ["1", "3"],
+                "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"]
+            }, section_not_ok_sensors)
     )
 
 

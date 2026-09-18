@@ -75,51 +75,40 @@ valid_sections: Final[frozenset[str]] = frozenset(
     }
 )
 
-# Mirrors `unix_default_section` in the legacy bakelet: what a rule without a 'sections'
-# key actually deployed.
-LEGACY_DEFAULT_SECTIONS: Final[Mapping[str, str | None]] = {
-    "instance": "sync",
-    "performance": "sync",
-    "systemparameter": "sync",
-    "processes": "sync",
-    "sessions": "sync",
-    "longactivesessions": "sync",
-    "logswitches": "sync",
-    "undostat": "sync",
-    "recovery_area": "sync",
-    "recovery_status": "sync",
-    "dataguard_stats": "sync",
-    "tablespaces": "async",
-    "rman": "async",
-    "jobs": "async",
-    "resumable": "async",
-    "locks": "sync",
-    "iostats": None,
-    "asm:instance": "sync",
-    "asm:processes": "sync",
-    "asm:asm_diskgroup": "async",
-}
-
 
 def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     warnings: list[str] = []
     instances: list[StoredInstanceConf] = []
 
-    deploy: Literal["deploy", "do_not_deploy"] = (
-        "deploy" if legacy.get("activated") else "do_not_deploy"
+    # A legacy rule says nothing about deployment unless it carries "activated",
+    # and the legacy bakery refused a merged configuration that named it nowhere.
+    # Writing a value here would let this rule answer for every rule below it.
+    deploy: Literal["deploy", "do_not_deploy"] | None = (
+        None
+        if "activated" not in legacy
+        else ("deploy" if legacy["activated"] else "do_not_deploy")
     )
 
     cache_age = legacy.get("async_interval") or None
 
     validate_permissions = _convert_permissions(legacy.get("validate_permissions"))
-    if legacy_sections := legacy.get("sections"):
-        sections = _convert_sections(legacy_sections, warnings)
-    else:
-        sections = _convert_sections(LEGACY_DEFAULT_SECTIONS, warnings)
+    # A rule without 'sections' left the selection to the legacy bakery, which
+    # collected the same set the unified plug-in collects. Writing that set out
+    # would let this rule answer for every rule below it, so it is left to the
+    # plug-in here too. Two details of the legacy default differ, and only a
+    # rule that reaches the bakery without any 'sections' at all is affected.
+    sections = (
+        _convert_sections(legacy_sections, warnings)
+        if (legacy_sections := legacy.get("sections"))
+        else None
+    )
+    if sections is None:
         warnings.append(
-            "'Sections' was not configured, so the selection the legacy bakery applied by "
-            "default has been written out explicitly. The new rule pins that selection "
-            "instead of deferring to the plugin later."
+            "'Sections' was not configured, so the unified plug-in applies its own "
+            "selection. It collects the same sections the legacy plug-in did, with two "
+            "differences: 'Locks' is cached rather than collected on every agent run, "
+            "and 'System parameters' is now collected on Windows as well. Configure "
+            "'Sections - data to collect' if either matters."
         )
     excluded_sections: list[StoredExcludedSectionConf] | None = None
 
@@ -146,9 +135,10 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     instances.extend(_convert_login_exceptions(login_exceptions, warnings))
 
-    if auth is None or auth.auth_type is None:
-        auth = (auth or StoredAuthConf()).model_copy(update={"auth_type": ("wallet", None)})
-        warnings.append("No auth defined in legacy rule. Defaulting to Oracle wallet.")
+    # A rule that names no login gets no auth block. The legacy bakery refused a
+    # merged configuration without one, and the unified one does the same, so an
+    # incomplete rule stays incomplete rather than answering for the rules below
+    # it. _convert_auth already defaults a login without a usable auth type.
 
     warnings.extend(msg for key, msg in field_warning_messages.items() if key in legacy)
 
@@ -156,13 +146,13 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
         rule=StoredConfig(
             deploy_rev2=deploy,
             auth=auth,
-            connection=connection or StoredConnectionConf(),
+            connection=connection,
             tns_admin=legacy.get("tns_admin") or None,
             cache_age=cache_age,
             discovery=discovery,
             sections=sections,
             excluded_sections=excluded_sections,
-            instances_rev2=instances,
+            instances_rev2=instances or None,
             validate_permissions=validate_permissions,
         ),
         warnings=warnings,

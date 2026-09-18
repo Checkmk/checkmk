@@ -6,27 +6,31 @@
 from cmk.update_config.plugins.lib.mk_oracle_migration import convert, dump
 
 
-def test_empty_body_is_not_deployed() -> None:
-    assert dump(convert({}).rule)["deploy_rev2"] == "do_not_deploy"
+def test_empty_body_says_nothing_about_deployment() -> None:
+    # The legacy bakery refused a merged configuration that named no "Activation",
+    # so a rule that names none must not answer for the rules below it.
+    assert "deploy_rev2" not in dump(convert({}).rule)
 
 
-def test_empty_body_auth_is_wallet() -> None:
-    assert dump(convert({}).rule)["auth"] == {"auth_type": ("wallet", None)}
+def test_empty_body_says_nothing_about_authentication() -> None:
+    assert "auth" not in dump(convert({}).rule)
 
 
-def test_empty_body_auth_type_is_a_plain_str_not_an_enum_member() -> None:
+def test_a_login_without_a_usable_auth_type_becomes_a_wallet() -> None:
+    converted = convert({"login": {"host": "db1"}})
+    auth_type = dump(converted.rule)["auth"]["auth_type"]
+    assert auth_type == ("wallet", None)
     # StrEnum == str, so this catches what == "wallet" above can't: an unconverted enum
     # member, which pprints as invalid Python syntax.
-    auth_type = dump(convert({}).rule)["auth"]["auth_type"][0]
-    assert type(auth_type) is str
+    assert type(auth_type[0]) is str
+    assert (
+        "Unknown auth type, defaulting to wallet because auth-type is mandatory in the "
+        "unified plugin." in converted.warnings
+    )
 
 
 def test_empty_body_has_no_instances() -> None:
-    assert dump(convert({}).rule)["instances_rev2"] == []
-
-
-def test_empty_body_has_warning() -> None:
-    assert "No auth defined in legacy rule. Defaulting to Oracle wallet." in convert({}).warnings
+    assert "instances_rev2" not in dump(convert({}).rule)
 
 
 def test_deploy_when_activated_true() -> None:
@@ -44,40 +48,28 @@ def test_async_interval_cache_age() -> None:
 def test_sections_supported_keys_are_mapped() -> None:
     new_rule = convert({"sections": {"instance": "sync"}})
 
-    assert new_rule.warnings == ["No auth defined in legacy rule. Defaulting to Oracle wallet."]
+    assert new_rule.warnings == []
     assert dump(new_rule.rule)["sections"] == {"instance": False}
 
 
-def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
-    """A legacy rule without a 'sections' key was still baked with an explicit section
-    list, so the migration must materialise it instead of leaving the unified plugin to
-    apply its own defaults."""
-    new_rule = convert({"login": {"auth": "wallet"}})
-    sections = dump(new_rule.rule)["sections"]
+def test_sections_absent_is_left_to_the_plug_in_with_a_warning() -> None:
+    """The legacy bakery applied its own section list when the merged rules named none.
 
-    assert new_rule.warnings == [
-        (
-            "'Sections' was not configured, so the selection the legacy bakery applied by "
-            "default has been written out explicitly. The new rule pins that selection "
-            "instead of deferring to the plugin later."
-        )
-    ]
-    assert sections["locks"] is False
-    # The legacy default left iostats off, and a section that is not collected
-    # is absent rather than named.
-    assert "iostats" not in sections
-    assert "ts_quotas" not in sections
-    assert sections["asm_instance"] is False
-    assert sections["tablespaces"] is True
+    Writing that list into every converted rule would make the rule answer for
+    the rules below it, so the selection is left to the unified plug-in, whose
+    own list holds the same sections.
+    """
+    new_rule = convert({"login": {"auth": "wallet"}})
+
+    assert "sections" not in dump(new_rule.rule)
+    assert len(new_rule.warnings) == 1
+    assert "'Sections' was not configured" in new_rule.warnings[0]
 
 
 def test_sections_unsupported_keys_are_skipped_with_warning() -> None:
     new_rule = convert({"sections": {"special_section": "sync"}})
 
-    assert new_rule.warnings == [
-        "Could not map section 'special_section'.",
-        "No auth defined in legacy rule. Defaulting to Oracle wallet.",
-    ]
+    assert new_rule.warnings == ["Could not map section 'special_section'."]
     assert dump(new_rule.rule)["sections"] == {}
 
 
@@ -155,12 +147,9 @@ def test_unmappable_fields_ignored() -> None:
         "'Sqlnet Send timeout' has been skipped because it is not supported by the unified plugin. Use Connection Timeout instead if this is applicable."
         in new_rule.warnings
     )
-    dumped = dump(new_rule.rule)
-    assert dumped["deploy_rev2"] == "do_not_deploy"
-    assert dumped["instances_rev2"] == []
-    assert set(dumped) == {"deploy_rev2", "auth", "connection", "sections", "instances_rev2"}
-    assert dumped["auth"] == {"auth_type": ("wallet", None)}
-    assert dumped["connection"] == {}
+    # A rule that names none of the settings the unified plug-in needs converts
+    # to a rule that names none of them either.
+    assert dump(new_rule.rule) == {}
 
 
 def test_permissions_not_mapped_when_validate_permissions_absent() -> None:
@@ -304,7 +293,7 @@ def test_login_without_tnsalias_has_no_instance() -> None:
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {}
 
-    assert dumped["instances_rev2"] == []
+    assert "instances_rev2" not in dumped
 
 
 def test_login_with_tnsalias_creates_no_instance() -> None:
@@ -314,7 +303,7 @@ def test_login_with_tnsalias_creates_no_instance() -> None:
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {}
 
-    assert dumped["instances_rev2"] == []
+    assert "instances_rev2" not in dumped
 
 
 def test_login_with_tnsalias_warns_that_it_could_not_be_migrated() -> None:
@@ -338,12 +327,12 @@ def test_login_tnsalias_does_not_affect_main_auth_and_connection() -> None:
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {"host": "mydata.db", "port": 3635}
 
-    assert dumped["instances_rev2"] == []
+    assert "instances_rev2" not in dumped
 
 
 def test_no_instance_created_when_no_login_exceptions() -> None:
     new_rule = convert({"login_exceptions": []})
-    assert dump(new_rule.rule)["instances_rev2"] == []
+    assert "instances_rev2" not in dump(new_rule.rule)
 
 
 def test_instance_created_when_login_exceptions_present() -> None:
@@ -374,12 +363,11 @@ def test_sid_specific_credentials_are_not_promoted_to_the_default_login() -> Non
     )
     dumped = dump(new_rule.rule)
 
-    assert dumped["auth"] == {"auth_type": ("wallet", None)}
+    assert "auth" not in dumped, "credentials for one database are not the default ones"
     assert [instance["oracle_id"] for instance in dumped["instances_rev2"]] == [
         ("sid", "proddb"),
         ("sid", "testdb"),
     ]
-    assert "No auth defined in legacy rule. Defaulting to Oracle wallet." in new_rule.warnings
 
 
 def test_remote_instance_maps_connection_and_piggyback() -> None:
@@ -551,7 +539,7 @@ def test_main_asm_auth_mapped_when_login_asm_present_without_host_and_port() -> 
         "password": ("cmk_postprocessed", "explicit_password", ("", "asm_pass")),
         "role": "sysasm",
     }
-    assert dumped["instances_rev2"] == []
+    assert "instances_rev2" not in dumped
 
 
 def test_fallback_instance_created_when_login_asm_has_host_and_port() -> None:

@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkRadioButton from 'cmk-ui-library/components/user-input/CmkRadioButton/CmkRadioButton.vue'
 import CmkRadioGroup from 'cmk-ui-library/components/user-input/CmkRadioButton/CmkRadioGroup.vue'
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 
 // RadioGroupItem reads its selection state from the surrounding RadioGroupRoot, so the
 // button is always rendered inside a CmkRadioGroup.
@@ -60,6 +60,16 @@ test('CmkRadioButton associates its label with the radio via for/id', async () =
   // Clicking the label selects the associated radio.
   await fireEvent.click(label!)
   expect(radio).toHaveAttribute('aria-checked', 'true')
+})
+
+// The name must survive the mount re-render: reka-ui names the radio only on the second pass, and
+// without the `await` this test passes whatever that second pass produces.
+test('CmkRadioButton names the radio by its label, not by its value', async () => {
+  renderGroup()
+  await nextTick()
+
+  expect(screen.getByRole('radio', { name: 'Option A' })).toBeInTheDocument()
+  expect(screen.queryByRole('radio', { name: 'a' })).toBeNull()
 })
 
 test('CmkRadioButton renders its label as HTML', () => {

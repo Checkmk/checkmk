@@ -100,6 +100,15 @@ class FrozenAggregationStore:
             / generate_identifier(branch_title)
         )
 
+    def get_branch_path_of(self, frozen_aggregation: BICompiledAggregation) -> Path:
+        """Path of the snapshot a frozen aggregation was loaded from."""
+        if (frozen_info := frozen_aggregation.frozen_info) is None:
+            raise ValueError(f"Aggregation {frozen_aggregation.id!r} is not frozen")
+        return self.get_branch_path(
+            aggregation_id=frozen_info.based_on_aggregation_id,
+            branch_title=frozen_info.based_on_branch_title,
+        )
+
 
 class MetadataStore:
     def __init__(self, fs: BIFileSystem) -> None:

@@ -40,8 +40,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     Host,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
@@ -95,7 +95,8 @@ class ModeObjectParameters(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        host = folder_from_request(folder_tree(), request.var("folder"), self._hostname).host(
+        self._tree = make_folder_tree(self._ctx.config)
+        host = folder_from_request(self._tree, request.var("folder"), self._hostname).host(
             self._hostname
         )
         if host is None:
@@ -147,7 +148,7 @@ class ModeObjectParameters(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         for_host: bool = not self._service
 
         # Object type specific detail information

@@ -58,7 +58,6 @@ from cmk.gui.watolib.configuration_bundles import (
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_tree,
     FolderTree,
     make_action_link,
     make_folder_tree,
@@ -802,7 +801,7 @@ class ModeConfigurationBundle(WatoMode):
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(
-            folder_tree(),
+            make_folder_tree(self._ctx.config),
             self._bundle_group,
             {self._bundle_id},
             acting_user=user,

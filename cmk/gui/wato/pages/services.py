@@ -82,6 +82,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     FolderTree,
     Host,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.pending_changes import (
@@ -223,7 +224,9 @@ class ModeDiscovery(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._host = folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            make_folder_tree(self._ctx.config),
+            request.var("folder"),
+            request.get_ascii_input("host"),
         ).load_host(request.get_validated_type_input_mandatory(HostName, "host"))
 
         self._host.permissions.need_permission("read", user)

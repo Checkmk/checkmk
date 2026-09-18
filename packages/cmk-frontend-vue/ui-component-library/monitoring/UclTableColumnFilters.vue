@@ -69,7 +69,7 @@ import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type {
   BooleanGroupFilter,
-  CheckboxListFilter,
+  CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
@@ -98,13 +98,17 @@ const MANY_STATES = [
   'CLUSTERED'
 ]
 
-const stateFilter = computed<CheckboxListFilter>(() => ({
-  type: 'checkbox-list',
+const stateFilter = computed<CheckboxListWithFlagsFilter>(() => ({
+  type: 'checkbox-list-with-flags',
   field: 'state',
   options: (propState.value.optionCount === 'many' ? MANY_STATES : FEW_STATES).map((state) => ({
     value: state,
     title: state
-  }))
+  })),
+  flags: [
+    { field: 'is_flapping', title: 'Flapping' },
+    { field: 'stale', title: 'Stale' }
+  ]
 }))
 const modesFilter = computed<BooleanGroupFilter>(() => ({
   type: 'boolean-group',
@@ -416,18 +420,20 @@ const sortedRows = computed<HostEntry[]>(() => {
         </p>
 
         <p class="ucl-table-column-filters__hint">
-          The State column declares a <code>checkbox-list</code> filter via
-          <code>meta.filter</code>. The header button opens the FilterDropdown, which owns the
-          popover and all keyboard handling; the checkbox list only renders the active row. Selected
-          values persist in the table's column-filter state, so they survive closing the dropdown
-          and drive the (server-side) query. Future filter types — numeric range, IP range — plug in
-          as additional dropdown contents without changing this wiring. The Mode column declares a
-          <code>boolean-group</code> filter: one tri-state group per boolean field, whose non-"All"
-          groups are AND-combined into the node. The Labels column shows the same
-          <code>string-input</code> type with a <code>suggest</code> callback, which swaps its plain
-          text field for a CmkChipAutocomplete: several picks become an <code>or</code> of one
-          <code>contains</code> each. It targets the host name here because the API carries no label
-          condition yet; the column filter itself needs no change once it does.
+          The State column declares a <code>checkbox-list-with-flags</code> filter via
+          <code>meta.filter</code>: the state options plus the orthogonal flapping/stale flags,
+          which are AND-combined with the list's own condition. The header button opens the
+          FilterDropdown, which owns the popover and all keyboard handling; the checkbox list only
+          renders the active row. Selected values persist in the table's column-filter state, so
+          they survive closing the dropdown and drive the (server-side) query. Future filter types —
+          numeric range, IP range — plug in as additional dropdown contents without changing this
+          wiring. The Mode column declares a <code>boolean-group</code> filter: one tri-state group
+          per boolean field, whose non-"All" groups are AND-combined into the node. The Labels
+          column shows the same <code>string-input</code> type with a <code>suggest</code> callback,
+          which swaps its plain text field for a CmkChipAutocomplete: several picks become an
+          <code>or</code> of one <code>contains</code> each. It targets the host name here because
+          the API carries no label condition yet; the column filter itself needs no change once it
+          does.
         </p>
       </div>
 

@@ -1,0 +1,8 @@
+#!/bin/bash
+# A fresh site brings no certificates along, so an existing one means the site was not created
+# from scratch and cmk-cert is right to refuse.
+set -e
+cmk-cert init site-ca
+cmk-cert init site
+cmk-cert init agent-ca
+cmk-cert init relay-ca

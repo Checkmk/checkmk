@@ -114,6 +114,22 @@ def initialize_site_certificate(
     )
 
 
+def initialize_relay_ca(
+    omd_root: Path,
+    site_id: SiteId,
+    key_size: int | None = None,
+) -> RelaysCA:
+    """Initial creation of the relay signing CA certificate.
+
+    This is intended to be used by omd upon site creation.
+    """
+    return RelaysCA.create(
+        cert_dir=cert_dir(omd_root),
+        site_id=site_id,
+        key_size=key_size or 4096,
+    )
+
+
 class RootCA(CertificateWithPrivateKey):
     """A generic certificate authority for all our CA needs.
 

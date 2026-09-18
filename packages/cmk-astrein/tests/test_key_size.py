@@ -67,18 +67,13 @@ def test_other_generate_key_ignored() -> None:
     assert _check("other.generate_key()") == []
 
 
-def test_initialize_site_ca_without_key_sizes() -> None:
+def test_initialize_site_ca_without_key_size() -> None:
     errors = _check("mgr.initialize_site_ca()")
     assert len(errors) == 1
 
 
-def test_initialize_site_ca_with_only_site_key() -> None:
-    errors = _check("mgr.initialize_site_ca(site_key_size=1024)")
-    assert len(errors) == 1
-
-
-def test_initialize_site_ca_with_both_key_sizes() -> None:
-    assert _check("mgr.initialize_site_ca(site_key_size=1024, root_key_size=1024)") == []
+def test_initialize_site_ca_with_key_size() -> None:
+    assert _check("mgr.initialize_site_ca(key_size=1024)") == []
 
 
 def test_root_ca_load_or_create_without_key_size() -> None:

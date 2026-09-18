@@ -29,6 +29,7 @@ filegroup(
 pkg_files(
     name = "post_create",
     srcs = [
+        "post-create/00_certs",
         "post-create/01_create-sample-config.py",
         "post-create/02_message-broker-certs",
     ],
@@ -53,6 +54,7 @@ pkg_files(
 pkg_files(
     name = "post_mv",
     srcs = [
+        "scripts/00_certs",
         "scripts/post-mv/01_cmk-post-rename-site",
     ],
     attributes = pkg_attributes(
@@ -64,6 +66,7 @@ pkg_files(
 pkg_files(
     name = "post_cp",
     srcs = [
+        "scripts/00_certs",
         "scripts/post-cp/01_cmk-post-rename-site",
     ],
     attributes = pkg_attributes(
@@ -75,6 +78,7 @@ pkg_files(
 pkg_files(
     name = "post_restore",
     srcs = [
+        "scripts/00_certs",
         "scripts/post-restore/01_cmk-post-rename-site",
     ],
     attributes = pkg_attributes(
@@ -217,7 +221,9 @@ pkg_tar(
 sh_library(
     name = "omd_packages_check_mk_sh",
     srcs = [
+        "post-create/00_certs",
         "post-create/02_message-broker-certs",
+        "scripts/00_certs",
         "scripts/post-cp/01_cmk-post-rename-site",
         "scripts/post-mv/01_cmk-post-rename-site",
         "scripts/post-restore/01_cmk-post-rename-site",

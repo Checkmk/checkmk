@@ -22,7 +22,7 @@ from cmk.gui.cmkcert.main import (
     _run_init,
     _run_revoke,
     _run_rotate,
-    CertificateType,
+    InitCertificateType,
 )
 from cmk.gui.config import Config
 from cmk.utils.certs import cert_dir, crl_path, issued_certificates_path, RootCA, SiteCA
@@ -78,7 +78,7 @@ def _dummy_cert_with_key() -> str:
     return f"{_dummy_key()}\n{_dummy_certificate()}"
 
 
-def _create_dummy(omd_root: Path, target_certificate: CertificateType) -> Path:
+def _create_dummy(omd_root: Path, target_certificate: InitCertificateType) -> Path:
     cert_path = _certificate_path(
         omd_root=omd_root,
         site_id=_site_id(),
@@ -109,7 +109,7 @@ def fixture_agent_ca(omd_root: Path) -> Path:
     return agent_ca_path
 
 
-def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
+def _test_init(omd_root: Path, target_cert: InitCertificateType) -> None:
     site_id = _site_id()
     cert_path = _certificate_path(
         omd_root=omd_root,
@@ -134,9 +134,10 @@ def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
     [
         "site-ca",
         "agent-ca",
+        "relay-ca",
     ],
 )
-def test_init_cas(omd_root: Path, target_cert: CertificateType) -> None:
+def test_init_cas(omd_root: Path, target_cert: InitCertificateType) -> None:
     _test_init(omd_root, target_cert)
 
 
@@ -151,11 +152,12 @@ def test_init_site(omd_root: Path) -> None:
     [
         "site-ca",
         "agent-ca",
+        "relay-ca",
         "site",
     ],
 )
 def test_init_cert_does_not_replace_existing(
-    omd_root: Path, target_certificate: CertificateType
+    omd_root: Path, target_certificate: InitCertificateType
 ) -> None:
     _create_dummy(omd_root, target_certificate)
 
@@ -166,6 +168,31 @@ def test_init_cert_does_not_replace_existing(
             target_certificate=target_certificate,
             key_size=1024,
         )
+
+
+@pytest.mark.parametrize(
+    "target_certificate",
+    [
+        "site-ca",
+        "agent-ca",
+        "relay-ca",
+        "site",
+    ],
+)
+def test_init_if_missing_keeps_existing(
+    omd_root: Path, target_certificate: InitCertificateType
+) -> None:
+    cert_path = _create_dummy(omd_root, target_certificate)
+
+    _run_init(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate=target_certificate,
+        key_size=1024,
+        if_missing=True,
+    )
+
+    assert cert_path.read_text() == _dummy_cert_with_key()
 
 
 @pytest.mark.usefixtures("site_ca")

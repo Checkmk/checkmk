@@ -5,51 +5,11 @@
 
 
 import os
-from pathlib import Path
 
 import pytest
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.x509.oid import NameOID
-from pytest_mock import MockerFixture
 
-import omdlib.finalize
 import omdlib.main
-from omdlib.contexts import SiteContext
 from omdlib.type_defs import Skeleton
-
-
-def test_initialize_site_ca(
-    mocker: MockerFixture,
-    tmp_path: Path,
-) -> None:
-    site_id = "tested"
-    ca_path = tmp_path / site_id / "etc" / "ssl"
-    ca_path.mkdir(parents=True, exist_ok=True)
-    ca_pem = ca_path / "ca.pem"
-    site_pem = ca_path / "sites" / ("%s.pem" % site_id)
-
-    mocker.patch(
-        "omdlib.finalize.cert_dir",
-        return_value=ca_path,
-    )
-
-    assert not site_pem.exists()
-    omdlib.finalize.initialize_site_ca(SiteContext(site_id), site_key_size=1024, root_key_size=1024)
-
-    assert ca_pem.exists()
-    ca_cert = load_pem_x509_certificate(ca_pem.read_bytes())
-    assert (
-        ca_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
-        .rfc4514_string()
-        .startswith(f"CN=Site '{site_id}' local CA")
-    )
-
-    assert site_pem.exists()
-    site_cert = load_pem_x509_certificate(site_pem.read_bytes())
-    assert (
-        site_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].rfc4514_string()
-        == f"CN={site_id}"
-    )
 
 
 def test_hostname() -> None:

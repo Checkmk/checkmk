@@ -19,56 +19,6 @@ from omdlib.scripts import call_scripts
 from omdlib.site_paths import SitePaths
 from omdlib.tmpfs import prepare_and_populate_tmpfs
 
-from cmk.ccc.site import SiteId
-from cmk.utils.certs import (
-    agent_root_ca_path,
-    cert_dir,
-    RelaysCA,
-    RootCA,
-    SiteCA,
-)
-
-
-def initialize_site_ca(
-    site: SiteContext, site_key_size: int = 4096, root_key_size: int = 4096
-) -> None:
-    """Initialize the site local CA and create the default site certificate
-    This will be used e.g. for serving SSL secured livestatus
-
-    site_key_size specifies the length of the site certificate's private key. It should only be
-    changed for testing purposes.
-    """
-    site_home = SitePaths.from_site_name(site.name).home
-    site_id = SiteId(site.name)
-    ca_path = cert_dir(Path(site_home))
-    ca = SiteCA.load_or_create(site_id, ca_path, key_size=root_key_size)
-
-    if not ca.site_certificate_exists(ca.cert_dir, site_id):
-        # Additional subject alternative names can be configured in the UI later, but not on first
-        # init for now.
-        ca.create_site_certificate(
-            site_id,
-            additional_sans=[],
-            key_size=site_key_size,
-        )
-
-
-def initialize_agent_ca(site: SiteContext) -> None:
-    """Initialize the agents CA folder alongside a default agent signing CA.
-    The default CA shall be used for issuing certificates for requesting agent controllers.
-    Additional CAs/root certs that may be placed at the agent CA folder shall be used as additional
-    root certs for agent receiver certificate verification (either as client or server cert)
-    """
-    site_home = Path(SitePaths.from_site_name(site.name).home)
-    RootCA.load_or_create(agent_root_ca_path(site_home), f"Site '{site.name}' agent signing CA")
-
-
-def initialize_relay_ca(site: SiteContext) -> None:
-    """Initialize the relay CA folder alongside a default relay signing CA."""
-    site_home = Path(SitePaths.from_site_name(site.name).home)
-    ca_path = cert_dir(Path(site_home))
-    RelaysCA.load_or_create(ca_path, SiteId(site.name))
-
 
 class CommandType(Enum):
     create = auto()
@@ -129,9 +79,6 @@ def finalize_site_as_user(
     # see CMK-3067
     report_port_allocations()
     config_set_all(site.name, site.hook_dir, config, ["TMPFS"])
-    initialize_site_ca(site)
-    initialize_agent_ca(site)
-    initialize_relay_ca(site)
     save_site_conf(site_home, config)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:

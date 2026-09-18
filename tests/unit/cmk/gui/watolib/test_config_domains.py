@@ -11,13 +11,11 @@ from typing import TypedDict
 import pytest
 from pytest_mock import MockerFixture
 
-import omdlib.finalize
-from omdlib.contexts import SiteContext
-
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import load_text_from_file
 from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainOMD
+from cmk.utils.certs import cert_dir, initialize_site_ca, initialize_site_certificate, SiteCA
 
 remote1_newer = (
     "-----BEGIN CERTIFICATE-----\n"
@@ -256,28 +254,18 @@ class TestConfigDomainCACertificates:
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])  # noqa: SLF001
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
 
-    def test_remote_root_ca_in_remote_site_cas(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        site_id = "tested"
-        ca_path = tmp_path / site_id / "etc" / "ssl"
-        ca_path.mkdir(parents=True, exist_ok=True)
-        ca_pem = ca_path / "ca.pem"
-        site_pem = ca_path / "sites" / ("%s.pem" % site_id)
-
-        monkeypatch.setattr(
-            omdlib.finalize,
-            "cert_dir",
-            lambda x: ca_path,  # noqa: ARG005
-        )
+    def test_remote_root_ca_in_remote_site_cas(self, tmp_path: Path) -> None:
+        site_id = SiteId("tested")
+        ca_pem = SiteCA.root_ca_path(cert_dir(tmp_path))
+        site_pem = SiteCA.site_certificate_path(cert_dir(tmp_path), site_id)
 
         assert not site_pem.exists()
-        omdlib.finalize.initialize_site_ca(
-            SiteContext(site_id), site_key_size=1024, root_key_size=1024
-        )
+        initialize_site_ca(omd_root=tmp_path, site_id=site_id, key_size=1024)
+        initialize_site_certificate(omd_root=tmp_path, site_id=site_id, key_size=1024)
+        assert site_pem.exists()
 
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])  # noqa: SLF001
-        assert SiteId(site_id) in remote_cas
+        assert site_id in remote_cas
 
 
 def test_remote_sites_cas_negative_serials() -> None:

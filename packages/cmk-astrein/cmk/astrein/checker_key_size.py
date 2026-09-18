@@ -50,7 +50,7 @@ _RULES: tuple[_KeySizeRule, ...] = (
         attr_name="initialize_site_ca",
         any_receiver=True,
         specific_receiver=None,
-        required_kwargs=("site_key_size", "root_key_size"),
+        required_kwargs=("key_size",),
     ),
     _KeySizeRule(
         func_name=None,

@@ -27,6 +27,7 @@ from cmk.utils.certs import (
     cert_dir,
     crl_path,
     initialize_agent_ca,
+    initialize_relay_ca,
     initialize_site_ca,
     initialize_site_certificate,
     issued_certificates_path,
@@ -52,6 +53,10 @@ def _parse_serial_number(value: str) -> int:
     return int(digits, 16)
 
 
+# The relay CA is created upon site creation, but cannot be rotated (yet).
+InitCertificateType = CertificateType | Literal["relay-ca"]
+
+
 def _parse_args(args: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="""
@@ -73,8 +78,15 @@ It is intended for internal use during site creation.
     )
     mode_init.add_argument(
         "target_certificate",
-        choices=["site", "site-ca", "agent-ca"],
+        choices=["site", "site-ca", "agent-ca", "relay-ca"],
         help="Specify which certificate to create.",
+    )
+    mode_init.add_argument(
+        "--if-missing",
+        dest="if_missing",
+        action="store_true",
+        default=False,
+        help="Exit successfully instead of failing if the certificate already exists.",
     )
 
     mode_rotate = modes.add_parser(
@@ -211,7 +223,7 @@ log of the CA in 'var/log' can be revoked, and the revocation is recorded there 
 def _certificate_path(
     omd_root: Path,
     site_id: SiteId,
-    target_certificate: CertificateType,
+    target_certificate: InitCertificateType,
 ) -> Path:
     match target_certificate:
         case "site":
@@ -220,15 +232,20 @@ def _certificate_path(
             return SiteCA.root_ca_path(cert_dir=cert_dir(omd_root))
         case "agent-ca":
             return agent_root_ca_path(site_root_dir=omd_root)
+        case "relay-ca":
+            return RelaysCA.root_ca_path(cert_dir=cert_dir(omd_root))
 
 
 def _run_init(
     omd_root: Path,
     site_id: SiteId,
-    target_certificate: CertificateType,
+    target_certificate: InitCertificateType,
     key_size: int | None = None,
+    if_missing: bool = False,
 ) -> None:
     if _certificate_path(omd_root, site_id, target_certificate).exists():
+        if if_missing:
+            return
         raise ValueError(f"Certificate '{target_certificate}' for site '{site_id}' already exists.")
 
     match target_certificate:
@@ -238,6 +255,8 @@ def _run_init(
             initialize_agent_ca(site_id=site_id, omd_root=omd_root, key_size=key_size)
         case "site":
             initialize_site_certificate(site_id=site_id, omd_root=omd_root, key_size=key_size)
+        case "relay-ca":
+            initialize_relay_ca(site_id=site_id, omd_root=omd_root, key_size=key_size)
 
 
 def _run_rotate(
@@ -369,6 +388,7 @@ def main(args: Sequence[str] | None = None) -> int:
                 cmk.utils.paths.omd_root,
                 SiteId(site_id),
                 parsed_args.target_certificate,
+                if_missing=parsed_args.if_missing,
             )
 
         elif parsed_args.mode == "rotate":

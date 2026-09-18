@@ -117,9 +117,21 @@ pkg_files(
     renames = {"cmk/backup/mkbackup/__init__.py": "bin/mkbackup"},
 )
 
+pkg_files(
+    name = "monitor_mkbackup_bin",
+    srcs = ["cmk-monitor-mkbackup"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+)
+
 package_wheel(
     name = "pkg_tar",
-    additional_files = [":mkbackup_bin"],
+    additional_files = [
+        ":mkbackup_bin",
+        ":monitor_mkbackup_bin",
+    ],
     visibility = ["//visibility:public"],
     whl = "wheel",
 )
@@ -149,5 +161,6 @@ sh_library(
     name = "helpers",
     srcs = [
         ".f12",
+        "cmk-monitor-mkbackup",
     ],
 )

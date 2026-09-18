@@ -196,3 +196,117 @@ def test_malformed_duration_is_omitted_from_the_summary() -> None:
     assert results == [
         Result(state=State.OK, summary="Status: Success, Last backup: 5 seconds ago")
     ]
+
+
+# The following tests pin the current behaviour of the age levels and the status
+# mapping. They are characterization tests: the hand-rolled "(!)"/"(!!)" markers
+# and the "(Warn/Crit: ...)" text are exactly today's output, and are expected to
+# change when the check moves to check_levels. Levels are compared inclusively
+# (age >= warn / age >= crit), so the boundary values are pinned as well.
+
+
+@pytest.mark.parametrize(
+    "last_backup_age, expected_result",
+    [
+        pytest.param(
+            "20",
+            Result(
+                state=State.WARN,
+                summary="Status: Success, Last backup: 20 seconds ago(!) "
+                "(Warn/Crit: 20 seconds/40 seconds)",
+            ),
+            id="age equal to the warn level",
+        ),
+        pytest.param(
+            "30",
+            Result(
+                state=State.WARN,
+                summary="Status: Success, Last backup: 30 seconds ago(!) "
+                "(Warn/Crit: 20 seconds/40 seconds)",
+            ),
+            id="age inside the warn band",
+        ),
+        pytest.param(
+            "40",
+            Result(
+                state=State.CRIT,
+                summary="Status: Success, Last backup: 40 seconds ago(!!) "
+                "(Warn/Crit: 20 seconds/40 seconds)",
+            ),
+            id="age equal to the crit level",
+        ),
+        pytest.param(
+            "50",
+            Result(
+                state=State.CRIT,
+                summary="Status: Success, Last backup: 50 seconds ago(!!) "
+                "(Warn/Crit: 20 seconds/40 seconds)",
+            ),
+            id="age above the crit level",
+        ),
+    ],
+)
+def test_last_backup_age_levels(last_backup_age: str, expected_result: Result) -> None:
+    results = _check_results(
+        [["Status", "Success"], ["JobName", "JOB_NAME"], ["LastBackupAge", last_backup_age]]
+    )
+
+    assert results == [expected_result]
+
+
+@pytest.mark.parametrize(
+    "status, expected_state",
+    [
+        pytest.param("Warning", State.WARN, id="status Warning is a warning"),
+        pytest.param("Failed", State.CRIT, id="status Failed is critical"),
+    ],
+)
+def test_status_maps_to_the_service_state(status: str, expected_state: State) -> None:
+    results = _check_results([["Status", status], ["JobName", "JOB_NAME"], ["LastBackupAge", "5"]])
+
+    assert results == [
+        Result(state=expected_state, summary=f"Status: {status}, Last backup: 5 seconds ago")
+    ]
+
+
+def _stop_time_results(stop_time: str) -> list[Result]:
+    # time_machine.travel pins $TZ from the ZoneInfo, so the mktime the StopTime
+    # fallback uses is deterministic. CET matches the rest of the module.
+    with time_machine.travel(
+        datetime.datetime(2015, 2, 1, 21, 5, 50, tzinfo=ZoneInfo("CET")), tick=False
+    ):
+        return _check_results(
+            [["Status", "Success"], ["JobName", "JOB_NAME"], ["StopTime", stop_time]]
+        )
+
+
+@pytest.mark.parametrize(
+    "stop_time, expected_result",
+    [
+        pytest.param(
+            "01.02.2015 21:05:20",
+            Result(
+                state=State.WARN,
+                summary="Status: Success, Last backup: 30 seconds ago(!) "
+                "(Warn/Crit: 20 seconds/40 seconds)",
+            ),
+            id="stop time above the warn level",
+        ),
+        pytest.param(
+            "01.02.2015 21:05:00",
+            Result(
+                state=State.CRIT,
+                summary="Status: Success, Last backup: 50 seconds ago(!!) "
+                "(Warn/Crit: 20 seconds/40 seconds)",
+            ),
+            id="stop time above the crit level",
+        ),
+        pytest.param(
+            "01.01.1900 00:00:00",
+            Result(state=State.OK, summary="Status: Success"),
+            id="running backup sentinel omits the age",
+        ),
+    ],
+)
+def test_stop_time_fallback(stop_time: str, expected_result: Result) -> None:
+    assert _stop_time_results(stop_time) == [expected_result]

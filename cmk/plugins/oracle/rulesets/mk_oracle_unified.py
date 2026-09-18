@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping, Sequence
-from enum import StrEnum
-from typing import Final, Literal, override
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -40,16 +39,6 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 # Matches absolute paths on Unix (/...), env var references ($VAR or ${VAR}),
 # and absolute Windows paths (C:\... or C:/...).
 USE_HOST_CLIENT_PATH_RE = r"^(/|\$[\w{]|[a-zA-Z]:[/\\]).*"
-
-
-class Affinity(StrEnum):
-    ALL = "all"
-    DB = "db"
-    ASM = "asm"
-
-    @override
-    def __repr__(self) -> str:
-        return str(self).__repr__()
 
 
 type _AuthOptions = tuple[str, object]

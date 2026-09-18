@@ -945,9 +945,9 @@ class ModeEditRuleset(WatoMode):
 
     @override
     def _from_vars(self) -> None:
-        tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._folder = folder_from_request(
-            tree, request.var("folder"), request.get_ascii_input("host")
+            self._tree, request.var("folder"), request.get_ascii_input("host")
         )
 
         self._name = request.get_ascii_input_mandatory("varname")
@@ -1028,7 +1028,7 @@ class ModeEditRuleset(WatoMode):
                 "service", _('Unable to analyze matching, because "service" parameter is missing')
             )
 
-        self._just_edited_rule_from_vars(tree)
+        self._just_edited_rule_from_vars(self._tree)
 
     # After actions like editing or moving a rule there is a rule that the user has been
     # working before. Focus this rule row again to make multiple actions with a single
@@ -1219,7 +1219,7 @@ class ModeEditRuleset(WatoMode):
 
         folder = mandatory_parameter("folder", request.var("folder"))
 
-        rule_folder = folder_tree().folder(request.get_str_input_mandatory("_folder", folder))
+        rule_folder = self._tree.folder(request.get_str_input_mandatory("_folder", folder))
         rule_folder.permissions.need_permission("write", user)
         rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
@@ -1269,7 +1269,7 @@ class ModeEditRuleset(WatoMode):
             html.div(display_varname, class_="varname")
 
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), self._name
+            self._tree, self._name
         ).get(self._name)
 
         if self._rulespec.deprecation_planned:
@@ -1277,7 +1277,7 @@ class ModeEditRuleset(WatoMode):
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
-        self._rule_listing(ruleset, folder_tree(), site_configs=config.sites, debug=config.debug)
+        self._rule_listing(ruleset, self._tree, site_configs=config.sites, debug=config.debug)
         self._create_form()
 
     def _explain_match_type(self, match_type: MatchType) -> None:
@@ -2186,7 +2186,7 @@ class ABCEditRuleMode(WatoMode):
                     ),
                     conditions_catalog=create_rule_conditions_catalog(
                         locked_conditions=self._locked_conditions,
-                        tree=folder_tree(),
+                        tree=self._tree,
                         rule_spec_name=self._rulespec.name,
                         rule_spec_item=(
                             RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
@@ -2208,7 +2208,7 @@ class ABCEditRuleMode(WatoMode):
                         locked_conditions=self._locked_conditions,
                         title=title,
                         value_parameter_form=registered_form_spec,
-                        tree=folder_tree(),
+                        tree=self._tree,
                         rule_spec_name=self._rulespec.name,
                         rule_spec_item=(
                             RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
@@ -2240,6 +2240,7 @@ class ABCEditRuleMode(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
         self._name = request.get_ascii_input_mandatory(self.VAR_RULE_SPEC_NAME)
 
         try:
@@ -2252,7 +2253,7 @@ class ABCEditRuleMode(WatoMode):
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
 
-        self._set_folder(folder_tree())
+        self._set_folder(self._tree)
 
         self._rulesets = FolderRulesets.load_folder_rulesets(self._folder)
         self._ruleset = self._rulesets.get(self._name)
@@ -2273,9 +2274,7 @@ class ABCEditRuleMode(WatoMode):
         else:
             rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
 
-            collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-                folder_tree(), self._name
-            )
+            collection = SingleRulesetRecursively.load_single_ruleset_recursively(tree, self._name)
             ruleset = collection.get(self._name)
             try:
                 self._folder = ruleset.get_rule_by_id(rule_id).folder
@@ -2446,7 +2445,7 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(rule_values.conditions)
 
         # Check permissions on folders
-        new_rule_folder = folder_tree().folder(rule_values.conditions.host_folder)
+        new_rule_folder = self._tree.folder(rule_values.conditions.host_folder)
         self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write", user)
 

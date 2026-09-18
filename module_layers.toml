@@ -146,8 +146,18 @@ allows = [
 
 
 [plugin_families.violations.bakery]
-# One of the first modes to go into the expected namespace
-allows = ["@ccc", "cmk.utils.log.console", "cmk.utils.render", "cmk.bakery"]
+# The "cmk" commands of the bakery (cli) drive the bakery backend and need the
+# base configuration and the agent paths.
+allows = [
+  "@ccc",
+  "cmk.bakery",
+  "cmk.base.config",
+  "cmk.discover_plugins",
+  "cmk.utils.log.console",
+  "cmk.utils.password_store",
+  "cmk.utils.paths",
+  "cmk.utils.render",
+]
 
 
 [plugin_families.violations.crash]

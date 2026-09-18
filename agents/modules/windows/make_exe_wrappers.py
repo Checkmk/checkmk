@@ -32,11 +32,13 @@ Usage::
 
 import argparse
 import base64
+import configparser
 import hashlib
 import io
 import re
 import sys
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
 
 # Console entry points the CAB ships as .exe wrappers, and the exact
@@ -63,19 +65,75 @@ def _plain_main(module: str, func: str) -> str:
     )
 
 
-def _wrappers(python_major_minor: str) -> dict[str, str]:
-    return {
-        "pip.exe": _PIP_MAIN,
-        "pip3.exe": _PIP_MAIN,
-        f"pip{python_major_minor}.exe": _PIP_MAIN,
-        f"pip-{python_major_minor}.exe": _PIP_MAIN,
-        "cffi-gen-src.exe": _plain_main("cffi._cffi_gen_src", "run"),
-        "chardetect.exe": _plain_main("chardet.cli", "main"),
-        "idna.exe": _plain_main("idna.cli", "main"),
-        "normalizer.exe": _plain_main("charset_normalizer.cli", "cli_detect"),
-        "pywin32_postinstall.exe": _plain_main("win32.scripts.pywin32_postinstall", "main"),
-        "pywin32_testall.exe": _plain_main("win32.scripts.pywin32_testall", "main"),
-    }
+# pip's console scripts keep the (older) template virtualenv's seeder generated;
+# everything else is generated from the dist's own declared entry point.
+_PIP_SCRIPT_TARGET = "pip._internal.cli.main:main"
+
+
+def _console_scripts(site_packages: list[Path]) -> dict[str, str]:
+    """Map every installed console script to its "module:func" entry point.
+
+    The names come from each dist-info's ``entry_points.txt``, so a wrapper can
+    never disagree with the wheel it wraps.  pip additionally installs a
+    versioned alias (``pip3.14``) that it does not declare there; it is
+    recovered from the RECORD below and mapped to pip's own target.
+    """
+    scripts: dict[str, str] = {}
+    for site in site_packages:
+        for entry_points in sorted(site.glob("*.dist-info/entry_points.txt")):
+            parser = configparser.ConfigParser()
+            # Entry-point names are case sensitive; ConfigParser lowercases by default.
+            parser.optionxform = str  # type: ignore[method-assign,assignment]
+            parser.read(entry_points)
+            if not parser.has_section("console_scripts"):
+                continue
+            for name, target in parser.items("console_scripts"):
+                scripts[name] = target.strip()
+    return scripts
+
+
+def _installed_scripts(site_packages: list[Path]) -> set[str]:
+    """Console-script names the cross-platform pip install actually recorded."""
+    names: set[str] = set()
+    for site in site_packages:
+        for record in site.glob("*.dist-info/RECORD"):
+            for line in record.read_text().splitlines():
+                if not line.startswith("../../bin/"):
+                    continue
+                name = line[len("../../bin/") :].split(",", 1)[0]
+                if not name.endswith(".py") and "__pycache__" not in name:
+                    names.add(name)
+    return names
+
+
+def _main_py(name: str, target: str) -> str:
+    if target == _PIP_SCRIPT_TARGET:
+        return _PIP_MAIN
+    module, _, func = target.partition(":")
+    if not module or not func:
+        sys.exit(f"error: console script {name!r} has an unparsable entry point {target!r}")
+    return _plain_main(module, func)
+
+
+def _wrappers(python_major_minor: str, site_packages: list[Path]) -> dict[str, str]:
+    """{wrapper filename: __main__.py} for every script the install recorded."""
+    declared = _console_scripts(site_packages)
+    versioned_pip = f"pip{python_major_minor}"
+    wrappers: dict[str, str] = {}
+    for name in sorted(_installed_scripts(site_packages)):
+        target = declared.get(name)
+        if target is None:
+            if name != versioned_pip:
+                sys.exit(
+                    f"error: console script {name!r} was installed but no dist-info "
+                    "declares it; make_exe_wrappers.py cannot derive its entry point"
+                )
+            # pip's own versioned alias, not declared in entry_points.txt.
+            target = _PIP_SCRIPT_TARGET
+        wrappers[name + ".exe"] = _main_py(name, target)
+    # virtualenv's extra alias; never RECORDed, so it is not derivable.
+    wrappers[f"pip-{python_major_minor}.exe"] = _PIP_MAIN
+    return wrappers
 
 
 _STUB_IN_PIP_WHEEL = "pip/_vendor/distlib/t64.exe"
@@ -84,21 +142,11 @@ _STUB_IN_PIP_WHEEL = "pip/_vendor/distlib/t64.exe"
 _ZIP_DATE_TIME = (1980, 1, 1, 0, 0, 0)
 
 
-def _record_script_to_wrapper(python_major_minor: str) -> dict[str, str]:
+def _record_script_to_wrapper(wrapper_names: Iterable[str]) -> dict[str, str]:
     # RECORD line rewrites: the POSIX entry-point script name pip recorded
     # under bin/ -> the .exe wrapper that replaces it.  pip-<X.Y>.exe is
     # virtualenv's extra alias and was never RECORDed, matching production.
-    return {
-        "pip": "pip.exe",
-        "pip3": "pip3.exe",
-        f"pip{python_major_minor}": f"pip{python_major_minor}.exe",
-        "cffi-gen-src": "cffi-gen-src.exe",
-        "chardetect": "chardetect.exe",
-        "idna": "idna.exe",
-        "normalizer": "normalizer.exe",
-        "pywin32_postinstall": "pywin32_postinstall.exe",
-        "pywin32_testall": "pywin32_testall.exe",
-    }
+    return {name.removesuffix(".exe"): name for name in wrapper_names}
 
 
 def _pip_wheel(path: Path) -> Path:
@@ -150,11 +198,7 @@ def _fixup_records(
                     # A pip-generated console script that never ships (only
                     # bin/*.py is copied to Scripts/); its RECORD hash covers
                     # the build machine's interpreter path, breaking reproducibility.
-                    sys.exit(
-                        f"error: {record}: console script {name!r} has no .exe wrapper; "
-                        "add it to _wrappers()/_record_script_to_wrapper() in "
-                        "make_exe_wrappers.py"
-                    )
+                    sys.exit(f"error: {record}: console script {name!r} has no .exe wrapper")
             lines.append(line)
         record.write_text(eol.join(lines) + eol)
 
@@ -178,13 +222,13 @@ def main() -> int:
 
     wrappers = {
         name: _wrapper_bytes(stub, args.shebang, main_py)
-        for name, main_py in _wrappers(args.python_major_minor).items()
+        for name, main_py in _wrappers(args.python_major_minor, args.fixup_records).items()
     }
     args.scripts_dir.mkdir(parents=True, exist_ok=True)
     for name, data in wrappers.items():
         (args.scripts_dir / name).write_bytes(data)
 
-    script_to_wrapper = _record_script_to_wrapper(args.python_major_minor)
+    script_to_wrapper = _record_script_to_wrapper(wrappers)
     for site_packages in args.fixup_records:
         _fixup_records(site_packages, wrappers, script_to_wrapper)
     return 0

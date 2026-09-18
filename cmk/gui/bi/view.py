@@ -7,14 +7,14 @@
 # mypy: disable-error-code="type-arg"
 
 import typing
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final, Literal, override
 
 from cmk.bi import storage
 from cmk.bi.computer import BIAggregationFilter
 from cmk.bi.filesystem import get_default_site_filesystem
-from cmk.bi.lib import FrozenMarker
+from cmk.bi.lib import ABCBICompiledNode, FrozenMarker
 from cmk.bi.trees import BICompiledRule
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -417,9 +417,14 @@ class PainterAggrIcons(Painter):
                 compiled_branch = load_compiled_branch(
                     frozen_info.based_on_aggregation_id, frozen_info.based_on_branch_title
                 )
-                frozen_elements = row["aggr_compiled_aggregation"].branches[0].required_elements
+                frozen_branch = row["aggr_compiled_aggregation"].branches[0]
+                frozen_elements = frozen_branch.required_elements
                 live_elements = compiled_branch.required_elements
-                if frozen_elements.symmetric_difference(live_elements):
+                # required_elements only holds site/host/service, so a reconfigured rule
+                # is not being taken into account
+                if frozen_elements.symmetric_difference(live_elements) or branches_differ(
+                    frozen_branch, compiled_branch
+                ):
                     html.icon_button(
                         bi_frozen_diff_url,
                         _("This aggregation is frozen. The live version has changes."),
@@ -1005,6 +1010,37 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     return row, aggregations_are_equal
 
 
+NodeIdentifier = tuple[tuple[int | str, ...], ...]
+
+_DERIVED_NODE_KEYS: Final = frozenset({"nodes", "required_hosts"})
+
+
+def node_signature(node: ABCBICompiledNode) -> Mapping[str, object]:
+    """Everything a node is configured with, except its children."""
+    return {key: value for key, value in node.serialize().items() if key not in _DERIVED_NODE_KEYS}
+
+
+def changed_identifiers(
+    reference_ids: Mapping[NodeIdentifier, ABCBICompiledNode],
+    other_ids: Mapping[NodeIdentifier, ABCBICompiledNode],
+) -> set[NodeIdentifier]:
+    """Identifiers present in both trees whose node configuration differs."""
+    return {
+        ident
+        for ident in reference_ids.keys() & other_ids.keys()
+        if node_signature(reference_ids[ident]) != node_signature(other_ids[ident])
+    }
+
+
+def branches_differ(reference_branch: BICompiledRule, other_branch: BICompiledRule) -> bool:
+    """Whether two branches differ in shape or configuration. Mutates neither."""
+    reference_ids = {x.id: x.node_ref for x in reference_branch.get_identifiers((), set())}
+    other_ids = {x.id: x.node_ref for x in other_branch.get_identifiers((), set())}
+    if set(reference_ids) != set(other_ids):
+        return True
+    return bool(changed_identifiers(reference_ids, other_ids))
+
+
 def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledRule) -> bool:
     """Modifies the reference branch inline, returns true/false if the branches are equal"""
     ref_idents = reference_branch.get_identifiers((), set())
@@ -1013,12 +1049,14 @@ def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiled
     ref_ids = {x.id: x.node_ref for x in ref_idents}
     other_ids = {x.id: x.node_ref for x in other_idents}
 
-    if set(ref_ids) == set(other_ids):
+    changed_ids = changed_identifiers(ref_ids, other_ids)
+
+    if set(ref_ids) == set(other_ids) and not changed_ids:
         return True
 
-    affected_parent_ids: set[tuple[tuple[int, str], ...]] = set()
+    affected_parent_ids: set[NodeIdentifier] = set()
 
-    def extract_and_update_affected_parents_ids(ident: tuple[tuple[int, str], ...]) -> None:
+    def extract_and_update_affected_parents_ids(ident: NodeIdentifier) -> None:
         # If a diff was detected in the following identifier:
         #   - ((1, "Host heute"), (1, "Performance"), (1, "Memory"))
         # Two parent ids would be extracted pointing to the grandparent and parent node:
@@ -1063,8 +1101,16 @@ def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiled
         mod_idents = reference_branch.get_identifiers((), set())
         mod_ids = {x.id: x.node_ref for x in mod_idents}
 
+    for changed_id in changed_ids:
+        extract_and_update_affected_parents_ids(changed_id)
+        ref_ids[changed_id].set_frozen_marker(FrozenMarker("changed"))
+
+    # A node that was reconfigured keeps saying so - "look inside" is only useful for
+    # an ancestor that has nothing to report in its own right.
     for pid in affected_parent_ids:
-        if (ref := ref_ids.get(pid)) or (ref := other_ids.get(pid)):
+        if ((ref := ref_ids.get(pid)) or (ref := other_ids.get(pid))) and (
+            (marker := ref.frozen_marker) is None or marker.status != "changed"
+        ):
             ref.set_frozen_marker(FrozenMarker("parent"))
 
     return False

@@ -178,7 +178,9 @@ class ABCFoldableTreeRenderer(abc.ABC):
     def _toggle_js_function(self) -> str:
         raise NotImplementedError
 
-    def _show_leaf(self, tree: BILeafTreeState, show_host: bool) -> None:
+    def _show_leaf(
+        self, tree: BILeafTreeState, show_host: bool, frozen_marker_rendered: bool = False
+    ) -> None:
         site, host = tree[2]["host"]
         service = tree[2].get("service")
 
@@ -202,7 +204,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
                 filename="view.py",
             )
 
-        with self._show_node(tree, show_host):
+        with self._show_node(tree, show_host, frozen_marker_rendered=frozen_marker_rendered):
             self._assume_icon(site, host, service)
 
             if show_host:
@@ -221,6 +223,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         show_host: bool,
         mousecode: str | None = None,
         img_class: str | None = None,
+        frozen_marker_rendered: bool = False,
     ) -> AbstractContextManager[None]:
         raise NotImplementedError
 
@@ -268,7 +271,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         frozen_marker_set: bool = False,
     ) -> None:
         if is_leaf(tree):
-            self._show_leaf(tree, show_host)
+            self._show_leaf(tree, show_host, frozen_marker_set)
             return
         if not is_aggr(tree):
             raise ValueError("Invalid tree state")
@@ -280,7 +283,13 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         css_class = "open" if self._is_open(path) else "closed"
 
-        with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
+        with self._show_node(
+            tree,
+            show_host,
+            mousecode=mc,
+            img_class=css_class,
+            frozen_marker_rendered=frozen_marker_set,
+        ):
             if tree[2].get("icon"):
                 html.write_html(html.render_icon(tree[2]["icon"]))
                 html.write_text_permissive("&nbsp;")
@@ -338,6 +347,12 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                         tooltip_text = _("These nodes are only in the frozen aggregation")
                     frozen_symbol = "-"
                     frozen_aggregation_css = "frozen_aggregation only_in_frozen_aggregation"
+                elif frozen_marker.status == "changed":
+                    tooltip_text = _(
+                        "This node is configured differently in the frozen aggregation"
+                    )
+                    frozen_symbol = "~"
+                    frozen_aggregation_css = "frozen_aggregation changed_in_frozen_aggregation"
             html.open_li(class_=frozen_aggregation_css)
             if frozen_aggregation_css and frozen_marker and frozen_symbol:
                 html.span(
@@ -361,6 +376,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         show_host: bool,
         mousecode: str | None = None,
         img_class: str | None = None,
+        frozen_marker_rendered: bool = False,
     ) -> Iterator[None]:
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
@@ -409,9 +425,15 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             icon_name = StaticIcon(IconNames.outof_serviceperiod)
             icon_title = _("This element is currently not in its service period.")
 
-        if (frozen_marker := tree[2].get("frozen_marker")) and frozen_marker.status == "parent":
-            icon_name = StaticIcon(IconNames.warning)
-            icon_title = _("This node has nested aggregation differences.")
+        if frozen_marker := tree[2].get("frozen_marker"):
+            if frozen_marker.status == "parent":
+                icon_name = StaticIcon(IconNames.warning)
+                icon_title = _("This node has nested aggregation differences.")
+            elif frozen_marker.status == "changed" and not frozen_marker_rendered:
+                # The root branch never passes through _show_child, so this is the only
+                # place its own marker can be shown.
+                icon_name = StaticIcon(IconNames.warning)
+                icon_title = _("This node is configured differently in the frozen aggregation")
 
         if icon_name and icon_title:
             html.static_icon(icon_name, title=icon_title, css_classes=["icon", "bi"])
@@ -520,6 +542,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
         show_host: bool,
         mousecode: str | None = None,
         img_class: str | None = None,
+        frozen_marker_rendered: bool = False,
     ) -> Iterator[None]:
         yield
 

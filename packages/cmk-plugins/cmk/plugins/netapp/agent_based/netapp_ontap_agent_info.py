@@ -24,7 +24,7 @@ def parse_netapp_ontap_agent_info(string_table: StringTable) -> Section:
     return [models.AgentInfoModel.model_validate_json(line[0]) for line in string_table]
 
 
-def discover_netapp_ontap_agent_info(section: Section) -> DiscoveryResult:
+def discover_netapp_ontap_agent_info(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

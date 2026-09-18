@@ -124,7 +124,7 @@ const onResetIntent = (): void => {
 const {
   hiddenMetricNames,
   hiddenLineNames,
-  highlightedMetricName,
+  highlightedMetricNames,
   visibleMetrics,
   visibleHorizontalLines
 } = useGraphVisibility(
@@ -180,6 +180,7 @@ const graphOptions = computed(
             :data_time_range="fetchedTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
+            :shaded_regions="[]"
             :value-range="viewValueRange"
             zoom-mode="time"
             :size="figureSize"
@@ -189,7 +190,7 @@ const graphOptions = computed(
             :pan-enabled="true"
             :zoom-enabled="true"
             :options="graphOptions"
-            :highlighted-metric-name="highlightedMetricName"
+            :highlighted-metric-names="highlightedMetricNames"
             @zoom="onZoom"
             @pan="onPan"
             @reset="onResetIntent"
@@ -203,7 +204,7 @@ const graphOptions = computed(
           :clickable-metric-names="clickableMetricNames"
           @update:hidden-metric-names="hiddenMetricNames = $event"
           @update:hidden-line-names="hiddenLineNames = $event"
-          @hover-metric="highlightedMetricName = $event"
+          @hover-metrics="highlightedMetricNames = $event"
           @metric-click="onMetricClick"
         />
       </template>

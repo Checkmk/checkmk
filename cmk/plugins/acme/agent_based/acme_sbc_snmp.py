@@ -59,7 +59,7 @@ snmp_section_acme_sbc_snmp = SimpleSNMPSection(
 )
 
 
-def discover_acme_sbc_snmp(section: Section) -> DiscoveryResult:
+def discover_acme_sbc_snmp(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

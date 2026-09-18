@@ -4,11 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 import enum
@@ -39,8 +36,7 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.oauth2_connections.recomposer import recompose as recompose_oauth2_connection
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
-from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.userdb import UserSelection as LegacyUserSelection
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib import config_domains as legacy_config_domains
@@ -79,6 +75,7 @@ from cmk.web.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
+from cmk.web.utils.doc_references import DocReference
 
 
 @dataclass(frozen=True)
@@ -236,7 +233,7 @@ def convert_to_legacy_rulespec(
 
 def _convert_to_legacy_check_parameter_rulespec(
     to_convert: ruleset_api_v1.rule_specs.CheckParameters,
-    edition_only: Edition,
+    edition_only: Edition,  # noqa: ARG001
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
     convert_condition = to_convert.condition
@@ -280,7 +277,7 @@ def _convert_to_legacy_check_parameter_rulespec(
 
 def _convert_to_legacy_manual_check_parameter_rulespec(
     to_convert: ruleset_api_v1.rule_specs.EnforcedService,
-    edition_only: Edition,
+    edition_only: Edition,  # noqa: ARG001
     localizer: Callable[[str], str],
 ) -> ManualCheckParameterRulespec:
     match to_convert.condition:
@@ -1906,7 +1903,7 @@ LevelsConfigModel = (
 
 
 def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "no_levels", None:
             return "no_levels", None
         case "fixed", tuple(fixed_levels):
@@ -1976,7 +1973,7 @@ def _convert_to_legacy_levels[NumberT: (int, float)](
             )
         )
 
-    match to_convert.form_spec_template:
+    match to_convert.form_spec_template:  # type: ignore[exhaustive-match]
         case (
             ruleset_api_v1.form_specs.Float()
             | ruleset_api_v1.form_specs.TimeSpan()
@@ -2002,7 +1999,7 @@ def _convert_to_legacy_levels[NumberT: (int, float)](
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             choices=choices,
-            default_value=_make_levels_default_value(to_convert, prefill_value),
+            default_value=_make_levels_default_value(to_convert, prefill_value),  # type: ignore[possibly-undefined]
             # Mypy does not see, to see Literal["..."] as a str
             validate=validate,  # type: ignore[arg-type]
         ),
@@ -2041,7 +2038,7 @@ def _make_levels_default_value[NumberT: (int, float)](
 
 
 def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "environment_proxy", str():
             return "environment", "environment"
         case "cmk_postprocessed", "no_proxy", str():
@@ -2061,11 +2058,11 @@ def _transform_proxy_back(
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
 ]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
-        case "no_proxy", None:
-            return "cmk_postprocessed", "no_proxy", ""
+        case "no_proxy", None:  # type: ignore[unreachable]
+            return "cmk_postprocessed", "no_proxy", ""  # type: ignore[unreachable]
         case "global", str(stored_proxy_id):
             return "cmk_postprocessed", "stored_proxy", stored_proxy_id
         case "url", str(url):
@@ -2230,7 +2227,7 @@ def _transform_from_legacy_internal_proxy(
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
 
-        case "no_proxy", None:
+        case "no_proxy", None:  # type: ignore[unreachable]
             return "cmk_postprocessed", "no_proxy", ""
 
         case "global", str(stored_proxy_id):
@@ -2239,7 +2236,7 @@ def _transform_from_legacy_internal_proxy(
         case "manual", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
             "auth": {
                 "user": str(user),
                 "password": (
@@ -2270,7 +2267,7 @@ def _transform_from_legacy_internal_proxy(
         case "manual", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
         }:
             return (
                 "cmk_postprocessed",
@@ -2651,7 +2648,7 @@ def _convert_to_legacy_text_area(
 
 
 def _transform_timeperiod_forth(value: object) -> str | None:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "stored_time_period", str(time_period):
             return time_period
         # time_period is None when adding a new rule

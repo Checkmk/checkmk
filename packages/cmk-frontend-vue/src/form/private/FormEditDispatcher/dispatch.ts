@@ -8,6 +8,7 @@ import { type Component } from 'vue'
 
 import FormBinaryConditionChoices from '@/form/private/forms/FormBinaryConditionChoices'
 import FormBooleanChoice from '@/form/private/forms/FormBooleanChoice.vue'
+import FormCaCertificate from '@/form/private/forms/FormCaCertificate.vue'
 import FormCascadingSingleChoice from '@/form/private/forms/FormCascadingSingleChoice.vue'
 import FormCatalog from '@/form/private/forms/FormCatalog/FormCatalog.vue'
 import FormCheckboxListChoice from '@/form/private/forms/FormCheckboxListChoice.vue'
@@ -49,9 +50,9 @@ type FormSpecComponents = Record<Components['type'], Component>
 // Explicitly call out components owned by features to statically ensure
 // base components are exhaustively registered.
 type FeatureOwnedComponents =
-  | 'metric_backend_custom_query'
+  | 'telemetry_metrics_custom_query'
   | 'oauth2_connection_setup'
-  | 'dcd_metric_backend_filter'
+  | 'dcd_telemetry_metrics_filter'
 
 type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 
@@ -59,6 +60,7 @@ type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 const baseComponents: BaseComponents = {
   binary_condition_choices: FormBinaryConditionChoices,
   boolean_choice: FormBooleanChoice,
+  ca_certificate: FormCaCertificate,
   cascading_single_choice: FormCascadingSingleChoice,
   catalog: FormCatalog,
   checkbox_list_choice: FormCheckboxListChoice,

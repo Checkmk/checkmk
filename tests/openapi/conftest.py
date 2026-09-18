@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-from __future__ import annotations
+# mypy: disable-error-code="explicit-any"
+
 
 import logging
 import os
@@ -19,13 +19,10 @@ import pytest
 
 import cmk.ccc.version as cmk_version
 
-# NOTE: register_assert_rewrite + fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
+# NOTE: fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
 # Modules like cmk/gui/userdb/store.py capture `cmk.utils.paths.var_dir` at import time; patching
 # after those imports is too late and yields relative paths at runtime.
-pytest.register_assert_rewrite("tests.testlib")
-
-
-from tests.testlib import fake_site  # noqa: E402
+from tests.testlib import fake_site
 
 fake_site.fake_paths()
 
@@ -34,6 +31,7 @@ from flask import Flask  # noqa: E402
 from pytest_mock import MockerFixture  # noqa: E402
 
 import cmk.gui.watolib.password_store  # noqa: E402
+from cmk.ccc.hostaddress import HostName  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
@@ -120,7 +118,6 @@ class DummyLicensingHandler(LicensingHandler):
 
 
 logger = logging.getLogger(__name__)
-logging.getLogger("faker").setLevel(logging.ERROR)
 
 # This allows exceptions to be handled by IDEs (rather than just printing the results)
 # when pytest based tests are being run from inside the IDE
@@ -143,12 +140,12 @@ def pytest_exception_interact(
         raise excp_
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_cmk() -> Generator[None]:
     yield from fake_site.cleanup_cmk_tmp_dir()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_umask() -> Generator[None]:
     """Ensure the tests always use the same umask"""
     old_mask = os.umask(0o0007)
@@ -158,50 +155,50 @@ def fixture_umask() -> Generator[None]:
         os.umask(old_mask)
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = "NO_SITE"
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def enable_debug_fixture() -> Generator[None]:
     yield from fake_site.enable_cmk_debug()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_after_test() -> Generator[None]:
     yield from fake_site.cleanup_omd_root_after_test()
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_livestatus_connect() -> Iterator[None]:
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
     yield from fake_site.prevent_livestatus_connect()
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def clear_caches_per_module() -> Generator[None]:
     """Ensures that module-scope fixtures are executed with clean caches."""
     fake_site.clear_caches()
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def clear_caches_per_function() -> Generator[None]:
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     fake_site.clear_caches()
     yield
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     yield from fake_site.reduce_password_hashing_rounds()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:
     """cmk.utils.log.security_event.log_security_event implicitly opens a file logger upon it's
     first call which we want to avoid in the unit test context."""
@@ -213,14 +210,14 @@ def test_edition() -> cmk_version.Edition:
     return fake_site.edition()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
         mp.setattr(
             cmk_version,
             "omd_version",
-            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",  # noqa: ARG005
         )
         cmk_version.edition.cache_clear()
         yield
@@ -247,7 +244,7 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
 def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: DummyLicensingHandler,
+        lambda omd_root: DummyLicensingHandler,  # noqa: ARG005
     )
 
 
@@ -260,17 +257,17 @@ def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(mocker: MockerFixture) -> Iterator[None]:
     yield from perform_gui_cleanup_after_test(mocker)
 
@@ -309,7 +306,7 @@ def set_config_fixture() -> SetConfig:
     return set_config_context
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: cmk_version.Edition) -> None:
     perform_load_plugins(test_edition)
 
@@ -345,7 +342,7 @@ def inline_background_jobs(mocker: MockerFixture) -> None:
     inline_background_jobs_patches(mocker)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_unannotated_background_job_start(
     request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:
@@ -364,7 +361,7 @@ def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMo
     )
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
+        side_effect=lambda *args, **kw: None,  # noqa: ARG005
     )
 
 
@@ -416,7 +413,7 @@ def aut_user_auth_wsgi_app(
 
 
 @pytest.fixture()
-def with_host(request_context, with_admin_login):
+def with_host(request_context: None, with_admin_login: UserId) -> Iterator[list[HostName]]:
     yield from create_test_hosts()
 
 
@@ -456,9 +453,9 @@ def api_client(
 @pytest.fixture()
 def with_groups(
     monkeypatch: pytest.MonkeyPatch,
-    request_context,
-    with_admin_login,
-    suppress_remote_automation_calls,
+    request_context: None,
+    with_admin_login: UserId,
+    suppress_remote_automation_calls: RemoteAutomation,
 ) -> Iterator[None]:
     yield from create_test_groups(monkeypatch)
 

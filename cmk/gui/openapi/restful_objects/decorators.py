@@ -14,8 +14,6 @@ which then has to be dumped into the checkmk.yaml file.
 
 """
 
-from __future__ import annotations
-
 import contextlib
 import functools
 import http.client

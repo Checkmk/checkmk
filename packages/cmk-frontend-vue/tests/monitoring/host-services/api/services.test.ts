@@ -18,6 +18,8 @@ function makeApiEntry(overrides: Partial<ApiServiceEntry> = {}): ApiServiceEntry
   return {
     name: 'CPU load',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     summary: 'OK - 15 min load: 0.5',
     last_check: 1783942710,
     last_state_change: 1783942740,

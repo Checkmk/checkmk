@@ -18,6 +18,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiConfig,
     GuiConnectionConf,
     GuiDiscoveryConf,
+    GuiExcludedSectionConf,
     GuiInstanceConf,
     GuiMainConf,
     GuiOracleClientLibOptions,
@@ -52,13 +53,13 @@ def _source(base_os: OS) -> Path:
 def _target(base_os: OS) -> Path:
     match base_os:
         case OS.LINUX:
-            return Path("packages", "mk-oracle", "mk-oracle")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2")
         case OS.WINDOWS:
-            return Path("packages", "mk-oracle", "mk-oracle.exe")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2.exe")
         case OS.AIX:
-            return Path("packages", "mk-oracle", "mk-oracle.aix")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2.aix")
         case OS.SOLARIS:
-            return Path("packages", "mk-oracle", "mk-oracle.solaris")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2.solaris")
         case _:
             raise ValueError(f"Unsupported OS: {base_os}")
 
@@ -67,17 +68,17 @@ linux_files: list[Plugin] = [
     Plugin(
         base_os=OS.LINUX,
         source=Path("mk-oracle"),
-        target=Path("packages", "mk-oracle", "mk-oracle"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2"),
     ),
     Plugin(
         base_os=OS.LINUX,
         source=Path("oracle_unified_sync"),
-        target=Path("oracle_unified_sync"),
+        target=Path("mk-oracle-v2_sync"),
     ),
     Plugin(
         base_os=OS.LINUX,
         source=Path("oracle_unified_async"),
-        target=Path("oracle_unified_async"),
+        target=Path("mk-oracle-v2_async"),
         interval=600,
     ),
 ]
@@ -86,17 +87,17 @@ windows_files: list[Plugin] = [
     Plugin(
         base_os=OS.WINDOWS,
         source=Path("mk-oracle.exe"),
-        target=Path("packages", "mk-oracle", "mk-oracle.exe"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.exe"),
     ),
     Plugin(
         base_os=OS.WINDOWS,
         source=Path("oracle_unified_sync.ps1"),
-        target=Path("oracle_unified_sync.ps1"),
+        target=Path("mk-oracle-v2_sync.ps1"),
     ),
     Plugin(
         base_os=OS.WINDOWS,
         source=Path("oracle_unified_async.ps1"),
-        target=Path("oracle_unified_async.ps1"),
+        target=Path("mk-oracle-v2_async.ps1"),
         interval=600,
     ),
 ]
@@ -105,17 +106,17 @@ aix_files: list[Plugin] = [
     Plugin(
         base_os=OS.AIX,
         source=Path("mk-oracle.aix"),
-        target=Path("packages", "mk-oracle", "mk-oracle.aix"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.aix"),
     ),
     Plugin(
         base_os=OS.AIX,
         source=Path("oracle_unified_sync.aix"),
-        target=Path("oracle_unified_sync.aix"),
+        target=Path("mk-oracle-v2_sync.aix"),
     ),
     Plugin(
         base_os=OS.AIX,
         source=Path("oracle_unified_async.aix"),
-        target=Path("oracle_unified_async.aix"),
+        target=Path("mk-oracle-v2_async.aix"),
         interval=600,
     ),
 ]
@@ -124,17 +125,17 @@ solaris_files: list[Plugin] = [
     Plugin(
         base_os=OS.SOLARIS,
         source=Path("mk-oracle.solaris"),
-        target=Path("packages", "mk-oracle", "mk-oracle.solaris"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.solaris"),
     ),
     Plugin(
         base_os=OS.SOLARIS,
         source=Path("oracle_unified_sync.solaris"),
-        target=Path("oracle_unified_sync.solaris"),
+        target=Path("mk-oracle-v2_sync.solaris"),
     ),
     Plugin(
         base_os=OS.SOLARIS,
         source=Path("oracle_unified_async.solaris"),
-        target=Path("oracle_unified_async.solaris"),
+        target=Path("mk-oracle-v2_async.solaris"),
         interval=600,
     ),
 ]
@@ -277,6 +278,7 @@ oracle_config_full: GuiConfig = GuiConfig(
                 host="dbhost2",
                 port=1522,
                 timeout=20,
+                # per-instance tns_admin is reserved and dropped by the bakery (main-only)
                 tns_admin="/etc/oracle/tns2",
             ),
         ),
@@ -319,7 +321,6 @@ expected_yaml_lines_full = [
     "        hostname: dbhost2",
     "        port: 1522",
     "        timeout: 20",
-    "        tns_admin: /etc/oracle/tns2",
     "      instance_name: Instance_Name_2",
     "      service_name: Service_Name_2",
     "    options:",
@@ -511,6 +512,7 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
                 host="hostb",
                 port=1522,
                 timeout=10,
+                # per-instance tns_admin is reserved and dropped by the bakery (main-only)
                 tns_admin="/etc/oracle/tnsb",
             ),
         ),
@@ -544,7 +546,6 @@ expected_yaml_lines_discovery_instances = [
     "        hostname: hostb",
     "        port: 1522",
     "        timeout: 10",
-    "        tns_admin: /etc/oracle/tnsb",
     "      instance_name: SID_B",
 ]
 
@@ -816,25 +817,25 @@ custom_metrics_files: list[Plugin] = [
     Plugin(
         base_os=OS.LINUX,
         source=Path("oracle_unified_async_custom_metrics"),
-        target=Path("oracle_unified_async_custom_metrics"),
+        target=Path("mk-oracle-v2_async_custom_metrics"),
         interval=120,
     ),
     Plugin(
         base_os=OS.WINDOWS,
         source=Path("oracle_unified_async_custom_metrics.ps1"),
-        target=Path("oracle_unified_async_custom_metrics.ps1"),
+        target=Path("mk-oracle-v2_async_custom_metrics.ps1"),
         interval=120,
     ),
     Plugin(
         base_os=OS.AIX,
         source=Path("oracle_unified_async_custom_metrics.aix"),
-        target=Path("oracle_unified_async_custom_metrics.aix"),
+        target=Path("mk-oracle-v2_async_custom_metrics.aix"),
         interval=120,
     ),
     Plugin(
         base_os=OS.SOLARIS,
         source=Path("oracle_unified_async_custom_metrics.solaris"),
-        target=Path("oracle_unified_async_custom_metrics.solaris"),
+        target=Path("mk-oracle-v2_async_custom_metrics.solaris"),
         interval=120,
     ),
 ]
@@ -977,3 +978,142 @@ def test_additional_options_ignores_legacy_permissions_check_key() -> None:
         {"permissions_check": ("enabled", {"safe_entries": ["x"]})}
     )
     assert options.validate_permissions is None
+
+
+# --- excluded_sections tests ---
+
+SID: Literal["sid"] = "sid"
+DESCRIPTOR: Literal["descriptor"] = "descriptor"
+ALIAS: Literal["alias"] = "alias"
+
+
+def _config_with_excluded_sections(
+    excluded_sections: list[GuiExcludedSectionConf] | None,
+) -> GuiConfig:
+    return GuiConfig(
+        deploy=(DEPLOY, None),
+        main=GuiMainConf(
+            auth=GuiAuthConf(
+                auth_type=(
+                    OracleAuthType.STANDARD,
+                    GuiAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
+                ),
+                role=None,
+            ),
+            connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+            excluded_sections=excluded_sections,
+        ),
+        instances=None,
+    )
+
+
+def _yaml_lines(config: GuiConfig) -> Sequence[str]:
+    entries = [entry for entry in _process(config) if isinstance(entry, PluginConfig)]
+    assert entries, "no plugin config emitted"
+    return list(entries[0].lines)
+
+
+def test_excluded_sections_emits_the_target_fields_and_the_sections() -> None:
+    # The ruleset value is a tagged tuple; the tag is dropped and the identifying
+    # fields are written next to `sections`, without a `target_id` level.
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(SID, GuiOracleIdentificationConf(sid="XE")),
+                sections=["jobs", "tablespaces"],
+            )
+        ]
+    )
+
+    lines = _yaml_lines(config)
+
+    assert "    excluded_sections:" in lines
+    assert "    - sections:" in lines
+    assert "      - jobs" in lines
+    assert "      - tablespaces" in lines
+    assert "      sid: XE" in lines
+    # The cascading tag itself is never emitted.
+    assert not any("descriptor" in line for line in lines)
+
+
+def test_excluded_sections_emits_every_identifying_field_of_a_descriptor() -> None:
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(
+                    DESCRIPTOR,
+                    GuiOracleIdentificationConf(service_name="srv", instance_name="inst", sid="XE"),
+                ),
+                sections=["jobs"],
+            )
+        ]
+    )
+
+    lines = _yaml_lines(config)
+
+    # The dumper sorts the keys, so `instance_name` opens the entry.
+    assert "    - instance_name: inst" in lines
+    assert "      service_name: srv" in lines
+    assert "      sid: XE" in lines
+
+
+def test_excluded_sections_emits_an_alias_target() -> None:
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(ALIAS, GuiOracleIdentificationConf(alias="my_alias")),
+                sections=["locks"],
+            )
+        ]
+    )
+
+    assert "    - alias: my_alias" in _yaml_lines(config)
+
+
+def test_excluded_sections_emits_one_entry_per_rule() -> None:
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(SID, GuiOracleIdentificationConf(sid="A")), sections=["jobs"]
+            ),
+            GuiExcludedSectionConf(
+                target_id=(SID, GuiOracleIdentificationConf(sid="B")), sections=["locks"]
+            ),
+        ]
+    )
+
+    lines = _yaml_lines(config)
+
+    assert lines.count("    - sections:") == 2
+    assert "      sid: A" in lines
+    assert "      sid: B" in lines
+
+
+@pytest.mark.parametrize("excluded_sections", [None, []])
+def test_excluded_sections_absent_when_no_rules(
+    excluded_sections: list[GuiExcludedSectionConf] | None,
+) -> None:
+    lines = _yaml_lines(_config_with_excluded_sections(excluded_sections))
+    assert not any("excluded_sections" in line for line in lines)
+
+
+def test_excluded_sections_skips_a_rule_without_any_identifying_field() -> None:
+    # A target that names nothing can never be matched, so the rule is dropped.
+    # The key itself still appears, as an empty list.
+    config = _config_with_excluded_sections(
+        [GuiExcludedSectionConf(target_id=(SID, GuiOracleIdentificationConf()), sections=["jobs"])]
+    )
+
+    assert "    excluded_sections: []" in _yaml_lines(config)
+
+
+def test_excluded_sections_keeps_a_target_without_sections() -> None:
+    # `sections` is optional in the ruleset, so the target survives with no list.
+    config = _config_with_excluded_sections(
+        [GuiExcludedSectionConf(target_id=(SID, GuiOracleIdentificationConf(sid="XE")))]
+    )
+
+    lines = _yaml_lines(config)
+
+    assert "    - sid: XE" in lines
+    assert not any(line.strip() == "sections:" for line in lines)

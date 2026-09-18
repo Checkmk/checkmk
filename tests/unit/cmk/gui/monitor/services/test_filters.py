@@ -13,6 +13,8 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
+    ServiceLabelChoiceCondition,
+    ServiceNameChoiceCondition,
     ServiceNotNode,
     ServiceOrNode,
     ServiceStateChoiceCondition,
@@ -21,6 +23,7 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceTimestampCondition,
     ServiceTimestampOp,
 )
+from tests.testlib.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(
@@ -82,11 +85,151 @@ def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
     assert parse_as_livestatus_filter(condition) == expected
 
 
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(
+            True,
+            "Filter: modified_attributes_list >= active_checks_enabled\n"
+            "Filter: active_checks_enabled = 0\n"
+            "And: 2",
+            id="manually disabled",
+        ),
+        pytest.param(
+            False,
+            "Filter: modified_attributes_list >= active_checks_enabled\n"
+            "Filter: active_checks_enabled = 0\n"
+            "And: 2\n"
+            "Negate:",
+            id="not manually disabled",
+        ),
+    ],
+)
+def test_query_builder_active_checks_disabled_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="active_checks_disabled", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(
+            True,
+            "Filter: modified_attributes_list >= passive_checks_enabled\n"
+            "Filter: accept_passive_checks = 0\n"
+            "And: 2",
+            id="manually disabled",
+        ),
+        pytest.param(
+            False,
+            "Filter: modified_attributes_list >= passive_checks_enabled\n"
+            "Filter: accept_passive_checks = 0\n"
+            "And: 2\n"
+            "Negate:",
+            id="not manually disabled",
+        ),
+    ],
+)
+def test_query_builder_passive_checks_disabled_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="passive_checks_disabled", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(
+            True,
+            "Filter: in_check_period = 1\nFilter: in_passive_check_period = 1\nAnd: 2",
+            id="inside both check periods",
+        ),
+        pytest.param(
+            False,
+            "Filter: in_check_period = 1\nFilter: in_passive_check_period = 1\nAnd: 2\nNegate:",
+            id="outside at least one check period",
+        ),
+    ],
+)
+def test_query_builder_in_check_period_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="in_check_period", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(
+            True,
+            "Filter: state = 3\n"
+            "Filter: plugin_output ~ check failed - please submit a crash report!\n"
+            "And: 2",
+            id="crashed",
+        ),
+        pytest.param(
+            False,
+            "Filter: state = 3\n"
+            "Filter: plugin_output ~ check failed - please submit a crash report!\n"
+            "And: 2\n"
+            "Negate:",
+            id="did not crash",
+        ),
+    ],
+)
+def test_query_builder_check_crashed_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="check_crashed", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (True, "Filter: comments !="),
+        (False, "Filter: comments ="),
+    ],
+)
+def test_query_builder_has_comments_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(
+        type="condition", field="has_comments", op="eq", value=value
+    )
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (True, "Filter: staleness >= 3.5"),
+        (False, "Filter: staleness < 3.5"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_query_builder_stale_condition(value: bool, expected: str, set_config: SetConfig) -> None:
+    condition = ServiceBooleanCondition(type="condition", field="stale", op="eq", value=value)
+    with set_config(staleness_threshold=3.5):
+        assert parse_as_livestatus_filter(condition) == expected
+
+
 def test_query_builder_state_choice_single_no_or() -> None:
     condition = ServiceStateChoiceCondition(
         type="condition", field="state", op="one_of", value=["WARN"]
     )
-    assert parse_as_livestatus_filter(condition) == "Filter: state = 1"
+    value = parse_as_livestatus_filter(condition)
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+        ]
+    )
+
+    assert value == expected
 
 
 def test_query_builder_state_choice_multiple_with_or() -> None:
@@ -101,12 +244,158 @@ def test_query_builder_state_choice_multiple_with_or() -> None:
     expected = "\n".join(  # noqa: FLY002
         [
             "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
             "Filter: state = 2",
+            "Filter: has_been_checked = 1",
+            "And: 2",
             "Or: 2",
         ]
     )
 
     assert value == expected
+
+
+def test_query_builder_state_choice_pending_matches_has_been_checked_only() -> None:
+    """A pending service's raw ``state`` column is meaningless, so 'PENDING' is not translated
+    into a ``state = X`` filter at all - only into ``has_been_checked``."""
+    condition = ServiceStateChoiceCondition(
+        type="condition", field="state", op="one_of", value=["PENDING"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: has_been_checked = 0"
+
+
+def test_query_builder_state_choice_mixes_pending_and_real_states() -> None:
+    condition = ServiceStateChoiceCondition(
+        type="condition", field="state", op="one_of", value=["OK", "PENDING"]
+    )
+
+    value = parse_as_livestatus_filter(condition)
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 0",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: has_been_checked = 0",
+            "Or: 2",
+        ]
+    )
+
+    assert value == expected
+
+
+def test_query_builder_label_choice_single_no_or() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os_family:linux"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels = 'cmk/os_family' 'linux'"
+
+
+def test_query_builder_label_choice_multiple_with_or() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition",
+        field="tags",
+        op="one_of",
+        value=["criticality:prod", "networking:core"],
+    )
+
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: tags = 'criticality' 'prod'",
+            "Filter: tags = 'networking' 'core'",
+            "Or: 2",
+        ]
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+def test_label_choice_condition_rejects_a_newline() -> None:
+    payload = {
+        "type": "condition",
+        "field": "labels",
+        "op": "one_of",
+        "value": ["key:va\nlue"],
+    }
+
+    with pytest.raises(ValidationError):
+        TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+            payload, strict=False
+        )
+
+
+def test_query_builder_label_choice_splits_on_the_first_colon_only() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["url:https://example.com"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels = 'url' 'https://example.com'"
+
+
+def test_query_builder_label_choice_value_prefix_matches_by_regex() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os_family:lin*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels ~ 'cmk/os_family' '^lin'"
+
+
+def test_query_builder_label_choice_key_prefix_matches_the_names_column() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: label_names ~ ^cmk/os"
+
+
+def test_query_builder_tag_key_prefix_matches_its_own_names_column() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="tags", op="one_of", value=["crit*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: tag_names ~ ^crit"
+
+
+def test_query_builder_label_choice_prefix_is_a_literal_not_a_pattern() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os_family:a.b*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels ~ 'cmk/os_family' '^a\\.b'"
+
+
+def test_query_builder_name_choice_single_no_or() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contact_groups", op="one_of", value=["all"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: contact_groups >= all"
+
+
+def test_query_builder_name_choice_multiple_with_or() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contacts", op="one_of", value=["alice", "bob"]
+    )
+
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: contacts >= alice",
+            "Filter: contacts >= bob",
+            "Or: 2",
+        ]
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+def test_query_builder_name_choice_prefix_matches_by_regex() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contact_groups", op="one_of", value=["ops*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: contact_groups ~ ^ops"
 
 
 def test_query_builder_nested_conditions() -> None:
@@ -134,7 +423,22 @@ def test_query_builder_nested_conditions() -> None:
     )
 
     value = parse_as_livestatus_filter(nodes)
-    expected = "Filter: state = 1\nFilter: state = 0\nFilter: state = 3\nOr: 2\nNegate:\nAnd: 2"
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: state = 0",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: state = 3",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Or: 2",
+            "Negate:",
+            "And: 2",
+        ]
+    )
 
     assert value == expected
 
@@ -151,7 +455,15 @@ def test_query_builder_mixed_string_and_state_conditions() -> None:
     )
 
     value = parse_as_livestatus_filter(nodes)
-    expected = "Filter: description ~~ CPU\nFilter: state = 1\nAnd: 2"
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: description ~~ CPU",
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "And: 2",
+        ]
+    )
 
     assert value == expected
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import time
@@ -164,8 +163,8 @@ agent_section_livestatus_ssl_certs = AgentSection(
 
 def discovery_livestatus_status(
     section_livestatus_status: LivestatusSection | None,
-    section_livestatus_ssl_certs: LivestatusSection | None,
-    section_omd_info: OmdInfoSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,  # noqa: ARG001
+    section_omd_info: OmdInfoSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -196,7 +195,7 @@ def check_livestatus_status(
 
 
 def _make_levels(raw_days: tuple[float | None, float | None]) -> None | tuple[float, float]:
-    match raw_days:
+    match raw_days:  # type: ignore[exhaustive-match]
         case float(w), float(c):
             return (w * 86400.0, c * 86400.0)
     return None
@@ -248,7 +247,7 @@ def _generate_livestatus_results(
     section_livestatus_status: LivestatusSection | None,
     section_livestatus_ssl_certs: LivestatusSection | None,
     section_omd_info: OmdInfoSection | None,
-    value_store: MutableMapping[str, Any],
+    value_store: MutableMapping[str, Any],  # noqa: ARG001
     this_time: float,
 ) -> CheckResult:
     if section_livestatus_status is None or item not in section_livestatus_status:

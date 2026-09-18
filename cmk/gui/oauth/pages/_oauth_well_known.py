@@ -26,6 +26,9 @@ class OAuthAuthorizationServerMetadataPage(Page):
     Returns 404 while no OAuth-consuming feature is enabled for the site (the
     enabled predicate is injected at registration). The document is
     intentionally incomplete for now: jwks_uri doesn't exist yet.
+
+    The introspection_endpoint (RFC 7662) is left out as it violates the RFC.
+    We assume introspection is only called via the loopback device.
     """
 
     def __init__(self, enabled: Callable[[], bool]) -> None:

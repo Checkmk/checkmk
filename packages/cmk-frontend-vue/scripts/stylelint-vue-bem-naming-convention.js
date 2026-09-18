@@ -53,7 +53,7 @@ const patternMap = {
   cmk: 'src/components/',
   db: 'src/dashboard/',
   qs: 'src/quick-setup/',
-  gd: 'src/graph-designer/',
+  tmcq: 'src/telemetry-metrics-custom-query/',
   mm: 'src/main-menu/',
   mh: 'src/mode-host/'
 }

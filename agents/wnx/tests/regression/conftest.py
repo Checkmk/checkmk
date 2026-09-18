@@ -81,7 +81,7 @@ def _get_data_using_telnet(addr_host: str, addr_port: int) -> str:
 
 
 @pytest.fixture(name="actual_output")
-def actual_output_engine(write_config, wait_agent):
+def actual_output_engine(write_config, wait_agent):  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     # Run agent and yield telnet output.
     p = None
     try:

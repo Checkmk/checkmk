@@ -35,7 +35,7 @@ class _Params(BaseModel, frozen=True):
 
 def _commands_function(
     params: _Params,
-    host_config: HostConfig,
+    host_config: HostConfig,  # noqa: ARG001
 ) -> Iterable[SpecialAgentCommand]:
     args = []
     if params.timeout is not None:

@@ -45,7 +45,7 @@ class ComputeWidgetTitlesExtensions:
 
 @api_model
 class ComputeWidgetTitlesResponse(DomainObjectModel):
-    domainType: Literal["dashboard-widget-titles"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["dashboard-widget-titles"] = api_field(
         description="The domain type of the object."
     )
     extensions: ComputeWidgetTitlesExtensions = api_field(

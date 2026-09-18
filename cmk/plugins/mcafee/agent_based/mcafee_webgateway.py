@@ -40,7 +40,7 @@ class Params(typing.TypedDict, total=False):
 ValueStore = typing.MutableMapping[str, typing.Any]
 
 
-def discover_webgateway(section: Section) -> DiscoveryResult:
+def discover_webgateway(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

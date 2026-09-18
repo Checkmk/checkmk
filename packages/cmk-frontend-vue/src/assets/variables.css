@@ -37,6 +37,7 @@
   --font-size-small: 10px;
   --font-size-xsmall: 8px;
   --font-weight-default: 400;
+  --font-weight-medium: 500;
   --font-weight-bold: 700;
 
   /* Spacings */
@@ -78,12 +79,19 @@
     --popup-dialog-title-color: var(--color-conference-grey-100);
     --popup-dialog-message-color: var(--color-mid-grey-100);
     --menu-entry-disabled: var(--color-midnight-grey-100);
+    --switch-off-bg-color: var(--color-daylight-grey-90);
+    --switch-off-border-color: var(--color-mid-grey-50);
+    --switch-on-border-color: var(--color-corporate-green-70);
+    --switch-on-bg-color: var(--color-corporate-green-50);
+    --switch-thumb-color: var(--color-conference-grey-90);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
     /* Fonts */
     --font-color: var(--color-conference-grey-100);
+    --font-color-secondary: var(--color-conference-grey-70);
     --font-color-dimmed: var(--grey-4-dimmed);
+    --font-underline-color: var(--color-conference-grey-60);
     --font-color-light-bg: var(--font-color);
     --font-perfometer-color: var(--color-conference-grey-100);
 
@@ -113,6 +121,9 @@
     --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
+    --global-settings-row-hover-bg-color: var(--color-dark-blue-10);
+    --global-settings-topic-headline-color: var(--font-color);
+    --global-settings-topic-subline-color: var(--font-color-dimmed);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
     --wizard-progress-bar-background-badge-color: var(--color-midnight-grey-100);
@@ -136,10 +147,11 @@
     --tag-font-color-dark: var(--color-conference-grey-100);
 
     /* Cmk Toggle Button Group */
-    --toggle-button-group-active-bg-color: var(--ux-theme-10);
-    --toggle-button-group-inactive-bg-color: var(--ux-theme-6);
+    --toggle-button-group-active-bg-color: var(--ux-theme-8);
+    --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
     --toggle-button-group-border-color: var(--color-mid-grey-50);
-    --toggle-button-group-active-text-color: var(--color-white-100);
+    --toggle-button-group-inactive-border-color: var(--color-mid-grey-10);
+    --toggle-button-group-active-text-color: var(--color-conference-grey-100);
     --toggle-button-group-inactive-text-color: var(--color-conference-grey-100);
     --toggle-button-group-disabled-text-color: var(--color-conference-grey-70);
     --toggle-button-group-hover-bg-color: var(--color-daylight-grey-80);
@@ -221,12 +233,19 @@
     --popup-dialog-title-color: var(--color-white-100);
     --popup-dialog-message-color: var(--color-mid-grey-0);
     --menu-entry-disabled: var(--color-white-70);
+    --switch-off-bg-color: var(--color-daylight-grey-70);
+    --switch-off-border-color: var(--color-daylight-grey-70);
+    --switch-on-border-color: var(--color-corporate-green-50);
+    --switch-on-bg-color: var(--color-corporate-green-50);
+    --switch-thumb-color: var(--color-conference-grey-90);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
     /* Fonts */
     --font-color: var(--color-white-100);
+    --font-color-secondary: var(--color-white-70);
     --font-color-dimmed: var(--white-dimmed);
+    --font-underline-color: var(--color-white-60);
     --font-color-light-bg: var(--color-mist-grey-100);
     --font-perfometer-color: var(--color-mid-grey-60);
 
@@ -254,6 +273,9 @@
     --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
+    --global-settings-row-hover-bg-color: var(--color-dark-blue-90);
+    --global-settings-topic-headline-color: var(--color-white-80);
+    --global-settings-topic-subline-color: var(--color-mid-grey-0);
     --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
     --wizard-progress-bar-background-badge-color: var(--color-white-100);
@@ -279,7 +301,8 @@
     /* Cmk Toggle Button Group */
     --toggle-button-group-active-bg-color: var(--ux-theme-8);
     --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
-    --toggle-button-group-border-color: var(--color-mid-grey-60);
+    --toggle-button-group-border-color: var(--color-mid-grey-50);
+    --toggle-button-group-inactive-border-color: var(--color-mid-grey-90);
     --toggle-button-group-active-text-color: var(--color-white-100);
     --toggle-button-group-inactive-text-color: var(--color-white-100);
     --toggle-button-group-disabled-text-color: var(--color-white-50);

@@ -3,11 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getCsrfToken } from './csrf'
 import type { PartialK } from './types'
-
-declare global {
-  let global_csrf_token: string
-}
 
 type OptionalArgs<HandlerData = any> = PartialK<
   Args<HandlerData>,
@@ -116,7 +113,7 @@ export function call_ajax<HandlerData = any>(
     !args.post_data.includes('&_csrf_token=') &&
     !args.post_data.startsWith('_csrf_token=')
   ) {
-    args.post_data += '&_csrf_token=' + encodeURIComponent(global_csrf_token)
+    args.post_data += '&_csrf_token=' + encodeURIComponent(getCsrfToken())
   }
 
   AJAX.send(args.post_data)

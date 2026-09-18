@@ -37,7 +37,7 @@ snmp_section_cpu_utilization = SimpleSNMPSection(
 )
 
 
-def _discover_cpu_utilization(section: float) -> DiscoveryResult:
+def _discover_cpu_utilization(section: float) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

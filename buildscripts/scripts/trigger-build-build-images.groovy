@@ -69,6 +69,9 @@ void main() {
             "minimal-alpine-bash-git",
             "minimal-alpine-python-checkmk",
             "minimal-ubuntu-checkmk",
+            "reference-image",
+            "deb-package-signer",
+            "cmk-update-agent",
         ];
     }
 

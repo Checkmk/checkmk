@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -29,14 +28,14 @@ from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 
 def _migrate_to_float(value: object) -> float:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case int() | float():
             return float(value)
     raise ValueError(f"Expected int or float, got {type(value)}")
 
 
 def _migrate_to_dict(value: object) -> dict[str, object]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case name, password:
             return {"bind_dn": name, "password": password}
         case dict():

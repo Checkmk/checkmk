@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from typing import cast
 
@@ -103,10 +102,10 @@ def parse_netstat(string_table: StringTable) -> Section:
 
         connections.append(
             Connection(
-                proto=cast(Protocol, proto),
-                local_address=split_ip_address(local),
-                remote_address=split_ip_address(remote),
-                state=parse_connection_state(connection_state),
+                proto=cast(Protocol, proto),  # type: ignore[possibly-undefined]
+                local_address=split_ip_address(local),  # type: ignore[possibly-undefined]
+                remote_address=split_ip_address(remote),  # type: ignore[possibly-undefined]
+                state=parse_connection_state(connection_state),  # type: ignore[possibly-undefined]
             )
         )
     return connections

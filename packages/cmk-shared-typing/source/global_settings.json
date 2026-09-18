@@ -4,17 +4,58 @@
   "title": "global_settings_app",
   "properties": {
     "title": { "type": "string" },
-    "site": {
-      "description": "Site id. Null means the global global settings.",
-      "type": ["string", "null"]
+    "breadcrumb": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/global_settings_breadcrumb_item" }
+    },
+    "scope": {
+      "description": "Whether the shown settings apply to all sites or to one specific site.",
+      "anyOf": [
+        { "$ref": "#/$defs/global_settings_scope_global" },
+        { "$ref": "#/$defs/global_settings_scope_site" }
+      ]
     },
     "topics": {
       "type": "array",
       "items": { "$ref": "#/$defs/global_settings_topic" }
     }
   },
-  "required": ["title", "site", "topics"],
+  "required": ["title", "breadcrumb", "scope", "topics"],
   "$defs": {
+    "global_settings_breadcrumb_item": {
+      "title": "GlobalSettingsBreadcrumbItem",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "link": { "type": ["string", "null"] }
+      },
+      "required": ["title", "link"]
+    },
+    "global_settings_scope_global": {
+      "type": "object",
+      "title": "global_settings_scope_global",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "global"
+        }
+      },
+      "required": ["type"]
+    },
+    "global_settings_scope_site": {
+      "type": "object",
+      "title": "global_settings_scope_site",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "site"
+        },
+        "site_id": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "site_id"]
+    },
     "global_settings_topic": {
       "type": "object",
       "properties": {
@@ -40,12 +81,30 @@
         },
         "spec": { "$ref": "vue_formspec/components.json#/$defs/components" },
         "value": {},
+        "default_value": {},
         "modified": {
           "description": "Whether the variable is explicitly configured in the scope of this app.",
           "type": "boolean"
+        },
+        "site_overrides": {
+          "description": "Sites that configure their own explicit value for this variable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/global_settings_site_override" }
         }
       },
-      "required": ["name", "spec", "value", "modified"]
+      "required": ["name", "spec", "value", "default_value", "modified", "site_overrides"]
+    },
+    "global_settings_site_override": {
+      "type": "object",
+      "properties": {
+        "site_id": { "type": "string" },
+        "title": { "type": "string" },
+        "url": {
+          "description": "Link to the site-specific global settings page.",
+          "type": "string"
+        }
+      },
+      "required": ["site_id", "title", "url"]
     }
   }
 }

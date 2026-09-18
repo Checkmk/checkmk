@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.diagnostics (crash bundle capture)."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -110,6 +108,8 @@ class TestCollectBazelState:
             state = _collect_bazel_state(tmp_path)
         assert state["output_base"] == str(tmp_path)
         assert state["output_base_exists"] is True
+        assert "deploy_output_base" in state
+        assert "shared_server" in state
 
     def test_handles_timeout(self, tmp_path: Path) -> None:
         """Bazel info timeout does not crash the collector."""

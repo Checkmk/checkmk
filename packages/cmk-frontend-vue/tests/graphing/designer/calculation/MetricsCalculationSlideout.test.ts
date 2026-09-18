@@ -3,19 +3,26 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, within } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 
 import MetricsCalculationSlideout from '@/graphing/designer/calculation/MetricsCalculationSlideout.vue'
+import type { ItemId } from '@/graphing/designer/types'
 
 import { formulaItem, rrdMetricItem } from '../fixtures'
 
-const items = [rrdMetricItem('A'), formulaItem('D', { ast: { op: 'ref', id: 'A' } })]
+const items = [
+  rrdMetricItem('A'),
+  formulaItem('D', { ast: { op: 'ref', id: 'A' } }),
+  formulaItem('E', {
+    ast: { op: 'percentile', percentile: 95, operand: { op: 'ref', id: 'A' } }
+  })
+]
 const props = { items, nextId: 'B', nextColor: '#ffd703' }
 
 // The slide-in dialog mounts its content on the open transition, so open starts false.
-async function renderSlideout() {
-  const utils = render(MetricsCalculationSlideout, { props: { open: false, ...props } })
-  await utils.rerender({ open: true, ...props })
+async function renderSlideout(editing: ItemId | null = null) {
+  const utils = render(MetricsCalculationSlideout, { props: { open: false, editing, ...props } })
+  await utils.rerender({ open: true, editing, ...props })
   return utils
 }
 
@@ -53,4 +60,9 @@ test('passes the delete event through', async () => {
   const { emitted } = await renderSlideout()
   await fireEvent.click(screen.getByRole('button', { name: 'Delete D' }))
   expect(emitted('delete')).toEqual([['D']])
+})
+
+test('opening on a transformation focuses its metric selection', async () => {
+  await renderSlideout('E')
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Metric' })).toHaveFocus())
 })

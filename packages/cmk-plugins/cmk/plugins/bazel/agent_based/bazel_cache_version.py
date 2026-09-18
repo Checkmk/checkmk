@@ -33,7 +33,7 @@ def parse_bazel_cache_version(string_table: StringTable) -> VersionSection | Non
     return VersionSection(section["current"], section.get("latest"))
 
 
-def discover_bazel_cache_version(section: VersionSection) -> DiscoveryResult:
+def discover_bazel_cache_version(section: VersionSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

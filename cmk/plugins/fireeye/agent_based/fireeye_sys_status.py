@@ -49,7 +49,7 @@ snmp_section_fireeye_sys_status = SimpleSNMPSection(
 )
 
 
-def discover_fireeye_sys_status(section: Section) -> DiscoveryResult:
+def discover_fireeye_sys_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

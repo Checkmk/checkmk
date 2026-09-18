@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 
@@ -1142,7 +1141,7 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
 
 
 def test_with_defaulted_timezone() -> None:
-    def _get_local_timezone():
+    def _get_local_timezone() -> datetime.tzinfo:
         return datetime.UTC
 
     assert _with_defaulted_timezone(
@@ -1263,11 +1262,8 @@ def test_openapi_service_description_for_single_downtime(
             assert "service_description" not in resp.json["extensions"]
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_modify_downtime_without_parameters(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-) -> None:
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_livestatus")
+def test_openapi_modify_downtime_without_parameters(clients: ClientRegistry) -> None:
     clients.Downtime.modify(
         modify_type="by_id",
         downtime_id="123",

@@ -21,7 +21,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 MAGNITUDES = tuple(IECMagnitude)[:4]
 
 
-def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:
+def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:  # noqa: A002
     elements = {
         "size_upper": DictElement(
             required=False,

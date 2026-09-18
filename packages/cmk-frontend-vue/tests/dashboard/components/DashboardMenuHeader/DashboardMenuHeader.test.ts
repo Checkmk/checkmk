@@ -3,7 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -12,6 +15,21 @@ import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHead
 import type { DashboardMetadata, DashboardTokenModel } from '@/dashboard/types/dashboard'
 import { DashboardOwnerType } from '@/dashboard/types/dashboard'
 import { copyToClipboard, dashboardAPI } from '@/dashboard/utils.ts'
+
+const TZ = 'Europe/Berlin'
+
+const testRange: DateTimeRange = (() => {
+  const to: ZonedDateTime = toZoned(new CalendarDateTime(2026, 3, 10, 12, 0), TZ, 'compatible')
+  return { from: to.subtract({ hours: 4 }), to }
+})()
+
+const testGlobalTimePicker: GlobalTimePickerProps = {
+  custom_time_ranges: [{ title: 'Last 1 hour', total_seconds: 3600 }],
+  default_time_range: 4 * 3600,
+  server_time_zone: TZ,
+  first_day_of_week: null,
+  refresh: { interval_seconds: null, starts_live: false, reloads_page_content: false }
+}
 
 vi.mock('@/dashboard/utils.ts', () => ({
   copyToClipboard: vi.fn().mockResolvedValue(undefined),
@@ -54,6 +72,8 @@ interface RenderProps {
   isEmptyDashboard?: boolean
   isDashboardLoading?: boolean
   runtimeFilters?: Record<string, string>
+  globalTimePicker?: GlobalTimePickerProps
+  range?: DateTimeRange
 }
 
 function renderHeader(props: RenderProps = {}) {
@@ -67,6 +87,9 @@ function renderHeader(props: RenderProps = {}) {
       isEmptyDashboard: false,
       isDashboardLoading: false,
       runtimeFilters: {},
+      globalTimePicker: testGlobalTimePicker,
+      range: testRange,
+      'onUpdate:range': () => {},
       ...props
     }
   })
@@ -85,12 +108,12 @@ describe('DashboardMenuHeader', () => {
 
     it('renders the Filter button in view mode', () => {
       renderHeader()
-      expect(screen.getByText('Filter')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument()
     })
 
     it('does not render Filter button in edit mode', () => {
       renderHeader({ isEditMode: true })
-      expect(screen.queryByText('Filter')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument()
     })
 
     it('shows "Edit widgets" for custom editable dashboard', () => {
@@ -164,7 +187,7 @@ describe('DashboardMenuHeader', () => {
   describe('emits', () => {
     it('emits open-runtime-filter when Filter button is clicked', async () => {
       const { emitted } = renderHeader()
-      await fireEvent.click(screen.getByText('Filter'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Filter' }))
       expect(emitted()['open-runtime-filter']).toHaveLength(1)
     })
 

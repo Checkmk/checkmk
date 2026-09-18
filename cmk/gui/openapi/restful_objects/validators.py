@@ -10,8 +10,6 @@
 
 """Common operations for API endpoints."""
 
-from __future__ import annotations
-
 import contextlib
 import dataclasses
 import http.client

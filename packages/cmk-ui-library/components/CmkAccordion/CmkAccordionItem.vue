@@ -6,12 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { AccordionContent, AccordionHeader, AccordionItem } from 'reka-ui'
 
+import CmkIcon, { type SimpleIcons } from '../CmkIcon'
+import CmkAccordionItemStateIndicator from './CmkAccordionItemStateIndicator.vue'
 import CmkAccordionTrigger from './CmkAccordionTrigger.vue'
 
 export interface CmkAccordionItemProps {
   value?: string
   headerAs?: string
   disabled?: boolean | undefined
+  icon?: SimpleIcons
 }
 
 const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordionItemProps>()
@@ -21,8 +24,17 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   <AccordionItem :value="value" :disabled="disabled" class="cmk-accordion-item">
     <AccordionHeader :as="headerAs" class="cmk-accordion-item__header"
       ><CmkAccordionTrigger :value="value" :disabled="disabled ? true : false">
+        <CmkIcon v-if="icon" :name="icon" size="xlarge" class="cmk-accordion-item__icon" />
+        <CmkAccordionItemStateIndicator
+          v-if="!disabled"
+          :value="value"
+          class="cmk-accordion-item__state-indicator"
+        />
         <slot name="header" />
       </CmkAccordionTrigger>
+      <span v-if="$slots['header-right']" class="cmk-accordion-item__header-right">
+        <slot name="header-right" />
+      </span>
     </AccordionHeader>
     <!-- @vue-ignore aria-labelledby not a property of AccordionContent -->
     <AccordionContent
@@ -42,6 +54,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 .cmk-accordion-item {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   border: 1px solid transparent;
   background: var(--ux-theme-3);
   border-radius: 4px;
@@ -56,6 +69,25 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   &:last-of-type {
     margin-bottom: 0;
   }
+}
+
+.cmk-accordion-item__icon {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.cmk-accordion-item__state-indicator {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.cmk-accordion-item__header-right {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 20px;
 }
 
 .cmk-accordion-item__content-wrapper {
@@ -74,9 +106,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   margin: 0;
 
   &:hover {
-    button {
-      background: var(--ux-theme-6);
-    }
+    background: var(--ux-theme-6);
   }
 
   &[data-state='open'] {
@@ -103,9 +133,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 body[data-theme='modern-dark'] {
   .cmk-accordion-item__header {
     &:hover {
-      button {
-        background: var(--color-white-10);
-      }
+      background: var(--color-white-10);
     }
   }
 }

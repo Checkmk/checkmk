@@ -11,8 +11,6 @@ It includes clients for different API domains, providing methods to perform crea
 delete operations and other actions.
 """
 
-from __future__ import annotations
-
 import abc
 import dataclasses
 import datetime
@@ -77,7 +75,11 @@ class Response:
     headers: Mapping[str, str]  # TODO: Use werkzeug.datastructures.Headers?
 
     def assert_status_code(self, status_code: int) -> Response:
-        assert self.status_code == status_code
+        if self.status_code != status_code:
+            raise AssertionError(
+                f"Expected status code {status_code}, got {self.status_code}. "
+                f"Body: {self.body.decode('utf-8', errors='replace') if self.body else None}"
+            )
         return self
 
     @property
@@ -87,7 +89,7 @@ class Response:
 
     def assert_rest_api_crash(self) -> Self:
         """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        assert self.status_code == 500
+        self.assert_status_code(500)
         assert_and_delete_rest_crash_report(self.json["ext"]["id"])
         return self
 
@@ -95,7 +97,8 @@ class Response:
 def assert_and_delete_rest_crash_report(crash_id: str) -> None:
     """Assert that the REST API crash report with the given ID exists and delete it."""
     crash_file = make_crash_report_base_path(paths.omd_root) / "rest_api" / crash_id / "crash.info"
-    assert crash_file.exists()
+    if not crash_file.exists():
+        raise AssertionError(f"No REST API crash report {crash_id!r} at {crash_file}")
     crash_file.unlink()
 
 
@@ -153,7 +156,7 @@ class RestApiException(Exception):
     def __str__(self) -> str:
         try:
             formatted_body = json.loads(cast(bytes, self.response.body))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             formatted_body = self.response.body
 
         return pprint.pformat(
@@ -801,7 +804,7 @@ class HostConfigClient(RestApiClient):
         expect_ok: bool = True,
         api_version: APIVersion | None = None,
     ) -> Response:
-        if bake_agent is not None:
+        if bake_agent is not None:  # noqa: SIM108
             query_params = {"bake_agent": "1" if bake_agent else "0"}
         else:
             query_params = {}
@@ -844,7 +847,7 @@ class HostConfigClient(RestApiClient):
         bake_agent: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        if bake_agent is not None:
+        if bake_agent is not None:  # noqa: SIM108
             query_params = {"bake_agent": "1" if bake_agent else "0"}
         else:
             query_params = {}
@@ -3190,8 +3193,8 @@ class DcdClient(RestApiClient):
         )
 
 
-class DcdMetricBackendClient(RestApiClient):
-    domain: Literal["dcd_metric_backend"] = "dcd_metric_backend"
+class DcdTelemetryMetricsClient(RestApiClient):
+    domain: Literal["dcd_telemetry_metrics"] = "dcd_telemetry_metrics"
     default_version = APIVersion.INTERNAL
 
     def get(self, dcd_id: str, expect_ok: bool = True) -> Response:
@@ -3636,6 +3639,8 @@ class ServiceDiscoveryClient(RestApiClient):
     service_discovery_domain: DomainType = "service_discovery"
     discovery_run_domain: DomainType = "discovery_run"
     service_discovery_run_domain: DomainType = "service_discovery_run"
+    # `update_discovery_phase` is an action on the host object, not on a discovery domain.
+    host_domain: DomainType = "host"
 
     def bulk_discovery(
         self,
@@ -3706,6 +3711,30 @@ class ServiceDiscoveryClient(RestApiClient):
         return self.request(
             "get",
             url=f"/objects/{self.service_discovery_run_domain}/{host_name}",
+            expect_ok=expect_ok,
+        )
+
+    def update_service_phase(
+        self,
+        host_name: str,
+        *,
+        check_type: str,
+        service_item: str | None,
+        target_phase: str,
+        api_version: APIVersion | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        # The body params are keyword-only on purpose: three of them are interchangeable strings
+        # to a type checker, and transposing two yields a puzzling 400 rather than an error here.
+        return self.request(
+            "put",
+            url=(f"/objects/{self.host_domain}/{host_name}/actions/update_discovery_phase/invoke"),
+            body={
+                "check_type": check_type,
+                "service_item": service_item,
+                "target_phase": target_phase,
+            },
+            api_version=api_version,
             expect_ok=expect_ok,
         )
 
@@ -3805,7 +3834,7 @@ class ParentScanClient(RestApiClient):
         gateway_hosts: Any,
         performance_settings: dict[str, object] | None = None,
         force_explicit_parents: bool | None = None,
-        expect_ok: bool = True,
+        expect_ok: bool = True,  # noqa: ARG002
     ) -> Response:
         body = {
             "host_names": host_names,
@@ -4431,6 +4460,17 @@ class DashboardClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def clone_from_relative_grid_dashboard(
+        self, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_responsive}/actions/clone_from_relative_grid/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def edit_relative_grid_dashboard(
         self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True
     ) -> Response:
@@ -4649,8 +4689,8 @@ class RelayClient(RestApiClient):
         )
 
 
-class MetricBackendClient(RestApiClient):
-    domain: DomainType = "metric_backend"
+class DataBackendClient(RestApiClient):
+    domain: DomainType = "data_backend"
     default_version = APIVersion.INTERNAL
 
     def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
@@ -4661,12 +4701,54 @@ class MetricBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+
+class TelemetryMetricsClient(RestApiClient):
+    domain: DomainType = "telemetry_metrics"
+    default_version = APIVersion.INTERNAL
+
     def names_with_types(self, value: str | None = None, expect_ok: bool = True) -> Response:
         body: dict[str, Any] = {} if value is None else {"value": value}
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/names_with_types/invoke",
             body=body,
+            expect_ok=expect_ok,
+        )
+
+
+class CustomServiceClient(RestApiClient):
+    domain: DomainType = "custom_service"
+    default_version = APIVersion.UNSTABLE
+
+    def create(
+        self,
+        configuration_name: str,
+        host_assignment: Mapping[str, Any],
+        configuration: Mapping[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={
+                "configuration_name": configuration_name,
+                "host_assignment": dict(host_assignment),
+                "configuration": dict(configuration),
+            },
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, configuration_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{configuration_name}",
             expect_ok=expect_ok,
         )
 
@@ -4681,6 +4763,99 @@ class PagetypeTopicClient(RestApiClient):
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
         )
+
+
+class GlobalSettingClient(RestApiClient):
+    """Client for the global settings endpoints, which also serve Event Console settings."""
+
+    domain: DomainType = "global_setting"
+    default_version = APIVersion.INTERNAL
+
+    def get(self, varname: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+        )
+
+    def update(
+        self,
+        varname: str,
+        value: Any,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{varname}",
+            body={"value": value},
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(varname, etag),
+        )
+
+    def delete(
+        self,
+        varname: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(varname, etag),
+        )
+
+    def get_site(self, site_id: str, varname: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+        )
+
+    def update_site(
+        self,
+        site_id: str,
+        varname: str,
+        value: Any,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
+            body={"value": value},
+            expect_ok=expect_ok,
+            headers=self._set_site_etag_header(site_id, varname, etag),
+        )
+
+    def delete_site(
+        self,
+        site_id: str,
+        varname: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+            headers=self._set_site_etag_header(site_id, varname, etag),
+        )
+
+    def _set_etag_header(
+        self, varname: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(varname).headers["ETag"]}
+        return set_if_match_header(etag)
+
+    def _set_site_etag_header(
+        self, site_id: str, varname: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get_site(site_id, varname).headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 class JavascriptCrashReportClient(RestApiClient):
@@ -5084,7 +5259,7 @@ class ClientRegistry:
     Comment: CommentClient
     EventConsole: EventConsoleClient
     Dcd: DcdClient
-    DcdMetricBackend: DcdMetricBackendClient
+    DcdTelemetryMetrics: DcdTelemetryMetricsClient
     AuditLog: AuditLogClient
     BiPack: BiPackClient
     BiAggregation: BiAggregationClient
@@ -5110,15 +5285,18 @@ class ClientRegistry:
     ConstantClient: ConstantClient
     ViewClient: ViewClient
     RelayClient: RelayClient
-    MetricBackendClient: MetricBackendClient
+    DataBackendClient: DataBackendClient
+    TelemetryMetricsClient: TelemetryMetricsClient
     PagetypeTopicClient: PagetypeTopicClient
     IconClient: IconClient
+    GlobalSetting: GlobalSettingClient
     JavascriptCrashReport: JavascriptCrashReportClient
     HistoricalEventConsole: HistoricalEventConsole
     HostAvailability: HostAvailabilityClient
     ServiceAvailability: ServiceAvailabilityClient
     DisabledEndpointStub: DisabledEndpointStubClient
     MonitorHosts: MonitorHostsClient
+    CustomService: CustomServiceClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -5152,7 +5330,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Comment=CommentClient(request_handler, url_prefix),
         EventConsole=EventConsoleClient(request_handler, url_prefix),
         Dcd=DcdClient(request_handler, url_prefix),
-        DcdMetricBackend=DcdMetricBackendClient(request_handler, url_prefix),
+        DcdTelemetryMetrics=DcdTelemetryMetricsClient(request_handler, url_prefix),
         AuditLog=AuditLogClient(request_handler, url_prefix),
         BiPack=BiPackClient(request_handler, url_prefix),
         BiAggregation=BiAggregationClient(request_handler, url_prefix),
@@ -5178,13 +5356,16 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ViewClient=ViewClient(request_handler, url_prefix),
         RelayClient=RelayClient(request_handler, url_prefix),
         SidebarElement=SidebarElementClient(request_handler, url_prefix),
-        MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
+        DataBackendClient=DataBackendClient(request_handler, url_prefix),
+        TelemetryMetricsClient=TelemetryMetricsClient(request_handler, url_prefix),
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
         IconClient=IconClient(request_handler, url_prefix),
+        GlobalSetting=GlobalSettingClient(request_handler, url_prefix),
         JavascriptCrashReport=JavascriptCrashReportClient(request_handler, url_prefix),
         HistoricalEventConsole=HistoricalEventConsole(request_handler, url_prefix),
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
         DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
+        CustomService=CustomServiceClient(request_handler, url_prefix),
     )

@@ -14,8 +14,8 @@ import cmk.ccc.plugin_registry
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.view_utils import CellSpec
+from cmk.web.utils.speaklater import LazyString
 
 
 @dataclass(frozen=True)
@@ -25,7 +25,7 @@ class PainterConfiguration:
     staleness_threshold: float
     painter_options: PainterOptions | None = None
     time_range: tuple[int, int] | None = None  # provided from external view/dashlet
-    dynamic_columns: Callable[["PainterConfiguration"], Sequence[ColumnName]] | None = None
+    dynamic_columns: Callable[[PainterConfiguration], Sequence[ColumnName]] | None = None
 
 
 def strip_css_from_cell_spec[T](
@@ -77,7 +77,7 @@ class Painter[T]:
     short_title: str | LazyString
     columns: Sequence[ColumnName] = field(default_factory=list)
     list_title: str | LazyString | None = None
-    group_key: Callable[[T, PainterConfiguration], Any] = lambda x, y: None
+    group_key: Callable[[T, PainterConfiguration], Any] = lambda x, y: None  # noqa: ARG005
     painter_options: list[str] | None = None
     title_classes: list[str] | None = None
     # dynamic_columns/derive will be reviewed later on

@@ -1,0 +1,50 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
+import type { AttributeCondition, AttributeKind } from '@/telemetry-metrics/attribute-filter/types'
+
+function makeCondition(
+  attributeKind: AttributeKind | null,
+  operator: AttributeCondition['operator'],
+  value = ''
+): AttributeCondition {
+  return { attributeKind, key: 'http.method', operator, value }
+}
+
+test('attribute-kind prefix is rendered', () => {
+  expect(pillLabel(makeCondition(null, 'equals', 'GET'))).toBe('http.method is GET')
+  expect(pillLabel(makeCondition('resource', 'equals', 'GET'))).toBe(
+    '[Resource] http.method is GET'
+  )
+  expect(pillLabel(makeCondition('scope', 'equals', 'GET'))).toBe('[Scope] http.method is GET')
+  expect(pillLabel(makeCondition('data_point', 'equals', 'GET'))).toBe(
+    '[Data point] http.method is GET'
+  )
+})
+
+test('all string operators render with their human phrase', () => {
+  expect(pillLabel(makeCondition(null, 'equals', 'x'))).toBe('http.method is x')
+  expect(pillLabel(makeCondition(null, 'not_equals', 'x'))).toBe('http.method is not x')
+  expect(pillLabel(makeCondition(null, 'contains', 'x'))).toBe('http.method contains x')
+  expect(pillLabel(makeCondition(null, 'not_contains', 'x'))).toBe('http.method does not contain x')
+  expect(pillLabel(makeCondition(null, 'starts_with', 'x'))).toBe('http.method starts with x')
+  expect(pillLabel(makeCondition(null, 'not_starts_with', 'x'))).toBe(
+    'http.method does not start with x'
+  )
+  expect(pillLabel(makeCondition(null, 'ends_with', 'x'))).toBe('http.method ends with x')
+  expect(pillLabel(makeCondition(null, 'not_ends_with', 'x'))).toBe(
+    'http.method does not end with x'
+  )
+  expect(pillLabel(makeCondition(null, 'regex', '^/api'))).toBe('http.method matches regex ^/api')
+  expect(pillLabel(makeCondition(null, 'not_regex', '^/api'))).toBe(
+    'http.method does not match regex ^/api'
+  )
+})
+
+test('existence operators omit the value', () => {
+  expect(pillLabel(makeCondition(null, 'exists'))).toBe('http.method exists')
+  expect(pillLabel(makeCondition(null, 'not_exists'))).toBe('http.method does not exist')
+})

@@ -228,7 +228,7 @@ class BaseHostAttributeModel:
     )
 
     waiting_for_discovery: bool | ApiOmitted = api_field(
-        description=HostAttributeWaitingForDiscovery()._help_text(),
+        description=HostAttributeWaitingForDiscovery()._help_text(),  # noqa: SLF001
         default_factory=ApiOmitted,
     )
 
@@ -323,7 +323,7 @@ class HostAttributeResponseModel(
         description="Read only access to configured metadata.", default_factory=ApiOmitted
     )
     # Override the input model with the read-only variant, whose flags are always rendered.
-    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(  # type: ignore[mutable-override]
+    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(
         description="Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by rules.",
         default_factory=ApiOmitted,
     )
@@ -351,7 +351,7 @@ class HostAttributeResponseModel(
     @staticmethod
     def from_internal(
         value: HostAttributes, static_attributes: set[str]
-    ) -> "HostAttributeResponseModel":
+    ) -> HostAttributeResponseModel:
         return HostAttributeResponseModel(
             alias=value.get("alias", ApiOmitted()),
             site=value.get("site", ApiOmitted()),

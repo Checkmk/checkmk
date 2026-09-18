@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator, Mapping
 
 import pytest
@@ -69,10 +71,8 @@ def create_disabled_versioned_stub(fresh_app_instance: None) -> Iterator[Version
     versioned_endpoint_registry.unregister(stub)
 
 
-def test_disabled_legacy_stub_returns_403(
-    disabled_legacy_stub: WrappedEndpoint,
-    clients: ClientRegistry,
-) -> None:
+@pytest.mark.usefixtures("disabled_legacy_stub")
+def test_disabled_legacy_stub_returns_403(clients: ClientRegistry) -> None:
     resp = clients.DisabledEndpointStub.get_legacy(expect_ok=False)
     resp.assert_status_code(403)
     assert resp.json["title"] == "Feature not available"
@@ -80,10 +80,8 @@ def test_disabled_legacy_stub_returns_403(
     assert resp.json["status"] == 403
 
 
-def test_disabled_versioned_stub_returns_403(
-    disabled_versioned_stub: VersionedEndpoint,
-    clients: ClientRegistry,
-) -> None:
+@pytest.mark.usefixtures("disabled_versioned_stub")
+def test_disabled_versioned_stub_returns_403(clients: ClientRegistry) -> None:
     resp = clients.DisabledEndpointStub.get_versioned(expect_ok=False)
     resp.assert_status_code(403)
     assert resp.json["title"] == "Feature not available"

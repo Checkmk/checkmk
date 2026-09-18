@@ -18,8 +18,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import IconNames, StaticIcon, VisualContext
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._base import CustomizableSidebarSnapin
@@ -52,6 +53,25 @@ def get_context_url_variables(context: VisualContext) -> list[tuple[str, str]]:
     for filter_vars in context.values():
         add_vars.update(filter_vars)
     return list(add_vars.items())
+
+
+def total_url(
+    what: str,
+    context: VisualContext,
+    context_vars: Sequence[tuple[str, str]],
+    total_view_vars: Sequence[tuple[str, str]],
+) -> str:
+    """The URL behind a row's "total" count.
+
+    A "hosts" row without an active filter links to the new Vue "All hosts" page. Every
+    other row - a filtered "hosts" row included, since that page does not understand the
+    legacy filter context - keeps linking to the classic view.
+    """
+    if what == "hosts" and not any(
+        value for filter_vars in context.values() for value in filter_vars.values()
+    ):
+        return makeuri_contextless(request, [], filename="monitor_all_hosts.py")
+    return makeuri_contextless(request, [*total_view_vars, *context_vars], filename="view.py")
 
 
 def group_by_state(
@@ -234,9 +254,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             td_class = "col4" if has_stale_objects else "col3"
 
             html.open_tr()
-            url = makeuri_contextless(
-                request, [*row.views.total, *context_vars], filename="view.py"
-            )
+            url = total_url(row.what, row.context, context_vars, row.views.total)
             html.open_td(class_=["total", td_class])
             html.a("%s" % amount, href=url, title=f"{amount:,}")
             html.close_td()

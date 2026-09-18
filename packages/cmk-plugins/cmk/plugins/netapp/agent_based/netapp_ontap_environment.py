@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -64,7 +62,9 @@ def discover_netapp_ontap_environment(
 
 
 def check_netapp_ontap_environment_discrete(
-    item: str, params: None, section: DiscreteSection
+    item: str,
+    params: None,  # noqa: ARG001
+    section: DiscreteSection,
 ) -> CheckResult:
     if not (data := section.get(item)):
         return
@@ -89,16 +89,16 @@ def check_environment_threshold(
         yield Result(state=State.CRIT, summary=f"Sensor state: {data.threshold_state}")
         return
 
-    def _perf_key(_key):
+    def _perf_key(_key: str) -> str:
         return _key.replace("/", "").replace(" ", "_").replace("__", "_").lower()
 
     # We don't want mV or mA, but V or A
-    def _scale(val, _unit):
+    def _scale(val: Any, _unit: Any) -> Any:
         if val is not None and _unit.lower() in ("mv", "ma"):
             val /= 1000.0
         return val
 
-    def _scale_unit(_unit):
+    def _scale_unit(_unit: Any) -> Any:
         return {"mv": "v", "ma": "a"}.get(_unit.lower(), _unit.lower())
 
     levels = (

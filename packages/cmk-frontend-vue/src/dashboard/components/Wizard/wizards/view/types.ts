@@ -27,8 +27,3 @@ export interface LinkExistingViewSelection {
 }
 
 export type ViewSelection = NewViewSelection | CopyExistingViewSelection | LinkExistingViewSelection
-
-export enum DataConfigurationMode {
-  CREATE = 'create',
-  EDIT = 'edit'
-}

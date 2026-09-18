@@ -26,7 +26,7 @@ def parse_emc_isilon_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_emc_isilon_cpu_utilization(section: StringTable) -> DiscoveryResult:
+def discover_emc_isilon_cpu_utilization(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     # the device reports cpu utilization for each core and a total. This interprets only the total
     yield Service()
 

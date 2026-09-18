@@ -15,6 +15,7 @@ from cmk.piggyback.hub import RELATIVE_CONFIG_PATH
 from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
     create_local_check,
     get_piggybacked_service_time,
+    piggyback_hub_log_level,
     piggybacked_data_gets_updated,
     piggybacked_service_discovered,
     set_omd_config_piggyback_hub,
@@ -99,6 +100,8 @@ def _piggyback_env_two_site_setup(
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
+            piggyback_hub_log_level(central_site, "INFO"),
+            piggyback_hub_log_level(remote_site, "INFO"),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             await_broker_ready(central_site, remote_site)
@@ -282,7 +285,7 @@ def _check_config_redistributed(
         config_mtimes_ms[site.id] = current_mtime_ms
 
 
-@pytest.mark.skip(reason="CMK-35803; flake")
+@pytest.mark.xfail(raises=TimeoutError, strict=False, reason="CMK-37535; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """

@@ -223,6 +223,7 @@ class TestMonitorHostEvents:
             resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID)
 
         assert resp.json["meta"]["since"] == _NOW - 8 * _SECONDS_PER_DAY
+        assert resp.json["meta"]["time_window_days"] == 8
 
     @time_machine.travel(_NOW)
     def test_the_time_window_is_a_parameter(
@@ -237,6 +238,7 @@ class TestMonitorHostEvents:
             resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID, time_window_days=30)
 
         assert resp.json["meta"]["since"] == _NOW - 30 * _SECONDS_PER_DAY
+        assert resp.json["meta"]["time_window_days"] == 30
 
     @time_machine.travel(_NOW)
     def test_a_service_name_narrows_the_events_to_that_service(

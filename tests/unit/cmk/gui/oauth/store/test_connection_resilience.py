@@ -13,9 +13,9 @@ unauthenticated rather than reaching the unhandled-exception path.
 from datetime import datetime, timedelta, UTC
 
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.store.backend import oauth_db_path
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.backend import oauth_db_path
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 

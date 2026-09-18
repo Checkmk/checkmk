@@ -14,19 +14,17 @@ from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
+from tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup import (
+    ServiceGraphsHoverPopup,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
-from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 logger = logging.getLogger(__name__)
-
-# Serves the legacy renderer's first load and every update alike, so any use of it at all
-# shows up here.
-_LEGACY_GRAPH_ENDPOINT = "ajax_render_graph.py"
 
 # A graph that rendered must have asked this: the page ships no series data of its own.
 _ENGINE_GRAPH_ENDPOINT = "domain-types/graph/actions/fetch_data/invoke"
@@ -87,8 +85,8 @@ def test_reschedule_active_checks(dashboard_page: MainDashboard, created_host: H
     )
 
 
-# Substrings: the engine renders the graph plug-in's own title, which - unlike the legacy
-# combined renderer - carries neither the unique host/service nor the presentation.
+# Substrings: the engine renders the graph plug-in's own title, which carries neither the
+# unique host/service nor the presentation.
 @pytest.mark.parametrize(
     "service_filter, expected_graphs",
     [
@@ -132,9 +130,8 @@ def test_filtered_services_combined_graphs(
         combined_graphs_service_search_page.check_graph(graph_title)
 
 
-def test_no_errors_on_combined_graphs_page(
-    dashboard_page: MainDashboard, linux_hosts: list[str]
-) -> None:
+@pytest.mark.usefixtures("linux_hosts")
+def test_no_errors_on_combined_graphs_page(dashboard_page: MainDashboard) -> None:
     """Test that there are no errors on the 'Combined graphs - Service search' page."""
     service_search_page = ServiceSearchPage(dashboard_page.page)
     service_search_page.filter_sidebar.apply_last_service_state_change_filter(
@@ -160,36 +157,19 @@ def test_service_graphs_render_through_the_engine(
     javascript_errors: list[str],
     requested_urls: list[str],
 ) -> None:
-    """The service detail page renders its graphs through the engine.
-
-    The legacy renderer is still live and still serves the host surfaces, so showing that
-    the engine renders here says nothing on its own: the legacy path has to be shown unused
-    as well.
-
-    Hovering a graph icon on the way in would defeat the endpoint check, as the legacy hover
-    preview asks that same endpoint. The fixture arrives by clicking the service's name.
-    """
+    """The service detail page renders its graphs through the engine."""
     expect(
         service_graphs.panels, "The engine rendered no graph at all on the service detail page"
     ).not_to_have_count(0)
-    expect(
-        GraphAccessor(service_graphs.owner).container(GraphContainment.PAGE_DIRECT),
-        "The legacy graph container is still on the page beside the engine's",
-    ).to_have_count(0)
-
-    # Without this, a listener that collected nothing would pass the check below as quietly
-    # as a page that really had stopped using the legacy renderer.
+    # A drawn frame proves nothing on its own; the series have to have been fetched too.
     assert any(_ENGINE_GRAPH_ENDPOINT in url for url in requested_urls), (
         f"No graph data was fetched at all, so nothing here observed a graph being "
         f"rendered: {requested_urls}"
     )
-    legacy_requests = [url for url in requested_urls if _LEGACY_GRAPH_ENDPOINT in url]
-
-    assert not legacy_requests, f"The page asked the legacy renderer for a graph: {legacy_requests}"
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
-def test_service_graphs_have_titles_and_legend_no_broken(
+def test_service_graphs_have_titles_and_legend_not_broken(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
     """Each service graph has a title and a legend, and none reports a failed load.
@@ -224,10 +204,6 @@ def test_combined_graphs_render_through_the_engine(
 ) -> None:
     """Every card of the combined-graphs page is rendered by the engine.
 
-    The legacy renderer is still live and still serves other surfaces, so showing that the
-    engine renders here says nothing on its own: the legacy path has to be shown unused as
-    well.
-
     Each card is checked for its own plot rather than for an engine element of its own: the
     page mounts a single component holding all of them, so only the per-card plot separates
     "the engine drew every card" from "it drew the first one".
@@ -241,20 +217,11 @@ def test_combined_graphs_render_through_the_engine(
     ).to_have_count(1)
     for index, panel in enumerate(combined_graphs_page.all_panels()):
         expect(panel.graph.canvas, f"Graph card {index} rendered no plot").to_be_visible()
-    expect(
-        GraphAccessor(combined_graphs_page).container(GraphContainment.PAGE_DIRECT),
-        "The legacy graph container is still on the page beside the engine's",
-    ).to_have_count(0)
-
-    # Without this, a listener that collected nothing would pass the check below as quietly
-    # as a page that really had stopped using the legacy renderer.
+    # A drawn frame proves nothing on its own; the series have to have been fetched too.
     assert any(_ENGINE_GRAPH_ENDPOINT in url for url in requested_urls), (
         f"No graph data was fetched at all, so nothing here observed a card being "
         f"rendered: {requested_urls}"
     )
-    legacy_requests = [url for url in requested_urls if _LEGACY_GRAPH_ENDPOINT in url]
-
-    assert not legacy_requests, f"The page asked the legacy renderer for a graph: {legacy_requests}"
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
@@ -306,20 +273,34 @@ def test_combined_graphs_over_all_services_have_no_broken_graphs(
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
-# --- Graphing engine skeleton (CMK-35973): R1.3 Area 9 --------------------
-# Complete once the engine renders on this surface: reach the graph via
-# GraphAccessor.graph_root.
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_graph_hover_preview_renders_and_closes(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
+def test_graph_hover_preview_renders_its_expected_elements(
+    service_graphs_hover_popup: ServiceGraphsHoverPopup,
+    javascript_errors: list[str],
 ) -> None:
-    """HP-02 (R1.3 Area 9): the hover-preview popup renders content and closes cleanly.
-
-    Do: hover the graph icon of a service with known perfdata on the services-of-host
-    view; wait for the popup graph to finish loading.
-    Assert: canvas and SVG axes present in the popup component; no broken-graph; moving the
-    cursor away closes it cleanly.
+    """Upon hovering a service graphs icon on the "Services of host" view, a preview popup is
+    rendered showing the service's graphs. The rendering includes the graph title, time information
+    and plot (canvas + axes).
     """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+    panel = service_graphs_hover_popup.open().panel(0)
+
+    expect(panel.title, "The hover popup rendered a graph without a title").to_be_visible()
+    expect(panel.title, "The hover popup rendered an empty graph title").not_to_have_text("")
+    expect(panel.timestamp, "The hover popup rendered no time information").to_be_visible()
+    expect(panel.graph.canvas, "The hover popup rendered no plot").to_be_visible()
+    expect(
+        panel.graph.time_axis_labels, "The hover popup's plot drew no time axis"
+    ).not_to_have_count(0)
+    expect(
+        panel.graph.value_axis_labels, "The hover popup's plot drew no value axis"
+    ).not_to_have_count(0)
+    expect(
+        service_graphs_hover_popup.broken_graphs, "A graph in the hover popup failed to load"
+    ).to_have_count(0)
+
+    service_graphs_hover_popup.close()
+    expect(
+        service_graphs_hover_popup.popup,
+        "The hover popup stayed open after the pointer left the icon",
+    ).to_be_hidden()
+
+    assert not javascript_errors, f"The hover popup raised page errors: {javascript_errors}"

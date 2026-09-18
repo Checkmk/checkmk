@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import fcntl
 import getopt
@@ -528,7 +526,7 @@ opt_verbose = 0
 opt_debug = False
 
 
-def parse_arguments():
+def parse_arguments() -> tuple[Mode, list[str], list[tuple[str, str]], list[tuple[str, str]]]:
     global opt_verbose, opt_debug
     short_options = "h"
     long_options = ["help", "version", "verbose", "debug"]

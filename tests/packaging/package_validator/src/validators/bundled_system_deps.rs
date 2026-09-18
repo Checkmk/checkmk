@@ -25,8 +25,8 @@ pub(crate) fn scan_all<'a>(
 ) -> Vec<Finding<'a>> {
     package
         .files()
-        .iter()
-        .filter_map(|(path, _)| {
+        .keys()
+        .filter_map(|path| {
             path.file_name()
                 .and_then(|f| f.to_str())
                 .filter(|name| system_dependencies.contains(name))

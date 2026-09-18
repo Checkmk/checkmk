@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import fnmatch
@@ -82,7 +81,7 @@ _DATE_MACRO_PATTERN = re.compile(r"\$(DATE|YESTERDAY):((?:%\w.?){1,})\$")
 def _cast_value(value: Any, data_type: type) -> Any:
     try:
         return data_type(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -463,7 +462,7 @@ def _check_individual_files(
             levels_lower=levels_lower,
         )
 
-    overall_state = max(r.state.value for r in results if isinstance(r, Result))
+    overall_state = max(r.state.value for r in results if isinstance(r, Result))  # type: ignore[possibly-undefined]
     if skip_ok_files and State(overall_state) == State.OK:
         return
 
@@ -528,7 +527,7 @@ def _fileinfo_check_conjunctions(
 
 
 def check_fileinfo_groups_data(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     section: Fileinfo,
     reftime: int,

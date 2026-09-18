@@ -5,35 +5,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
-import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { computed } from 'vue'
 
 import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.vue'
-import { seedRefreshIntervalSeconds } from '../GlobalRefreshControl/useGlobalRefresh.ts'
+import { reloadPageContent } from '../GlobalRefreshControl/pageContentReload.ts'
 import GlobalTimePicker from './GlobalTimePicker.vue'
-import { rollingRange } from './private/timeRange.ts'
-import { useGlobalTimeRange } from './useGlobalTimeRange.ts'
+import { initGlobalRefresh } from './globalTimeState.ts'
+import { useGlobalTimePickerRange } from './useGlobalTimePickerRange.ts'
 
 const props = defineProps<GlobalTimePickerProps>()
 
-const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+const { range, returnToLiveMonitoring } = useGlobalTimePickerRange(props.default_time_range)
 
-const fallback = rollingRange(props.default_time_range)
-
-if (activeTimeRange.value === null) {
-  setActiveTimeRange(fallback, 'time_picker')
-}
-
-seedRefreshIntervalSeconds(props.default_refresh_time)
-
-const range = computed<DateTimeRange>({
-  get: () => activeTimeRange.value ?? fallback,
-  set: (value: DateTimeRange) => setActiveTimeRange(value, 'time_picker')
+initGlobalRefresh({
+  intervalSeconds: props.refresh.interval_seconds,
+  live: props.refresh.starts_live,
+  // Only a page whose rows the server rendered needs its content re-fetched; one made of graphs
+  // alone leaves them to follow the tick.
+  ...(props.refresh.reloads_page_content ? { strategy: reloadPageContent } : {})
 })
-
-function returnToLiveMonitoring(): void {
-  setActiveTimeRange(rollingRange(props.default_time_range), 'time_picker')
-}
 </script>
 
 <template>

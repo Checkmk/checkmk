@@ -106,7 +106,11 @@ watch(selected, (value) => {
 
 <template>
   <div class="monitoring-filter-numeric">
-    <CmkRadioGroup v-model="selected" class="monitoring-filter-numeric__radio-group">
+    <CmkRadioGroup
+      v-model="selected"
+      class="monitoring-filter-numeric__radio-group"
+      :label="_t('Value range')"
+    >
       <div class="monitoring-filter-numeric__radio-row">
         <CmkRadioButton :value="ANY_OPTION" :label="_t('Any (>0)')" />
       </div>

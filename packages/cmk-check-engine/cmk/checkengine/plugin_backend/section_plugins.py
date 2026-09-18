@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Background tools required to register a section plug-in"""
@@ -139,7 +138,7 @@ def noop_snmp_parse_function(
 
 def wrap_in_unpacker(parse_function: SimpleSNMPParseFunction) -> SNMPParseFunction:
     @functools.wraps(parse_function)
-    def unpacking_parse_function(string_table):  # type: ignore[misc]
+    def unpacking_parse_function(string_table: list[Any]) -> Any:  # type: ignore[misc]
         return parse_function(string_table[0])
 
     return unpacking_parse_function
@@ -210,7 +209,7 @@ def _create_host_label_function(
         return _noop_host_label_function
 
     @functools.wraps(host_label_function)
-    def filtered_generator(*args, **kwargs):  # type: ignore[misc]
+    def filtered_generator(*args: object, **kwargs: object) -> Generator[HostLabel]:
         """Only let HostLabel through
 
         This allows for better typing in base code.

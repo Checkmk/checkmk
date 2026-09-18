@@ -69,20 +69,20 @@ def _make_sources(
         ipaddress,
         IPStackConfig.IPv4,
         source_config=config_cache.make_source_config(
-            config_cache.make_service_configurer({}, lambda *a: ""),
-            ip_lookup=lambda *a: ipaddress,
-            service_name_config=lambda *a: "",
-            enforced_services_table=lambda hn: {},
+            config_cache.make_service_configurer({}, lambda *a: ""),  # noqa: ARG005
+            ip_lookup=lambda *a: ipaddress,  # noqa: ARG005
+            service_name_config=lambda *a: "",  # noqa: ARG005
+            enforced_services_table=lambda hn: {},  # noqa: ARG005
             snmp_fetcher_config=SNMPFetcherConfig(
                 on_error=OnError.RAISE,
-                missing_sys_description=lambda host_name: False,
+                missing_sys_description=lambda host_name: False,  # noqa: ARG005
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 base_path=Path("/"),
                 relative_stored_walk_path=tmp_path,
                 relative_walk_cache_path=tmp_path,
                 relative_section_cache_path=Path("dev/null"),
-                caching_config=lambda host_name: {},
+                caching_config=lambda host_name: {},  # noqa: ARG005
             ),
         ),
         simulation_mode=True,
@@ -108,8 +108,8 @@ def _make_sources(
                 ip_family,
                 ipaddress,
                 secrets_config=_SecretsConfig(path=Path("/pw/store"), secrets={}),
-                ip_address_of=lambda *a: ipaddress,
-                executable_finder=lambda name, module: "/yolo/bin/hurra",
+                ip_address_of=lambda *a: ipaddress,  # noqa: ARG005
+                executable_finder=lambda name, module: "/yolo/bin/hurra",  # noqa: ARG005
                 for_relay=False,
             )
             if special_agent_command_lines is None

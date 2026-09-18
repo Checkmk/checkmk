@@ -59,8 +59,8 @@ agent_section_omd_broker_shovels = AgentSection(
 
 def discover_omd_broker_status(
     section_omd_broker_status: SectionStatus | None,
-    section_omd_broker_shovels: SectionShovels | None,
-    section_omd_broker_queues: SectionQueues | None,
+    section_omd_broker_shovels: SectionShovels | None,  # noqa: ARG001
+    section_omd_broker_queues: SectionQueues | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_omd_broker_status:
         yield from (Service(item=site) for site in section_omd_broker_status)

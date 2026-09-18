@@ -26,8 +26,8 @@ PasswordOnDisk = tuple[
 
 @patch("cmk.gui.watolib.password_visitor.passwordstore_choices", return_value=[])
 def test_password_encrypts_password(  # type: ignore[misc]
-    patch_pwstore: None,
-    request_context: None,
+    patch_pwstore: None,  # noqa: ARG001
+    request_context: None,  # noqa: ARG001
 ) -> None:
     password = "some_password"
     visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=False))
@@ -51,7 +51,9 @@ def test_password_encrypts_password(  # type: ignore[misc]
     ],
 )
 def test_password_masks_password(  # type: ignore[misc]
-    patch_pwstore: None, request_context: None, value: IncomingData
+    patch_pwstore: None,  # noqa: ARG001
+    request_context: None,  # noqa: ARG001
+    value: IncomingData,
 ) -> None:
     visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=True))
     _, _, (_, masked_password) = cast(PasswordOnDisk, visitor.to_disk(value))
@@ -67,7 +69,9 @@ def test_password_masks_password(  # type: ignore[misc]
     ],
 )
 def test_nested_password_gets_masked(  # type: ignore[misc]
-    patch_pwstore: None, request_context: None, value: IncomingData
+    patch_pwstore: None,  # noqa: ARG001
+    request_context: None,  # noqa: ARG001
+    value: IncomingData,
 ) -> None:
     spec = Dictionary(elements={"el": DictElement(parameter_form=Password())})
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=True))
@@ -134,8 +138,8 @@ def test_nested_password_gets_masked(  # type: ignore[misc]
     ],
 )
 def test_password_migrates_password_on_disk(  # type: ignore[misc]
-    patch_pwstore: None,
-    request_context: None,
+    patch_pwstore: None,  # noqa: ARG001
+    request_context: None,  # noqa: ARG001
     old: IncomingData,
     new: PasswordOnDisk,
 ) -> None:

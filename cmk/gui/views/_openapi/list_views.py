@@ -44,13 +44,13 @@ class ViewExtensions:
 
 @api_model
 class ViewModel(DomainObjectModel):
-    domainType: Literal["view"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["view"] = api_field(description="The domain type of the object.")
     extensions: ViewExtensions = api_field(description="Parts of the configuration of this view.")
 
 
 @api_model
 class ViewCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["view"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["view"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[ViewModel] = api_field(description="A list of views.")

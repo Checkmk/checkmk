@@ -3,36 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime as dt
 from typing import Protocol
 
 import pytest
 
-# Needed to monkeypatch agent_aws.NOW
-from cmk.plugins.aws.special_agent import agent_aws
-from cmk.plugins.aws.special_agent.agent_aws import (
+from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
-    S3,
-    S3Limits,
-    S3Requests,
-    S3Summary,
     TagsImportPatternOption,
     TagsOption,
 )
+
+# Needed to monkeypatch NOW in the s3 module
+from cmk.plugins.aws.special_agent.sections import s3 as s3_module
+from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws.special_agent.sections.s3 import S3, S3Limits, S3Requests, S3Summary
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
 
 
 class FakeS3Client:
-    def list_buckets(self):
+    def list_buckets(self) -> Mapping[str, object]:
         return {
             "Buckets": S3ListBucketsIB.create_instances(amount=4),
             "Owner": {
@@ -41,14 +37,14 @@ class FakeS3Client:
             },
         }
 
-    def get_bucket_location(self, Bucket=""):
+    def get_bucket_location(self, Bucket: str = "") -> Mapping[str, object]:
         if Bucket in ["Name-0", "Name-1", "Name-2"]:
             return {
                 "LocationConstraint": "region",
             }
         return {}
 
-    def get_bucket_tagging(self, Bucket=""):
+    def get_bucket_tagging(self, Bucket: str = "") -> Mapping[str, object]:
         if Bucket == "Name-0":
             return {
                 "TagSet": S3BucketTaggingIB.create_instances(amount=1),
@@ -81,7 +77,7 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
     ) -> S3Sections:
         # on_time is somehow not feeded from here to S3Limits, so use monkey patch...
         monkeypatch.setattr(
-            agent_aws, "NOW", dt.strptime("2020-09-28 15:30 UTC", "%Y-%m-%d %H:%M %Z")
+            s3_module, "NOW", dt.strptime("2020-09-28 15:30 UTC", "%Y-%m-%d %H:%M %Z")
         )
 
         region = "region"
@@ -135,7 +131,7 @@ def test_agent_aws_s3_limits(
     get_s3_sections: CreateS3Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    amount_buckets: int,
+    amount_buckets: int,  # noqa: ARG001
 ) -> None:
     s3_limits, _s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
     s3_limits_results = s3_limits.run().results

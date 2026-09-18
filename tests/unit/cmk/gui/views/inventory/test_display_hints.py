@@ -3,22 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 
 import datetime
 from collections.abc import Callable
 
 import pytest
 
-import cmk.gui.inventory
-import cmk.gui.utils
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvText,
 )
+from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint, TableWithView
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _make_title_function,
     _PaintBool,
     _PaintChoice,
     _PaintNumber,
@@ -30,16 +28,21 @@ from cmk.gui.views.inventory._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
     DisplayHints,
-    inv_display_hints,
-    NodeDisplayHint,
     Table,
-    TableWithView,
     TDStyles,
 )
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
+from cmk.inventory.structured_data import (
+    InventoryPath,
+    parse_internal_raw_path,
+    SDKey,
+    SDNodeName,
+    SDPath,
+    SDValue,
+    TreeSource,
+)
 from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
@@ -71,8 +74,17 @@ from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
         (0, 1, -1),
     ],
 )
-def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
+def test__cmp_inv_generic(val_a: SDValue, val_b: SDValue, result: int) -> None:
     assert _decorate_sort_function(_cmp_inv_generic)(val_a, val_b) == result
+
+
+def test__cmp_inv_generic_compares_strings() -> None:
+    assert _decorate_sort_function(_cmp_inv_generic)("a", "b") == -1
+
+
+def test__cmp_inv_generic_rejects_mixed_types() -> None:
+    with pytest.raises(TypeError):
+        _decorate_sort_function(_cmp_inv_generic)("a", 1)
 
 
 @pytest.mark.parametrize(
@@ -189,9 +201,7 @@ def test_get_node_hint_returns_registered_hint_verbatim() -> None:
 def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
-    node_hint = inv_display_hints.get_node_hint(
-        cmk.gui.inventory.parse_internal_raw_path(raw_path).path
-    )
+    node_hint = inv_display_hints.get_node_hint(parse_internal_raw_path(raw_path).path)
 
     assert node_hint.name == "_".join(("inv",) + node_hint.path)
     assert node_hint.icon == expected_node_hint.icon
@@ -261,7 +271,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     ],
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
-    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
@@ -385,7 +395,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
 def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
-    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )
@@ -602,3 +612,15 @@ def test_sort_choice() -> None:
     )
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(1, 2) == 1
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(2, 1) == -1
+
+
+def test__make_title_function_of_a_callable_legacy_title() -> None:
+    assert _make_title_function({"title": lambda word: f"<{word}>"})("key") == "<key>"
+
+
+def test__make_title_function_of_a_plain_legacy_title() -> None:
+    assert _make_title_function({"title": "Title"})("key") == "Title"
+
+
+def test__make_title_function_without_a_legacy_title() -> None:
+    assert _make_title_function({})("some_key") == "Some Key"

@@ -81,7 +81,7 @@ class ParsedLine:
     update_metadata: str | None
 
     @classmethod
-    def try_from_str(cls, line: str) -> "ParsedLine | None":
+    def try_from_str(cls, line: str) -> ParsedLine | None:
         """Parse a line of the agent output, returning the parts
         >>> assert ParsedLine.try_from_str(
         ...     "Remv default-java-plugin [2:1.8-58]"
@@ -220,7 +220,7 @@ agent_section_apt = AgentSection(
 )
 
 
-def discover_apt(section: Section) -> DiscoveryResult:
+def discover_apt(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

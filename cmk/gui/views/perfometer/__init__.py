@@ -7,11 +7,11 @@ from cmk.gui.painter.v0 import PainterRegistry
 
 from ..sorter import SorterRegistry
 from .painter import PainterPerfometer
-from .sorter import SorterPerfometer
+from .sorter import sorter_perfometer
 
 
 def register(sorter_registry: SorterRegistry, painter_registry: PainterRegistry) -> None:
-    sorter_registry.register(SorterPerfometer)
+    sorter_registry.register(sorter_perfometer())
     painter_registry.register(PainterPerfometer)
 
 

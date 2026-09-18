@@ -21,6 +21,7 @@ cc_binary(
     features = [
         "static_libstdcpp",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["no-lint"],
 )
 
@@ -36,6 +37,7 @@ cc_binary(
     features = [
         "static_libstdcpp",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["no-lint"],
 )
 
@@ -130,8 +132,8 @@ py_library(
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/watolib",
         "//cmk/update_config",
-        "//cmk/utils",
         "//cmk/utils:redis",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:discover_plugins",
@@ -149,6 +151,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/update_config",
         "//cmk/utils:paths",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version",
     ],
 )

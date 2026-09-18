@@ -17,6 +17,7 @@ py_library(
             "**/nonfree/**",
         ],
     ) + [
+        "//cmk/plugins/ceph/agents",
         "//cmk/plugins/collection/agents",
         "//cmk/plugins/files/agents",
         "//cmk/plugins/jolokia/agents",
@@ -26,12 +27,13 @@ py_library(
         "//cmk/plugins/plesk/agents",
         "//cmk/plugins/postgres/agents",
         "//cmk/plugins/sap/agents",
+        "//cmk/plugins/unitrends/agents",
     ],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/packages/cmk-dcd:__pkg__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
         "//non-free/packages/cmk-otel-collector:__pkg__",
         "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__pkg__",

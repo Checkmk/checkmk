@@ -22,13 +22,17 @@ from cmk.ruleset_matcher.labels import LabelSource
 type UnixTimestamp = int
 """An instant as whole seconds since the epoch (UTC)."""
 
-type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
+type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]
 
 
 class HostState(enum.IntEnum):
     UP = 0
     DOWN = 1
     UNREACHABLE = 2
+    # Not a real Livestatus state: assigned to a host that has never been checked, whose raw
+    # `state` column is meaningless (always 0). See ``LiveStatusHostRepository`` for where this
+    # gets constructed instead of the real state.
+    PENDING = 3
 
 
 @dataclasses.dataclass(frozen=True)
@@ -69,6 +73,15 @@ class Host:
     service_counts: ServiceCounts | None
     acknowledged: bool
     in_downtime: bool
+    notifications_enabled: bool
+    num_comments: int
+    active_checks_disabled: bool
+    passive_checks_disabled: bool
+    in_notification_period: bool
+    in_service_period: bool
+    in_check_period: bool
+    is_flapping: bool
+    stale: bool
     folder: str | None
     last_check: UnixTimestamp | None
     last_state_change: UnixTimestamp | None
@@ -86,13 +99,10 @@ class Host:
                 return "DOWN"
             case HostState.UNREACHABLE:
                 return "UNREACHABLE"
+            case HostState.PENDING:
+                return "PENDING"
             case _:
                 assert_never(self.state)
-
-
-@dataclasses.dataclass(frozen=True)
-class HostOverview(Host):
-    customer: str | None
 
 
 class HostOptionalField(enum.StrEnum):

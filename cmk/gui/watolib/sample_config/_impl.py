@@ -39,7 +39,10 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
-from cmk.gui.watolib.global_settings import save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings_raw,
+)
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
@@ -188,6 +191,40 @@ class SampleConfigGeneratorGroups(SampleConfigGeneratorABCGroups):
         }
 
 
+class SampleConfigGeneratorInlineSNMPBackend(SampleConfigGenerator):
+    """Make the inline SNMP backend the default in the editions shipping it
+
+    The shipped default in `cmk.base.default_config` must be a backend that is
+    available in every edition, so the editions shipping the inline backend
+    configure it here.
+    """
+
+    @classmethod
+    @override
+    def ident(cls) -> str:
+        return "inline_snmp_backend"
+
+    @classmethod
+    @override
+    def sort_index(cls) -> int:
+        # must run after ConfigGeneratorBasicWATOConfig, which replaces the
+        # global settings with a freshly built set. The editions' tests for
+        # `init_wato_datastructures` pin the outcome.
+        return 12
+
+    @override
+    def generate(self, tree: FolderTree) -> None:
+        save_global_settings_raw(
+            {
+                # Load the full config (with undefined settings), so that saving
+                # does not drop them.
+                **load_configuration_settings(full_config=True),
+                "snmp_backend_default": "inline",
+            },
+            skip_cse_edition_check=True,
+        )
+
+
 class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @classmethod
     @override
@@ -201,7 +238,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
     @override
     def generate(self, tree: FolderTree) -> None:
-        save_global_settings(self._initial_global_settings(), skip_cse_edition_check=True)
+        save_global_settings_raw(self._initial_global_settings(), skip_cse_edition_check=True)
 
         self._initialize_tag_config()
 
@@ -394,6 +431,7 @@ class ConfigGeneratorInitialAdminUser(SampleConfigGenerator):
             now=datetime.now(),
             pprint_value=True,
             call_users_saved_hook=False,
+            changed_users=[UserId("cmkadmin")],
         )
 
 

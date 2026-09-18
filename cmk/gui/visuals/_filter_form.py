@@ -8,9 +8,10 @@ from collections.abc import Mapping
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import IconNames, SingleInfos, StaticIcon, VisualContext
+from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 
@@ -42,7 +43,7 @@ def show_filter_form(
         _show_filter_form_buttons(
             varprefix,
             filter_list_id,
-            vs_filters._page_request_vars,
+            vs_filters._page_request_vars,  # noqa: SLF001
             page_name,
             reset_ajax_page,
             context,

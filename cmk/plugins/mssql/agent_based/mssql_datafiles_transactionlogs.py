@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 from collections.abc import Mapping, Sequence
@@ -120,7 +119,7 @@ def _mssql_datafiles_process_sizes(
                     levels[0] * reference_value / 100.0,
                     levels[1] * reference_value / 100.0,
                 )
-        elif levels[0] is not None:
+        elif levels[0] is not None:  # type: ignore[unreachable]
             return (
                 levels[0] * 1024 * 1024,
                 levels[1] * 1024 * 1024,
@@ -209,7 +208,7 @@ def discover_mssql_common(
 def discover_mssql_datafiles(
     params: list[Mapping[str, Any]],
     section_mssql_datafiles: SectionDatafiles | None,
-    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_mssql_datafiles:
         return
@@ -219,7 +218,7 @@ def discover_mssql_datafiles(
 def discover_mssql_transactionlogs(
     params: list[Mapping[str, Any]],
     section_mssql_transactionlogs: SectionDatafiles | None,
-    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_mssql_transactionlogs:
         return

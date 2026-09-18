@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import overload
 
 from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString
@@ -17,52 +16,19 @@ def prettify(html_text: str) -> str:
     return re.sub("\n{2,}", "\n", re.sub(">", ">\n", txt))
 
 
-@overload
-def encode_attribute(value: list[str]) -> list[str]: ...
-
-
-@overload
-def encode_attribute(value: str) -> str: ...
-
-
-def encode_attribute(value: list[str] | str) -> list[str] | str:
-    if isinstance(value, list):
-        return [encode_attribute(v) for v in value]
-
+def encode_attribute(value: str) -> str:
     return (
         value.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
     )
 
 
-@overload
-def undo_encode_attribute(value: list[str]) -> list[str]: ...
-
-
-@overload
-def undo_encode_attribute(value: str) -> str: ...
-
-
-def undo_encode_attribute(value: list[str] | str) -> list[str] | str:
-    if isinstance(value, list):
-        return [undo_encode_attribute(v) for v in value]
-
+def undo_encode_attribute(value: str) -> str:
     return (
         value.replace("&quot;", '"').replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
     )
 
 
-@overload
-def subber(value: list[str]) -> list[str]: ...
-
-
-@overload
-def subber(value: str) -> str: ...
-
-
-def subber(value: list[str] | str) -> list[str] | str:
-    if isinstance(value, list):
-        return [subber(v) for v in value]
-
+def subber(value: str) -> str:
     return re.sub(
         ">",
         " ",

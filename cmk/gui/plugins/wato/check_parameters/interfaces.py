@@ -672,7 +672,7 @@ PERC_PKG_LEVELS = (10.0, 20.0)
 
 def _vs_alternative_levels(
     title: str,
-    help: str,
+    help: str,  # noqa: A002
     percent_levels: tuple[float, float] = (0.0, 0.0),
     percent_detail: str = "",
     abs_detail: str = "",

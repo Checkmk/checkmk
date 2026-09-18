@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import uuid
 from collections.abc import Iterable
 
@@ -236,10 +237,8 @@ def test_create_non_existing_oauth2_connection(
     assert resp.json["id"] == my_new_uuid, resp.json
 
 
-@pytest.mark.usefixtures("mock_update_passwords_merged_file")
-def test_create_non_existing_oauth2_connection_without_permissions(
-    clients: ClientRegistry, with_admin: tuple[str, str]
-) -> None:
+@pytest.mark.usefixtures("mock_update_passwords_merged_file", "with_admin")
+def test_create_non_existing_oauth2_connection_without_permissions(clients: ClientRegistry) -> None:
     # GIVEN
     clients.User.create(
         username="guest_user1",

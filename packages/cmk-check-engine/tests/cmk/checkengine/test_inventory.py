@@ -194,3 +194,26 @@ def test__create_trees_from_inventory_plugin_items() -> None:
     )
     assert trees.inventory
     assert trees.status_data
+
+
+def test_hwsw_inventory_parameters_from_raw() -> None:
+    assert HWSWInventoryParameters.from_raw(
+        {
+            "hw-changes": 1,
+            "sw-changes": 2,
+            "sw-missing": 3,
+            "nw-changes": 0,
+            "inv-fail-status": 2,
+            "status_data_inventory": True,
+        }
+    ) == HWSWInventoryParameters(1, 2, 3, 0, 2, True)
+
+
+def test_hwsw_inventory_parameters_from_raw_defaults_missing_entries() -> None:
+    assert HWSWInventoryParameters.from_raw({}) == HWSWInventoryParameters(0, 0, 0, 0, 1, False)
+
+
+def test_hwsw_inventory_parameters_from_raw_defaults_an_unusable_entry() -> None:
+    assert HWSWInventoryParameters.from_raw({"hw-changes": ["not a state"]}) == (
+        HWSWInventoryParameters(0, 0, 0, 0, 1, False)
+    )

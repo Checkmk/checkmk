@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import abc
 import functools
@@ -27,11 +26,11 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.post_auth_gates import post_auth_gate_redirect_url
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 from cmk.gui.wsgi.type_defs import WSGIResponse
+from cmk.web.utils.language_cookie import set_language_cookie
 from cmk.web.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.web.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

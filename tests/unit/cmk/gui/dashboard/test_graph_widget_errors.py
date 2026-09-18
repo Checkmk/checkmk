@@ -7,11 +7,10 @@
 Unit tests for Graph widget error handling.
 
 This test suite verifies that technical graph rendering errors are properly
-caught and transformed into user-friendly messages using make_mk_missing_data_error().
+caught and transformed into user-friendly messages.
 """
 
-import re
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -22,105 +21,15 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashletConfig,
 )
 from cmk.gui.dashboard.exceptions import WidgetRenderError
-from cmk.gui.dashboard.page_graph_widget import GraphWidgetPage, render_graph_widget_content
-from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing import MKGraphRecipeNotFoundError, MKGraphWidgetTooSmallError
 
 
 class TestGraphWidgetErrorHandling:
     """Test that graph widget errors are properly transformed into user-friendly messages."""
 
-    @pytest.mark.parametrize(
-        "exception_class,exception_message,expected_exception,expected_substring",
-        [
-            (
-                MKGraphRecipeNotFoundError,
-                "Failed to calculate a graph recipe.",
-                MKMissingDataError,
-                "No data was found with the current parameters of this widget",
-            ),
-            (
-                MKGraphWidgetTooSmallError,
-                "Either increase the widget height or disable the graph legend.",
-                WidgetRenderError,
-                "Either increase the widget height or disable the graph legend.",
-            ),
-        ],
-    )
-    def test_render_graph_widget_content_transforms_graph_exceptions(
-        self,
-        request_context: None,
-        exception_class: type[Exception],
-        exception_message: str,
-        expected_exception: type[Exception],
-        expected_substring: str,
-    ) -> None:
-        """Verify that graph-specific exceptions are caught and transformed into UI-facing errors."""
-        mock_ctx = MagicMock()
-        mock_ctx.config.debug = False
-        mock_ctx.config.graph_timeranges = []
-        mock_ctx.config.default_temperature_unit = "celsius"
-        mock_dashlet_config: TemplateGraphDashletConfig = {
-            "type": "performance_graph",
-            "graph_render_options": {},
-            "timerange": "25h",
-            "graph_id": "",
-        }
-
-        with (
-            patch(
-                "cmk.gui.dashboard.page_graph_widget.host_service_graph_dashlet_cmk",
-                side_effect=exception_class(exception_message),
-            ),
-            patch("cmk.gui.dashboard.page_graph_widget.dashlet_registry"),
-        ):
-            with pytest.raises(expected_exception) as exc_info:
-                render_graph_widget_content(
-                    ctx=mock_ctx,
-                    dashlet_config=mock_dashlet_config,
-                    widget_id="test_widget",
-                )
-            error_message = str(exc_info.value)
-            assert expected_substring in error_message
-
-    @pytest.mark.parametrize(
-        "exception_class,exception_message,expected_error_substring",
-        [
-            (
-                MKLivestatusNotFoundError,
-                "Host not found",
-                "Service or host not found.",
-            ),
-        ],
-    )
-    def test_recipes_transforms_graph_exceptions(
-        self,
-        request_context: None,
-        exception_class: type[Exception],
-        exception_message: str,
-        expected_error_substring: str,
-    ) -> None:
-        """Verify that graph exceptions are transformed into MKMissingDataError."""
-
-        mock_dashlet_spec: TemplateGraphDashletConfig = {
-            "type": "performance_graph",
-            "graph_render_options": {},
-            "timerange": "25h",
-            "graph_id": "",
-        }
-
-        with patch.object(TemplateGraphDashlet, "build_graph_specification") as mock_graph_spec:
-            mock_spec_instance = MagicMock()
-            mock_spec_instance.recipes.side_effect = exception_class(exception_message)
-            mock_graph_spec.return_value = mock_spec_instance
-
-            dashlet = TemplateGraphDashlet(dashlet=mock_dashlet_spec)
-            with pytest.raises(MKMissingDataError, match=re.escape(expected_error_substring)):
-                dashlet.recipes()
-
-    def test_instantiation_does_not_resolve_the_graph(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_instantiation_does_not_resolve_the_graph(self) -> None:
         """Serving a dashboard instantiates every widget; resolving queries the core, so the
-        recipes must only be computed once something asks for them."""
+        specification must only be built once something asks for it."""
         mock_dashlet_spec: TemplateGraphDashletConfig = {
             "type": "performance_graph",
             "graph_render_options": {},
@@ -136,17 +45,33 @@ class TestGraphWidgetErrorHandling:
             assert dashlet.infos() == ["host", "service"]
             assert mock_graph_spec.call_count == 0
 
-            dashlet.recipes()
+            dashlet.graph_specification()
             assert mock_graph_spec.call_count == 1
 
             # Resolution is memoized: a second consumer must not query the core again.
-            dashlet.default_display_title()
+            dashlet.graph_specification()
             assert mock_graph_spec.call_count == 1
 
-    def test_resolve_site_missing_host_provides_specific_message(
-        self,
-        request_context: None,
-    ) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_a_widget_whose_graph_cannot_be_resolved_keeps_its_own_title(self) -> None:
+        mock_dashlet_spec: TemplateGraphDashletConfig = {
+            "type": "performance_graph",
+            "graph_render_options": {},
+            "timerange": "25h",
+            "graph_id": "",
+        }
+
+        with patch.object(
+            TemplateGraphDashlet,
+            "build_graph_specification",
+            side_effect=MKLivestatusNotFoundError("Host not found"),
+        ):
+            dashlet = TemplateGraphDashlet(dashlet=mock_dashlet_spec)
+
+            assert dashlet.default_display_title() == TemplateGraphDashlet.title()
+
+    @pytest.mark.usefixtures("request_context")
+    def test_resolve_site_missing_host_provides_specific_message(self) -> None:
         missing_host = "ghost-host"
 
         with patch("cmk.gui.dashboard.dashlet.dashlets.graph.sites.live") as live_mock:
@@ -155,34 +80,8 @@ class TestGraphWidgetErrorHandling:
             )
 
             with pytest.raises(WidgetRenderError) as exc_info:
-                TemplateGraphDashlet._resolve_site(missing_host)
+                TemplateGraphDashlet._resolve_site(missing_host)  # noqa: SLF001
 
         error_message = str(exc_info.value)
         assert missing_host in error_message
         assert "could not be found on any active site" in error_message
-
-    def test_graph_widget_page_renders_user_error_from_validation(
-        self,
-        request_context: None,
-    ) -> None:
-        page = GraphWidgetPage()
-        mock_ctx = MagicMock()
-        user_message = "Host ghost-host is missing"
-
-        with (
-            patch(
-                "cmk.gui.dashboard.page_graph_widget.get_validated_internal_graph_request",
-                side_effect=MKUserError(None, user_message),
-            ),
-            patch(
-                "cmk.gui.dashboard.page_graph_widget.html.render_message",
-                return_value="rendered",
-            ) as render_message,
-            patch(
-                "cmk.gui.dashboard.page_graph_widget.html.write_html",
-            ) as write_html,
-        ):
-            page.page(mock_ctx)
-
-        render_message.assert_called_once_with(user_message)
-        write_html.assert_called_once_with("rendered")

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -18,7 +20,7 @@ from cmk.gui.agent_download._pages import (
     DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE,
     ModeDownloadAgentsOther,
     PageDownloadAgentPlugin,
-    PluginFamilyAgentDir,
+    PluginFamilyDir,
 )
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -37,12 +39,14 @@ def _local_page(allowed_dirs: Sequence[Path]) -> PageDownloadAgentPlugin:
     return PageDownloadAgentPlugin(allowed_dirs, require_permission=True)
 
 
-def test_download_href_static_file_uses_apache_alias(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_download_href_static_file_uses_apache_alias() -> None:
     path = str(cmk.utils.paths.agents_dir / "linux" / "check-mk-agent.rpm")
     assert download_href(path) == "agents/linux/check-mk-agent.rpm"
 
 
-def test_download_href_plugin_family_file_uses_gui_handler(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_download_href_plugin_family_file_uses_gui_handler() -> None:
     # A plugin family file lives outside share/check_mk/agents and must not be
     # served as a broken relative "agents/<absolute path>" URL.
     path = str(cmk.utils.paths.lib_dir / "python3/cmk/plugins/oracle/agents/mk-oracle")
@@ -52,9 +56,8 @@ def test_download_href_plugin_family_file_uses_gui_handler(request_context: None
     assert "agents//" not in href
 
 
-def test_download_href_local_plugin_family_file_uses_authenticated_handler(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_download_href_local_plugin_family_file_uses_authenticated_handler() -> None:
     local_dir = cmk.utils.paths.local_lib_dir / "python3/cmk/plugins/custom/agents"
 
     href = download_href(str(local_dir / "mk-custom"))
@@ -183,65 +186,101 @@ def test_page_download_rejects_missing_file(
         _shipped_page([plugin_agents_dir]).page(page_context)
 
 
-@pytest.fixture(name="uncached_plugin_family_agent_dirs")
-def fixture_uncached_plugin_family_agent_dirs() -> Iterator[None]:
+@pytest.fixture(name="uncached_plugin_family_agents")
+def fixture_uncached_plugin_family_agents() -> Iterator[None]:
     """Drop the process wide discovery cache around a test that patches the discovery.
 
     Clearing it upfront keeps the real families found at import time from shadowing the
     patched ones, clearing it afterwards keeps the patched ones out of later tests.
     """
-    _pages._plugin_family_agent_dirs.cache_clear()
+    _pages._plugin_family_agents.cache_clear()  # noqa: SLF001
     try:
         yield
     finally:
-        _pages._plugin_family_agent_dirs.cache_clear()
+        _pages._plugin_family_agents.cache_clear()  # noqa: SLF001
 
 
-def test_plugin_family_agent_dirs_marks_local_families(
-    uncached_plugin_family_agent_dirs: None,
+@pytest.mark.usefixtures("uncached_plugin_family_agents")
+def test_plugin_family_agents_groups_shipped_and_local_dirs_of_one_family(
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(
         _pages,
         "discover_families",
         return_value={
-            "cmk.plugins.oracle": [f"{cmk.utils.paths.lib_dir}/python3/cmk/plugins/oracle"],
+            "cmk.plugins.oracle": [
+                # A family can be installed locally in addition to being shipped.
+                f"{cmk.utils.paths.local_lib_dir}/python3/cmk/plugins/oracle",
+                f"{cmk.utils.paths.lib_dir}/python3/cmk/plugins/oracle",
+            ],
             "cmk.plugins.custom": [f"{cmk.utils.paths.local_lib_dir}/python3/cmk/plugins/custom"],
         },
     )
 
-    assert {d.title: d.is_local for d in _pages._plugin_family_agent_dirs()} == {
-        "Oracle": False,
-        "Custom": True,
+    assert {
+        family.title: [d.is_local for d in family.dirs]
+        for family in _pages._plugin_family_agents()  # noqa: SLF001
+    } == {
+        # Both directories belong to one family, the shipped one first.
+        "Oracle": [False, True],
+        "Custom": [True],
     }
 
 
-def test_other_mode_titles_plugin_family_section_by_family(
-    request_context: None,
-    mocker: MockerFixture,
-    test_edition: cmk_version.Edition,
+@pytest.mark.usefixtures("request_context")
+def test_other_mode_shows_shipped_and_local_file_in_one_section(
+    mocker: MockerFixture, test_edition: cmk_version.Edition, tmp_path: Path
 ) -> None:
+    shipped_dir = tmp_path / "plugins" / "oracle" / "agents"
+    shipped_dir.mkdir(parents=True)
+    (shipped_dir / "mk_oracle").touch()
+    (shipped_dir / "mk_oracle.ps1").touch()
+    local_dir = tmp_path / "local" / "plugins" / "oracle" / "agents"
+    local_dir.mkdir(parents=True)
+    (local_dir / "mk_oracle").touch()
+
     mocker.patch.object(
         _pages,
-        "_plugin_family_agent_dirs",
+        "_plugin_family_agents",
         return_value=[
-            PluginFamilyAgentDir(
-                path=Path("/opt/plugins/oracle/agents"), title="Oracle", is_local=False
-            ),
-            PluginFamilyAgentDir(
-                path=Path("/opt/local/plugins/custom/agents"), title="Custom", is_local=True
-            ),
+            _pages.PluginFamilyAgents(
+                title="Oracle",
+                dirs=[
+                    PluginFamilyDir(path=shipped_dir, is_local=False),
+                    PluginFamilyDir(path=local_dir, is_local=True),
+                ],
+            )
         ],
     )
-    mode = ModeDownloadAgentsOther(
-        test_edition, PageContext(config=Config(), request=global_request)
+
+    sections = list(
+        ModeDownloadAgentsOther(  # noqa: SLF001
+            test_edition, PageContext(config=Config(), request=global_request)
+        )._extra_sections()
     )
 
-    # A plugin family agents dir gets a family specific title instead of the
-    # generic "Agents" that the path based fallback would produce for relpath "".
-    assert mode._title_for_root("/opt/plugins/oracle/agents", "") == "Oracle"
-    # Locally installed families are still offered, but they are the only ones
-    # requiring a login, so their section says so.
-    assert mode._title_for_root("/opt/local/plugins/custom/agents", "").startswith("Custom (")
+    # One section for the family, with the locally installed version of a file right
+    # below the shipped one - and marked as the only one requiring a login.
+    assert sections == [
+        (
+            "Oracle",
+            [
+                _pages.DownloadFile(str(shipped_dir / "mk_oracle"), "mk_oracle"),
+                _pages.DownloadFile(
+                    str(local_dir / "mk_oracle"), "mk_oracle (local, download requires login)"
+                ),
+                _pages.DownloadFile(str(shipped_dir / "mk_oracle.ps1"), "mk_oracle.ps1"),
+            ],
+        )
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_other_mode_titles_share_tree_section_by_path(test_edition: cmk_version.Edition) -> None:
     # Files below the share tree keep their existing label.
-    assert mode._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins") == "Plug-ins"
+    assert (
+        ModeDownloadAgentsOther(  # noqa: SLF001
+            test_edition, PageContext(config=Config(), request=global_request)
+        )._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins")
+        == "Plug-ins"
+    )

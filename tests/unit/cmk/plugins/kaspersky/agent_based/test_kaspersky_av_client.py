@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -17,8 +16,8 @@ from cmk.plugins.kaspersky.agent_based import kaspersky_av_client
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-@pytest.fixture(scope="module", autouse=True)
-def set_fixed_timezone():
+@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield
 
@@ -39,7 +38,7 @@ def set_fixed_timezone():
 def test_parse_kaspersky_av_client(
     string_table: StringTable, now: int, expected_section: kaspersky_av_client.Section
 ) -> None:
-    assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section
+    assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

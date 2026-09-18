@@ -934,7 +934,7 @@ def test_inventory_common_azure() -> None:
 )
 def test_check_memory(  # type: ignore[misc]
     section: Resource,
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
@@ -957,7 +957,7 @@ def test_check_memory(  # type: ignore[misc]
 )
 def test_check_cpu(  # type: ignore[misc]
     section: Resource,
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
@@ -982,7 +982,7 @@ def test_check_cpu(  # type: ignore[misc]
 )
 def test_check_connections(  # type: ignore[misc]
     section: Resource,
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:

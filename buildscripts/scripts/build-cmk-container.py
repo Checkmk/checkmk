@@ -153,7 +153,7 @@ def run_cmd(
     return completed_process
 
 
-logging.basicConfig(
+logging.basicConfig(  # astrein: disable=logging-formatter
     format="[%(asctime)s] [%(levelname)-8s] [%(funcName)-15s:%(lineno)4s] %(message)s",
     level=logging.WARNING,
 )
@@ -652,7 +652,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Feigling")
+        print("Feigling")  # noqa: T201  # It's OK for scripts to print()
     except Exception as e:
         raise e
     finally:

@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.manifest.deps (dependency expansion and dir extraction)."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from cmk.dev_deploy.manifest.deps import expand_dependencies

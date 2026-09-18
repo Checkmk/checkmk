@@ -9,7 +9,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -26,7 +25,10 @@ py_library(
     ],
     data = ["cmk/messaging/py.typed"],
     imports = ["."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests/unit:__subpackages__",
+    ],
     deps = [
         requirement("pika"),
         requirement("pydantic"),
@@ -53,14 +55,12 @@ py_cmk_test(
 py_wheel(
     name = "wheel",
     distribution = "cmk-messaging",
-    # TODO: Duplicated from pyproject.toml
     entry_points = {
         "console_scripts": [
             "cmk-broker-test = cmk.messaging.broker_test:main",
         ],
     },
     strip_path_prefixes = ["packages/cmk-messaging"],
-    # TODO: Duplicated from pyproject.toml
     version = "0.1.0",
     visibility = ["//visibility:public"],
     deps = [

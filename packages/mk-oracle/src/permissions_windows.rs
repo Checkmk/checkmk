@@ -42,7 +42,8 @@ use winapi::um::winnt::{
     ACCESS_ALLOWED_ACE, ACCESS_ALLOWED_ACE_TYPE, ACE_HEADER, DACL_SECURITY_INFORMATION, DELETE,
     FILE_APPEND_DATA, FILE_ATTRIBUTE_REPARSE_POINT, FILE_SHARE_DELETE, FILE_SHARE_READ,
     FILE_SHARE_WRITE, FILE_WRITE_ATTRIBUTES, FILE_WRITE_DATA, FILE_WRITE_EA, GENERIC_ALL,
-    GENERIC_WRITE, PACL, PSID, READ_CONTROL, SID_NAME_USE, WRITE_DAC, WRITE_OWNER,
+    GENERIC_WRITE, OWNER_SECURITY_INFORMATION, PACL, PSID, READ_CONTROL, SID_NAME_USE, WRITE_DAC,
+    WRITE_OWNER,
 };
 
 // Bounds tree recursion so admin-made junction cycles still terminate.
@@ -67,10 +68,19 @@ pub fn is_running_as_admin() -> bool {
 /// Well-known SID for BUILTIN\Administrators.
 const ADMINISTRATORS_SID: &str = "S-1-5-32-544";
 
+/// Well-known, install-invariant service SID for `NT SERVICE\TrustedInstaller`.
+/// It owns the whole `C:\Windows` subtree and no standard user can run as it, so
+/// it is a privileged owner/writer just like SYSTEM. Only the owner check needs
+/// it (Oracle paths are never TrustedInstaller-owned), but trusting it uniformly
+/// keeps the owner and DACL decisions in sync.
+const TRUSTED_INSTALLER_SID: &str =
+    "S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464";
+
 /// `$admin_sids` from the legacy plugin — confirmed by Security team:
 ///   * `S-1-5-18`      — NT AUTHORITY\SYSTEM
 ///   * `S-1-5-32-544`  — BUILTIN\Administrators
-const ADMIN_SIDS: &[&str] = &["S-1-5-18", ADMINISTRATORS_SID];
+///   * [`TRUSTED_INSTALLER_SID`] — owns protected system paths
+const ADMIN_SIDS: &[&str] = &["S-1-5-18", ADMINISTRATORS_SID, TRUSTED_INSTALLER_SID];
 
 /// Port of the legacy `Test-DomainSid`: true for a Domain Admins (RID 512)
 /// or Enterprise Admins (RID 519) SID, i.e. `S-1-5-21-<a>-<b>-<c>-51{2,9}`.
@@ -90,6 +100,16 @@ fn is_domain_sid(sid_str: &str) -> bool {
 /// [`ADMIN_SIDS`], plus domain/enterprise admins ([`is_domain_sid`]).
 fn is_privileged_sid(sid_str: &str) -> bool {
     ADMIN_SIDS.contains(&sid_str) || is_domain_sid(sid_str)
+}
+
+/// Whether a SID is trusted to modify a checked path: a well-known privileged
+/// SID ([`is_privileged_sid`]), or a direct member of the local Administrators
+/// group / a configured safe entry, both carried in `local_admins`. This is the
+/// single trust decision shared by the DACL walk (an ACE granting write access)
+/// and the owner check (the owner implicitly holds `WRITE_DAC`), so the two can
+/// never drift apart.
+fn is_trusted_sid(sid_str: &str, local_admins: &HashSet<String>) -> bool {
+    is_privileged_sid(sid_str) || local_admins.contains(sid_str)
 }
 
 fn sid_to_string(sid: PSID) -> Option<String> {
@@ -255,7 +275,7 @@ fn walk_dacl_ex(pdacl: PACL, path: &Path, local_admins: &HashSet<String>) -> boo
             log::warn!("ACE #{} of {:?} has an invalid SID", i, path);
             return false;
         };
-        if is_privileged_sid(&sid_str) || local_admins.contains(&sid_str) {
+        if is_trusted_sid(&sid_str, local_admins) {
             continue;
         }
         log::warn!(
@@ -268,17 +288,36 @@ fn walk_dacl_ex(pdacl: PACL, path: &Path, local_admins: &HashSet<String>) -> boo
     true
 }
 
+/// Whether the object owner is a trusted principal. On Windows the owner
+/// implicitly holds `READ_CONTROL` and `WRITE_DAC` regardless of the DACL, so a
+/// compliant-looking DACL is worthless when a non-privileged principal owns the
+/// object: it can rewrite the DACL at will and plant a library an elevated
+/// process later loads. Mirrors the Linux check that rejects any non-root,
+/// non-safe owner (see `permissions_linux`).
+fn owner_is_trusted(owner: PSID, path: &Path, local_admins: &HashSet<String>) -> bool {
+    let Some(sid_str) = sid_to_string(owner) else {
+        log::warn!("Path {:?} has a missing or invalid owner SID", path);
+        return false;
+    };
+    if is_trusted_sid(&sid_str, local_admins) {
+        return true;
+    }
+    log::warn!("Path {:?} is owned by non-privileged SID {}", path, sid_str);
+    false
+}
+
 /// Check the DACL of `path`. Follows reparse points to their target.
 fn only_admins_can_modify(path: &Path, local_admins: &HashSet<String>) -> bool {
     let wide = to_wide(path);
+    let mut psid_owner: PSID = ptr::null_mut();
     let mut pdacl: PACL = ptr::null_mut();
     let mut sd: *mut c_void = ptr::null_mut();
     let status = unsafe {
         GetNamedSecurityInfoW(
             wide.as_ptr() as *mut u16,
             SE_FILE_OBJECT,
-            DACL_SECURITY_INFORMATION,
-            ptr::null_mut(),
+            OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+            &mut psid_owner,
             ptr::null_mut(),
             &mut pdacl,
             ptr::null_mut(),
@@ -293,7 +332,9 @@ fn only_admins_can_modify(path: &Path, local_admins: &HashSet<String>) -> bool {
         );
         return false;
     }
-    let ok = walk_dacl_ex(pdacl, path, local_admins);
+    // Both the owner SID and the DACL live inside `sd`, freed once below.
+    let ok =
+        owner_is_trusted(psid_owner, path, local_admins) && walk_dacl_ex(pdacl, path, local_admins);
     if !sd.is_null() {
         unsafe {
             LocalFree(sd);
@@ -322,14 +363,15 @@ fn only_admins_can_modify_no_follow(path: &Path, local_admins: &HashSet<String>)
         log::warn!("CreateFileW (no-follow) failed for {:?}", path);
         return false;
     }
+    let mut psid_owner: PSID = ptr::null_mut();
     let mut pdacl: PACL = ptr::null_mut();
     let mut sd: *mut c_void = ptr::null_mut();
     let status = unsafe {
         GetSecurityInfo(
             handle,
             SE_FILE_OBJECT,
-            DACL_SECURITY_INFORMATION,
-            ptr::null_mut(),
+            OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+            &mut psid_owner,
             ptr::null_mut(),
             &mut pdacl,
             ptr::null_mut(),
@@ -347,7 +389,9 @@ fn only_admins_can_modify_no_follow(path: &Path, local_admins: &HashSet<String>)
         );
         return false;
     }
-    let ok = walk_dacl_ex(pdacl, path, local_admins);
+    // Both the owner SID and the DACL live inside `sd`, freed once below.
+    let ok =
+        owner_is_trusted(psid_owner, path, local_admins) && walk_dacl_ex(pdacl, path, local_admins);
     if !sd.is_null() {
         unsafe {
             LocalFree(sd);
@@ -476,13 +520,18 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_privileged_sid, local_administrators, only_admins_can_modify};
+    use super::{is_privileged_sid, is_trusted_sid, local_administrators, only_admins_can_modify};
+    use std::collections::HashSet;
     use std::path::PathBuf;
 
     #[test]
     fn test_is_privileged_sid_system_and_builtin_admins() {
         assert!(is_privileged_sid("S-1-5-18"));
         assert!(is_privileged_sid("S-1-5-32-544"));
+        // TrustedInstaller owns the C:\Windows subtree; trusted as owner/writer.
+        assert!(is_privileged_sid(
+            "S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464"
+        ));
     }
 
     #[test]
@@ -512,6 +561,32 @@ mod tests {
         // be trusted just because the domain id begins with those digits.
         assert!(!is_privileged_sid("S-1-5-21-5123456789-1111-2222-1001"));
         assert!(!is_privileged_sid("S-1-5-21-5190000000-1111-2222-1001"));
+    }
+
+    // The owner check delegates to `is_trusted_sid`: a non-privileged owner can
+    // rewrite the DACL via its implicit WRITE_DAC, so it must be rejected unless
+    // it is a well-known admin SID or a resolved member of the Administrators
+    // group / a configured safe entry (both carried in `local_admins`).
+    #[test]
+    fn test_is_trusted_sid_owner_and_dacl_principals() {
+        let empty = HashSet::new();
+        // Well-known privileged SIDs are trusted without any group membership:
+        // NT AUTHORITY\SYSTEM, BUILTIN\Administrators, Domain Admins.
+        assert!(is_trusted_sid("S-1-5-18", &empty));
+        assert!(is_trusted_sid("S-1-5-32-544", &empty));
+        assert!(is_trusted_sid("S-1-5-21-1111-2222-3333-512", &empty));
+        // A non-well-known SID (e.g. the admin user who installed the client) is
+        // trusted only as a resolved member of the local Administrators group.
+        let member = "S-1-5-21-1111-2222-3333-1001";
+        assert!(!is_trusted_sid(member, &empty));
+        let local_admins = HashSet::from([member.to_string()]);
+        assert!(is_trusted_sid(member, &local_admins));
+        // Anyone else stays rejected: an ordinary user, or BUILTIN\Users.
+        assert!(!is_trusted_sid(
+            "S-1-5-21-1111-2222-3333-1002",
+            &local_admins
+        ));
+        assert!(!is_trusted_sid("S-1-5-32-545", &local_admins));
     }
 
     #[test]

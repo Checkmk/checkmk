@@ -5,7 +5,7 @@
  */
 import type * as intl from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 
 import GraphHeader from '@/graphing/components/header/GraphHeader.vue'
 import type { BurgerMenuGroup } from '@/graphing/types'
@@ -30,24 +30,66 @@ test('omits the graph title when showTitle is not set', () => {
   expect(screen.queryByText('CPU utilization')).not.toBeInTheDocument()
 })
 
+const AGGREGATED_TIME_RANGE = { start: JUNE_15_NOON_UTC, end: JUNE_15_NOON_UTC + 3600, step: 300 }
+const RAW_TIME_RANGE = { start: JUNE_15_NOON_UTC, end: JUNE_15_NOON_UTC + 3600, step: 60 }
+
 test('the consolidation dropdown shows the selected function', async () => {
-  render(GraphHeader, { props: { showConsolidation: true, consolidationFn: 'max' } })
+  render(GraphHeader, {
+    props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE }
+  })
 
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Graph values' })).toHaveTextContent('Max')
   )
 })
 
-test('selecting a consolidation function emits update:consolidationFn', async () => {
+test('selecting a consolidation function shows the new selection and emits update:consolidationFn', async () => {
   const user = userEvent.setup()
   const { emitted } = render(GraphHeader, {
-    props: { showConsolidation: true, consolidationFn: 'avg' }
+    props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE }
+  })
+  const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
+
+  await user.click(dropdown)
+  await user.click(await screen.findByRole('option', { name: 'Min' }))
+  expect(dropdown).toHaveTextContent('Min')
+  expect(emitted('update:consolidationFn')?.at(-1)).toEqual(['min'])
+
+  await user.click(dropdown)
+  await user.click(await screen.findByRole('option', { name: 'Average' }))
+  expect(dropdown).toHaveTextContent('Average')
+  expect(emitted('update:consolidationFn')?.at(-1)).toEqual(['avg'])
+})
+
+const INLINE_TOOLTIP_STUBS = {
+  CmkTooltipProvider: { template: '<div><slot /></div>' },
+  CmkTooltip: { template: '<div><slot /></div>' },
+  CmkTooltipTrigger: { template: '<div><slot /></div>' },
+  CmkTooltipContent: { template: '<div><slot /></div>' }
+}
+
+test('the consolidation functions are offered from the default downwards, each explaining what it displays', async () => {
+  const user = userEvent.setup()
+  render(GraphHeader, {
+    props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE },
+    global: { stubs: INLINE_TOOLTIP_STUBS }
   })
 
   await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
-  await user.click(await screen.findByRole('option', { name: 'Max' }))
 
-  expect(emitted()['update:consolidationFn']).toEqual([['max']])
+  const descriptionPerOption = [
+    ['Max', 'Display of maximum values for each selected metric over time.'],
+    ['Average', 'Display of average values for each selected metric over time.'],
+    ['Min', 'Display of minimum values for each selected metric over time.']
+  ] as const
+  const options = await screen.findAllByRole('option')
+
+  expect(options.map((option) => option.getAttribute('aria-label'))).toEqual(
+    descriptionPerOption.map(([name]) => name)
+  )
+  descriptionPerOption.forEach(([, description], index) => {
+    expect(within(options[index]!).getByText(description)).toBeInTheDocument()
+  })
 })
 
 test('describes a same-day range with a single date and its resolution', () => {
@@ -58,7 +100,7 @@ test('describes a same-day range with a single date and its resolution', () => {
     }
   })
 
-  expect(screen.getByText('for 2026-06-15,')).toBeInTheDocument()
+  expect(screen.getByText(/for 2026-06-15,/)).toBeInTheDocument()
   expect(screen.getByText('resolution: 5 min')).toBeInTheDocument()
 })
 
@@ -70,8 +112,24 @@ test('describes a cross-day range as start — end', () => {
     }
   })
 
-  expect(screen.getByText('for 2026-06-14 — 2026-06-15,')).toBeInTheDocument()
+  expect(screen.getByText(/for 2026-06-14 — 2026-06-15,/)).toBeInTheDocument()
   expect(screen.getByText('resolution: 6 h')).toBeInTheDocument()
+})
+
+test('the time range note names the graph values while the consolidation dropdown is hidden', () => {
+  render(GraphHeader, {
+    props: { showTimestamp: true, showConsolidation: true, timeRange: RAW_TIME_RANGE }
+  })
+
+  expect(screen.getByText('Graph values for 2026-06-15,')).toBeInTheDocument()
+})
+
+test('the time range note leaves naming the graph values to the consolidation dropdown', () => {
+  render(GraphHeader, {
+    props: { showTimestamp: true, showConsolidation: true, timeRange: AGGREGATED_TIME_RANGE }
+  })
+
+  expect(screen.getByText('for 2026-06-15,')).toBeInTheDocument()
 })
 
 test('omits the range note while no time range is known', () => {
@@ -102,15 +160,27 @@ test('switching the zoom mode emits update:zoomMode', async () => {
 })
 
 test('omits the consolidation dropdown unless showConsolidation is set', () => {
-  render(GraphHeader, {})
+  render(GraphHeader, { props: { timeRange: AGGREGATED_TIME_RANGE } })
 
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 })
 
-test('shows the consolidation dropdown when showConsolidation is set', () => {
-  render(GraphHeader, { props: { showConsolidation: true } })
+test('shows the consolidation dropdown when showConsolidation is set and the data is aggregated', () => {
+  render(GraphHeader, { props: { showConsolidation: true, timeRange: AGGREGATED_TIME_RANGE } })
 
   expect(screen.getByRole('combobox', { name: 'Graph values' })).toBeInTheDocument()
+})
+
+test('hides the consolidation dropdown while the time range is unknown', () => {
+  render(GraphHeader, { props: { showConsolidation: true } })
+
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+})
+
+test('hides the consolidation dropdown once the data is at raw, unaggregated resolution', () => {
+  render(GraphHeader, { props: { showConsolidation: true, timeRange: RAW_TIME_RANGE } })
+
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 })
 
 test('hides the zoom selector when showControls is false', () => {
@@ -143,7 +213,7 @@ test('exposes the controls as an accessible group', () => {
   ).toBeInTheDocument()
 })
 
-test('draws the burger menu at the right-hand end of the header', () => {
+test('draws the burger menu inside the header trailing action group', () => {
   const groups: BurgerMenuGroup[] = [
     {
       heading: 'Export',
@@ -155,20 +225,15 @@ test('draws the burger menu at the right-hand end of the header', () => {
       showTitle: true,
       title: 'CPU utilization',
       showConsolidation: true,
+      timeRange: AGGREGATED_TIME_RANGE,
       showBurgerMenu: true,
       burgerMenuGroups: groups
     }
   })
 
-  const title = screen.getByText('CPU utilization')
-  const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
-  const zoomSwitch = screen.getByRole('switch')
-  const burgerMenuButton = screen.getByRole('button')
+  const [valuesAndTimeGroup, zoomAndMenuGroup] = screen.getAllByRole('group')
 
-  // The header lays its children out left to right, so DOM order matches
-  // visual order. The burger menu must follow every other control to end
-  // up drawn furthest to the right.
-  for (const control of [title, dropdown, zoomSwitch]) {
-    expect(control.compareDocumentPosition(burgerMenuButton)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-  }
+  expect(valuesAndTimeGroup).toHaveAccessibleName('Graph values and time information')
+  expect(zoomAndMenuGroup).toHaveAccessibleName('Graph zoom controls and action menu')
+  expect(within(zoomAndMenuGroup!).getByRole('button')).toBeInTheDocument()
 })

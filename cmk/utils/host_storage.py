@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import abc
 import enum
@@ -342,7 +340,7 @@ class ABCHostsStorageLoader[THostsReadData](abc.ABC):
     def file_exists(self, file_path: Path) -> bool:
         return self._storage.exists(file_path)
 
-    def file_valid(self, file_path: Path) -> bool:
+    def file_valid(self, file_path: Path) -> bool:  # noqa: ARG002
         return True
 
     def read_and_apply(self, file_path: Path, global_dict: dict[str, Any]) -> bool:
@@ -468,7 +466,7 @@ def get_all_storage_readers() -> list[ABCHostsStorage]:
 
 
 def get_storage_format(format_option: object) -> StorageFormat:
-    match format_option:
+    match format_option:  # type: ignore[exhaustive-match]
         case None:
             return StorageFormat.PICKLE
         case StorageFormat() as already_parsed:

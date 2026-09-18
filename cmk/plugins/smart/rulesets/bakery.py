@@ -33,7 +33,7 @@ def migrate(value: object) -> Mapping[str, object]:
         return {"deployment": ("do_not_deploy", None)}
     if value == "smart_posix":
         return {"deployment": ("sync", None)}
-    if value in ("smart", True):
+    if value == "smart":
         return {"deployment": ("sync", None), "use_legacy_plugin": True}
     raise ValueError(f"Unexpected value: {value!r}")
 

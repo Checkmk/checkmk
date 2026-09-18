@@ -427,7 +427,6 @@ def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_simple_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests)

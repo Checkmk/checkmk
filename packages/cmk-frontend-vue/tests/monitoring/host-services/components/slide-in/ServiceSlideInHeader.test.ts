@@ -13,6 +13,8 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
   return {
     name: 'CPU load',
     state: 'CRIT',
+    is_flapping: false,
+    stale: false,
     summary: 'CRIT - load average: 9.10, 8.05, 7.01',
     last_check: 1783942710,
     last_state_change: 1783942740,
@@ -57,5 +59,30 @@ describe('ServiceSlideInHeader', () => {
     expect(downtime.compareDocumentPosition(screen.getByText('CPU load'))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     )
+  })
+
+  it('shows a flapping badge between the state and the service name', () => {
+    render(ServiceSlideInHeader, { props: { service: makeService({ is_flapping: true }) } })
+
+    const flapping = screen.getByTitle('Flapping')
+    expect(flapping.compareDocumentPosition(screen.getByText('CRITICAL'))).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING
+    )
+    expect(flapping.compareDocumentPosition(screen.getByText('CPU load'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+  })
+
+  it('shows a stale badge when the service is stale', () => {
+    render(ServiceSlideInHeader, { props: { service: makeService({ stale: true }) } })
+
+    expect(screen.getByTitle('Stale')).toBeInTheDocument()
+  })
+
+  it('shows neither badge for a service that is neither flapping nor stale', () => {
+    render(ServiceSlideInHeader, { props: { service: makeService() } })
+
+    expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
   })
 })

@@ -40,7 +40,7 @@ def parse_cisco_ucs_raid(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_cisco_ucs_raid(section: Section) -> DiscoveryResult:
+def discover_cisco_ucs_raid(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -50,33 +50,33 @@ class MerakiClient:
         self._switch_client = SwitchClient(sdk.switch)
         self._wireless_client = WirelessClient(sdk.wireless)
 
-    def get_api_response_codes(self, id: str) -> Sequence[schema.RawApiResponseCodes]:
+    def get_api_response_codes(self, id: str) -> Sequence[schema.RawApiResponseCodes]:  # noqa: A002
         return self._org_client.get_api_response_codes(id)
 
     def get_appliance_performance(self, serial: str) -> schema.RawAppliancePerformance | None:
         return self._appliance_client.get_appliance_performance(serial)
 
-    def get_devices(self, id: str) -> Sequence[schema.RawDevice]:
+    def get_devices(self, id: str) -> Sequence[schema.RawDevice]:  # noqa: A002
         fn = self._org_client.get_devices
         fetch = fn if self._no_cache else self._cache.devices(fn)
         return fetch(id)
 
-    def get_devices_statuses(self, id: str) -> Sequence[schema.RawDevicesStatus]:
+    def get_devices_statuses(self, id: str) -> Sequence[schema.RawDevicesStatus]:  # noqa: A002
         fn = self._org_client.get_device_statuses
         fetch = fn if self._no_cache else self._cache.device_statuses(fn)
         return fetch(id)
 
-    def get_device_uplink_addresses(self, id: str) -> Sequence[schema.RawDeviceUplinksAddress]:
+    def get_device_uplink_addresses(self, id: str) -> Sequence[schema.RawDeviceUplinksAddress]:  # noqa: A002
         fn = self._org_client.get_device_uplink_addresses
         fetch = fn if self._no_cache else self._cache.device_uplinks_info(fn)
         return fetch(id)
 
-    def get_licenses_overview(self, id: str, name: str) -> schema.LicensesOverview | None:
+    def get_licenses_overview(self, id: str, name: str) -> schema.LicensesOverview | None:  # noqa: A002
         fn = self._org_client.get_licenses_overview
         fetch = fn if self._no_cache else self._cache.licenses_overview(fn)
         return fetch(id, name)
 
-    def get_networks(self, id: str, name: str) -> Sequence[schema.Network]:
+    def get_networks(self, id: str, name: str) -> Sequence[schema.Network]:  # noqa: A002
         fn = self._org_client.get_networks
         fetch = fn if self._no_cache else self._cache.networks(fn)
         return fetch(id, name)
@@ -84,23 +84,23 @@ class MerakiClient:
     def get_organizations(self) -> Sequence[schema.RawOrganisation]:
         return self._org_client.get_organizations()
 
-    def get_sensor_readings(self, id: str) -> Sequence[schema.RawSensorReadings]:
+    def get_sensor_readings(self, id: str) -> Sequence[schema.RawSensorReadings]:  # noqa: A002
         return self._sensor_client.get_sensor_readings(id)
 
     def get_switch_ports_statuses(self, serial: str) -> Sequence[schema.RawSwitchPortsStatus]:
         return self._switch_client.get_switch_ports_statuses(serial)
 
-    def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
+    def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:  # noqa: A002
         fn = self._appliance_client.get_uplink_statuses
         fetch = fn if self._no_cache else self._cache.appliance_uplinks(fn)
         return fetch(id)
 
-    def get_uplink_vpn_statuses(self, id: str) -> Sequence[schema.RawUplinkVpnStatuses]:
+    def get_uplink_vpn_statuses(self, id: str) -> Sequence[schema.RawUplinkVpnStatuses]:  # noqa: A002
         fn = self._appliance_client.get_uplink_vpn_statuses
         fetch = fn if self._no_cache else self._cache.appliance_vpns(fn)
         return fetch(id)
 
-    def get_uplink_usage(self, id: str) -> Sequence[schema.RawUplinkUsage]:
+    def get_uplink_usage(self, id: str) -> Sequence[schema.RawUplinkUsage]:  # noqa: A002
         return self._appliance_client.get_uplink_usage(id)
 
     def get_wireless_device_statuses(self, serial: str) -> schema.RawWirelessDeviceStatus | None:
@@ -108,7 +108,7 @@ class MerakiClient:
         fetch = fn if self._no_cache else self._cache.wireless_device_statuses(fn)
         return fetch(serial)
 
-    def get_wireless_ethernet_statuses(self, id: str) -> Sequence[schema.RawWirelessEthernetStatus]:
+    def get_wireless_ethernet_statuses(self, id: str) -> Sequence[schema.RawWirelessEthernetStatus]:  # noqa: A002
         fn = self._wireless_client.get_ethernet_statuses
         fetch = fn if self._no_cache else self._cache.wireless_ethernet_statuses(fn)
         return fetch(id)

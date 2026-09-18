@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Sequence
@@ -32,7 +32,9 @@ from tests.testlib.unit.gui.filter_table_test_helper import (
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
+def fixture_livestatus_test_config(
+    mock_livestatus: MockLiveStatusConnection, mock_wato_folders: None
+) -> MockLiveStatusConnection:
     live = mock_livestatus
     live.add_table(
         "hostgroups",
@@ -111,8 +113,9 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", filter_registry.keys())
+@pytest.mark.usefixtures("request_context")
 def test_filters_filter_with_empty_request(
-    filter_ident: str, live: MockLiveStatusConnection, request_context: None
+    filter_ident: str, live: MockLiveStatusConnection
 ) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
@@ -197,6 +200,12 @@ filter_tests = [
         ident="event_facility",
         request_vars=[("event_facility", "0")],
         expected_filters="Filter: event_facility = 0\n",
+    ),
+    # Testing base class EventHostQuery
+    FilterTest(
+        ident="event_host",
+        request_vars=[("event_host", "myhost")],
+        expected_filters=("Filter: event_host = myhost\nFilter: event_core_host = myhost\nOr: 2\n"),
     ),
     # Testing base class FilterNagiosFlag, FilterOption
     FilterTest(
@@ -595,12 +604,13 @@ filter_tests = [
 ]
 
 
-def filter_test_id(t):
+def filter_test_id(t: FilterTest) -> str:
     return t.ident + ":" + ",".join(["=".join(p) for p in t.request_vars])
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
     with (
         set_config(
             wato_host_attrs=[
@@ -616,9 +626,8 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context
         assert filt.filter(filter_vars) == test.expected_filters
 
 
-def test_custom_attribute_filter_without_the_value_variable(
-    set_config: SetConfig, request_context: None
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_custom_attribute_filter_without_the_value_variable(set_config: SetConfig) -> None:
     # A stored context that carries only the attribute name and no value key at all,
     # as opposed to a value key holding an empty string. Both mean "any value".
     with set_config(custom_service_attributes={"bla": {"title": "Bla"}}):
@@ -631,8 +640,10 @@ def test_custom_attribute_filter_without_the_value_variable(
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
+@pytest.mark.usefixtures("request_context")
 def test_filters_filter_table(  # type: ignore[misc]
-    test: FilterTableTest, monkeypatch: pytest.MonkeyPatch, request_context: None
+    test: FilterTableTest,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Skip deployment_has_agent in community edition - needs bakery
     if test.ident == "deployment_has_agent":
@@ -656,9 +667,8 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:  # type: ignor
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(
-    live: MockLiveStatusConnection, request_context: None, patch_theme: None
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> None:
     with live:
         for filt in filter_registry.values():
             with output_funnel.plugged():
@@ -666,7 +676,7 @@ def test_filters_display_with_empty_request(
                 filt.display(dict.fromkeys(filt.htmlvars, ""))
 
 
-def _set_expected_queries(filt_ident, live):
+def _set_expected_queries(filt_ident: str, live: MockLiveStatusConnection) -> None:
     if filt_ident in ["hostgroups"]:
         live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
         return

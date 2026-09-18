@@ -89,6 +89,7 @@ function setState(field: F, next: BooleanState): void {
       <hr v-if="index > 0" class="monitoring-filter-boolean-group__separator" />
       <CmkRadioGroup
         class="monitoring-filter-boolean-group__group"
+        :label="untranslated(group.title)"
         :model-value="stateOf(group.field)"
         @update:model-value="setState(group.field, $event as BooleanState)"
       >

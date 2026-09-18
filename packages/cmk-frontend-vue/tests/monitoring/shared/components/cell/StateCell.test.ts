@@ -71,8 +71,8 @@ test('renders the service state when kind is service', () => {
   expect(screen.getByText('CRITICAL')).toBeInTheDocument()
 })
 
-test('forwards the pending flag to the service state', () => {
-  mountCell({ kind: 'service', state: 'CRIT', pending: true })
+test('renders the pending state for a service', () => {
+  mountCell({ kind: 'service', state: 'PENDING' })
 
   expect(screen.getByText('PENDING')).toBeInTheDocument()
   expect(screen.queryByText('CRITICAL')).not.toBeInTheDocument()
@@ -87,13 +87,32 @@ test('renders the stale indicator when stale', () => {
 test('marks the state badge itself as stale', () => {
   const { container } = mountCell({ kind: 'service', state: 'OK', stale: true })
 
-  expect(container.querySelector('.monitoring-state-tag--stale')).toHaveTextContent('OK')
+  expect(container.querySelector('.cmk-state-tag--stale')).toHaveTextContent('OK')
+})
+
+test('renders the flapping indicator when flapping', () => {
+  mountCell({ kind: 'service', state: 'OK', flapping: true })
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+})
+
+test('renders no flapping indicator when not flapping', () => {
+  mountCell({ kind: 'service', state: 'OK', flapping: false })
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+})
+
+test('renders both the flapping and the stale indicator together', () => {
+  mountCell({ kind: 'service', state: 'OK', flapping: true, stale: true })
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
 })
 
 test.each<[StateCellProps, string]>([
   [{ state: 'DOWN' }, 'DO'],
   [{ state: 'UNREACHABLE' }, 'UN'],
-  [{ state: 'UP', pending: true }, 'PD'],
+  [{ state: 'PENDING' }, 'PD'],
   [{ kind: 'service', state: 'CRIT' }, 'CR'],
   [{ kind: 'service', state: 'WARN' }, 'WA']
 ])('abbreviates the label in a column too narrow to spell it out', async (props, label) => {
@@ -112,5 +131,12 @@ test('keeps the stale indicator in a narrow column', async () => {
   await mountCellInColumnOfWidth({ kind: 'service', state: 'OK', stale: true }, 86)
 
   expect(screen.getByTitle('Stale')).toBeInTheDocument()
+  expect(screen.getByText('OK')).toBeInTheDocument()
+})
+
+test('keeps the flapping indicator in a narrow column', async () => {
+  await mountCellInColumnOfWidth({ kind: 'service', state: 'OK', flapping: true }, 86)
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
   expect(screen.getByText('OK')).toBeInTheDocument()
 })

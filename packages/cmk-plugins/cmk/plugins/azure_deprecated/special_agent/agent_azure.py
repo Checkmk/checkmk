@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """agent_azure
 
@@ -16,8 +15,6 @@ Checkmk special agent for monitoring Azure cloud applications.
 Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
-
-from __future__ import annotations
 
 import argparse
 import contextlib
@@ -409,7 +406,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     else:
         fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)
+    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
 
     # V-VERBOSE INFO
     for key, value in vars(args).items():
@@ -546,7 +543,7 @@ class BaseApiClient:
     def _update_ratelimit(self, response: requests.Response) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
@@ -941,7 +938,7 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        self.current_group.add_key(key, value)
+        self.current_group.add_key(key, value)  # type: ignore[unreachable]
 
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:
@@ -1811,7 +1808,7 @@ def main_graph_client(args: Args) -> None:
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
+def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:  # noqa: ARG001
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",

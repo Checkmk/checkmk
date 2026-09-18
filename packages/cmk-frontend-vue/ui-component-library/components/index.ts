@@ -12,10 +12,11 @@ import { pages as formSpecPages } from '../form'
 import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
 import UclIcons from '../foundations/Icons/UclIcons.vue'
+import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
-import { pages as metricBackendPages } from '../metric-backend'
 import { pages as monitoringPages } from '../monitoring'
 import { pages as networkFlowPages } from '../network-flow'
+import { pages as telemetryMetricsPages } from '../telemetry-metrics'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
@@ -23,6 +24,7 @@ import UclCmkChip from './basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
 import UclCmkIconButton from './basic-elements/CmkIconButton/UclCmkIconButton.vue'
+import UclCmkIconLink from './basic-elements/CmkIconLink/UclCmkIconLink.vue'
 import UclCmkInlineButton from './basic-elements/CmkInlineButton/UclCmkInlineButton.vue'
 import UclCmkLabeledSwitch from './basic-elements/CmkLabeledSwitch/UclCmkLabeledSwitch.vue'
 import UclCmkLink from './basic-elements/CmkLink/UclCmkLink.vue'
@@ -92,6 +94,7 @@ import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialo
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkStateCountBar from './system-feedback/CmkStateCountBar/UclCmkStateCountBar.vue'
 import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
+import UclStateTag from './system-feedback/StateTag/UclStateTag.vue'
 import UclCmkProgressCircle from './system-feedback/progress/UclCmkProgressCircle.vue'
 import UclCmkProgressbar from './system-feedback/progress/UclCmkProgressbar.vue'
 
@@ -99,6 +102,7 @@ const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
   new Page('CmkButton', UclCmkButton),
   new Page('CmkIconButton', UclCmkIconButton),
+  new Page('CmkIconLink', UclCmkIconLink),
   new Page('CmkInlineButton', UclCmkInlineButton),
   new Page('CmkChip', UclCmkChip),
   new Page('CmkCode', UclCmkCode),
@@ -200,6 +204,7 @@ const systemFeedbackPages = [
   ]),
   new Page('CmkSkeleton', UclCmkSkeleton),
   new Page('CmkStateCountBar', UclCmkStateCountBar),
+  new Page('StateTag', UclStateTag),
   new Page('CmkTooltip', UclCmkTooltip)
 ]
 export const roots = [
@@ -222,8 +227,9 @@ export const roots = [
     new Folder('Dashboards', dashboardPages),
     new Folder('Filters', filtersPages),
     new Folder('Form Spec Elements', formSpecPages),
+    new Folder('Global settings', globalSettingsPages),
     new Folder('Graphing', graphingPages),
-    new Folder('Metric backend', metricBackendPages),
+    new Folder('Metric backend', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
     new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)

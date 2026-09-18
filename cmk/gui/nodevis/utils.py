@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 from dataclasses import dataclass
 from typing import Any
@@ -15,10 +14,10 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui import sites
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.livestatus_client import lqencode
 from cmk.utils.paths import default_config_dir
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 topology_dir = cmk.utils.paths.var_dir / "topology"
 topology_data_dir = topology_dir / "data"
@@ -71,7 +70,7 @@ class BILayoutManagement:
         return bi_layouts["aggregations"]
 
 
-def get_toggle_layout_designer_page_menu_entry():
+def get_toggle_layout_designer_page_menu_entry() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Layout configuration"),
         icon_name=StaticIcon(IconNames.toggle_off),
@@ -87,7 +86,7 @@ def get_toggle_layout_designer_page_menu_entry():
     )
 
 
-def get_compare_history_page_menu_entry():
+def get_compare_history_page_menu_entry() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Compare history"),
         icon_name=StaticIcon(IconNames.toggle_off),

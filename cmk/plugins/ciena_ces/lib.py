@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import all_of, any_of, contains, startswith, StringTable
 
 class SNMPEnum(Enum):
     @classmethod
-    def good_value(cls) -> "SNMPEnum":
+    def good_value(cls) -> SNMPEnum:
         raise NotImplementedError
 
 
@@ -25,7 +25,7 @@ class TceHealthStatus(SNMPEnum):
 
     @classmethod
     @override
-    def good_value(cls) -> "TceHealthStatus":
+    def good_value(cls) -> TceHealthStatus:
         return cls.normal
 
 
@@ -37,7 +37,7 @@ class PowerSupplyState(SNMPEnum):
 
     @classmethod
     @override
-    def good_value(cls) -> "PowerSupplyState":
+    def good_value(cls) -> PowerSupplyState:
         return cls.online
 
 
@@ -50,7 +50,7 @@ class FanStatus(SNMPEnum):
 
     @classmethod
     @override
-    def good_value(cls) -> "FanStatus":
+    def good_value(cls) -> FanStatus:
         return cls.ok
 
 
@@ -62,7 +62,7 @@ class LeoSystemState(SNMPEnum):
 
     @classmethod
     @override
-    def good_value(cls) -> "LeoSystemState":
+    def good_value(cls) -> LeoSystemState:
         return cls.normal
 
 
@@ -73,7 +73,7 @@ class LeoPowerSupplyState(SNMPEnum):
 
     @classmethod
     @override
-    def good_value(cls) -> "LeoPowerSupplyState":
+    def good_value(cls) -> LeoPowerSupplyState:
         return cls.online
 
 
@@ -84,7 +84,7 @@ class LeoFanStatus(SNMPEnum):
 
     @classmethod
     @override
-    def good_value(cls) -> "LeoFanStatus":
+    def good_value(cls) -> LeoFanStatus:
         return cls.ok
 
 

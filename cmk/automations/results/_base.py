@@ -9,8 +9,6 @@ Provides the abstract result type, the serialization wrapper, and the global
 registry that all concrete result modules register into.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import astuple, dataclass
@@ -44,7 +42,7 @@ _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
 class ABCAutomationResult(ABC):
     def serialize(
         self,
-        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites
+        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites  # noqa: ARG002
     ) -> SerializedResult:
         return self._default_serialize()
 

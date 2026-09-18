@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type ScrollContainerVariants } from 'cmk-ui-library/components/CmkScrollContainer.vue'
 
 import codeExample from './UclCmkScrollContainerCodeExample.vue?raw'
@@ -29,10 +29,10 @@ export const panelConfig = {
   type: {
     type: 'list' as const,
     title: 'Scrollbar Type',
-    options: [
-      { title: 'Inner', name: 'inner' },
-      { title: 'Outer', name: 'outer' }
-    ] satisfies Options<ScrollContainerVariants['type']>[],
+    options: listOptions<ScrollContainerVariants['type']>({
+      inner: 'Inner',
+      outer: 'Outer'
+    }),
     initialState: 'inner' as const
   },
   height: { type: 'string' as const, title: 'Fixed Height', initialState: '100%' },

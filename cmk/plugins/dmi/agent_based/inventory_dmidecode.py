@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import time
 from collections import Counter
@@ -46,7 +45,7 @@ def _parse_bios_information(lines: list[list[str]]) -> BIOSInformation:
     for name, raw_value, *_rest in lines:
         if raw_value == "Not Specified":
             continue
-        match name:
+        match name:  # type: ignore[exhaustive-match]
             case "Vendor":
                 vendor = raw_value
             case "Version":
@@ -86,7 +85,7 @@ def _parse_system_information(lines: list[list[str]]) -> SystemInformation:
     for name, raw_value, *_rest in lines:
         if raw_value == "Not Specified":
             continue
-        match name:
+        match name:  # type: ignore[exhaustive-match]
             case "Manufacturer":
                 manufacturer = raw_value
             case "Product Name":
@@ -121,7 +120,7 @@ def _parse_chassis_information(lines: list[list[str]]) -> ChassisInformation:
     for name, raw_value, *_rest in lines:
         if raw_value == "Not Specified":
             continue
-        match name:
+        match name:  # type: ignore[exhaustive-match]
             case "Manufacturer":
                 manufacturer = raw_value
             case "Type":
@@ -172,7 +171,7 @@ def _parse_processor_information(lines: list[list[str]]) -> ProcessorInformation
     for name, raw_value, *_rest in lines:
         if raw_value == "Not Specified":
             continue
-        match name:
+        match name:  # type: ignore[exhaustive-match]
             case "Manufacturer":
                 manufacturer = raw_value
             case "Max Speed":
@@ -233,7 +232,7 @@ def _parse_physical_memory_array(
     for name, raw_value, *_rest in lines:
         if raw_value == "Not Specified":
             continue
-        match name:
+        match name:  # type: ignore[exhaustive-match]
             case "Location":
                 location = raw_value
             case "Use":
@@ -293,7 +292,7 @@ def _parse_memory_device(
     for name, raw_value, *_rest in lines:
         if raw_value == "Not Specified":
             continue
-        match name:
+        match name:  # type: ignore[exhaustive-match]
             case "Total Width":
                 total_width = raw_value
             case "Data Width":
@@ -387,7 +386,7 @@ def parse_dmidecode(
     ] = []
     counter: Counter[Literal["physical_memory_array", "memory_device"]] = Counter()
     for title, lines in subsections:
-        match title:
+        match title:  # type: ignore[exhaustive-match]
             case "BIOS Information":
                 entities.append(_parse_bios_information(lines))
             case "System Information":

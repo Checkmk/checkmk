@@ -23,4 +23,4 @@ def test_prefilled_contact_email(
 ) -> None:
     """LoggedInUser.email falls back to the user id, which EmailAddress would reject."""
     monkeypatch.setattr(_settings, "user", SimpleNamespace(email=email))
-    assert _settings._prefilled_contact_email() == expected
+    assert _settings._prefilled_contact_email() == expected  # noqa: SLF001

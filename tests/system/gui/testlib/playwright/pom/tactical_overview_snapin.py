@@ -12,7 +12,10 @@ class TacticalOverviewSnapin(Sidebar.Snapin):
 
     @property
     def hosts_number(self) -> Locator:
-        return self.container.locator("a[href='view.py?view_name=allhosts']")
+        # Links to the Vue "All hosts" page (see CMK-37778) as long as the "hosts" row
+        # is unfiltered; a filtered "hosts" row (e.g. in a custom snapin) would still use
+        # 'view.py?view_name=allhosts'.
+        return self.container.locator("a[href='monitor_all_hosts.py']")
 
     @property
     def hosts_unhandled(self) -> Locator:

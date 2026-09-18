@@ -20,10 +20,16 @@ import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
         <StateCell :state="'UNREACHABLE'" :stale="true" />
       </tr>
       <tr>
+        <StateCell :state="'DOWN'" :flapping="true" />
+      </tr>
+      <tr>
         <StateCell kind="service" :state="'OK'" />
       </tr>
       <tr>
         <StateCell kind="service" :state="'CRIT'" :stale="true" />
+      </tr>
+      <tr>
+        <StateCell kind="service" :state="'WARN'" :flapping="true" />
       </tr>
     </tbody>
   </table>

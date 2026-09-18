@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from datetime import timedelta
 
@@ -20,19 +19,17 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec
-from ._cleanup import ConfigVariableInventoryCleanup, InventoryCleanup
+from ._cleanup import ConfigVariableInventoryCleanup, InventoryCleanupJob
 from ._icon import InventoryHistoryIcon, InventoryIcon
 from ._openapi import register as openapi_register
 from ._rulespec import RulespecGroupInventory
 from ._tree import (
     get_history,
     get_raw_status_data_via_livestatus,
-    InventoryPath,
     load_delta_tree,
     load_latest_delta_tree,
     load_tree,
-    parse_internal_raw_path,
-    TreeSource,
+    make_filter_choices_from_permitted_paths,
     verify_permission,
 )
 from ._valuespecs import (
@@ -44,15 +41,13 @@ from ._webapi import page_host_inv_api
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 __all__ = [
-    "InventoryPath",
     "RulespecGroupInventory",
-    "TreeSource",
     "get_history",
     "get_raw_status_data_via_livestatus",
     "load_delta_tree",
     "load_latest_delta_tree",
     "load_tree",
-    "parse_internal_raw_path",
+    "make_filter_choices_from_permitted_paths",
     "register",
     "vs_element_inventory_visible_raw_path",
     "vs_inventory_path_or_keys_help",
@@ -77,7 +72,7 @@ def register(
     cron_job_registry.register(
         CronJob[Config](
             name="execute_inventory_cleanup_job",
-            callable=InventoryCleanup(cmk.utils.paths.omd_root),
+            callable=InventoryCleanupJob(cmk.utils.paths.omd_root),
             interval=timedelta(hours=24),
         )
     )

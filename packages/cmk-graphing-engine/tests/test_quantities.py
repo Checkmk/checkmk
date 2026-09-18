@@ -7,6 +7,8 @@
 
 from collections.abc import Mapping
 
+import pytest
+
 from cmk.graphing_engine import (
     Constant,
     Difference,
@@ -73,6 +75,33 @@ def test_evaluate_value_of_a_scalar_reference() -> None:
         )
         == 80.0
     )
+
+
+@pytest.mark.parametrize(
+    "scalar_kind, expected",
+    [
+        (ScalarKind.WARNING, 80.0),
+        (ScalarKind.CRITICAL, 90.0),
+        (ScalarKind.LOWER_WARNING, 20.0),
+        (ScalarKind.LOWER_CRITICAL, 10.0),
+        (ScalarKind.MINIMUM, 0.0),
+        (ScalarKind.MAXIMUM, 100.0),
+    ],
+)
+def test_evaluate_value_of_a_scalar_reference_reads_its_own_bound(
+    scalar_kind: ScalarKind, expected: float
+) -> None:
+    a = _metric("a")
+    data = _data(
+        value=1.0,
+        warning=80.0,
+        critical=90.0,
+        lower_warning=20.0,
+        lower_critical=10.0,
+        minimum=0.0,
+        maximum=100.0,
+    )
+    assert _evaluate_value(ScalarOf(metric=a, scalar_kind=scalar_kind), {a: data}) == expected
 
 
 def test_evaluate_value_of_a_scalar_reference_without_the_bound_is_none() -> None:

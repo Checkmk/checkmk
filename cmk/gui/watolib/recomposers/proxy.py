@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import urllib.parse
@@ -61,7 +60,7 @@ def _transform_from_disk(
     if isinstance(value, FrontendDefaultValue):
         return value
 
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "environment_proxy", str():
             return "environment", "environment"
         case "cmk_postprocessed", "no_proxy", str():
@@ -81,7 +80,7 @@ def _transform_to_disk(
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
 ]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
         case "no_proxy", None:

@@ -6,11 +6,8 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Status sidebar rendering"""
-
-from __future__ import annotations
 
 import contextlib
 import copy
@@ -46,7 +43,6 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
 from cmk.gui.product_usage_analytics.popup import render_product_usage_analytics_popup
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import load_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -56,6 +52,7 @@ from cmk.shared_typing.main_menu import NavItemTopic
 from cmk.shared_typing.sidebar import SidebarConfig
 from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 from . import _snapin
@@ -520,7 +517,7 @@ class SidebarRenderer:
                 sidebar_update_interval=nav.sidebar_update_interval,
             )
         html.open_div(id_="content_area")
-        html._main_navigation_open = True
+        html._main_navigation_open = True  # noqa: SLF001
 
     def render_main_navigation_close(self) -> None:
         """Close the page started by :meth:`render_main_navigation_open`.
@@ -533,7 +530,11 @@ class SidebarRenderer:
         html.body_end()
 
     def _show_body_start(
-        self, *, screenshot_mode: bool, sidebar_notify_interval: int | None, kiosk: bool
+        self,
+        *,
+        screenshot_mode: bool,
+        sidebar_notify_interval: int | None,  # noqa: ARG002
+        kiosk: bool,
     ) -> None:
         # Chrome-bearing pages now host the main content in the same document as
         # the sidebar, so the body needs both the sidebar's ``body.side`` shell
@@ -543,7 +544,7 @@ class SidebarRenderer:
         # snapin previews embedded elsewhere) keep only the default ``body.main``.
         # Both paths preserve extra body classes that the page registered via
         # ``html.add_body_css_class`` (e.g. ``view``, ``dashlet``, ``inline``).
-        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes]
+        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes]  # noqa: SLF001
         if screenshot_mode:
             body_classes.append("screenshotmode")
 
@@ -593,9 +594,12 @@ class SidebarRenderer:
             if user.id is not None
             else None
         )
+        sidebar_classes = [] if sidebar_position is None else [sidebar_position]
+        if user_config.folded:
+            sidebar_classes.append("folded")
         html.open_div(
             id_="check_mk_sidebar",
-            class_=[] if sidebar_position is None else [sidebar_position],
+            class_=sidebar_classes,
         )
 
         self._show_snapin_bar(
@@ -606,9 +610,6 @@ class SidebarRenderer:
         )
 
         html.close_div()
-
-        if user_config.folded:
-            html.final_javascript("cmk.sidebar.fold_sidebar();")
 
     def _migrate_to_vue_sidbar_snapin_config(
         self, snapin: UserSidebarSnapin
@@ -630,10 +631,10 @@ class SidebarRenderer:
 
     def _show_snapin_bar(
         self,
-        config: Config,
+        config: Config,  # noqa: ARG002
         user_config: UserSidebarConfig,
         *,
-        show_scrollbar: bool,
+        show_scrollbar: bool,  # noqa: ARG002
         sidebar_update_interval: float,
     ) -> None:
         html.vue_component(
@@ -647,8 +648,6 @@ class SidebarRenderer:
                 )
             ),
         )
-
-        html.javascript("cmk.sidebar.initialize_sidebar();\n")
 
     def _show_snapins(
         self, config: Config, user_config: UserSidebarConfig

@@ -87,7 +87,8 @@ class MockHandler(BaseHTTPRequestHandler):
         request_headers = dict(self.headers.items())
         if response.request_validator is not None:
             try:
-                assert response.request_validator(request_headers, request_body)
+                if not response.request_validator(request_headers, request_body):
+                    raise AssertionError("Request validation failed")
             except AssertionError as excp:
                 self.send_response(400, "Request Validation Failed")
                 self.end_headers()
@@ -183,7 +184,7 @@ class MockServer:
             self.key_file,
         )
 
-    def __enter__(self) -> "MockServer":
+    def __enter__(self) -> MockServer:
         if self.https and self.cert_file and self.key_file:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             ssl_context.load_cert_chain(keyfile=self.key_file, certfile=self.cert_file)

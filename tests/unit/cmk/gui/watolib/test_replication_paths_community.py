@@ -21,7 +21,7 @@ from tests.testlib.common.utils import reset_registries
 EDITION = cmk_version.Edition.COMMUNITY
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def restore_orig_replication_paths() -> Generator[None]:
     with reset_registries([replication_path_registry]):
         yield
@@ -177,7 +177,8 @@ def _default_site_config() -> SiteConfiguration:
     )
 
 
-def test_get_replication_paths_defaults(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_replication_paths_defaults() -> None:
     expected = _expected_replication_paths()
     assert sorted(
         replication_path_registry.values(),
@@ -190,12 +191,8 @@ def test_get_replication_paths_defaults(request_context: None) -> None:
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
-def test_get_replication_components(
-    monkeypatch: pytest.MonkeyPatch,
-    replicate_ec: bool | None,
-    replicate_mkps: bool | None,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("monkeypatch", "request_context")
+def test_get_replication_components(replicate_ec: bool | None, replicate_mkps: bool | None) -> None:
     site_config = _default_site_config()
 
     if replicate_ec is not None:
@@ -214,7 +211,7 @@ def test_get_replication_components(
         ]
 
     assert sorted(
-        activate_changes._get_replication_components(site_config),
+        activate_changes._get_replication_components(site_config),  # noqa: SLF001
         key=lambda replication_path: replication_path.ident,
     ) == sorted(
         expected,

@@ -13,12 +13,12 @@ from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.visuals.filter import Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.livestatus_client import lq_logic
+from cmk.web.utils.speaklater import LazyString
 
 
 def register(filter_registry: FilterRegistry) -> None:

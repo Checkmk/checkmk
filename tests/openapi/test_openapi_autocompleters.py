@@ -7,8 +7,8 @@ import pytest
 
 from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.config import Config
-from cmk.gui.type_defs import Choices
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.utils.choices import Choices
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -127,7 +127,7 @@ def test_extra_parameters_are_forwarded_to_autocompleter(clients: ClientRegistry
     """
     received: dict[str, object] = {}
 
-    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:  # noqa: ARG001
         received.update(params)
         return []
 

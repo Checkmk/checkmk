@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import dataclasses
 import itertools
@@ -69,7 +68,7 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.config_domain_name import CORE
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -629,7 +628,7 @@ class AllRulesets(RulesetCollection):
         """
         if tree is None:
             tree = folder_tree()
-        rulesets = RulesetCollection._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = AllRulesets(rulesets, tree)
         self._load_rulesets_recursively(tree.root_folder())
         return self
@@ -703,7 +702,7 @@ class SingleRulesetRecursively(RulesetCollection):
     def load_single_ruleset_recursively(
         tree: FolderTree, name: RulesetName
     ) -> SingleRulesetRecursively:
-        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
+        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)  # noqa: SLF001
         self = SingleRulesetRecursively(rulesets)
         self._load_rulesets_recursively(tree.root_folder(), only_varname=name)
         return self
@@ -721,13 +720,13 @@ class FolderRulesets(RulesetCollection):
 
     @staticmethod
     def load_folder_rulesets(folder: Folder) -> FolderRulesets:
-        rulesets = RulesetCollection._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = FolderRulesets(rulesets, folder=folder)
         self._load_folder_rulesets(folder)
         return self
 
     def save_folder(self, *, pprint_value: bool, debug: bool) -> None:
-        if RulesetCollection._save_folder(
+        if RulesetCollection._save_folder(  # noqa: SLF001
             self._folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
         ):
             update_merged_password_file(debug=debug)
@@ -791,24 +790,24 @@ class Ruleset:
         except KeyError:
             return []
 
-    def _num_quick_setup_rules(self, folder: Folder) -> int:
-        # the assertion is that all quick setup rules are at the top
+    def _num_bundle_locked_rules(self, folder: Folder) -> int:
+        # the assertion is that all bundle-locked rules are at the top
         folder_rules = self.get_folder_rules(folder)
         for idx, rule in enumerate(folder_rules):
-            if not is_locked_by_quick_setup(rule.locked_by):
+            if not is_locked_by_config_bundle(rule.locked_by):
                 return idx
-        # if we get here either there are no rules or all of them are managed by qs
+        # if we get here either there are no rules or all of them are bundle-locked
         return len(folder_rules)
 
     def get_index_for_move(self, folder: Folder, rule: Rule, target: int) -> int:
-        num_qs_rules = self._num_quick_setup_rules(folder)
-        if is_locked_by_quick_setup(rule.locked_by):
+        num_locked_rules = self._num_bundle_locked_rules(folder)
+        if is_locked_by_config_bundle(rule.locked_by):
             if rule in self.get_folder_rules(folder):
-                return min(num_qs_rules - 1, target)
+                return min(num_locked_rules - 1, target)
 
-            return min(num_qs_rules, target)
+            return min(num_locked_rules, target)
 
-        return max(num_qs_rules, target)
+        return max(num_locked_rules, target)
 
     def prepend_rule(self, folder: Folder, rule: Rule) -> None:
         rules = self._rules.setdefault(folder.path(), [])
@@ -895,8 +894,8 @@ class Ruleset:
 
     def append_rule(self, folder: Folder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
-        if is_locked_by_quick_setup(rule.locked_by):
-            index = self._num_quick_setup_rules(folder)
+        if is_locked_by_config_bundle(rule.locked_by):
+            index = self._num_bundle_locked_rules(folder)
             rules.insert(index, rule)
         else:
             index = len(rules)
@@ -2130,8 +2129,8 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         return store.load_mk_file(
             path,
             default={
-                **RulesetCollection._context_helpers(folder),
-                **RulesetCollection._prepare_empty_rulesets(),
+                **RulesetCollection._context_helpers(folder),  # noqa: SLF001
+                **RulesetCollection._prepare_empty_rulesets(),  # noqa: SLF001
             },
             lock=lock,
         )
@@ -2394,7 +2393,7 @@ def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
     return choices
 
 
-def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
+def get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
     choices: dict[str, ConditionGroup] = {}
     for tag in _get_cached_tags():
         match tag:
@@ -2445,7 +2444,7 @@ def _create_explicit_rule_conditions_dict(
                 help_text=Help(
                     "Rule only applies to hosts that meet all of the host tag conditions listed here."
                 ),
-                get_conditions=_get_host_tags_condition_choices,
+                get_conditions=get_host_tags_condition_choices,
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one tag condition."))
                 ],

@@ -26,7 +26,7 @@ fi
 
 # Filter out non-free/packages/* files — their isolated package trees
 # cannot be resolved by mypy running from the repo root. These packages
-# have their own pyproject.toml and run scripts for type checking.
+# have their own run scripts for type checking.
 declare -a FILES
 for arg in "$@"; do
     if [[ "$arg" != non-free/packages/* ]]; then

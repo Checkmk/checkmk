@@ -29,7 +29,9 @@ def discover_ipr400_in_voltage(section: StringTable) -> DiscoveryResult:
 
 
 def check_ipr400_in_voltage(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str,  # noqa: ARG001
+    params: Mapping[str, Any],
+    section: StringTable,
 ) -> CheckResult:
     warn, crit = params["levels_lower"]
     warn_upper, crit_upper = params.get("levels_upper", (None, None))

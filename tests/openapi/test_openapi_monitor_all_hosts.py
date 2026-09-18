@@ -170,6 +170,19 @@ class TestMonitorHostsQueryParamValidation:
                 },
                 id="site_id nested under 'or'",
             ),
+            pytest.param(
+                {"type": "condition", "field": "name", "op": "contains", "value": "x\n"},
+                id="newline in string value",
+            ),
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "labels",
+                    "op": "one_of",
+                    "value": ["key:val\nue"],
+                },
+                id="newline in label choice value",
+            ),
         ],
     )
     def test_filters_validation_errors(
@@ -339,11 +352,12 @@ class TestMonitorHostsQuery:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
+        # The folder is searched by its Setup title; no folder of the test site carries this
+        # query, so the search reaches name and alias only.
         search_filter = [
             "Filter: name ~~ no-such-host",
             "Filter: alias ~~ no-such-host",
-            r"Filter: filename ~~ ^/wato.*no-such-host.*/hosts\.mk$",
-            "Or: 3",
+            "Or: 2",
         ]
         mock_livestatus.add_table("hosts", _HOSTS)
         mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
@@ -379,7 +393,11 @@ class TestMonitorHostsFilters:
                 f"Columns: {_HOST_TABLE_COLUMNS}",
                 "Filter: num_services <= 10",
                 "Filter: state = 0",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Or: 2",
                 "And: 2",
                 "OrderBy: name asc natural",
@@ -392,7 +410,11 @@ class TestMonitorHostsFilters:
                 "Stats: state >= 0",
                 "Filter: num_services <= 10",
                 "Filter: state = 0",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Or: 2",
                 "And: 2",
             ]
@@ -429,64 +451,45 @@ class TestMonitorHostsFilters:
                 "num_services_warn": 0,
                 "site_id": "NO_SITE",
                 "state": "UP",
+                "is_flapping": False,
+                "stale": False,
                 "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
             },
         ]
+
+    def test_never_checked_host_is_reported_as_pending(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table(
+            "hosts",
+            [{**_HOSTS[0], "name": "pending-host", "has_been_checked": 0}],
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert resp.json["hosts"][0]["state"] == "PENDING"
 
     def test_hosts_filtered_by_folder(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        # Livestatus stores the host's config file, not the folder the user sees, so a folder
-        # condition becomes filters on `filename` - no matter whether the folder is read at
-        # all. Which hosts that selects is covered by
-        # tests/unit/cmk/gui/monitor/hosts/test_folder.py: the mock reads `~~` as a plain
-        # substring instead of a regex, so it cannot answer that here.
-        mock_livestatus.add_table("hosts", _HOSTS)
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                f"Columns: {_HOST_TABLE_COLUMNS}",
-                "Filter: filename ~~ ^/wato/.*/network.*/hosts\\.mk$",
-                "Filter: filename ~~ ^/wato/network.*/hosts\\.mk$",
-                "Or: 2",
-                "OrderBy: name asc natural",
-                f"Limit: {_LIMIT}",
-            ]
-        )
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                "Stats: state >= 0",
-                "Filter: filename ~~ ^/wato/.*/network.*/hosts\\.mk$",
-                "Filter: filename ~~ ^/wato/network.*/hosts\\.mk$",
-                "Or: 2",
-            ]
-        )
-        filters = {
-            "type": "condition",
-            "field": "folder",
-            "op": "contains",
-            "value": "/network",
-        }
-        with mock_livestatus():
-            clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
-
-    def test_hosts_filtered_by_folder_title(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,
-    ) -> None:
-        # A folder is also filterable by the title Setup shows for it, which Livestatus knows
-        # nothing about: it is resolved to the folder's file here. The test site has the root
-        # folder only, whose fallback title is "Main".
-        folder_lines = [
-            "Filter: filename ~~ ^/wato/.*Main.*/hosts\\.mk$",
-            "Filter: filename = /wato/hosts.mk",
-            "Or: 2",
-        ]
+        # A folder is filtered by the title Setup shows for it, which Livestatus knows nothing
+        # about: the folders carrying the value are resolved here and asked for by file. The test
+        # site has the root folder only, whose fallback title is "Main".
+        folder_lines = ["Filter: filename = /wato/hosts.mk"]
         mock_livestatus.add_table("hosts", _HOSTS)
         mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
@@ -500,6 +503,32 @@ class TestMonitorHostsFilters:
         )
         mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", *folder_lines])
         filters = {"type": "condition", "field": "folder", "op": "contains", "value": "Main"}
+        with mock_livestatus():
+            clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
+
+    def test_hosts_filtered_by_a_folder_name_that_is_no_title(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        # The folder's path used to be filterable and is not any more. No title carries it, so no
+        # host does - said out loud, since sending no filter at all would select every host. That
+        # the query selects nothing is covered by tests/unit/cmk/gui/monitor/hosts/test_folder.py:
+        # the mock evaluates no `Negate:`, so it cannot answer that here.
+        folder_lines = ["Filter: state >= 0", "Negate:"]
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                *folder_lines,
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", *folder_lines])
+        filters = {"type": "condition", "field": "folder", "op": "contains", "value": "/network"}
         with mock_livestatus():
             clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
 
@@ -1001,6 +1030,7 @@ class TestMonitorHostOverview:
                     "alias": "Today",
                     "address": "127.0.0.1",
                     "state": 0,
+                    "has_been_checked": 1,
                     "num_services": 10,
                     "num_services_ok": 10,
                     "num_services_warn": 0,
@@ -1009,12 +1039,21 @@ class TestMonitorHostOverview:
                     "num_services_pending": 0,
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "comments": [],
+                    "modified_attributes_list": [],
+                    "active_checks_enabled": 1,
+                    "accept_passive_checks": 1,
+                    "in_notification_period": 1,
+                    "in_service_period": 1,
+                    "in_check_period": 1,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "tags": {"criticality": "prod"},
                     "labels": {"cmk/os_family": "linux"},
                     "label_sources": {"cmk/os_family": "discovered"},
-                    "custom_variables": {"CUSTOMER": "customer1"},
                     "contact_groups": ["all"],
                     "filename": "/wato/network/switches/hosts.mk",
                 }
@@ -1050,8 +1089,8 @@ class TestMonitorHostOverview:
             "modes": [],
             "last_check": 1783942710,
             "last_state_change": 1783942740,
-            "customer": "customer1",
-            "folder": "/network/switches",
+            "customer": None,
+            "folder": "",
             "contact_groups": ["all"],
             "tags": {"criticality": "prod"},
             "labels": {"cmk/os_family": {"value": "linux", "source": "discovered"}},
@@ -1059,7 +1098,7 @@ class TestMonitorHostOverview:
         }
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
-    def test_get_host_overview_no_customer(
+    def test_get_host_overview_without_multi_tenancy_has_no_customer(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
@@ -1072,6 +1111,7 @@ class TestMonitorHostOverview:
                     "alias": "Today",
                     "address": "127.0.0.1",
                     "state": 0,
+                    "has_been_checked": 1,
                     "num_services": 0,
                     "num_services_ok": 0,
                     "num_services_warn": 0,
@@ -1080,13 +1120,22 @@ class TestMonitorHostOverview:
                     "num_services_pending": 0,
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "comments": [],
+                    "modified_attributes_list": [],
+                    "active_checks_enabled": 1,
+                    "accept_passive_checks": 1,
+                    "in_notification_period": 1,
+                    "in_service_period": 1,
+                    "in_check_period": 1,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                     "contact_groups": [],
                     "tags": {},
                     "labels": {},
                     "label_sources": {},
-                    "custom_variables": {},
                     "filename": "",
                 }
             ],
@@ -1205,6 +1254,7 @@ _HOSTS = [
         "address": "127.0.0.1",
         "alias": "Today",
         "state": 0,
+        "has_been_checked": 1,
         "num_services": 10,
         "num_services_ok": 10,
         "num_services_warn": 0,
@@ -1213,6 +1263,16 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
         "last_check": 1700000000,
         "last_state_change": 1700000060,
         "filename": "/wato/hosts.mk",
@@ -1227,6 +1287,7 @@ _HOSTS = [
         "address": "127.0.10.1",
         "alias": "Yesterday",
         "state": 1,
+        "has_been_checked": 1,
         "num_services": 20,
         "num_services_ok": 20,
         "num_services_warn": 0,
@@ -1235,6 +1296,16 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
         "last_check": 1700000100,
         "last_state_change": 1700000160,
         "filename": "/wato/network/hosts.mk",
@@ -1249,6 +1320,7 @@ _HOSTS = [
         "address": "127.0.2.1",
         "alias": "Tomorrow",
         "state": 2,
+        "has_been_checked": 1,
         "num_services": 30,
         "num_services_ok": 30,
         "num_services_warn": 0,
@@ -1257,6 +1329,16 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
         "last_check": 1700000200,
         "last_state_change": 1700000260,
         # Not managed via Setup, e.g. added directly to the monitoring core.
@@ -1270,7 +1352,23 @@ _HOSTS = [
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
 # the order the query names them, so the expectations below read like the real `Columns:` header.
-_MANDATORY_COLUMNS = ("name", "state", "acknowledged", "scheduled_downtime_depth")
+_MANDATORY_COLUMNS = (
+    "name",
+    "state",
+    "has_been_checked",
+    "acknowledged",
+    "scheduled_downtime_depth",
+    "notifications_enabled",
+    "comments",
+    "modified_attributes_list",
+    "active_checks_enabled",
+    "accept_passive_checks",
+    "in_notification_period",
+    "in_service_period",
+    "in_check_period",
+    "is_flapping",
+    "staleness",
+)
 _OPTIONAL_COLUMNS = {
     "alias": "alias",
     "address": "address",
@@ -1310,4 +1408,4 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change contact_groups tags labels label_sources custom_variables filename"
+_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"

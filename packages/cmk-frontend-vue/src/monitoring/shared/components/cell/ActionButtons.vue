@@ -109,6 +109,7 @@ function select(action: CellAction): void {
     <DropdownMenuRoot v-if="hasMenu" @update:open="onOpenChange">
       <DropdownMenuTrigger as-child>
         <CmkIconButton
+          class="monitoring-action-buttons__more"
           name="more-actions"
           primary-color="font"
           size="small"
@@ -164,6 +165,7 @@ function select(action: CellAction): void {
             <div
               v-else-if="failed && loadedActions === null"
               class="monitoring-action-buttons__menu-status monitoring-action-buttons__menu-hint"
+              role="alert"
             >
               {{ _t('Could not load more actions.') }}
             </div>
@@ -206,7 +208,13 @@ function select(action: CellAction): void {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--dimension-2);
+  gap: var(--monitoring-action-buttons-gap, var(--dimension-2));
+}
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.monitoring-action-buttons__more :deep(.cmk-multitone-icon) {
+  width: var(--monitoring-action-buttons-more-icon-width, var(--dimension-5));
+  height: var(--monitoring-action-buttons-more-icon-height, var(--dimension-5));
 }
 </style>
 

@@ -35,7 +35,7 @@ class OAuth2ConnectionSetupVisitor(
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackDataModel]:
-        return get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)._parse_value(
+        return get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)._parse_value(  # noqa: SLF001
             raw_value
         )
 
@@ -44,7 +44,7 @@ class OAuth2ConnectionSetupVisitor(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         visitor = get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)
-        return visitor._validate(parsed_value)
+        return visitor._validate(parsed_value)  # noqa: SLF001
 
     @override
     def _to_vue(
@@ -54,12 +54,12 @@ class OAuth2ConnectionSetupVisitor(
             raise TypeError("Received unexpected InvalidValue: %r" % parsed_value)
         title, help_text = get_title_and_help(self.form_spec)
         visitor = get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)
-        vue_form_spec, vue_value = visitor._to_vue(parsed_value)
+        vue_form_spec, vue_value = visitor._to_vue(parsed_value)  # noqa: SLF001
         return (
             shared_type_defs.Oauth2ConnectionSetup(
                 title=title,
                 help=help_text,
-                validators=build_vue_validators(visitor._validators()),
+                validators=build_vue_validators(visitor._validators()),  # noqa: SLF001
                 config=Oauth2ConnectionConfig(**asdict(get_oauth2_connection_config())),
                 form_spec=vue_form_spec,
                 authority_mapping=[
@@ -77,6 +77,6 @@ class OAuth2ConnectionSetupVisitor(
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         ident = str(parsed_value["ident"]) if "ident" in parsed_value else None
-        return get_visitor(get_oauth2_connection_form_spec(ident), self.visitor_options)._to_disk(
+        return get_visitor(get_oauth2_connection_form_spec(ident), self.visitor_options)._to_disk(  # noqa: SLF001
             parsed_value
         )

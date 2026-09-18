@@ -21,14 +21,16 @@ use crate::config::options::Options;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::constants::{get_user_config_file, RUNTIME_DIR};
-use crate::platform::get_local_instances;
-use crate::types::{EnvVarName, SectionFilter, UseHostClient};
+use crate::platform::{get_local_instances, home_key};
+use crate::types::{EnvVarName, LocalInstance, SectionFilter, UseHostClient};
 use crate::version::VERSION;
 use crate::{constants, setup};
 use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
+use std::collections::HashSet;
 use std::env::ArgsOs;
+use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -61,6 +63,19 @@ pub struct Env {
 
     /// generate plugins and stop
     generate_plugins: Option<PathBuf>,
+
+    /// `ORACLE_HOME` as inherited from the environment, `None` when unset or
+    /// empty. Read once at start: the parent process exports its own value
+    /// before spawning, so a later read would see that instead.
+    oracle_home: Option<PathBuf>,
+
+    /// What `LOCAL_ORACLE_HOME_TARGETS` states, `None` when it says nothing.
+    local_oracle_home_targets: Option<bool>,
+
+    /// `TNS_ADMIN` as inherited from the environment, `None` when unset or empty.
+    /// Read once at start, like `oracle_home`: the parent process exports its own
+    /// value before spawning, so a later read would see that instead.
+    global_tns_admin: Option<PathBuf>,
 }
 
 impl Env {
@@ -81,6 +96,53 @@ impl Env {
             runtime_ready: args.runtime_ready,
             filter: args.filter.unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
+            oracle_home: Env::inherited_oracle_home(),
+            local_oracle_home_targets: Env::inherited_local_oracle_home_targets(),
+            global_tns_admin: Env::inherited_global_tns_admin(),
+        }
+    }
+
+    fn inherited_oracle_home() -> Option<PathBuf> {
+        std::env::var(ORACLE_HOME_ENV_VAR)
+            .ok()
+            .filter(|home| !home.is_empty())
+            .map(PathBuf::from)
+    }
+
+    fn inherited_local_oracle_home_targets() -> Option<bool> {
+        parse_local_oracle_home_targets(
+            std::env::var(LOCAL_ORACLE_HOME_TARGETS_ENV_VAR)
+                .ok()
+                .as_deref(),
+        )
+    }
+
+    /// `TNS_ADMIN` as the environment states it, `None` when unset or empty.
+    fn inherited_global_tns_admin() -> Option<PathBuf> {
+        std::env::var_os(TNS_ADMIN_ENV_VAR)
+            .filter(|dir| !dir.is_empty())
+            .map(PathBuf::from)
+    }
+
+    /// An `Env` that only carries `ORACLE_HOME` and `LOCAL_ORACLE_HOME_TARGETS`, for
+    /// tests that need their states without mutating the process environment,
+    /// which is global and would race between parallel tests.
+    ///
+    /// `pub` rather than `#[cfg(test)]` so the component tests in `tests/` can
+    /// reach it: they are a separate crate, compiled against the library built
+    /// without `cfg(test)`. Hidden from the documented API - it builds a
+    /// partially initialised `Env`, which only a test has any business doing.
+    #[doc(hidden)]
+    pub fn with_oracle_home(
+        oracle_home: Option<&str>,
+        local_oracle_home_targets: Option<bool>,
+    ) -> Self {
+        Self {
+            oracle_home: oracle_home
+                .filter(|home| !home.is_empty())
+                .map(PathBuf::from),
+            local_oracle_home_targets,
+            ..Default::default()
         }
     }
 
@@ -120,6 +182,32 @@ impl Env {
         self.filter
     }
 
+    pub fn oracle_home(&self) -> Option<&Path> {
+        self.oracle_home.as_deref()
+    }
+
+    /// Whether this run serves only the targets of its `ORACLE_HOME`, as
+    /// `LOCAL_ORACLE_HOME_TARGETS` states it. `None` when it states nothing.
+    pub fn local_oracle_home_targets(&self) -> Option<bool> {
+        self.local_oracle_home_targets
+    }
+
+    /// The `TNS_ADMIN` directory that comes with the inherited `ORACLE_HOME`:
+    /// `<ORACLE_HOME>/network/admin`, where a full Oracle installation keeps its
+    /// `tnsnames.ora`, `sqlnet.ora` and wallet.
+    pub fn local_tns_admin(&self) -> Option<PathBuf> {
+        self.oracle_home
+            .as_ref()
+            .map(|home| home.join("network").join("admin"))
+    }
+
+    /// The global `TNS_ADMIN` directory inherited from the environment, `None`
+    /// when unset or empty. When present, its `tnsnames.ora` resolves aliases in
+    /// place of any `ORACLE_HOME`-local one.
+    pub fn global_tns_admin(&self) -> Option<&Path> {
+        self.global_tns_admin.as_deref()
+    }
+
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
         if dir.is_some() {
             dir.as_deref()
@@ -138,6 +226,21 @@ impl Env {
         }
 
         path.is_dir().then(|| path.to_path_buf())
+    }
+}
+
+/// `LOCAL_ORACLE_HOME_TARGETS` as a decision: `yes` and `no` state one, anything else
+/// states nothing and is reported, so a typo does not silently pick a side.
+/// Matched ignoring case and surrounding blanks.
+fn parse_local_oracle_home_targets(value: Option<&str>) -> Option<bool> {
+    let value = value?;
+    match value.trim().to_lowercase().as_str() {
+        "yes" => Some(true),
+        "no" => Some(false),
+        other => {
+            log::warn!("{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}: '{other}' is neither 'yes' nor 'no'");
+            None
+        }
     }
 }
 
@@ -202,20 +305,22 @@ fn init_logging(args: &Args, environment: &Env, logging: Option<Logging>) -> Res
     };
 
     let s = apply_logging_parameters(level, environment.log_dir(), send_to, l).map(|_| ());
-    log_info_optional(args, level, environment, s.is_ok());
+    log_info(level, environment, s.is_ok());
     s
 }
 
-fn log_info_optional(args: &Args, level: log::Level, environment: &Env, log_available: bool) {
-    if args.print_info {
-        let info = create_info_text(&level, environment);
-        if log_available {
-            log::info!("{}", info);
-        } else {
-            println!("{}", info);
-        }
+/// Report the paths and the log level every run starts with: the first thing a
+/// support case asks for. Logged at debug, so a default-level log stays clean.
+/// Goes to stdout when there is no log to write to.
+fn log_info(level: log::Level, environment: &Env, log_available: bool) {
+    let info = create_info_text(&level, environment);
+    if log_available {
+        log::debug!("{}", info);
+    } else {
+        println!("{}", info);
     }
 }
+
 fn create_info_text(level: &log::Level, environment: &Env) -> String {
     format!(
         "\n  - Log level: {}\n  - Log dir: {}\n  - Temp dir: {}\n  - MK_CONFDIR: {}\n  - MK_LIBDIR: {}",
@@ -297,12 +402,19 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
         .basename("mk-oracle")
 }
 
-pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
+pub const RUNTIME_SUB_DIR: &str = "mk-oracle-v2";
 
 #[cfg(unix)]
 pub const CLIENT_LIB_NAME: &str = "libclntsh.so";
 #[cfg(windows)]
 pub const CLIENT_LIB_NAME: &str = "oci.dll";
+
+/// Oracle client library subdirectory under an Oracle home: `lib` on Unix
+/// (shared objects), `bin` on Windows (DLLs).
+#[cfg(unix)]
+const CLIENT_LIB_SUBDIR: &str = "lib";
+#[cfg(windows)]
+const CLIENT_LIB_SUBDIR: &str = "bin";
 
 /// The directory contains an Oracle client library: libclntsh.so* on Unix
 /// (installations may ship only the versioned file without the unversioned
@@ -343,8 +455,7 @@ pub fn detect_host_runtime() -> Option<ClientRuntime> {
                     local.name,
                     local.home
                 );
-                // shared libraries live in lib on Unix, DLLs in bin on Windows
-                let candidate = local.home.join(if cfg!(windows) { "bin" } else { "lib" });
+                let candidate = local.home.join(CLIENT_LIB_SUBDIR);
                 if !candidate.is_dir() {
                     log::warn!(
                         "Oracle home {:?} is not suitable: {:?} is not a directory",
@@ -401,6 +512,10 @@ fn find_std_env_var_runtime() -> Option<ClientRuntime> {
     }
 }
 
+/// The client directory of the Oracle home that `env_var` names, `None` when the
+/// variable is unset or the directory holds no client library.
+///
+/// A full Oracle home keeps that library in the `CLIENT_LIB_SUBDIR` of the home.
 pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
     let oracle_home = match std::env::var(env_var) {
         Ok(path) => path,
@@ -410,7 +525,7 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
         }
     };
 
-    let candidate = PathBuf::from(oracle_home).join("lib");
+    let candidate = PathBuf::from(oracle_home).join(CLIENT_LIB_SUBDIR);
 
     if !candidate.is_dir() {
         log::warn!("{} path {:?} is not a directory", env_var, candidate);
@@ -429,15 +544,12 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
     Some(candidate)
 }
 
-/// The Oracle client shipped with the agent, below the agent's library
-/// directory at plugins/packages/mk-oracle. `lib_dir` is what MK_LIBDIR names.
+/// The Oracle client deployed with the agent, in the `oic` subdirectory - Oracle
+/// Instant Client - of the plug-in's directory below `lib_dir`, which is what
+/// MK_LIBDIR names. The subdirectory keeps the client apart from the plug-in's
+/// own files, which sit one level up: the user config and `orasql/`.
 pub fn detect_factory_runtime(lib_dir: &Path) -> Option<PathBuf> {
-    let runtime_path = lib_dir.join("plugins/packages/mk-oracle");
-    let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
-        runtime_path.join("runtime")
-    } else {
-        runtime_path
-    };
+    let runtime_path = lib_dir.join("plugins/libexec/mk-oracle-v2/oic");
     if !runtime_path.is_dir() {
         log::error!("{:?} is not a directory", runtime_path);
         return None;
@@ -471,7 +583,7 @@ impl ClientRuntime {
     /// The client of a full Oracle home, whose location the caller already knows.
     fn in_home(home: PathBuf) -> Self {
         Self {
-            dir: home.join(if cfg!(windows) { "bin" } else { "lib" }),
+            dir: home.join(CLIENT_LIB_SUBDIR),
             home: Some(home),
         }
     }
@@ -565,6 +677,27 @@ const ENV_VAR_SEP: &str = ":";
 
 pub const ORACLE_HOME_ENV_VAR: &str = "ORACLE_HOME";
 
+/// The directory the Oracle client resolves names from, in preference to
+/// `ORACLE_HOME/network/admin`.
+pub const TNS_ADMIN_ENV_VAR: &str = "TNS_ADMIN";
+
+/// Which half of the configured targets this run takes: `yes` or `no`.
+///
+/// * `yes` - the targets of this run's `ORACLE_HOME`: the aliases of its
+///   `tnsnames.ora` and its own SIDs with wallet authentication. Requires
+///   `ORACLE_HOME`; without one the run has no target at all.
+/// * `no` - the targets needing no home: a SID no local instance owns, a SID
+///   needing no wallet, a descriptor, and an alias a global `TNS_ADMIN`
+///   resolves.
+/// * absent - nothing states how the targets are divided, so none is dropped.
+///   This is the behaviour today, since no code sets the variable yet.
+///
+/// The two values are complements: one `no` run plus one `yes` run per
+/// `ORACLE_HOME` cover every target exactly once. Setting only one of them
+/// drops the other's share, so whoever sets this has to start both runs.
+/// An alias no `tnsnames.ora` resolves is taken by neither.
+pub const LOCAL_ORACLE_HOME_TARGETS_ENV_VAR: &str = "LOCAL_ORACLE_HOME_TARGETS";
+
 /// The environment the monitoring process is spawned with: computed by
 /// detect_runtime_env, exported by apply_runtime_env and rendered for
 /// --find-runtime by format_runtime_env.
@@ -576,10 +709,35 @@ pub struct RuntimeEnv {
     pub oracle_home: Option<PathBuf>,
 }
 
+/// Why no Oracle client runtime could be prepared.
+#[derive(Debug, PartialEq)]
+pub enum RuntimeError {
+    NoConfig,
+    NotFound,
+    Rejected { dir: PathBuf },
+}
+
+impl std::fmt::Display for RuntimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoConfig => write!(f, "No Config"),
+            Self::NotFound => write!(f, "No Oracle client runtime found"),
+            Self::Rejected { dir } => write!(
+                f,
+                "{dir:?} - Execution is blocked because you try to load an unsafe Oracle client \
+                 library as a privileged user. Please, disable write access to the files by \
+                 non-privileged users."
+            ),
+        }
+    }
+}
+
+impl std::error::Error for RuntimeError {}
+
 /// Detect the oracle client and the ORACLE_HOME that comes with it.
 /// ORACLE_HOME can be overridden by an inherited env var, while the client
 /// is always set based on the config and the search.
-pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
+pub fn detect_runtime_env(config: &OracleConfig) -> Result<RuntimeEnv, RuntimeError> {
     const LIB_DIR: &str = constants::environment::LIB_DIR_ENV_VAR;
     let lib_dir = std::env::var(LIB_DIR)
         .inspect_err(|_| log::warn!("{LIB_DIR} is not set"))
@@ -588,18 +746,20 @@ pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
     let inherited = std::env::var(ORACLE_HOME_ENV_VAR)
         .ok()
         .filter(|v| !v.is_empty());
-    let client = config.ora_sql().and_then(|ora_sql| {
-        detect_runtime(
-            ora_sql.options().use_host_client(),
-            lib_dir.as_deref(),
-            ora_sql.conn().grid(),
-        )
-        .filter(|runtime| runtime_permissions_ok(runtime, ora_sql.options()))
-    });
-    RuntimeEnv {
-        oracle_home: effective_oracle_home(client.as_ref(), inherited),
-        runtime_dir: client.map(|c| c.dir),
+    let ora_sql = config.ora_sql().ok_or(RuntimeError::NoConfig)?;
+    let client = detect_runtime(
+        ora_sql.options().use_host_client(),
+        lib_dir.as_deref(),
+        ora_sql.conn().grid(),
+    )
+    .ok_or(RuntimeError::NotFound)?;
+    if !runtime_permissions_ok(&client, ora_sql.options()) {
+        return Err(RuntimeError::Rejected { dir: client.dir });
     }
+    Ok(RuntimeEnv {
+        oracle_home: effective_oracle_home(Some(&client), inherited),
+        runtime_dir: Some(client.dir),
+    })
 }
 
 fn runtime_permissions_ok(runtime: &ClientRuntime, options: &Options) -> bool {
@@ -710,11 +870,12 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// On Unix the path, its direct entries and its parent directories must only be
 /// writable by root, by the conventional Oracle owner `oracle:oinstall`, or by a
 /// user or group listed in `safe_entries`, whenever the plugin runs as root. On
-/// Windows the path's DACL must grant write access only to privileged SIDs
-/// (SYSTEM, built-in Administrators, Domain Admins, Enterprise Admins) or to a
-/// listed safe entry, whenever the plugin runs elevated. In both cases a
-/// non-privileged caller always passes, and `check` turns the validation off
-/// entirely.
+/// Windows the path must be owned by, and its DACL must grant write access only
+/// to, privileged SIDs (SYSTEM, built-in Administrators, Domain Admins,
+/// Enterprise Admins) or a listed safe entry, whenever the plugin runs elevated:
+/// the owner implicitly holds `WRITE_DAC`, so validating the DACL alone would let
+/// a non-privileged owner rewrite it. In both cases a non-privileged caller
+/// always passes, and `check` turns the validation off entirely.
 pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> bool {
     #[cfg(unix)]
     {
@@ -747,7 +908,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 $CMK_VERSION = "{}"
 
-& $env:MK_PLUGINSDIR\packages\mk-oracle\mk-oracle.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
+& $env:MK_PLUGINSDIR\libexec\mk-oracle-v2\mk-oracle-v2.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
         VERSION
     )
 });
@@ -785,7 +946,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 CMK_VERSION="{}"
 
-"${{MK_LIBDIR}}/plugins/packages/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
+"${{MK_LIBDIR}}/plugins/libexec/mk-oracle-v2/mk-oracle-v2" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
         VERSION
     )
 });
@@ -915,12 +1076,12 @@ fn build_plugin_list(
 ) -> Vec<(String, Option<u32>, &'static str)> {
     let ext = if cfg!(windows) { ".ps1" } else { "" };
     let mut plugins = vec![
-        ("oracle_unified_sync", None, "--filter sync"),
-        ("oracle_unified_async", Some(cache_age), "--filter async"),
+        ("mk-oracle-v2_sync", None, "--filter sync"),
+        ("mk-oracle-v2_async", Some(cache_age), "--filter async"),
     ];
     if cache_age != custom_metrics_cache_age {
         plugins.push((
-            "oracle_unified_async_custom_metrics",
+            "mk-oracle-v2_async_custom_metrics",
             Some(custom_metrics_cache_age),
             "--filter async-custom-metrics",
         ));
@@ -950,26 +1111,218 @@ pub fn display_and_log(e: impl std::fmt::Display) {
     eprintln!("Stop on error: `{e}`",);
 }
 
-pub fn spawn_new_process(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
+/// One child per local `ORACLE_HOME`, each taking that home's own targets, plus
+/// one keeping the parent's `ORACLE_HOME` and taking every other target.
+///
+/// The homes come from the locally detected instances, deduplicated by
+/// [`home_key`], so several SIDs sharing a home yield one child and the first
+/// spelling the source reported is the one passed on. A host with no local
+/// instance leaves only the last plan, which is what a single run has always
+/// done.
+fn plan_spawns(local_instances: &[LocalInstance]) -> Vec<Option<PathBuf>> {
+    let mut seen: HashSet<PathBuf> = HashSet::new();
+    let mut plans: Vec<Option<PathBuf>> = local_instances
+        .iter()
+        .filter(|instance| seen.insert(home_key(&instance.home)))
+        .map(|instance| Some(instance.home.clone()))
+        .collect();
+    // `None` overrides nothing: that child keeps the ORACLE_HOME the parent
+    // selected and takes every target no home of its own claims.
+    plans.push(None);
+    plans
+}
+
+/// Re-runs this program once per [`plan_spawns`] entry, each child seeing
+/// `--runtime-ready` and the environment of its plan.
+///
+/// The children run one after another: they write their sections to the same
+/// stdout, and concurrent writes would interleave them. A child that cannot be
+/// started is reported and the remaining ones still run, so one broken home does
+/// not cost the whole host its monitoring.
+///
+/// Returns the first non-zero exit code, or zero when every child succeeded.
+pub fn spawn_new_processes(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
+    let local_instances = get_local_instances().unwrap_or_else(|e| {
+        log::warn!("Cannot determine the local instances: {e}");
+        Vec::new()
+    });
+    let plans = plan_spawns(&local_instances);
+    let exe = std::env::current_exe().expect("Failed to get current exe");
     let mut new_args = args.clone();
     new_args.push("--runtime-ready".to_string());
-    let exe = std::env::current_exe().expect("Failed to get current exe");
-    let status = std::process::Command::new(exe)
-        .args(&new_args[1..]) // skip the old program name
-        .status()
-        .unwrap_or_else(|e| {
-            display_and_log(e);
-            setup::reset_env(&old_path, None);
-            std::process::exit(1);
-        });
+
+    let mut code = 0;
+    for plan in &plans {
+        // A child serving one home takes that home's targets; the one keeping
+        // the inherited home takes the rest.
+        let targets = if plan.is_some() { "yes" } else { "no" };
+        let mut command = std::process::Command::new(&exe);
+        command
+            .args(&new_args[1..]) // skip the old program name
+            .env(LOCAL_ORACLE_HOME_TARGETS_ENV_VAR, targets);
+        match plan {
+            Some(home) => {
+                log::info!(
+                    "Spawn for {ORACLE_HOME_ENV_VAR}={home:?} with \
+                     {LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={targets}"
+                );
+                command.env(ORACLE_HOME_ENV_VAR, home);
+                // Pair the library search path with ORACLE_HOME so the child
+                // loads the client of its own home. Without this every child
+                // inherits the parent's single runtime and loads the wrong
+                // client for its home.
+                match child_runtime_path(home, &old_path) {
+                    Some(path) => {
+                        log::info!("Spawn {RUNTIME_PATH_ENV_VAR}={path:?}");
+                        command.env(RUNTIME_PATH_ENV_VAR, &path);
+                    }
+                    None => log::warn!(
+                        "Oracle home {home:?} ships no client library in its \
+                         {CLIENT_LIB_SUBDIR} directory; child keeps the inherited \
+                         {RUNTIME_PATH_ENV_VAR}"
+                    ),
+                }
+            }
+            None => log::info!(
+                "Spawn for the inherited {ORACLE_HOME_ENV_VAR} with \
+                 {LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={targets}"
+            ),
+        }
+        match command.status() {
+            Ok(status) => {
+                if code == 0 {
+                    code = status.code().unwrap_or_default();
+                }
+            }
+            Err(e) => {
+                display_and_log(e);
+                if code == 0 {
+                    code = 1;
+                }
+            }
+        }
+    }
     setup::reset_env(&old_path, None);
-    status.code().unwrap_or_default()
+    code
+}
+
+/// The library search path a child serving `home` must use: that home's own
+/// client (`<home>/lib`, `<home>\bin` on Windows) ahead of `old_path` (the search
+/// path as it was before any runtime was prepended). `None` when the home ships no
+/// client library there, so the child keeps the inherited path instead of being
+/// pointed at a missing directory.
+///
+/// Pairs the per-child library path with the per-child `ORACLE_HOME`: without it
+/// every child inherits the parent's single runtime and loads the wrong client.
+fn child_runtime_path(home: &Path, old_path: &Path) -> Option<OsString> {
+    let lib_dir = home.join(CLIENT_LIB_SUBDIR);
+    if !contains_oracle_client_lib(&lib_dir) {
+        return None;
+    }
+    Some(prepend_to_search_path(lib_dir, old_path))
+}
+
+/// Prepend `dir` to `old_path` with the platform separator, or return just `dir`
+/// when `old_path` is empty.
+fn prepend_to_search_path(dir: PathBuf, old_path: &Path) -> OsString {
+    let mut path = dir.into_os_string();
+    if !old_path.as_os_str().is_empty() {
+        path.push(ENV_VAR_SEP);
+        path.push(old_path);
+    }
+    path
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn test_prepend_to_search_path() {
+        let dir = PathBuf::from("/opt/oracle/home").join(CLIENT_LIB_SUBDIR);
+
+        // Empty old path: just the client dir.
+        assert_eq!(
+            prepend_to_search_path(dir.clone(), Path::new("")),
+            dir.clone().into_os_string()
+        );
+
+        // Non-empty: client dir, separator, then the old path.
+        let old = Path::new("/existing/lib");
+        let mut expected = dir.clone().into_os_string();
+        expected.push(ENV_VAR_SEP);
+        expected.push(old);
+        assert_eq!(prepend_to_search_path(dir, old), expected);
+    }
+
+    #[test]
+    fn test_child_runtime_path_none_when_home_has_no_client() {
+        assert!(child_runtime_path(
+            Path::new("/surely/missing/oracle/home"),
+            Path::new("/existing/lib")
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn test_parse_local_oracle_home_targets() {
+        assert_eq!(parse_local_oracle_home_targets(None), None);
+        assert_eq!(parse_local_oracle_home_targets(Some("yes")), Some(true));
+        assert_eq!(parse_local_oracle_home_targets(Some("no")), Some(false));
+        // Case and blanks do not decide.
+        assert_eq!(parse_local_oracle_home_targets(Some(" YES ")), Some(true));
+        assert_eq!(parse_local_oracle_home_targets(Some("No")), Some(false));
+        // Anything else states nothing rather than picking a side.
+        assert_eq!(parse_local_oracle_home_targets(Some("")), None);
+        assert_eq!(parse_local_oracle_home_targets(Some("true")), None);
+        assert_eq!(parse_local_oracle_home_targets(Some("1")), None);
+    }
+
+    fn local_instance(name: &str, home: &str) -> LocalInstance {
+        LocalInstance {
+            name: crate::types::InstanceName::from(name),
+            home: PathBuf::from(home),
+            base: None,
+        }
+    }
+
+    #[test]
+    fn test_plan_spawns() {
+        // No local instance: only the run that keeps the inherited home.
+        assert_eq!(plan_spawns(&[]), vec![None]);
+
+        // Two homes, one of them named twice: one child per home, then the
+        // inherited one. The spelling of the first sighting is passed on.
+        assert_eq!(
+            plan_spawns(&[
+                local_instance("XE", "/u01/dbhome_1"),
+                local_instance("FREE", "/u01/dbhome_1"),
+                local_instance("+ASM", "/u01/grid"),
+            ]),
+            vec![
+                Some(PathBuf::from("/u01/dbhome_1")),
+                Some(PathBuf::from("/u01/grid")),
+                None,
+            ]
+        );
+    }
+
+    /// Windows spells one directory in several cases, so it is one child there.
+    #[test]
+    fn test_plan_spawns_folds_the_home_case_on_windows() {
+        let plans = plan_spawns(&[
+            local_instance("XE", r"C:\app\dbhome_1"),
+            local_instance("FREE", r"c:\APP\dbhome_1"),
+        ]);
+
+        let expected_homes = if cfg!(windows) { 1 } else { 2 };
+        assert_eq!(plans.len(), expected_homes + 1, "{plans:?}");
+        assert_eq!(
+            plans.last().expect("the inherited plan is always last"),
+            &None
+        );
+    }
 
     #[test]
     fn test_spec() {
@@ -1044,9 +1397,9 @@ mod tests {
     #[test]
     fn test_build_plugin_list_names_unix() {
         let plugins = build_plugin_list(100, 200);
-        assert_eq!(plugins[0].0, "oracle_unified_sync");
-        assert_eq!(plugins[1].0, "oracle_unified_async");
-        assert_eq!(plugins[2].0, "oracle_unified_async_custom_metrics");
+        assert_eq!(plugins[0].0, "mk-oracle-v2_sync");
+        assert_eq!(plugins[1].0, "mk-oracle-v2_async");
+        assert_eq!(plugins[2].0, "mk-oracle-v2_async_custom_metrics");
     }
 
     #[test]

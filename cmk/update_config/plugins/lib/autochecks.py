@@ -42,9 +42,9 @@ type TDiscoveredParametersTransforms = Mapping[CheckPluginName, ParameterTransfo
 
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     # cpu_loads no longer discovers any parameters, hence we can just drop them on update
-    CheckPluginName("cpu_loads"): lambda x: {},
+    CheckPluginName("cpu_loads"): lambda x: {},  # noqa: ARG005
     # f5_bigip_pool no longer discovers any parameters after migration to agent_based.v2
-    CheckPluginName("f5_bigip_pool"): lambda x: {},
+    CheckPluginName("f5_bigip_pool"): lambda x: {},  # noqa: ARG005
 }
 
 _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
@@ -54,6 +54,26 @@ _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms 
         for name, transform in _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.items()
     },
 }
+
+_AUTOMATION_HELPER_STALE_PS_PATTERNS = frozenset(
+    {
+        "~gunicorn:.*automation-helper",
+        "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+    }
+)
+_AUTOMATION_HELPER_CURRENT_PS_PATTERN = (
+    "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)"
+)
+
+
+def _transform_automation_helper_ps_patterns(
+    item: str, params: Mapping[str, object]
+) -> Mapping[str, object]:
+    if not item.endswith("automation helpers"):
+        return params
+    if params.get("process") not in _AUTOMATION_HELPER_STALE_PS_PATTERNS:
+        return params
+    return {**params, "process": _AUTOMATION_HELPER_CURRENT_PS_PATTERN, "match_groups": ()}
 
 
 @dataclass(frozen=True)
@@ -129,12 +149,16 @@ def _fix_entry(
         _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(new_plugin_name, lambda x: x)
     )
 
+    parameters = explicit_parameters_transform(entry.parameters)
+    if new_plugin_name == CheckPluginName("ps") and isinstance(parameters, dict):
+        parameters = _transform_automation_helper_ps_patterns(entry.item or "", parameters)
+
     return AutocheckEntry(
         check_plugin_name=new_plugin_name,
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
             new_plugin_name,
-            explicit_parameters_transform(entry.parameters),
+            parameters,
             all_rulesets,
             check_plugins,
             hostname,
@@ -148,7 +172,7 @@ def _transformed_params[T: LegacyCheckParameters](
     params: T,
     all_rulesets: RulesetCollection,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    host: str,
+    host: str,  # noqa: ARG001
 ) -> Mapping[str, object]:
     if (ruleset := _get_ruleset(plugin_name, all_rulesets, check_plugins)) is None:
         if not params:

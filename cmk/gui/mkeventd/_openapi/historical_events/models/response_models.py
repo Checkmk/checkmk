@@ -119,7 +119,7 @@ class HistoricalEventExtensionsModel:
 
 @api_model
 class HistoricalEventModel(DomainObjectModel):
-    domainType: Literal["historical_event"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["historical_event"] = api_field(
         description="The domain type of the object.",
     )
 

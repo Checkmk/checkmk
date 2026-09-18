@@ -25,6 +25,12 @@ body.dashboard {
   }
 }
 
+// Would eat the few pixels of slack that keep the viewport-sized dashboard
+// scrollbar-free, letting a horizontal scrollbar pull in a vertical one.
+#main_page_content:has(div#dashboard) {
+  padding-bottom: 0;
+}
+
 div#dashboard {
   position: relative;
   padding: 0;
@@ -114,13 +120,6 @@ div.dashlet {
     filter: grayscale(100%);
     transform: scale(0.8, 0.8);
     transform-origin: center;
-  }
-
-  div.graph > div.v_axis_label {
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    transform: rotate(-90deg) translateX(50%);
   }
 }
 
@@ -631,25 +630,6 @@ div#dashboard.grid {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
-}
-
-.dashlet.pnpgraph .dashlet_inner {
-  color: $font-color;
-  text-align: left;
-  background-color: $dashlet-inner-bg-color;
-}
-
-.dashlet.pnpgraph .graph {
-  border: none;
-  box-shadow: none;
-}
-
-.dashlet.pnpgraph .container {
-  background-color: $dashlet-inner-bg-color;
-}
-
-.dashlet.pnpgraph div.title a {
-  color: $font-color;
 }
 
 svg {

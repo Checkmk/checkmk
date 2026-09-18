@@ -5,20 +5,17 @@
 
 """Smoke tests for the flamegraph tree builder on hand-crafted stats dicts."""
 
-from __future__ import annotations
-
 import marshal
 from pathlib import Path
 
 import pytest
 
+from cmk.profiling.backend import build_flamegraph_tree, get_top_hotspots
 from cmk.profiling.backend._flamegraph import (
     _make_formatter,
     _MAX_CALLERS_PER_HOTSPOT,
     _MAX_HOTSPOTS,
     _profile_to_folded_stacks,
-    build_flamegraph_tree,
-    get_top_hotspots,
 )
 
 # pstats on-disk shape: {func_key: (prim_calls, ncalls, tottime, cumtime, callers_dict)}

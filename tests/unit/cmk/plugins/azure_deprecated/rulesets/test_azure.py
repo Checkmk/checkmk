@@ -91,12 +91,12 @@ def test_vs_to_fs_update() -> None:
 
 
 def test_migrate_keeps_values() -> None:
-    migrated = azure_ruleset._migrate_services_to_monitor(["Microsoft.DBforMySQL/flexibleServers"])
-    double_migrated = azure_ruleset._migrate_services_to_monitor(migrated)
+    migrated = azure_ruleset._migrate_services_to_monitor(["Microsoft.DBforMySQL/flexibleServers"])  # noqa: SLF001
+    double_migrated = azure_ruleset._migrate_services_to_monitor(migrated)  # noqa: SLF001
     assert migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
     assert double_migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
 
 
 def test_migrate_silently_drops_invalid_values() -> None:
-    migrated = azure_ruleset._migrate_services_to_monitor(["dadada"])
+    migrated = azure_ruleset._migrate_services_to_monitor(["dadada"])  # noqa: SLF001
     assert len(migrated) == 0

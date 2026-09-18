@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 import time
 from collections.abc import Mapping
@@ -292,7 +291,7 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
         )
 
     if battery_capacity:
-        if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:
+        if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:  # type: ignore[possibly-undefined]
             yield from check_levels(
                 value=battery_capacity,
                 levels_lower=("fixed", (alt_crit_capacity, alt_crit_capacity)),

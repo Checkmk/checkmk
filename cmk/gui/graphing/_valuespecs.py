@@ -3,33 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
 
 import json
 import re
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, override, TypedDict
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
+from cmk.graphing_engine import metric_display_attributes
+from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
+from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
 from cmk.gui.unit_formatter import (
     AutoPrecision,
     NotationFormatter,
     StrictPrecision,
     TimeFormatter,
 )
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -37,6 +35,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DictionaryEntry,
+    DictionaryModel,
     DropdownChoice,
     DropdownChoiceWithHostAndServiceHints,
     Filesize,
@@ -47,36 +46,40 @@ from cmk.gui.valuespec import (
     MigrateNotUpdated,
     Percentage,
     Tuple,
+    ValueSpec,
     ValueSpecHelp,
-    ValueSpecValidateFunc,
 )
-from cmk.utils.metrics import MetricName as MetricName_
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.web.utils.choices import Choice, Choices
 
+from ._decoding import ensure_type
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import GraphDisplayConfigHTML
-from ._legacy import check_metrics
-from ._metrics import get_metric_spec, registered_metric_ids_and_titles
-from ._translated_metrics import (
-    find_matching_translation,
-    lookup_metric_translations_for_check_command,
-    parse_perf_data,
-)
-from ._unit import (
+from ._metric_data import translate_metric_names
+from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
+from ._performance_data import parse_performance_data
+from ._unit_specification import (
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,
-    get_temperature_unit,
     IECNotation,
     SINotation,
     StandardScientificNotation,
     TimeNotation,
-    user_specific_unit,
 )
+from ._user_specific_unit import get_temperature_unit, user_specific_unit
 
 type LivestatusQueryFunc = Callable[
-    [Literal["host", "service"], VisualContext, list[str]], list[dict[str, Any]]
+    [Literal["host", "service"], VisualContext, list[str]], Sequence[Mapping[str, object]]
 ]
+
+
+def _title_format(entry: object) -> GraphTitleFormatVS:
+    match entry:
+        case "plain" | "add_host_name" | "add_host_alias" | "add_service_description":
+            return entry
+        case _:
+            raise ValueError(f"invalid graph title format entry {entry}")
 
 
 def migrate_graph_render_options_title_format(
@@ -89,6 +92,13 @@ def migrate_graph_render_options_title_format(
         | Sequence[GraphTitleFormatVS]
     ),
 ) -> Sequence[GraphTitleFormatVS]:
+    return migrate_graph_render_options_title_format_from_disk(p)
+
+
+def migrate_graph_render_options_title_format_from_disk(
+    p: object,
+) -> Sequence[GraphTitleFormatVS]:
+    """Same migration for FormSpec migrate hooks, which receive unvalidated disk data."""
     # ->1.5.0i2 pnp_graph reportlet
     if p == "add_host_name":
         return ["plain", "add_host_name"]
@@ -101,34 +111,46 @@ def migrate_graph_render_options_title_format(
 
     if isinstance(p, tuple):
         if p[0] == "add_title_infos":
-            infos: Sequence[GraphTitleFormatVS] = ["plain"] + p[1]
-            return infos
+            return ["plain", *(_title_format(entry) for entry in p[1])]
         if p[0] == "plain":
             return ["plain"]
         raise ValueError(f"invalid graph title format {p}")
 
     # Because the spec could come from a JSON request CMK-6339
     if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":
-        return ["plain"] + p[1]
+        return ["plain", *(_title_format(entry) for entry in p[1])]
 
-    return p
+    if isinstance(p, list):
+        return [_title_format(entry) for entry in p]
+
+    raise ValueError(f"invalid graph title format {p}")
 
 
-def migrate_graph_render_options(value):
+def migrate_graph_render_options(value: Mapping[str, object]) -> DictionaryModel:
+    migrated: DictionaryModel = dict(value)
     # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
     # This has been consolidated with the option title_format from the reportlet.
-    if value.pop("show_service", False):
-        value["title_format"] = ["plain", "add_host_name", "add_service_description"]
+    if migrated.pop("show_service", False):
+        migrated["title_format"] = ["plain", "add_host_name", "add_service_description"]
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
-    if isinstance(value.get("title_format"), str | tuple):
-        value["title_format"] = migrate_graph_render_options_title_format(value["title_format"])
-    return value
+    if isinstance(migrated.get("title_format"), str | tuple):
+        migrated["title_format"] = migrate_graph_render_options_title_format_from_disk(
+            migrated["title_format"]
+        )
+    return migrated
 
 
-def vs_graph_render_options(default_values=None, exclude=None):
+def vs_graph_render_options(
+    default_values: Mapping[str, object] | None = None,
+    exclude: Collection[str] | None = None,
+    *,
+    with_inline_title: bool = True,
+) -> MigrateNotUpdated[DictionaryModel]:
     return MigrateNotUpdated(
         valuespec=Dictionary(
-            elements=vs_graph_render_option_elements(default_values, exclude),
+            elements=vs_graph_render_option_elements(
+                default_values, exclude, with_inline_title=with_inline_title
+            ),
             optional_keys=[],
             title=_("Graph rendering options"),
         ),
@@ -146,29 +168,45 @@ def _vs_title_infos() -> ListChoice:
     return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
 
-def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[DictionaryEntry]:
+def _vs_show_title(
+    default_value: bool | Literal["inline"], with_inline_title: bool
+) -> DropdownChoice[bool | Literal["inline"]]:
+    choices: list[tuple[bool | Literal["inline"], str]] = [
+        (False, _("Don't show graph title")),
+        (True, _("Show graph title")),
+    ]
+    if with_inline_title:
+        choices.append(("inline", _("Show graph title on graph area")))
+    return DropdownChoice(
+        title=_("Title"),
+        choices=choices,
+        default_value=default_value,
+        # Configs written before the choice was dropped still hold "inline". Complaining about it
+        # would make the dialog unsaveable until the user touches this very dropdown.
+        invalid_choice="complain" if with_inline_title else "replace",
+    )
+
+
+def vs_graph_render_option_elements(
+    default_values: Mapping[str, object] | None = None,
+    exclude: Collection[str] | None = None,
+    *,
+    with_inline_title: bool = True,
+) -> list[DictionaryEntry]:
     # Allow custom default values to be specified by the caller. This is, for example,
     # needed by the dashlets which should add the host/service by default.
-    default_values = GraphDisplayConfigHTML.model_validate(default_values or {})
+    defaults = GraphDisplayConfigHTML.model_validate(default_values or {})
 
     elements: list[DictionaryEntry] = [
         (
             "font_size",
             Fontsize(
-                default_value=default_values.font_size,
+                default_value=defaults.font_size,
             ),
         ),
         (
             "show_title",
-            DropdownChoice(
-                title=_("Title"),
-                choices=[
-                    (False, _("Don't show graph title")),
-                    (True, _("Show graph title")),
-                    ("inline", _("Show graph title on graph area")),
-                ],
-                default_value=default_values.show_title,
-            ),
+            _vs_show_title(defaults.show_title, with_inline_title),
         ),
         (
             "title_format",
@@ -182,7 +220,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show graph time range"),
                 label=_("Show the graph time range on top of the graph"),
-                default_value=default_values.show_graph_time,
+                default_value=defaults.show_graph_time,
             ),
         ),
         (
@@ -190,7 +228,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show margin round the graph"),
                 label=_("Show a margin round the graph"),
-                default_value=default_values.show_margin,
+                default_value=defaults.show_margin,
             ),
         ),
         (
@@ -198,7 +236,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show legend"),
                 label=_("Show the graph legend"),
-                default_value=default_values.show_legend,
+                default_value=defaults.show_legend,
             ),
         ),
         (
@@ -206,7 +244,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show vertical axis"),
                 label=_("Show the graph vertical axis"),
-                default_value=default_values.show_vertical_axis,
+                default_value=defaults.show_vertical_axis,
             ),
         ),
         (
@@ -229,15 +267,15 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show time axis"),
                 label=_("Show the graph time axis"),
-                default_value=True,
+                default_value=defaults.show_time_axis,
             ),
         ),
         (
             "show_controls",
             Checkbox(
-                title=_("Show controls"),
-                label=_("Show the graph controls"),
-                default_value=default_values.show_controls,
+                title=_("Show burger menu"),
+                label=_("Show the graph burger menu"),
+                default_value=defaults.show_controls,
             ),
         ),
         (
@@ -245,7 +283,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show pin"),
                 label=_("Show the pin"),
-                default_value=default_values.show_pin,
+                default_value=defaults.show_pin,
             ),
         ),
         (
@@ -253,7 +291,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Show time range previews"),
                 label="Show previews",
-                default_value=default_values.show_time_range_previews,
+                default_value=defaults.show_time_range_previews,
             ),
         ),
         (
@@ -261,7 +299,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
             Checkbox(
                 title=_("Time range synchronization"),
                 label="Do not follow timerange changes of other graphs on the current page",
-                default_value=default_values.fixed_timerange,
+                default_value=defaults.fixed_timerange,
             ),
         ),
     ]
@@ -277,14 +315,28 @@ class ValueWithUnitElement(TypedDict):
     default: float
 
 
+def _value_with_unit_vs(
+    vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
+    symbol: str,
+    title: str,
+    default: float,
+) -> ValueSpec[int] | ValueSpec[float]:
+    if vs is Float:
+        return Float(title=title, unit=symbol, default_value=default)
+    if vs is Integer:
+        return Integer(title=title, unit=symbol, default_value=int(default))
+    if vs is Percentage:
+        return Percentage(title=title, default_value=default)
+    return vs(title=title, default_value=int(default))
+
+
 class ValuesWithUnits(CascadingDropdown):
     def __init__(
         self,
         vs_name: str,
         metric_vs_name: str,
         elements: Sequence[ValueWithUnitElement],
-        validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
     ):
         temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         super().__init__(
@@ -292,11 +344,13 @@ class ValuesWithUnits(CascadingDropdown):
                 (
                     choice.id,
                     choice.title,
-                    self._unit_vs(
-                        choice.vs_type,
-                        choice.symbol,
-                        elements,
-                        validate_value_elements,
+                    Tuple(
+                        elements=[
+                            _value_with_unit_vs(
+                                choice.vs_type, choice.symbol, elem["title"], elem["default"]
+                            )
+                            for elem in elements
+                        ]
                     ),
                 )
                 for choice in _sorted_unit_choices(
@@ -309,23 +363,6 @@ class ValuesWithUnits(CascadingDropdown):
         )
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
-
-    def _unit_vs(
-        self,
-        vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
-        symbol: str,
-        elements: Sequence[ValueWithUnitElement],
-        validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None,
-    ) -> Tuple:
-        def set_vs(vs, title, default):
-            if vs.__name__ in ["Float", "Integer"]:
-                return vs(title=title, unit=symbol, default_value=default)
-            return vs(title=title, default_value=default)
-
-        return Tuple(
-            elements=[set_vs(vs, elem["title"], elem["default"]) for elem in elements],
-            validate=validate_value_elements,
-        )
 
     @override
     def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
@@ -401,11 +438,15 @@ def id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
             notation_id = "EngineeringScientificNotation"
         case TimeNotation():
             notation_id = "TimeNotation"
+        case other_notation:
+            assert_never(other_notation)
     match unit_spec.precision:
         case AutoPrecision():
             precision_id = "AutoPrecision"
         case StrictPrecision():
             precision_id = "StrictPrecision"
+        case other_precision:
+            assert_never(other_precision)
     return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"
 
 
@@ -487,12 +528,12 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
     ident = "monitored_metrics"
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # type: ignore[explicit-any]
         # Customer's metrics from local checks or other custom plug-ins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
-        kwargs_with_defaults: Mapping[str, Any] = {
+        kwargs_with_defaults: Mapping[str, Any] = {  # type: ignore[explicit-any]
             "css_spec": ["ajax-vals"],
             "hint_label": _("metric"),
             "title": _("Metric"),
@@ -538,26 +579,30 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
 def _metric_choices(
     check_command: str,
-    perfvars: tuple[MetricName_, ...],
-    registered_metrics: Mapping[str, RegisteredMetric],
+    raw_metric_names: Sequence[EngineMetricName],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
 ) -> Iterator[Choice]:
-    for perfvar in perfvars:
-        metric_name = find_matching_translation(
-            MetricName_(perfvar),
-            lookup_metric_translations_for_check_command(check_metrics, check_command),
-        ).name
+    for metric_name in translate_metric_names(
+        check_command, raw_metric_names, registered_translations
+    ):
         yield (
             metric_name,
-            get_metric_spec(
-                metric_name,
-                registered_metrics,
+            metric_display_attributes(
+                metric_name, translate_to_current_language, registered_metrics
             ).title,
         )
 
 
+def _engine_metric_names(raw: object) -> Iterator[EngineMetricName]:
+    for name in ensure_type(raw, list):
+        yield EngineMetricName(ensure_type(name, str))
+
+
 def metrics_of_query(
     context: VisualContext,
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     livestatus_query: LivestatusQueryFunc,
 ) -> Iterator[Choice]:
     # Fetch host data with the *same* query. This saves one round trip. And head
@@ -571,21 +616,24 @@ def metrics_of_query(
         "host_metrics",
     ]
 
-    row = {}
+    row: Mapping[str, object] = {}
     for row in livestatus_query("service", context, columns):
-        perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], debug=active_config.debug
+        raw = parse_performance_data(
+            ensure_type(row["service_perf_data"], str),
+            ensure_type(row["service_check_command"], str),
+            debug=active_config.debug,
         )
-        known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from _metric_choices(
-            str(check_command),
-            tuple(map(str, known_metrics)),
+            raw.check_command,
+            [*raw.values, *_engine_metric_names(row["service_metrics"])],
             registered_metrics,
+            registered_translations,
         )
 
     if row.get("host_check_command"):
         yield from _metric_choices(
             str(row["host_check_command"]),
-            tuple(map(str, row["host_metrics"])),
+            list(_engine_metric_names(row["host_metrics"])),
             registered_metrics,
+            registered_translations,
         )

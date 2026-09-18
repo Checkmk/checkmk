@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 py_library(
@@ -31,6 +32,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:azure_deprecated",
@@ -38,6 +40,7 @@ py_library(
         "//packages/cmk-plugins:gcp",
         "//packages/cmk-plugins:proxmox_ve",
         "//packages/cmk-web/cmk/web/utils",
+        requirement("pyyaml"),
     ],
 )
 

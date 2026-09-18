@@ -165,6 +165,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   /** The kind of fetch currently in flight, or `'idle'`. */
   readonly fetchState: Ref<FetchState> = ref('idle')
   readonly hasLoaded: Ref<boolean> = ref(false)
+  readonly loadFailed: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
   readonly searchQuery: Ref<string> = ref('')
   /**
@@ -486,6 +487,10 @@ export abstract class MonitoringService<T> extends ServiceBase {
     void this.fetch()
   }
 
+  retry(): void {
+    void this.fetch()
+  }
+
   refresh(delayMs = 0): void {
     if (this.refreshTimer !== null) {
       clearTimeout(this.refreshTimer)
@@ -585,6 +590,9 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
     this.secondsRemaining.value = this.pollIntervalSeconds
     this.fetchState.value = kind
+    if (kind === 'foreground') {
+      this.loadFailed.value = false
+    }
     const searchQueryForFetch = this.appliedSearchQuery.value
     try {
       const response = await this.fetchBatch(abort.signal)
@@ -603,10 +611,12 @@ export abstract class MonitoringService<T> extends ServiceBase {
         this.maxOffset.value = response.meta.maxOffset
       }
       this.committedSearchQuery.value = searchQueryForFetch
+      this.loadFailed.value = false
     } catch (error: unknown) {
       if (this.currentAbort !== abort) {
         return
       }
+      this.loadFailed.value = true
       console.error('MonitoringService: fetchBatch failed', error)
     } finally {
       if (this.currentAbort === abort) {

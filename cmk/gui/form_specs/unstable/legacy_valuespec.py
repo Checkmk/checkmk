@@ -18,7 +18,7 @@ class LegacyValueSpec(cmk.rulesets.v1.form_specs.FormSpec[Any]):
     valuespec: ValueSpec[Any]
 
     @classmethod
-    def wrap(cls, valuespec: ValueSpec[Any]) -> "LegacyValueSpec":
+    def wrap(cls, valuespec: ValueSpec[Any]) -> LegacyValueSpec:
         return cls(
             title=cmk.rulesets.v1.Title(str(valuespec.title() or "")),
             help_text=cmk.rulesets.v1.Help(str(valuespec.help() or "")),

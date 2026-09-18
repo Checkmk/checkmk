@@ -19,41 +19,25 @@ import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped,unused-ignore]
 
-# TODO: Can we somehow push some of the registrations below to the subdirectories?
-# Needs to be executed before the import of those modules
-pytest.register_assert_rewrite(
-    "tests.testlib",
-    "tests.unit.cmk.legacy_checks.checktestlib",
-    "tests.unit.checks.generictests.run",
-)
-
-try:
-    from tests.testlib.site import Site
-
-    _SITE_AVAILABLE = True
-except Exception:
-    # Site class is not available during packaging tests for community edition
-    _SITE_AVAILABLE = False
-
-    class _SiteStub:
-        def report_crashes(self) -> None:
-            pass
-
-    Site = _SiteStub  # type: ignore[assignment,misc]
-
-from tests.testlib.common.repo import (  # noqa: E402
+from tests.testlib.common.repo import (
     current_base_branch_name,
 )
-from tests.testlib.common.utils2 import (  # noqa: E402
+from tests.testlib.common.utils2 import (
     is_containerized,
     run,
     verbose_called_process_error,
 )
-from tests.testlib.pytest_helpers.timeouts import (  # noqa: E402
+from tests.testlib.pytest_helpers.sharding import (
+    Durations,
+    fetch_durations,
+    plan,
+    select_for_shard,
+)
+from tests.testlib.pytest_helpers.timeouts import (
     MonitorTimeout,
     SessionTimeoutError,
 )
-from tests.testlib.version import (  # noqa: E402
+from tests.testlib.version import (
     CMKEdition,
     CMKVersion,
     edition_from_env,
@@ -90,8 +74,8 @@ def get_test_type(test_path: Path) -> str:
     return test_path_relative.parts[0]
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config) -> Iterator[None]:
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     session_timeout_cli = "--session-timeout"
     timeout_duration = (
         _session_timeout_option
@@ -102,7 +86,7 @@ def _session_timeout(request: pytest.FixtureRequest, pytestconfig: pytest.Config
         yield
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_log_exception(
     caplog: pytest.LogCaptureFixture, pytestconfig: pytest.Config
 ) -> Iterator[None]:
@@ -228,13 +212,6 @@ def pytest_internalerror(excinfo: pytest.ExceptionInfo[BaseException]) -> None:
         raise excinfo.value
 
 
-# Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
-# runs and prevent us from spot the important messages easily. Reduce the Reduce the log level
-# selectively.
-# See also https://github.com/joke2k/faker/issues/753
-logging.getLogger("faker").setLevel(logging.ERROR)
-
-
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register options to pytest"""
     parser.addoption(
@@ -261,6 +238,44 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=None,
         type=int,
         help="Select only the first N tests from the collection list.",
+    )
+    parser.addoption(
+        "--medium-chain",
+        action="store_true",
+        default=False,
+        help=(
+            "Mark this run as part of the gated medium chain, which skips tests "
+            "carrying skip_if_medium_chain. A plain option and not a '-m' filter "
+            "on purpose: the make targets in run_tests.sh set their own '-m' after "
+            "TEST_FILTER, and pytest lets the last '-m' win."
+        ),
+    )
+    parser.addoption(
+        "--shard-index",
+        action="store",
+        default=None,
+        type=int,
+        help="Run only the tests of this shard, counting from 0. Needs --shard-count.",
+    )
+    parser.addoption(
+        "--shard-count",
+        action="store",
+        default=None,
+        type=int,
+        help="Number of shards the suite is split into. Needs --shard-index.",
+    )
+    parser.addoption(
+        "--shard-durations-build",
+        action="store",
+        default=os.environ.get("SHARD_BUILD_BASED_ON"),
+        type=str,
+        help=(
+            "Finished build to take the balancing runtimes from, as '<job>#<number>' "
+            "with the full job path, e.g. "
+            "'checkmk/master/heavy/test-system-singlesite-ultimatemt#1234'. Defaults to "
+            "the SHARD_BUILD_BASED_ON environment variable, which is how the job "
+            "parameter of that name reaches pytest."
+        ),
     )
     parser.addoption(
         "--session-timeout",
@@ -386,6 +401,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     config.addinivalue_line(
         "markers",
+        "skip_if_medium_chain: skip test when --medium-chain is set. For tests "
+        "that cannot work pre-submit, not for tests that merely fail",
+    )
+    config.addinivalue_line(
+        "markers",
         "requires_non_root_user: Tests that require a non-root user to be executed.",
     )
 
@@ -393,9 +413,72 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
     items[:] = items[0 : config.getoption("--limit")]
+    _apply_sharding(items, config)
     for item in items:
         if config.getoption("--no-skip"):
             item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
+
+
+def _apply_sharding(items: list[pytest.Function], config: pytest.Config) -> None:
+    """Keep only the items belonging to this shard, if sharding is requested."""
+    shard_index = config.getoption("--shard-index")
+    shard_count = config.getoption("--shard-count")
+    # An empty SHARD_BUILD_BASED_ON counts as unset, not as a value.
+    shard_durations_build = config.getoption("--shard-durations-build") or None
+    if all(v is None for v in [shard_index, shard_count, shard_durations_build]):
+        return
+    if any(v is None for v in [shard_index, shard_count, shard_durations_build]):
+        raise pytest.UsageError(
+            "--shard-index, --shard-count and --shard-durations-build must be given together"
+        )
+    if not items:
+        return
+
+    durations = _shard_durations(config)
+    shard_plan = plan(items, shard_count, durations)
+    for index in range(shard_count):
+        logger.info(
+            "shard %d/%d: %d modules, %d tests, ~%.1f min%s",
+            index,
+            shard_count,
+            shard_plan.modules[index],
+            shard_plan.tests[index],
+            shard_plan.seconds[index] / 60,
+            " <-- this shard" if index == shard_index else "",
+        )
+    logger.info(
+        "expected test time %.1f min, heaviest module %.1f min",
+        shard_plan.makespan / 60,
+        shard_plan.floor / 60,
+    )
+    if shard_count > 1 and shard_plan.makespan <= shard_plan.floor:
+        logger.warning(
+            "The split is down to its heaviest module, more than %d shards would "
+            "only add pods without getting faster.",
+            shard_count,
+        )
+
+    selected, deselected = select_for_shard(items, shard_index, shard_count, durations)
+    config.hook.pytest_deselected(items=deselected)
+    items[:] = list(selected)
+
+
+def _shard_durations(config: pytest.Config) -> Durations:
+    """Runtimes used for balancing. Fails rather than guessing.
+
+    No fallback and no default on purpose: a shard balancing against something
+    its siblings do not have splits the suite differently, and the tests between
+    the two splits are not reported as skipped, they simply never run.
+    """
+    if not (reference := config.getoption("--shard-durations-build")):
+        raise pytest.UsageError("Sharding needs --shard-durations-build")
+
+    try:
+        durations = fetch_durations(reference)
+    except (RuntimeError, ValueError) as exc:
+        raise pytest.UsageError(str(exc)) from exc
+    logger.info("Shard durations: %d modules from %s", len(durations.per_module), reference)
+    return durations
 
 
 def _editions_from_markers(item: pytest.Item, marker_name: EditionMarker) -> list[TypeCMKEdition]:
@@ -433,22 +516,20 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     ):
         pytest.skip(f"{item.nodeid}: Package contains faked artifacts!")
 
-
-def _iter_site_objects(pytest_item: pytest.Item) -> Iterator[Site]:
-    """Yield all Site objects found in the function arguments of the given test."""
-    if not _SITE_AVAILABLE:
-        return
-    funcargs = getattr(pytest_item, "funcargs", None)
-    if not funcargs:
-        return
-    for obj in funcargs.values():
-        if isinstance(obj, Site):
-            yield obj
+    if item.get_closest_marker("skip_if_medium_chain") and item.config.getoption("--medium-chain"):
+        pytest.skip(f"{item.nodeid}: Not reachable in the gated medium chain!")
 
 
 @pytest.hookimpl
 def pytest_runtest_teardown(item: pytest.Item) -> None:
     """Teardown hook to report crashes after each test."""
+    try:
+        from tests.testlib.site import Site
+    except ImportError:
+        # Site class is not available during packaging tests for community edition
+        return
+
     faked_artifacts = bool(item.config.getoption("--package-contains-faked-artifacts"))
-    for site_obj in _iter_site_objects(item):
-        site_obj.report_crashes(ignore_bakery_crashes=faked_artifacts)
+    for obj in getattr(item, "funcargs", {}).values():
+        if isinstance(obj, Site):
+            obj.report_crashes(ignore_bakery_crashes=faked_artifacts)

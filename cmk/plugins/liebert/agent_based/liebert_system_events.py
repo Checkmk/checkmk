@@ -39,7 +39,7 @@ def parse_liebert_system_events(string_table: StringTable) -> Section:
     return {"events": parse_liebert_without_unit([string_table], str)}
 
 
-def discover_liebert_system_events(section: Section) -> DiscoveryResult:
+def discover_liebert_system_events(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

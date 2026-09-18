@@ -11,7 +11,6 @@ import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
@@ -23,8 +22,6 @@ import type { CombinedGraphContentPresentation } from '@/dashboard/components/Wi
 import ColorSelector from '../ColorSelector/ColorSelector.vue'
 
 const { _t } = usei18n()
-
-const fontSizeId = useId()
 
 interface GraphRenderOptions {
   colorOptions?: Suggestion[]
@@ -44,7 +41,6 @@ const presentation = defineModel<CombinedGraphContentPresentation>('presentation
   default: undefined
 })
 
-const fontSize = defineModel<number>('fontSize', { required: true })
 const color = defineModel<string>('color', { required: false, default: undefined })
 const timestamp = defineModel<boolean>('timestamp', { required: true })
 const roundMargin = defineModel<boolean>('roundMargin', { required: true })
@@ -126,13 +122,6 @@ const displayPresentation = computed(() => presentation.value !== undefined)
             />
           </CmkIndent>
         </div>
-        <div>
-          <CmkLabel :for="fontSizeId">{{ _t('Font size') }}</CmkLabel>
-          <CmkIndent>
-            <CmkInput :id="fontSizeId" v-model:model-value="fontSize as number" type="number" />
-          </CmkIndent>
-        </div>
-
         <div v-if="displayColorChooser">
           <CmkLabel>{{ _t('Color') }}</CmkLabel>
           <CmkIndent>

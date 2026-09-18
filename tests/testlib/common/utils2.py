@@ -11,6 +11,7 @@ handling file operations, and interacting with the system environment.
 
 import dataclasses
 import enum
+import errno
 import logging
 import os
 import re
@@ -192,7 +193,7 @@ def spawn_expect_process(
                     if counter >= dialog.count >= 1:
                         # max count reached
                         break
-            if p.isalive():
+            if p.isalive():  # noqa: SIM108
                 rc = p.expect(pexpect.EOF, timeout=timeout)
             else:
                 rc = p.status  # type: ignore[assignment]
@@ -396,9 +397,10 @@ def daemon(
                 _terminate_daemon(daemon_proc, termination_mode, sudo)
             stdout, _stderr = daemon_proc.communicate(timeout=5)
             logger.info("Output from %s daemon:\n%s", name_for_logging, stdout)
-            assert daemon_rc is None, (
-                f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
-            )
+            if daemon_rc is not None:
+                raise RuntimeError(
+                    f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
+                )
 
 
 def _terminate_daemon(
@@ -492,7 +494,14 @@ def read_file(
     sudo: bool = True,
     substitute_user: str | None = None,
 ) -> str | bytes:
-    """Read a file as root or another user."""
+    """Read a file as root or another user.
+
+    Raises:
+        FileNotFoundError: if the file could not be read. The file usually lives inside a
+            site and is read through "cat", so its exit code is all there is to go on: any
+            non-zero exit is reported as a missing file. The underlying error is kept as the
+            cause, so the exit code and stderr are not lost.
+    """
     try:
         return run(
             ["cat", Path(path).as_posix()],
@@ -502,8 +511,11 @@ def read_file(
             substitute_user=substitute_user,
         ).stdout
     except subprocess.CalledProcessError as excp:
-        excp.add_note(f"Failed to read file '{path}'!")
-        raise excp
+        raise FileNotFoundError(
+            errno.ENOENT,
+            f"Reading the file failed (exit code {excp.returncode})",
+            Path(path).as_posix(),
+        ) from excp
 
 
 def write_file(
@@ -550,9 +562,8 @@ def restart_httpd() -> None:
     """
 
     almalinux_prefix = "almalinux"
-    assert any(
-        distro for distro in get_supported_distros() if distro.startswith(almalinux_prefix)
-    ), "We dropped support for almalinux, please adapt the code below."
+    if not any(distro.startswith(almalinux_prefix) for distro in get_supported_distros()):
+        raise RuntimeError("We dropped support for almalinux, please adapt the code below.")
 
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO", "").startswith(almalinux_prefix):
@@ -637,9 +648,11 @@ def get_supported_distros() -> list[str]:
 def check_permissions(file_path: Path, expected_permissions: str) -> None:
     """Check if the file has the expected permissions."""
     actual_permissions = filemode(file_path.stat().st_mode)
-    assert actual_permissions == expected_permissions, (
-        f"Unexpected permissions for {file_path}: {actual_permissions}"
-    )
+    if actual_permissions != expected_permissions:
+        raise AssertionError(
+            f"Unexpected permissions for {file_path}: {actual_permissions}, "
+            f"expected {expected_permissions}"
+        )
 
 
 def is_cleanup_enabled() -> bool:

@@ -36,7 +36,7 @@ def check_alcatel_fans(item: str, section: StringTable) -> CheckResult:
     try:
         line = section[int(item) - 1]
         fan_state = int(line[0])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return
 
     yield Result(

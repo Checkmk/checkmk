@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -524,7 +526,7 @@ def test_get_aggregation_state_not_yet_compiled(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    counter_path = BIAggregationPacks._num_enabled_aggregations_path()
+    counter_path = BIAggregationPacks._num_enabled_aggregations_path()  # noqa: SLF001
     counter_path.parent.mkdir(parents=True, exist_ok=True)
     counter_path.write_text("1")
 
@@ -608,10 +610,9 @@ def test_get_aggregation_state_filter_names_no_match(
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
+@pytest.mark.usefixtures("mock_livestatus")
 def test_post_bi_pack_creating_contact_groups_regression(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-    wato_enabled: bool,
+    clients: ClientRegistry, wato_enabled: bool
 ) -> None:
     contact_group = "i_should_never_exists"
 
@@ -645,12 +646,12 @@ def test_get_aggregation_state_should_not_update_config_generation(
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
 
-    generation_before_calling_endpoint = activate_changes._get_current_config_generation()
+    generation_before_calling_endpoint = activate_changes._get_current_config_generation()  # noqa: SLF001
 
     with live(expect_status_query=False), set_config(wato_enabled=wato_enabled):
         clients.BiAggregation.get_aggregation_state_post(body={"filter_names": ["Host heute"]})
 
-    generation_after_calling_endpoint = activate_changes._get_current_config_generation()
+    generation_after_calling_endpoint = activate_changes._get_current_config_generation()  # noqa: SLF001
 
     assert generation_before_calling_endpoint == generation_after_calling_endpoint
 

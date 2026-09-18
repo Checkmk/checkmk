@@ -81,3 +81,53 @@ def test_secret_parser_resolve_reference(monkeypatch: pytest.MonkeyPatch) -> Non
     secret = resolve_secret_option(args, "secret")
     assert isinstance(secret, Secret)
     assert secret.reveal() == "mystoredsecret"
+
+
+@pytest.mark.parametrize("option_name", ["my-secret", "my_secret"])
+def test_secret_parser_resolve_explicit_hyphenated(option_name: str) -> None:
+    parser = argparse.ArgumentParser()
+    parser_add_secret_option(
+        parser,
+        long="--my-secret",
+        help="A secret",
+        required=True,
+    )
+    args = parser.parse_args(["--my-secret", "mysecret"])
+    secret = resolve_secret_option(args, option_name)
+    assert isinstance(secret, Secret)
+    assert secret.reveal() == "mysecret"
+
+
+@pytest.mark.parametrize("option_name", ["my-secret", "my_secret"])
+def test_secret_parser_resolve_reference_hyphenated(
+    option_name: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    option = "hurray:/path/to/secret"
+    monkeypatch.setattr(
+        mocktarget, "dereference_secret", {option: Secret("mystoredsecret")}.__getitem__
+    )
+
+    parser = argparse.ArgumentParser()
+    parser_add_secret_option(
+        parser,
+        long="--my-secret",
+        help="A secret",
+        required=True,
+    )
+    args = parser.parse_args(["--my-secret-id", "hurray:/path/to/secret"])
+    secret = resolve_secret_option(args, option_name)
+    assert isinstance(secret, Secret)
+    assert secret.reveal() == "mystoredsecret"
+
+
+def test_secret_parser_unset_error_keeps_option_name() -> None:
+    parser = argparse.ArgumentParser()
+    parser_add_secret_option(
+        parser,
+        long="--my-secret",
+        help="A secret",
+        required=False,
+    )
+    args = parser.parse_args([])
+    with pytest.raises(TypeError, match="my-secret"):
+        resolve_secret_option(args, "my-secret")

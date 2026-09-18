@@ -16,9 +16,10 @@ from cmk.gui import pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import DynamicIcon, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 from ._base import CustomizableSidebarSnapin, SidebarSnapin
 from ._permission_section import PERMISSION_SECTION_SIDEBAR_SNAPINS

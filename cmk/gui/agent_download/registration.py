@@ -11,7 +11,7 @@ from cmk.gui.watolib.mode import ModeRegistry
 
 from ._endpoints import download_agent, ENDPOINT_DOWNLOAD_BY_TOKEN
 from ._pages import (
-    _plugin_family_agent_dirs,
+    _plugin_family_agents,
     DOWNLOAD_AGENT_PLUGIN_PAGE,
     DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE,
     ModeDownloadAgentsLinux,
@@ -40,8 +40,8 @@ def register(
     mode_registry.register(ModeDownloadAgentsLinux)
 
     # The endpoints handing out the files need to filter for allowed ones themselves!
-    # Bonus: fills the cache of _plugin_family_agent_dirs at apache load.
-    available_dirs = [d.path for d in _plugin_family_agent_dirs()]
+    # Bonus: fills the cache of _plugin_family_agents at apache load.
+    available_dirs = [d.path for family in _plugin_family_agents() for d in family.dirs]
     page_registry.register(
         PageEndpoint(
             f"noauth:{DOWNLOAD_AGENT_PLUGIN_PAGE}",

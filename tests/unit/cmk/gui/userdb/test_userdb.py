@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from datetime import datetime
@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import cmk.ccc.version
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing
@@ -359,7 +358,8 @@ def test_update_unknown_session(single_auth_request: SingleRequest) -> None:
     assert not is_valid_user_session(user_id, load_session_infos(user_id), "xyz")
 
 
-def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: SetConfig) -> None:
+@pytest.mark.usefixtures("set_config")
+def test_logout_on_idle_timeout(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session.initialize(
         user_id,
@@ -740,6 +740,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
         now=now,
         pprint_value=True,
         call_users_saved_hook=False,
+        changed_users=[user_id],
     )
 
     with pytest.raises(MKUserError, match="User is locked"):
@@ -858,7 +859,8 @@ def test_disable_web_authentication(user_id: UserId) -> None:
     assert not userdb.is_two_factor_login_enabled(user_id)
 
 
-def test_make_two_factor_backup_codes(user_id: UserId) -> None:
+@pytest.mark.usefixtures("user_id")
+def test_make_two_factor_backup_codes() -> None:
     codes = userdb.make_two_factor_backup_codes()
     assert len(codes) == 10
     for password, pwhashed in codes:

@@ -1,4 +1,0 @@
-exports_files([
-    "extensions.bzl",
-    "BUILD.libxml2.bazel",
-])

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 from typing import Any, override
 
@@ -511,8 +510,8 @@ class LDAPGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):
-        attribute_to_set = obj.get("attribute_to_set")
+    def get_obj_type(self, obj: Any) -> str:
+        attribute_to_set: str = obj.get("attribute_to_set")
         if attribute_to_set not in self.type_schemas:
             self.type_schemas[attribute_to_set] = LDAPGroupsToSyncAllOthers
         return attribute_to_set
@@ -577,7 +576,7 @@ class LDAPGroupsToRoles(LDAPCheckbox):
         result_data: dict[str, Any],
         original_data: dict[str, Any],
         *,
-        many: bool = False,
+        many: bool = False,  # noqa: ARG002
     ) -> dict[str, Any]:
         for field in self.fields:
             original_data.pop(field, None)
@@ -596,7 +595,7 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 class LDAPSyncPlugins(BaseSchema):
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     @pre_dump
-    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         data["mega_menu_icons"] = data.get("main_menu_icons")
         return data
 
@@ -698,7 +697,7 @@ class LDAPSyncPlugins(BaseSchema):
         result_data: dict[str, Any],
         original_data: dict[str, Any],
         *,
-        many: bool = False,
+        many: bool = False,  # noqa: ARG002
     ) -> dict[str, Any]:
         for field in self.fields:
             original_data.pop(field, None)

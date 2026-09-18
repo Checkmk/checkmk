@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 import threading
@@ -33,7 +32,7 @@ def reset_hooks() -> Generator[None]:
 @pytest.mark.usefixtures("patch_theme", "reset_hooks")
 def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
     @hooks.request_memoize()
-    def cached_function():  # type: ignore[misc]
+    def cached_function() -> datetime.datetime:
         return datetime.datetime.now()
 
     assert len(hooks.hooks) > 0
@@ -74,7 +73,7 @@ def test_request_memoize_request_integration(
     mock = mocker.MagicMock()
 
     @hooks.request_memoize()
-    def memoized():  # type: ignore[misc]
+    def memoized() -> object:
         return mock()
 
     class PageClass(Page):
@@ -221,7 +220,7 @@ def test_cache_clear_all() -> None:
     cached_function(42)
     other_cached_function(42)
 
-    hooks._thread_cache.cache_clear_all()
+    hooks._thread_cache.cache_clear_all()  # noqa: SLF001
     assert cached_function.cache_info() is None  # type: ignore[attr-defined]
     assert other_cached_function.cache_info() is None  # type: ignore[attr-defined]
 

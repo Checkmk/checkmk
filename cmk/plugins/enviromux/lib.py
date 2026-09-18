@@ -184,7 +184,7 @@ def parse_enviromux_micro(
                     value=float(line[3]) / 10.0,
                 ),
             )
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             continue
 
     return enviromux_micro_sensors

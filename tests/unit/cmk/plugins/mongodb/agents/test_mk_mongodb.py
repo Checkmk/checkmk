@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP006  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+# ruff: noqa: UP007  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+# ruff: noqa: UP035  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -461,7 +466,7 @@ def test_sections_replica_arbiters(capsys):
 
 
 def test__write_section_replica_none_primary(capsys):
-    mk_mongodb._write_section_replica(None)
+    mk_mongodb._write_section_replica(None)  # noqa: SLF001
     captured_output_and_error = capsys.readouterr()
     stdout, stderr = _stdout_stderr(captured_output_and_error)
 

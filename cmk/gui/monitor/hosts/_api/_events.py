@@ -36,7 +36,7 @@ from ._urls import host_view_link_by_id, service_view_link_by_id
 _DEFAULT_TIME_WINDOW_DAYS = 8
 _MAX_TIME_WINDOW_DAYS = 365
 
-_DEFAULT_LIMIT = 500
+_DEFAULT_LIMIT = 100
 _MAX_LIMIT = 5_000
 
 _SECONDS_PER_DAY = 86400
@@ -72,9 +72,18 @@ class EventEntry:
         ),
         example=None,
     )
+    service_link: str | None = api_field(
+        description=(
+            "URL to the legacy view holding the event history of the service this event "
+            "belongs to. Null for an event of the host itself."
+        ),
+        example=(
+            "view.py?view_name=svcevents&site=local&host=web-server-01&service=CPU+utilization"
+        ),
+    )
 
     @classmethod
-    def from_domain(cls, event: Event) -> Self:
+    def from_domain(cls, event: Event, *, site_id: str, hostname: str) -> Self:
         return cls(
             time=event.time,
             event=event.type,
@@ -82,6 +91,16 @@ class EventEntry:
             state_info=event.state_information,
             plugin_output=event.plugin_output,
             icon=EventIcon.from_event(event),
+            service_link=(
+                service_view_link_by_id(
+                    "svcevents",
+                    site_id=site_id,
+                    hostname=hostname,
+                    service_name=event.service_name,
+                )
+                if event.service_name is not None
+                else None
+            ),
         )
 
 
@@ -93,6 +112,14 @@ class EventsMeta:
     )
     since: UnixTimestamp = api_field(
         description="Unix timestamp the queried time window starts at", example=1751714310
+    )
+    time_window_days: int = api_field(
+        description=(
+            "Number of days the returned events actually cover. Equal to the requested time "
+            "window, unless the response was truncated - then it is the window ending at the "
+            "oldest event still shown, rounded up to a whole day."
+        ),
+        example=_DEFAULT_TIME_WINDOW_DAYS,
     )
     legacy_events_link: str = api_field(
         description="URL to the legacy view holding the full event history of the same subject",
@@ -140,6 +167,7 @@ def get_host_events(
     ] = _DEFAULT_LIMIT,
 ) -> EventsResponse:
     """Show the recent events of a host, or of one of its services."""
+    now = int(time.time())
     with sites.only_sites(site_id):
         connection = sites.live()
 
@@ -149,8 +177,10 @@ def get_host_events(
             hostname=hostname,
             site_id=site_id,
             service_name=service_name,
-            since=int(time.time()) - time_window_days * _SECONDS_PER_DAY,
+            since=now - time_window_days * _SECONDS_PER_DAY,
+            time_window_days=time_window_days,
             limit=limit,
+            now=now,
         )
 
 
@@ -162,7 +192,9 @@ def _handle_get_host_events(
     site_id: str,
     service_name: str | None = None,
     since: UnixTimestamp,
+    time_window_days: int = _DEFAULT_TIME_WINDOW_DAYS,
     limit: int = _DEFAULT_LIMIT,
+    now: UnixTimestamp | None = None,
 ) -> EventsResponse:
     if not host_repo.host_exists(hostname):
         raise ProblemException(
@@ -177,13 +209,25 @@ def _handle_get_host_events(
         since=since,
         limit=limit + 1,
     )
+    shown_events = events[:limit]
+    truncated = len(events) > limit
 
     return EventsResponse(
-        events=[EventEntry.from_domain(event) for event in events[:limit]],
+        events=[
+            EventEntry.from_domain(event, site_id=site_id, hostname=hostname)
+            for event in shown_events
+        ],
         meta=EventsMeta(
             limit=limit,
-            truncated=len(events) > limit,
+            truncated=truncated,
             since=since,
+            time_window_days=(
+                _covered_window_days(
+                    shown_events[-1].time, now=now if now is not None else int(time.time())
+                )
+                if truncated and shown_events
+                else time_window_days
+            ),
             legacy_events_link=(
                 host_view_link_by_id("hostsvcevents", site_id=site_id, hostname=hostname)
                 if service_name is None
@@ -193,6 +237,18 @@ def _handle_get_host_events(
             ),
         ),
     )
+
+
+def _covered_window_days(oldest_shown: UnixTimestamp, *, now: UnixTimestamp) -> int:
+    """Days between `oldest_shown` and `now`, rounded up and floored at one.
+
+    Used only for a truncated response, which covers less than the requested window - down to
+    whichever event was the oldest that still fit under the row limit. Rounded up because a
+    window reaching into part of an extra day still reaches back into that day, and floored at
+    one because that remainder can be under a day and "the last 0 days" reads as broken rather
+    than as today.
+    """
+    return max(1, -(-(now - oldest_shown) // _SECONDS_PER_DAY))
 
 
 ENDPOINT_GET_HOST_EVENTS = VersionedEndpoint(

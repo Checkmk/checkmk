@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for services and discovery"""
 
@@ -59,10 +57,8 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -134,9 +130,12 @@ from cmk.utils.html import get_html_state_marker
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import Item
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 from ._status_links import make_host_status_link
 
@@ -647,7 +646,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pending_changes=pending_changes,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
-                discovery_result = perform_service_discovery(
+                discovery_result = perform_service_discovery(  # type: ignore[unreachable]
                     action=action,
                     discovery_result=discovery_result,
                     update_source=None,
@@ -904,7 +903,7 @@ class DiscoveryPageRenderer:
             # Colored overall state field
             html.open_div(class_="state_bar state%s" % overall_state)
             html.open_span()
-            match overall_state:
+            match overall_state:  # type: ignore[exhaustive-match]
                 case 0:
                     html.static_icon(StaticIcon(IconNames.check))
                 case 1:
@@ -1086,7 +1085,7 @@ class DiscoveryPageRenderer:
         messages = []
         for current_table, num in changed_entry.current_tables_with_count.items():
             use_plural = num > 1 or len(changed_entry.current_tables_with_count) > 1
-            match current_table:
+            match current_table:  # type: ignore[exhaustive-match]
                 case DiscoveryState.UNDECIDED:
                     messages.append(
                         _(
@@ -1236,7 +1235,7 @@ class DiscoveryPageRenderer:
 
     def _show_fix_all(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result:
-            return
+            return  # type: ignore[unreachable]
 
         if not user.may("wato.services"):
             return
@@ -1375,7 +1374,7 @@ class DiscoveryPageRenderer:
         if not user.may("wato.services"):
             return
 
-        match table_source:
+        match table_source:  # type: ignore[exhaustive-match]
             case DiscoveryState.MONITORED | DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.UNDECIDED):
                     self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
@@ -1735,7 +1734,7 @@ class DiscoveryPageRenderer:
         checkbox_name = checkbox_id(entry.check_plugin_name, entry.item)
 
         num_buttons = 0
-        match entry.check_source:
+        match entry.check_source:  # type: ignore[exhaustive-match]
             case DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.MONITORED):
                     html.icon_button(
@@ -1874,7 +1873,9 @@ class DiscoveryPageRenderer:
             html.empty_icon()
             num_buttons += 1
 
-    def _action_menu_url_vars(self, checkbox_name: str, entry: CheckPreviewEntry) -> HTTPVariables:
+    def _action_menu_url_vars(
+        self, checkbox_name: str, entry: CheckPreviewEntry
+    ) -> list[HTTPVariable]:
         return [
             ("checkboxname", checkbox_name),
             ("hostname", self._host.name()),
@@ -2731,12 +2732,12 @@ def _start_js_call(
     return f"cmk.service_discovery.start({params})"
 
 
-def ajax_popup_service_action_menu(ctx: PageContext) -> None:
+def ajax_popup_service_action_menu(ctx: PageContext) -> None:  # noqa: ARG001
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
     if checkbox_name is None or hostname is None:  # type: ignore[redundant-expr]
-        html.show_error(_("Cannot render drop-down: Missing required information"))
+        html.show_error(_("Cannot render drop-down: Missing required information"))  # type: ignore[unreachable]
         return
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))

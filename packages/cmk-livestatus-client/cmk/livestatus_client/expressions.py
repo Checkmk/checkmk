@@ -14,8 +14,6 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 
 """
 
-from __future__ import annotations
-
 import abc
 from dataclasses import dataclass
 from typing import override, Self

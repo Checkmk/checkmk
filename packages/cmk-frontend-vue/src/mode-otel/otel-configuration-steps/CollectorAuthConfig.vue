@@ -147,6 +147,17 @@ const passwordErrors = computed<string[]>(() => {
             )
           "
         />
+        <CmkHelpText
+          v-else
+          :aria-label="_t('How are passwords created by the quick setup?')"
+          :help="
+            _t(
+              'When configured as part of a quick setup, only the selected password ' +
+                'will be created upon saving. Any other passwords defined as part of ' +
+                'the quick setup will not be created.'
+            )
+          "
+        />
       </div>
       <CmkInlineValidation v-if="passwordErrors.length" :validation="passwordErrors" />
     </div>

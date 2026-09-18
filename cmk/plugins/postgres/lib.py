@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping, Sequence
 
@@ -36,6 +35,6 @@ def parse_dbs(string_table: StringTable) -> Section:
 
         item = f"{inst_name}{name}"
         if item in dbs:  # Templates are ignored
-            dbs[item].append(dict(zip(headers, content)))
+            dbs[item].append(dict(zip(headers, content)))  # type: ignore[possibly-undefined]
 
     return dbs

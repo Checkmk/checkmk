@@ -57,7 +57,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
                     )
                 try:
                     password_type, (password_id, password) = raw_value.value[1:]
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return InvalidValue(
                         reason=_("No password provided"), fallback_value=fallback_value
                     )
@@ -65,7 +65,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
             case RawFrontendData():
                 try:
                     password_type, password_id, password, encrypted = raw_value.value
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return InvalidValue(
                         reason=_("No password provided"), fallback_value=fallback_value
                     )

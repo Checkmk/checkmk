@@ -8,7 +8,7 @@ from cmk.plugins.lib.cpu import Section
 from cmk.plugins.lib.cpu_load import check_cpu_load
 
 
-def discover_cpu_load(section: Section) -> DiscoveryResult:
+def discover_cpu_load(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

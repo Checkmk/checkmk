@@ -48,7 +48,7 @@ def cluster_check_ps(
     section_mem: Mapping[str, memory.SectionMem | None],
     section_mem_used: Mapping[str, memory.SectionMemUsed | None],
     section_mem_total: Mapping[str, memory.SectionMemTotal | None],
-    section_cpu: Mapping[str, cpu.Section | None],  # unused
+    section_cpu: Mapping[str, cpu.Section | None],  # unused  # noqa: ARG001
 ) -> CheckResult:
     iter_non_trivial_sections = (
         (node_name, node_section)

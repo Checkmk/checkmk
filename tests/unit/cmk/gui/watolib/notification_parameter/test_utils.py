@@ -2,11 +2,11 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Generator
 
 import pytest
 
-from cmk.ccc.user import UserId
 from cmk.events.notify_types import (
     NotificationParameterGeneralInfos,
     NotificationParameterID,
@@ -161,8 +161,8 @@ def test_validation_on_saving_notification_params(
         )
 
 
-@pytest.mark.usefixtures("with_admin_login")
-def test_get_list_of_notification_parameter(registry: NotificationParameterRegistry) -> None:
+@pytest.mark.usefixtures("with_admin_login", "registry")
+def test_get_list_of_notification_parameter() -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
         {
@@ -187,10 +187,8 @@ def test_get_list_of_notification_parameter(registry: NotificationParameterRegis
     assert params[0].description == "foo"
 
 
-@pytest.mark.usefixtures("request_context")
-def test_get_notification_parameter(
-    registry: NotificationParameterRegistry, with_admin_login: UserId
-) -> None:
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_get_notification_parameter(registry: NotificationParameterRegistry) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
         {
@@ -216,18 +214,17 @@ def test_get_notification_parameter(
     assert param.data["parameter_properties"]["method_parameters"]["test_param"] == "bar"
 
 
+@pytest.mark.usefixtures("with_admin_login")
 def test_get_notification_parameter_throws_keyerror(
     registry: NotificationParameterRegistry,
-    with_admin_login: UserId,
 ) -> None:
     with pytest.raises(KeyError):
         get_notification_parameter(registry, NotificationParameterID("some-id"), user)
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_get_notification_parameter_doesnt_just_return_from_disk(
     registry: NotificationParameterRegistry,
-    with_admin_login: UserId,
 ) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(

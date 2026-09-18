@@ -16,7 +16,15 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.command import (
+    acknowledge_defaults,
+    acknowledge_presets_url,
+    downtime_presets,
+    downtime_presets_url,
+    DowntimeRecurrences,
+    MonitorCommands,
+    notification_rules_url,
+)
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
@@ -25,7 +33,10 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
+    AcknowledgeDefaults,
+    DowntimePreset,
     DowntimeRecurrence,
+    DowntimeUntilKeyword,
     Edition,
     MonitoringAction,
     MonitoringHostServicesApp,
@@ -95,7 +106,8 @@ class MonitorHostServicesPage(Page):
         title = _("Services of host %(host)s") % {"host": hostname}
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
-        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, user_permissions)
+        host_url = _host_url(ctx, hostname, site_id)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, user_permissions)
 
         make_header(
             html,
@@ -119,6 +131,10 @@ class MonitorHostServicesPage(Page):
             user_role_ids=user.role_ids,
         )
 
+        # The option states and durations the dialogs start from, as the settings the panes
+        # link to have them.
+        ack = acknowledge_defaults(ctx.config)
+
         html.vue_component(
             "cmk-monitoring-host-services",
             data=asdict(
@@ -127,6 +143,7 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     host=hostname,
                     site=site_id,
+                    host_url=host_url,
                     user_id=str(user.id),
                     edition=Edition(edition(paths.omd_root).short),
                     ai_explain=ai_explain.is_enabled(),
@@ -136,6 +153,27 @@ class MonitorHostServicesPage(Page):
                         for recurrence in self._recurrences.offered()
                     ],
                     row_actions=_row_actions(ctx.config, hostname),
+                    acknowledge_presets_url=acknowledge_presets_url(ctx.config),
+                    acknowledge_defaults=AcknowledgeDefaults(
+                        sticky=ack.sticky,
+                        persistent=ack.persistent,
+                        notify=ack.notify,
+                        expire_seconds=ack.expire_seconds,
+                    ),
+                    downtime_presets=[
+                        DowntimePreset(
+                            title=preset.title,
+                            # A span stays a number; a keyword becomes the generated enum.
+                            end=(
+                                preset.end
+                                if isinstance(preset.end, int)
+                                else DowntimeUntilKeyword(preset.end)
+                            ),
+                        )
+                        for preset in downtime_presets(ctx.config)
+                    ],
+                    notification_rules_url=notification_rules_url(ctx.config),
+                    downtime_presets_url=downtime_presets_url(ctx.config),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,
@@ -179,6 +217,7 @@ def _make_breadcrumb(
     ctx: PageContext,
     hostname: HostName,
     site_id: SiteId,
+    host_url: str,
     user_permissions: UserPermissions,
 ) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
@@ -196,7 +235,7 @@ def _make_breadcrumb(
     breadcrumb.append(
         BreadcrumbItem(
             title=hostname,
-            url=_host_url(ctx, hostname, site_id),
+            url=host_url,
             id=None,
         )
     )

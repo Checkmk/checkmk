@@ -31,9 +31,11 @@ defineProps<{ align?: 'start' }>()
 
 .monitoring-overview-detail-list :slotted(dt) {
   color: var(--font-color);
+  font-weight: var(--font-weight-bold);
 }
 
 .monitoring-overview-detail-list :slotted(dd) {
   margin: 0;
+  font-weight: var(--font-weight-default);
 }
 </style>

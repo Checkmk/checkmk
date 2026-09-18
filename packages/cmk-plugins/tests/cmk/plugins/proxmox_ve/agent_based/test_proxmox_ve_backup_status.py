@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 from collections.abc import Mapping
@@ -93,7 +91,7 @@ BACKUP_DATA4 = [
 ]
 
 
-def set_null_values(backup_data):
+def set_null_values(backup_data: pvbs.Section) -> pvbs.Section:
     backup_data["last_backup"].update(
         {
             "transfer_time": 0,

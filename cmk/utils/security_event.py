@@ -96,7 +96,10 @@ def _get_logger() -> logging.Logger:
     logger = logging.getLogger("cmk_security")
     if not logger.handlers:  # delayed logger initialization
         handler = logging.FileHandler(log_dir / "security.log", encoding="utf-8")
-        handler.setFormatter(logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"))
+        handler.setFormatter(
+            # astrein: disable=logging-formatter
+            logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s")
+        )
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)
         logger.propagate = False

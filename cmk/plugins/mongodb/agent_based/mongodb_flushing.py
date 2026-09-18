@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 # <<<mongodb_flushing>>>
 # average_ms 1.28893335892
@@ -32,7 +31,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_mongodb_flushing(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_flushing(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup
     yield Service()
@@ -53,7 +52,7 @@ def check_mongodb_flushing(params: Mapping[str, Any], section: StringTable) -> C
         last_ms = float(info_dict["last_ms"])
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         yield Result(
             state=State.UNKNOWN,
             summary="Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(

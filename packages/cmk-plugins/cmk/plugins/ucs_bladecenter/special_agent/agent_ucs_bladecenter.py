@@ -611,6 +611,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 def setup_logging(verbose: bool) -> None:
     fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
+    # astrein: disable=logging-formatter
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO, format=fmt)
 
 

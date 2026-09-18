@@ -11,13 +11,12 @@ import { cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Ref, onMounted, ref } from 'vue'
 
+import { getCsrfToken } from '@/lib/csrf'
+
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
 
 const { _t } = usei18n()
 
@@ -54,7 +53,7 @@ const acknowledgedMsgIds: Ref<string[]> = ref([])
 const deletedMsgIds: Ref<string[]> = ref([])
 
 async function postUserMessageAction(actionType: string, msg: UserMessage): Promise<void> {
-  const csrfToken = global_csrf_token
+  const csrfToken = getCsrfToken()
   await cmkAjax(`ajax_user_message_action.py`, {
     action_type: actionType,
     msg_id: msg.id,

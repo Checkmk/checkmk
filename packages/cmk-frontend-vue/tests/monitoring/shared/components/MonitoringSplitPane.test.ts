@@ -102,7 +102,9 @@ async function mountPaneWithLoadedRows(perform: MonitoringAction['perform']) {
               getActionTarget: (row: Row) => ({ site_id: row.site_id, name: row.name }),
               selectionLabel: (count: number) =>
                 `${count} hosts selected` as unknown as TranslatedString,
-              actionsLabel: untranslated('Actions for selected hosts')
+              actionsLabel: untranslated('Actions for selected hosts'),
+              countsLabel: (selected: number, total: number) =>
+                `Selected hosts: ${selected} | Total hosts: ${total}` as unknown as TranslatedString
             },
             {
               row: ({ tableRow }: { tableRow: TableRow<Row> }) => [

@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 from typing import Any
@@ -47,7 +45,7 @@ def check_apc_inputs(item: str, params: Mapping[str, Any], section: StringTable)
     }
     for name, _location, state, alarm_status in section:
         if name == item:
-            match alarm_status:
+            match alarm_status:  # type: ignore[exhaustive-match]
                 case "2" | "4":
                     check_state = State.WARN
                 case "3":
@@ -55,7 +53,7 @@ def check_apc_inputs(item: str, params: Mapping[str, Any], section: StringTable)
                 case "1":
                     check_state = State.OK
 
-            yield Result(state=check_state, summary="State is %s" % alarm_states[alarm_status])
+            yield Result(state=check_state, summary="State is %s" % alarm_states[alarm_status])  # type: ignore[possibly-undefined]
 
             if params["state"] != state:
                 yield Result(

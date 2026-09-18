@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # Please have a look at doc/Notifications.png:
 #
@@ -58,7 +56,6 @@ from cmk.base import config, events
 from cmk.base.automations.automations import Automation, load_config, load_plugins
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, raise_mkterminate_on_sigint
 from cmk.ccc.hostaddress import HostName
@@ -66,6 +63,7 @@ from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -341,7 +339,7 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
     Otherwise, return a function that raises a RuntimeError with the given message.
     """
     if monitoring_core == "nagios":
-        return lambda msg: None
+        return lambda msg: None  # noqa: ARG005
 
     def ensure_nagios(msg: str) -> None:
         raise RuntimeError(msg)
@@ -362,12 +360,22 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   '----------------------------------------------------------------------'
 
 
-def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
+def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
+    return dict.fromkeys(parsed, True)
+
+
+def _mode_notify(
+    app: CheckmkBaseApp, _global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    options = _notify_flags(parsed)
     community_edition = app.edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
-        return _do_notify_via_automation(
-            options=options,
-            args=args,
+        return (
+            _do_notify_via_automation(
+                options=options,
+                args=list(args),
+            )
+            or 0
         )
 
     if keepalive := not community_edition and "keepalive" in options:
@@ -375,14 +383,13 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(
-            edition=app.edition,
             with_conf_d=True,
             validate_hosts=False,
         )
 
-    return do_notify(
+    exit_status = do_notify(
         options,
-        args,
+        list(args),
         notification_config=make_notification_config(
             app.edition,
             loading_result.loaded_config,
@@ -399,6 +406,7 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
             livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
     )
+    return exit_status or 0
 
 
 def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
@@ -426,7 +434,7 @@ def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
 
     try:
         data = ast.literal_eval(result.output)
-    except (SyntaxError, ValueError, TypeError):
+    except SyntaxError, ValueError, TypeError:
         logger.exception("Could not parse automation result %(output)r", {"output": result.output})
         return 2
 
@@ -526,7 +534,7 @@ def do_notify(
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 replay_nr = 0
             _notify_notify(
                 raw_context_from_backlog(replay_nr),
@@ -539,8 +547,8 @@ def do_notify(
                 all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "test":
-            assert isinstance(args[0], dict)
-            _notify_notify(
+            assert isinstance(args[0], dict)  # type: ignore[unreachable]
+            _notify_notify(  # type: ignore[unreachable]
                 EventContext(args[0]),
                 timeperiods_active,
                 get_http_proxy,
@@ -849,9 +857,7 @@ def _automation_notification_replay(
     loading_result: config.LoadingResult | None,
 ) -> NotificationReplayResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -882,9 +888,7 @@ def _automation_notification_analyse(
     loading_result: config.LoadingResult | None,
 ) -> NotificationAnalyseResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -919,9 +923,7 @@ def _automation_notification_test(
     dispatch = args[1]
 
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -948,17 +950,15 @@ def _automation_notification_test(
 
 
 def _automation_get_bulks(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: AgentBasedPlugins | None,  # noqa: ARG001
     loading_result: config.LoadingResult | None,
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     return NotificationGetBulksResult(
         _find_bulks(
             only_ripe,
@@ -970,24 +970,23 @@ def _automation_get_bulks(
     )
 
 
-mode_notify = Mode(
+cli_command_notify = CLICommand(
     long_option="notify",
     handler_function=_mode_notify,
     argument=True,
     argument_descr="MODE",
     argument_optional=True,
-    short_help="Used to send notifications from core",
-    # TODO: Write long help
     sub_options=[
-        Option(
+        CLIOption(
             long_option="log-to-stdout",
             short_help="Also write log messages to console",
         ),
-        Option(
+        CLIOption(
             long_option="keepalive",
             short_help="Execute in keepalive mode (Commercial editions only)",
         ),
     ],
+    short_help="Used to send notifications from core",
 )
 
 automation_notification_replay = Automation(
@@ -1255,7 +1254,7 @@ def _create_notifications(
 def _process_notifications(
     enriched_context: EnrichedEventContext,
     notifications: Notifications,
-    parameters: NotificationParameterSpecs,
+    parameters: NotificationParameterSpecs,  # noqa: ARG001
     num_rule_matches: int,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -1382,7 +1381,7 @@ def _process_notifications(
                 log_to_history(
                     notification_result_message(
                         plugin=NotificationPluginName(entry.plugin_name),
-                        context=plugin_context,
+                        context=plugin_context,  # type: ignore[possibly-undefined]
                         exit_code=NotificationResultCode(2),
                         output=[str(e)],
                     )
@@ -1535,7 +1534,7 @@ def _rbn_get_bulk_params(
     if isinstance(bulk, tuple):
         method, params = bulk
     else:
-        method, params = (
+        method, params = (  # type: ignore[unreachable]
             "always",
             bulk,
         )  # old format: treat as "Always Bulk" - typing says this can't ever be the case. Can it be removed?
@@ -1543,27 +1542,23 @@ def _rbn_get_bulk_params(
     if is_always_bulk(params) or method == "always":
         return params
 
-    if is_timeperiod_bulk(params):
-        try:
-            active = timeperiods_active.get(params["timeperiod"], False)
-        except MKLivestatusException:
-            if cmk.ccc.debug.enabled():
-                raise
-            # If a livestatus connection error appears we will bulk the
-            # notification in the first place. When the connection is available
-            # again and the period is not active the notifications will be sent.
-            logger.info(
-                "   - Error checking activity of time period %(timeperiod)s: assuming active",
-                {"timeperiod": params["timeperiod"]},
-            )
-            active = True
+    try:
+        active = timeperiods_active.get(params["timeperiod"], False)
+    except MKLivestatusException:
+        if cmk.ccc.debug.enabled():
+            raise
+        # If a livestatus connection error appears we will bulk the
+        # notification in the first place. When the connection is available
+        # again and the period is not active the notifications will be sent.
+        logger.info(
+            "   - Error checking activity of time period %(timeperiod)s: assuming active",
+            {"timeperiod": params["timeperiod"]},
+        )
+        active = True
 
-        if active:
-            return params
-        return params.get("bulk_outside")
-
-    logger.info("   - Unknown bulking method: assuming bulking is disabled")
-    return None
+    if active:
+        return params
+    return params.get("bulk_outside")
 
 
 def _rbn_event_match_rule(
@@ -1861,7 +1856,9 @@ def rbn_rule_contacts(
 
 
 def _rbn_match_contact_macros(
-    rule: EventRule, contactname: ContactName, contact: Contact
+    rule: EventRule,
+    contactname: ContactName,  # noqa: ARG001
+    contact: Contact,
 ) -> str | None:
     if "contact_match_macros" in rule:
         for macro_name, regexp in rule["contact_match_macros"]:

@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.type_defs import HTTPVariables
+from cmk.web.utils.urls import HTTPVariable
 
 
 @dataclass
 class WelcomeCardUrl:
     id: str
-    vars: HTTPVariables
+    vars: list[HTTPVariable]
     filename: str
 
 

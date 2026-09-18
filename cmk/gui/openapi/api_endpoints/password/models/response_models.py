@@ -45,7 +45,7 @@ class PasswordExtension:
 
 @api_model
 class PasswordObject(DomainObjectModel):
-    domainType: Literal["password"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["password"] = api_field(
         description="The type of the domain-object.",
     )
     extensions: PasswordExtension = api_field(
@@ -55,7 +55,7 @@ class PasswordObject(DomainObjectModel):
 
 @api_model
 class PasswordCollection(DomainObjectCollectionModel):
-    domainType: Literal["password"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["password"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[PasswordObject] = api_field(

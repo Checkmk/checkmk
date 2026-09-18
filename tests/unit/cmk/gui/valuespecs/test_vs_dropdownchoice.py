@@ -10,7 +10,12 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 def get_dropdown_choice(
@@ -55,7 +60,7 @@ class TestValueSpecDropdownChoice:
             get_dropdown_choice(invalid_choice="replace"),
             "asd",
         )
-        expect_validate_failure(  # type: ignore[misc]
+        expect_validate_failure_untypeable(
             get_dropdown_choice(),
             1,
             match="The value 1 has type int, but does not match any of the available choice types.",
@@ -77,7 +82,8 @@ class TestValueSpecDropdownChoice:
     def test_mask(self) -> None:
         assert get_dropdown_choice().mask("hunter2") == "hunter2"
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(value="a"):
             assert get_dropdown_choice(encode_value=False).from_html_vars("value") == "a"
 

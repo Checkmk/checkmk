@@ -17,17 +17,24 @@ import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
 
-import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
-import { useBrushCoordination } from '../composables/useBrushCoordination'
+import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
+import { useBrushSnapshot } from '../composables/useBrushSnapshot'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
 import { useGraphNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import type {
+  BrushOverview,
+  GraphDisplayOptions,
+  PanelKey,
+  RequestedTimeRange,
+  TimeRangeCommitKind
+} from '../types'
 import { drawnTimeRange } from '../utils/timeRange'
 import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
+import { clippedToNavigableTime, navigableBounds } from './TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from './constants'
 
@@ -46,8 +53,8 @@ const props = withDefaults(
     // - see effectiveWidth below.
     figure_width?: number
     figure_height?: number
-    show_consolidation?: boolean
-    show_legend?: boolean
+    // Omit for the defaults below, or send the whole object.
+    display?: GraphDisplayOptions
     // 'column' stacks the panels vertically (the default)
     // 'wrap' flows the fixed-width panels into as many columns as the container allows
     layout?: 'column' | 'wrap'
@@ -60,8 +67,13 @@ const props = withDefaults(
   {
     combination_mode: null,
     figure_height: 300,
-    show_consolidation: true,
-    show_legend: true,
+    display: () => ({
+      show_consolidation: true,
+      show_legend: true,
+      show_title: true,
+      show_vertical_axis: true,
+      show_time_axis: true
+    }),
     layout: 'column',
     time_range_scope: 'global'
   }
@@ -105,7 +117,7 @@ const initialTimeRange = {
   start: props.initial_time_range_start,
   end: props.initial_time_range_end
 }
-const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } =
+const { requestedTimeRange, setRequestedTimeRange, rangeChange } =
   props.time_range_scope === 'global'
     ? useRequestedTimeRange(initialTimeRange)
     : useLocalTimeRange(initialTimeRange)
@@ -113,16 +125,22 @@ const consolidationFnPerPanel = ref<ConsolidationFn[]>([])
 const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
   consolidationFnPerPanel.value[panelIndex] ?? DEFAULT_CONSOLIDATION_FN
 
-const { setRefreshPaused } = useGlobalRefresh()
+const { pauseRefresh } = useGlobalRefresh()
 
-const brushCoordination = useBrushCoordination(
-  () => Math.floor(Date.now() / 1000),
-  () => requestedTimeRange.value
-)
+// One strip for the whole group — every panel shows the same range; only the series differ.
+const brush = useBrushSnapshot<BrushOverview[]>({
+  getNow: () => Math.floor(Date.now() / 1000),
+  getRequestedTimeRange: () => requestedTimeRange.value
+})
 
-function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
-  brushCoordination.onBrushChange(range, kind)
-  setRequestedTimeRange(range)
+function onPanelTimeRange(
+  requested: RequestedTimeRange,
+  kind: TimeRangeCommitKind,
+  panelKey: PanelKey
+): void {
+  const range = clippedToNavigableTime(requested, navigableBounds())
+  brush.onRangeCommitted(range, kind)
+  setRequestedTimeRange(range, panelKey)
 }
 
 const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload } = useGraphData(
@@ -135,18 +153,36 @@ const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload 
 
 const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => props.graphs,
-  () => brushCoordination.brushDomain.value,
+  () => brush.requestedDomain.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFnPerPanel.value,
-  () => props.combination_mode
+  () => props.combination_mode,
+  { getFetchBounds: navigableBounds }
 )
-const overviews = computed(() =>
-  overviewGraphs.value.map((graph) => ({
-    metrics: graph.metrics,
-    dataTimeRange: graph.timeRange,
-    viewTimeRange: drawnTimeRange(brushCoordination.brushDomain.value, graph.timeRange)
-  }))
-)
+
+// Derived from the response that fills it, never from `brush.requestedDomain`, which by now may
+// have moved on: a strip snapped to one fetch's grid and drawn over another's series is what put
+// the selection bar in the wrong place.
+watch(overviewGraphs, (graphs) => {
+  const answered = graphs[0]
+  if (answered === undefined) {
+    return
+  }
+  brush.onOverviewFetched({
+    requestedDomain: answered.requestedTimeRange,
+    drawnDomain: clippedToNavigableTime(
+      drawnTimeRange(answered.requestedTimeRange, answered.timeRange),
+      navigableBounds()
+    ),
+    data: graphs.map((graph) => ({ metrics: graph.metrics, dataTimeRange: graph.timeRange }))
+  })
+})
+
+function brushSnapshotOf(panelIndex: number) {
+  const snapshot = brush.snapshot.value
+  const overview = snapshot?.data[panelIndex]
+  return snapshot && overview ? { ...snapshot, data: overview } : undefined
+}
 
 // A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving
 // them up reads as nothing having happened. Only that case is worth delaying - a slot that has
@@ -167,6 +203,7 @@ const slots = computed(() =>
     return {
       index,
       graph,
+      isAwaitingData: loadingSlots.value[index] ?? false,
       isSkeleton: isWaiting && (graph === null || delayHasElapsed.value)
     }
   })
@@ -235,7 +272,7 @@ function onRetry(): void {
         class="graphing-graph-group__panel"
         :figure-width="effectiveWidth"
         :figure-height="figure_height"
-        :show-legend="show_legend"
+        :show-legend="display.show_legend"
         :show-brush="props.graphs[panelSlot.index]!.interaction.brush === 'enabled'"
         :height="panelHeights[panelSlot.index]"
       />
@@ -249,22 +286,31 @@ function onRetry(): void {
           :metrics="panelSlot.graph.metrics"
           :data-time-range="panelSlot.graph.timeRange"
           :requested-time-range="requestedTimeRange"
-          :time-picker-requests="timePickerRequests"
+          :awaiting-data="panelSlot.isAwaitingData"
+          :panel-key="panelSlot.index"
+          :range-change="rangeChange"
+          :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
           :title="panelSlot.graph.title"
-          :show-title="true"
-          :show-timestamp="true"
-          :show-consolidation="show_consolidation"
-          :show-legend="show_legend"
+          :show-title="display.show_title"
+          :show-timestamp="props.graphs[panelSlot.index]?.options.header.show_graph_time ?? true"
+          :show-consolidation="display.show_consolidation"
+          :show-legend="display.show_legend"
+          :show-value-axis="display.show_vertical_axis"
+          :show-time-axis="display.show_time_axis"
+          :min-value-axis-width="display.min_value_axis_width"
           :interaction="props.graphs[panelSlot.index]!.interaction"
-          :overview="overviews[panelSlot.index]"
+          :brush-snapshot="brushSnapshotOf(panelSlot.index)"
           :horizontal-lines="panelSlot.graph.horizontalLines"
+          :shaded-regions="panelSlot.graph.shadedRegions"
           :figure-width="effectiveWidth"
           :figure-height="figure_height"
           :add-to="panelSlot.graph.addTo"
-          :header-is-compact="layout === 'wrap'"
-          @update:requested-time-range="onPanelTimeRange"
+          :is-hover-graph="layout === 'wrap'"
+          @update:requested-time-range="
+            (range, kind) => onPanelTimeRange(range, kind, panelSlot.index)
+          "
           @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
-          @inspect="setRefreshPaused(true)"
+          @inspect="pauseRefresh"
         />
         <GraphNotice
           v-if="notice"

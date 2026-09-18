@@ -3,18 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 
-from cmk.plugins.aws.special_agent.agent_aws import AWSConfig, CostsAndUsage, NamingConvention
+from cmk.plugins.aws.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws.special_agent.sections.costs_and_usage import CostsAndUsage
 
 from .agent_aws_fake_clients import CEGetCostsAndUsageIB
 
 
 class FakeCEClient:
-    def get_cost_and_usage(self, TimePeriod, Granularity, Metrics, GroupBy):
+    def get_cost_and_usage(
+        self,
+        TimePeriod: object,  # noqa: ARG002
+        Granularity: object,  # noqa: ARG002
+        Metrics: object,  # noqa: ARG002
+        GroupBy: object,  # noqa: ARG002
+    ) -> dict[str, object]:
         return {
             "NextPageToken": "string",
             "GroupDefinitions": [

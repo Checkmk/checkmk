@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { OneColorIcons } from 'cmk-ui-library/components/CmkIcon/types'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 defineProps<{
   iconName: OneColorIcons
@@ -24,6 +25,7 @@ defineEmits<{
         class="db-responsive-grid-widget-button__icon"
         :name="iconName"
         :title="title"
+        :aria-label="title as TranslatedString"
         :primary-color="{ custom: 'var(--db-rgw-button-color)' }"
         size="xlarge"
       />

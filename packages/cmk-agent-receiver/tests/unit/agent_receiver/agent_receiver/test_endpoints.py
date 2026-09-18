@@ -4,18 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import io
 import stat
+import zlib
 from collections.abc import MutableMapping
 from pathlib import Path
 from uuid import uuid4
 from zlib import compress
 
-import httpx
+import httpx2
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pydantic import UUID4
+from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
+from cmk.agent_receiver.agent_receiver import decompression
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     CMKEdition,
     HostConfiguration,
@@ -448,12 +451,12 @@ def _call_register_new_ongoing_ultimate(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
-) -> httpx.Response:
+) -> httpx2.Response:
     mocker.patch(
         "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.ultimate,
     )
-    return client.post(  # type: ignore[no-any-return]
+    return client.post(
         f"/register_new_ongoing/{uuid}",
         auth=("user", "password"),
     )
@@ -674,6 +677,23 @@ def test_agent_data_invalid_data(
         f"/agent_data/{uuid}",
         headers=agent_data_headers,
         files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Decompression of agent data failed"}
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+def test_agent_data_decompression_size(
+    monkeypatch: MonkeyPatch,
+    client: TestClient,
+    uuid: UUID4,
+    agent_data_headers: MutableMapping[str, str],
+) -> None:
+    monkeypatch.setattr(decompression, "MAX_SIZE_AGENT_DATA", 1024)
+    response = client.post(
+        f"/agent_data/{uuid}",
+        headers=agent_data_headers,
+        files={"monitoring_data": ("filename", io.BytesIO(zlib.compress(b"\x00" * 1025, level=1)))},
     )
     assert response.status_code == 400
     assert response.json() == {"detail": "Decompression of agent data failed"}

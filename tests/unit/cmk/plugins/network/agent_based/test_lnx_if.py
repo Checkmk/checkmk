@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import copy
-from collections.abc import Mapping
-from pathlib import Path
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -154,7 +152,7 @@ def test_parse_lnx_if_ipaddress(
     result: lnx_if.SectionInventory,
     request: pytest.FixtureRequest,
 ) -> None:
-    assert lnx_if._parse_lnx_if_ipaddress(string_table) == result, (
+    assert lnx_if._parse_lnx_if_ipaddress(string_table) == result, (  # noqa: SLF001
         f"in param {request.node.callspec.id}"
     )
 
@@ -477,7 +475,7 @@ def _increment_timestamp_of_interface(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_lnx_if(empty_value_store: None) -> None:
+def test_check_lnx_if() -> None:
     list(
         lnx_if.check_lnx_if(
             INTERFACE.attributes.index,
@@ -508,7 +506,7 @@ def test_check_lnx_if(empty_value_store: None) -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_cluster_check_lnx_if(empty_value_store: None) -> None:
+def test_cluster_check_lnx_if() -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
@@ -1161,12 +1159,12 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
         ),
     ],
 )
-def test_lnx_if_regression(  # type: ignore[misc]
-    monkeypatch,
-    string_table,
-    discovery_results,
-    items_params_results,
-):
+def test_lnx_if_regression(
+    monkeypatch: pytest.MonkeyPatch,
+    string_table: StringTable,
+    discovery_results: Sequence[Service],
+    items_params_results: Sequence[tuple[str, Mapping[str, object], Sequence[Result]]],
+) -> None:
     section = lnx_if.parse_lnx_if(string_table)
 
     assert (
@@ -1589,15 +1587,3 @@ def test_inventorize_lnx_if_ip(
     assert list(lnx_if.inventorize_lnx_if(section, None)) == list(expected_result), (
         f"in param {request.node.callspec.id}"
     )
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just set _PYTEST_RAISES=1 and run this file from your IDE and dive into the code.
-    source_file_path = (
-        (base := (test_file := Path(__file__)).parents[6])
-        / test_file.parent.relative_to(base / "tests/unit")
-        / test_file.name[5:]
-    ).as_posix()
-    assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
-    pytest.main(["-vvsx", __file__])

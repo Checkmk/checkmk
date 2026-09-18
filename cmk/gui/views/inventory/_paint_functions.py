@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 import time
 
@@ -57,12 +56,12 @@ def register(inv_paint_funtions: InvPaintFunctions) -> None:
 def inv_paint_generic(value: SDValue) -> PaintResult:
     if value == "" or value is None:
         return "", ""
+    if isinstance(value, bool):
+        return "", _("Yes") if value else _("No")
     if isinstance(value, float):
         return "number", "%.2f" % value
     if isinstance(value, int):
         return "number", "%d" % value
-    if isinstance(value, bool):
-        return "", _("Yes") if value else _("No")
     return "", escape_text("%s" % value)
 
 

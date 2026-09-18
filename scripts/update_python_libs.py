@@ -175,7 +175,7 @@ def _main() -> None:
         )
         subprocess.check_call(["git", "commit", "-F", ".git-commit-msg"])
     else:
-        print("git commit -F .git-commit-msg")
+        print("git commit -F .git-commit-msg")  # noqa: T201  # It's OK for scripts to print()
 
 
 if __name__ == "__main__":

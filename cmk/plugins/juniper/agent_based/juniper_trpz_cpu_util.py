@@ -35,7 +35,7 @@ def saveint(value: str) -> int:
         return 0
 
 
-def discovery_juniper_trpz_cpu_util(section: Section) -> DiscoveryResult:
+def discovery_juniper_trpz_cpu_util(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

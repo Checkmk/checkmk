@@ -17,7 +17,7 @@ from cmk.gui.utils.labels import Label
 
 class TestLabelMatchPlugin:
     def test_input_to_key_value_invalid_ok(self) -> None:
-        assert ABCLabelMatchPlugin._input_to_key_value("key:value") == Label("key", "value", False)
+        assert ABCLabelMatchPlugin._input_to_key_value("key:value") == Label("key", "value", False)  # noqa: SLF001
 
     @pytest.mark.parametrize(
         "invalid_input",
@@ -30,7 +30,7 @@ class TestLabelMatchPlugin:
     )
     def test_input_to_key_value_invalid(self, invalid_input: str) -> None:
         with pytest.raises(MKUserError):
-            ABCLabelMatchPlugin._input_to_key_value(invalid_input)
+            ABCLabelMatchPlugin._input_to_key_value(invalid_input)  # noqa: SLF001
 
     def test_get_livestatus_filters_no_input(self) -> None:
         assert HostLabelMatchPlugin().get_livestatus_filters("", {}) == ""

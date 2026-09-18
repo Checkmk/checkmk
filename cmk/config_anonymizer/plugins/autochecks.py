@@ -11,7 +11,7 @@ import cmk.utils.paths
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer, AutochecksStore
+from cmk.checkengine.discovery import AutochecksSerializer, AutochecksStore
 from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep

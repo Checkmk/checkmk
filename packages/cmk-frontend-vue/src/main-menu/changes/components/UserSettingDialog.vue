@@ -9,10 +9,9 @@ import { Api } from 'cmk-ui-library/lib/api-client'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
 
-const { _t } = usei18n()
+import { getCsrfToken } from '@/lib/csrf'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
+const { _t } = usei18n()
 
 const props = defineProps<{
   activateChangesUrl: string
@@ -40,7 +39,7 @@ async function setChangesAction(action: 'full_page' | 'slideout') {
   error.value = null
   try {
     await restAPI.put(`ajax_set_change_action.py`, {
-      _csrf_token: encodeURIComponent(global_csrf_token),
+      _csrf_token: encodeURIComponent(getCsrfToken()),
       action
     })
 

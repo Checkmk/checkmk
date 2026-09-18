@@ -60,11 +60,11 @@ def _make_plugin(
         name=CheckPluginName(name),
         sections=[ParsedSectionName(name)],
         service_name=service_name,
-        discovery_function=lambda *args, **kw: iter(()),
+        discovery_function=lambda *args, **kw: iter(()),  # noqa: ARG005
         discovery_default_parameters=None,
         discovery_ruleset_name=None,
         discovery_ruleset_type="merged",
-        check_function=lambda *args, **kw: iter(()),
+        check_function=lambda *args, **kw: iter(()),  # noqa: ARG005
         check_default_parameters=check_default_parameters,
         check_ruleset_name=None,
         cluster_check_function=None,
@@ -136,7 +136,7 @@ def test_cluster_ignores_nodes_parameters(
         _TEST_CHECK_PLUGINS,
         service_configurer=service_configurer,
         service_name_config=service_name_config,
-        enforced_services_table=lambda hn: {},
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
     )[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet({}, ()),
@@ -745,7 +745,7 @@ def test_check_table_of_mgmt_boards(
                 {},
                 config_cache.make_service_configurer({}, service_name_config),
                 service_name_config,
-                lambda hn: {},
+                lambda hn: {},  # noqa: ARG005
             ).keys()
         )
         == expected_result
@@ -843,14 +843,14 @@ def test_check_table_skips_services_with_invalid_names(
     loading_result = ts.apply(monkeypatch)
     config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)  # noqa: SLF001
     )
     service_configurer = config_cache.make_service_configurer(
         _TEST_CHECK_PLUGINS, service_name_config
     )
 
     def enforced_services_table(
-        hn: HostName,
+        hn: HostName,  # noqa: ARG001
     ) -> Mapping[ServiceID, tuple[object, ConfiguredService]]:
         return {empty_name_service.id(): ("enforced", empty_name_service)}
 
@@ -879,6 +879,83 @@ def test_check_table_skips_services_with_invalid_names(
         )
         is chk_table
     )
+
+
+def test_service_disabled_by_rule_is_reported_as_ignored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hostname = HostName("some-host")
+    smart = CheckPluginName("smart_temp")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_autochecks(
+        hostname,
+        [
+            AutocheckEntry(smart, "monitored", {}, {}),
+            AutocheckEntry(smart, "disabled", {}, {}),
+        ],
+    )
+    ts.set_ruleset(
+        "ignored_services",
+        [
+            {
+                "id": "01",
+                "condition": {"service_description": [{"$regex": "Temperature SMART disabled$"}]},
+                "value": True,
+            }
+        ],
+    )
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
+
+    chk_table = config_cache.check_table(
+        hostname,
+        _TEST_CHECK_PLUGINS,
+        config_cache.make_service_configurer(_TEST_CHECK_PLUGINS, service_name_config),
+        service_name_config,
+        lambda hn: {},  # noqa: ARG005
+    )
+
+    assert set(chk_table) == {ServiceID(smart, "monitored")}
+    assert [s.id() for s in chk_table.ignored_services] == [ServiceID(smart, "disabled")]
+
+
+def test_a_service_that_is_monitored_as_well_is_not_reported_as_ignored() -> None:
+    """A discovered and an enforced service share an id but not their labels.
+
+    The "Disabled services" ruleset can therefore match one and not the other.
+    The enforced one wins in the table, so the id must not be reported as
+    disabled -- the nagios host check would stop checking it.
+    """
+    service_id = ServiceID(CheckPluginName("smart_temp"), "item")
+    discovered = ConfiguredService(
+        check_plugin_name=service_id.name,
+        item=service_id.item,
+        description="Temperature SMART item",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        labels={"disable-me": "yes"},
+        discovered_labels={"disable-me": "yes"},
+        is_enforced=False,
+    )
+    enforced = ConfiguredService(
+        check_plugin_name=service_id.name,
+        item=service_id.item,
+        description="Temperature SMART item",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=True,
+    )
+
+    table = HostCheckTable(services=[enforced], ignored_services=[discovered])
+
+    assert not table.ignored_services
 
 
 def test_iter_skipped_services_warnings() -> None:

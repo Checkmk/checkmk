@@ -170,7 +170,7 @@ def plugin_dir_engine(request):
     return os.path.join(user_dir, request.param)
 
 
-@pytest.fixture(name="manage_plugins", params=["windows_if.ps1"], autouse=True)
+@pytest.fixture(name="manage_plugins", params=["windows_if.ps1"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files\\regression")
@@ -195,8 +195,12 @@ def manage_plugins_engine(request, plugin_dir):
 
 
 @pytest.mark.skip("This test is not conform with latest changes on Monitoring Site")
+@pytest.mark.usefixtures("testconfig")
 def test_section_plugin_windows_if(  # type: ignore[misc]
-    request, testconfig, expected_output, actual_output, testfile
+    request,
+    expected_output,
+    actual_output,
+    testfile,
 ) -> None:
     # request.node.name gives test name
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":

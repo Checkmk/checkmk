@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
 # Checkmk-Agent-Plug-in - Nginx Server Status
 #
 # Fetches the stub nginx_status page from detected or configured nginx
@@ -27,6 +23,14 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+try:
+    from collections.abc import Container, Sequence
+
+    _ = Container, Sequence  # make ruff happy
+except ImportError:
+    # We need typing only for testing
+    pass
+
 __version__ = "3.0.0b1"
 
 USER_AGENT = "checkmk-agent-nginx_status-" + __version__
@@ -36,39 +40,9 @@ import urllib  # noqa: E402
 
 urllib.getproxies = dict  # type: ignore[attr-defined]
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    text_type = str
-    binary_type = bytes
-else:
-    text_type = unicode  # noqa: F821
-    binary_type = str
-
-
-# Borrowed from six
-def ensure_str(s, encoding="utf-8", errors="strict"):
-    """Coerce *s* to `str`.
-
-    For Python 2:
-      - `unicode` -> encoded to `str`
-      - `str` -> `str`
-
-    For Python 3:
-      - `str` -> `str`
-      - `bytes` -> decoded to `str`
-    """
-    if not isinstance(s, (text_type, binary_type)):
-        raise TypeError("not expecting type '%s'" % type(s))
-    if PY2 and isinstance(s, text_type):
-        s = s.encode(encoding, errors)
-    elif PY3 and isinstance(s, binary_type):
-        s = s.decode(encoding, errors)
-    return s
-
 
 def extract_stats_from_iproute2(lines, ssl_ports):
+    # type: (Sequence[str], Container[int]) -> list[tuple[str, str, int]]
     results = []
 
     line_maxsplit = 5
@@ -76,7 +50,10 @@ def extract_stats_from_iproute2(lines, ssl_ports):
     process_regex = re.compile(r'^\w+:\(\("(nginx|nginx.conf)",pid=(\d+).*$')
 
     for line in lines[1:]:  # skip column headers
-        _, _, _, local_addr, _, process_info = line.split(None, line_maxsplit)
+        parts = line.split(None, line_maxsplit)
+        if len(parts) < 6:  # kernel-owned sockets (e.g. nfsd) have no process column
+            continue
+        _, _, _, local_addr, _, process_info = parts
 
         process_match = process_regex.match(process_info)
         if process_match is None:
@@ -106,6 +83,7 @@ def extract_stats_from_iproute2(lines, ssl_ports):
 
 
 def extract_stats_from_netstat(lines, ssl_ports):
+    # type: (Sequence[str], Container[int]) -> list[tuple[str, str, int]]
     pids = []
     results = []
     for netstat_line in lines:
@@ -154,6 +132,7 @@ def extract_stats_from_netstat(lines, ssl_ports):
 
 
 def try_detect_servers(ssl_ports):
+    # type: (Container[int]) -> list[tuple[str, str, int]]
     """Fetch network statistics for nginx server(s).
 
     Try and fetch the stats from the `ss` utility. If tool not available, fallback to the `netstat`
@@ -168,7 +147,8 @@ def try_detect_servers(ssl_ports):
     return extract_stats_from_netstat(netstat_lines, ssl_ports)
 
 
-def _is_ip_v6_address(address: str) -> bool:
+def _is_ip_v6_address(address):
+    # type: (str) -> bool
     """Check if the given address is an IPv6 address."""
     try:
         return ipaddress.ip_address(address).version == 6
@@ -176,44 +156,97 @@ def _is_ip_v6_address(address: str) -> bool:
         return False
 
 
-def _make_url(proto: str, address: str, port: int, page: str) -> str:
+def _make_url(proto, address, port, page):
+    # type: (str, str, int, str) -> str
     """Construct a URL from its components, taking care of IPv6 addresses."""
     if _is_ip_v6_address(address):
         return "%s://[%s]:%s/%s" % (proto, address, port, page)
     return "%s://%s:%s/%s" % (proto, address, port, page)
 
 
+def parse_ssl_ports(raw):
+    # type: (object) -> list[int]
+    if not isinstance(raw, list) or not all(isinstance(port, int) for port in raw):
+        raise ValueError("ssl_ports must be a list of ints, got %r" % (raw,))
+    return [port for port in raw if isinstance(port, int)]
+
+
+def parse_servers(raw):
+    # type: (object) -> list[tuple[str, str, int, str]] | None
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        raise ValueError("servers must be a list, got %r" % (raw,))
+    return [_parse_server(server) for server in raw]
+
+
+def _parse_server(raw_server):
+    # type: (object) -> tuple[str, str, int, str]
+    if isinstance(raw_server, tuple):
+        return _parse_server_tuple(raw_server)
+    if isinstance(raw_server, dict):
+        return _parse_server_dict(raw_server)
+    raise ValueError("Invalid server config object. Expected tuple or dict")
+
+
+def _parse_server_dict(raw_server_dict):
+    # type: (dict[str, object]) -> tuple[str, str, int, str]
+    proto = raw_server_dict.get("protocol")
+    address = raw_server_dict.get("address")
+    port = raw_server_dict.get("port")
+    page = raw_server_dict.get("page", "nginx_status")
+    if not (
+        isinstance(proto, str)
+        and isinstance(address, str)
+        and isinstance(port, int)
+        and isinstance(page, str)
+    ):
+        raise ValueError("invalid server dict entry %r" % (raw_server_dict,))
+    return proto, address, port, page
+
+
+def _parse_server_tuple(raw_server_tuple):
+    # type: (tuple[object, ...]) -> tuple[str, str, int, str]
+    if len(raw_server_tuple) != 3:
+        raise ValueError(
+            "Wrong length of server tuple %r. Expected 3 elements" % (raw_server_tuple,)
+        )
+    proto, address, port = raw_server_tuple
+    if not (isinstance(proto, str) and isinstance(address, str) and isinstance(port, int)):
+        raise ValueError("invalid server tuple entry %r" % (raw_server_tuple,))
+    return proto, address, port, "nginx_status"
+
+
 def main():
+    # type: () -> None
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
 
-    config = {}  # type: dict
+    config = {}  # type: dict[str, object]
     if os.path.exists(config_file):
         with open(config_file) as open_config_file:
             config_src = open_config_file.read()
             exec(config_src, globals(), config)  # nosec B102 # BNS:a29406
     # None or list of (proto, ipaddress, port) tuples.
     # proto is 'http' or 'https'
-    servers = config.get("servers")
-    ssl_ports = config.get("ssl_ports", [443])
+    try:
+        ssl_ports = parse_ssl_ports(config.get("ssl_ports", [443]))
+        servers = parse_servers(config.get("servers"))
+    except ValueError as e:
+        sys.stderr.write("%s: %s\n" % (config_file, e))
+        sys.exit(1)
 
     if servers is None:
-        servers = try_detect_servers(ssl_ports)
+        servers = [
+            (proto, address, port, "nginx_status")
+            for proto, address, port in try_detect_servers(ssl_ports)
+        ]
 
     if not servers:
         sys.exit(0)
 
     sys.stdout.write("<<<nginx_status>>>\n")
-    for server in servers:
-        if isinstance(server, tuple):
-            proto, address, port = server
-            page = "nginx_status"
-        else:
-            proto = server["protocol"]
-            address = server["address"]
-            port = server["port"]
-            page = server.get("page", "nginx_status")
-
+    for proto, address, port, page in servers:
         try:
             if proto not in ["http", "https"]:
                 raise ValueError("Scheme '%s' is not allowed" % proto)
@@ -231,7 +264,7 @@ def main():
                 else:
                     raise
 
-            for line in ensure_str(fd.read()).split("\n"):
+            for line in fd.read().decode("utf-8").split("\n"):
                 if not line or line.isspace():
                     continue
                 if line.lstrip()[0] == "<":

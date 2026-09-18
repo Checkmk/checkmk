@@ -39,7 +39,7 @@ def parse_netapp_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_netapp_cpu(section: StringTable) -> DiscoveryResult:
+def discover_netapp_cpu(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

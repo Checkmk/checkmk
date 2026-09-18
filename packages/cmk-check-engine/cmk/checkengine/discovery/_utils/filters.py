@@ -57,13 +57,13 @@ class ServiceFilters(NamedTuple):
     changed_params: ServiceFilter
 
     @classmethod
-    def accept_all(cls) -> "ServiceFilters":
+    def accept_all(cls) -> ServiceFilters:
         return cls(
             _accept_all_services, _accept_all_services, _accept_all_services, _accept_all_services
         )
 
     @classmethod
-    def from_settings(cls, rediscovery_parameters: RediscoveryParameters) -> "ServiceFilters":
+    def from_settings(cls, rediscovery_parameters: RediscoveryParameters) -> ServiceFilters:
         service_filter_lists = _get_service_filter_lists(rediscovery_parameters)
 
         new_services_filter = _get_service_filter_func(

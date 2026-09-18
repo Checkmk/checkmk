@@ -5,6 +5,7 @@
  */
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
+import type { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
@@ -12,7 +13,6 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import type { HostApi } from '../api/hosts'
 import { visibleHostFields } from '../columns'
 
 export class HostService extends MonitoringService<HostEntry> {

@@ -16,7 +16,6 @@ from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base import config
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
@@ -147,6 +146,6 @@ def load_plugins() -> AgentBasedPlugins:
         return config.load_all_plugins()
 
 
-def load_config(edition: cmk_version.Edition) -> config.LoadingResult:
+def load_config() -> config.LoadingResult:
     with tracer.span("load_config"):
-        return config.load(edition, validate_hosts=False)
+        return config.load(validate_hosts=False)

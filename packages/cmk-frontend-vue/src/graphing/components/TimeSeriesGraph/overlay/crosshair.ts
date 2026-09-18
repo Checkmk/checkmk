@@ -4,12 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-const COLOR_WHITE_100 = '#ffffff'
 const COLOR_WHITE_10 = 'rgb(255 255 255 / 10%)'
 const CROSSHAIR_GREY = '#8a8a8a'
-
-const PIN_LINE_TOP_HALF_WIDTH = 1
-const PIN_LINE_BOTTOM_HALF_WIDTH = 0.5
 
 const FOCUS_DOT_RADIUS = 4
 const FOCUS_HALO_RADIUS = 8
@@ -20,7 +16,7 @@ export function crosshairCentreX(snapX: number): number {
 }
 
 export function pinLineCentreX(pinX: number): number {
-  return Math.round(pinX)
+  return Math.round(pinX) + 0.5
 }
 
 export function drawCrosshair(ctx: CanvasRenderingContext2D, snapX: number, height: number): void {
@@ -35,16 +31,20 @@ export function drawCrosshair(ctx: CanvasRenderingContext2D, snapX: number, heig
   ctx.setLineDash([])
 }
 
-export function drawPinLine(ctx: CanvasRenderingContext2D, x: number, height: number): void {
-  const centerX = pinLineCentreX(x)
+export function drawPinLine(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  height: number,
+  color: string
+): void {
+  const pixelAlignedX = pinLineCentreX(x)
   ctx.beginPath()
-  ctx.moveTo(centerX - PIN_LINE_TOP_HALF_WIDTH, 0)
-  ctx.lineTo(centerX + PIN_LINE_TOP_HALF_WIDTH, 0)
-  ctx.lineTo(centerX + PIN_LINE_BOTTOM_HALF_WIDTH, height)
-  ctx.lineTo(centerX - PIN_LINE_BOTTOM_HALF_WIDTH, height)
-  ctx.closePath()
-  ctx.fillStyle = COLOR_WHITE_100
-  ctx.fill()
+  ctx.setLineDash([])
+  ctx.strokeStyle = color
+  ctx.lineWidth = 1
+  ctx.moveTo(pixelAlignedX, 0)
+  ctx.lineTo(pixelAlignedX, height)
+  ctx.stroke()
 }
 
 export interface FocusDot {

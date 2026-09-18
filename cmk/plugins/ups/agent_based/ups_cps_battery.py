@@ -62,7 +62,9 @@ def discover_ups_cps_battery_temp(section: Section | None) -> DiscoveryResult:
 
 
 def check_ups_cps_battery_temp(
-    item: str, params: TempParamType, section: Section | None
+    item: str,  # noqa: ARG001
+    params: TempParamType,
+    section: Section | None,
 ) -> CheckResult:
     if section is not None and "temperature" in section:
         yield from check_temperature(

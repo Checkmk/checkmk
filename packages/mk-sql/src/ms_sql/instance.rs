@@ -18,7 +18,7 @@ use crate::config::{
 };
 use crate::emit;
 #[cfg(windows)]
-use crate::ms_sql::client::update_edition;
+use crate::ms_sql::client::apply_edition;
 use crate::ms_sql::client::ManageEdition;
 use crate::ms_sql::query::{
     obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
@@ -45,6 +45,79 @@ use tiberius::Row;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
+
+/// A database of an instance together with whether the monitoring login can
+/// actually open it (`HAS_DBACCESS(name) = 1`, see [`sqls::query::DATABASE_NAMES_ACTIVE`]).
+///
+/// An inaccessible database - offline, restoring, or simply not granted to the
+/// login - must never be connected to: the failed per-database login is exactly
+/// what floods the SQL Server error log (18456 / 4060). Such a database is instead
+/// reported with a simulated error line, mirroring the legacy `mssql.vbs` plugin,
+/// which stayed on the master connection (`USE [db]`) and never triggered a
+/// per-database login.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DatabaseEntry {
+    pub name: String,
+    pub accessible: bool,
+}
+
+/// Parses the `has_access` column of [`sqls::query::DATABASE_NAMES_ACTIVE`].
+/// Only an explicit `1` grants access; `0` and NULL (rendered as an empty string)
+/// both mean the login cannot open the database.
+fn parse_has_access(raw: &str) -> bool {
+    raw.trim() == "1"
+}
+
+/// The synthetic error reported for a database the monitoring login cannot open,
+/// in place of the driver error a real (spam-causing) login attempt would raise.
+fn inaccessible_database_error() -> anyhow::Error {
+    anyhow::anyhow!("database is not accessible")
+}
+
+/// Splits the databases so that each chunk is handled by its own thread.
+///
+/// The thresholds cap the thread count: one chunk below 8 databases, two up to
+/// 64, four above that.
+fn chunk_databases(databases: &[DatabaseEntry]) -> std::slice::Chunks<'_, DatabaseEntry> {
+    if databases.len() >= 64 {
+        let max_chunk = databases.len().div_ceil(4usize);
+        let min_chunk = 16usize;
+        databases.chunks(std::cmp::max(min_chunk, max_chunk))
+    } else if databases.len() >= 8 {
+        let max_chunk = databases.len().div_ceil(2usize);
+        let min_chunk = 4usize;
+        databases.chunks(std::cmp::max(min_chunk, max_chunk))
+    } else {
+        // `chunks(0)` panics, so an empty list has to ask for a non-zero size;
+        // it yields no chunk either way.
+        databases.chunks(std::cmp::max(1usize, databases.len()))
+    }
+}
+
+/// Splits database entries into `(accessible, inaccessible)` names, dropping any
+/// excluded database. Accessible databases are connected to for real data;
+/// inaccessible ones only get a simulated error line and are never connected to -
+/// a per-database login to an offline / forbidden database is what floods the SQL
+/// Server error log (18456 / 4060). Input order is preserved within each bucket.
+fn partition_by_access(
+    entries: &[DatabaseEntry],
+    exclude: &[String],
+) -> (Vec<String>, Vec<String>) {
+    let mut accessible: Vec<String> = Vec::new();
+    let mut inaccessible: Vec<String> = Vec::new();
+    for entry in entries {
+        if exclude.contains(&entry.name) {
+            log::debug!("Database {} excluded", entry.name);
+            continue;
+        }
+        if entry.accessible {
+            accessible.push(entry.name.clone());
+        } else {
+            inaccessible.push(entry.name.clone());
+        }
+    }
+    (accessible, inaccessible)
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct SqlInstanceBuilder {
@@ -385,7 +458,9 @@ impl SqlInstance {
         // if yes - call generate_section with database parameter
         // else - call generate_section without database parameter
         log::trace!("{:?} @ {:?}", self, self.endpoint);
-        let body = match self.create_client(&self.endpoint, None).await {
+        // First connection to the instance: the edition is not known yet and
+        // has to be probed. Every later connection reuses what it found.
+        let body = match self.create_client(&self.endpoint, None, None).await {
             Ok(mut client) => {
                 let real_name = obtain_instance_name(&mut client)
                     .await
@@ -431,7 +506,7 @@ impl SqlInstance {
         &self,
         client: &mut UniClient,
         sections: &[Section],
-    ) -> Vec<String> {
+    ) -> Vec<DatabaseEntry> {
         let database_based_sections = section::get_per_database_sections();
         let need = database_based_sections.iter().any(|s| {
             sections
@@ -441,10 +516,53 @@ impl SqlInstance {
                 .contains(s)
         });
         if need {
-            self.generate_databases(client, sqls::Id::DatabaseNamesActive)
-                .await
+            self.generate_active_databases(client).await
         } else {
             Vec::new()
+        }
+    }
+
+    /// Enumerates the active databases together with their `HAS_DBACCESS` flag
+    /// (see [`sqls::query::DATABASE_NAMES_ACTIVE`]). Like [`Self::generate_databases`]
+    /// it never returns an error - a failure yields an empty list, matching the
+    /// legacy plugin.
+    pub async fn generate_active_databases(&self, client: &mut UniClient) -> Vec<DatabaseEntry> {
+        let result = run_known_query(client, sqls::Id::DatabaseNamesActive)
+            .await
+            .and_then(validate_rows)
+            .map(|rows| self.process_active_databases_rows(&rows));
+        match result {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get active databases: {}", err);
+                vec![]
+            }
+        }
+    }
+
+    fn process_active_databases_rows(&self, answers: &[UniAnswer]) -> Vec<DatabaseEntry> {
+        match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| DatabaseEntry {
+                    name: row.get_value_by_idx(0),
+                    accessible: parse_has_access(&row.get_value_by_idx(1)),
+                })
+                .collect::<Vec<DatabaseEntry>>(),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| DatabaseEntry {
+                    name: row.first().cloned().unwrap_or_default(),
+                    accessible: parse_has_access(
+                        row.get(1).map(String::as_str).unwrap_or_default(),
+                    ),
+                })
+                .collect::<Vec<DatabaseEntry>>(),
+            None => {
+                log::error!("Active databases answer is empty");
+                vec![]
+            }
         }
     }
 
@@ -466,10 +584,15 @@ impl SqlInstance {
     }
 
     /// Create a client for an Instance based on Config
+    ///
+    /// `known_edition` is the edition of an already established connection to
+    /// the same instance, if there is one: passing it saves a
+    /// `SERVERPROPERTY('Edition')` round trip per connection.
     pub async fn create_client(
         &self,
         endpoint: &Endpoint,
         database: Option<String>,
+        known_edition: Option<&Edition>,
     ) -> Result<UniClient> {
         log::info!(
             "Create client {} TCP:{} user:{} host:{}",
@@ -479,9 +602,16 @@ impl SqlInstance {
             endpoint.conn().hostname()
         );
         if self.tcp {
-            create_tcp_client(endpoint, database, self.port()).await
+            create_tcp_client(endpoint, database, self.port(), known_edition).await
         } else {
-            create_odbc_client(endpoint, self.cluster_name.as_ref(), &self.name, database).await
+            create_odbc_client(
+                endpoint,
+                self.cluster_name.as_ref(),
+                &self.name,
+                database,
+                known_edition,
+            )
+            .await
         }
     }
 
@@ -509,7 +639,7 @@ impl SqlInstance {
         client: &mut UniClient,
         endpoint: &Endpoint,
         section: &Section,
-        databases: &[String],
+        databases: &[DatabaseEntry],
     ) -> String {
         let body = match self.read_data_from_cache(section.name(), section.cache_age() as u64) {
             Some(from_cache) => from_cache,
@@ -531,7 +661,7 @@ impl SqlInstance {
         client: &mut UniClient,
         endpoint: &Endpoint,
         section: &Section,
-        databases: &[String],
+        databases: &[DatabaseEntry],
     ) -> String {
         let edition = client.get_edition();
         if let Some(query) = section.select_query(get_sql_dir(), self.version_major(), &edition) {
@@ -553,7 +683,11 @@ impl SqlInstance {
                     self.generate_sessions_section(client, &query, sep).await
                 }
                 names::DATABASES => {
-                    self.generate_databases_section(client, databases, &query, sep)
+                    // The status section lists every database (including offline /
+                    // inaccessible ones) via its own query over sysdatabases; the
+                    // name list is only the fallback when that query fails.
+                    let names: Vec<String> = databases.iter().map(|d| d.name.clone()).collect();
+                    self.generate_databases_section(client, &names, &query, sep)
                         .await
                 }
                 names::CONNECTIONS => self.generate_connections_section(client, &query, sep).await,
@@ -561,7 +695,7 @@ impl SqlInstance {
                 | names::TABLE_SPACES
                 | names::DATAFILES
                 | names::CLUSTERS => self.generate_database_indexed_section_threading(
-                    databases, endpoint, section, &query, sep,
+                    databases, endpoint, section, &query, sep, &edition,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     if client.get_edition() == Edition::Azure && section.name() == names::JOBS {
@@ -572,7 +706,7 @@ impl SqlInstance {
                     }
                 }
                 _ => self
-                    .generate_custom_section(endpoint, section)
+                    .generate_custom_section(endpoint, section, &edition)
                     .await
                     .unwrap_or_else(|| {
                         format!(
@@ -712,9 +846,10 @@ impl SqlInstance {
         databases: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         let tasks = databases.iter().map(move |database| {
-            self.generate_table_spaces_section_database(endpoint, database, query, sep)
+            self.generate_table_spaces_section_database(endpoint, database, query, sep, edition)
         });
 
         let results = stream::iter(tasks)
@@ -725,24 +860,25 @@ impl SqlInstance {
         results.join("")
     }
 
+    fn format_table_spaces_error(&self, d: &str, e: &anyhow::Error) -> String {
+        format!(
+            "{} {} - - - - - - - - - - - - {}\n",
+            self.mssql_name(),
+            d.replace(' ', "_"),
+            prepare_error(e)
+        )
+    }
+
     pub async fn generate_table_spaces_section_database(
         &self,
         endpoint: &Endpoint,
         database: &str,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
-        let format_error = |d: &str, e: &anyhow::Error| {
-            format!(
-                "{} {} - - - - - - - - - - - - {}\n",
-                self.mssql_name(),
-                d.replace(' ', "_"),
-                prepare_error(e)
-            )
-            .to_string()
-        };
         match self
-            .create_client(endpoint, Some(database.to_owned()))
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
             .await
         {
             Ok(mut c) => match run_custom_query(&mut c, query).await {
@@ -753,10 +889,10 @@ impl SqlInstance {
                     run_custom_query(&mut c, sqls::query::SPACE_USED_SIMPLE)
                         .await
                         .map(|rows| to_table_spaces_entry(&self.mssql_name(), database, &rows, sep))
-                        .unwrap_or_else(|e| format_error(database, &e))
+                        .unwrap_or_else(|e| self.format_table_spaces_error(database, &e))
                 }
             },
-            Err(err) => format_error(database, &err),
+            Err(err) => self.format_table_spaces_error(database, &err),
         }
     }
 
@@ -793,61 +929,120 @@ impl SqlInstance {
         }
     }
 
+    /// Renders the simulated per-database error lines for `inaccessible` databases,
+    /// in the wire format of `section_name`. These stand in for real rows so an
+    /// inaccessible database is reported without a per-database login - which is
+    /// what floods the SQL Server error log (18456 / 4060). A section with no
+    /// per-database error representation yields an empty string.
+    ///
+    /// `CLUSTERS` is deliberately not handled here: unlike these three sections,
+    /// it only produces a simulated entry when the instance is clustered, so that
+    /// gating lives with the rest of the `CLUSTERS` generation logic instead.
+    fn format_inaccessible_databases(
+        &self,
+        section_name: &str,
+        inaccessible: &[String],
+        sep: char,
+    ) -> String {
+        let err = inaccessible_database_error();
+        match section_name {
+            names::TABLE_SPACES => inaccessible
+                .iter()
+                .map(|d| self.format_table_spaces_error(d, &err))
+                .collect(),
+            names::TRANSACTION_LOG | names::DATAFILES => inaccessible
+                .iter()
+                .map(|d| self.format_some_file_error(d, &err, sep))
+                .collect(),
+            _ => String::new(),
+        }
+    }
+
+    /// Renders the simulated `CLUSTERS` error lines for `inaccessible` databases,
+    /// but only when the instance is actually clustered - `IsClustered` is a
+    /// `SERVERPROPERTY`, not a per-database fact, so an inaccessible database says
+    /// nothing about it on its own.
+    fn format_inaccessible_clusters(
+        &self,
+        inaccessible: &[String],
+        sep: char,
+        is_clustered: bool,
+    ) -> String {
+        if !is_clustered {
+            return String::new();
+        }
+        let err = inaccessible_database_error();
+        inaccessible
+            .iter()
+            .map(|d| self.format_clusters_error(d, &err, sep))
+            .collect()
+    }
+
     pub fn generate_database_indexed_section_threading(
         &self,
-        databases: &[String],
+        databases: &[DatabaseEntry],
         endpoint: &Endpoint,
         section: &Section,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         if databases.is_empty() {
             log::warn!("No active databases, skip section {}", section.name());
             return String::new();
         }
-        let chunks = if databases.len() >= 64 {
-            let max_chunk = databases.len().div_ceil(4usize);
-            let min_chunk = 16usize;
-            databases.chunks(std::cmp::max(min_chunk, max_chunk))
-        } else if databases.len() >= 8 {
-            let max_chunk = databases.len().div_ceil(2usize);
-            let min_chunk = 4usize;
-            databases.chunks(std::cmp::max(min_chunk, max_chunk))
-        } else {
-            databases.chunks(databases.len())
-        };
         thread::scope(|s| {
-            let s: Vec<_> = chunks
-                .into_iter()
+            let s: Vec<_> = chunk_databases(databases)
                 .map(|chunk| {
                     s.spawn(|| {
-                        let dbs = chunk
-                            .iter()
-                            .filter_map(|database| {
-                                if endpoint.conn().exclude_databases().contains(database) {
-                                    log::debug!("Database {} excluded", database);
-                                    None
-                                } else {
-                                    Some(database.clone())
-                                }
-                            })
-                            .collect::<Vec<String>>();
+                        // Accessible databases are connected to for real data;
+                        // inaccessible ones are reported with a simulated error
+                        // line and never connected to - a per-database login to
+                        // an offline / forbidden database is what floods the SQL
+                        // Server error log (18456 / 4060).
+                        let (accessible, inaccessible) =
+                            partition_by_access(chunk, endpoint.conn().exclude_databases());
+                        let simulated =
+                            self.format_inaccessible_databases(section.name(), &inaccessible, sep);
                         let rt = tokio::runtime::Runtime::new().unwrap();
-                        match section.name() {
-                            names::TRANSACTION_LOG => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, &dbs, query, sep),
-                            ),
-                            names::TABLE_SPACES => rt.block_on(
-                                self.generate_table_spaces_section(endpoint, &dbs, query, sep),
-                            ),
-                            names::DATAFILES => rt.block_on(
-                                self.generate_datafiles_section(endpoint, &dbs, query, sep),
-                            ),
-                            names::CLUSTERS => rt.block_on(
-                                self.generate_clusters_section(endpoint, &dbs, query, sep),
-                            ),
-                            _ => format!("{} not implemented\n", section.name()).to_string(),
-                        }
+                        let real = match section.name() {
+                            names::TRANSACTION_LOG => {
+                                rt.block_on(self.generate_transaction_logs_section(
+                                    endpoint,
+                                    &accessible,
+                                    query,
+                                    sep,
+                                    edition,
+                                ))
+                            }
+                            names::TABLE_SPACES => rt.block_on(self.generate_table_spaces_section(
+                                endpoint,
+                                &accessible,
+                                query,
+                                sep,
+                                edition,
+                            )),
+                            names::DATAFILES => rt.block_on(self.generate_datafiles_section(
+                                endpoint,
+                                &accessible,
+                                query,
+                                sep,
+                                edition,
+                            )),
+                            // Unlike above, CLUSTERS handles its own simulated
+                            // entries internally (needs live is_clustered state).
+                            // `simulated` below is always "" for it.
+                            names::CLUSTERS => rt.block_on(self.generate_clusters_section(
+                                endpoint,
+                                &accessible,
+                                &inaccessible,
+                                query,
+                                sep,
+                                edition,
+                            )),
+                            _ => format!("{} not implemented\n", section.name()),
+                        };
+                        real + &simulated
                     })
                 })
                 .collect();
@@ -864,9 +1059,10 @@ impl SqlInstance {
         databases: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         let tasks = databases.iter().map(move |database| {
-            self.generate_transaction_logs_section_database(endpoint, database, query, sep)
+            self.generate_transaction_logs_section_database(endpoint, database, query, sep, edition)
         });
 
         let results = stream::iter(tasks)
@@ -882,9 +1078,10 @@ impl SqlInstance {
         database: &str,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         match self
-            .create_client(endpoint, Some(database.to_owned()))
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
             .await
         {
             Ok(mut c) => run_custom_query(&mut c, query)
@@ -897,7 +1094,7 @@ impl SqlInstance {
 
     fn format_some_file_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
         format!(
-            "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
+            "{}{sep}{}|-|-|-|-|-|-|{}\n",
             self.name,
             d.replace(' ', "_"),
             prepare_error(e)
@@ -911,9 +1108,10 @@ impl SqlInstance {
         databases: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         let tasks = databases.iter().map(move |database| {
-            self.generate_datafiles_section_database(endpoint, database, query, sep)
+            self.generate_datafiles_section_database(endpoint, database, query, sep, edition)
         });
 
         let results = stream::iter(tasks)
@@ -930,9 +1128,10 @@ impl SqlInstance {
         database: &str,
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
         match self
-            .create_client(endpoint, Some(database.to_owned()))
+            .create_client(endpoint, Some(database.to_owned()), Some(edition))
             .await
         {
             Ok(mut c) => run_custom_query(&mut c, query)
@@ -987,75 +1186,81 @@ impl SqlInstance {
         }
     }
 
+    /// Generates the full `CLUSTERS` output: real entries for `accessible`
+    /// databases and, when the instance is clustered, simulated error entries for
+    /// `inaccessible` ones (see [`Self::format_inaccessible_clusters`]).
+    ///
+    /// `IsClustered` (and, when true, the cluster node list) is a
+    /// `SERVERPROPERTY` - identical for every database on this instance - so it
+    /// is discovered once via a single connection, never once per database. This
+    /// intentionally does not select any specific database: the fact holds
+    /// instance-wide regardless of which database (if any) is even accessible.
     pub async fn generate_clusters_section(
         &self,
         endpoint: &Endpoint,
-        databases: &[String],
+        accessible: &[String],
+        inaccessible: &[String],
         query: &str,
         sep: char,
+        edition: &Edition,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_clusters_section_database(endpoint, database, query, sep)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
+        if accessible.is_empty() && inaccessible.is_empty() {
+            return String::new();
+        }
+        match self.discover_cluster_status(endpoint, query, edition).await {
+            Ok((is_clustered, node_info)) => {
+                let real: String = match &node_info {
+                    Some((active_node, nodes)) => accessible
+                        .iter()
+                        .map(|d| {
+                            format!(
+                                "{}{sep}{}{sep}{}{sep}{}\n",
+                                self.name,
+                                d.replace(' ', "_"),
+                                active_node,
+                                nodes
+                            )
+                        })
+                        .collect(),
+                    None => String::new(),
+                };
+                real + &self.format_inaccessible_clusters(inaccessible, sep, is_clustered)
+            }
+            // Could not determine clustering at all: report the same connection
+            // error for every database instead of silently producing nothing.
+            Err(err) => accessible
+                .iter()
+                .chain(inaccessible.iter())
+                .map(|d| self.format_clusters_error(d, &err, sep))
+                .collect(),
+        }
     }
 
     /// Todo(sk): write a test
-    pub async fn generate_clusters_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-    ) -> String {
-        let format_error = |d: &str, e: &anyhow::Error| {
-            format!(
-                "{}{sep}{}{sep}{sep}{sep}{:?}\n",
-                self.name,
-                d.replace(' ', "_"),
-                e
-            )
-        };
-        match self
-            .create_client(endpoint, Some(database.to_owned()))
-            .await
-        {
-            Ok(mut c) => match self
-                .generate_clusters_entry(&mut c, database, query, sep)
-                .await
-            {
-                Ok(None) => String::default(),
-                Ok(Some(entry)) => entry,
-                Err(err) => format_error(database, &err),
-            },
-            Err(err) => format_error(database, &err),
-        }
+    fn format_clusters_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
+        format!(
+            "{}{sep}{}{sep}{sep}{sep}{}\n",
+            self.name,
+            d.replace(' ', "_"),
+            prepare_error(e)
+        )
     }
 
-    async fn generate_clusters_entry(
+    /// Discovers instance-wide cluster status via a single connection: whether
+    /// the instance is clustered, and - only when it is - the `(active_node,
+    /// node_names)` pair shared by every database on it.
+    async fn discover_cluster_status(
         &self,
-        client: &mut UniClient,
-        database: &str,
+        endpoint: &Endpoint,
         query: &str,
-        sep: char,
-    ) -> Result<Option<String>> {
-        if !self.is_database_clustered(client).await? {
-            return Ok(None);
+        edition: &Edition,
+    ) -> Result<(bool, Option<(String, String)>)> {
+        let mut client = self.create_client(endpoint, None, Some(edition)).await?;
+        if !self.is_database_clustered(&mut client).await? {
+            return Ok((false, None));
         }
-        let (nodes, active_node) = self.get_cluster_nodes(client, query).await?;
-        Ok(Some(format!(
-            "{}{sep}{}{sep}{}{sep}{}\n",
-            self.name,
-            database.replace(' ', "_"),
-            active_node,
-            nodes
-        )))
+        let (nodes, active_node) = self.get_cluster_nodes(&mut client, query).await?;
+        Ok((true, Some((active_node, nodes))))
     }
 
     async fn is_database_clustered(&self, client: &mut UniClient) -> Result<bool> {
@@ -1131,7 +1336,10 @@ impl SqlInstance {
         query: Option<&str>,
         edition: &Edition,
     ) -> String {
-        match self.create_client(endpoint, section.main_db(edition)).await {
+        match self
+            .create_client(endpoint, section.main_db(edition), Some(edition))
+            .await
+        {
             Ok(mut c) => {
                 let q = query.map(|q| q.to_owned()).unwrap_or_else(|| {
                     section
@@ -1158,8 +1366,9 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         section: &Section,
+        edition: &Edition,
     ) -> Option<String> {
-        match self.create_client(endpoint, None).await {
+        match self.create_client(endpoint, None, Some(edition)).await {
             Ok(mut c) => {
                 if let Some(query) =
                     section.find_provided_query(get_sql_dir(), self.version_major())
@@ -1358,6 +1567,7 @@ pub async fn create_tcp_client(
     endpoint: &Endpoint,
     database: Option<String>,
     port: Option<Port>,
+    known_edition: Option<&Edition>,
 ) -> Result<UniClient> {
     let (auth, conn) = endpoint.split();
     let client = match auth.auth_type() {
@@ -1378,7 +1588,7 @@ pub async fn create_tcp_client(
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
-    client.build().await
+    client.edition(known_edition.cloned()).build().await
 }
 
 pub async fn create_odbc_client(
@@ -1386,16 +1596,20 @@ pub async fn create_odbc_client(
     cluster_name: Option<&ClusterName>,
     instance_name: &InstanceName,
     database: Option<String>,
+    known_edition: Option<&Edition>,
 ) -> Result<UniClient> {
     let hostname = endpoint.conn().hostname();
     #[cfg(unix)]
-    anyhow::bail!(
-        "ODBC Not supported `{}` `{}` cluster:`{:?}` db:`{:?}`",
-        hostname,
-        instance_name,
-        cluster_name,
-        database
-    );
+    {
+        let _ = known_edition; // ODBC is Windows-only, nothing to apply here
+        anyhow::bail!(
+            "ODBC Not supported `{}` `{}` cluster:`{:?}` db:`{:?}`",
+            hostname,
+            instance_name,
+            cluster_name,
+            database
+        );
+    }
     #[cfg(windows)]
     {
         let connection_string = odbc::make_connection_string(
@@ -1407,7 +1621,7 @@ pub async fn create_odbc_client(
             endpoint,
         );
         let mut client = UniClient::Odbc(OdbcClient::new(connection_string));
-        update_edition(&mut client).await;
+        apply_edition(&mut client, known_edition).await;
         Ok(client)
     }
 }
@@ -2257,8 +2471,15 @@ async fn get_custom_instance_builder(
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
         log::debug!("Trying to connect to `{instance_name}` using ODBC");
-        if let Ok(mut client) =
-            create_odbc_client(endpoint, builder.cluster_name.as_ref(), instance_name, None).await
+        // Discovery: no earlier connection to this instance, edition unknown.
+        if let Ok(mut client) = create_odbc_client(
+            endpoint,
+            builder.cluster_name.as_ref(),
+            instance_name,
+            None,
+            None,
+        )
+        .await
         {
             log::debug!("Connected to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)
@@ -2681,15 +2902,150 @@ fn to_sql_instance(answers: &UniAnswer) -> Vec<SqlInstanceBuilder> {
 #[cfg(test)]
 mod tests {
     use super::{
-        generate_instance_entries, generate_signaling_blocks, get_active_local_instances,
+        chunk_databases, generate_instance_entries, generate_signaling_blocks,
+        get_active_local_instances, parse_has_access, partition_by_access, DatabaseEntry,
         SqlInstance, SqlInstanceBuilder,
     };
     use crate::args::Args;
     use crate::config::ms_sql::{Authentication, Connection, Endpoint};
+    use crate::config::section::names;
     use crate::config::yaml::test_tools::create_yaml;
     use crate::setup::Env;
     use crate::types::Port;
     use std::path::Path;
+
+    // The HAS_DBACCESS flag decides connect (accessible) vs simulated error line
+    // (inaccessible). Only an explicit "1" grants access; "0" and NULL (rendered
+    // as an empty string) must both mean "do not connect".
+    #[test]
+    fn test_parse_has_access() {
+        assert!(parse_has_access("1"));
+        assert!(parse_has_access(" 1 "));
+        assert!(!parse_has_access("0"));
+        assert!(!parse_has_access(""));
+        assert!(!parse_has_access("NULL"));
+    }
+
+    fn db(name: &str, accessible: bool) -> DatabaseEntry {
+        DatabaseEntry {
+            name: name.to_string(),
+            accessible,
+        }
+    }
+
+    // Accessible databases are connected to for real data; inaccessible ones only
+    // get a simulated error line. The split must follow the flag and keep input
+    // order within each bucket.
+    #[test]
+    fn test_partition_by_access_splits_on_flag() {
+        let entries = [db("a", true), db("b", false), db("c", true), db("d", false)];
+        let (accessible, inaccessible) = partition_by_access(&entries, &[]);
+        assert_eq!(accessible, vec!["a".to_string(), "c".to_string()]);
+        assert_eq!(inaccessible, vec!["b".to_string(), "d".to_string()]);
+    }
+
+    // The chunking decides how many threads a run spawns, so the thresholds
+    // are pinned here.
+    #[test]
+    fn test_chunk_databases_sizes() {
+        let make = |n: usize| {
+            (0..n)
+                .map(|i| db(&format!("db{i}"), true))
+                .collect::<Vec<_>>()
+        };
+
+        // Below 8 databases everything stays in a single chunk.
+        for n in 1..8 {
+            let entries = make(n);
+            assert_eq!(chunk_databases(&entries).count(), 1, "n={n}");
+        }
+
+        // 8..64: two chunks, at least 4 databases each.
+        let entries = make(8);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![4, 4]);
+
+        let entries = make(9);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![5, 4]);
+
+        // From 64 on: four chunks, at least 16 databases each.
+        let entries = make(64);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![16, 16, 16, 16]);
+
+        let entries = make(100);
+        let sizes: Vec<usize> = chunk_databases(&entries).map(|c| c.len()).collect();
+        assert_eq!(sizes, vec![25, 25, 25, 25]);
+    }
+
+    /// An empty list must not panic: `chunks(0)` does.
+    #[test]
+    fn test_chunk_databases_empty() {
+        assert_eq!(chunk_databases(&[]).count(), 0);
+    }
+
+    // An excluded database is dropped entirely - neither connected to nor reported
+    // as an error - regardless of whether it is accessible.
+    #[test]
+    fn test_partition_by_access_drops_excluded() {
+        let entries = [db("keep", true), db("skip", true), db("gone", false)];
+        let exclude = vec!["skip".to_string(), "gone".to_string()];
+        let (accessible, inaccessible) = partition_by_access(&entries, &exclude);
+        assert_eq!(accessible, vec!["keep".to_string()]);
+        assert!(inaccessible.is_empty());
+    }
+
+    #[test]
+    fn test_format_inaccessible_databases() {
+        let i = SqlInstanceBuilder::new()
+            .name("test_name")
+            .build(&Endpoint::default());
+        let dbs = vec!["db_one".to_string(), "db two".to_string()];
+
+        // A per-database section renders one error line per inaccessible database;
+        // spaces in the name become underscores.
+        let out = i.format_inaccessible_databases(names::TABLE_SPACES, &dbs, '|');
+        assert_eq!(out.lines().count(), 2);
+        assert!(out.contains("MSSQL_TEST_NAME"));
+        assert!(out.contains("db_one"));
+        assert!(out.contains("db_two"));
+
+        // A section without a per-database error representation yields nothing.
+        assert_eq!(
+            i.format_inaccessible_databases("unknown_section", &dbs, '|'),
+            ""
+        );
+
+        // CLUSTERS is handled separately (see test_format_inaccessible_clusters),
+        // not by this dispatcher.
+        assert_eq!(
+            i.format_inaccessible_databases(names::CLUSTERS, &dbs, '|'),
+            ""
+        );
+    }
+
+    #[test]
+    fn test_format_inaccessible_clusters() {
+        let i = SqlInstanceBuilder::new()
+            .name("test_name")
+            .build(&Endpoint::default());
+        let dbs = vec!["db_one".to_string(), "db two".to_string()];
+
+        // No inaccessible databases yields nothing, regardless of is_clustered.
+        assert_eq!(i.format_inaccessible_clusters(&[], '|', true), "");
+
+        // CLUSTERS is a SERVERPROPERTY, not a per-database fact: with is_clustered
+        // false, inaccessible databases yield nothing even though other sections
+        // would report them.
+        assert_eq!(i.format_inaccessible_clusters(&dbs, '|', false), "");
+
+        // With is_clustered true, renders one error line per inaccessible database.
+        let out = i.format_inaccessible_clusters(&dbs, '|', true);
+        assert_eq!(out.lines().count(), 2);
+        assert!(out.contains("db_one"));
+        assert!(out.contains("db_two"));
+    }
 
     #[test]
     fn test_get_active_local_instances_flag_false_returns_none() {

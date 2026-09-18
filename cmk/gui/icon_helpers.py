@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.shared_typing.main_menu import (
     DefaultIcon,
     EmblemIcon,
     UserIcon,
 )
 from cmk.shared_typing.main_menu import DynamicIcon as SharedDynamicIcon
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 
 def _to_icon_name(name: str) -> IconNames:

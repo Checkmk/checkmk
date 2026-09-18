@@ -4,13 +4,17 @@
 
 """Unit tests for cmk.dev_deploy.service_manager (resolve_services)."""
 
-from __future__ import annotations
-
+import subprocess
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
-from cmk.dev_deploy.execution.service_manager import resolve_services
+from cmk.dev_deploy.execution.service_manager import (
+    resolve_services,
+    restart_services,
+    SERVICE_RESTART_ORDER,
+)
 from cmk.dev_deploy.types import (
     BazelTarget,
     BazelTargetKind,
@@ -112,6 +116,41 @@ def _patch_specs(
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        pytest.param(ServiceAction.RELOAD, id="reload"),
+        pytest.param(ServiceAction.RESTART, id="restart"),
+    ],
+)
+def test_apache_requests_search_rebuild_only_after_success(
+    monkeypatch: pytest.MonkeyPatch, action: ServiceAction
+) -> None:
+    run = Mock(
+        spec=subprocess.run,
+        return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(subprocess, "run", run)
+
+    restart_services([(Service.APACHE, action)], _site())
+
+    assert run.call_args.args[0][-1] == f"omd {action.value} apache && init-redis"
+
+
+def test_other_service_restarts_do_not_request_search_rebuild(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = Mock(
+        spec=subprocess.run,
+        return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(subprocess, "run", run)
+
+    restart_services([(Service.AUTOMATION_HELPER, ServiceAction.RESTART)], _site())
+
+    assert run.call_args.args[0][-1] == "omd restart automation-helper"
 
 
 class TestResolveServicesDefaults:
@@ -228,6 +267,40 @@ class TestResolveServicesEditionGating:
         result = resolve_services(changes, None, _site(Edition.PRO))
         assert result == [(Service.CMC, ServiceAction.RESTART)]
 
+    def test_ai_control_plane_filtered_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_specs(
+            monkeypatch,
+            service_specs=[
+                ServiceSpec(
+                    source_prefix="non-free/packages/cmk-ai-control-plane/",
+                    services=((Service.AI_CONTROL_PLANE, ServiceAction.RESTART),),
+                    edition_constraint=None,
+                ),
+            ],
+        )
+        changes = _changeset(
+            files=("non-free/packages/cmk-ai-control-plane/cmk/ai_control_plane/app.py",)
+        )
+        result = resolve_services(changes, None, _site(Edition.COMMUNITY))
+        assert result == []
+
+    def test_ai_control_plane_included_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_specs(
+            monkeypatch,
+            service_specs=[
+                ServiceSpec(
+                    source_prefix="non-free/packages/cmk-ai-control-plane/",
+                    services=((Service.AI_CONTROL_PLANE, ServiceAction.RESTART),),
+                    edition_constraint=None,
+                ),
+            ],
+        )
+        changes = _changeset(
+            files=("non-free/packages/cmk-ai-control-plane/cmk/ai_control_plane/app.py",)
+        )
+        result = resolve_services(changes, None, _site(Edition.PRO))
+        assert result == [(Service.AI_CONTROL_PLANE, ServiceAction.RESTART)]
+
 
 class TestResolveServicesOrdering:
     """Results follow SERVICE_RESTART_ORDER."""
@@ -250,6 +323,14 @@ class TestResolveServicesOrdering:
         result = resolve_services(changes, None, _site())
         services = [svc for svc, _ in result]
         assert services.index(Service.APACHE) < services.index(Service.AUTOMATION_HELPER)
+
+    def test_every_service_has_a_restart_order_position(self) -> None:
+        """Every Service enum member must appear in SERVICE_RESTART_ORDER.
+
+        An omission silently falls back to sort-key 999 (last), which is easy
+        to miss when a new service is added.
+        """
+        assert set(Service) == set(SERVICE_RESTART_ORDER)
 
 
 class TestResolveServicesDeployedDeployers:

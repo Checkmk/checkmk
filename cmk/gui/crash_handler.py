@@ -89,7 +89,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
                 language=get_current_language(),
                 request_method=request.request_method,
             )
-        except (RuntimeError, AttributeError):
+        except RuntimeError, AttributeError:
             # TODO: for the moment we set the request details to unknown, but we should probably
             #  introduce a new crash report type which does not require request details
             request_details = RequestDetails(
@@ -270,7 +270,7 @@ def create_gui_crash_report(
 
 
 def _show_crash_dump_message(
-    crash: "GUICrashReport",
+    crash: GUICrashReport,
     plain_text: bool,
     fail_silently: bool,
     show_crash_link: bool | None,

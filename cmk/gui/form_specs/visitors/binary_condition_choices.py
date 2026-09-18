@@ -76,7 +76,7 @@ def _parse_frontend(
             for raw_group in raw_value
             if raw_group["label_group"]
         ]
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return InvalidValue(fallback_value=[], reason=_("Invalid data"))
 
 
@@ -99,7 +99,7 @@ def _parse_disk(
             )
             for raw_group_operator, raw_label_group in raw_value
         ]
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return InvalidValue(fallback_value=[], reason=_("Invalid data"))
 
 

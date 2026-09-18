@@ -55,7 +55,7 @@ describe('drawData', () => {
     const metrics = [makeMetric('area', '#area00'), makeMetric('line', '#line00')]
     const stacks = [makeSeries('area-stacked'), makeSeries('line')]
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, null)
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set())
 
     expect(drawStackedBandSpy).toHaveBeenCalledTimes(1)
     expect(drawStackedBandSpy.mock.calls[0]![4]).toBe('#area00')
@@ -68,7 +68,7 @@ describe('drawData', () => {
     const metrics = [makeMetric('line', '#line00'), makeMetric('area', '#area00')]
     const stacks = [makeSeries('line'), makeSeries('area-stacked')]
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, null)
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set())
 
     const areaDrawnAt = drawStackedBandSpy.mock.invocationCallOrder[0]!
     const lineDrawnAt = drawLineSpy.mock.invocationCallOrder[0]!
@@ -84,7 +84,7 @@ describe('drawData', () => {
       alphaByColor.set(color, context.globalAlpha)
     })
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, 'focus')
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set(['focus']))
 
     expect(alphaByColor.get('#focus0')).toBe(1)
     expect(alphaByColor.get('#other0')).toBeLessThan(1)
@@ -99,9 +99,33 @@ describe('drawData', () => {
       alphas.push(context.globalAlpha)
     })
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, null)
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set())
 
     expect(alphas).toEqual([1, 1])
+  })
+
+  test('keeps every highlighted metric opaque when a source row resolved to several', () => {
+    const ctx = makeCtx()
+    const metrics = [
+      makeMetric('first', '#first0'),
+      makeMetric('second', '#secon0'),
+      makeMetric('other', '#other0')
+    ]
+    const stacks = [
+      makeSeries('area-stacked'),
+      makeSeries('area-stacked'),
+      makeSeries('area-stacked')
+    ]
+    const alphaByColor = new Map<string, number>()
+    drawStackedBandSpy.mockImplementation((context, _series, _x, _y, color) => {
+      alphaByColor.set(color, context.globalAlpha)
+    })
+
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set(['first', 'second']))
+
+    expect(alphaByColor.get('#first0')).toBe(1)
+    expect(alphaByColor.get('#secon0')).toBe(1)
+    expect(alphaByColor.get('#other0')).toBeLessThan(1)
   })
 
   test('restores full opacity after drawing so later draws are unaffected', () => {
@@ -109,7 +133,7 @@ describe('drawData', () => {
     const metrics = [makeMetric('focus', '#focus0'), makeMetric('other', '#other0')]
     const stacks = [makeSeries('area-stacked'), makeSeries('area-stacked')]
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, 'focus')
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set(['focus']))
 
     expect(ctx.globalAlpha).toBe(1)
   })

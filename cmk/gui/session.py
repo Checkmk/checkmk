@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 from datetime import datetime
 from typing import cast, overload, override
@@ -203,7 +202,9 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @classmethod
     def create_empty_session(
-        cls, exc: MKException | None, user_permissions: UserPermissions
+        cls,
+        exc: MKException | None,
+        user_permissions: UserPermissions,  # noqa: ARG003
     ) -> CheckmkFileBasedSession:
         """Create a new and empty and logged-out session.
 
@@ -309,9 +310,12 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         credentials have been provided, 2FA has been completed, ...).
 
         For automation users this always sets the state to "logged_in" as they authenticate
-        non-interactively and cannot manage their own profile.
+        non-interactively and cannot manage their own profile. The same applies to an
+        OAuth access token: it is only ever handed out after the interactive /authorize
+        consent step, which itself required a fully logged-in (2FA-complete, password
+        up to date) session, so the credential already proves those checks were satisfied.
         """
-        if self.user.automation_user:
+        if self.user.automation_user or self.session_info.auth_type == "oauth":
             self.session_info.session_state = "logged_in"
             return self.session_info.session_state
 
@@ -324,7 +328,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             """
             This does not check if a user already has configured their 2FA as it shouldn't be reached if they have.
             """
-            return self.two_factor_enforced(self.user.ident, self.user._user_permissions)
+            return self.two_factor_enforced(self.user.ident, self.user._user_permissions)  # noqa: SLF001
 
         def _is_pw_change_needed() -> bool:
             pw_change_reason = userdb.need_to_change_pw(self.user.ident, datetime.now())
@@ -513,7 +517,11 @@ class FileBasedSession(SessionInterface):
         return sess
 
     def _authenticate_and_open(
-        self, app: Flask, request: flask.Request, config: Config, user_permissions: UserPermissions
+        self,
+        app: Flask,  # noqa: ARG002
+        request: flask.Request,
+        config: Config,
+        user_permissions: UserPermissions,
     ) -> CheckmkFileBasedSession:
         """Authenticate and open new session
 

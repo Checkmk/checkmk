@@ -12,7 +12,7 @@ from cmk.ccc import daemon, store
 from cmk.ccc.exceptions import MKGeneralException
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_locks() -> Iterator[None]:
     yield
     store.release_all_locks()

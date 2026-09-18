@@ -7,6 +7,7 @@
 
 from collections.abc import Collection, Iterable, Mapping
 from logging import Logger
+from typing import Final
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
@@ -18,6 +19,8 @@ from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.piggyback.hub import HostLocations, publish_persisted_locations_for_sites
 from cmk.utils.paths import omd_root
+
+CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT: Final = "site_piggyback_hub"
 
 _HOST_CHANGES = (
     "edit-host",  # includes moving a host from a site to another
@@ -46,7 +49,7 @@ def distribute_piggyback_hub_configs(
     logger: Logger,
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
-    site_to_activate: Collection[SiteId],  # only needed in multi-tenancy case.
+    site_to_activate: Collection[SiteId],  # only needed in multi-tenancy case.  # noqa: ARG001
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
     publish_persisted_locations_for_sites(
@@ -93,13 +96,18 @@ def _filter_for_enabled_piggyback_hub(
 def _validate_piggyback_hub_config(
     settings_per_site: Mapping[SiteId, GlobalSettings], central_site_id: SiteId
 ) -> None:
-    config_var_ident = "site_piggyback_hub"
-    central_enabled = dict(settings_per_site).pop(central_site_id)[config_var_ident]
-    if not central_enabled and any(
-        remote_config[config_var_ident] for remote_config in settings_per_site.values()
+    remote_settings = dict(settings_per_site)
+    central_settings = remote_settings.pop(central_site_id, {})
+    if CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT not in central_settings:
+        # Value is not set for the central site, so there is nothing to validate.
+        return
+
+    if not central_settings[CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT] and any(
+        remote_config.get(CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT)
+        for remote_config in remote_settings.values()
     ):
         raise MKUserError(
-            config_var_ident,
+            CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
             _(
                 "The piggyback-hub cannot be enabled for a remote site if it is disabled for the central site"
             ),

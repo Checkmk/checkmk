@@ -8,7 +8,6 @@ from enum import StrEnum
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.user import UserId
 from cmk.gui.form_specs import (
     DEFAULT_VALUE,
     get_visitor,
@@ -47,10 +46,8 @@ def single_choice_spec(validator: InvalidElementValidator | None = None) -> Sing
         pytest.param(RawFrontendData(1), id="different data type than element name"),
     ],
 )
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
 def test_invalid_single_choice_validator_keep(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
     invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.KEEP))
@@ -81,10 +78,8 @@ def test_invalid_single_choice_validator_keep(
         RawFrontendData("wuff"),
     ],
 )
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
 def test_invalid_single_choice_validator_complain(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
     invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.COMPLAIN))
@@ -110,10 +105,8 @@ def test_invalid_single_choice_validator_complain(
         RawFrontendData("wuff"),
     ],
 )
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
 def test_invalid_single_choice_validator_none(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
     invalid_choice: RawFrontendData | RawDiskData,
 ) -> None:
     single_choice = single_choice_spec(None)
@@ -139,12 +132,8 @@ def test_invalid_single_choice_validator_none(
         RawFrontendData(SingleChoiceVisitor.option_id("bar")),
     ],
 )
-def test_single_choice_valid_value(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-    valid_choice: RawFrontendData | RawDiskData,
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_user")
+def test_single_choice_valid_value(valid_choice: RawFrontendData | RawDiskData) -> None:
     single_choice = single_choice_spec(None)
     visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
 

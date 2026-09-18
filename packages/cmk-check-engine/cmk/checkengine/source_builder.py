@@ -112,6 +112,7 @@ class SourceBuilder:
         self._initialize_optional_sources(
             SourceContext(
                 host_name=self.host_name,
+                host_labels=source_config.labels_of_host(self.host_name),
                 ipaddress=self.ipaddress,
                 computed_datasources=self.cds,
                 max_age_agent=self.max_age_agent,
@@ -121,6 +122,7 @@ class SourceBuilder:
                 metrics_association=self._metrics_association,
                 check_mk_check_interval=self.check_mk_check_interval,
                 telemetry_custom_service=source_config.telemetry_custom_service,
+                metrics_identity_routing=source_config.metrics_identity_routing,
             )
         )
 

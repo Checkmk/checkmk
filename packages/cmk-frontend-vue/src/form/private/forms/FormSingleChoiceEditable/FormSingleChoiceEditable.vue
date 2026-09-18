@@ -48,6 +48,8 @@ onUnmounted(() => {
   abortController.abort()
 })
 
+const choicesLoading = ref<boolean>(true)
+
 onMounted(async () => {
   try {
     const entities = await configEntityAPI.listEntities(
@@ -65,6 +67,8 @@ onMounted(async () => {
       return
     }
     throw e
+  } finally {
+    choicesLoading.value = false
   }
 })
 
@@ -137,6 +141,7 @@ function slideInSubmitted(event: EntityDescription, close: () => void) {
   <CmkSlideInDropdown
     v-model="selectedObjectId"
     :choices="choices"
+    :loading="choicesLoading"
     :allow-editing-existing-elements="spec.allow_editing_existing_elements"
     :label="spec.title"
     :new-title="newTitle"

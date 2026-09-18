@@ -19,8 +19,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import requested_file_name
 
 

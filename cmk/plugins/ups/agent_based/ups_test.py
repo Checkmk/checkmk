@@ -140,7 +140,7 @@ def check_ups_test(params: Mapping[str, Any], section: Sequence[StringTable]) ->
 
     elif (elapsed_time := uptime.uptime_sec - start_time.uptime_sec) < 0:
         yield Result(
-            state=State.UNKNOWN, summary="Could not determine time since start of last test"
+            state=State.UNKNOWN, summary="Time since start of last test is a negative time period"
         )
         return
     else:

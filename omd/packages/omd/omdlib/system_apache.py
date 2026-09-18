@@ -21,7 +21,6 @@ __all__ = [
     "register_with_system_apache",
     "unregister_from_system_apache",
     "delete_apache_hook",
-    "is_apache_hook_up_to_date",
     "write_apache_listen_conf",
 ]
 
@@ -103,9 +102,7 @@ def register_with_system_apache(
     if (err := apache_network_port_has_error(apache_tcp_port)) is not None:
         sys.exit(f"Invalid value for '{apache_tcp_port}' for APACHE_TCP_PORT'. {err}\n")
 
-    create_apache_hook(
-        apache_config, site_name, apache_tcp_addr, apache_tcp_port, apache_hook_version()
-    )
+    create_apache_hook(apache_config, site_name, apache_tcp_addr, apache_tcp_port)
     apply_apache_config(version_info, apache_reload, verbose)
 
 
@@ -121,20 +118,6 @@ def apply_apache_config(version_info: VersionInfo, apache_reload: bool, verbose:
         reload_apache(version_info)
     else:
         restart_apache(version_info, verbose)
-
-
-def is_apache_hook_up_to_date(apache_config: Path) -> bool:
-    with open(apache_config) as f:
-        header = f.readline()
-        return header == apache_hook_header(apache_hook_version()) + "\n"
-
-
-def apache_hook_header(version: int) -> str:
-    return f"# version: {version}"
-
-
-def apache_hook_version() -> int:
-    return 6
 
 
 def _site_not_started_html(site_name: str) -> str:
@@ -237,20 +220,12 @@ def create_apache_hook(
     site_name: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
-    version: int,
 ) -> None:
-    """
-    Note: If you change the content of this file, you will have to increase the
-    apache_hook_version(). It will trigger a mechanism in `omd update` that notifies users about the
-    fact that they have to call `omd update-apache-config SITE` afterwards.
-    """
-
     not_started_html = _site_not_started_html(site_name)
     apache_config.parent.mkdir(parents=True, exist_ok=True)
     with open(apache_config, "w") as f:
         f.write(
-            f"""{apache_hook_header(version)}
-# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
+            f"""# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
 
 # Make sure that symlink /omd does not make problems
 <Directory />
@@ -273,6 +248,17 @@ def create_apache_hook(
     # wrong devlivered pages sometimes
     ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name} retry=0 disablereuse=On timeout=120
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}
+  </Location>
+
+  # RFC 7662 token introspection (cmk.gui.oauth.pages._introspect) is
+  # deliberately unauthenticated, deviating from RFC 7662 section 2.1's
+  # MUST-protect requirement -- it must never be reachable through this
+  # public proxy. Location sections merge in file order, not by
+  # specificity (that's Directory) -- this block must stay after the
+  # proxy Location above, since that order is what lets this Require
+  # win if the general Location ever gains one of its own.
+  <Location /{site_name}/check_mk/oauth_introspect.py>
+    Require all denied
   </Location>
 
   <Location /.well-known/oauth-authorization-server/oauth-{site_name}>

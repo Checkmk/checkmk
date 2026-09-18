@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.watcher (content hashing, heartbeat, watch loop)."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch

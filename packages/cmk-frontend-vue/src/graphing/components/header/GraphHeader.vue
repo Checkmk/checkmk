@@ -17,10 +17,11 @@ import { isoDate, stepLabel } from '../../utils/timeFormat'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import type { ZoomMode } from '../TimeSeriesGraph'
 import {
-  CONSOLIDATION_FUNCTIONS,
+  CONSOLIDATION_FUNCTION_OPTION_ORDER,
   type ConsolidationFn,
   DEFAULT_CONSOLIDATION_FN,
   isConsolidationFn,
+  useConsolidationFunctionDescriptions,
   useConsolidationFunctionLabels
 } from '../consolidation'
 import GraphTitle from './GraphTitle.vue'
@@ -37,7 +38,7 @@ const props = withDefaults(
     showConsolidation?: boolean | undefined
     showBurgerMenu?: boolean | undefined
     burgerMenuGroups?: BurgerMenuGroup[] | undefined
-    isCompact?: boolean | undefined
+    isHoverGraph?: boolean | undefined
   }>(),
   { showControls: true }
 )
@@ -52,12 +53,14 @@ const zoomMode = defineModel<ZoomMode>('zoomMode', { default: 'time' })
 const { _t } = usei18n()
 
 const consolidationFunctionLabels = useConsolidationFunctionLabels()
+const consolidationFunctionDescriptions = useConsolidationFunctionDescriptions()
 
 const consolidationOptions = computed<Suggestions>(() => ({
   type: 'fixed',
-  suggestions: CONSOLIDATION_FUNCTIONS.map((consolidationFunction) => ({
+  suggestions: CONSOLIDATION_FUNCTION_OPTION_ORDER.map((consolidationFunction) => ({
     name: consolidationFunction,
-    title: consolidationFunctionLabels.value[consolidationFunction]
+    title: consolidationFunctionLabels.value[consolidationFunction],
+    tooltip: consolidationFunctionDescriptions.value[consolidationFunction]
   }))
 }))
 
@@ -99,8 +102,15 @@ const titleEl = computed<HTMLElement | null>(() => (titleComp.value?.$el as HTML
 const valuesAndTimeEl = ref<HTMLElement | null>(null)
 const zoomAndMenuEl = ref<HTMLElement | null>(null)
 
+const RAW_DATA_STEP_SECONDS = 60
+
+const dataIsAggregated = computed(
+  () => !!props.timeRange && props.timeRange.step > RAW_DATA_STEP_SECONDS
+)
+const showConsolidationControl = computed(() => !!props.showConsolidation && dataIsAggregated.value)
+
 const showValuesAndTime = computed(
-  () => !!props.showConsolidation || (!!props.showTimestamp && !!props.timeRange)
+  () => showConsolidationControl.value || (!!props.showTimestamp && !!props.timeRange)
 )
 const showZoomAndMenu = computed(() => props.showControls || !!props.showBurgerMenu)
 
@@ -118,8 +128,15 @@ const { headerLineBreakLevel } = useHeaderLineBreakLevel(
   }
 )
 
+const timestampLabel = computed(() => {
+  const date = dateLabel.value ?? ''
+  return showConsolidationControl.value
+    ? _t('for %{date},', { date })
+    : _t('Graph values for %{date},', { date })
+})
+
 const resolutionLabel = computed(() => {
-  const prefix = !!props.isCompact || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
+  const prefix = !!props.isHoverGraph || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
   const resolution = props.timeRange ? withMinutesSpelledOut(stepLabel(props.timeRange.step)) : ''
   return `${prefix} ${resolution}`
 })
@@ -130,7 +147,7 @@ const resolutionLabel = computed(() => {
     ref="headerEl"
     class="graphing-graph-header"
     :class="{
-      'graphing-graph-header--compact': !!isCompact,
+      'graphing-graph-header--hover-graph': !!isHoverGraph,
       'graphing-graph-header--title-wrapped': headerLineBreakLevel === 2
     }"
   >
@@ -138,7 +155,7 @@ const resolutionLabel = computed(() => {
       v-if="showTitle"
       ref="titleComp"
       :title="title ?? ''"
-      :is-compact="!!isCompact"
+      :is-compact="!!isHoverGraph"
       class="graphing-graph-header__title"
     />
     <div
@@ -149,7 +166,7 @@ const resolutionLabel = computed(() => {
       role="group"
       :aria-label="_t('Graph values and time information')"
     >
-      <template v-if="showConsolidation">
+      <template v-if="showConsolidationControl">
         <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
         <CmkDropdown
           v-model="consolidationModel"
@@ -159,7 +176,7 @@ const resolutionLabel = computed(() => {
         />
       </template>
       <span v-if="showTimestamp && timeRange" class="graphing-graph-header__timestamp">
-        {{ _t('for %{date},', { date: dateLabel ?? '' }) }}
+        {{ timestampLabel }}
         <span class="graphing-graph-header__resolution">
           {{ resolutionLabel }}
         </span>
@@ -259,8 +276,19 @@ const resolutionLabel = computed(() => {
   font-weight: var(--font-weight-bold);
 }
 
-.graphing-graph-header--compact .graphing-graph-header__title,
-.graphing-graph-header--compact .graphing-graph-header__timestamp {
+.graphing-graph-header--hover-graph {
+  // For hover graphs the background color is handled in the panel
+  background-color: transparent;
+  padding: var(--dimension-4) var(--dimension-4) var(--dimension-5);
+}
+
+.graphing-graph-header--hover-graph .graphing-graph-header__title {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.graphing-graph-header--hover-graph .graphing-graph-header__title,
+.graphing-graph-header--hover-graph .graphing-graph-header__timestamp {
   font-size: var(--font-size-xsmall);
 }
 </style>

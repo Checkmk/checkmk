@@ -37,13 +37,13 @@ class VisualInfoExtensions:
 
 @api_model
 class VisualInfoModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: VisualInfoExtensions = api_field(description="The configuration of this info.")
 
 
 @api_model
 class VisualInfoCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[VisualInfoModel] = api_field(description="A list of info objects", example="")

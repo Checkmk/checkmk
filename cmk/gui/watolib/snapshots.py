@@ -5,8 +5,6 @@
 
 """Coordinates the collection and packing of snapshots"""
 
-from __future__ import annotations
-
 import logging
 import multiprocessing.pool
 import os
@@ -32,7 +30,7 @@ from cmk.gui.watolib.config_sync import (
     snapshot_file_creator_registry,
     SnapshotSettings,
 )
-from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.global_settings import save_site_global_settings_raw
 
 tracer = trace.get_tracer()
 
@@ -130,7 +128,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             self._site_snapshot_settings.items(), key=lambda x: x[0]
         ):
             with tracer.span(f"prepare_site_{site_id}"):
-                save_site_global_settings(
+                save_site_global_settings_raw(
                     get_site_globals(site_id, snapshot_settings.site_config),
                     custom_site_path=snapshot_settings.work_dir,
                 )

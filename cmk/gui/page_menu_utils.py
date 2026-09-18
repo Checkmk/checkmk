@@ -26,15 +26,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import (
-    DynamicIcon,
-    IconNames,
-    InfoName,
-    Rows,
-    SingleInfos,
-    StaticIcon,
-    Visual,
-)
+from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
@@ -46,6 +38,7 @@ from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hosts
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
@@ -84,10 +77,6 @@ def get_context_page_menu_dropdowns(
     singlecontext_request_vars = visuals.get_singlecontext_vars(
         view.context, view.spec["single_infos"]
     )
-
-    # Forward site so that link_from() can verify inventory data exists.
-    if "site" not in singlecontext_request_vars and (site := request.var("site")):
-        singlecontext_request_vars["site"] = site
 
     # Reports are displayed by separate dropdown (Export > Report)
     linked_visuals = list(

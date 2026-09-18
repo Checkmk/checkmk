@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -234,12 +233,12 @@ def get_service_attributes(
         core_objects_config, host_name, service_name, service_labels
     )
     attrs.update(
-        ConfigCache._get_tag_attributes(
+        ConfigCache._get_tag_attributes(  # noqa: SLF001
             core_objects_config.tags_of_service(host_name, service_name, service_labels), "TAG"
         )
     )
-    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABEL"))
-    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABELSOURCE"))
+    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABEL"))  # noqa: SLF001
+    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABELSOURCE"))  # noqa: SLF001
     return attrs
 
 

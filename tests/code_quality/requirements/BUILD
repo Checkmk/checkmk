@@ -5,6 +5,7 @@ load("//bazel/rules:requirements_mapping.bzl", "requirements_mapping")
 
 py_library(
     name = "requirements_utils",
+    testonly = True,
     srcs = ["utils.py"],
     data = ["//:defines.make"],
     imports = ["../../.."],
@@ -47,6 +48,7 @@ py_cmk_test(
 
 py_binary(
     name = "generate_requirements_mapping",
+    testonly = True,
     srcs = ["generate_requirements_mapping.py"],
     main = "generate_requirements_mapping.py",
     deps = [
@@ -56,6 +58,7 @@ py_binary(
 
 requirements_mapping(
     name = "mapping",
+    testonly = True,
     dist_infos = [req.replace(":pkg", ":dist_info") for req in all_requirements],
     tool = ":generate_requirements_mapping",
     visibility = ["//visibility:public"],

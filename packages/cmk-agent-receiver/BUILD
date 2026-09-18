@@ -10,7 +10,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
     "skel.permissions",
 ])
@@ -118,7 +117,7 @@ py_library(
         requirement("fastapi"),
         requirement("gunicorn"),
         requirement("h11"),
-        requirement("httpx"),
+        requirement("httpx2"),
         requirement("python-dateutil"),
         requirement("python-multipart"),
         requirement("requests"),
@@ -131,6 +130,7 @@ py_library(
 
 py_library(
     name = "testlib",
+    testonly = True,
     srcs = glob(["cmk/testlib/agent_receiver/**/*.py"]),
     data = [
         "@wiremock_standalone//file",
@@ -141,7 +141,7 @@ py_library(
         ":cmk-agent-receiver",
         "//packages/cmk-crypto",
         requirement("fastapi"),
-        requirement("httpx"),
+        requirement("httpx2"),
         requirement("python-dateutil"),
         requirement("starlette"),
         requirement("tenacity"),
@@ -170,7 +170,6 @@ py_wheel(
         "uvicorn-worker",
     ],
     strip_path_prefixes = ["packages/cmk-agent-receiver"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

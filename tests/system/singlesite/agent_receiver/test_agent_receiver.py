@@ -237,7 +237,8 @@ def test_supported_tls_versions(
 
 
 @pytest.mark.skip_if_faked_artifacts
-def test_all_TLS_versions_tested(site: Site, agent_receiver_port: int, site_ca: Path) -> None:
+@pytest.mark.usefixtures("site", "agent_receiver_port", "site_ca")
+def test_all_TLS_versions_tested() -> None:
     """Ensure the above tests cover all TLS versions."""
     all_versions = {
         version

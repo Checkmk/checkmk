@@ -11,6 +11,36 @@ def get_pip_options(module_name):
         "pillow": "--config-settings=avif=disable",
     }.get(module_name, "")
 
+def get_extra_setup(module_name):
+    """Shell snippet executed right before `pip install`.
+
+    Used to seed a local meson subproject package cache (MESON_PACKAGE_CACHE_DIR)
+    so meson resolves vendored C deps from disk instead of downloading them at
+    build time. The Bazel-fetched srcs referenced here must be added to that
+    module's `srcs` in the calling BUILD file.
+
+    matplotlib's meson build vendors freetype/harfbuzz/sheenbidi/libraqm/qhull as
+    subprojects, which by default requires network access at build time. None of
+    system-freetype/system-qhull/system-libraqm are set: our build images don't
+    provide a usable libqhull_r, and ship freetype and libraqm (0.10.1) older
+    than what matplotlib requires (libraqm needs >=0.10.4), so all five sources
+    are seeded offline here instead.
+    """
+    return {
+        "matplotlib": """
+            export PATH="$$(dirname "$$PYTHON_EXECUTABLE"):$$PATH"
+            export TMPDIR="$$HOME/tmp_matplotlib"
+            mkdir -p "$$TMPDIR"
+            export MESON_PACKAGE_CACHE_DIR="$$HOME/mpl_packagecache"
+            mkdir -p "$$MESON_PACKAGE_CACHE_DIR"
+            cp "$(execpath @matplotlib_freetype_src//file)" "$$MESON_PACKAGE_CACHE_DIR/freetype-2.14.3.tar.xz"
+            cp "$(execpath @matplotlib_harfbuzz_src//file)" "$$MESON_PACKAGE_CACHE_DIR/harfbuzz-14.1.0.tar.xz"
+            cp "$(execpath @matplotlib_sheenbidi_src//file)" "$$MESON_PACKAGE_CACHE_DIR/sheenbidi-3.0.0.tar.gz"
+            cp "$(execpath @matplotlib_libraqm_src//file)" "$$MESON_PACKAGE_CACHE_DIR/libraqm-0.10.5.tar.gz"
+            cp "$(execpath @matplotlib_qhull_src//file)" "$$MESON_PACKAGE_CACHE_DIR/qhull-8.0.2.tgz"
+        """,
+    }.get(module_name, "")
+
 def create_requirements_file(name, outs):
     """This macro is creating a requirements file per module.
     """
@@ -31,6 +61,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     openssl_dir = Label("@openssl").repo_name
     freetds_dir = Label("@freetds").repo_name
     python_dir = Label("@python").repo_name
+    extra_setup = get_extra_setup(name)
     native.genrule(
         name = name + "_compile",
         srcs = srcs,
@@ -45,6 +76,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 constraints = constraints,
+                extra_setup = extra_setup,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -54,6 +86,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 constraints = constraints,
+                extra_setup = extra_setup,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -152,6 +185,7 @@ build_cmd = """
     export CFLAGS="-Wno-error=incompatible-pointer-types -ffile-prefix-map=$$HOME=."
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/lib -Wl,--strip-debug"
+    {extra_setup}
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
@@ -167,7 +201,20 @@ build_cmd = """
       --use-feature=build-constraint \\
       --build-constraint="{constraints}" \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
+      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout" || true
+    # The `|| true` above keeps `set -e` from aborting on pip's exit code before
+    # we get a chance to inspect PIPESTATUS and dump diagnostics below.
+    PIP_INSTALL_STATUS=$${{PIPESTATUS[0]}}
+    if [ "$$PIP_INSTALL_STATUS" -ne 0 ]; then
+        # pip/meson swallow the actual subprocess output on failure and only point
+        # to a meson-log.txt buried in the (ephemeral) sandbox tmpdir -- e.g. the
+        # harfbuzz subproject build inside matplotlib's meson-python backend just
+        # reports "failed with status 1" with no further detail in the CI console.
+        # Dump any such log here so the real traceback survives into the CI log.
+        echo "pip install for $$MODULE_NAME failed (exit $$PIP_INSTALL_STATUS); dumping any meson-log.txt found under TMPDIR:"
+        find "$$TMPDIR" -name meson-log.txt -print -exec cat {{}} \\; 2>/dev/null
+        exit "$$PIP_INSTALL_STATUS"
+    fi
 
     tar cf $@ -C $$MODULE_NAME .
 """

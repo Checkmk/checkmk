@@ -13,12 +13,12 @@ from cmk.gui.http import request
 from cmk.gui.type_defs import (
     FilterHTTPVariables,
     FilterName,
-    HTTPVariables,
     InfoName,
     SingleInfos,
     Visual,
     VisualContext,
 )
+from cmk.web.utils.urls import HTTPVariable
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 from .filter import Filter, filter_registry
@@ -110,7 +110,7 @@ def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list
     return show_filters
 
 
-def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
+def context_to_uri_vars(context: VisualContext) -> list[HTTPVariable]:
     """Produce key/value tuples for HTTP variables from the visual context"""
     return list(
         chain.from_iterable(
@@ -166,7 +166,7 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     # construct crosslinks manually without the filter menu.
     # We must merge with the view context as many views have defaults, which
     # are not included in the crosslink.
-    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
+    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):  # noqa: SLF001
         with request.stashed_vars():
             request.set_var("_active", flag)
             return get_merged_context(context, vs_filterlist.from_html_vars(""))
@@ -184,7 +184,7 @@ def requested_context_from_request(infos: SingleInfos) -> VisualContext:
 
     # Test if filters are in url and reconstruct them. This is because we
     # construct cross-links manually without the filter menu.
-    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
+    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):  # noqa: SLF001
         with request.stashed_vars():
             request.set_var("_active", flag)
             return vs_filterlist.from_html_vars("")
@@ -204,16 +204,36 @@ def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) 
     return missing_context_filters(set(get_single_info_keys(single_infos)), context)
 
 
-def missing_context_filters(
-    require_filters: set[FilterName], context: VisualContext
-) -> set[FilterName]:
-    set_filters = (
+def filled_context_filters(context: VisualContext) -> set[FilterName]:
+    """The filters of the context that hold a value."""
+    return {
         filter_name
         for filter_name, filter_context in context.items()
         if isinstance(filter_context, dict) and any(filter_context.values())
-    )
+    }
 
-    return require_filters.difference(set_filters)
+
+def configured_context_filters(context: VisualContext) -> set[FilterName]:
+    """The filters of the context whose components all hold a value."""
+    configured: set[FilterName] = set()
+    for filter_name, filter_context in context.items():
+        if not isinstance(filter_context, dict):
+            continue
+        if (filter_object := filter_registry.get(filter_name)) is None:
+            continue
+        try:
+            components = list(filter_object.components())
+        except NotImplementedError:
+            continue
+        if all(component.is_configured(filter_context) for component in components):
+            configured.add(filter_name)
+    return configured
+
+
+def missing_context_filters(
+    require_filters: set[FilterName], context: VisualContext
+) -> set[FilterName]:
+    return require_filters.difference(filled_context_filters(context))
 
 
 def get_missing_single_infos_group_aware(

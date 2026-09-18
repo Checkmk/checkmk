@@ -13,7 +13,7 @@ from rich.box import SIMPLE_HEAD
 from rich.console import Console
 from rich.table import Table
 
-from .id_pool import load_legacy_stash_from_file, Paths, ServerStatus
+from .id_pool import Paths, read_legacy_stash_file, ServerStatus
 from .stash import Stash
 from .werk import WerkId
 
@@ -136,10 +136,7 @@ def _stash_ids(paths: Paths) -> Sequence[WerkId]:
 
 
 def _legacy_stash_ids(paths: Paths) -> Sequence[WerkId]:
-    if not paths.legacy_stash_file.exists():
-        return []
-    by_project = load_legacy_stash_from_file(paths).ids_by_project
-    return _sorted_ids(raw_id for ids in by_project.values() for raw_id in ids)
+    return _sorted_ids(read_legacy_stash_file(paths))
 
 
 def _stash_info(path: Path, reserved: Sequence[WerkId]) -> StashInfo:

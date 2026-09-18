@@ -28,6 +28,7 @@ from ._impl import LoadingResult as LoadingResult
 from ._impl import make_clustering_config as make_clustering_config
 from ._impl import make_host_tags as make_host_tags
 from ._impl import make_hosts_config as make_hosts_config
+from ._impl import make_loading_result as make_loading_result
 from ._impl import make_parser_config as make_parser_config
 from ._impl import ObjectAttributes as ObjectAttributes
 from ._impl import ObjectMacros as ObjectMacros

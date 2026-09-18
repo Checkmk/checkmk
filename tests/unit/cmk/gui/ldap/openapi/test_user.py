@@ -72,7 +72,7 @@ def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
 
 @pytest.mark.xfail(
     strict=True,
-    reason="CMK-37481: an auth_option flips the connector to htpasswd before the "
+    reason="CMK-37519: an auth_option flips the connector to htpasswd before the "
     "locked-attribute guard reads it, so the guard is skipped entirely",
 )
 def test_edit_ldap_user_with_auth_option_must_not_bypass_locked_attributes(

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::defines::values;
+use crate::config::defines::{keys, values};
 use anyhow::{bail, Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -143,10 +143,16 @@ struct LegacyCustomSql {
     dynamic_sids: bool,
     tns_alias: Option<String>,
     header_name: Option<String>,
-    header_sep: Option<char>,
+    /// `SQLS_SECTION_SEP`: the ASCII code of the separator, as `header_sep:`
+    /// takes it too.
+    header_sep: Option<u8>,
     /// `SQLS_ITEM_SID`: the SID the legacy plugin puts into the output item.
     /// Not supported by the new plugin, only used to warn about it.
     item_sid: Option<String>,
+    /// `SQLS_PARAMETERS`: the SQL*Plus commands the legacy plugin prepends to
+    /// the SQL file, usually `DEFINE`s for the substitution variables the file
+    /// references. Not supported by the new plugin, only used to warn about it.
+    parameters: Option<String>,
 }
 
 impl LegacyCustomSql {
@@ -225,9 +231,12 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         bail!("DBUSER must have at least username:password, got: {value}");
     }
     let field = |i: usize| fields.get(i).copied().unwrap_or("");
+    // Upper-cased like every other SID in the config - `REMOTE_INSTANCE_*`, the
+    // `sid:` key and the discovery lists - so entries naming one database in
+    // different cases do not end up as two instances.
     let sid = name
         .strip_prefix("DBUSER_")
-        .map(|suffix| suffix.to_string());
+        .map(|suffix| suffix.to_uppercase());
     let raw_username = field(0);
     // Legacy "/" means external authentication: emit an empty username and flag
     // the entry so the migrated config declares `type: wallet`. We always map to
@@ -339,21 +348,25 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                 // no global fallback: the legacy plugin unsets SQLS_ITEM_SID
                 // before each section
                 item_sid: section_var("SQLS_ITEM_SID").cloned(),
+                // global fallback like SQLS_DIR/SQLS_SQL: the legacy plugin
+                // saves the top level value and falls back to it
+                // (`${SQLS_PARAMETERS:-$custom_sqls_parameters}`). A blank value
+                // adds nothing to the query, so it counts as unset.
+                parameters: section_var("SQLS_PARAMETERS")
+                    .or_else(|| variables.get("SQLS_PARAMETERS"))
+                    .filter(|v| !v.trim().is_empty())
+                    .cloned(),
             })
         })
         .collect()
 }
 
-/// Convert a legacy SQLS_SECTION_SEP (an ASCII code, e.g. "124") to the
-/// separator character used by the `header_sep:` field.
-fn parse_header_sep(section: &str, value: &str) -> Option<char> {
-    let sep = value
-        .parse::<u8>()
-        .ok()
-        .map(char::from)
-        .filter(|c| (' '..='~').contains(c) && *c != '"' && *c != '\\');
+/// Convert a legacy SQLS_SECTION_SEP to the `header_sep:` field, which is the
+/// same thing: the ASCII code of the separator (e.g. "124" for '|').
+fn parse_header_sep(section: &str, value: &str) -> Option<u8> {
+    let sep = value.parse::<u8>().ok().filter(u8::is_ascii);
     if sep.is_none() {
-        log::warn!("{section}: SQLS_SECTION_SEP '{value}' is not a printable ASCII code, ignoring");
+        log::warn!("{section}: SQLS_SECTION_SEP '{value}' is not an ASCII code, ignoring");
     }
     sep
 }
@@ -595,6 +608,29 @@ fn warn_custom_sql_item_sid(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
         .collect()
 }
 
+/// Warn about the custom SQL sections that use `SQLS_PARAMETERS`.
+///
+/// The legacy plugin prepends the value to the SQL it pipes into `sqlplus`,
+/// which is how a SQL file gets the substitution variables (`&VAR`) it
+/// references `DEFINE`d. `sqlplus` commands have no meaning for the OCI driver
+/// of the new plugin, so there is nothing to migrate the value to: the section
+/// is migrated, but its query runs without the parameters and either fails or
+/// returns something else than it did.
+fn warn_custom_sql_parameters(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
+    custom_sqls
+        .iter()
+        .filter(|custom| custom.parameters.is_some())
+        .map(|custom| {
+            format!(
+                "{}: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands \
+                 it prepends to the query are lost, so convert the substitution variables the SQL \
+                 file uses into 'sql_params:' manually",
+                custom.name
+            )
+        })
+        .collect()
+}
+
 /// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
 /// the enclosing function name (None = top level).
 fn collect_raw_sqls_sids(legacy: &str) -> HashMap<Option<String>, String> {
@@ -622,6 +658,16 @@ fn parse_custom_sqls_function_def(line: &str) -> Option<String> {
     let name = name.trim();
     (!name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'))
         .then(|| name.to_string())
+}
+
+fn warn_remote_oracle_home(variables: &HashMap<String, String>) -> Vec<String> {
+    match variables.get("REMOTE_ORACLE_HOME") {
+        Some(value) if !value.trim().is_empty() => vec![format!(
+            "REMOTE_ORACLE_HOME '{value}' is not supported and is not migrated; \
+             the unified plug-in resolves ORACLE_HOME on its own"
+        )],
+        _ => vec![],
+    }
 }
 
 pub fn convert(
@@ -687,7 +733,12 @@ pub fn convert(
         &known_aliases(&dbuser, &dbuser_extras),
     ));
     warnings.extend(warn_custom_sql_item_sid(&custom_sqls));
+    warnings.extend(warn_custom_sql_parameters(&custom_sqls));
     warnings.extend(custom_sql_warnings(&custom_sqls));
+    warnings.extend(warn_remote_oracle_home(variables));
+    // Built before the warnings are flushed: the instance block is where the TNS alias is
+    // derived, and its warnings belong with the others at the top of the generated config.
+    let instance_lines = format_instances(&dbuser, &dbuser_extras, &custom_sqls, &mut warnings);
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
         print!("{warning}");
@@ -784,12 +835,13 @@ pub fn convert(
         .get("MAX_TASKS")
         .and_then(|v| v.parse::<u32>().ok());
 
+    let excluded_sections = find_excluded_sections(variables);
     let only_sids = parse_sid_list(variables, "ONLY_SIDS");
-    let mut skip_sids = parse_sid_list(variables, "SKIP_SIDS");
-    skip_sids.extend(find_excluded_instances(variables));
+    let skip_sids = parse_sid_list(variables, "SKIP_SIDS");
 
     out.extend(format_options(max_tasks));
-    out.extend(format_instances(&dbuser, &dbuser_extras, &custom_sqls));
+    out.extend(instance_lines);
+    out.extend(format_excluded_sections(&excluded_sections));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_custom_metrics(&custom_sqls));
     out.extend(format_cache_age(cache_maxage));
@@ -825,6 +877,7 @@ fn format_instances(
     dbuser: &LegacyDbUser,
     dbuser_extras: &[LegacyDbUser],
     custom_sqls: &[LegacyCustomSql],
+    warnings: &mut Vec<String>,
 ) -> Vec<String> {
     // Accumulate instance entries first; the `instances:` header is prepended
     // only when at least one entry exists, so a bare DBUSER yields no block.
@@ -834,8 +887,27 @@ fn format_instances(
     let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
         let sid = &entry.sid;
-        let tns_alias = &entry.tns_alias;
-        if sid.is_none() && tns_alias.is_none() {
+        // Wallet auth connects via `/@<alias>`: the SEPS credential is keyed by
+        // the alias, not by host/port. The legacy plugin uses the explicit
+        // TNSALIAS and falls back to the SID as the alias
+        // (`${CFGTNSALIAS:-${ORACLE_SID}}`); we reproduce that mapping so the
+        // runtime resolves the instance through its alias. tnsping verification
+        // of the alias is not migrated yet (may be added later). The SID-as-alias
+        // fallback is a stopgap and will be revisited once ORACLE_HOME detection
+        // is finally solved (enabling a proper local connection).
+        let alias = entry.tns_alias.clone().or_else(|| {
+            let sid = entry.sid.clone().filter(|_| entry.wallet)?;
+            log::info!(
+                "wallet authentication without TNSALIAS: assuming SID '{sid}' as the TNS alias"
+            );
+            warnings.push(format!(
+                "wallet authentication without TNSALIAS: the SID is written out as \
+                 'alias: {sid}'. Verify that it resolves in tnsnames.ora, the legacy tnsping \
+                 check is not migrated"
+            ));
+            Some(sid)
+        });
+        if sid.is_none() && alias.is_none() {
             log::info!("DBUSER has neither SID nor TNS alias, skipping instance entry");
             continue;
         }
@@ -847,14 +919,13 @@ fn format_instances(
         } else {
             false
         };
-        if let Some(alias) = tns_alias {
+        if let Some(alias) = &alias {
             lines.push(format!(
                 "      {} alias: {}\n",
                 if sid_written { ' ' } else { '-' },
-                &alias
+                alias
             ));
         };
-
         // The main DBUSER (sid == None) inherits connection and authentication
         // from `main:`; emitting them again here would duplicate the credentials
         // and pair a self-resolving TNS alias with an explicit host/port. Only
@@ -1019,6 +1090,26 @@ fn format_sections(
     lines
 }
 
+fn format_excluded_sections(excluded_sections: &HashMap<String, Vec<String>>) -> Vec<String> {
+    if excluded_sections.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![format!("    {}:\n", keys::EXCLUDED_SECTIONS)];
+    // Sort by SID: `HashMap` iteration order is unspecified, but the generated
+    // config must be stable across runs.
+    let mut sids: Vec<&String> = excluded_sections.keys().collect();
+    sids.sort();
+    for sid in sids {
+        lines.push(format!("      - {}:\n", keys::TARGET_ID));
+        lines.push(format!("          sid: {sid}\n"));
+        lines.push(format!(
+            "        sections: [{}]\n",
+            format_yaml_list(&excluded_sections[sid])
+        ));
+    }
+    lines
+}
+
 /// Sections without a SID or TNS alias restriction apply to all instances → global level
 fn format_custom_metrics(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
     let global: Vec<&LegacyCustomSql> = custom_sqls
@@ -1040,7 +1131,7 @@ fn format_custom_metric_entries(metrics: &[&LegacyCustomSql], indent: &str) -> V
             lines.push(format!("{indent}      header_name: {header_name}\n"));
             // the legacy plugin uses the separator only together with a custom section name
             if let Some(sep) = custom.header_sep {
-                lines.push(format!("{indent}      header_sep: \"{sep}\"\n"));
+                lines.push(format!("{indent}      header_sep: {sep}\n"));
             }
         }
     }
@@ -1061,12 +1152,26 @@ fn format_custom_metrics_cache_age(sqls_max_cache_age: Option<u32>) -> Vec<Strin
     vec![format!("    custom_metrics_cache_age: {age}\n")]
 }
 
-fn find_excluded_instances(variables: &HashMap<String, String>) -> Vec<String> {
+/// Sections excluded per SID, as declared by the legacy `EXCLUDE_<SID>='<section> ...'`
+/// variables: the key is the SID, the value that variable's section list.
+///
+/// The legacy plugin removes those sections only while processing that one SID;
+/// every other discovered instance keeps running the globally configured
+/// sections.
+///
+/// A variable with an empty SID or an empty section list is dropped, matching
+/// the legacy plugin, which treats both as no exclusion at all. `EXCLUDE_<SID>=ALL`
+/// is dropped too: it names no section but the whole instance, which is not
+/// supported yet.
+fn find_excluded_sections(variables: &HashMap<String, String>) -> HashMap<String, Vec<String>> {
     variables
         .iter()
         .filter_map(|(name, value)| {
-            let sid = name.strip_prefix("EXCLUDE_")?;
-            (value == "ALL").then(|| sid.to_string())
+            let sid = name
+                .strip_prefix("EXCLUDE_")
+                .filter(|sid| !sid.is_empty())?;
+            let sections: Vec<String> = value.split_whitespace().map(String::from).collect();
+            (!sections.is_empty() && sections != ["ALL"]).then(|| (sid.to_string(), sections))
         })
         .collect()
 }
@@ -1257,14 +1362,24 @@ fn build_posix_script(config_paths: &[PathBuf]) -> String {
         .collect::<Vec<_>>()
         .join("|");
     let section_vars = CUSTOM_SQL_SECTION_VARIABLES.join(" ");
+    // __emit is defined after sourcing the configs, so a config defining a
+    // function of the same name cannot take its place.
+    // Newlines are folded into spaces: one variable must be one output line,
+    // otherwise the reader takes the continuation lines for further variables
+    // and loses everything but the first line of the value (SQLS_PARAMETERS is
+    // regularly written across several lines).
     format!(
         r#"{source_configs}
+__emit() {{
+  [ -n "$2" ] || return 0
+  printf '%s %s\n' "$1" "$(printf '%s' "$2" | tr '\n' ' ')"
+}}
 for __n in {vars}; do
   eval "__v=\$$__n"
-  [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v"
+  __emit "$__n" "$__v"
 done
 set 2>/dev/null | while IFS='=' read -r __n __rest; do
-  case "$__n" in {prefixes}) eval "__v=\$$__n"; [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v";; esac
+  case "$__n" in {prefixes}) eval "__v=\$$__n"; __emit "$__n" "$__v";; esac
 done
 for __sec in $(echo "$SQLS_SECTIONS" | tr ',' ' '); do
   type "$__sec" >/dev/null 2>&1 || continue
@@ -1272,7 +1387,7 @@ for __sec in $(echo "$SQLS_SECTIONS" | tr ',' ' '); do
   "$__sec" >/dev/null 2>&1
   for __n in {section_vars}; do
     eval "__v=\$$__n"
-    [ -n "$__v" ] && printf '%s %s\n' "SQLS.$__sec.$__n" "$__v"
+    __emit "SQLS.$__sec.$__n" "$__v"
   done
 done
 true"#
@@ -1416,6 +1531,61 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_convert_remote_oracle_home_is_dropped_with_warning() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("REMOTE_ORACLE_HOME".into(), "/opt/oracle/remote".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // The dropped variable is reported ...
+        assert!(result.contains("# WARNING: REMOTE_ORACLE_HOME"));
+        // ... and never reaches the migrated config body.
+        let unified = result
+            .split_once("# --- Unified Config ---")
+            .expect("unified section present")
+            .1;
+        assert!(!unified.to_lowercase().contains("oracle_home"));
+        assert!(!unified.contains("/opt/oracle/remote"));
+        super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_wallet_without_alias_warns_about_the_sid_alias() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("DBUSER_XE".into(), "/:".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // The SID is written out as the alias ...
+        assert!(
+            result.contains("      - sid: XE\n        alias: XE\n"),
+            "got: {result}"
+        );
+        // ... and the guess is reported, ahead of the config it applies to.
+        let (head, _) = result
+            .split_once("# --- Unified Config ---")
+            .expect("unified section present");
+        assert!(
+            head.contains("# WARNING: wallet authentication without TNSALIAS"),
+            "got: {result}"
+        );
+        super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_wallet_with_explicit_alias_does_not_warn() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("DBUSER_XE".into(), "/:::::PRODALIAS".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            !result.contains("wallet authentication without TNSALIAS"),
+            "an explicit alias is not a guess, got: {result}"
+        );
+    }
+
     #[cfg(not(windows))]
     #[test]
     fn test_convert_remote_instance_platform_behavior() {
@@ -1479,6 +1649,113 @@ mod tests {
     }
 
     #[test]
+    fn test_find_excluded_sections_maps_sid_to_its_section_list() {
+        let vars = HashMap::from([
+            (
+                "EXCLUDE_proddb".into(),
+                "performance processes sessions".into(),
+            ),
+            ("EXCLUDE_AAA".into(), "jobs".into()),
+        ]);
+
+        assert_eq!(
+            find_excluded_sections(&vars),
+            HashMap::from([
+                (
+                    "proddb".to_string(),
+                    vec![
+                        "performance".to_string(),
+                        "processes".to_string(),
+                        "sessions".to_string()
+                    ]
+                ),
+                ("AAA".to_string(), vec!["jobs".to_string()]),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_find_excluded_sections_drops_empty_sid_and_value() {
+        let vars = HashMap::from([
+            ("EXCLUDE_".into(), "sessions".into()),
+            ("EXCLUDE_XE".into(), "   ".into()),
+            ("EXCLUDE_PROD".into(), String::new()),
+        ]);
+
+        assert!(find_excluded_sections(&vars).is_empty());
+    }
+
+    /// `ALL` excludes the whole instance instead of naming sections, which is
+    /// not supported yet, so the pair is not processed at all.
+    #[test]
+    fn test_find_excluded_sections_drops_a_bare_all() {
+        let vars = HashMap::from([
+            ("EXCLUDE_AAA".into(), "ALL".into()),
+            ("EXCLUDE_BBB".into(), " ALL ".into()),
+            // A list that merely mentions ALL is still a section list.
+            ("EXCLUDE_CCC".into(), "ALL jobs".into()),
+        ]);
+
+        assert_eq!(
+            find_excluded_sections(&vars),
+            HashMap::from([(
+                "CCC".to_string(),
+                vec!["ALL".to_string(), "jobs".to_string()]
+            )])
+        );
+    }
+
+    #[test]
+    fn test_format_excluded_sections_emits_target_block() {
+        let excluded = HashMap::from([(
+            "prodpdb".to_string(),
+            vec!["performance".to_string(), "sessions".to_string()],
+        )]);
+
+        let out: String = format_excluded_sections(&excluded).join("");
+
+        assert_eq!(
+            out,
+            concat!(
+                "    excluded_sections:\n",
+                "      - target_id:\n",
+                "          sid: prodpdb\n",
+                "        sections: [performance, sessions]\n",
+            )
+        );
+    }
+
+    #[test]
+    fn test_format_excluded_sections_empty_map_emits_nothing() {
+        assert!(format_excluded_sections(&HashMap::new()).is_empty());
+    }
+
+    /// Blocks are emitted one per SID, sorted by SID so the config is stable
+    /// regardless of `HashMap` order (XE2 inserted first, XE1 must come first).
+    #[test]
+    fn test_format_excluded_sections_sorts_blocks_by_sid() {
+        let excluded = HashMap::from([
+            ("XE2".to_string(), vec!["jobs".to_string()]),
+            ("XE1".to_string(), vec!["performance".to_string()]),
+        ]);
+
+        let out: String = format_excluded_sections(&excluded).join("");
+
+        assert_eq!(
+            out,
+            concat!(
+                "    excluded_sections:\n",
+                "      - target_id:\n",
+                "          sid: XE1\n",
+                "        sections: [performance]\n",
+                "      - target_id:\n",
+                "          sid: XE2\n",
+                "        sections: [jobs]\n",
+            )
+        );
+    }
+
+    #[test]
     fn test_parse_custom_sqls_per_section_vars() {
         let vars = HashMap::from([
             ("SQLS_SECTIONS".into(), "mycustomsection1".into()),
@@ -1505,6 +1782,7 @@ mod tests {
                 header_name: None,
                 header_sep: None,
                 item_sid: None,
+                parameters: None,
             }]
         );
     }
@@ -1529,6 +1807,7 @@ mod tests {
                 header_name: None,
                 header_sep: None,
                 item_sid: None,
+                parameters: None,
             }]
         );
     }
@@ -2012,6 +2291,85 @@ sec2 () {
     }
 
     #[test]
+    fn test_parse_custom_sqls_parameters() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2 sec3".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS_PARAMETERS".into(), "DEFINE GLOBAL = 1".into()),
+            (
+                "SQLS.sec1.SQLS_PARAMETERS".into(),
+                " DEFINE VAR_IFILE = \"/tmp/i.txt\" ".into(),
+            ),
+            ("SQLS.sec3.SQLS_PARAMETERS".into(), "  ".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(
+            result[0].parameters.as_deref(),
+            Some(" DEFINE VAR_IFILE = \"/tmp/i.txt\" ")
+        );
+        assert_eq!(
+            result[1].parameters.as_deref(),
+            Some("DEFINE GLOBAL = 1"),
+            "SQLS_PARAMETERS falls back to the global value"
+        );
+        assert!(
+            result[2].parameters.is_none(),
+            "a blank value adds nothing to the query"
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_parameters() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["PROD"]);
+        custom.parameters = Some("DEFINE VAR_IFILE = \"/tmp/i.txt\"".into());
+        assert_eq!(
+            warn_custom_sql_parameters(&[custom]),
+            vec![
+                "sec1: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands \
+                 it prepends to the query are lost, so convert the substitution variables the SQL \
+                 file uses into 'sql_params:' manually"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_parameters_without_parameters() {
+        let custom = make_custom_sql("sec1", None, "a.sql", &["PROD"]);
+        assert!(warn_custom_sql_parameters(&[custom]).is_empty());
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_warns_on_custom_sql_parameters() {
+        let legacy = "sec1 () {\n    SQLS_SIDS=\"PROD\"\n    SQLS_SQL=\"a.sql\"\n    \
+                      SQLS_PARAMETERS=\"\n        DEFINE VAR_IFILE = \\\"/tmp/i.txt\\\"\n    \"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "PROD".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+            (
+                "SQLS.sec1.SQLS_PARAMETERS".into(),
+                "         DEFINE VAR_IFILE = \"/tmp/i.txt\"     ".into(),
+            ),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("# WARNING: sec1: SQLS_PARAMETERS is not supported"),
+            "got: {result}"
+        );
+        assert!(
+            result.contains("          - sec1:\n              path: a.sql\n"),
+            "the section is migrated regardless, got: {result}"
+        );
+        let (_, yaml) = result.split_once("# --- Unified Config ---").unwrap();
+        assert!(
+            !yaml.contains("sql_params"),
+            "the parameters cannot be migrated automatically, got: {yaml}"
+        );
+    }
+
+    #[test]
     fn test_parse_custom_sqls_section_sep() {
         let vars = HashMap::from([
             ("SQLS_SECTIONS".into(), "sec1 sec2 sec3".into()),
@@ -2021,10 +2379,10 @@ sec2 () {
             ("SQLS.sec3.SQLS_SECTION_SEP".into(), "not-a-number".into()),
         ]);
         let result = parse_custom_sqls("", &vars);
-        assert_eq!(result[0].header_sep, Some('|'));
+        assert_eq!(result[0].header_sep, Some(b'|'));
         assert_eq!(
             result[1].header_sep,
-            Some(';'),
+            Some(b';'),
             "top-level SQLS_SECTION_SEP is a global fallback"
         );
         assert!(
@@ -2116,6 +2474,7 @@ sec3 () {
             header_name: None,
             header_sep: None,
             item_sid: None,
+            parameters: None,
         }
     }
 
@@ -2168,10 +2527,10 @@ sec3 () {
     fn test_format_custom_metrics_section_sep() {
         let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
         custom.header_name = Some("my_section".into());
-        custom.header_sep = Some('|');
+        custom.header_sep = Some(b'|');
         let out: String = format_custom_metrics(&[custom]).join("");
         assert!(
-            out.contains("          header_name: my_section\n          header_sep: \"|\"\n"),
+            out.contains("          header_name: my_section\n          header_sep: 124\n"),
             "got: {out}"
         );
     }
@@ -2179,7 +2538,7 @@ sec3 () {
     #[test]
     fn test_format_custom_metrics_section_sep_needs_section_name() {
         let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
-        custom.header_sep = Some('|');
+        custom.header_sep = Some(b'|');
         let out: String = format_custom_metrics(&[custom]).join("");
         assert!(
             !out.contains("header_sep:"),
@@ -2192,7 +2551,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         // port without hostname: connection block must fall back to localhost
         let xe = make_dbuser(Some("XE"), "", "", "", Some("1522"), None, None);
-        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
         assert!(out.contains(
             "        connection:\n          hostname: localhost\n          port: 1522\n"
         ));
@@ -2204,7 +2563,7 @@ sec3 () {
         let xe = make_dbuser(Some("XE"), "", "", "", None, None, Some("PROD"));
         let mut custom = make_custom_sql("sec1", None, "a.sql", &[]);
         custom.tns_alias = Some("PROD".to_owned());
-        let out: String = format_instances(&dbuser, &[xe], &[custom]).join("");
+        let out: String = format_instances(&dbuser, &[xe], &[custom], &mut Vec::new()).join("");
         assert!(out.contains(
             "      - sid: XE\n        alias: PROD\n        custom_metrics:\n          - sec1:\n              path: a.sql\n"
         ), "got: {out}");
@@ -2221,7 +2580,7 @@ sec3 () {
         c1.tns_alias = Some("REPORTING".into());
         let mut c2 = make_custom_sql("sec2", None, "b.sql", &[]);
         c2.tns_alias = Some("REPORTING".into());
-        let out: String = format_instances(&dbuser, &[], &[c1, c2]).join("");
+        let out: String = format_instances(&dbuser, &[], &[c1, c2], &mut Vec::new()).join("");
         assert_eq!(
             out.matches("      - alias: REPORTING\n").count(),
             1,
@@ -2237,7 +2596,7 @@ sec3 () {
         let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE"]);
         custom.tns_alias = Some("PROD".into());
-        let out: String = format_instances(&dbuser, &[], &[custom]).join("");
+        let out: String = format_instances(&dbuser, &[], &[custom], &mut Vec::new()).join("");
         assert!(
             out.contains("      - sid: XE\n        alias: PROD\n        custom_metrics:\n"),
             "SQLS_SIDS and SQLS_TNSALIAS must both reach the entry, got: {out}"
@@ -2258,7 +2617,8 @@ sec3 () {
         shared.tns_alias = Some("REPORTING".into());
         let mut rival = make_custom_sql("rival", None, "c.sql", &["RIVAL"]);
         rival.tns_alias = Some("REPORTING".into());
-        let out: String = format_instances(&dbuser, &[], &[multi, shared, rival]).join("");
+        let out: String =
+            format_instances(&dbuser, &[], &[multi, shared, rival], &mut Vec::new()).join("");
         assert!(
             out.contains("      - alias: PROD\n"),
             "several SIDs cannot identify one aliased entry, got: {out}"
@@ -2276,7 +2636,7 @@ sec3 () {
         let owner = make_dbuser(Some("XE1"), "user", "pass", "", None, None, Some("PROD"));
         let mut custom = make_custom_sql("sec1", None, "a.sql", &["OTHER"]);
         custom.tns_alias = Some("PROD".into());
-        let out: String = format_instances(&dbuser, &[owner], &[custom]).join("");
+        let out: String = format_instances(&dbuser, &[owner], &[custom], &mut Vec::new()).join("");
         assert!(
             out.contains("      - sid: XE1\n        alias: PROD\n"),
             "the alias keeps the SID of the instance owning it, got: {out}"
@@ -2387,14 +2747,24 @@ sec3 () {
         let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
         assert!(
             result.contains(
-                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n          header_sep: \"|\"\n"
+                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n          header_sep: 124\n"
             ),
             "got: {result}"
         );
-        // the loader must tolerate the header_name/sep keys (support comes later)
+        // the migrated keys must reach the runtime: the metric is emitted under
+        // the legacy section header instead of the default `oracle_sql` one
         let config =
             super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
-        assert!(config.ora_sql().is_some());
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        let metric = ms
+            .all_sections()
+            .iter()
+            .find(|s| s.is_custom_metric())
+            .expect("migrated custom metric must be loaded")
+            .clone();
+        let header = metric.custom_header().expect("header_name must be loaded");
+        assert_eq!(header.name(), "my_section");
+        assert_eq!(header.sep(), Some(b'|'));
     }
 
     #[test]
@@ -2685,6 +3055,41 @@ sec3 () {
         assert!(result.contains("          role: sysdba\n"));
     }
 
+    /// The SID-as-alias fallback must survive loading, not just appear in the
+    /// yaml: `alias` outranks `sid` when the target is resolved, so such an
+    /// instance is an alias target with no standalone sid. The Windows reference
+    /// config takes this path (its `$DBUSER_*` arrays carry no TNSALIAS field),
+    /// and only the Windows CI node runs it - hence this check here.
+    #[test]
+    fn test_wallet_without_alias_resolves_as_an_alias_target() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::localhost:1521:".into()),
+            ("DBUSER_XE1".into(), "/:::::".into()),
+        ]);
+
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let instance = &config
+            .ora_sql()
+            .expect("ora_sql must be present")
+            .instances()[0];
+        assert_eq!(
+            instance
+                .alias()
+                .as_ref()
+                .map(ToString::to_string)
+                .as_deref(),
+            Some("XE1"),
+            "got: {result}"
+        );
+        assert!(
+            instance.standalone_sid().is_none(),
+            "the alias outranks the sid, so there is no standalone sid: {result}"
+        );
+    }
+
     #[test]
     fn test_convert_slash_username_emits_wallet_auth() {
         let vars = HashMap::from([
@@ -2697,11 +3102,13 @@ sec3 () {
             "XE3 must have no connection (empty hostname)"
         );
         // "/" username → wallet auth: empty username/password, type wallet, role kept.
+        // No explicit TNSALIAS → the SID is assumed as the alias (wallet connects
+        // via `/@<alias>`), so `alias: XE3` precedes the authentication block.
         assert!(
             result.contains(
-                "      - sid: XE3\n        authentication:\n          username: \"\"\n          password: \"\"\n          type: wallet\n          role: sysasm\n"
+                "      - sid: XE3\n        alias: XE3\n        authentication:\n          username: \"\"\n          password: \"\"\n          type: wallet\n          role: sysasm\n"
             ),
-            "XE3 must have wallet authentication: {result}"
+            "XE3 must have wallet authentication with SID-as-alias: {result}"
         );
     }
 
@@ -2731,6 +3138,25 @@ sec3 () {
         assert_eq!(db.sid.as_deref(), Some("XE1"));
         assert!(db.username.is_empty(), "'/' replaced with empty");
         assert_eq!(db.tns_alias, Some("oooo".to_owned()));
+    }
+
+    /// A `DBUSER_<sid>` SID is upper-cased, like the SID of a `REMOTE_INSTANCE_*`,
+    /// so the two never name one database as two instances.
+    #[test]
+    fn test_parse_dbuser_sid_suffix_is_upper_cased() {
+        assert_eq!(
+            parse_dbuser("DBUSER_xe", "user:pass")
+                .unwrap()
+                .sid
+                .as_deref(),
+            Some("XE")
+        );
+        let remote = parse_remote_instance(
+            "REMOTE_INSTANCE_1",
+            "user:pass::remotehost:1521:piggyhost:xe:11.2",
+        )
+        .expect("valid remote instance");
+        assert_eq!(remote.sid.as_deref(), Some("XE"));
     }
 
     #[test]
@@ -2880,6 +3306,10 @@ sec3 () {
         assert!(script.contains("REMOTE_INSTANCE_"));
         assert!(script.contains("EXCLUDE_"));
         assert!(script.contains("SQLS.$__sec.$__n"));
+        assert!(
+            script.contains(r"tr '\n' ' '"),
+            "a value spanning several lines must be emitted as one line"
+        );
     }
 
     /// Several configs are sourced in the given order, like the legacy plugin
@@ -2937,6 +3367,56 @@ sec3 () {
         }
     }
 
+    /// Wallet auth without an explicit TNSALIAS connects via the SID used as the
+    /// alias (legacy `${CFGTNSALIAS:-${ORACLE_SID}}`), so the entry carries both
+    /// `sid:` and `alias:` (the runtime's alias path drives the connect).
+    #[test]
+    fn test_format_instances_wallet_falls_back_to_sid_alias() {
+        let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
+        let xe = make_dbuser(Some("XE"), "/", "", "", None, None, None);
+
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
+
+        assert!(
+            out.contains("      - sid: XE\n        alias: XE\n"),
+            "wallet instance must use its SID as the TNS alias, got: {out}"
+        );
+    }
+
+    /// An explicit TNSALIAS on a wallet entry takes precedence over the SID.
+    #[test]
+    fn test_format_instances_wallet_keeps_explicit_alias() {
+        let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
+        let xe = make_dbuser(Some("XE"), "/", "", "", None, None, Some("PRODALIAS"));
+
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
+
+        assert!(
+            out.contains("      - sid: XE\n        alias: PRODALIAS\n"),
+            "explicit TNSALIAS must win over SID-as-alias, got: {out}"
+        );
+        assert!(
+            !out.contains("alias: XE\n"),
+            "SID must not be reused as alias when TNSALIAS is set, got: {out}"
+        );
+    }
+
+    /// Standard (non-wallet) auth without an alias keeps a bare `sid:`; the
+    /// SID-as-alias fallback is wallet-only.
+    #[test]
+    fn test_format_instances_standard_auth_has_no_alias() {
+        let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
+        let xe = make_dbuser(Some("XE"), "user", "pass", "", None, None, None);
+
+        let out: String = format_instances(&dbuser, &[xe], &[], &mut Vec::new()).join("");
+
+        assert!(out.contains("      - sid: XE\n"), "got: {out}");
+        assert!(
+            !out.contains("alias:"),
+            "standard auth must not synthesize an alias, got: {out}"
+        );
+    }
+
     #[test]
     fn test_format_instances() {
         let dbuser = make_dbuser(
@@ -2961,7 +3441,7 @@ sec3 () {
             None,
         );
 
-        let out: String = format_instances(&dbuser, &[xe1, xe2], &[]).join("");
+        let out: String = format_instances(&dbuser, &[xe1, xe2], &[], &mut Vec::new()).join("");
 
         // DBUSER without sid/alias contributes no instance entry:
         // the first entry after the header is XE1

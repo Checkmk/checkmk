@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render } from '@testing-library/vue'
+import { beforeEach, expect, test, vi } from 'vitest'
 
 import GraphBrush from '@/graphing/components/GraphBrush/GraphBrush.vue'
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
@@ -13,20 +14,47 @@ const DOMAIN = { start: 1000, end: 2000, step: 10 }
 const PLOT_LEFT = 50
 const PLOT_WIDTH = 200
 
-function makeMetric(dataPoints: (number | null)[]): Metric {
+function makeMetric(dataPoints: (number | null)[], render: Partial<Metric['render']> = {}): Metric {
   return {
     data_points: dataPoints,
-    render: { stack: null, inverse: false, hidden: false },
-    metadata: { color: '#3366cc' }
+    render: { stack: null, inverse: false, hidden: false, ...render },
+    metadata: { name: 'm', color: '#3366cc' }
   } as unknown as Metric
 }
 
-function waveformXs(container: Element): number[] {
-  const path = container.querySelector('path.graphing-graph-brush__area')!
-  return [...path.getAttribute('d')!.matchAll(/[ML]([\d.]+),/g)].map((match) =>
-    parseFloat(match[1]!)
-  )
+// The waveform is painted onto a canvas, which jsdom does not implement. Record the points and
+// the paint operations so the real draw path runs and can be asserted on.
+let drawnPoints: Array<[number, number]> = []
+let paintOps: string[] = []
+
+function createCanvasContextStub(): CanvasRenderingContext2D {
+  const state: Record<string | symbol, unknown> = {}
+  return new Proxy(state, {
+    get: (target, prop) => {
+      if (prop === 'moveTo' || prop === 'lineTo') {
+        return (x: number, y: number) => void drawnPoints.push([x, y])
+      }
+      if (prop === 'fill' || prop === 'stroke') {
+        return () => void paintOps.push(prop)
+      }
+      return prop in target ? target[prop] : () => undefined
+    },
+    set: (target, prop, value) => {
+      target[prop] = value
+      return true
+    }
+  }) as unknown as CanvasRenderingContext2D
 }
+
+beforeEach(() => {
+  drawnPoints = []
+  paintOps = []
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(createCanvasContextStub())
+})
+
+// Canvas coordinates are strip-local: the canvas is positioned at plotLeft, so 0 is the track's
+// left edge and PLOT_WIDTH its right.
+const waveformXs = (): number[] => drawnPoints.map(([x]) => x)
 
 // jsdom reports an all-zero bounding rect, so client coordinates are the SVG-local ones.
 function renderBrush(overrides: Record<string, unknown> = {}) {
@@ -85,15 +113,20 @@ test('drag starting below the track is ignored', async () => {
   expect(emitted()['update:requestedTimeRange']).toBeUndefined()
 })
 
-test('fills the waveform out to the right edge of the track', () => {
+const PX_PER_SECOND = PLOT_WIDTH / (DOMAIN.end - DOMAIN.start)
+
+test('spans the track rather than stopping short of its edges', () => {
   const metrics = [makeMetric(samplesFilling(DOMAIN))]
 
-  const { container } = renderBrush({ metrics })
+  renderBrush({ metrics })
 
-  expect(Math.max(...waveformXs(container))).toBeCloseTo(PLOT_LEFT + PLOT_WIDTH, 5)
+  // A value is placed at the end of the interval it covers, so the first one sits a step in.
+  const drawn = waveformXs()
+  expect(Math.min(...drawn)).toBeLessThanOrEqual(DOMAIN.step * PX_PER_SECOND)
+  expect(Math.max(...drawn)).toBeGreaterThanOrEqual(PLOT_WIDTH)
 })
 
-test('leaves the samples the fetch reached past the strip off the waveform', () => {
+test('draws the strip extent, not everything the fetch reached past it', () => {
   const STEPS_FETCHED_PAST_THE_STRIP = 2
   const dataDomainReachingPastTheStrip = {
     ...DOMAIN,
@@ -101,9 +134,29 @@ test('leaves the samples the fetch reached past the strip off the waveform', () 
   }
   const metrics = [makeMetric(samplesFilling(dataDomainReachingPastTheStrip))]
 
-  const { container } = renderBrush({ metrics, dataDomain: dataDomainReachingPastTheStrip })
+  renderBrush({ metrics, dataDomain: dataDomainReachingPastTheStrip })
 
-  const drawn = waveformXs(container)
+  // The renderer carries one bucket past each edge so a curve leaving the strip is drawn to it;
+  // what it must not do is stretch the strip over the whole fetched extent.
+  const fetchedEndPx = (dataDomainReachingPastTheStrip.end - DOMAIN.start) * PX_PER_SECOND
+  const drawn = waveformXs()
   expect(drawn).not.toHaveLength(0)
-  expect(Math.max(...drawn)).toBeLessThanOrEqual(PLOT_LEFT + PLOT_WIDTH)
+  expect(Math.max(...drawn)).toBeLessThan(fetchedEndPx)
+})
+
+test('draws a metric with no stack group as a stroked line, never as a filled area', () => {
+  const metrics = [makeMetric(samplesFilling(DOMAIN), { stack: null })]
+
+  renderBrush({ metrics })
+
+  expect(paintOps).toContain('stroke')
+  expect(paintOps).not.toContain('fill')
+})
+
+test('draws a grouped metric as a filled area, the way the plot does', () => {
+  const metrics = [makeMetric(samplesFilling(DOMAIN), { stack: 'g1' })]
+
+  renderBrush({ metrics })
+
+  expect(paintOps).toContain('fill')
 })

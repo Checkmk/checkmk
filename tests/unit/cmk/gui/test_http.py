@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import io
 import time
 from collections.abc import Iterator
@@ -390,12 +392,9 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
         pytest.param(TEST_FORM_SIZE + 1, True, id="just_over_limit"),
     ],
 )
+@pytest.mark.usefixtures("patch_theme")
 def test_response_413_form_size_limit(
-    wsgi_app: WebTestAppForCMK,
-    patch_theme: None,
-    monkeypatch: MonkeyPatch,
-    size: int,
-    error: bool,
+    wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch, size: int, error: bool
 ) -> None:
     """Validate that form data exceeding the limit is rejected with 413.
 
@@ -568,11 +567,9 @@ def test_get_url_input() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_content_disposition_valid(
-    content_type: str,
-    disposition_type: ContentDispositionType,
-    file_name: str,
-    request_context: None,
+    content_type: str, disposition_type: ContentDispositionType, file_name: str
 ) -> None:
     response.set_content_type(content_type)
     response.set_content_disposition(disposition_type, file_name)
@@ -593,11 +590,9 @@ def test_content_disposition_valid(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_content_disposition_invalid_extension(
-    content_type: str,
-    disposition_type: ContentDispositionType,
-    file_name: str,
-    request_context: None,
+    content_type: str, disposition_type: ContentDispositionType, file_name: str
 ) -> None:
     response.set_content_type(content_type)
     with pytest.raises(
@@ -621,11 +616,9 @@ def test_content_disposition_invalid_extension(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_content_disposition_invalid_characters(
-    content_type: str,
-    disposition_type: ContentDispositionType,
-    file_name: str,
-    request_context: None,
+    content_type: str, disposition_type: ContentDispositionType, file_name: str
 ) -> None:
     response.set_content_type(content_type)
     with pytest.raises(ValueError, match="Invalid character in filename"):

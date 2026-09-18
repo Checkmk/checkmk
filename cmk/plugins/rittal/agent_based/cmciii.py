@@ -239,6 +239,17 @@ def parse_cmciii(string_table: Sequence[StringTable]) -> Sensors:
         value = sensor_value(value_str, value_int, scale, var_type, var_unit)
         parsed[type_][id_].setdefault(key, value)
 
+        if type_ == "phase" and sanitized_variable[-1] == "DescName":
+            # A phase is not a single device sensor but an aggregate of several
+            # ones - voltage, current, power - each with its own description and
+            # its own cmcIIIMsgTable index. sensor_key() strips the leaf for
+            # phases, so none of those descriptions ends up under "DescName".
+            # Keep the first one: it belongs to the sensor _index_ refers to, so
+            # item and index describe the same thing. The accepted smell is that
+            # the item then names the phase after one of its measurements, e.g.
+            # "1-3 L1 Voltage", although the service reports all of them.
+            parsed[type_][id_].setdefault("DescName", value)
+
     parsed["temp_in_out"] = split_temp_in_out_sensors(parsed.pop("temp_in_out"))
 
     return parsed

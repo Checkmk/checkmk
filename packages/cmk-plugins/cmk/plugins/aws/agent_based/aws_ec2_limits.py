@@ -14,16 +14,22 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Metric,
+    Result,
     Service,
+    State,
 )
 from cmk.plugins.aws.lib import AWSLimitsByRegion, check_aws_limits_legacy, parse_aws_limits_generic
 
+DEFAULT_LEVELS = (None, 80.0, 90.0)
+_INSTANCE_TYPE_PREFIX = "running_ondemand_instances_"
+
 default_running_ondemand_instances = [
-    (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWS_EC2_INST_TYPES
+    (inst_type, DEFAULT_LEVELS) for inst_type in aws_types.AWS_EC2_INST_TYPES
 ]
 
 default_running_ondemand_instance_families = [
-    (f"{inst_fam}_vcpu", (None, 80.0, 90.0)) for inst_fam in aws_types.AWS_EC2_INST_FAMILIES
+    (f"{inst_fam}_vcpu", DEFAULT_LEVELS) for inst_fam in aws_types.AWS_EC2_INST_FAMILIES
 ]
 
 
@@ -51,7 +57,32 @@ def check_aws_ec2_limits(
     # params look like:
     # {'vpc_sec_group_rules': (50, 80.0, 90.0),
     #  'running_ondemand_instances': [('a1.4xlarge', (20, 80.0, 90.0))]}
-    yield from check_aws_limits_legacy("ec2", _transform_ec2_limits(params), region_data)
+    limits = _transform_ec2_limits(params)
+    # AWS releases instance types faster than AWS_EC2_INST_TYPES is updated
+    listed_data = [row for row in region_data if not _is_unlisted_instance_type(row[0], limits)]
+    unlisted_data = [row for row in region_data if _is_unlisted_instance_type(row[0], limits)]
+    yield from check_aws_limits_legacy("ec2", limits, listed_data)
+    yield from _check_unlisted_instance_types(unlisted_data)
+
+
+def _is_unlisted_instance_type(resource_key: str, limits: Mapping[str, Any]) -> bool:
+    return resource_key.startswith(_INSTANCE_TYPE_PREFIX) and resource_key not in limits
+
+
+def _check_unlisted_instance_types(region_data: Sequence[Sequence[Any]]) -> CheckResult:
+    if not region_data:
+        return
+    usage: dict[str, int] = {}
+    for resource_key, _title, _limit, amount, _render in region_data:
+        yield Metric(f"aws_ec2_{resource_key}", amount)
+        usage[resource_key.removeprefix(_INSTANCE_TYPE_PREFIX)] = amount
+    yield Result(
+        state=State.OK,
+        summary="%d unrecognized instance type%s (limits not checked)"
+        % (len(usage), "" if len(usage) == 1 else "s"),
+        details="Instance types unknown to Checkmk, no limits checked: %s"
+        % ", ".join(f"{inst_type} ({amount})" for inst_type, amount in usage.items()),
+    )
 
 
 def discover_aws_ec2_limits(section: AWSLimitsByRegion) -> DiscoveryResult:

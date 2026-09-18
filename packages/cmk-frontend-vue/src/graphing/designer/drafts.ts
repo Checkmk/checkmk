@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { collectDirectRefs, fromApiAst, toApiAst } from './calculation/formula'
+import { consolidationFromWire, consolidationToWire } from './consolidation'
 import {
   type ApiDataSource,
   type ApiDataSourceInput,
@@ -12,10 +13,10 @@ import {
   type FormulaItem,
   type GraphItem,
   type ItemId,
-  type MetricBackendItem,
   type RRDMetricItem,
   type RRDQueryItem,
   type ScalarItem,
+  type TelemetryMetricsItem,
   isFormula
 } from './types'
 
@@ -27,7 +28,7 @@ export type DraftRRDMetricItem = WithNullable<
   'host_name' | 'service_name' | 'metric_name'
 >
 export type DraftRRDQueryItem = WithNullable<RRDQueryItem, 'metric_name'>
-export type DraftMetricBackendItem = WithNullable<MetricBackendItem, 'metric_name'>
+export type DraftTelemetryMetricsItem = WithNullable<TelemetryMetricsItem, 'metric_name'>
 export type DraftConstantItem = WithNullable<ConstantItem, 'value'>
 export type DraftScalarItem = WithNullable<ScalarItem, 'host_name' | 'service_name' | 'metric_name'>
 
@@ -35,14 +36,34 @@ export type DraftScalarItem = WithNullable<ScalarItem, 'host_name' | 'service_na
 export type DesignerItem =
   | DraftRRDMetricItem
   | DraftRRDQueryItem
-  | DraftMetricBackendItem
+  | DraftTelemetryMetricsItem
   | DraftConstantItem
   | DraftScalarItem
   | FormulaItem
 
 /** Converts a wire-format data source to a designer item; throws on an invalid formula ast. */
 export function fromApiDataSource(source: ApiDataSourceInput): GraphItem {
-  return source.type === 'rrd_formula' ? { ...source, ast: fromApiAst(source.ast) } : source
+  switch (source.type) {
+    case 'rrd_formula':
+      return { ...source, ast: fromApiAst(source.ast) }
+    case 'metric_backend':
+      return {
+        ...source,
+        consolidation_function: consolidationFromWire(source.consolidation_function)
+      }
+    default:
+      return source
+  }
+}
+
+function toApiDataSource(item: GraphItem): ApiDataSource {
+  if (isFormula(item)) {
+    return { ...item, ast: toApiAst(item.ast) }
+  }
+  if (item.type === 'metric_backend') {
+    return { ...item, consolidation_function: consolidationToWire(item.consolidation_function) }
+  }
+  return item
 }
 
 /**
@@ -66,7 +87,7 @@ export function toApiDataSources(items: readonly GraphItem[]): ApiDataSource[] {
     if (keptItem === undefined) {
       return []
     }
-    return [isFormula(keptItem) ? { ...keptItem, ast: toApiAst(keptItem.ast) } : keptItem]
+    return [toApiDataSource(keptItem)]
   })
 }
 
@@ -100,7 +121,7 @@ export function newRrdQueryDraft(id: ItemId): DraftRRDQueryItem {
   }
 }
 
-export function newMetricBackendDraft(id: ItemId): DraftMetricBackendItem {
+export function newTelemetryMetricsDraft(id: ItemId): DraftTelemetryMetricsItem {
   return {
     id,
     type: 'metric_backend',
@@ -114,36 +135,23 @@ export function newMetricBackendDraft(id: ItemId): DraftMetricBackendItem {
   }
 }
 
-/** Switches a single-metric draft to a dynamic query, keeping the metric and consolidation. */
-export function rrdMetricToQueryDraft(item: DraftRRDMetricItem): DraftRRDQueryItem {
+function appearanceOf(
+  item: DraftRRDMetricItem | DraftRRDQueryItem
+): Pick<DraftRRDMetricItem, 'title' | 'line_type' | 'mirrored' | 'visible'> {
   return {
-    id: item.id,
-    type: 'rrd_query',
     title: item.title,
     line_type: item.line_type,
     mirrored: item.mirrored,
-    visible: item.visible,
-    context: {},
-    metric_name: item.metric_name,
-    consolidation: item.consolidation
+    visible: item.visible
   }
 }
 
-/** Switches a dynamic query back to a single metric; the query filters cannot be mapped over. */
+export function rrdMetricToQueryDraft(item: DraftRRDMetricItem): DraftRRDQueryItem {
+  return { ...newRrdQueryDraft(item.id), ...appearanceOf(item) }
+}
+
 export function rrdQueryToMetricDraft(item: DraftRRDQueryItem, color: string): DraftRRDMetricItem {
-  return {
-    id: item.id,
-    type: 'rrd_metric',
-    title: item.title,
-    line_type: item.line_type,
-    mirrored: item.mirrored,
-    visible: item.visible,
-    color,
-    host_name: null,
-    service_name: null,
-    metric_name: item.metric_name,
-    consolidation: item.consolidation
-  }
+  return { ...newRrdMetricDraft(item.id, color), ...appearanceOf(item) }
 }
 
 export function newConstantDraft(id: ItemId, color: string): DraftConstantItem {

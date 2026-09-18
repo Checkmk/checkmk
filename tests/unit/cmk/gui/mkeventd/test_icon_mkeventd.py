@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 from typing import Literal, NamedTuple
@@ -255,12 +254,12 @@ def test_icon_options(
     """Creation of title and url for links to event console entries of host"""
     icon = icon_and_action_registry["mkeventd"]
 
-    def _get_dummy_hostname(args, row):
+    def _get_dummy_hostname(args: Sequence[str], row: Row) -> str:
         args_splitted = args[0].split("/")
         if args_splitted[0] == "$HOSTNAME$":
-            return row["host_name"]
+            return str(row["host_name"])
         if args_splitted[0] == "$HOSTADDRESS$":
-            return row["host_address"]
+            return str(row["host_address"])
         if args_splitted[0] == "$HOSTALIAS$":
             return "my_alias"
         return args[0]

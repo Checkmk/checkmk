@@ -8,7 +8,7 @@ from cmk.plugins.ceph.agent_based import ceph_df
 
 
 def test_sanitize_line() -> None:
-    assert ceph_df._sanitize_line(
+    assert ceph_df._sanitize_line(  # noqa: SLF001
         [
             "cephfs_data",
             "1",

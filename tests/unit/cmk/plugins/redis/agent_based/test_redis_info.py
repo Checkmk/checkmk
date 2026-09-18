@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -143,7 +142,7 @@ def test_check_redis_info(
         ),
     ],
 )
-def test_discover_redis_info_persistence(section, expected):  # type: ignore[misc]
+def test_discover_redis_info_persistence(section: Section, expected: Sequence[Service]) -> None:
     assert list(discover_redis_info_persistence(section)) == expected
 
 

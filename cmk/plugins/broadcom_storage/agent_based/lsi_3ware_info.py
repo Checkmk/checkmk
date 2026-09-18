@@ -41,7 +41,7 @@ def discover_3ware_info(section: StringTable) -> DiscoveryResult:
             yield Service(item=line[0])
 
 
-def check_3ware_info(item: str, section: StringTable) -> CheckResult:
+def check_3ware_info(item: str, section: StringTable) -> CheckResult:  # noqa: ARG001
     infotext = ""
     for line in section:
         line_text = " ".join(line[1:])

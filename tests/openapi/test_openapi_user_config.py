@@ -15,7 +15,7 @@ from cmk.gui.openapi.api_endpoints.user_config._utils import _auth_options_to_in
 
 @patch("time.time", return_value=1234567890)
 @patch("cmk.gui.userdb.htpasswd.hash_password", return_value="hashed_password")
-def test_automation_secret(mock_hash: None, mock_time: None) -> None:  # type: ignore[misc]
+def test_automation_secret(mock_hash: None, mock_time: None) -> None:  # type: ignore[misc]  # noqa: ARG001
     result = _auth_options_to_internal_format(
         {"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"},
         PasswordPolicy(12, None, False, Path("")),

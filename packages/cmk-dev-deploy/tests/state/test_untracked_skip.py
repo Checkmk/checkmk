@@ -14,8 +14,6 @@ These tests drive the real ``compute_dirty_hashes``/``get_dirty_files``
 chain and mock only the git commands underneath it.
 """
 
-from __future__ import annotations
-
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager

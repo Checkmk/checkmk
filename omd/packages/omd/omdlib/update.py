@@ -197,7 +197,9 @@ def _restore_version_meta_dir(site_home: Path, backup_dir: Path) -> None:
 HOOK_RELPATHS = [
     ".forward",
     "etc/apache/apache/listen-port.conf",
+    "etc/apache/conf.d/ai-control-plane.conf",
     "etc/apache/conf.d/cookie_auth.conf",
+    "etc/apache/conf.d/mcp.conf",
     "etc/apache/conf.d/nagios.conf",
     "etc/apache/conf.d/pnp4nagios.conf",
     "etc/check_mk/conf.d/microcore.mk",

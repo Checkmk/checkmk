@@ -35,6 +35,19 @@ export type {
 
 export type Options<T> = { title: string; name: NonNullable<T> }
 
+/**
+ * Build the option list of a `list` prop from a record keyed by the variant name.
+ *
+ * The record type makes the type checker reject an option list that omits a variant
+ * or names one that does not exist. Options are offered in key order.
+ *
+ * A list that deliberately offers only a sample of a large union keeps the plain
+ * array form with `satisfies Options<T>[]`.
+ */
+export const listOptions = <T extends string | null | undefined>(
+  titles: Record<NonNullable<T>, string>
+): Options<T>[] => Object.entries(titles).map(([name, title]) => ({ name, title }) as Options<T>)
+
 // Suggestion-typed alias kept for components that use CmkSuggestions as options source
 export type SuggestionOptions = Suggestion[]
 

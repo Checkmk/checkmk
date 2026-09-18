@@ -7,9 +7,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class
@@ -56,10 +54,8 @@ import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
-import cmk.ccc.plugin_registry
 import cmk.ccc.regex
 import cmk.utils.log
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress as HostAddressType
 from cmk.ccc.regex import RegexFutureWarning
@@ -79,18 +75,7 @@ from cmk.gui.i18n import _
 from cmk.gui.icons import all_available_icon_emblems, all_available_icons
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import (
-    ChoiceGroup,
-    ChoiceId,
-    Choices,
-    ChoiceText,
-    DynamicIcon,
-    DynamicIconName,
-    DynamicIconWithEmblem,
-    GroupedChoices,
-    IconNames,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ChoiceGroup, GroupedChoices
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.gui.utils.labels import (
@@ -106,7 +91,6 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.misc import savefloat
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.view_utils import render_labels
 from cmk.livestatus_client import LivestatusResponse
 from cmk.ruleset_matcher.labels import AndOrNotLiteral, LabelSources
@@ -114,7 +98,16 @@ from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
 from cmk.web.utils import escaping
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
+from cmk.web.utils.choices import ChoiceId, Choices, ChoiceText
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import (
+    DynamicIcon,
+    DynamicIconName,
+    DynamicIconWithEmblem,
+    IconNames,
+    StaticIcon,
+)
+from cmk.web.utils.speaklater import LazyString
 from cmk.web.utils.urls import is_allowed_url, makeuri, urlencode
 
 seconds_per_day = 86400
@@ -210,7 +203,7 @@ class ValueSpec[T](abc.ABC):
         self,
         title: str | None = None,
         label: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T] | None = None,
     ):
@@ -237,8 +230,8 @@ class ValueSpec[T](abc.ABC):
         if self._help is None:
             return None
 
-        if isinstance(self._help, LazyString):
-            return str(self._help)
+        if isinstance(self._help, LazyString):  # type: ignore[unreachable]
+            return str(self._help)  # type: ignore[unreachable]
 
         if not isinstance(self._help, str):
             raise ValueError(self._help)
@@ -339,11 +332,11 @@ class ValueSpec[T](abc.ABC):
 
     # TODO: Better signature: def (value: object, varprefix: builtins.str) -> _VT
     # Remember: Parse, don't validate!
-    def validate_datatype(self, value: T, varprefix: str) -> None:
+    def validate_datatype(self, value: T, varprefix: str) -> None:  # noqa: ARG002
         """Check if a given value matches the datatype of described by this class."""
         return
 
-    def _validate_value(self, value: T, varprefix: str) -> None:
+    def _validate_value(self, value: T, varprefix: str) -> None:  # noqa: ARG002
         """Override this method to implement custom validation functions for sub-valuespec types
 
         This function should assume that the data type is valid (either because
@@ -370,7 +363,7 @@ class FixedValue[T](ValueSpec[T]):
         value: T,
         totext: str | HTML | None = None,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T] | None = None,
     ):
@@ -431,7 +424,7 @@ class Age(ValueSpec[int]):
         maxvalue: int | None = None,
         display: (Container[Literal["days", "hours", "minutes", "seconds"]] | None) = None,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[int] = DEF_VALUE,
         validate: ValueSpecValidateFunc[int] | None = None,
         cssclass: str | None = None,
@@ -547,7 +540,7 @@ class TimeSpan(ValueSpec[float]):
             Container[Literal["days", "hours", "minutes", "seconds", "milliseconds"]] | None
         ) = None,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[float] = DEF_VALUE,
         validate: ValueSpecValidateFunc[float] | None = None,
         cssclass: str | None = None,
@@ -716,7 +709,7 @@ class Integer(ValueSpec[int]):
         align: Literal["left", "right"] = "left",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[int] = DEF_VALUE,
         validate: ValueSpecValidateFunc[int] | None = None,
     ):
@@ -777,8 +770,8 @@ class Integer(ValueSpec[int]):
 
     @override
     def validate_datatype(self, value: int, varprefix: str) -> None:
-        if isinstance(value, numbers.Integral):
-            return
+        if isinstance(value, numbers.Integral):  # type: ignore[unreachable]
+            return  # type: ignore[unreachable]
         raise MKUserError(
             varprefix,
             _("The value %(value)r has the wrong type %(type)s, but must be of type int")
@@ -867,7 +860,7 @@ class LegacyDataSize(Integer):
         units: Sequence[LegacyBinaryUnit] | None = None,
         label: str | None = None,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[int] = DEF_VALUE,
         validate: ValueSpecValidateFunc[int] | None = None,
     ):
@@ -968,7 +961,7 @@ class TextInput(ValueSpec[str]):
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -1143,7 +1136,7 @@ def ID(
     placeholder: str | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
 ) -> TextInput:
@@ -1194,7 +1187,7 @@ def UserID(
     placeholder: str | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
 ) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
@@ -1252,7 +1245,7 @@ class RegExp(TextInput):
         label: str | None = None,
         size: int | Literal["max"] = 25,
         try_max_width: bool = False,
-        cssclass: str = "text",
+        cssclass: str = "text",  # noqa: ARG002
         strip: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
@@ -1267,7 +1260,7 @@ class RegExp(TextInput):
         placeholder: str | None = None,
         # From ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -1422,7 +1415,7 @@ class EmailAddress(TextInput):
         autocomplete: str | None = None,
         # From ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -1495,7 +1488,7 @@ def IPNetwork(
     size: int | Literal["max"] = 34,
     # From ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
 ) -> TextInput:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
@@ -1535,7 +1528,7 @@ def IPNetwork(
     )
 
 
-def IPv4Network(title: str | None = None, help: ValueSpecHelp | None = None) -> TextInput:
+def IPv4Network(title: str | None = None, help: ValueSpecHelp | None = None) -> TextInput:  # noqa: A002
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
     return IPNetwork(ip_class=ipaddress.IPv4Network, size=18, title=title, help=help)
 
@@ -1544,7 +1537,7 @@ def IPAddress(
     ip_class: type[ipaddress.IPv4Address] | type[ipaddress.IPv6Address] | None = None,
     size: int | Literal["max"] = 34,
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     allow_empty: bool = True,
 ) -> TextInput:
@@ -1587,7 +1580,7 @@ def IPAddress(
 
 def IPv4Address(
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
 ) -> TextInput:
     return IPAddress(
@@ -1621,7 +1614,7 @@ def Hostname(
     allow_empty: bool = False,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     size: int = 38,
 ) -> TextInput:
@@ -1663,7 +1656,7 @@ class HostAddress(TextInput):
         autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -1775,7 +1768,7 @@ def AbsoluteDirname(
     size: int | Literal["max"] = 25,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
 ) -> TextInput:
@@ -1818,7 +1811,7 @@ class Url(TextInput):
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -1910,7 +1903,7 @@ def HTTPUrl(
     size: int | Literal["max"] = 80,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
 ) -> Url:
@@ -1940,7 +1933,7 @@ def HTTPSUrl(
     size: int | Literal["max"] = 80,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
 ) -> Url:
@@ -1999,7 +1992,7 @@ class TextAreaUnicode(TextInput):
         autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -2107,7 +2100,7 @@ class Filename(TextInput):
         autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
@@ -2189,7 +2182,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         split_separators: str = ";",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[Sequence[str]] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Sequence[str]] | None = None,
     ):
@@ -2353,8 +2346,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
 
 def NetworkPort(
     title: str | None = None,
-    size: int | None = None,
-    help: str | None = None,
+    size: int | None = None,  # noqa: ARG001
+    help: str | None = None,  # noqa: A002
     minvalue: int = 0,
     maxvalue: int = 65535,
     label: str | None = None,
@@ -2399,7 +2392,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         del_label: str | None = None,
         movable: bool = True,
         # https://github.com/python/cpython/issues/90015
-        style: "ListOf.Style | None" = None,
+        style: ListOf.Style | None = None,
         totext: str | None = None,
         text_if_empty: str | None = None,
         allow_empty: bool = True,
@@ -2410,7 +2403,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         ignore_complain: bool = False,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
         validate: ValueSpecValidateFunc[ListOfModel[T]] | None = None,
     ):
@@ -2760,7 +2753,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         del_label: str | None = None,
         delete_style: str = "default",
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[Mapping[str, Any]] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Mapping[str, Any]] | None = None,
         allow_empty: bool = True,
@@ -2961,7 +2954,7 @@ class Float(ValueSpec[float]):
         align: Literal["left", "right"] = "left",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[float] = DEF_VALUE,
         validate: ValueSpecValidateFunc[float] | None = None,
     ):
@@ -3020,7 +3013,7 @@ class Float(ValueSpec[float]):
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if isinstance(value, float):
             return
-        if isinstance(value, numbers.Integral) and self._allow_int:
+        if isinstance(value, numbers.Integral) and self._allow_int:  # type: ignore[unreachable]
             return
         raise MKUserError(
             varprefix,
@@ -3053,7 +3046,7 @@ class Percentage(Float):
         align: Literal["left", "right"] = "left",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[float] = DEF_VALUE,
         validate: ValueSpecValidateFunc[float] | None = None,
     ):
@@ -3099,7 +3092,7 @@ class Checkbox(ValueSpec[bool]):
         onclick: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[bool] = DEF_VALUE,
         validate: ValueSpecValidateFunc[bool] | None = None,
     ):
@@ -3176,7 +3169,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
         *,
         # DropdownChoice
         choices: DropdownChoices,
-        sorted: bool = False,
+        sorted: bool = False,  # noqa: A002
         label: str | None = None,
         help_separator: str | None = None,
         prefix_values: bool = False,
@@ -3192,7 +3185,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
         deprecated_choices: Sequence[Any] = (),
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T | None] | None = None,
         default: ValueSpecDefault[T] | None = None,  # CMK-12228
@@ -3422,7 +3415,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         on_change: str | None = None,
         # From ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
@@ -3528,7 +3521,7 @@ class MonitoredHostname(AjaxDropdownChoice):
         html_attrs: HTMLTagAttributes | None = None,
         # From ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
@@ -3573,7 +3566,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         autocompleter: AutocompleterConfig | None = None,
         # From ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
@@ -3644,7 +3637,7 @@ type MonitoringStateValue = Literal[0, 1, 2, 3]
 def MonitoringState(
     *,
     # DropdownChoice
-    sorted: bool = False,
+    sorted: bool = False,  # noqa: A002
     label: str | None = None,
     help_separator: str | None = None,
     prefix_values: bool = False,
@@ -3659,7 +3652,7 @@ def MonitoringState(
     html_attrs: HTMLTagAttributes | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
     validate: ValueSpecValidateFunc[int | None] | None = None,
     deprecated_choices: Sequence[int] = (),
@@ -3701,7 +3694,7 @@ class HostState(DropdownChoice):
         self,
         *,
         # DropdownChoice
-        sorted: bool = False,
+        sorted: bool = False,  # noqa: A002
         label: str | None = None,
         help_separator: str | None = None,
         prefix_values: bool = False,
@@ -3716,7 +3709,7 @@ class HostState(DropdownChoice):
         html_attrs: HTMLTagAttributes | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
         validate: ValueSpecValidateFunc[int | None] | None = None,
         deprecated_choices: Sequence[int] = (),
@@ -3813,17 +3806,17 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         choices: CascadingDropdownChoices,
         label: str | None = None,
         separator: str = ", ",
-        sorted: bool = True,
+        sorted: bool = True,  # noqa: A002
         orientation: Literal["vertical", "horizontal"] = "vertical",
         # https://github.com/python/cpython/issues/90015
-        render: "CascadingDropdown.Render | None" = None,
+        render: CascadingDropdown.Render | None = None,
         no_elements_text: str | None = None,
         no_preselect_title: str | None = None,
         render_sub_vs_page_name: str | None = None,
         render_sub_vs_request_vars: dict | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[CascadingDropdownChoiceValue] = DEF_VALUE,
         validate: ValueSpecValidateFunc[CascadingDropdownChoiceValue] | None = None,
         show_title_of_choices: bool = False,
@@ -4198,7 +4191,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         no_elements_text: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[ListChoiceModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[ListChoiceModel] | None = None,
     ):
@@ -4369,7 +4362,7 @@ class DualListChoice(ListChoice):
         no_elements_text: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[ListChoiceModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[ListChoiceModel] | None = None,
         locked_choices: Sequence[str] | None = None,
@@ -4531,7 +4524,7 @@ class DualListChoice(ListChoice):
         value: list = []
         selection_str = request.var(varprefix, "")
         if selection_str is None:
-            return value
+            return value  # type: ignore[unreachable]
         selected = selection_str.split("|")
         if self._custom_order:
             edict = dict(self._elements)
@@ -4562,7 +4555,7 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
         choices: DropdownChoices,
         otherlabel: str | None = None,
         # DropdownChoice
-        sorted: bool = False,
+        sorted: bool = False,  # noqa: A002
         label: str | None = None,
         help_separator: str | None = None,
         prefix_values: bool = False,
@@ -4576,7 +4569,7 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
         encode_value: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T | None] | None = None,
     ):
@@ -4690,7 +4683,7 @@ _sorted = sorted
 def Weekday(
     *,
     # DropdownChoice
-    sorted: bool = False,
+    sorted: bool = False,  # noqa: A002
     label: str | None = None,
     help_separator: str | None = None,
     prefix_values: bool = False,
@@ -4705,7 +4698,7 @@ def Weekday(
     html_attrs: HTMLTagAttributes | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str | None] | None = None,
     deprecated_choices: Sequence[str] = (),
@@ -4743,7 +4736,7 @@ class RelativeDate(OptionalDropdownChoice[int]):
         self,
         default_days: int = 0,
         # DropdownChoice
-        sorted: bool = False,
+        sorted: bool = False,  # noqa: A002
         label: str | None = None,
         help_separator: str | None = None,
         prefix_values: bool = False,
@@ -4757,7 +4750,7 @@ class RelativeDate(OptionalDropdownChoice[int]):
         encode_value: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         validate: ValueSpecValidateFunc[int | None] | None = None,
     ) -> None:
         choices = [
@@ -4845,13 +4838,13 @@ class AbsoluteDate(ValueSpec[None | float]):
         show_titles: bool = True,
         label: str | None = None,
         include_time: bool = False,
-        format: str | None = None,
+        format: str | None = None,  # noqa: A002
         allow_empty: bool = False,
         none_means_empty: bool = False,
         submit_form_name: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[float | None] = DEF_VALUE,
         validate: ValueSpecValidateFunc[float | None] | None = None,
     ):
@@ -5022,7 +5015,7 @@ class AbsoluteDate(ValueSpec[None | float]):
             except ValueError:
                 if self._allow_empty:
                     return None
-                raise MKUserError(varname, _("Please enter a valid number"))
+                raise MKUserError(varname, _("Please enter a valid number"))  # type: ignore[possibly-undefined]
             if part < mmin or part > mmax:
                 raise MKUserError(
                     varname,
@@ -5105,7 +5098,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         placeholder_value: TimeofdayValue = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[TimeofdayValue] = DEF_VALUE,
         validate: ValueSpecValidateFunc[TimeofdayValue] | None = None,
     ):
@@ -5228,7 +5221,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         allow_empty: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[TimeofdayRangeValue] = DEF_VALUE,
         validate: ValueSpecValidateFunc[TimeofdayRangeValue] | None = None,
     ):
@@ -5406,7 +5399,7 @@ class Timerange(CascadingDropdown):
         # TODO: Make this more specific
         label: str | None = None,
         separator: str = ", ",
-        sorted: bool = False,
+        sorted: bool = False,  # noqa: A002
         orientation: Literal["vertical", "horizontal"] = "vertical",
         render: CascadingDropdown.Render | None = None,
         no_elements_text: str | None = None,
@@ -5415,7 +5408,7 @@ class Timerange(CascadingDropdown):
         render_sub_vs_request_vars: dict | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[CascadingDropdownChoiceValue] = DEF_VALUE,
         validate: ValueSpecValidateFunc[CascadingDropdownChoiceValue] | None = None,
     ):
@@ -5694,7 +5687,7 @@ class Timerange(CascadingDropdown):
 def DateFormat(
     *,
     # DropdownChoice
-    sorted: bool = False,
+    sorted: bool = False,  # noqa: A002
     label: str | None = None,
     help_separator: str | None = None,
     prefix_values: bool = False,
@@ -5709,7 +5702,7 @@ def DateFormat(
     html_attrs: HTMLTagAttributes | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = "%Y-%m-%d",  # NOTE: Different!
     validate: ValueSpecValidateFunc[str | None] | None = None,
     deprecated_choices: Sequence[str] = (),
@@ -5747,7 +5740,7 @@ def DateFormat(
 def TimeFormat(
     *,
     # DropdownChoice
-    sorted: bool = False,
+    sorted: bool = False,  # noqa: A002
     label: str | None = None,
     help_separator: str | None = None,
     prefix_values: bool = False,
@@ -5762,7 +5755,7 @@ def TimeFormat(
     html_attrs: HTMLTagAttributes | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[str] = "%H:%M:%S",  # NOTE: Different!
     validate: ValueSpecValidateFunc[str | None] | None = None,
     deprecated_choices: Sequence[str] = (),
@@ -5813,7 +5806,7 @@ class Optional[T](ValueSpec[None | T]):
         indent: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T | None] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T | None] | None = None,
     ):
@@ -5946,10 +5939,10 @@ class Alternative(ValueSpec[AlternativeModel]):
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[AlternativeModel] | None = None,
-        style: str | None = None,  # CMK-12228
+        style: str | None = None,  # CMK-12228  # noqa: ARG002
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
@@ -6137,7 +6130,7 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         title_br: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         validate: ValueSpecValidateFunc[TT] | None = None,
     ):
         super().__init__(title=title, help=help, default_value=DEF_VALUE, validate=validate)
@@ -6169,7 +6162,7 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         for no, element in enumerate(self._elements):
             try:
                 val = value[no]
-            except (TypeError, IndexError):
+            except TypeError, IndexError:
                 val = element.default_value()
             vp = varprefix + "_" + str(no)
             if self._orientation == "vertical":
@@ -6288,9 +6281,9 @@ def _renders_own_form_sections(vs: ValueSpec) -> bool:
     section, our wrapping <tr>/<td>/<div> would be torn apart by the inner's
     section_close, so we let it manage its own sections instead."""
     if isinstance(vs, Dictionary):
-        return vs._render == "form_part"
+        return vs._render == "form_part"  # noqa: SLF001
     if isinstance(vs, Transform):
-        return _renders_own_form_sections(vs._valuespec)
+        return _renders_own_form_sections(vs._valuespec)  # noqa: SLF001
     return False
 
 
@@ -6319,7 +6312,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         horizontal: bool = False,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         validate: ValueSpecValidateFunc[DictionaryModel] | None = None,
     ):
         super().__init__(title=title, help=help, default_value=DEF_VALUE, validate=validate)
@@ -6383,7 +6376,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
     def _render_input(self, varprefix: str, value: DictionaryModel | None, render: str) -> None:
         value = self.migrate(value)
         if not isinstance(value, MutableMapping):
-            value = {}  # makes code simpler in complain phase
+            value = {}  # type: ignore[unreachable]  # makes code simpler in complain phase
 
         elements = list(self._get_elements())
         if len(elements) == 0:
@@ -6562,7 +6555,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         varprefix: str,
         elements: DictionaryElements,
         value: DictionaryModel,
-        title: str,
+        title: str,  # noqa: ARG002
         section_elements: Sequence[str],
         css: str | None,
     ) -> None:
@@ -6777,7 +6770,7 @@ class ElementSelection(ValueSpec[None | str]):
         empty_text: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
@@ -6895,7 +6888,7 @@ class Foldable[T](ValueSpec[T]):
         title_function: Callable[[Any], str] | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T] | None = None,
     ) -> None:
@@ -7016,7 +7009,7 @@ class Transform[T](ValueSpec[T]):
         forth: Callable[[Any], T] | None = None,
         back: Callable[[T], Any] | None = None,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
@@ -7110,7 +7103,7 @@ class Migrate[T](Transform[T]):
         *,
         migrate: Callable[[Any], T],
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T] | None = None,
     ):
@@ -7139,7 +7132,7 @@ class Transparent[T](Transform[T]):
         valuespec: ValueSpec[T],
         *,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T] | None = None,
     ):
@@ -7178,7 +7171,7 @@ class LDAPDistinguishedName(TextInput):
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ) -> None:
@@ -7265,7 +7258,7 @@ class Password(TextInput):
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecText | None = None,  # NOTE: Different!
+        help: ValueSpecText | None = None,  # NOTE: Different!  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ) -> None:
@@ -7285,7 +7278,7 @@ class Password(TextInput):
                 "password in order to provide it for authentication with "
                 "remote systems."
             )
-            help = plain_help if help is None else (help + "<br><br>" + plain_help)
+            help = plain_help if help is None else (help + "<br><br>" + plain_help)  # noqa: A001
 
         super().__init__(
             label=label,
@@ -7397,7 +7390,7 @@ class PasswordSpec(Password):
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecText | None = None,  # NOTE: Different!
+        help: ValueSpecText | None = None,  # NOTE: Different!  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ) -> None:
@@ -7460,7 +7453,7 @@ class FileUpload(ValueSpec[FileUploadModel]):
         allow_empty_content: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[FileUploadModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FileUploadModel] | None = None,
     ) -> None:
@@ -7551,7 +7544,7 @@ class ImageUpload(FileUpload):
         mime_types: Iterable[str] | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[FileUploadModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FileUploadModel] | None = None,
     ) -> None:
@@ -7574,7 +7567,7 @@ class ImageUpload(FileUpload):
     def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         if isinstance(value, str):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
-            value = value.encode("latin_1")
+            value = value.encode("latin_1")  # type: ignore[unreachable]
         if self._show_current_image and value:
             if not isinstance(value, bytes):  # Hmmm...
                 raise TypeError(value)
@@ -7637,7 +7630,7 @@ class UploadOrPasteTextFile(Alternative):
         mime_types: Iterable[str] | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
@@ -7682,7 +7675,7 @@ class UploadOrPasteTextFile(Alternative):
                 return value[-1].decode("utf-8")
             except UnicodeDecodeError as exc:
                 raise MKUserError(varprefix, _("Please choose a file to upload.")) from exc
-        return value
+        return value  # type: ignore[unreachable]
 
 
 class TextOrRegExp(Alternative):
@@ -7695,7 +7688,7 @@ class TextOrRegExp(Alternative):
         on_change: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
@@ -7755,14 +7748,14 @@ class Labels(ValueSpec[LabelsModel]):
 
     def __init__(
         self,
-        world: "Labels.World",
+        world: Labels.World,
         # https://github.com/python/cpython/issues/90015
-        label_source: "Labels.Source | None" = None,
+        label_source: Labels.Source | None = None,
         max_labels: int | None = None,
         object_type: Literal["host", "service"] | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[LabelsModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[LabelsModel] | None = None,
     ):
@@ -7867,7 +7860,7 @@ class Labels(ValueSpec[LabelsModel]):
     @classmethod
     def get_labels(
         cls,
-        world: "Labels.World",
+        world: Labels.World,
         search_label: str,
         object_type: Literal["host", "service"] | None = None,
     ) -> Sequence[tuple[str, str]]:
@@ -7977,7 +7970,7 @@ class _SingleLabel(AjaxDropdownChoice):
     def __init__(
         self,
         world: Labels.World,
-        label_source: Labels.Source | None = None,
+        label_source: Labels.Source | None = None,  # noqa: ARG002
         strict: Literal["True", "False"] = "False",
         object_type: Literal["host", "service"] | None = None,
         # DropdownChoice
@@ -8018,7 +8011,7 @@ class LabelGroup(ListOf):
         add_label: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         object_type: Literal["host", "service"] | None = None,
     ) -> None:
         if object_type is not None:
@@ -8094,7 +8087,7 @@ class LabelGroups(LabelGroup):
         add_label: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         object_type: Literal["host", "service"] | None = None,
     ) -> None:
         if object_type is not None:
@@ -8151,7 +8144,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         with_emblem: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[IconSelectorModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[IconSelectorModel] | None = None,
     ):
@@ -8440,7 +8433,7 @@ def ListOfTimeRanges(
     sort_by: int | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[ListOfModel[TimeofdayRangeValue]] = DEF_VALUE,
     validate: ValueSpecValidateFunc[ListOfModel[TimeofdayRangeValue]] | None = None,
 ) -> ListOf:
@@ -8475,7 +8468,7 @@ def Fontsize(
     align: Literal["left", "right"] = "left",
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[float] = 10,  # NOTE: Different!
     validate: ValueSpecValidateFunc[float] | None = None,
 ) -> Float:
@@ -8503,7 +8496,7 @@ class Color(ValueSpec[None | str]):
         allow_empty: bool = True,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str | None] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
@@ -8717,14 +8710,14 @@ def SchedulePeriod(
     # CascadingDropdown
     label: str | None = None,
     separator: str = ", ",
-    sorted: bool = True,
+    sorted: bool = True,  # noqa: A002
     render: CascadingDropdown.Render | None = None,
     no_elements_text: str | None = None,
     no_preselect_title: str | None = None,
     render_sub_vs_page_name: str | None = None,
     render_sub_vs_request_vars: dict | None = None,
     # ValueSpec
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[CascadingDropdownChoiceValue] = DEF_VALUE,
     validate: ValueSpecValidateFunc[CascadingDropdownChoiceValue] | None = None,
 ) -> CascadingDropdown:
@@ -8833,7 +8826,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
@@ -8929,7 +8922,7 @@ def ListOfCAs[T](
     sort_by: int | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
     validate: ValueSpecValidateFunc[ListOfModel[T]] | None = None,
 ) -> ListOf:
@@ -8978,7 +8971,7 @@ class SetupSiteChoice(DropdownChoice):
         self,
         *,
         # DropdownChoice
-        sorted: bool = False,
+        sorted: bool = False,  # noqa: A002
         label: str | None = None,
         help_separator: str | None = None,
         prefix_values: bool = False,
@@ -8992,7 +8985,7 @@ class SetupSiteChoice(DropdownChoice):
         html_attrs: HTMLTagAttributes | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[SiteId] = DEF_VALUE,
         validate: ValueSpecValidateFunc[SiteId | None] | None = None,
         deprecated_choices: Sequence[SiteId] = (),
@@ -9049,7 +9042,7 @@ def LogLevelChoice(
     *,
     with_verbose: bool = True,
     # DropdownChoice
-    sorted: bool = False,
+    sorted: bool = False,  # noqa: A002
     label: str | None = None,
     help_separator: str | None = None,
     prefix_values: bool = False,
@@ -9064,7 +9057,7 @@ def LogLevelChoice(
     html_attrs: HTMLTagAttributes | None = None,
     # ValueSpec
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     default_value: ValueSpecDefault[int] = DEF_VALUE,
     validate: ValueSpecValidateFunc[int | None] | None = None,
     deprecated_choices: Sequence[int] = (),
@@ -9216,7 +9209,7 @@ class DatePicker(ValueSpec[str]):
         self,
         title: str | None = None,
         label: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
         onchange: str | None = None,
@@ -9277,7 +9270,7 @@ class TimePicker(ValueSpec[str]):
     def __init__(
         self,
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
         onchange: str | None = None,

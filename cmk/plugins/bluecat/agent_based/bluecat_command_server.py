@@ -34,7 +34,7 @@ def parse_bluecat_command_server(string_table: StringTable) -> StringTable | Non
     return string_table or None
 
 
-def discover_bluecat_command_server(section: StringTable) -> DiscoveryResult:
+def discover_bluecat_command_server(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

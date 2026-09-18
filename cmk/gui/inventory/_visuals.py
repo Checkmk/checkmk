@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from __future__ import annotations
 
 from typing import override
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.visuals.filter.components import FilterComponent
 from cmk.gui.visuals.info import VisualInfo
 
@@ -33,7 +30,7 @@ class VisualInfoInventoryHistory(VisualInfo):
 
     @property
     @override
-    def single_spec(self) -> list[tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[DictionaryEntry]:
         return []
 
     @override

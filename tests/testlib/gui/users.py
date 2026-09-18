@@ -87,6 +87,7 @@ def create_and_destroy_user(  # type: ignore[misc]
         now=datetime.now(),
         pprint_value=config.wato_pprint_config,
         call_users_saved_hook=False,
+        changed_users=[user_id],
     )
 
     config.multisite_users[user_id] = user
@@ -106,6 +107,7 @@ def create_and_destroy_user(  # type: ignore[misc]
                 now=datetime.now(),
                 pprint_value=config.wato_pprint_config,
                 call_users_saved_hook=False,
+                changed_users=[user_id],
             )
 
         # User directories are not deleted by WATO by default. Clean it up here!

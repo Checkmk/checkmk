@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 
@@ -141,7 +140,7 @@ def test_check_azure_storageaccounts(  # type: ignore[misc]
     assert actual == results_expected
 
 
-def test_check_azure_storageaccounts_defaults():
+def test_check_azure_storageaccounts_defaults() -> None:
     resource = {
         "st0ragetestaccount": Resource(
             id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
@@ -212,7 +211,7 @@ def test_check_azure_storageaccounts_flow(  # type: ignore[misc]
     assert actual == results_expected
 
 
-def test_check_azure_storageaccounts_flow_defaults():
+def test_check_azure_storageaccounts_flow_defaults() -> None:
     resource = {
         "st0ragetestaccount": Resource(
             id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
@@ -298,7 +297,7 @@ def test_check_plugin_azure_storageaccounts_performance(  # type: ignore[misc]
     assert actual == results_expected
 
 
-def test_check_azure_storageaccounts_performance_defaults():
+def test_check_azure_storageaccounts_performance_defaults() -> None:
     resource = {
         "st0ragetestaccount": Resource(
             id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
@@ -379,7 +378,7 @@ def _make_section(metrics: Mapping[str, AzureMetric]) -> Section:
     }
 
 
-def test_check_azure_storageaccounts_inactivity_all_missing():
+def test_check_azure_storageaccounts_inactivity_all_missing() -> None:
     section = _make_section({})
     result = list(
         check_plugin_azure_storageaccounts.check_function("st0ragetestaccount", {}, section)
@@ -387,13 +386,13 @@ def test_check_azure_storageaccounts_inactivity_all_missing():
     assert result == [INACTIVITY_RESULT]
 
 
-def test_check_azure_storageaccounts_flow_inactivity_all_missing():
+def test_check_azure_storageaccounts_flow_inactivity_all_missing() -> None:
     section = _make_section({})
     result = list(check_azure_storageaccounts_flow("st0ragetestaccount", {}, section))
     assert result == [INACTIVITY_RESULT]
 
 
-def test_check_azure_storageaccounts_flow_inactivity_partial():
+def test_check_azure_storageaccounts_flow_inactivity_partial() -> None:
     """When only some flow metrics are missing, present metrics should still produce results."""
     section = _make_section(
         {
@@ -409,13 +408,13 @@ def test_check_azure_storageaccounts_flow_inactivity_partial():
     ]
 
 
-def test_check_azure_storageaccounts_performance_inactivity_all_missing():
+def test_check_azure_storageaccounts_performance_inactivity_all_missing() -> None:
     section = _make_section({})
     result = list(check_azure_storageaccounts_performance("st0ragetestaccount", {}, section))
     assert result == [INACTIVITY_RESULT]
 
 
-def test_check_azure_storageaccounts_performance_inactivity_partial():
+def test_check_azure_storageaccounts_performance_inactivity_partial() -> None:
     section = _make_section(
         {
             "average_Availability": AzureMetric(

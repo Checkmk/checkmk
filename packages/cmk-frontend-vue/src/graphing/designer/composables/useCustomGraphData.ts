@@ -5,8 +5,13 @@
  */
 import { type Ref, onScopeDispose, readonly, ref, watch } from 'vue'
 
+import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import { overviewStep } from '../../components/GraphBrush/overviewRange'
 import type { HorizontalLine, Metric, TimeRange } from '../../components/TimeSeriesGraph'
+import {
+  clippedToNavigableTime,
+  navigableBounds
+} from '../../components/TimeSeriesGraph/interaction/timeBounds'
 import type { ConsolidationFn } from '../../components/consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../../components/constants'
 import type { RequestedTimeRange, TimeInterval } from '../../types'
@@ -40,6 +45,7 @@ export interface UseCustomGraphDataOptions {
 }
 
 export interface OverviewData {
+  requestedTimeRange: TimeInterval
   metrics: CustomGraphMetric[]
   dataTimeRange: TimeRange
   viewTimeRange: TimeRange
@@ -205,11 +211,15 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         lastOverviewKey = null
       } else if (overviewResponse !== null) {
         overview.value = {
+          requestedTimeRange: {
+            start: overviewBody.requested_time_range.start,
+            end: overviewBody.requested_time_range.end
+          },
           metrics: [...overviewResponse.metrics],
           dataTimeRange: overviewResponse.time_range,
-          viewTimeRange: drawnTimeRange(
-            overviewBody.requested_time_range,
-            overviewResponse.time_range
+          viewTimeRange: clippedToNavigableTime(
+            drawnTimeRange(overviewBody.requested_time_range, overviewResponse.time_range),
+            navigableBounds()
           )
         }
         lastOverviewKey = overviewKey
@@ -260,6 +270,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   // forced when fetching hidden) leaves the key unchanged, so it does not trigger a refetch,
   // while any other change re-fetches. A `deep` watch cannot be used here — it fires on every
   // tracked change regardless of value equality, defeating the invariance.
+  const { refreshTick, contentReloadPending } = useGlobalRefresh()
+
   watch(
     () =>
       JSON.stringify({
@@ -268,9 +280,16 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         requestedTimeRange: options.getRequestedTimeRange(),
         consolidationFn: options.getConsolidationFn(),
         figureWidth: options.getFigureWidth(),
-        overviewRange: options.getOverviewRange()
+        overviewRange: options.getOverviewRange(),
+        // The tick re-fetches even when the window did not move (keeps Today, This week live).
+        refreshTick: refreshTick.value
       }),
-    schedule
+    () => {
+      if (contentReloadPending()) {
+        return
+      }
+      schedule()
+    }
   )
   void load()
 

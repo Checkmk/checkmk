@@ -15,7 +15,7 @@ from cmk.plugins.cisco.agent_based.cisco_ucs_fault_section import Section
 from cmk.plugins.cisco.lib_ucs import check_cisco_fault
 
 
-def discover_cisco_ucs_faults(section: Section) -> DiscoveryResult:
+def discover_cisco_ucs_faults(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

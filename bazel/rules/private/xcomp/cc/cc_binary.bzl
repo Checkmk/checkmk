@@ -1,6 +1,6 @@
 """Cross-compilable cc_binary rule with platform transition support."""
 
-load(":private/xcomp/transition.bzl", _transition_platform = "transition_platform")
+load(":private/xcomp/transition.bzl", _HOST_PLATFORM = "HOST_PLATFORM", _transition_platform = "transition_platform")
 
 _cc_binary_transitioned = rule(
     implementation = lambda ctx: ctx.super(),
@@ -11,7 +11,7 @@ _cc_binary_transitioned = rule(
             doc = "Pin a compilation mode (e.g. 'opt'); empty inherits the command line.",
             default = "",
         ),
-        "platform": attr.label(default = "@platforms//host"),
+        "platform": attr.label(default = _HOST_PLATFORM),
     },
 )
 

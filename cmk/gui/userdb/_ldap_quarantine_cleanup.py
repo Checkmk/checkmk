@@ -64,6 +64,7 @@ def expire_quarantined_users(now: datetime, retention: int | None) -> None:
         now=now,
         pprint_value=active_config.wato_pprint_config,
         call_users_saved_hook=True,
+        changed_users=expired,
     )
 
 

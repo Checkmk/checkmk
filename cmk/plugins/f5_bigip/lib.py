@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP Commons"""
 
+from collections.abc import Mapping
 from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import all_of, contains, matches, not_matches
@@ -32,12 +33,11 @@ F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
     "type": "active_standby",
 }
 
-AllStates = Literal[0, 1, 2, 3, 4]
-
 
 class _F5BigipClusterStatusVSResultRequired(TypedDict, total=False):
     type: Literal["active_standby", "active_active"]
 
 
 class F5BigipClusterStatusVSResult(_F5BigipClusterStatusVSResultRequired):
-    v11_2_states: dict[AllStates, AllStates]
+    # Keyed by the failover status names of cmk/plugins/f5_bigip/rulesets/cluster_status.py
+    v11_2_states: Mapping[str, int]

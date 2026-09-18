@@ -81,7 +81,7 @@ class BackgroundStatusSnapshot:
         return job_snapshot
 
     @classmethod
-    def from_dict(cls, data: dict) -> "BackgroundStatusSnapshot":
+    def from_dict(cls, data: dict) -> BackgroundStatusSnapshot:
         data["status"] = JobStatusSpec(**data["status"])
         return cls(**data)
 

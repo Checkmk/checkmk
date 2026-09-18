@@ -24,7 +24,7 @@ def vbox_guest_make_dict(info: StringTable) -> dict[str, str]:
     return {l[1].split("/", 2)[2].rstrip(","): l[3] if len(l) == 4 else "" for l in info}
 
 
-def check_vbox_guest(params: Mapping[str, object], section: StringTable) -> CheckResult:
+def check_vbox_guest(params: Mapping[str, object], section: StringTable) -> CheckResult:  # noqa: ARG001
     if len(section) == 1 and section[0][0] == "ERROR":
         yield Result(
             state=State.UNKNOWN, summary="Error running VBoxControl guestproperty enumerate"

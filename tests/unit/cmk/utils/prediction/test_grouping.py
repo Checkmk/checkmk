@@ -5,6 +5,7 @@
 
 import datetime
 import time
+from collections.abc import Callable
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -14,9 +15,27 @@ from cmk.utils.prediction import _grouping
 
 
 @pytest.mark.parametrize(
+    "group_by, timestamp, result",
+    [
+        (_grouping._group_by_wday, 1543402800, ("wednesday", 43200)),  # noqa: SLF001
+        (_grouping._group_by_day, 1543402800, ("everyday", 43200)),  # noqa: SLF001
+        (_grouping._group_by_day_of_month, 1543402800, ("28", 43200)),  # noqa: SLF001
+        (_grouping._group_by_everyhour, 1543402820, ("everyhour", 20)),  # noqa: SLF001
+    ],
+)
+def test_group_by(
+    group_by: Callable[[int], tuple[_grouping.Timegroup, int]],
+    timestamp: int,
+    result: tuple[_grouping.Timegroup, int],
+) -> None:
+    with time_machine.travel(datetime.datetime.fromtimestamp(timestamp, tz=ZoneInfo("CET"))):
+        assert group_by(timestamp) == result
+
+
+@pytest.mark.parametrize(
     "utcdate, timezone, period, horizon, windows_expected",
     [
-        (
+        pytest.param(
             "2018-11-29 14:56",
             "Europe/Berlin",
             "wday",
@@ -36,15 +55,17 @@ from cmk.utils.prediction import _grouping
                 (1536789600, 1536876000),
                 (1536184800, 1536271200),
             ],
+            id="wday-berlin",
         ),
-        (
+        pytest.param(
             "2018-11-26 07:00",
             "Europe/Berlin",
             "day",
             90,
             [(1543186800, 1543273200), (1540504800, 1540591200), (1537912800, 1537999200)],
+            id="day-of-month-berlin",
         ),
-        (
+        pytest.param(
             "2018-11-10 07:00",
             "Europe/Berlin",
             "hour",
@@ -141,8 +162,9 @@ from cmk.utils.prediction import _grouping
                 (1534197600, 1534284000),
                 (1534111200, 1534197600),
             ],
+            id="hour-berlin",
         ),
-        (
+        pytest.param(
             "2018-07-15 10:00",
             "America/New_York",
             "hour",
@@ -159,13 +181,87 @@ from cmk.utils.prediction import _grouping
                 (1530936000, 1531022400),
                 (1530849600, 1530936000),
             ],
+            id="hour-new-york",
         ),
-        (
+        pytest.param(
             "2018-07-15 10:00",
             "UTC",
             "wday",
             10,
             [(1531612800, 1531699200), (1531008000, 1531094400)],
+            id="wday-utc",
+        ),
+        pytest.param(
+            "2018-07-08 02:00",
+            "UTC",
+            "hour",
+            3,
+            [(1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)],
+            id="summer-utc-sequential-days",
+        ),
+        pytest.param(
+            "2018-07-08 02:00",
+            "Europe/Berlin",
+            "hour",
+            2,
+            [(1531000800, 1531087200), (1530914400, 1531000800)],
+            id="summer-berlin-shifted-two-hours",
+        ),
+        pytest.param(
+            "2018-07-08 02:00",
+            "America/New_York",
+            "hour",
+            2,
+            [(1531022400, 1531108800), (1530936000, 1531022400)],
+            id="summer-new-york",
+        ),
+        pytest.param(
+            "2018-10-28 02:00",
+            "UTC",
+            "hour",
+            2,
+            [(1540684800, 1540771200), (1540598400, 1540684800)],
+            id="dst-end-utc-unaffected",
+        ),
+        pytest.param(
+            "2018-10-28 02:00",
+            "Europe/Berlin",
+            "hour",
+            2,
+            [(1540681200, 1540767600), (1540591200, 1540677600)],
+            id="dst-end-berlin-after-switch",
+        ),
+        pytest.param(
+            "2018-10-28 00:00",
+            "Europe/Berlin",
+            "hour",
+            2,
+            [(1540677600, 1540764000), (1540591200, 1540677600)],
+            id="dst-end-berlin-before-switch",
+        ),
+        pytest.param(
+            "2018-11-04 07:00",
+            "America/New_York",
+            "hour",
+            2,
+            [(1541307600, 1541394000), (1541217600, 1541304000)],
+            id="dst-end-new-york-after-switch",
+        ),
+        pytest.param(
+            "2018-11-04 05:00",
+            "America/New_York",
+            "hour",
+            2,
+            [(1541307600, 1541394000), (1541217600, 1541304000)],
+            id="dst-end-new-york-before-switch",
+        ),
+        pytest.param(
+            "2019-04-02 10:00",
+            "Europe/Berlin",
+            "wday",
+            12,
+            [(1554156000, 1554242400), (1553554800, 1553641200)],
+            id="dst-start-berlin-short-week",
         ),
     ],
 )
@@ -176,13 +272,10 @@ def test_time_slices(
     horizon: int,
     windows_expected: list[tuple[int, int]],
 ) -> None:
-    period_info = _grouping.PREDICTION_PERIODS[period]
     with time_machine.travel(
-        datetime.datetime.fromisoformat(utcdate).replace(tzinfo=ZoneInfo(timezone))
+        datetime.datetime.fromisoformat(utcdate).replace(tzinfo=ZoneInfo(timezone), fold=1),
+        tick=False,
     ):
-        now = int(time.time())
-        assert callable(period_info.groupby)
-
-        time_windows = _grouping.time_slices(now, horizon * 86400, period)
+        time_windows = _grouping.time_slices(int(time.time()), horizon * 86400, period)
 
     assert time_windows == windows_expected

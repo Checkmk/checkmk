@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """Code for support of Nagios (and compatible) cores"""
@@ -619,7 +618,7 @@ def create_nagios_host_spec(
 
     elif hostname in hosts_config.clusters:
         # Special handling of clusters
-        host_spec["parents"] = ",".join(sorted(nodes))
+        host_spec["parents"] = ",".join(sorted(nodes))  # type: ignore[possibly-undefined]
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
@@ -970,11 +969,22 @@ def create_nagios_servicedefs(
     if not services_ids and not active_checks_rules_exist and not custom_checks:
         ping_services.append("PING")
 
+    # Unlike the fallback above, these services can be disabled by the user.
     if ip_stack_config is IPStackConfig.DUAL_STACK:
         if host_ip_family is AddressFamily.AF_INET6:
-            if "PING IPv4" not in services_ids:
+            if "PING IPv4" not in services_ids and not _skip_service(
+                config_cache,
+                hostname,
+                "PING IPv4",
+                _get_service_labels(config_cache.label_manager, hostname, "PING IPv4"),
+            ):
                 ping_services.append("PING IPv4")
-        elif "PING IPv6" not in services_ids:
+        elif "PING IPv6" not in services_ids and not _skip_service(
+            config_cache,
+            hostname,
+            "PING IPv6",
+            _get_service_labels(config_cache.label_manager, hostname, "PING IPv6"),
+        ):
             ping_services.append("PING IPv6")
 
     for ping_service in ping_services:

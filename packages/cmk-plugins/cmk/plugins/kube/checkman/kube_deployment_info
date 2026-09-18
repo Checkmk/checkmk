@@ -15,7 +15,8 @@ description:
 
  This information is provided by the API server. The service is always {OK}.
 
- It requires that the special agent kube is configured.
+ This check requires that Kubernetes monitoring is configured and that Checkmk
+ can receive data from the in-cluster agent.
 
 discovery:
  One service is created for each deployment.

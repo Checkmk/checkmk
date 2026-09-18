@@ -13,8 +13,10 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import CreateCustomServiceSlideIn from '@/mode-custom-services/CreateCustomServiceSlideIn.vue'
+import type { ServiceModel } from '@/mode-custom-services/types'
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import ActionsCell from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -27,23 +29,25 @@ import DropdownCell from '@/monitoring/shared/components/cell/DropdownCell.vue'
 import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
+import type { Metric } from '../../components/TimeSeriesGraph'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
-import type { GraphItemsStore } from '../composables/useGraphItems'
+import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
+import { useItemValidation } from '../composables/useItemValidation'
 import { useRowLabels } from '../composables/useRowLabels'
 import { useTitleMacroHelp } from '../composables/useTitleMacroHelp'
 import { useValidationMessages } from '../composables/useValidationMessages'
 import {
   type DesignerItem,
   newConstantDraft,
-  newMetricBackendDraft,
   newRrdMetricDraft,
   newScalarDraft,
+  newTelemetryMetricsDraft,
   scalarColor
 } from '../drafts'
-import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
-import { type RowIssue, isValid } from '../validation'
+import { customServiceModelFor } from '../telemetryMetrics'
+import { type ItemId, isFormula, isSingleLine, parseLineType } from '../types'
+import type { RowIssue } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
-import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
 import RowEditor from './forms/RowEditor.vue'
 
 /** Shared so an unaffected row keeps the same identity across renders. */
@@ -52,30 +56,37 @@ const NO_ISSUES: readonly RowIssue[] = Object.freeze([])
 const {
   store,
   thresholds,
-  metricBackendAvailable,
+  telemetryMetricsAvailable,
   createServicesAvailable,
-  metricBackendDefaultTitle,
+  telemetryMetricsDefaultTitle,
   titleMacros,
   issuesByRow,
-  resolvedTitles
+  resolvedTitles,
+  metricsBySource
 } = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
-  metricBackendAvailable: boolean
+  telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
   /** What the engine expands `$DEFAULT_TITLE$` to for a metric-backend row. */
-  metricBackendDefaultTitle: string
+  telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
   resolvedTitles: ReadonlyMap<ItemId, string>
+  /** Fetched series per data-source row, for the per-row metrics preview. */
+  metricsBySource: Map<ItemId, Metric[]>
 }>()
 
 const emit = defineEmits<{
   'add-calculation': []
+  'edit-calculation': [id: ItemId]
+  /** The series the hovered element stands for. */
+  hoverMetrics: [names: string[]]
 }>()
 
 const { _t } = usei18n()
 const { sourceTypeLabel, lineStyleSuggestions, lineStyleLabel } = useRowLabels()
+const { isValid } = useItemValidation(store.items)
 const { renderTitleMacroHelp } = useTitleMacroHelp()
 const { issueMessage } = useValidationMessages()
 
@@ -83,6 +94,18 @@ const titleMacroHelp = renderTitleMacroHelp(titleMacros)
 
 const rowSelection = ref<RowSelectionState>({})
 const expandedRows = ref<Record<string, boolean>>({})
+
+function isExpanded(row: DesignerItem): boolean {
+  return expandedRows.value[row.id] === true
+}
+
+watch(
+  () => store.items.value,
+  (rows) => {
+    rowSelection.value = retainKnownRows(rowSelection.value, rows)
+    expandedRows.value = retainKnownRows(expandedRows.value, rows)
+  }
+)
 
 const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
 const addSource = useTemplateRef<InstanceType<typeof CmkAddDropdown>>('addSource')
@@ -114,7 +137,7 @@ const columns: ColumnDef<DesignerItem>[] = [
   { id: 'display_name', header: _t('Display name'), meta: { stretch: true, justify: 'left' } },
   { id: 'line_style', header: _t('Line style'), meta: { justify: 'left' } },
   { id: 'mirrored', header: _t('Mirrored'), meta: { justify: 'center' } },
-  { id: 'actions', header: _t('Actions') }
+  { id: 'actions', header: _t('Actions'), meta: { justify: 'right' } }
 ]
 
 const sourceColumnIndex = columns.findIndex((column) => column.id === 'source')
@@ -136,7 +159,9 @@ const selectedIds = computed<ItemId[]>(() => {
 const addSourceSuggestions = computed(() => {
   const suggestions = [
     { name: 'rrd_metric', title: _t('Checkmk RRD') },
-    ...(metricBackendAvailable ? [{ name: 'metric_backend', title: _t('Metrics backend') }] : []),
+    ...(telemetryMetricsAvailable
+      ? [{ name: 'metric_backend', title: _t('Metrics backend') }]
+      : []),
     { name: 'scalar', title: _t('Service reference line') },
     { name: 'constant', title: _t('Constant line') }
   ]
@@ -153,7 +178,7 @@ function onAddSource(value: string): void {
       case 'scalar':
         return newScalarDraft(assigned, scalarColor('warning', store.nextColor.value, thresholds))
       case 'metric_backend':
-        return newMetricBackendDraft(assigned)
+        return newTelemetryMetricsDraft(assigned)
       default:
         throw new Error(`Unknown source type: ${value}`)
     }
@@ -167,39 +192,66 @@ const rowActions: CellAction[] = [
   { id: 'delete', label: _t('Delete'), icon: 'delete' }
 ]
 
-/** Metric-backend rows gain an "Add rule" action once their query is complete. */
+const editCalculation: CellAction = { id: 'edit', label: _t('Edit calculation'), icon: 'edit' }
+
+/** Calculations are edited in the slideout; a complete metric-backend row can become a service. */
 function rowActionsFor(row: DesignerItem): CellAction[] {
+  if (isFormula(row)) {
+    return [editCalculation, ...rowActions]
+  }
   if (
-    metricBackendAvailable &&
+    telemetryMetricsAvailable &&
     createServicesAvailable &&
     row.type === 'metric_backend' &&
     isValid(row)
   ) {
     return [
-      ...rowActions,
-      { id: 'add-rule', label: _t('Add rule: Metric backend (Custom query)'), icon: 'add-rule' }
+      { id: 'create-custom-service', label: _t('Create custom service'), icon: 'add-rule' },
+      ...rowActions
     ]
   }
   return rowActions
 }
 
-const metricBackendRuleItem = ref<MetricBackendItem | null>(null)
+const customServiceModel = ref<ServiceModel | null>(null)
 
 const rowDelete = useDeleteWithDependents(store, () => {
   rowSelection.value = {}
 })
 
 function onRowAction(row: DesignerItem, action: CellAction): void {
-  if (action.id === 'clone') {
+  if (action.id === 'edit') {
+    emit('edit-calculation', row.id)
+  } else if (action.id === 'clone') {
     const [created] = store.clone([row.id])
     if (created !== undefined) {
       void scrollToRow(created)
     }
   } else if (action.id === 'delete') {
     rowDelete.request([row.id])
-  } else if (action.id === 'add-rule' && row.type === 'metric_backend' && isValid(row)) {
-    metricBackendRuleItem.value = row
+  } else if (
+    action.id === 'create-custom-service' &&
+    row.type === 'metric_backend' &&
+    isValid(row)
+  ) {
+    customServiceModel.value = customServiceModelFor(row, telemetryMetricsDefaultTitle)
   }
+}
+
+/** A hidden row is fetched but not drawn, so highlighting it would dim the plot for nothing. */
+function onRowHover(row: DesignerItem | null): void {
+  if (row === null || !row.visible) {
+    emit('hoverMetrics', [])
+    return
+  }
+  emit(
+    'hoverMetrics',
+    (metricsBySource.get(row.id) ?? []).map((metric) => metric.metadata.name)
+  )
+}
+
+function onPreviewHover(row: DesignerItem, names: string[]): void {
+  emit('hoverMetrics', row.visible ? names : [])
 }
 
 function onBulkClone(): void {
@@ -278,8 +330,9 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
         :columns="columns"
         :get-row-key="(row: DesignerItem) => row.id"
         :get-row-variant="rowVariant"
-        :expanded-rows="expandedRows"
+        :is-row-expanded="isExpanded"
         @reorder="(from: number, to: number) => store.move(from, to)"
+        @row-hover="onRowHover"
       >
         <template #row="{ row, tableRow }">
           <DragHandleCell column-id="drag" vertical-align="middle" />
@@ -311,7 +364,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
           <CollapsibleCell
             column-id="title"
             vertical-align="middle"
-            :expanded="expandedRows[row.id] === true"
+            :expanded="isExpanded(row)"
             @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
           >
             <div class="graphing-metrics-table__title">
@@ -368,6 +421,8 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
                 :store="store"
                 :thresholds="thresholds"
                 :issues="issuesOf(row)"
+                :metrics="metricsBySource.get(row.id) ?? []"
+                @hover-metrics="onPreviewHover(row, $event)"
               />
             </td>
           </tr>
@@ -406,12 +461,11 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
       @close="rowDelete.cancel()"
     />
 
-    <MetricBackendRuleSlideIn
-      v-if="metricBackendRuleItem !== null"
+    <CreateCustomServiceSlideIn
+      v-if="customServiceModel !== null"
       open
-      :item="metricBackendRuleItem"
-      :default-title="metricBackendDefaultTitle"
-      @close="metricBackendRuleItem = null"
+      :initial="customServiceModel"
+      @close="customServiceModel = null"
     />
   </div>
 </template>

@@ -10,9 +10,10 @@ from typing import Literal
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import BuiltinIconVisibility, DynamicIcon, IconSpec, Row, StaticIcon
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 from .base import Icon, IconConfig
 

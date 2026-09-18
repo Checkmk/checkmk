@@ -11,6 +11,7 @@ from cmk.gui.dashboard.type_defs import (
     NetworkFlowDonutLegendMode,
     NetworkFlowKpiStatCardDashletConfig,
     NetworkFlowKpiStatCardMetric,
+    NetworkFlowKpiStatCardSparkHeightMode,
     NetworkFlowTopTableDashletConfig,
     NetworkFlowTopTableDimension,
     NetworkFlowTrendChartDashletConfig,
@@ -73,6 +74,10 @@ class NetworkFlowDonutContent(BaseWidgetContent):
         description="Whether the legend states the volume per category in a table, or names the "
         "categories as compact chips below the chart."
     )
+    show_delta: bool = api_field(
+        description="Whether to compare each category against the preceding window of equal "
+        "length. Off means the preceding window is not read at all."
+    )
 
     @classmethod
     @override
@@ -87,6 +92,8 @@ class NetworkFlowDonutContent(BaseWidgetContent):
             limit_to=config["limit_to"],
             # Widgets stored before the legend became configurable listed the shares.
             legend_mode=config.get("legend_mode", "table"),
+            # Widgets stored before the comparison existed showed no comparison.
+            show_delta=config.get("show_delta", False),
         )
 
     @override
@@ -96,6 +103,7 @@ class NetworkFlowDonutContent(BaseWidgetContent):
             dimension=self.dimension,
             limit_to=self.limit_to,
             legend_mode=self.legend_mode,
+            show_delta=self.show_delta,
         )
 
 
@@ -113,6 +121,10 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
     show_delta: bool = api_field(
         description="Whether to show the change versus the previous period."
     )
+    spark_height_mode: NetworkFlowKpiStatCardSparkHeightMode = api_field(
+        description="Whether the sparkline runs the full height of the card, behind the "
+        "value, or as a band strictly below it."
+    )
 
     @classmethod
     @override
@@ -126,6 +138,7 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
             metric=config["metric"],
             accent=config["accent"],
             show_delta=config["show_delta"],
+            spark_height_mode=config.get("spark_height_mode", "band"),
         )
 
     @override
@@ -135,6 +148,7 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
             metric=self.metric,
             accent=self.accent,
             show_delta=self.show_delta,
+            spark_height_mode=self.spark_height_mode,
         )
 
 

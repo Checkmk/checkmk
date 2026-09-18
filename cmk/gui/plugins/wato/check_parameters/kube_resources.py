@@ -16,7 +16,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Float, Percentage, Tuple
 
 
-def valuespec_percentual(title: str, maxvalue: None | float = 101.0) -> CascadingDropdown:
+def valuespec_percentual(title: str, maxvalue: None | float = 101.0) -> CascadingDropdown:  # noqa: ARG001
     return wrap_with_no_levels_dropdown(
         title=title,
         value_spec=Tuple(

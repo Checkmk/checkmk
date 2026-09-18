@@ -50,11 +50,12 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.livestatus_client import SiteConfiguration
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.urls import makeuri_contextless
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
@@ -325,7 +326,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(
+                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(  # noqa: ARG005
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],
@@ -341,8 +342,8 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    use_git: bool,  # noqa: ARG001
+    pprint_value: bool,  # noqa: ARG001
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:

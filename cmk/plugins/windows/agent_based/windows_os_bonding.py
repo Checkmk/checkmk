@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections import defaultdict
 
@@ -19,22 +18,22 @@ def parse_windows_os_bonding(string_table: StringTable) -> bonding.Section:
         if len(line) > 1:
             item = line[1].lstrip()
         if line[0] == "Team Name":
-            bond = item
+            bond = item  # type: ignore[possibly-undefined]
             bonds[bond] = {}
             bonds[bond]["interfaces"] = {}
         elif line[0] == "Bonding Mode":
-            bonds[bond]["mode"] = item
+            bonds[bond]["mode"] = item  # type: ignore[possibly-undefined]
         elif line[0] == "Status":
-            bonds[bond]["status"] = item.lower()
+            bonds[bond]["status"] = item.lower()  # type: ignore[possibly-undefined]
         elif line[0] == "Speed":
-            bonds[bond]["speed"] = item
+            bonds[bond]["speed"] = item  # type: ignore[possibly-undefined]
         elif line[0] == "Slave Name":
-            slave = item
-            bonds_interfaces[bond][slave] = {}
+            slave = item  # type: ignore[possibly-undefined]
+            bonds_interfaces[bond][slave] = {}  # type: ignore[possibly-undefined]
         elif line[0] == "Slave Status":
-            bonds_interfaces[bond][slave]["status"] = item.lower()
+            bonds_interfaces[bond][slave]["status"] = item.lower()  # type: ignore[possibly-undefined]
         elif line[0] == "Slave MAC address":
-            bonds_interfaces[bond][slave]["hwaddr"] = item.lower().replace("-", ":")
+            bonds_interfaces[bond][slave]["hwaddr"] = item.lower().replace("-", ":")  # type: ignore[possibly-undefined]
 
     for name, interfaces in bonds_interfaces.items():
         bonds[name]["interfaces"] = interfaces

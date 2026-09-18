@@ -134,6 +134,7 @@ void withAugmentedTimeout(Map args = [:], Closure body) {
             println("Timeout detected");
             raise("${defaultDict.message}. Timeout is ${defaultDict.timeout}min");
         }
+        throw exc;
     }
 }
 

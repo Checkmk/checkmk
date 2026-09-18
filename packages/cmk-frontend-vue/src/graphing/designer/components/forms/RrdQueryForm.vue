@@ -30,10 +30,12 @@ import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
 
 type Category = 'host' | 'service'
 
-const { item, store, metricNameErrors } = defineProps<{
+const { item, store, metricNameErrors, hostFilterErrors, serviceFilterErrors } = defineProps<{
   item: DraftRRDQueryItem
   store: GraphItemsStore
   metricNameErrors: TranslatedString[]
+  hostFilterErrors: TranslatedString[]
+  serviceFilterErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
@@ -101,14 +103,18 @@ const hostSuggestions = computed(() => addSuggestionsFor('host'))
 const serviceSuggestions = computed(() => addSuggestionsFor('service'))
 
 function syncContext(): void {
+  const configured = filters.getFilters()
   store.replace({
     ...item,
-    context: JSON.parse(JSON.stringify(filters.getFilters())) as ConfiguredFilters
+    context: Object.fromEntries(
+      filters.activeFilters.value.map((filterId) => [filterId, { ...configured[filterId] }])
+    )
   })
 }
 
 function onAddFilter(filterId: string): void {
   filters.addFilter(filterId)
+  syncContext()
 }
 
 function onUpdateFilter(filterId: string, values: ConfiguredValues): void {
@@ -139,6 +145,7 @@ function onConsolidationChange(value: ConsolidationFn): void {
       :get-filter-values="filters.getFilterValues"
       :add-suggestions="hostSuggestions"
       :filter-definitions="filterDefinitions"
+      :errors="hostFilterErrors"
       @add-filter="onAddFilter"
       @update-filter="onUpdateFilter"
       @remove-filter="onRemoveFilter"
@@ -150,6 +157,7 @@ function onConsolidationChange(value: ConsolidationFn): void {
       :get-filter-values="filters.getFilterValues"
       :add-suggestions="serviceSuggestions"
       :filter-definitions="filterDefinitions"
+      :errors="serviceFilterErrors"
       @add-filter="onAddFilter"
       @update-filter="onUpdateFilter"
       @remove-filter="onRemoveFilter"

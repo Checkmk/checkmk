@@ -10,10 +10,12 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Callable, Mapping, Sequence, Set
+from collections.abc import Callable, Collection, Mapping, Sequence, Set
+from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
@@ -23,9 +25,10 @@ from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryE
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Log
 from cmk.livestatus_client.types import Column
+from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import HostNotFoundError
-from ._folder import folder_from_filename
+from ._folder import folder_files_matching, folder_title, MonitorFolders
 from ._models import (
     Event,
     EventClass,
@@ -33,7 +36,6 @@ from ._models import (
     HostFilter,
     HostLabelValue,
     HostOptionalField,
-    HostOverview,
     HostSort,
     HostSortColumn,
     HostState,
@@ -41,12 +43,23 @@ from ._models import (
     ServiceCounts,
     UnixTimestamp,
 )
+from ._site import MonitorSites
 from ._sorting import host_sorter
 
 
 class LiveStatusHostRepository:
-    def __init__(self, *, connection: MultiSiteConnection) -> None:
+    def __init__(
+        self,
+        *,
+        connection: MultiSiteConnection,
+        folders: MonitorFolders | None = None,
+        sites: MonitorSites | None = None,
+    ) -> None:
         self._connection = connection
+        # A folder is shown and searched by its Setup title, which Livestatus does not have. A
+        # caller reading no folder needs none, hence the default that knows no titles.
+        self._folders = folders if folders is not None else MonitorFolders()
+        self._sites = sites if sites is not None else MonitorSites()
 
     def host_exists(self, hostname: str) -> bool:
         q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
@@ -63,7 +76,7 @@ class LiveStatusHostRepository:
     ) -> Sequence[Host]:
         query_ = _sanitize_query(query)
         extra_headers = [
-            *filters.splitlines(),
+            *_split_filter_lines(filters),
             _build_primary_sort(sorters),
         ]
         if limit is not None:
@@ -73,8 +86,19 @@ class LiveStatusHostRepository:
             [
                 Hosts.name,
                 Hosts.state,
+                Hosts.has_been_checked,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
+                Hosts.notifications_enabled,
+                Hosts.comments,
+                Hosts.modified_attributes_list,
+                Hosts.active_checks_enabled,
+                Hosts.accept_passive_checks,
+                Hosts.in_notification_period,
+                Hosts.in_service_period,
+                Hosts.in_check_period,
+                Hosts.is_flapping,
+                Hosts.staleness,
                 *(
                     column
                     for field, columns in _OPTIONAL_COLUMNS.items()
@@ -82,7 +106,7 @@ class LiveStatusHostRepository:
                     for column in columns
                 ),
             ],
-            _build_query_filter(query_, fields),
+            _build_query_filter(query_, fields, self._folders, self._sites),
             extra_headers=extra_headers,
         )
 
@@ -93,17 +117,32 @@ class LiveStatusHostRepository:
                         name=row["name"],
                         alias=row.get("alias"),
                         address=row.get("address"),
-                        state=HostState(row["state"]),
+                        state=(
+                            HostState.PENDING
+                            if row["has_been_checked"] == 0
+                            else HostState(row["state"])
+                        ),
                         site_id=row["site"],
                         service_counts=_service_counts(row),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
+                        notifications_enabled=bool(row["notifications_enabled"]),
+                        num_comments=len(row["comments"]),
+                        active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        passive_checks_disabled=_manually_disabled(
+                            row, "passive_checks_enabled", column="accept_passive_checks"
+                        ),
+                        in_notification_period=bool(row["in_notification_period"]),
+                        in_service_period=bool(row["in_service_period"]),
+                        in_check_period=bool(row["in_check_period"]),
+                        is_flapping=bool(row["is_flapping"]),
+                        stale=row["staleness"] >= active_config.staleness_threshold,
                         last_check=_timestamp(row.get("last_check")),
                         last_state_change=_timestamp(row.get("last_state_change")),
                         folder=(
                             None
                             if (filename := row.get("filename")) is None
-                            else folder_from_filename(filename)
+                            else folder_title(filename, self._folders.title_of)
                         ),
                         labels=(
                             HostLabelValue.by_label(row["labels"], row["label_sources"])
@@ -121,13 +160,14 @@ class LiveStatusHostRepository:
                 key=host_sorter(sorters),
             )
 
-    def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:
+    def get_overview(self, *, hostname: str, site_id: str) -> Host:
         q = Query(
             [
                 Hosts.name,
                 Hosts.alias,
                 Hosts.address,
                 Hosts.state,
+                Hosts.has_been_checked,
                 Hosts.num_services,
                 Hosts.num_services_ok,
                 Hosts.num_services_warn,
@@ -136,13 +176,22 @@ class LiveStatusHostRepository:
                 Hosts.num_services_pending,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
+                Hosts.notifications_enabled,
+                Hosts.comments,
+                Hosts.modified_attributes_list,
+                Hosts.active_checks_enabled,
+                Hosts.accept_passive_checks,
+                Hosts.in_notification_period,
+                Hosts.in_service_period,
+                Hosts.in_check_period,
+                Hosts.is_flapping,
+                Hosts.staleness,
                 Hosts.last_check,
                 Hosts.last_state_change,
                 Hosts.contact_groups,
                 Hosts.tags,
                 Hosts.labels,
                 Hosts.label_sources,
-                Hosts.custom_variables,
                 Hosts.filename,
             ],
             Hosts.name == hostname,
@@ -151,11 +200,11 @@ class LiveStatusHostRepository:
             row = q.fetchone(self._connection, True, only_site=SiteId(site_id))
         except ValueError:
             raise HostNotFoundError(f"Host {hostname!r} not found on site {site_id!r}") from None
-        return HostOverview(
+        return Host(
             name=row["name"],
             alias=row["alias"],
             address=row["address"],
-            state=HostState(row["state"]),
+            state=(HostState.PENDING if row["has_been_checked"] == 0 else HostState(row["state"])),
             site_id=row["site"],
             service_counts=ServiceCounts(
                 total=row["num_services"],
@@ -167,10 +216,20 @@ class LiveStatusHostRepository:
             ),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
+            notifications_enabled=bool(row["notifications_enabled"]),
+            num_comments=len(row["comments"]),
+            active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            passive_checks_disabled=_manually_disabled(
+                row, "passive_checks_enabled", column="accept_passive_checks"
+            ),
+            in_notification_period=bool(row["in_notification_period"]),
+            in_service_period=bool(row["in_service_period"]),
+            in_check_period=bool(row["in_check_period"]),
+            is_flapping=bool(row["is_flapping"]),
+            stale=row["staleness"] >= active_config.staleness_threshold,
             last_check=int(row["last_check"]),
             last_state_change=int(row["last_state_change"]),
-            customer=row["custom_variables"].get("CUSTOMER"),
-            folder=folder_from_filename(row["filename"]),
+            folder=folder_title(row["filename"], self._folders.title_of),
             contact_groups=list(row["contact_groups"]),
             tags=dict(row["tags"]),
             # The overview does not expose contacts, so its query does not read them.
@@ -191,16 +250,19 @@ class LiveStatusHostRepository:
         # server-side via ``Stats`` instead of transferring and counting every matching row. The
         # ``Query`` class can't emit ``Stats`` headers yet, so the filter is assembled by hand.
         query_filter = (
-            ": ".join(line) for line in _build_query_filter(_sanitize_query(query), fields).render()
+            ": ".join(line)
+            for line in _build_query_filter(
+                _sanitize_query(query), fields, self._folders, self._sites
+            ).render()
         )
-        return self._count_hosts(extra_lines=[*query_filter, *filters.splitlines()])
+        return self._count_hosts(extra_lines=[*query_filter, *_split_filter_lines(filters)])
 
     def _count_hosts(self, *, extra_lines: Sequence[str] = ()) -> int:
         # A ``Stats`` count on the hosts table. Runs under the connection's ``AuthUser`` filter, so a
         # user without "see all" counts only the hosts they may see. The count is the trailing column
         # of each returned row; summing across rows adds up the per-site counts. A raw ``Stats`` query
         # returns untyped (string) columns, hence the explicit ``int`` conversion.
-        stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *extra_lines])
+        stats_query = "\n".join((f"GET {Hosts.__tablename__}", "Stats: state >= 0", *extra_lines))
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
 
@@ -273,29 +335,58 @@ def _sanitize_query(q: str) -> str:
     return q.replace("*", ".*")
 
 
-def _folder_pattern(query: str) -> str:
-    return rf"^/wato.*{query}.*/hosts\.mk$"
+def _split_filter_lines(filters: HostFilter) -> list[str]:
+    return filters.split("\n") if filters else []
 
 
 _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] = {
     HostOptionalField.ALIAS: lambda query: Hosts.alias.contains(query, ignore_case=True),
     HostOptionalField.ADDRESS: lambda query: Hosts.address.contains(query, ignore_case=True),
-    HostOptionalField.FOLDER: lambda query: Hosts.filename.contains(
-        _folder_pattern(query), ignore_case=True
+    HostOptionalField.LABELS: lambda query: Or(
+        Hosts.label_names.contains(query, ignore_case=True),
+        Hosts.label_values.contains(query, ignore_case=True),
+    ),
+    HostOptionalField.TAGS: lambda query: Or(
+        Hosts.tag_names.contains(query, ignore_case=True),
+        Hosts.tag_values.contains(query, ignore_case=True),
+    ),
+    HostOptionalField.CONTACTS: lambda query: Hosts.contacts.contains(query, ignore_case=True),
+    HostOptionalField.CONTACT_GROUPS: lambda query: Hosts.contact_groups.contains(
+        query, ignore_case=True
     ),
 }
 
 
-def _build_query_filter(query: str, fields: Set[HostOptionalField]) -> QueryExpression:
+def _build_query_filter(
+    query: str,
+    fields: Set[HostOptionalField],
+    folders: MonitorFolders,
+    sites: MonitorSites,
+) -> QueryExpression:
     if not query:
         return NothingExpression()
 
-    return Or(
-        Hosts.name.contains(query, ignore_case=True),
-        *(build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields),
+    searched = [build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields]
+    if HostOptionalField.FOLDER in fields:
+        # The folder is searched by the title Setup shows, which Livestatus has never heard of, so
+        # the folders carrying the query are resolved first and asked for by file.
+        searched.extend(
+            Hosts.filename.equals(file) for file in folder_files_matching(query, folders.titles())
+        )
+    searched.extend(
+        Hosts.labels.op("=", f"{BuiltinLabelsKey.SITE} {site_id}")
+        for site_id in sites.matching(query)
     )
 
+    return Or(Hosts.name.contains(query, ignore_case=True), *searched)
 
+
+# Sorting by folder means sorting by the title Setup gives it, which Livestatus cannot do: it only
+# has the file. So the header below merely bounds which rows a ``Limit:`` keeps, and the order the
+# user sees is the natural sort ``host_sorter()`` applies afterwards. Ordering by file is no longer
+# even close to ordering by title - "Data center Munich" lives in ``dc_muc`` - so a listing longer
+# than the limit, sorted by folder, shows the right rows in the right order only within the window
+# the limit kept.
 _LIVESTATUS_COLUMN_OVERRIDES: Mapping[HostSortColumn, str] = {
     HostSortColumn.FOLDER: "filename",
 }
@@ -352,6 +443,19 @@ def _columns_to_read(
     }
 
 
+def _manually_disabled(
+    row: Mapping[str, object], attribute: str, *, column: str | None = None
+) -> bool:
+    """Whether a check setting was turned off by a user rather than left off by configuration.
+
+    Livestatus reports the setting alone, which is also 0 for everything a plugin never
+    enables; only a mention in ``modified_attributes_list`` says a user switched it off. Pass
+    ``column`` where the setting's own column is named differently from the modified attribute.
+    """
+    modified = cast(Collection[str], row["modified_attributes_list"])
+    return attribute in modified and not row[column or attribute]
+
+
 def _timestamp(value: float | None) -> UnixTimestamp | None:
     return None if value is None else int(value)
 
@@ -370,6 +474,11 @@ def _service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
     )
 
 
+# Sorting by state hits the same limit-window imprecision as folder above: a host that has never
+# been checked is ``HostState.PENDING`` - last in ``host_sorter()``'s ascending order - but its raw
+# ``state`` column reports 0, indistinguishable there from a genuinely OK host. A listing longer
+# than the limit, sorted by state, therefore shows the right rows in the right order only within
+# the window the limit kept.
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
     if not sorters or sorters[0].column in _VIRTUAL_SORT_COLUMNS:
         return "OrderBy: name asc"

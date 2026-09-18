@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from cmk.ccc.version import edition
 from cmk.product_usage.collection import (
     collect_data,
     data_storage_path,
@@ -40,6 +39,7 @@ class ProductUsageRequest:
     store: bool = False
     upload: bool = False
     schedule: bool = False
+    write_to_stdout: bool = True
 
 
 def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
@@ -49,10 +49,7 @@ def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
     # disabled and not-due runs cheap and free of cmk.base imports.
     from cmk.base.config import load
 
-    this_edition = edition(paths.omd_root)
-    base_config = load(
-        edition=this_edition,
-    )
+    base_config = load()
 
     return get_proxy_config(
         proxy_setting=proxy_setting,
@@ -97,8 +94,11 @@ def main(args: Sequence[str] | None = None) -> int:
                 paths.omd_root,
                 logger,
             )
-            sys.stdout.write(data.model_dump_with_metadata_json(indent=2).decode("utf-8") + "\n")
-            sys.stdout.flush()
+            if request.write_to_stdout:
+                sys.stdout.write(
+                    data.model_dump_with_metadata_json(indent=2).decode("utf-8") + "\n"
+                )
+                sys.stdout.flush()
 
             if request.store:
                 store_data(data, paths.var_dir)
@@ -167,7 +167,9 @@ def parse_args(args: Sequence[str]) -> ProductUsageRequest:
     if parsed_args.dry_run:
         return ProductUsageRequest(collect=True)
     if parsed_args.cron:
-        return ProductUsageRequest(collect=True, store=True, upload=True, schedule=True)
+        return ProductUsageRequest(
+            collect=True, store=True, upload=True, schedule=True, write_to_stdout=False
+        )
     return ProductUsageRequest(collect=True, store=True, upload=True)
 
 

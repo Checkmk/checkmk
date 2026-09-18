@@ -12,16 +12,21 @@ from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
-from cmk.gui.token_auth import AgentRegistrationToken, DashboardToken, TokenId, TokenStore
-from cmk.gui.token_auth._store import (
-    AGENT_REGISTRATION_TOKEN_GRACE_PERIOD,
+from cmk.gui.token_auth import (
+    AgentRegistrationToken,
     AgentRegistrationUse,
     AuthToken,
+    DashboardToken,
+    TokenId,
+    TokenStore,
+    TokenUseAlreadyConsumed,
+)
+from cmk.gui.token_auth._store import (
+    AGENT_REGISTRATION_TOKEN_GRACE_PERIOD,
     InvalidToken,
     TokenExpired,
     TokenRevoked,
     TokenTypeError,
-    TokenUseAlreadyConsumed,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode
 

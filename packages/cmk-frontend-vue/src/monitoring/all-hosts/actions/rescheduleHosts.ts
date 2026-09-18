@@ -15,6 +15,6 @@ export function useRescheduleHostsAction(): MonitoringAction<RescheduleValues, H
 
   return createRescheduleAction<HostRef>({
     reschedule: (api, targets, spreadMinutes) => api.rescheduleHosts(targets, spreadMinutes),
-    errorMessage: _t('Could not reschedule the checks for the selected hosts.')
+    errorHeading: _t('Could not reschedule the checks for the selected hosts')
   })
 }

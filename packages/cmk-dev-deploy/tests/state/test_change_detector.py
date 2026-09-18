@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.change_detector (git diff, file categorization)."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 
@@ -22,7 +20,7 @@ from cmk.dev_deploy.state.deploy_state import compute_file_hash, DeployerState, 
 from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, ChangeSet, DiffBaseSource
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _inject_computed_rules() -> None:
     """Inject categorization rules computed from checked-in data.
 
@@ -165,12 +163,6 @@ class TestChangeSet:
         )
         assert cs.has_python_only is True
 
-    def test_frozen(self) -> None:
-        """ChangeSet is frozen (immutable)."""
-        cs = ChangeSet(build_commit="a" * 40, files=(), categories={})
-        with pytest.raises(AttributeError):
-            cs.build_commit = "b" * 40  # type: ignore[misc]
-
 
 # ---------------------------------------------------------------------------
 # ChangeDetectionError tests
@@ -231,7 +223,7 @@ class TestCategorizeFile:
             # Frontend (legacy)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),
-            ("packages/cmk-frontend/src/js/modules/graphs.ts", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/js/modules/popup_menu.ts", ChangeCategory.FRONTEND),
             # Config
             ("agents/plugins/my_agent", ChangeCategory.CONFIG),
             ("notifications/slack", ChangeCategory.CONFIG),
@@ -569,10 +561,14 @@ class TestCategorizationRegression:
             ("packages/cmk-frontend-vue/src/App.vue", ChangeCategory.VUE),
             ("packages/cmk-frontend-vue/src/main.ts", ChangeCategory.VUE),
             ("packages/cmk-shared-typing/src/types.ts", ChangeCategory.VUE),
+            # Vue input package: built into the cmk-frontend-vue dist, no spec of its own
+            ("packages/cmk-ui-library/components/StateTag.vue", ChangeCategory.VUE),
+            ("packages/cmk-ui-library/lib/utils.ts", ChangeCategory.VUE),
+            ("packages/cmk-ui-library/README.md", ChangeCategory.OTHER),
             # Frontend (includes .ts -- the motivating bug fix)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),
-            ("packages/cmk-frontend/src/js/modules/graphs.ts", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/js/modules/popup_menu.ts", ChangeCategory.FRONTEND),
             # Python packages (specific and catch-all)
             ("packages/cmk-ccc/cmk/ccc/version.py", ChangeCategory.PYTHON),
             ("non-free/packages/cmk-bakery/cmk/bakery/foo.py", ChangeCategory.PYTHON),

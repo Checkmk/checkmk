@@ -13,7 +13,6 @@ export interface UseGraphRenderOptions {
   verticalAxisWidthMode: Ref<'fixed' | 'absolute'>
   fixedVerticalAxisWidth: Ref<number>
 
-  fontSize: Ref<number>
   timestamp: Ref<boolean>
   roundMargin: Ref<boolean>
   graphLegend: Ref<boolean>
@@ -44,7 +43,6 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
     Number.isFinite(data?.vertical_axis_width) ? (data?.vertical_axis_width as number) : 8
   )
 
-  const fontSize = ref<number>(data?.font_size_pt ?? 8)
   const timestamp = ref<boolean>(data?.show_graph_time ?? false)
   const roundMargin = ref<boolean>(data?.show_margin ?? false)
   const graphLegend = ref<boolean>(data?.show_legend ?? false)
@@ -61,7 +59,6 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
       vertical_axis_width:
         verticalAxisWidthMode.value === 'fixed' ? 'fixed' : fixedVerticalAxisWidth.value,
 
-      font_size_pt: fontSize.value,
       show_graph_time: timestamp.value,
       show_margin: roundMargin.value,
       show_legend: graphLegend.value,
@@ -81,7 +78,6 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
     verticalAxisWidthMode,
     fixedVerticalAxisWidth,
 
-    fontSize,
     timestamp,
     roundMargin,
     graphLegend,

@@ -100,7 +100,9 @@ def create_new_user(
     indirect=True,
 )
 def test_delete_role_in_use(
-    dashboard_page: MainDashboard, new_role: RoleData, new_user: UserData
+    dashboard_page: MainDashboard,
+    new_role: RoleData,
+    new_user: UserData,  # noqa: ARG001
 ) -> None:
     """Test that a role in use cannot be deleted.
 

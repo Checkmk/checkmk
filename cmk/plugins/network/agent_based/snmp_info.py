@@ -57,7 +57,7 @@ snmp_section_snmp_info = SimpleSNMPSection(
 )
 
 
-def discover_snmp_info(section: SNMPInfo) -> DiscoveryResult:
+def discover_snmp_info(section: SNMPInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

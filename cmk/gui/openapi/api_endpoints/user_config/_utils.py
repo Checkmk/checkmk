@@ -459,9 +459,7 @@ def _interface_options_to_internal_format(
 
     if (time_picker := api_interface_options.get("time_picker")) is not None:
         if (start_of_week := time_picker.get("start_of_week")) is not None:
-            internal_interface_options["start_of_week"] = (
-                None if start_of_week == "browser_locale" else start_of_week
-            )
+            internal_interface_options["start_of_week"] = start_of_week
         if (time_range := time_picker.get("default_time_range")) is not None:
             internal_interface_options["graph_default_time_range"] = (
                 _time_picker_option_to_internal(time_range, "duration")
@@ -792,13 +790,13 @@ def _time_picker_option_to_internal(option: Mapping[str, Any], value_key: str) -
 def _start_of_week_to_api_format(
     start_of_week: StartOfWeek | None,
 ) -> Literal["browser_locale", "saturday", "sunday", "monday"]:
-    """
+    """No preference stored resolves to the default the time picker applies.
     >>> _start_of_week_to_api_format(None)
-    'browser_locale'
-    >>> _start_of_week_to_api_format('monday')
     'monday'
+    >>> _start_of_week_to_api_format('browser_locale')
+    'browser_locale'
     """
-    return "browser_locale" if start_of_week is None else start_of_week
+    return "monday" if start_of_week is None else start_of_week
 
 
 def _time_range_to_api_format(duration: int | None) -> TimeRangeDetails:

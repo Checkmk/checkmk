@@ -29,6 +29,7 @@ from cmk.utils.certs import (
 
 from .cmkcert_rotate import (
     finalize_rotate_site_ca_certificate,
+    rotate_agent_ca_certificate,
     rotate_site_certificate,
     start_rotate_site_ca_certificate,
 )
@@ -87,12 +88,24 @@ In a distributed monitoring setup, the rotation should be run from the central s
 that remote sites' trust stores are updated automatically.
 Warning: following the Site CA certificate rotation, all agents will need to be manually \
 re-registered to trust the updated certificate.
+
+'agent-ca' certificate: The agent signing CA certificate can be rotated directly. The current CA \
+is kept alongside the new one, so that already registered agents stay trusted and can renew their \
+certificate with the new CA. Use '--ca-pem' to install your own CA instead of a generated one. \
+Since the agent receiver authorizes registered agents by the common name of their certificate's \
+issuer, the provided CA has to have the same common name as the current one. Use '--force' to \
+install a CA with a different common name anyway, which requires registering all agents again. \
+The provided CA also has to be a currently valid CA certificate that carries subject and \
+authority key identifiers and a key of at least RSA 2048 bits or an equivalent elliptic curve \
+key.
+Once no agent uses a certificate issued by the previous CA anymore, delete it from \
+'etc/ssl/agents' and reload the agent receiver to drop it from the trusted certificate store.
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     mode_rotate.add_argument(
         "target_certificate",
-        choices=["site", "site-ca"],
+        choices=["site", "site-ca", "agent-ca"],
         help="Specify which certificate to rotate.",
     )
 
@@ -102,7 +115,7 @@ re-registered to trust the updated certificate.
         default=None,
         help=(
             "Specify the expiry time in days. "
-            "The default expiry time is 10 years for both 'site-ca' and 'site' certificates."
+            "The default expiry time is 10 years for all certificate types."
         ),
     )
 
@@ -111,6 +124,28 @@ re-registered to trust the updated certificate.
         dest="remote_site",
         type=str,
         help=("Specify the remote site id for which you want to rotate the certificate."),
+    )
+    mode_rotate.add_argument(
+        "--ca-pem",
+        dest="ca_pem",
+        type=Path,
+        default=None,
+        help=(
+            "'agent-ca' certificate only -- "
+            "Install the CA from the given PEM file instead of generating a new CA. The file has "
+            "to contain both the CA certificate and its unencrypted private key."
+        ),
+    )
+    mode_rotate.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help=(
+            "'agent-ca' certificate only -- "
+            "Install the CA given by '--ca-pem' even if its common name differs from the current "
+            "CA's. The agent receiver will then reject all registered agents until they are "
+            "registered again."
+        ),
     )
     mode_rotate.add_argument(
         "--finalize",
@@ -163,6 +198,8 @@ def _run_rotate(
     target_certificate: CertificateType,
     expiry: int | None,
     finalize: bool,
+    ca_pem: Path | None = None,
+    force: bool = False,
 ) -> None:
 
     if (
@@ -195,8 +232,14 @@ def _run_rotate(
                 key_size=4096,
             )
         case "agent-ca":
-            sys.stdout.write("cmk-cert: Rotating the 'agent-ca' certificate is not supported.\n")
-            sys.exit(1)
+            rotate_agent_ca_certificate(
+                omd_root=omd_root,
+                site_id=site_id,
+                expiry=expiry,
+                key_size=4096,
+                ca_pem=ca_pem,
+                force=force,
+            )
 
 
 def main(args: Sequence[str] | None = None) -> int:
@@ -230,6 +273,23 @@ def main(args: Sequence[str] | None = None) -> int:
                 )
                 return -1
 
+            if parsed_args.target_certificate == "agent-ca":
+                if parsed_args.remote_site:
+                    sys.stderr.write(
+                        "cmk-cert: --remote-site cannot be used when rotating the 'agent-ca' certificate.\n"
+                    )
+                    return -1
+            elif parsed_args.ca_pem is not None:
+                sys.stderr.write(
+                    "cmk-cert: --ca-pem can only be used when rotating the 'agent-ca' certificate.\n"
+                )
+                return -1
+            elif parsed_args.force:
+                sys.stderr.write(
+                    "cmk-cert: --force can only be used when rotating the 'agent-ca' certificate.\n"
+                )
+                return -1
+
             target_site = SiteId(parsed_args.remote_site or site_id)
             _run_rotate(
                 cmk.utils.paths.omd_root,
@@ -237,6 +297,8 @@ def main(args: Sequence[str] | None = None) -> int:
                 parsed_args.target_certificate,
                 parsed_args.expiry,
                 parsed_args.finalize,
+                parsed_args.ca_pem,
+                parsed_args.force,
             )
 
         else:

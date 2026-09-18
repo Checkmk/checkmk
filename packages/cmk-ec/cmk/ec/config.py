@@ -226,19 +226,28 @@ class MkpRulePackProxy(MutableMapping[str, Any]):
     def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        return self.rule_pack[key]  # type: ignore[literal-required] # TODO: Nuke this!
+        return self.rule_pack[self.__validate_key(key)]
 
     @override
     def __setitem__(self, key: str, value: Any) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        self.rule_pack[key] = value  # type: ignore[literal-required] # TODO: Nuke this!
+        self.rule_pack[self.__validate_key(key)] = value
 
     @override
     def __delitem__(self, key: str) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        del self.rule_pack[key]  # type: ignore[misc] # TODO: Nuke this!
+        del self.rule_pack[self.__validate_key(key)]
+
+    # We should really use something different than TypedDict here... :-/
+    @staticmethod
+    def __validate_key(key: str) -> Literal["id" | "title" | "disabled" | "rules" | "customer"]:
+        match key:
+            case "id" | "title" | "disabled" | "rules" | "customer":
+                return key
+            case _:
+                raise KeyError(key)
 
     @override
     def __repr__(self) -> str:
@@ -336,21 +345,21 @@ class ConfigFromWATO(TypedDict):
     history_lifetime: int
     history_rotation: Literal["daily", "weekly"]
     hostname_translation: TranslationOptions  # TODO: Mutable???
-    housekeeping_interval: int
+    housekeeping_interval: float
     log_level: LogConfig  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
     remote_status: tuple[int, bool, Sequence[str] | None] | None
     replication: Replication | None
-    retention_interval: int
+    retention_interval: float
     rule_optimizer: bool
     rule_packs: Sequence[ECRulePack]
     rules: Collection[Rule]
-    sqlite_housekeeping_interval: int
+    sqlite_housekeeping_interval: float
     sqlite_freelist_size: int
     snmp_credentials: Collection[SNMPCredential]
     socket_queue_len: int
-    statistics_interval: int
+    statistics_interval: float
     translate_snmptraps: SNMPTrapTranslation
 
 

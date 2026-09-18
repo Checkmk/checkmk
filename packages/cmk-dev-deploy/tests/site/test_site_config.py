@@ -8,8 +8,6 @@ Comprehensive coverage of side-channel .mk file management: path construction,
 site running check, stale override detection, write/remove operations.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

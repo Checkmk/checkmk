@@ -10,7 +10,7 @@
 
 import copy
 import json
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Sequence
 from typing import Any, overload, override, TypedDict
 
 import cmk.ccc.version as cmk_version
@@ -52,19 +52,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
@@ -114,9 +104,14 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.web.utils import escaping
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import (
+    HTTPVariable,
     makeactionuri,
     makeactionuri_contextless,
     makeuri,
@@ -257,8 +252,8 @@ class ABCBIMode(WatoMode):
     def title_for_pack(self, bi_pack: BIAggregationPack) -> str:
         return escaping.escape_attribute(bi_pack.title)
 
-    def url_to_pack(self, addvars: HTTPVariables, bi_pack: BIAggregationPack) -> str:
-        return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])
+    def url_to_pack(self, addvars: Sequence[HTTPVariable], bi_pack: BIAggregationPack) -> str:
+        return makeuri_contextless(request, [*addvars, ("pack", bi_pack.id)])
 
     def _get_selection(self, _type: str) -> list[str]:
         checkbox_name = "_c_%s_" % _type
@@ -1745,10 +1740,10 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     def __init__(
         self,
         *,
-        type: str | None = "hierarchy",
+        type: str | None = "hierarchy",  # noqa: A002
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
         validate: ValueSpecValidateFunc[dict[str, Any]] | None = None,
     ):

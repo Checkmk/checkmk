@@ -60,10 +60,10 @@ def test_extra_details_cannot_overwrite_baseline_fields(
 
 def test_oauth_authorization_failure_event_details() -> None:
     event = OAuthAuthorizationFailureEvent(
-        reason="missing client_id",
+        reason="unknown client_id",
         client_id=None,
         remote_ip="127.0.0.1",
     )
-    assert event.details["reason"] == "missing client_id"
+    assert event.details["reason"] == "unknown client_id"
     assert event.details["client_id"] == "Unknown client"
     assert event.details["remote_ip"] == "127.0.0.1"

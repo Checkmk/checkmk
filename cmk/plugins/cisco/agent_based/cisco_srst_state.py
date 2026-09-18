@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime
 
 
-def discover_cisco_srst_state(section: StringTable) -> DiscoveryResult:
+def discover_cisco_srst_state(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

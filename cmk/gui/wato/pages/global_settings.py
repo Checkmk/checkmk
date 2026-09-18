@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Editor for global settings in main.mk and modes for these global
 settings"""
@@ -13,7 +12,6 @@ settings"""
 import abc
 import contextlib
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
-from copy import deepcopy
 from typing import Any, Final, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -26,14 +24,12 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import (
     DisplayMode,
-    get_visitor,
     IncomingData,
     localize,
     parse_data_from_field_id,
     RawDiskData,
     read_data_from_frontend,
     render_form_spec,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
 from cmk.gui.global_config import get_global_config
@@ -41,7 +37,6 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
@@ -63,13 +58,11 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.site_config import has_distributed_setup_remote_sites
-from cmk.gui.type_defs import ActionResult, GlobalSettings, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, GlobalSettings
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
-from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -79,14 +72,12 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     GlobalSettingsContext,
 )
-from cmk.gui.watolib.config_domains import (
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-    finalize_all_settings_per_site,
-)
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
+    global_settings_diff_text,
     load_configuration_settings,
+    make_global_settings_context,
     save_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
@@ -101,54 +92,15 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
-from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
-from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.utils.object_diff import make_diff, make_diff_text
-from cmk.utils.paths import log_dir, var_dir
+from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec
 from cmk.web.utils import escaping
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
-
-
-def _masked_value_for_log(
-    config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
-) -> object:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(
-            value_model,
-            VisitorOptions(migrate_values=True, mask_values=True),
-        )
-        return visitor.to_disk(RawDiskData(value))
-    return value_model.mask(value)
-
-
-def _global_settings_diff_text(
-    config_variable: ConfigVariable,
-    context: GlobalSettingsContext,
-    old_settings: GlobalSettings,
-    new_settings: GlobalSettings,
-) -> str:
-    old_masked = {
-        varname: _masked_value_for_log(config_variable, context, value)
-        for varname, value in old_settings.items()
-    }
-    new_masked = {
-        varname: _masked_value_for_log(config_variable, context, value)
-        for varname, value in new_settings.items()
-    }
-
-    unmasked_diff = make_diff(old_settings, new_settings)
-    masked_diff = make_diff(old_masked, new_masked)
-
-    if unmasked_diff == masked_diff:
-        return make_diff_text(old_masked, new_masked)
-
-    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")
 
 
 def register(
@@ -286,13 +238,8 @@ class ABCGlobalSettingsMode(WatoMode):
                 varname = config_variable.ident()
                 context = self.make_global_settings_context(config)
                 value_model = config_variable.value_model(context)
-                help_text: str | HTML
-                if isinstance(value_model, FormSpec):
-                    help_text = localize(resolve_help_text(value_model))
-                    title_text = localize(resolve_title(value_model))
-                else:
-                    help_text = value_model.help() or ""
-                    title_text = value_model.title() or ""
+                help_text = localize(resolve_help_text(value_model))
+                title_text = localize(resolve_title(value_model))
 
                 if not global_config.global_settings.is_activated(varname):
                     continue
@@ -352,54 +299,21 @@ class ABCGlobalSettingsMode(WatoMode):
                     modified_cls = []
                     value_title = None
 
-                if isinstance(value_model, FormSpec):
+                if isinstance(value_model, BooleanChoice):
                     forms.section(title, simple=True)
-                    html.open_a(href=edit_url, class_=modified_cls, title=value_title)
-                    render_form_spec(
-                        value_model,
-                        f"_vue_gs_{varname}",
-                        RawDiskData(value),
-                        do_validate=False,
-                        display_mode=DisplayMode.READONLY,
-                    )
-                    html.close_a()
+                    _show_toggle_switch(varname, bool(value), modified_cls, value_title)
                     continue
 
-                try:
-                    to_text = value_model.value_to_html(value)
-                except Exception:
-                    logger.exception("error converting %(value)r to text", {"value": value})
-                    to_text = html.render_error(
-                        _("Failed to render value: %(value)r") % {"value": value}
-                    )
-
-                # Is this a simple (single) value or not? change styling in these cases...
-                simple = True
-                if "\n" in to_text or "<td>" in to_text:
-                    simple = False
-                forms.section(title, simple=simple)
-
-                if is_a_checkbox(value_model):
-                    html.open_div(
-                        class_=["toggle_switch_container"]
-                        + modified_cls
-                        + (["on"] if value else [])
-                    )
-                    html.toggle_switch(
-                        enabled=value,
-                        help_txt=(value_title + " " if value_title else "")
-                        + _("Click to toggle this setting"),
-                        href=makeactionuri(
-                            request,
-                            transactions.get(),
-                            [("_action", "toggle"), ("_varname", varname)],
-                        ),
-                        class_=[*modified_cls, "large"],
-                    )
-                    html.close_div()
-
-                else:
-                    html.a(to_text, href=edit_url, class_=modified_cls, title=value_title)
+                forms.section(title, simple=True)
+                html.open_a(href=edit_url, class_=modified_cls, title=value_title)
+                render_form_spec(
+                    value_model,
+                    f"_vue_gs_{varname}",
+                    RawDiskData(value),
+                    do_validate=False,
+                    display_mode=DisplayMode.READONLY,
+                )
+                html.close_a()
 
             if header_is_painted:
                 forms.end()
@@ -417,7 +331,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         # Don't call this in _from_vars. make_global_settings_context might rely on the object
         # being fully initialized.
         context = self.make_global_settings_context(active_config)
-        self._value_model: ValueSpec | FormSpec[Any] = self._config_variable.value_model(context)
+        self._value_model: FormSpec[Any] = self._config_variable.value_model(context)
 
     @override
     def _from_vars(self) -> None:
@@ -481,18 +395,9 @@ class ABCEditGlobalSettingMode(WatoMode):
         old_settings: GlobalSettings = (
             {self._varname: current} if self._varname in self._current_settings else {}
         )
-        new_value: Any = None
         if request.var("_reset"):
             if not transactions.check_transaction(request):
                 return None
-
-            if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
-                default_settings = ABCConfigDomain.get_all_default_globals()
-                self._validate_update_piggyback_hub_config(
-                    default_settings[self._varname],
-                    default_settings,
-                    config.sites,
-                )
 
             with contextlib.suppress(KeyError):
                 del self._current_settings[self._varname]
@@ -504,12 +409,6 @@ class ABCEditGlobalSettingMode(WatoMode):
             new_settings: GlobalSettings = {}
         else:
             new_value = self._parse_submitted_value()
-
-            if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
-                self._validate_update_piggyback_hub_config(
-                    new_value, ABCConfigDomain.get_all_default_globals(), config.sites
-                )
-
             self._current_settings[self._varname] = new_value
             msg = HTML.with_escaping(
                 _("Changed global configuration variable %(varname)s.") % {"varname": self._varname}
@@ -518,12 +417,11 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         self._save(
             make_folder_tree(config),
+            sites=config.sites,
             pprint_value=config.wato_pprint_config,
             use_git=config.wato_use_git,
             liveproxyd_enabled=config.liveproxyd_enabled,
         )
-        if new_value and self._varname == "trusted_certificate_authorities":
-            ConfigDomainCACertificates.log_changes(current, new_value)
 
         add_global_settings_change(
             self._config_variable,
@@ -535,7 +433,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 local_site=omd_site(),
                 user_id=user.id,
             ),
-            diff_text=_global_settings_diff_text(
+            diff_text=global_settings_diff_text(
                 self._config_variable,
                 self.make_global_settings_context(config),
                 old_settings,
@@ -552,35 +450,20 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         return redirect(self._back_url())
 
-    def _validate_update_piggyback_hub_config(
-        self, new_value: bool, default_settings: GlobalSettings, site_configs: SiteConfigurations
-    ) -> None:
-        site_specific_settings = {
-            site_id: deepcopy(site_conf.get("globals", {}))
-            for site_id, site_conf in site_configs.items()
-        }
-        global_settings = dict(deepcopy(self._global_settings))
-        if (sites := self._affected_sites()) is not None:
-            for site_id in sites:
-                site_specific_settings[site_id][self._varname] = new_value
-        else:
-            global_settings[self._varname] = new_value
-
-        validate_piggyback_hub_config(
-            site_configs,
-            finalize_all_settings_per_site(
-                default_settings, global_settings, site_specific_settings
-            ),
-        )
-
     @abc.abstractmethod
     def _back_url(self) -> str:
         raise NotImplementedError
 
     def _save(
-        self, tree: FolderTree, *, pprint_value: bool, use_git: bool, liveproxyd_enabled: bool
+        self,
+        tree: FolderTree,  # noqa: ARG002
+        *,
+        sites: SiteConfigurations,
+        pprint_value: bool,  # noqa: ARG002
+        use_git: bool,  # noqa: ARG002
+        liveproxyd_enabled: bool,  # noqa: ARG002
     ) -> None:
-        save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings, sites)
 
     @abc.abstractmethod
     def _affected_sites(self) -> Sequence[SiteId] | None:
@@ -595,44 +478,26 @@ class ABCEditGlobalSettingMode(WatoMode):
         return "_vue_global_settings"
 
     def _title(self) -> str:
-        if isinstance(self._value_model, FormSpec):
-            return localize(resolve_title(self._value_model))
-        title = self._value_model.title()
-        assert isinstance(title, str)
-        return title
+        return localize(resolve_title(self._value_model))
 
     def _parse_submitted_value(self) -> object:
-        if isinstance(self._value_model, FormSpec):
-            return parse_data_from_field_id(self._value_model, self._vue_field_id())
-        new_value = self._value_model.from_html_vars("ve")
-        self._value_model.validate_value(new_value, "ve")
-        return new_value
+        return parse_data_from_field_id(self._value_model, self._vue_field_id())
 
     def _render_editable_value(self, value: object) -> None:
-        if isinstance(self._value_model, FormSpec):
-            if request.has_var(self._vue_field_id()):
-                value_incoming: IncomingData = read_data_from_frontend(self._vue_field_id())
-            else:
-                value_incoming = RawDiskData(value)
-            render_form_spec(
-                self._value_model, self._vue_field_id(), value_incoming, do_validate=True
-            )
-            return
-        self._value_model.render_input("ve", value)
-        self._value_model.set_focus("ve")
-        html.help(self._value_model.help())
+        if request.has_var(self._vue_field_id()):
+            value_incoming: IncomingData = read_data_from_frontend(self._vue_field_id())
+        else:
+            value_incoming = RawDiskData(value)
+        render_form_spec(self._value_model, self._vue_field_id(), value_incoming, do_validate=True)
 
     def _render_readonly_value(self, field_id: str, value: object) -> None:
-        if isinstance(self._value_model, FormSpec):
-            render_form_spec(
-                self._value_model,
-                field_id,
-                RawDiskData(value),
-                do_validate=False,
-                display_mode=DisplayMode.READONLY,
-            )
-            return
-        html.write_text_permissive(self._value_model.value_to_html(value))
+        render_form_spec(
+            self._value_model,
+            field_id,
+            RawDiskData(value),
+            do_validate=False,
+            display_mode=DisplayMode.READONLY,
+        )
 
     @override
     def page(self, config: Config) -> None:
@@ -651,7 +516,10 @@ class ABCEditGlobalSettingMode(WatoMode):
             html.show_warning(domain_hint)
         hint = self._config_variable.hint()
         if hint:
-            html.show_warning(hint)
+            if self._config_variable.hint_type() == "info":
+                html.show_info(hint)
+            else:
+                html.show_warning(hint)
 
         with html.form_context("value_editor", method="POST"):
             forms.header(self._title())
@@ -678,8 +546,8 @@ class ABCEditGlobalSettingMode(WatoMode):
                 html.write_text_permissive(_("This variable is at factory settings."))
             else:
                 curvalue = self._current_settings[self._varname]
-                if is_configured_globally and curvalue == self._global_settings[self._varname]:
-                    html.write_text_permissive(_("Site setting and global setting are identical."))
+                if is_configured_globally and curvalue == self._global_settings[self._varname]:  # type: ignore[unreachable]
+                    html.write_text_permissive(_("Site setting and global setting are identical."))  # type: ignore[unreachable]
                 elif curvalue == defvalue:
                     html.write_text_permissive(
                         _("Your setting and factory settings are identical.")
@@ -785,7 +653,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         else:
             self._current_settings[varname] = not def_value
         msg = _("Changed global configuration variable %(varname)s.") % {"varname": varname}
-        save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings, config.sites)
 
         add_global_settings_change(
             config_variable,
@@ -797,7 +665,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 local_site=omd_site(),
                 user_id=user.id,
             ),
-            diff_text=_global_settings_diff_text(
+            diff_text=global_settings_diff_text(
                 config_variable,
                 self.make_global_settings_context(config),
                 old_settings,
@@ -815,7 +683,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, omd_site(), config)
+        return make_global_settings_context(
+            self._edition,
+            omd_site(),
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
@@ -853,7 +726,12 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, omd_site(), config)
+        return make_global_settings_context(
+            self._edition,
+            omd_site(),
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
@@ -863,13 +741,21 @@ class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
         return DefaultModeEditGlobals
 
 
-def is_a_checkbox(vs: ValueSpec) -> bool:
-    """Checks if a valuespec is a Checkbox"""
-    if isinstance(vs, Checkbox):
-        return True
-    if isinstance(vs, Transform):
-        return is_a_checkbox(vs._valuespec)
-    return False
+def _show_toggle_switch(
+    varname: str, value: bool, modified_cls: list[str], value_title: str | None
+) -> None:
+    html.open_div(class_=["toggle_switch_container"] + modified_cls + (["on"] if value else []))
+    html.toggle_switch(
+        enabled=value,
+        help_txt=(value_title + " " if value_title else "") + _("Click to toggle this setting"),
+        href=makeactionuri(
+            request,
+            transactions.get(),
+            [("_action", "toggle"), ("_varname", varname)],
+        ),
+        class_=[*modified_cls, "large"],
+    )
+    html.close_div()
 
 
 class MatchItemGeneratorSettings(ABCMatchItemGenerator):
@@ -893,11 +779,9 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         edit_mode_name: str,
         global_settings_context: GlobalSettingsContext,
     ) -> MatchItem:
-        value_model = config_variable.value_model(global_settings_context)
-        if isinstance(value_model, FormSpec):
-            title = localize(resolve_title(value_model)) or _("Untitled setting")
-        else:
-            title = value_model.title() or _("Untitled setting")
+        title = localize(resolve_title(config_variable.value_model(global_settings_context))) or _(
+            "Untitled setting"
+        )
         ident = config_variable.ident()
         return MatchItem(
             title=title,
@@ -934,19 +818,6 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     @override
     def is_localization_dependent(self) -> bool:
         return True
-
-
-def make_global_settings_context(
-    edition: Edition, target_site_id: SiteId, config: Config
-) -> GlobalSettingsContext:
-    return GlobalSettingsContext(
-        target_site_id=target_site_id,
-        edition_of_local_site=edition,
-        site_neutral_log_dir=site_neutral_path(log_dir),
-        site_neutral_var_dir=site_neutral_path(var_dir),
-        configured_sites=config.sites,
-        configured_graph_timeranges=config.graph_timeranges,
-    )
 
 
 def _pending_changes(

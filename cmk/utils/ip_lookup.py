@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
-from __future__ import annotations
 
 import enum
 import ipaddress
@@ -89,7 +86,7 @@ def make_lookup_mgmt_board_ip_address(
     ip_config: IPLookupConfig,
 ) -> IPLookupOptional:
     if ip_config.fake_dns:
-        return lambda host_name, family: ip_config.fake_dns
+        return lambda host_name, family: ip_config.fake_dns  # noqa: ARG005
     if ip_config.simulation_mode:
         return local_ip_for
 
@@ -111,7 +108,7 @@ def make_lookup_mgmt_board_ip_address(
                 if mgmt_address is None
                 else HostAddress(str(ipaddress.ip_address(mgmt_address)))
             )
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             mgmt_ipa = None
 
         try:
@@ -137,7 +134,7 @@ def make_lookup_ip_address(
     ip_config: IPLookupConfig,
 ) -> IPLookup:
     if ip_config.fake_dns:
-        return lambda host_name, family: ip_config.fake_dns
+        return lambda host_name, family: ip_config.fake_dns  # noqa: ARG005
     if ip_config.simulation_mode:
         return local_ip_for
 
@@ -217,7 +214,7 @@ def is_fallback_ip(ip: HostAddress | str) -> bool:
 
 
 def local_ip_for(
-    host_name: HostName,
+    host_name: HostName,  # noqa: ARG001
     family: SupportedAddressFamily,
 ) -> HostAddress:
     match family:
@@ -361,7 +358,7 @@ def _actual_dns_lookup(
         if isinstance(socket_address, int):
             raise Exception("Your Python has been compiled with --disable-ipv6, sorry...")
         return HostAddress(socket_address)
-    except (MKTerminate, MKTimeout):
+    except MKTerminate, MKTimeout:
         # We should be more specific with the exception handler below, then we
         # could drop this special handling here
         raise
@@ -446,7 +443,7 @@ class IPLookupCache:
     def load_persisted(self) -> None:
         try:
             self._cache.update(self._store.read_obj(default={}))
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
             raise
@@ -528,7 +525,7 @@ def update_dns_cache(
                     {"host_name": host_name, "family": family, "ip": ip},
                 )
 
-            except (MKTerminate, MKTimeout):
+            except MKTerminate, MKTimeout:
                 # We should be more specific with the exception handler below, then we
                 # could drop this special handling here
                 raise

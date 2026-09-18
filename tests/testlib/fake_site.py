@@ -91,7 +91,8 @@ def fake_paths() -> None:
         if name.startswith("_") or not isinstance(value, str | Path) or name in unpatched_paths:
             continue
 
-        assert Path(value).is_relative_to(original_omd_root)
+        if not Path(value).is_relative_to(original_omd_root):
+            raise RuntimeError(f"cmk.utils.paths.{name} is not below omd_root: {value}")
         with contextlib.suppress(ValueError):  # path is outside of omd_root
             monkeypatch.setattr(
                 f"cmk.utils.paths.{name}",

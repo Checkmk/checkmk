@@ -3,29 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 import math
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, NamedTuple, Protocol, Self
+from typing import Final, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
 from cmk.agent_based.prediction_backend import PredictionInfo
-from cmk.ccc.hostaddress import HostName
 
-from ..misc import pnp_cleanup
-from ..paths import predictions_dir
-from ..servicename import ServiceName
-from ._grouping import time_slices
-
-logger = logging.getLogger("cmk.prediction")
-
-
-LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
-
+from ._file_layout import iter_prediction_files, meta_file_template, relative_data_file
+from ._grouping import parse_period_name, PeriodName, time_slices
 
 _DAY = 86400
+
+_RRD_CONSOLIDATION_FUNCTION: Final = "max"
+
+_RETENTION: Final[Mapping[PeriodName, int]] = {
+    "wday": 7 * _DAY,
+    "day": 31 * _DAY,
+    "hour": 3 * _DAY,
+    "minute": 3 * _DAY,
+}
 
 
 class MetricRecord(Protocol):
@@ -44,7 +44,6 @@ class DataStat(NamedTuple):
 
     @classmethod
     def from_values(cls, values: Sequence[float]) -> Self:
-        """Statistically summarize all the measured values"""
         average = sum(values) / float(len(values))
         return cls(
             average=average,
@@ -67,84 +66,43 @@ class PredictionData(BaseModel, frozen=True):
         return self.points[unbound_index % len(self.points)]
 
 
+@dataclass(frozen=True)
 class PredictionStore:
-    DATA_FILE_SUFFIX = ""
-    INFO_FILE_SUFFIX = ".info"
-    NAME_TEMPLATE = "{meta.metric}/{meta.params.period}-{meta.valid_interval[0]}-{meta.direction}"
-    RETENTION = {
-        "wday": 7 * _DAY,
-        "day": 31 * _DAY,
-        "hour": 3 * _DAY,
-        "minute": 3 * _DAY,
-    }
-
-    def __init__(
-        self,
-        host_name: HostName,
-        service_name: ServiceName,
-    ) -> None:
-        # Watch out. The CMC has to agree on the path.
-        self.path: Path = predictions_dir / host_name / pnp_cleanup(service_name)
+    path: Path
 
     @property
     def meta_file_path_template(self) -> str:
-        # make base dir safe for .format call
-        safe_template = str(self.path).replace("{", "{{").replace("}", "}}")
-        return safe_template + f"/{self.NAME_TEMPLATE}{self.INFO_FILE_SUFFIX}"
-
-    @classmethod
-    def relative_data_file(cls, meta: PredictionInfo) -> Path:
-        return Path(cls.NAME_TEMPLATE.format(meta=meta)).with_suffix(cls.DATA_FILE_SUFFIX)
-
-    def _data_file(self, meta: PredictionInfo) -> Path:
-        return self.path / self.relative_data_file(meta=meta)
-
-    @staticmethod
-    def filter_prediction_files_by_metric(
-        metric: str, prediction_files: Iterable[Path]
-    ) -> Iterator[Path]:
-        yield from (
-            prediction_file
-            for prediction_file in prediction_files
-            # note that a metric name cannot have a '/' in it.
-            if metric in prediction_file.parts
-        )
+        return meta_file_template(self.path)
 
     def save_prediction(self, meta: PredictionInfo, prediction: PredictionData) -> None:
-        data_file = self._data_file(meta)
+        data_file = self.path / relative_data_file(meta)
         data_file.parent.mkdir(exist_ok=True, parents=True)
         data_file.write_text(prediction.model_dump_json())
 
-    def iter_all_metadata_files(self) -> Iterable[Path]:
-        if not self.path.exists():
-            return ()
-        return self.path.rglob(f"*{self.INFO_FILE_SUFFIX}")
-
     def remove_outdated_predictions(self, now: float) -> None:
-        for info_path in self.iter_all_metadata_files():
-            period, start_time_str = info_path.name.split("-")[:2]
+        for files in iter_prediction_files(self.path):
+            period, start_time_str = files.info.name.split("-")[:2]
+            if (period_name := parse_period_name(period)) is None:
+                continue
 
-            if (now - float(start_time_str)) > self.RETENTION[period]:
-                info_path.unlink(missing_ok=True)
-                info_path.with_suffix(self.DATA_FILE_SUFFIX).unlink(missing_ok=True)
+            if (now - float(start_time_str)) > _RETENTION[period_name]:
+                files.unlink()
 
     def iter_all_valid_predictions(
         self, now: float
     ) -> Iterator[tuple[PredictionInfo, PredictionData | None]]:
-        for info_path in self.iter_all_metadata_files():
+        for files in iter_prediction_files(self.path):
             try:
-                meta = PredictionInfo.model_validate_json(info_path.read_text())
+                meta = PredictionInfo.model_validate_json(files.info.read_text())
             except FileNotFoundError:
                 continue
 
             if not meta.valid_interval[0] <= now < meta.valid_interval[1]:
                 continue
 
-            data_path = info_path.with_suffix(self.DATA_FILE_SUFFIX)
-
             try:
-                if info_path.stat().st_mtime <= data_path.stat().st_mtime:
-                    yield meta, PredictionData.model_validate_json(data_path.read_text())
+                if files.info.stat().st_mtime <= files.data.stat().st_mtime:
+                    yield meta, PredictionData.model_validate_json(files.data.read_text())
                     continue
             except FileNotFoundError:
                 pass
@@ -164,6 +122,7 @@ def compute_prediction(
     )
 
     from_time = time_windows[0][0]
+    rpn = f"{info.metric}.{_RRD_CONSOLIDATION_FUNCTION}"
     raw_slices = [
         (
             response.window,
@@ -171,7 +130,7 @@ def compute_prediction(
             from_time - start,
         )
         for start, end in time_windows
-        if (response := get_recorded_data(f"{info.metric}.max", start, end))
+        if (response := get_recorded_data(rpn, start, end))
     ]
 
     return (
@@ -221,8 +180,7 @@ def _forward_fill_resample(
 
 
 def _data_stats(slices: Iterable[Iterable[float | None]]) -> list[DataStat | None]:
-    "Statistically summarize all the upsampled RRD data"
-    return [  # can't inline this b/c it is unit tested :-/
+    return [
         (
             DataStat.from_values(point_line)
             if (point_line := [x for x in time_column if x is not None])

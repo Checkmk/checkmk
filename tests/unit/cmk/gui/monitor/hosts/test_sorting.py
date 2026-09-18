@@ -237,28 +237,29 @@ def test_sort_naturally_sorts_numbers_correctly() -> None:
     assert value == expected
 
 
-def test_sort_naturally_sorts_folders_correctly() -> None:
-    folders = [
-        "/network",
-        "/",
+def test_sort_naturally_sorts_folder_titles_correctly() -> None:
+    """The column shows the titles Setup gives a folder, so that is what gets ordered."""
+    titles = [
+        "Netzwerk",
+        "Main",
         "",
-        "/network/switches",
-        "/orgs",
-        "/orgs/zone10",
-        "/orgs/zone2",
-        "/NETWORK",
+        "Netzwerk / Rechenzentrum 1",
+        "Standorte",
+        "Standorte / Zone 10",
+        "Standorte / Zone 2",
+        "netzwerk",
     ]
 
-    value = sorted(folders, key=functools.cmp_to_key(sort_naturally))
+    value = sorted(titles, key=functools.cmp_to_key(sort_naturally))
     expected = [
         "",
-        "/",
-        "/NETWORK",
-        "/network",
-        "/network/switches",
-        "/orgs",
-        "/orgs/zone2",
-        "/orgs/zone10",
+        "Main",
+        "Netzwerk",
+        "netzwerk",
+        "Netzwerk / Rechenzentrum 1",
+        "Standorte",
+        "Standorte / Zone 2",
+        "Standorte / Zone 10",
     ]
 
     assert value == expected

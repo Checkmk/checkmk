@@ -28,6 +28,7 @@ const props = defineProps<{
   inputHint?: string
   validation?: Array<string>
   allowEditingExistingElements?: boolean
+  loading?: boolean
   /** Title of the slide-in when creating a new element. */
   newTitle: TranslatedString
   /** Title of the slide-in when editing an existing element. */
@@ -44,6 +45,7 @@ const slideInOpen = ref<boolean>(false)
 const resolvedI18n = computed(() => ({
   noSelection: props.inputHint ?? _t('Please select an element'),
   noObjects: _t('No options available'),
+  loading: _t('Loading…'),
   edit: _t('Edit'),
   create: _t('Create new')
 }))
@@ -76,7 +78,8 @@ const { CmkErrorBoundary, error } = useCmkErrorBoundary()
           suggestions: choices
         }"
         :input-hint="untranslated(resolvedI18n.noSelection)"
-        :no-elements-text="untranslated(resolvedI18n.noObjects)"
+        :no-elements-text="untranslated(loading ? resolvedI18n.loading : resolvedI18n.noObjects)"
+        :no-results-hint="untranslated(loading ? resolvedI18n.loading : '')"
         :label="untranslated(label)"
         required
       />

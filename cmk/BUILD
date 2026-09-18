@@ -28,6 +28,7 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-messaging",
     ],
 )

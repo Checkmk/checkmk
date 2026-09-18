@@ -33,7 +33,7 @@ def parse_statgrab_cpu(string_table: StringTable) -> CPUInfo | None:
     )
 
 
-def discover_statgrab_cpu(section: CPUInfo) -> DiscoveryResult:
+def discover_statgrab_cpu(section: CPUInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

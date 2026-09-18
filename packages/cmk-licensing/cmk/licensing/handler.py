@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import abc
 from collections.abc import Sequence
@@ -17,24 +16,144 @@ from cmk.ccc import store
 
 
 class LicenseState(Enum):
-    """All possible license states of the Checkmk site"""
+    """All possible license states of the Checkmk site.
 
+    Note that new enums may be added at any point, and the precise definitions of existing enums may
+    change (e.g. which parts of Checkmk are supposed to work in which state). Therefore, please use
+    the methods that are defined for each state, instead of matching the states themselves (i.e.
+    instead of `state in [...]` use `state.is_...()`).
+
+    The methods are intended to guard the site capabilities and apply other effects depending on the
+    license state. This way, all the implications of licensed states are managed centrally.
+    """
+
+    # The site has no active license, but is still in the trial period, and the trial verification
+    # workflow has been completed.
     TRIAL = auto()
+
+    # The site has never had a license, and the trial period has expired.
     FREE = auto()
+
+    # The site has a valid license that has been verified recently, or a recently expired license
+    # and a grace period is in effect.
     LICENSED = auto()
+
+    # The site used to have a valid license, but it expired and the grace period has elapsed.
     UNLICENSED = auto()
+
+    # The site has no active license, but is still in the trial period. The user has selected "trial
+    # mode" in the trial verification workflow, but has not completed the verification process.
+    PENDING_TRIAL_VERIFICATION = auto()
+
+    # The site has no active license, but is still in the trial period. The user has selected
+    # "licensed mode", but did not completed the license verification process yet.
+    PENDING_LICENSE_VERIFICATION = auto()
+
+    # The site has no active license, but is still in the trial period. The user has not selected
+    # whether the site should be in the "trial" or "licensed" mode in the trial verification
+    # workflow yet.
+    PENDING_SELECTION = auto()
 
     @property
     def readable(self) -> str:
-        if self is LicenseState.TRIAL:
-            return "trial"
-        if self is LicenseState.FREE:
-            return "free"
-        if self is LicenseState.LICENSED:
-            return "licensed"
-        if self is LicenseState.UNLICENSED:
-            return "unlicensed"
-        raise ValueError
+        match self:
+            case LicenseState.TRIAL:
+                return "trial"
+            case LicenseState.FREE:
+                return "free"
+            case LicenseState.LICENSED:
+                return "licensed"
+            case LicenseState.UNLICENSED:
+                return "unlicensed"
+            case LicenseState.PENDING_TRIAL_VERIFICATION:
+                return "unverified trial"
+            case LicenseState.PENDING_LICENSE_VERIFICATION:
+                return "unverified licensed"
+            case LicenseState.PENDING_SELECTION:
+                return "trial mode not selected"
+        raise ValueError(f"unexpected license state: {self!r}")
+
+    def blocks_distributed_setup_changes_free(self) -> bool:
+        """Returns True if the site should block distributed changes.
+
+        This typically happens when the site enters a free state after a trial expiration."""
+
+        match self:
+            case LicenseState.FREE:
+                return True
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                | LicenseState.UNLICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return False
+
+    def is_connecting_to_remotes_enabled(self) -> bool:
+        """Returns True if distributed monitoring features should be enabled (for central sites)."""
+
+        match self:
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return True
+            case LicenseState.FREE | LicenseState.UNLICENSED:
+                return False
+
+    def is_adding_as_remote_enabled(self) -> bool:
+        """Returns True if the site can be added to a distributed monitoring setup (as a remote site)."""
+
+        match self:
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                # Note: it's not clear if UNLICENSED remote sites should be prevented from remote
+                # site automation. This code replicates the behaviour that existed in the past,
+                # however, it probably makes sense to remove the UNLICENSED state here.
+                | LicenseState.UNLICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return True
+            case LicenseState.FREE:
+                return False
+
+    def has_reduced_metric_series_limit(self) -> bool:
+        """Returns True if the site should reduce the active metric series limit (typically to 750)."""
+
+        match self:
+            case LicenseState.FREE:
+                return True
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                | LicenseState.UNLICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return False
+
+    def has_remaining_trial_time(self) -> bool:
+        """Return True if the site is in a state where remaining trial time exists."""
+
+        match self:
+            case (
+                LicenseState.TRIAL
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return True
+            case LicenseState.FREE | LicenseState.LICENSED | LicenseState.UNLICENSED:
+                return False
 
 
 class LicenseStateError(Exception):

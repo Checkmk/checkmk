@@ -11,9 +11,9 @@ from typing import override
 
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Row
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import Filter, FilterGroup
 from cmk.gui.visuals.filter.components import FilterComponent, Slider
+from cmk.web.utils.speaklater import LazyString
 
 
 @dataclass

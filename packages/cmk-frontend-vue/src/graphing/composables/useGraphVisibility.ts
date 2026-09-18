@@ -13,12 +13,12 @@ export function useGraphVisibility(
   options: {
     hiddenMetricNames?: Ref<string[]>
     hiddenLineNames?: Ref<string[]>
-    highlightedMetricName?: Ref<string | null>
+    highlightedMetricNames?: Ref<string[]>
   } = {}
 ) {
   const hiddenMetricNames = options.hiddenMetricNames ?? ref<string[]>([])
   const hiddenLineNames = options.hiddenLineNames ?? ref<string[]>([])
-  const highlightedMetricName = options.highlightedMetricName ?? ref<string | null>(null)
+  const highlightedMetricNames = options.highlightedMetricNames ?? ref<string[]>([])
 
   const visibleMetrics = computed(() =>
     getMetrics().filter((m) => !hiddenMetricNames.value.includes(m.metadata.name))
@@ -31,7 +31,7 @@ export function useGraphVisibility(
   return {
     hiddenMetricNames,
     hiddenLineNames,
-    highlightedMetricName,
+    highlightedMetricNames,
     visibleMetrics,
     visibleHorizontalLines
   }

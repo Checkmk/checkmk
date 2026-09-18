@@ -8,8 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.graylog.server_side_calls.special_agent import commands_function, Params
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, SpecialAgentCommand
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 
 @pytest.mark.parametrize(

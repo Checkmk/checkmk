@@ -6,7 +6,10 @@
 from logging import Logger
 from typing import override
 
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings_raw,
+)
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -39,7 +42,7 @@ class UpdateUseNewServiceDescription(UpdateAction):
                 raise ValueError(
                     f"Unknown 'use_new_descriptions_for' format: {updated_global_settings.get('use_new_descriptions_for')}"
                 )
-        save_global_settings(updated_global_settings)
+        save_global_settings_raw(updated_global_settings)
 
 
 update_action_registry.register(

@@ -3,165 +3,127 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Translate between the Livestatus ``filename`` column and the folder shown to the user.
+"""Name the Setup folder a host is configured in, the way Setup names it.
 
-Livestatus has no folder column. A host's Setup folder is only implied by ``filename``, the
-config file the host is defined in: Setup writes one ``hosts.mk`` per folder below ``/wato``, so
-the folder is the path between those two fixed parts::
+Livestatus has no folder column. A host's folder is only implied by ``filename``, the config file
+the host is defined in: Setup writes one ``hosts.mk`` per folder below ``/wato``, so the path
+between those two fixed parts is the folder::
 
-    /wato/hosts.mk              ->  "/"             the root folder
-    /wato/network/dc1/hosts.mk  ->  "/network/dc1"
-    anything else               ->  ""              not managed via Setup
+    /wato/hosts.mk                ->  ""               the root folder
+    /wato/dc_muc/rack1/hosts.mk   ->  "dc_muc/rack1"
+    anything else                 ->  None             no Setup folder
 
-Reading a folder and filtering by one have to agree on that mapping, so both directions live
-here: `folder_from_filename` produces what the user sees, `folder_contains_filters` matches
-against exactly that.
+That path is not what a user reads, though. Setup shows a folder by its title, which need not
+resemble the path at all - "Data center Munich" may well live in ``dc_muc`` - and only Setup knows
+it. So the titles are injected (see `SetupFolders`): the column asks for the title of one folder,
+the filter asks for all of them, to find the folders a value names.
 
-A folder carries a second name, the title Setup shows for it, and it need not resemble its path:
-"Data center Munich" may well live in ``dc_muc``. Livestatus knows nothing about it, so matching
-a title means resolving it to the folders that bear it before asking Livestatus about their
-files. `MonitorFolders` is where those titles come from.
+Two kinds of host have no folder to show, and therefore cannot be filtered by one:
 
-Two accepted imprecisions of the filter side, neither reachable with filenames as the monitoring
-core emits them: the fixed path parts are matched case-insensitively, and a filename with a
-trailing slash is read as a folder but matched as none.
+* hosts not managed via Setup, added straight to the monitoring core;
+* hosts a remote site owns, whose folders the local Setup does not know.
+
+A third kind has a folder, but not one that says anything about it. The hosts the Dynamic host
+configuration creates - Kubernetes objects and piggyback hosts in general - are ordinary Setup
+hosts, yet every one of them lands in the single folder its creation rule names, Main by default
+and the cluster host's folder for the Kubernetes Quick Setup, so their own nesting never becomes
+folder nesting. A Kubernetes topology lives in the host name and in the ``cmk/kubernetes/*``
+labels instead; a folder column cannot show it, and labels are the dimension that can.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import Protocol
-
-from cmk.ccc.regex import escape_regex_chars
-from cmk.gui.logged_in import LoggedInUser
-
-# A folder's path as it appears in a filename, and the title path Setup shows for it.
-type TitledFolder = tuple[str, str]
 
 
-class SetupFolders(Protocol):
-    """What this domain needs from Setup: which folders there are, and how they are titled.
+@dataclass(frozen=True, kw_only=True)
+class SetupFolders:
+    """What this domain needs from Setup: how its folders are titled.
 
-    Described as a protocol so Setup's folder tree can be injected without this module importing
-    it, and spelled the way Setup spells it, so the tree satisfies this without an adapter on the
-    Setup side.
+    Two questions rather than one mapping, because they do not cost the same: the title of one
+    folder is a lookup, while every title means walking the whole folder tree - which the column,
+    redrawn on a timer, has no business doing. They arrive as functions, so Setup answers them off
+    its own request-scoped caches and this domain holds nothing of Setup's to call them on.
     """
 
-    def folder_choices_fulltitle(self, acting_user: LoggedInUser) -> Sequence[TitledFolder]: ...
+    title_of: Callable[[str], str | None]
+    all_titles: Callable[[], Mapping[str, str]]
 
 
 class MonitorFolders:
-    """The Setup folders the monitoring pages may name, by path and by title.
+    """How the monitoring pages name the folder a host is configured in.
 
-    Setup is injected as a source and read when a caller asks rather than copied at wiring time:
-    its folder tree lives for one request only, and a folder added meanwhile has to be found.
-    While no source is wired the titles stay unknown, which leaves filtering by path.
+    Setup is injected as a source and asked when a caller wants to know rather than read out at
+    wiring time: its folders live for one request only, and one added meanwhile has to be found.
+    While no source is wired no folder has a title, which reads as no folder at all.
     """
 
     def __init__(self) -> None:
-        self._setup: Callable[[], SetupFolders] | None = None
+        self._setup: SetupFolders | None = None
 
-    def use_setup_source(self, source: Callable[[], SetupFolders]) -> None:
+    def use_setup_source(self, source: SetupFolders) -> None:
         self._setup = source
 
-    def visible_to(self, user: LoggedInUser) -> Sequence[TitledFolder]:
-        """Every folder this user may see, empty while no source is wired.
+    def title_of(self, path: str) -> str | None:
+        """The title Setup shows for one folder, None when the user has no folder of that path."""
+        return None if self._setup is None else self._setup.title_of(path)
 
-        Which folders that are is Setup's own answer, gated by its read permissions.
-        """
-        if self._setup is None:
-            return ()
-        return self._setup().folder_choices_fulltitle(user)
+    def titles(self) -> Mapping[str, str]:
+        """Every folder the user may know of, titled the way the Folder column shows it."""
+        return {} if self._setup is None else self._setup.all_titles()
 
 
 monitor_folders = MonitorFolders()
 
 
-def folder_from_filename(filename: str) -> str:
-    """The folder to show for a host defined in ``filename``."""
+def folder_path_from_filename(filename: str) -> str | None:
+    """The folder a host defined in ``filename`` sits in, None when that file is not Setup's."""
     path = PurePosixPath(filename)
     if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
-        # Not managed via Setup, e.g. added directly to the monitoring core.
-        return ""
+        return None
     folder = path.relative_to("/wato").parent
-    return "/" if folder == PurePosixPath(".") else f"/{folder}"
+    return "" if folder == PurePosixPath(".") else str(folder)
 
 
-def folder_contains_filters(value: str, *, folders: Sequence[TitledFolder] = ()) -> list[str]:
-    r"""Livestatus filter lines matching the hosts whose folder carries ``value``.
+def folder_title(filename: str, title_of: Callable[[str], str | None]) -> str:
+    """The folder to show for a host defined in ``filename``, empty when it has none."""
+    if (path := folder_path_from_filename(filename)) is None:
+        return ""
+    return title_of(path) or ""
 
-    A folder is matched when the value is part of the path shown in the Folder column, or part
-    of the title Setup shows for it, so a user may type whichever of the two names they know.
-    The title is matched here rather than in Livestatus, which never sees one.
 
-        >>> for line in folder_contains_filters("network"):
+def folder_matching_filters(value: str, titles: Mapping[str, str]) -> list[str]:
+    """Livestatus filter lines selecting the hosts whose folder title carries ``value``.
+
+    A title is Setup's word, not Livestatus', so which folders carry the value is decided here and
+    Livestatus is only asked about their files.
+
+        >>> for line in folder_matching_filters("Munich", {"dc_muc": "Data center Munich"}):
         ...     print(line)
-        Filter: filename ~~ ^/wato/.*network.*/hosts\.mk$
-
-        >>> for line in folder_contains_filters("Munich", folders=[("dc_muc", "Munich")]):
-        ...     print(line)
-        Filter: filename ~~ ^/wato/.*Munich.*/hosts\.mk$
         Filter: filename = /wato/dc_muc/hosts.mk
-        Or: 2
 
-    The value is a literal substring, not a pattern, hence the escaping below.
+        >>> for line in folder_matching_filters("Rack", {"dc_muc": "Data center Munich"}):
+        ...     print(line)
+        Filter: state >= 0
+        Negate:
     """
-    # One element per entry on Livestatus' filter stack, each spelled as one or more lines.
-    fragments = _path_fragments(value) + _title_fragments(value, folders)
+    if not (files := folder_files_matching(value, titles)):
+        # No folder carries the value, so no host does. Every host has a state, hence not having
+        # one selects none - said as a filter, because saying nothing would select every host.
+        return ["Filter: state >= 0", "Negate:"]
 
-    lines = [line for fragment in fragments for line in fragment]
-    if len(fragments) > 1:
-        lines.append(f"Or: {len(fragments)}")
+    lines = [f"Filter: filename = {file}" for file in files]
+    if len(files) > 1:
+        lines.append(f"Or: {len(files)}")
     return lines
 
 
-def _path_fragments(value: str) -> list[list[str]]:
-    r"""Matches on the folder path, spelled as a match on the middle of ``filename``.
-
-    Since ``filename`` is ``/wato`` + the folder + ``/hosts.mk``, the pattern is pinned in place
-    by the two fixed parts. Anchoring matters: an unpinned match would let ``wato`` or
-    ``hosts.mk`` match every host. Two cases the pinned match cannot express follow it.
-    """
-    pattern = escape_regex_chars(value)
-
-    fragments = [
-        # ``value`` inside the folder, past its leading slash.
-        [rf"Filter: filename ~~ ^/wato/.*{pattern}.*/hosts\.mk$"],
-    ]
-    if value.startswith("/"):
-        # ``value`` covering the folder's leading slash, i.e. matching a path prefix. The
-        # alternative above cannot see that slash, it is part of the fixed ``/wato/``.
-        fragments.append([rf"Filter: filename ~~ ^/wato{pattern}.*/hosts\.mk$"])
-    if value in ("", "/"):
-        # The root folder shows as "/" although its filename holds no folder part at all.
-        fragments.append([_matching(_filename_of(""))])
-    if not value:
-        # Hosts not managed via Setup show no folder at all, which only "" is contained in.
-        fragments.append([r"Filter: filename ~~ ^/wato/(.*/)?hosts\.mk$", "Negate:"])
-    return fragments
-
-
-def _title_fragments(value: str, folders: Sequence[TitledFolder]) -> list[list[str]]:
-    """One file per folder whose Setup title carries the value.
-
-    A folder the value already matches by path needs no line of its own. That also keeps a value
-    every path carries, "/" or the empty one, from repeating every folder there is.
-    """
+def folder_files_matching(value: str, titles: Mapping[str, str]) -> list[str]:
+    """The files of the folders whose title carries ``value``, in a settled order."""
     needle = value.lower()
-    fragments: list[list[str]] = []
-    for path, title_path in folders:
-        if needle not in title_path.lower():
-            continue
-        filename = _filename_of(path)
-        if needle in folder_from_filename(filename).lower():
-            continue
-        fragments.append([_matching(filename)])
-    return fragments
+    return [_filename_of(path) for path, title in sorted(titles.items()) if needle in title.lower()]
 
 
 def _filename_of(path: str) -> str:
     """The file Setup writes the hosts of the folder at ``path`` into."""
     return f"/wato/{path}/hosts.mk" if path else "/wato/hosts.mk"
-
-
-def _matching(filename: str) -> str:
-    return f"Filter: filename = {filename}"

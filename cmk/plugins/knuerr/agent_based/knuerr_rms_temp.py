@@ -18,11 +18,11 @@ from cmk.plugins.knuerr.lib import DETECT_KNUERR
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 
-def discover_knuerr_rms_temp(section: StringTable) -> DiscoveryResult:
+def discover_knuerr_rms_temp(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Ambient")
 
 
-def check_knuerr_rms_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+def check_knuerr_rms_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:  # noqa: ARG001
     yield from check_temperature(
         float(section[0][0]) / 10,
         params,

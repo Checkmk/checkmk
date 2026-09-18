@@ -64,7 +64,7 @@ def parse_cmciii_lcp_waterflow(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_cmciii_lcp_waterflow(section: Section) -> DiscoveryResult:
+def discover_cmciii_lcp_waterflow(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

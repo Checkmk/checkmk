@@ -6,11 +6,8 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Provides the view editor dialog"""
-
-from __future__ import annotations
 
 import ast
 import datetime as dt
@@ -38,7 +35,6 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     ColumnTypes,
-    DynamicIconName,
     InventoryJoinMacrosSpec,
     PainterName,
     PainterParameters,
@@ -78,6 +74,7 @@ from cmk.gui.views.inventory import (
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.inventory.structured_data import SDPath
+from cmk.web.utils.icons import DynamicIconName
 
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter
@@ -214,7 +211,8 @@ def _migrate_column_headers_repeat_to_pergroup(setting: str) -> str:
 
 
 def view_inventory_join_macros(
-    ds_name: str, all_column_display_hints: Sequence[OrderedColumnDisplayHintsOfView]
+    ds_name: str,  # noqa: ARG001
+    all_column_display_hints: Sequence[OrderedColumnDisplayHintsOfView],
 ) -> Dictionary:
     def _validate_macro_of_datasource(macro: str, varprefix: str) -> None:
         allowed_macros_chars = string.ascii_uppercase + string.digits + "_"
@@ -569,7 +567,7 @@ class _RawVSJoinInvColumnSpec(_RawVSColumnSpecOptional):
 def _view_editor_spec(
     *,
     ident: str,
-    ds_name: str,
+    ds_name: str,  # noqa: ARG001
     title: str,
     vs_column: ValueSpec,
     allow_empty: bool,
@@ -705,7 +703,7 @@ def _view_editor_spec(
         column_spec: ColumnSpec,
     ) -> PainterName | tuple[PainterName, PainterParameters]:
         if column_spec.parameters is None:
-            return column_spec.name
+            return column_spec.name  # type: ignore[unreachable]
         return (column_spec.name, column_spec.parameters)
 
     vs_column = Transform(
@@ -756,7 +754,10 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
 
 
 def view_editor_sorter_specs(
-    ident: str, ds_name: str, painters: Sequence[ColumnSpec], user_permissions: UserPermissions
+    ident: str,  # noqa: ARG001
+    ds_name: str,
+    painters: Sequence[ColumnSpec],
+    user_permissions: UserPermissions,
 ) -> Dictionary:
     def _sorter_choices(
         ds_name: str, painters: Sequence[ColumnSpec]

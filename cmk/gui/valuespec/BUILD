@@ -26,7 +26,6 @@ py_library(
         "//cmk/utils:encryption",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",

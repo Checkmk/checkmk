@@ -7,9 +7,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import json
 import operator
@@ -74,15 +72,7 @@ from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import (
-    Choices,
-    CustomHostAttrSpec,
-    GlobalSettings,
-    HTTPVariables,
-    IconNames,
-    SetOnceDict,
-    StaticIcon,
-)
+from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, SetOnceDict
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -92,7 +82,7 @@ from cmk.gui.watolib.config_domain_name import (
     DomainSettings,
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     all_host_attributes,
@@ -136,7 +126,10 @@ from cmk.utils.host_storage import (
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.web.utils import urls
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable
 
 from .tls_registration_help import remove_tls_registration_help
 
@@ -826,20 +819,25 @@ class NullFolderCache:
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder] | None:
         return None
 
-    def folder_metadata(self, path: PathWithoutSlash) -> FolderMetaData | None:
+    def folder_metadata(self, path: PathWithoutSlash) -> FolderMetaData | None:  # noqa: ARG002
         return None
 
     def num_hosts_recursively(
-        self, path_with_slash: PathWithSlash, acting_user: LoggedInUser
+        self,
+        path_with_slash: PathWithSlash,  # noqa: ARG002
+        acting_user: LoggedInUser,  # noqa: ARG002
     ) -> int | None:
         return None
 
     def choices_for_moving(
-        self, path: PathWithoutSlash, move_type: _MoveType, acting_user: LoggedInUser
+        self,
+        path: PathWithoutSlash,  # noqa: ARG002
+        move_type: _MoveType,  # noqa: ARG002
+        acting_user: LoggedInUser,  # noqa: ARG002
     ) -> Choices | None:
         return None
 
-    def recursive_subfolders_for_path(self, path: PathWithSlash) -> Sequence[PathWithSlash] | None:
+    def recursive_subfolders_for_path(self, path: PathWithSlash) -> Sequence[PathWithSlash] | None:  # noqa: ARG002
         return None
 
     def folder_updated(self, filesystem_path: str) -> None:
@@ -1520,7 +1518,7 @@ def disk_or_search_base_folder_from_request(
     return folder
 
 
-def _makeuri_to_wato(vars_: HTTPVariables) -> str:
+def _makeuri_to_wato(vars_: Sequence[HTTPVariable]) -> str:
     """Build a "wato.py" URL without depending on the request global proxy.
 
     This is equivalent to ``urls.makeuri_contextless(request, vars_, filename="wato.py")``,
@@ -2193,7 +2191,7 @@ class Folder:
             self._subfolders.values(), key=operator.methodcaller("title"), reverse=True
         ):
             visible_subfolders = (
-                subfolder._walk_tree(
+                subfolder._walk_tree(  # noqa: SLF001
                     results, current_depth=current_depth + 1, pretty=pretty, acting_user=acting_user
                 )
                 or visible_subfolders
@@ -2465,11 +2463,11 @@ class Folder:
                 % {"folder": self.title()}
             )
 
-    def url(self, request: Request, add_vars: HTTPVariables | None = None) -> str:
+    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        url_vars: HTTPVariables = [("folder", self.path())]
+        url_vars: list[HTTPVariable] = [("folder", self.path())]
         have_mode = False
         for varname, _value in add_vars:
             if varname == "mode":
@@ -2477,9 +2475,9 @@ class Folder:
                 break
         if not have_mode:
             url_vars.append(("mode", "folder"))
-        if request.var("debug") == "1":
-            add_vars.append(("debug", "1"))
         url_vars += add_vars
+        if request.var("debug") == "1":
+            url_vars.append(("debug", "1"))
         return _makeuri_to_wato(url_vars)
 
     def edit_url(self, backfolder: Folder | None = None) -> str:
@@ -2521,7 +2519,7 @@ class Folder:
 
         time_allowed = self.attributes["network_scan"].get("time_allowed")
         if time_allowed is None:
-            return next_time  # No time frame limit
+            return next_time  # type: ignore[unreachable]  # No time frame limit
 
         # Transform pre 1.6 single time window to list of time windows
         times_allowed = [time_allowed] if isinstance(time_allowed, tuple) else time_allowed
@@ -3032,7 +3030,7 @@ class Folder:
         return [
             host_name
             for host_name in host_names
-            if is_locked_by_quick_setup(self.tree.load_host(host_name).locked_by())
+            if is_locked_by_config_bundle(self.tree.load_host(host_name).locked_by())
         ]
 
     @staticmethod
@@ -3159,7 +3157,7 @@ class Folder:
         host = self.hosts()[oldname]
         host.permissions.need_permission("write", acting_user)
 
-        if is_locked_by_quick_setup(host.locked_by()):
+        if is_locked_by_config_bundle(host.locked_by()):
             raise MKUserError(
                 "rename-host",
                 _('You cannot rename host "%(oldname)s", because it is managed by Quick Setup.')
@@ -3221,7 +3219,7 @@ class Folder:
         self._load_hosts_on_demand()
         assert self._hosts is not None
         self._hosts[host.name()] = host
-        host._folder = self
+        host._folder = self  # noqa: SLF001
         self._num_hosts = len(self._hosts)
 
     def _remove_host(self, host: Host) -> None:
@@ -3236,7 +3234,7 @@ class Folder:
         for host in self.hosts().values():
             site_ids.add(host.site_id())
         for subfolder in self.subfolders():
-            subfolder._add_all_sites_to_set(site_ids)
+            subfolder._add_all_sites_to_set(site_ids)  # noqa: SLF001
 
     # .-----------------------------------------------------------------------.
     # | HTML Generation                                                       |
@@ -3253,24 +3251,24 @@ class Folder:
                     "Host attributes are locked (you cannot create, edit or delete hosts in this folder)"
                 )
             )
-        elif isinstance(self._locked_hosts, str) and self._locked_hosts:
-            lock_messages.append(self._locked_hosts)
+        elif isinstance(self._locked_hosts, str) and self._locked_hosts:  # type: ignore[unreachable]
+            lock_messages.append(self._locked_hosts)  # type: ignore[unreachable]
 
         # Locked folder attributes
         if self._locked is True:
             lock_messages.append(
                 _("Folder attributes are locked (you cannot edit the attributes of this folder)")
             )
-        elif isinstance(self._locked, str) and self._locked:
-            lock_messages.append(self._locked)
+        elif isinstance(self._locked, str) and self._locked:  # type: ignore[unreachable]
+            lock_messages.append(self._locked)  # type: ignore[unreachable]
 
         # Also subfolders are locked
         if self._locked_subfolders:
             lock_messages.append(
                 _("Subfolders are locked (you cannot create or remove folders in this folder)")
             )
-        elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:
-            lock_messages.append(self._locked_subfolders)
+        elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:  # type: ignore[unreachable]
+            lock_messages.append(self._locked_subfolders)  # type: ignore[unreachable]
 
         if lock_messages:
             if len(lock_messages) == 1:
@@ -3534,7 +3532,7 @@ class SearchFolder:
     def show_locking_information(self) -> None:
         pass
 
-    def has_subfolder(self, name: str) -> bool:
+    def has_subfolder(self, name: str) -> bool:  # noqa: ARG002
         return False
 
     def has_subfolders(self) -> bool:
@@ -3545,14 +3543,14 @@ class SearchFolder:
 
     def path(self) -> str:
         if self._name:
-            return self._base_folder.path() + "//search:" + self._name
+            return self._base_folder.path() + "//search:" + self._name  # type: ignore[unreachable]
         return self._base_folder.path() + "//search"
 
-    def url(self, request: Request, add_vars: HTTPVariables | None = None) -> str:
+    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        url_vars: HTTPVariables = [("host_search", "1"), *add_vars]
+        url_vars: list[HTTPVariable] = [("host_search", "1"), *add_vars]
 
         for varname, value in request.itervars():
             if varname.startswith(("host_search_", "_change")):
@@ -4308,18 +4306,18 @@ def _collect_hosts(folder: Folder) -> Mapping[HostName, CollectedHostAttributes]
     return hosts_attributes
 
 
-def folder_preserving_link(request: Request, add_vars: HTTPVariables) -> str:
+def folder_preserving_link(request: Request, add_vars: Sequence[HTTPVariable]) -> str:
     return folder_from_request(
         folder_tree(), request.var("folder"), request.get_ascii_input("host")
     ).url(request, add_vars)
 
 
-def make_action_link(request: Request, vars_: HTTPVariables) -> str:
-    session_vars: HTTPVariables = [("_transid", transactions.get())]
+def make_action_link(request: Request, vars_: Sequence[HTTPVariable]) -> str:
+    session_vars: list[HTTPVariable] = [("_transid", transactions.get())]
     if (csrf_token := get_session_csrf_token()) is not None:
         session_vars.append(("_csrf_token", csrf_token))
 
-    return folder_preserving_link(request, vars_ + session_vars)
+    return folder_preserving_link(request, [*vars_, *session_vars])
 
 
 @request_memoize()
@@ -4332,6 +4330,53 @@ def get_folder_title_path(tree: FolderTree, path: PathWithoutSlash) -> list[str]
 @request_memoize()
 def get_folder_title_path_with_links(tree: FolderTree, path: PathWithoutSlash) -> list[HTML]:
     return tree.folder(path).title_path_with_links()
+
+
+@request_memoize()
+def folder_title_path(
+    tree: FolderTree, path: PathWithoutSlash, acting_user: LoggedInUser
+) -> str | None:
+    """The titles down to this folder, for a reader outside Setup that names it to a user.
+
+    None when this user has no such folder: one the local Setup does not know, which is the
+    ordinary case for a host of a remote site keeping a hierarchy of its own, or one kept from
+    them. Answering by path lets a caller holding one - a monitoring page reading the config file
+    a host is defined in, say - know nothing about how folders are stored or titled.
+    """
+    if tree.config.wato_hide_folders_without_read_permissions:
+        # Which folders a user may know of takes the whole tree to answer, since one they may not
+        # read is still theirs to see while a folder below it is. Memoized, so however many rows
+        # ask, the walk happens once.
+        return all_folder_title_paths(tree, acting_user).get(path)
+    try:
+        return tree.folder(path).alias_path(show_main=False)
+    except MKGeneralException:
+        return None
+
+
+@request_memoize()
+def all_folder_title_paths(
+    tree: FolderTree, acting_user: LoggedInUser
+) -> Mapping[PathWithoutSlash, str]:
+    """Every folder this user may know of, titled the way `folder_title_path` titles one.
+
+    Kept apart from asking for a single title because the two do not cost the same: one title
+    instantiates that folder's own chain, all of them walk the tree. Both are memoized for the
+    request, which is what makes either safe to ask per table row.
+
+    Which folders a user may know of is `recursive_subfolder_choices`' answer rather than a second
+    reading of the same rule: it is the one that keeps a folder whose subfolder is visible, and the
+    one Setup's own folder choices go by. Only an installation that hides the folders a user may
+    not read has to ask it, and only that installation pays for the permission check per folder.
+    """
+    if not tree.config.wato_hide_folders_without_read_permissions:
+        return {
+            path: folder.alias_path(show_main=False) for path, folder in tree.all_folders().items()
+        }
+    return {
+        path: tree.folder(path).alias_path(show_main=False)
+        for path, _indented_title in tree.folder_choices_fulltitle(acting_user)
+    }
 
 
 def _ensure_trailing_slash(path: str) -> PathWithSlash:

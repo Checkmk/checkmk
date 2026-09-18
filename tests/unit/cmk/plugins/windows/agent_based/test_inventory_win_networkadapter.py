@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from pathlib import Path
-
 import pytest
 
 from cmk.agent_based.v2 import (
@@ -289,15 +287,3 @@ def test_parse_win_networkadapter_parameters(
 ) -> None:
     [adapter] = list(parse_win_networkadapter(string_table))
     assert adapter.inet6 == expected_inet6
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just set _PYTEST_RAISES=1 and run this file from your IDE and dive into the code.
-    source_file_path = (
-        (base := (test_file := Path(__file__)).parents[6])
-        / test_file.parent.relative_to(base / "tests/unit")
-        / test_file.name[5:]
-    ).as_posix()
-    assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
-    pytest.main(["-vvsx", __file__])

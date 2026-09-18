@@ -12,20 +12,62 @@ import { computed } from 'vue'
 export interface StateSegment {
   label: TranslatedString
   count: number
-  color: Colors
+  color: Colors | 'pending'
+  href?: string | undefined
+  target?: string | undefined
 }
 
-const props = defineProps<{ segments: StateSegment[] }>()
+export interface StateTotal {
+  label: TranslatedString
+  href?: string | undefined
+  target?: string | undefined
+}
+
+interface LegendEntry {
+  label: TranslatedString
+  count: number
+  color: StateSegment['color']
+  active: boolean
+  href: string | undefined
+  target: string | undefined
+}
+
+const props = defineProps<{ segments: StateSegment[]; total?: StateTotal | undefined }>()
 
 const { _t } = usei18n()
 
-const total = computed(() => props.segments.reduce((sum, segment) => sum + segment.count, 0))
+const totalCount = computed(() => props.segments.reduce((sum, segment) => sum + segment.count, 0))
 
 /** Only non-zero segments occupy space in the bar; the legend still lists all of them. */
 const barSegments = computed(() => props.segments.filter((segment) => segment.count > 0))
 
+function toEntry(
+  label: TranslatedString,
+  count: number,
+  color: StateSegment['color'],
+  link: Pick<StateSegment, 'href' | 'target'>
+): LegendEntry {
+  return {
+    label,
+    count,
+    color,
+    active: count > 0,
+    href: count > 0 ? link.href : undefined,
+    target: count > 0 ? link.target : undefined
+  }
+}
+
+const legend = computed<LegendEntry[]>(() => {
+  const states = props.segments.map((segment) =>
+    toEntry(segment.label, segment.count, segment.color, segment)
+  )
+  return props.total === undefined
+    ? states
+    : [toEntry(props.total.label, totalCount.value, 'default', props.total), ...states]
+})
+
 const ariaLabel = computed<string>(() =>
-  total.value === 0
+  totalCount.value === 0
     ? _t('No services')
     : barSegments.value
         .map((segment) => _t('%{count} %{label}', { count: segment.count, label: segment.label }))
@@ -36,7 +78,7 @@ const ariaLabel = computed<string>(() =>
 <template>
   <div class="cmk-state-count-bar">
     <div class="cmk-state-count-bar__bar" role="img" :aria-label="ariaLabel">
-      <template v-if="total > 0">
+      <template v-if="totalCount > 0">
         <div
           v-for="(segment, index) in barSegments"
           :key="index"
@@ -52,17 +94,16 @@ const ariaLabel = computed<string>(() =>
       />
     </div>
     <ul class="cmk-state-count-bar__legend">
-      <li
-        v-for="(segment, index) in segments"
-        :key="index"
-        class="cmk-state-count-bar__legend-item"
-      >
-        <span
-          class="cmk-state-count-bar__legend-swatch"
-          :class="`cmk-state-count-bar__legend-swatch--${segment.color}`"
-        />
-        <span class="cmk-state-count-bar__legend-label">{{ segment.label }}</span>
-        <span class="cmk-state-count-bar__legend-count">{{ segment.count }}</span>
+      <li v-for="(entry, index) in legend" :key="index" class="cmk-state-count-bar__legend-item">
+        <component
+          :is="entry.href === undefined ? 'span' : 'a'"
+          class="cmk-state-count-bar__legend-entry"
+          :class="entry.active ? `cmk-state-count-bar__legend-entry--${entry.color}` : undefined"
+          :href="entry.href"
+          :target="entry.target"
+        >
+          {{ entry.label }}: {{ entry.count }}
+        </component>
       </li>
     </ul>
   </div>
@@ -77,8 +118,9 @@ const ariaLabel = computed<string>(() =>
 
 .cmk-state-count-bar__bar {
   display: flex;
+  gap: var(--dimension-2);
   width: 100%;
-  height: var(--dimension-7);
+  height: var(--dimension-6);
   overflow: hidden;
   border-radius: var(--border-radius);
 }
@@ -89,64 +131,63 @@ const ariaLabel = computed<string>(() =>
 }
 
 .cmk-state-count-bar__segment--success,
-.cmk-state-count-bar__legend-swatch--success {
-  background-color: var(--success);
+.cmk-state-count-bar__legend-entry--success::before {
+  background-color: var(--color-corporate-green-80);
 }
 
 .cmk-state-count-bar__segment--warning,
-.cmk-state-count-bar__legend-swatch--warning {
-  background-color: var(--color-warning);
+.cmk-state-count-bar__legend-entry--warning::before {
+  background-color: var(--color-yellow-60);
 }
 
 .cmk-state-count-bar__segment--danger,
-.cmk-state-count-bar__legend-swatch--danger {
-  background-color: var(--color-danger);
+.cmk-state-count-bar__legend-entry--danger::before {
+  background-color: var(--color-dark-red-60);
 }
 
 .cmk-state-count-bar__segment--unknown,
-.cmk-state-count-bar__legend-swatch--unknown {
-  background-color: var(--color-unknown);
+.cmk-state-count-bar__legend-entry--unknown::before {
+  background-color: var(--color-orange-70);
 }
 
-/* PENDING and the empty track both use the neutral grey — there is no --color-pending. */
+.cmk-state-count-bar__segment--pending,
+.cmk-state-count-bar__legend-entry--pending::before {
+  background-color: var(--color-mist-grey-80);
+}
+
 .cmk-state-count-bar__segment--default,
 .cmk-state-count-bar__segment--empty,
-.cmk-state-count-bar__legend-swatch--default {
+.cmk-state-count-bar__legend-entry--default::before {
   background-color: var(--state-count-bar-neutral);
 }
 
 .cmk-state-count-bar__legend {
-  display: grid;
-  grid-template-columns: auto auto auto;
-  place-items: center start;
-  gap: var(--dimension-4);
-  width: fit-content;
+  display: flex;
+  flex-flow: row wrap;
+  gap: var(--dimension-3) var(--spacing);
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
-/* Each item's children join the shared grid (swatch | label | count) so the counts
-   stay aligned in one column across all rows regardless of label width. */
-.cmk-state-count-bar__legend-item {
-  display: contents;
+.cmk-state-count-bar__legend-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-4);
+  color: var(--font-color);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-/* A slim colour swatch drawn next to the label instead of tinting it; horizontally
-   slim but as tall as the bar above. */
-.cmk-state-count-bar__legend-swatch {
-  flex: none;
-  width: var(--dimension-4);
-  height: var(--dimension-7);
-  border-radius: var(--border-radius);
+.cmk-state-count-bar__legend-entry::before {
+  content: '';
+  flex: 0 0 auto;
+  width: var(--dimension-2);
+  height: var(--dimension-6);
 }
 
-/* Right-aligned monospace column so the counts stay readable and lined up next to
-   the labels regardless of digit count. */
-.cmk-state-count-bar__legend-count {
-  justify-self: end;
-  font-family: var(--font-family-monospace);
-  font-weight: var(--font-weight-bold);
+a.cmk-state-count-bar__legend-entry:hover {
+  text-decoration: underline;
 }
 
 body[data-theme='facelift'] .cmk-state-count-bar {

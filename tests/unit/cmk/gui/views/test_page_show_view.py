@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable
 from typing import override
 
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.view import View
 from cmk.gui.views.page_show_view import _get_needed_regular_columns
 from cmk.gui.visuals.filter import Filter
@@ -21,7 +21,7 @@ def test_get_needed_regular_columns(view: View) -> None:
             return []
 
         @override
-        def columns_for_filter_table(self, context):
+        def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
             return ["some_column"]
 
     columns = _get_needed_regular_columns(

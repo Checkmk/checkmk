@@ -70,13 +70,15 @@ ruff = lint_ruff_aspect(
 clang_tidy = lint_clang_tidy_aspect(
     binary = Label("@multitool_hub//tools/clang-tidy"),
     global_config = [Label("//:.clang-tidy")],
-    gcc_install_dir = [Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu")],
+    gcc_install_dir = [Label("@gcc_toolchain//:x86_64-checkmk-linux-gnu")],
     # GCC's own builtin headers aren't a safe substitute for clang's resource-dir headers
     # (e.g. its mmintrin.h calls __builtin_ia32_* names Clang doesn't implement), so use
     # Clang's own extracted resource-dir headers instead.
     builtin_include_dir = [Label("@clang-resource-headers")],
+    # Not the opaque :x86_64-checkmk-linux-gnu dir: it collides with all_files in the sandbox.
     deps = [
-        Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu"),
+        Label("@gcc_toolchain//:builtin_headers"),
+        Label("@gcc_toolchain//:linker_builtins"),
         Label("@clang-resource-headers"),
     ],
 )

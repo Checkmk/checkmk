@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pytest
 
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
@@ -17,7 +20,8 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
         RawDiskData(""),  # Acceptable at the moment
     ],
 )
-def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_validate_ok_regex(value: RawDiskData) -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
@@ -26,7 +30,8 @@ def test_validate_ok_regex(request_context: None, value: RawDiskData) -> None:
     assert not errors
 
 
-def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_global_flags_in_middle_is_invalid() -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     global_flags_in_middle_regex = RawDiskData(
@@ -39,7 +44,8 @@ def test_global_flags_in_middle_is_invalid(request_context: None) -> None:
     assert errors[0].message.startswith("Invalid regular expression:")
 
 
-def test_syntax_error_is_invalid(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_syntax_error_is_invalid() -> None:
     form_spec = RegularExpression(predefined_help_text=MatchingScope.FULL)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     syntax_error_regex = RawDiskData("^(.*server.*}$")
@@ -50,7 +56,8 @@ def test_syntax_error_is_invalid(request_context: None) -> None:
     assert errors[0].message.startswith("Invalid regular expression:")
 
 
-def test_custom_validate_is_applied(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_custom_validate_is_applied() -> None:
     def custom_validator(value: str) -> str:
         raise ValidationError(Message("Custom validation failed"))
 

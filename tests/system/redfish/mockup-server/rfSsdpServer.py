@@ -135,7 +135,7 @@ EXT:
 """
 
 
-def main(argv=None):
+def main(argv=None):  # noqa: ARG001
     """
     main program
     """

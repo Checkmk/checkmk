@@ -5,13 +5,8 @@
 
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIconName,
-    SorterSpec,
-    ViewSpec,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, SorterSpec, ViewSpec, VisualLinkSpec
+from cmk.web.utils.icons import DynamicIconName
 
 from ._tree_renderer import make_table_view_name_of_host
 

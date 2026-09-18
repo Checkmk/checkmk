@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import asyncio
@@ -157,7 +156,7 @@ class BaseAsyncApiClient:
     def _update_ratelimit(self, response: aiohttp.ClientResponse) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
@@ -180,7 +179,7 @@ class BaseAsyncApiClient:
                 timeout=aiohttp.ClientTimeout(total=30),
             )
 
-        return session
+        return session  # type: ignore[possibly-undefined]
 
     async def __aenter__(self):
         if self._session is None or self._session.closed:

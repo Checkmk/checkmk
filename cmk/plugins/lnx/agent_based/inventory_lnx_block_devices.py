@@ -15,8 +15,6 @@ Sample agent output:
     |device/serial|AJ98N635810808T29   |
 """
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 from itertools import groupby
 

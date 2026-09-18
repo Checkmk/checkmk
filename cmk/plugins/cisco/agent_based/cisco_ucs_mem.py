@@ -72,7 +72,7 @@ def parse_cisco_ucs_mem(string_table: StringTable) -> dict[str, MemoryModule]:
             presence=Presence(presence),
             id=id,
         )
-        for name, serial, memtype, capacity, operability, presence, id in string_table
+        for name, serial, memtype, capacity, operability, presence, id in string_table  # noqa: A001
     }
 
 
@@ -97,7 +97,7 @@ snmp_section_cisco_ucs_mem = SimpleSNMPSection(
 
 def discover_cisco_ucs_mem(
     section_cisco_ucs_mem: Mapping[str, MemoryModule] | None,
-    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_cisco_ucs_mem:
         return

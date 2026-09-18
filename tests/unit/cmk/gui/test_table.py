@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import re
 
@@ -21,7 +19,7 @@ from cmk.web.utils.html import HTML
 from tests.unit.cmk.gui.compare_html import compare_html
 
 
-def read_out_simple_table(text):
+def read_out_simple_table(text: str) -> list[list[str]]:
     assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
@@ -38,7 +36,7 @@ def read_out_simple_table(text):
     return data
 
 
-def read_out_csv(text, separator):
+def read_out_csv(text: str, separator: str) -> list[list[str]]:
     # Get the contents of the table as a list of lists
     data = []
     for row in text.split("\n"):
@@ -138,7 +136,7 @@ def test_context() -> None:
                     table.cell(h, r)
 
         written_text = "".join(output_funnel.drain())
-    data = read_out_simple_table(written_text)
+    data: list[list[str]] | list[tuple[int, ...]] = read_out_simple_table(written_text)
     assert data.pop(0) == header
     data = [tuple(map(int, row)) for row in data if row and row[0]]
     assert data == rows
@@ -284,7 +282,7 @@ def test_table_cubical(
     limit: int,
     output_format: str,
 ) -> None:
-    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)  # noqa: ARG005
 
     # Test data
     rows = [(i, i**3) for i in range(10)]
@@ -313,6 +311,7 @@ def test_table_cubical(
 
     # Data assertions
     assert output_format in ["html", "csv"], "Fetch is not yet implemented"
+    data: list[list[str]] | list[tuple[int, ...]]
     if output_format == "html":
         with output_funnel.plugged():
             _render_table()

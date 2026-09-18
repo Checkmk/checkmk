@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -39,7 +38,7 @@ map_luntype = {
 }
 
 
-def discover_cisco_ucs_lun(section: StringTable) -> DiscoveryResult:
+def discover_cisco_ucs_lun(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -12,7 +12,6 @@ from typing import Any, Literal, NamedTuple
 from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import (
     AbsoluteDirname,
     Age,
@@ -35,6 +34,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec.definitions import DictionaryEntry
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.web.utils.choices import Choices
 
 
 def _validate_oracle_password(forbidden_chars: str) -> Callable[[tuple[str, str], str], None]:
@@ -43,7 +43,7 @@ def _validate_oracle_password(forbidden_chars: str) -> Callable[[tuple[str, str]
     Validates only the explicit password entry, not password store references.
     """
 
-    def _validate(value: tuple[str, str], varprefix: str) -> None:
+    def _validate(value: tuple[str, str], varprefix: str) -> None:  # noqa: ARG001
         mode, password = value
         if mode == "password":
             # Only validate direct password entry, not password store references

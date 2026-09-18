@@ -31,7 +31,7 @@ def parse_innovaphone_cpu(string_table: StringTable) -> Utilization | None:
             return None
 
 
-def discover_innovaphone_cpu(section: Utilization) -> DiscoveryResult:
+def discover_innovaphone_cpu(section: Utilization) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

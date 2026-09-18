@@ -5,4 +5,4 @@
 
 from google.protobuf.internal import api_implementation
 
-print(api_implementation.Type())
+print(api_implementation.Type())  # noqa: T201  # It's OK for test/script helpers to print()

@@ -85,6 +85,14 @@ test('clears the field and emits an empty query when the clear button is clicked
   expect(emitted('search')).toEqual([['']])
 })
 
+test('omits the submit button when it is turned off', () => {
+  render(CmkSearchInput, {
+    props: { placeholder: 'Search settings…', modelValue: '', showSubmitButton: false }
+  })
+
+  expect(screen.queryByRole('button', { name: 'Search' })).not.toBeInTheDocument()
+})
+
 test('emits an empty query on clear even when the model is parent-controlled', async () => {
   const model = ref('web01')
   const searched: string[] = []

@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_cisco_sys_mem(section: StringTable) -> DiscoveryResult:
+def discover_cisco_sys_mem(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

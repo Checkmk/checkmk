@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.gui.icon_helpers import migrate_to_dynamic_icon, migrate_to_static_icon
-from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon
 from cmk.shared_typing.main_menu import DefaultIcon, EmblemIcon
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 
 
 @pytest.mark.parametrize(

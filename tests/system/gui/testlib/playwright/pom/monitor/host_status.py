@@ -6,6 +6,7 @@
 import logging
 import re
 from typing import override
+from urllib.parse import urljoin
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -53,8 +54,13 @@ class HostStatus(CmkPage):
         This method assumes that the host is already created.
         """
         logger.info("Navigate to Monitor >> Overview >> All hosts")
-        self.main_menu.monitor_menu("All hosts", exact=True).click()
-        self.page.wait_for_url(url=re.compile(re.escape("view_name=allhosts")), wait_until="load")
+        # The Monitor menu's "All hosts" entry now opens the Vue "All hosts" page instead
+        # (see CMK-37778), so this navigates by URL directly to the classic view, which
+        # stays reachable even though it is hidden from menu listings.
+        # To be adapted when the new "All hosts" page tests are implemented in CMK-38167.
+        # `self.go()` isn't available yet: it relies on `self._url`, which
+        # `CmkPage.__init__` only sets after `navigate()` returns.
+        self.page.goto(urljoin(self.page.url, "view.py?view_name=allhosts"), wait_until="load")
 
         logger.info("Navigate to 'Services of host %s'", self.host_details.name)
         self.main_area.locator("table.data").get_by_role(

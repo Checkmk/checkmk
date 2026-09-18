@@ -3,17 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-
-# ruff: noqa: ARG005
 
 
 import copy
 import itertools
 import time
-from collections.abc import Sequence
+from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 from typing import override
 
@@ -55,11 +51,11 @@ class TestAgentParser:
         return HostName("testhost")
 
     @pytest.fixture
-    def store_path(self, tmp_path):
+    def store_path(self, tmp_path: Path) -> Path:
         return tmp_path / "store"
 
     @pytest.fixture
-    def store(self, store_path):
+    def store(self, store_path: Path) -> SectionStore[Sequence[AgentRawDataSectionElem]]:
         return SectionStore[Sequence[AgentRawDataSectionElem]](store_path)
 
     @pytest.fixture
@@ -552,12 +548,12 @@ class TestAgentParser:
         monkeypatch.setattr(
             SectionStore,
             "load",
-            lambda self: {
+            lambda self: {  # noqa: ARG005
                 SectionName("persisted"): (42, 69, [["content"]]),
             },
         )
         # Patch IO:
-        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
+        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)  # noqa: ARG005
 
         raw_data = AgentRawData(
             b"\n".join(
@@ -711,8 +707,11 @@ class TestAgentParser:
         assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators_and_piggyback(
-        self, parser, store, monkeypatch
-    ):
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
 
@@ -887,13 +886,121 @@ class TestSectionMarker:
             assert expected is None
 
 
+class TestPiggybackMarker:
+    @staticmethod
+    def _parse_header(header: bytes, translation: TranslationOptions) -> PiggybackMarker:
+        parsed: PiggybackMarker | None = None
+
+        class ExpectPiggybackHeader(ParserStateAdapter):
+            @override
+            def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
+                nonlocal parsed
+                parsed = piggyback_header
+                return self
+
+        ExpectPiggybackHeader(translation=translation)(header)
+        assert parsed is not None
+        return parsed
+
+    @pytest.mark.parametrize(
+        "header, translation, expected_hostname",
+        [
+            pytest.param(
+                b"<<<<My virtual machine>>>>",
+                TranslationOptions(),
+                HostName("My_virtual_machine"),
+                id="invalid characters are converted into underscores",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(regex=[(r"(\S+) .*", r"\1")]),
+                HostName("VM01"),
+                # The expression only matches the space-containing name, so
+                # this pins that translation happens before the conversion
+                # into underscores.
+                id="regexes match the raw name as sent by the agent",
+            ),
+            pytest.param(
+                b"<<<<host123.foobar.de>>>>",
+                TranslationOptions(drop_domain=True),
+                HostName("host123"),
+                id="convert FQHN drops the domain part",
+            ),
+            pytest.param(
+                b"<<<<vm42>>>>",
+                TranslationOptions(case="upper"),
+                HostName("VM42"),
+                id="case translation converts the case",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(regex=[(r"(VM\d+)", r"\1")]),
+                HostName("VM01_-_Testserver"),
+                id="regex pattern must match the whole name",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(regex=[(r"(vm\d+) .*", r"\1")]),
+                HostName("VM01_-_Testserver"),
+                id="regex match is case sensitive",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(case="lower", regex=[(r"(vm\d+) .*", r"\1")]),
+                HostName("vm01"),
+                id="regexes are applied after the case translation",
+            ),
+            pytest.param(
+                b"<<<<vm42>>>>",
+                TranslationOptions(regex=[(r"(vm\d+)", r"first-\1"), (r"(v.*)", r"second-\1")]),
+                HostName("first-vm42"),
+                id="regexes are executed successively until the first match",
+            ),
+            pytest.param(
+                b"<<<<vm42>>>>",
+                TranslationOptions(
+                    case="upper",
+                    regex=[(r"(VM\d+)", r"\1-translated")],
+                    mapping=[("VM42-translated", "mapped")],
+                ),
+                HostName("mapped"),
+                id="mapping is applied after case conversion and regexes",
+            ),
+        ],
+    )
+    def test_translation_behaves_as_documented(
+        self,
+        header: bytes,
+        translation: TranslationOptions,
+        expected_hostname: HostName,
+    ) -> None:
+        """Pins the behavior documented in the help texts of the "Host name translation for
+        piggybacked hosts" rule. If one of these cases needs adjusting, the help texts must be
+        adjusted as well, and vice versa.
+        """
+        parsed = self._parse_header(header, translation)
+        assert parsed.hostname == expected_hostname
+
+    def test_translation_results_in_None(self) -> None:
+        parsed = self._parse_header(
+            b"<<<<x>>>>",
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[(".*(.*?)", r"\1")],
+            ),
+        )
+        assert parsed.hostname is None
+
+
 class TestSNMPParser:
     @pytest.fixture
-    def hostname(self):
+    def hostname(self) -> str:
         return "hostname"
 
     @pytest.fixture
-    def parser(self):
+    def parser(self) -> SNMPParser:
         return SNMPParser()
 
     def test_empty_raw_data(self, parser: SNMPParser) -> None:
@@ -905,7 +1012,7 @@ class TestSNMPParser:
         assert not host_sections.piggybacked_raw_data
 
     @pytest.fixture
-    def sections(self):
+    def sections(self) -> dict[SectionName, StringTable]:
         # See also the tests to HostSections.
         section_a = SectionName("section_a")
         content_a = [["first", "line"], ["second", "line"]]
@@ -930,17 +1037,23 @@ class TestSNMPParser:
         assert ahs.piggybacked_raw_data == {}
 
 
-class MockStore(SectionStore):
-    def __init__(self, path: Path, sections: object) -> None:
+class MockStore(SectionStore[Sequence[Sequence[str]]]):
+    def __init__(
+        self,
+        path: Path,
+        sections: MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]],
+    ) -> None:
         super().__init__(path)
         self._sections = sections
 
     @override
-    def store(self, sections):
+    def store(
+        self, sections: MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]]
+    ) -> None:
         self._sections = copy.copy(sections)
 
     @override
-    def load(self):
+    def load(self) -> MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]]:
         return copy.copy(self._sections)
 
 
@@ -1156,22 +1269,6 @@ class TestMarkers:
                 return self
 
         ExpectPiggybackHeader()(b"<<<<x>>>>")
-
-    def test_piggybacked_host_translation_results_in_None(self) -> None:
-        class ExpectPiggybackHeader(ParserStateAdapter):
-            @override
-            def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-                assert piggyback_header.hostname is None
-                return self
-
-        ExpectPiggybackHeader(
-            translation=TranslationOptions(
-                case=None,
-                drop_domain=False,
-                mapping=[],
-                regex=[(".*(.*?)", r"\1")],
-            )
-        )(b"<<<<x>>>>")
 
     def test_piggybacked_host_footer(self) -> None:
         class ExpectPiggybackFooter(ParserStateAdapter):

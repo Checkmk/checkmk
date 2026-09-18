@@ -128,7 +128,7 @@ def test_user_change_password_success(
 def test_user_change_password_strict_policy_success(
     test_site: Site,
     dashboard_page: MainDashboard,
-    char_groups_number_password_policy: None,
+    char_groups_number_password_policy: None,  # noqa: ARG001
     password: str,
 ) -> None:
     """Test user can successfully change password with a strict password policy.
@@ -175,7 +175,7 @@ def test_user_change_password_errors(
 )
 def test_user_change_password_incompatible_with_policy(
     dashboard_page: MainDashboard,
-    char_groups_number_password_policy: None,
+    char_groups_number_password_policy: None,  # noqa: ARG001
     expected_groups_number: int,
     password: str,
 ) -> None:
@@ -259,7 +259,7 @@ def test_default_wordlist(
 )
 def test_setting_password_incompatible_with_policy(
     dashboard_page: MainDashboard,
-    char_groups_number_password_policy: None,
+    char_groups_number_password_policy: None,  # noqa: ARG001
     expected_groups_number: int,
     password: str,
 ) -> None:

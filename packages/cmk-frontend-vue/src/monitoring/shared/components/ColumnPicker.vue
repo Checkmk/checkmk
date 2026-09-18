@@ -45,15 +45,15 @@ watch(model, (value) => {
     :label="_t('columns')"
     :clear-label="_t('Back to default')"
   >
-    <template #trigger="{ toggle, isOpen }">
+    <template #trigger="{ toggle, isOpen, panelId }">
       <button
         type="button"
         class="monitoring-column-picker__trigger"
         :class="{ 'monitoring-column-picker__trigger--active': isOpen }"
         :title="_t('Show or hide columns')"
         :aria-label="_t('Show or hide columns')"
-        aria-haspopup="true"
         :aria-expanded="isOpen"
+        :aria-controls="panelId"
         @click="toggle"
       >
         <CmkMultitoneIcon

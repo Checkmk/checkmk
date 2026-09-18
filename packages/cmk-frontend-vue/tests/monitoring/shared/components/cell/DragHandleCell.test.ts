@@ -43,6 +43,10 @@ test('renders a draggable handle and forwards the drag events', async () => {
 
   const handle = screen.getByRole('button', { name: 'Drag to reorder' })
   expect(handle).toHaveAttribute('draggable', 'true')
+  expect(handle.tagName).toBe('BUTTON')
+
+  handle.focus()
+  expect(handle).toHaveFocus()
 
   await fireEvent(handle, new MouseEvent('dragstart', { bubbles: true }))
   await fireEvent(handle, new MouseEvent('drag', { bubbles: true }))

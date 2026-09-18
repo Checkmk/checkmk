@@ -63,7 +63,7 @@ snmp_section_globalprotect_utilization = SimpleSNMPSection(
 )
 
 
-def discover_globalprotect_utilization(section: Section) -> DiscoveryResult:
+def discover_globalprotect_utilization(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -71,6 +71,8 @@ let requestCounter = 0
 // Mirrors the legacy SingleTimeseriesDashlet._metric_color mapping.
 const DEFAULT_THEME_COLOR = '#008EFF'
 
+const PX_PER_PT = 96 / 72
+
 const resolveTimeseriesColor = (color: SingleTimeseriesContent['color']): string | null => {
   if (color === 'default_metric') {
     return null
@@ -269,6 +271,17 @@ const timerange = computed(() => {
 })
 const showLegend = computed(() => graphRenderOptions.value?.show_legend ?? false)
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
+const showPin = computed(
+  () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
+)
+const showTimeAxis = computed(() => graphRenderOptions.value?.show_time_axis ?? true)
+const showValueAxis = computed(() => graphRenderOptions.value?.show_vertical_axis ?? true)
+const showMargin = computed(() => graphRenderOptions.value?.show_margin ?? false)
+// A fixed axis keeps the renderer's own default width.
+const valueAxisWidth = computed(() => {
+  const configuredWidth = graphRenderOptions.value?.vertical_axis_width
+  return typeof configuredWidth === 'number' ? configuredWidth * PX_PER_PT : undefined
+})
 const combinationMode = computed(() => {
   const content = props.content
   return content.type === 'combined_graph' ? content.presentation : null
@@ -311,10 +324,16 @@ onMounted(() => {
       <GraphFigure
         v-else-if="shell"
         :internal="shell.internal"
+        :y-axis="shell.y_axis"
         :timerange="timerange"
         :combination-mode="combinationMode"
         :show-legend="showLegend"
         :show-timestamp="showTimestamp"
+        :show-pin="showPin"
+        :show-time-axis="showTimeAxis"
+        :show-value-axis="showValueAxis"
+        :show-margin="showMargin"
+        :min-value-axis-width="valueAxisWidth"
         :fetch-graph="fetchGraph"
       />
     </div>

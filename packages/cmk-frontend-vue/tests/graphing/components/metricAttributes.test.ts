@@ -19,14 +19,14 @@ const UNIT: Metric['metadata']['unit'] = {
   convertible: true
 }
 
-function metricWith(attributes?: MetricAttribute[]): Metric {
+function metricWith(attributes: MetricAttribute[] = []): Metric {
   return {
     metadata: {
       name: 'm',
       title: 'M',
       unit: UNIT,
       color: '#ff0000',
-      ...(attributes === undefined ? {} : { attributes })
+      attributes
     },
     render: { stack: null, inverse: false, hidden: false },
     data_points: [1]

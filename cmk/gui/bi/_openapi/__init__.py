@@ -17,7 +17,6 @@ You can find an introduction to BI in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
 
-import http
 import http.client
 from collections.abc import Mapping
 from contextlib import suppress
@@ -573,7 +572,7 @@ def delete_bi_aggregation(params: Mapping[str, Any]) -> Response:
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=RO_PERMISSIONS,
 )
-def get_bi_packs(params: Mapping[str, Any]) -> Response:
+def get_bi_packs(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all BI packs"""
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()

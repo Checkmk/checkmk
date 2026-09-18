@@ -94,7 +94,8 @@ def bulk_update_hosts_v1(
                     valid_attributes_to_remove = remove_attributes_as_set & set(attributes)
                     faulty_attributes = remove_attributes_as_set - valid_attributes_to_remove
                     for valid_attribute in valid_attributes_to_remove:
-                        # mypy expects literal keys for typed dicts
+                        # FIXME: The typing here is a lie: One can't pretend to still have
+                        # HostAttributes in attributes after removing random keys from it.
                         del attributes[valid_attribute]  # type: ignore[misc]
 
                 diff, affected_sites = host.apply_edit(

@@ -20,7 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import FilterHTTPVariables, IconNames, SingleInfos, StaticIcon, VisualContext
+from cmk.gui.type_defs import FilterHTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
@@ -40,9 +40,10 @@ from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.livestatus_client import LivestatusTestingError
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
-def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:
+def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:  # noqa: A002
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos: SingleInfos) -> Iterator[tuple[str, str]]:
@@ -71,7 +72,7 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         name: str,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[FilterHTTPVariables] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FilterHTTPVariables] | None = None,
     ):
@@ -167,7 +168,7 @@ class VisualFilterList(ListOfMultiple):
     ) -> Sequence[tuple[str, VisualFilter]]:
         return sorted(
             cls._get_filter_specs(info, ignored_context_choices),
-            key=lambda x: (x[1]._filter.sort_index, x[1].title()),
+            key=lambda x: (x[1]._filter.sort_index, x[1].title()),  # noqa: SLF001
         )
 
     @classmethod

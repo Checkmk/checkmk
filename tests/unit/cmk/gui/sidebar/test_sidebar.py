@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -22,11 +21,11 @@ from cmk.gui.sidebar import UserSidebarSnapin
 from cmk.gui.utils.roles import UserPermissions
 
 
-@pytest.fixture(scope="function", autouse=True)
-def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+@pytest.fixture(scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -115,7 +114,7 @@ def test_user_config_move_snapin_before(
         move = user_config.get_snapin(move_id)
     except KeyError as e:
         if result is None:
-            assert "does not exist" in "%s" % e
+            assert "does not exist" in "%s" % e  # type: ignore[unreachable]
             return
         raise
 
@@ -157,7 +156,7 @@ def test_load_default_config_for_existing_user(monkeypatch: pytest.MonkeyPatch) 
     """Test that existing users (without created_on_version attribute) don't get the welcome snapin."""
     # Mock the user to NOT have the created_on_version attribute (existing user from 2.4)
     with monkeypatch.context() as m:
-        m.setattr(user, "get_attribute", lambda key, default=None: default)
+        m.setattr(user, "get_attribute", lambda key, default=None: default)  # noqa: ARG005
 
         user_permissions = UserPermissions({}, {}, {}, [])
         user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
@@ -179,7 +178,7 @@ def test_load_default_config_with_custom_snapin(monkeypatch: pytest.MonkeyPatch)
     included_in_default_sidebar() filter must not look them up directly. The
     unknown snap-in is dropped by the all_snapins() filter instead of raising."""
     with monkeypatch.context() as m:
-        m.setattr(user, "get_attribute", lambda key, default=None: default)
+        m.setattr(user, "get_attribute", lambda key, default=None: default)  # noqa: ARG005
 
         user_permissions = UserPermissions({}, {}, {}, [])
         user_config = sidebar.UserSidebarConfig(
@@ -227,7 +226,7 @@ def test_load_default_config_with_non_tuple_entry(
     new-format dictionary or a hand-written malformed entry took the whole sidebar down.
     Interpretable entries are kept, the rest are dropped."""
     with monkeypatch.context() as m:
-        m.setattr(user, "get_attribute", lambda key, default=None: default)
+        m.setattr(user, "get_attribute", lambda key, default=None: default)  # noqa: ARG005
 
         user_permissions = UserPermissions({}, {}, {}, [])
         user_config = sidebar.UserSidebarConfig(user, default_config, user_permissions)
@@ -240,7 +239,7 @@ def test_load_legacy_list_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
-        lambda x: [("tactical_overview", "open"), ("views", "closed")],
+        lambda x: [("tactical_overview", "open"), ("views", "closed")],  # noqa: ARG005
     )
 
     user_permissions = UserPermissions({}, {}, {}, [])
@@ -256,7 +255,7 @@ def test_load_legacy_off_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
-        lambda x: [("search", "off"), ("views", "closed")],
+        lambda x: [("search", "off"), ("views", "closed")],  # noqa: ARG005
     )
 
     user_permissions = UserPermissions({}, {}, {}, [])
@@ -271,7 +270,7 @@ def test_load_skip_not_existing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
-        lambda x: {"fold": False, "snapins": [("bla", "closed"), ("views", "closed")]},
+        lambda x: {"fold": False, "snapins": [("bla", "closed"), ("views", "closed")]},  # noqa: ARG005
     )
 
     user_permissions = UserPermissions({}, {}, {}, [])
@@ -286,7 +285,7 @@ def test_load_skip_not_permitted(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
-        lambda x: {
+        lambda x: {  # noqa: ARG005
             "fold": False,
             "snapins": [("tactical_overview", "closed"), ("views", "closed")],
         },
@@ -306,7 +305,7 @@ def test_load_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
-        lambda x: {
+        lambda x: {  # noqa: ARG005
             "fold": True,
             "snapins": [
                 ("search", "closed"),
@@ -341,7 +340,7 @@ def test_save_user_config_allowed(mocker: MockerFixture, monkeypatch: pytest.Mon
         save_user_file_mock = mocker.patch.object(user, "save_file")
         user_permissions = UserPermissions({}, {}, {}, [])
         user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
-        user_config._config = {"fold": True, "snapins": []}
+        user_config._config = {"fold": True, "snapins": []}  # noqa: SLF001
         user_config.save()
         save_user_file_mock.assert_called_once_with("sidebar", {"fold": True, "snapins": []})
         mocker.stopall()
@@ -480,6 +479,6 @@ def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: boo
     )
 
     if do_save is None:
-        m_save.assert_not_called()
+        m_save.assert_not_called()  # type: ignore[unreachable]
     else:
         m_save.assert_called_once()

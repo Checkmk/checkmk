@@ -135,6 +135,14 @@ async function onToggle() {
     display: flex;
     flex-direction: column;
 
+    /* stylelint-disable selector-pseudo-class-no-unknown */
+    :deep(input),
+    :deep(textarea),
+    :deep(select) {
+      cursor: auto;
+    }
+    /* stylelint-enable selector-pseudo-class-no-unknown */
+
     .sidebar-snapin__delete {
       opacity: 0;
       margin-top: var(--dimension-3);

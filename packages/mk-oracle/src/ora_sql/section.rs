@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::{self, options::Options, section, section::names};
-use crate::emit::{header, signaling_header};
+use crate::config::{self, options::Options, section, section::names, section::CustomHeader};
+use crate::emit::{custom_section_header, header, signaling_header};
 use crate::ora_sql::custom;
 use crate::ora_sql::sqls;
 use crate::setup::validate_permissions;
@@ -41,6 +41,7 @@ pub struct Section {
     sep: char,
     cache_age: Option<u32>,
     header_name: String,
+    custom_header: Option<CustomHeader>,
     section_affinity: SectionAffinity,
     item_value: Option<ItemValue>,
     inline_sql: Option<String>,
@@ -53,24 +54,24 @@ pub struct Section {
 impl Section {
     pub fn make_instance_section(options: &Options) -> Self {
         let config_section = config::section::SectionBuilder::new(section::names::INSTANCE).build();
-        Self::new(&config_section, 0, options)
+        Self::new(&config_section, Some(0), options)
     }
 
     pub fn new(
         section: &config::section::Section,
-        global_cache_age: u32,
+        global_cache_age: Option<u32>,
         options: &Options,
     ) -> Self {
-        let cache_age = if section.kind() == config::section::SectionKind::Async {
-            Some(global_cache_age)
-        } else {
-            None
-        };
+        // No global cache age means every section runs synchronously, whatever
+        // the config says about it.
+        let cache_age =
+            global_cache_age.filter(|_| section.kind() == config::section::SectionKind::Async);
         Self {
             name: section.name().clone(),
             sep: section.sep(),
             cache_age,
             header_name: section.name().clone().into(),
+            custom_header: section.custom_header().cloned(),
             section_affinity: section.affinity().clone(),
             item_value: section.item_value().cloned(),
             inline_sql: section.sql().map(str::to_owned),
@@ -92,6 +93,9 @@ impl Section {
     }
 
     pub fn to_signaling_header(&self) -> Option<String> {
+        if let Some(custom) = &self.custom_header {
+            return Some(custom_section_header(custom.name(), custom.sep()));
+        }
         if self.header_name.as_str() == section::names::ASM_INSTANCE {
             return None;
         }
@@ -102,7 +106,25 @@ impl Section {
         &self.pdb_patterns
     }
 
+    /// Name for the execution log. Custom metrics are named by their item: they
+    /// all share the section `sql`, so the section name cannot tell them apart.
+    pub fn log_label(&self) -> String {
+        match &self.item_value {
+            Some(item) => format!("metric {}", item.as_str()),
+            None => format!("section {}", self.name),
+        }
+    }
+
     pub fn to_work_header(&self) -> String {
+        // A `header_name:` replaces the whole header. It comes without the
+        // `[[[<instance>|<item>]]]` subsection the default `oracle_sql` header
+        // gets, so the cached marker has to live here.
+        if let Some(custom) = &self.custom_header {
+            return custom_section_header(
+                &(custom.name().to_owned() + &self.cached_header()),
+                custom.sep(),
+            );
+        }
         let real_name = match self.header_name.as_str() {
             names::IO_STATS => names::PERFORMANCE, // IO_STATS is a performance section
             names::ASM_INSTANCE => names::INSTANCE, // ASM_INSTANCE is an instance section
@@ -126,7 +148,7 @@ impl Section {
     /// appended when the metric is async.
     pub fn to_work_header_for(&self, instance: &InstanceName) -> String {
         let section_header = self.to_work_header();
-        match self.item_value.as_ref() {
+        match self.subsection_item() {
             None => section_header,
             Some(item) => {
                 let cached = self.cached_subsection_suffix();
@@ -137,7 +159,7 @@ impl Section {
 
     pub fn to_work_header_for_pdb(&self, instance: &InstanceName, pdb: &PdbName) -> String {
         let section_header = self.to_work_header();
-        match self.item_value.as_ref() {
+        match self.subsection_item() {
             None => section_header,
             Some(item) => {
                 let cached = self.cached_subsection_suffix();
@@ -147,6 +169,19 @@ impl Section {
                 )
             }
         }
+    }
+
+    /// The item of the `[[[<instance>|<item>]]]` subsection line, if the
+    /// section emits one.
+    ///
+    /// The line is part of the `oracle_sql` format and is left out once the
+    /// section is emitted under a `header_name:` of its own - the data then
+    /// goes to a check plugin of the user, which has its own format.
+    fn subsection_item(&self) -> Option<&ItemValue> {
+        if self.custom_header.is_some() {
+            return None;
+        }
+        self.item_value.as_ref()
     }
 
     fn cached_header(&self) -> String {
@@ -449,10 +484,8 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
                     return Some(min_version.parse::<u32>().unwrap_or(0));
                 }
             }
-            [stem] => {
-                if stem.to_lowercase() == section_name.to_lowercase() {
-                    return Some(0);
-                }
+            [stem] if stem.to_lowercase() == section_name.to_lowercase() => {
+                return Some(0);
             }
             _ => {}
         }
@@ -600,7 +633,7 @@ mod tests {
             &section::SectionBuilder::new("backup")
                 .set_async(true)
                 .build(),
-            100,
+            Some(100),
             &options,
         );
         assert_eq!(
@@ -612,7 +645,11 @@ mod tests {
             .starts_with("<<<oracle_backup:cached("));
         assert!(section.to_work_header().ends_with("100):sep(124)>>>"));
 
-        let section = Section::new(&section::SectionBuilder::new("jobs").build(), 100, &options);
+        let section = Section::new(
+            &section::SectionBuilder::new("jobs").build(),
+            Some(100),
+            &options,
+        );
         assert!(section
             .to_work_header()
             .starts_with("<<<oracle_jobs:cached("));
@@ -620,7 +657,7 @@ mod tests {
             &section::SectionBuilder::new("jobs")
                 .set_async(false)
                 .build(),
-            100,
+            Some(100),
             &options,
         );
         assert_eq!(section.to_work_header(), "<<<oracle_jobs:sep(124)>>>");
@@ -634,7 +671,7 @@ mod tests {
         assert!(get_sql_id("").is_none());
     }
 
-    fn make_custom_metric_section(name: &str, async_: bool, cache_age: u32) -> Section {
+    fn make_custom_metric_section(name: &str, async_: bool, cache_age: Option<u32>) -> Section {
         let item = ItemValue::from(name.to_string());
         let mut builder = section::SectionBuilder::new(name)
             .sql("select 'details:hi' from dual")
@@ -648,19 +685,37 @@ mod tests {
     // TC-ORA-101 (Param: plain <<<oracle_sql:sep(58)>>> header, sync and async)
     #[test]
     fn test_custom_metric_section_header_uses_sep_58() {
-        let sync = make_custom_metric_section("product_price", false, 600);
+        let sync = make_custom_metric_section("product_price", false, Some(600));
         assert_eq!(sync.to_work_header(), "<<<oracle_sql:sep(58)>>>");
 
         // Even for an async metric, the section header stays plain — the
         // cached(...) marker lives on the subsection header per tech design.
-        let async_ = make_custom_metric_section("last_sessions", true, 600);
+        let async_ = make_custom_metric_section("last_sessions", true, Some(600));
         assert_eq!(async_.to_work_header(), "<<<oracle_sql:sep(58)>>>");
+    }
+
+    #[test]
+    fn test_log_label_names_the_custom_metric_item() {
+        // Every custom metric is named `sql`, so the item has to disambiguate.
+        assert_eq!(
+            make_custom_metric_section("product_price", false, Some(600)).log_label(),
+            "metric product_price"
+        );
+        assert_eq!(
+            Section::new(
+                &section::SectionBuilder::new(names::TABLESPACES).build(),
+                None,
+                &Options::default()
+            )
+            .log_label(),
+            format!("section {}", names::TABLESPACES)
+        );
     }
 
     // TC-ORA-101 (Param: subsection header carries the item_name -> [[[<SID>|<item>]]])
     #[test]
     fn test_custom_metric_work_header_for_includes_subsection() {
-        let sync = make_custom_metric_section("product_price", false, 600);
+        let sync = make_custom_metric_section("product_price", false, Some(600));
         let header = sync.to_work_header_for(&InstanceName::from("ORCL"));
         assert_eq!(header, "<<<oracle_sql:sep(58)>>>\n[[[ORCL|product_price]]]");
     }
@@ -668,7 +723,7 @@ mod tests {
     // TC-ORA-101 (Param: PDB instance type -> [[[<SID>_<PDB>|<item>]]])
     #[test]
     fn test_work_header_for_pdb_includes_pdb_in_subsection() {
-        let section = make_custom_metric_section("product_price", false, 0);
+        let section = make_custom_metric_section("product_price", false, Some(0));
         let header =
             section.to_work_header_for_pdb(&InstanceName::from("ORCL"), &PdbName::from("MYPDB"));
         assert_eq!(
@@ -680,7 +735,7 @@ mod tests {
     // TC-ORA-101 (Param: PDB instance type + async -> cached marker on the PDB subsection)
     #[test]
     fn test_work_header_for_pdb_async_includes_cached_marker() {
-        let section = make_custom_metric_section("last_sessions", true, 600);
+        let section = make_custom_metric_section("last_sessions", true, Some(600));
         let header =
             section.to_work_header_for_pdb(&InstanceName::from("ORCL"), &PdbName::from("MYPDB"));
         assert!(header.starts_with("<<<oracle_sql:sep(58)>>>\n[[[ORCL_MYPDB|last_sessions|cached("));
@@ -690,7 +745,7 @@ mod tests {
     // TC-ORA-101 (Param: async -> cached marker on subsection, not section header)
     #[test]
     fn test_async_cached_marker_lives_on_subsection_header() {
-        let async_ = make_custom_metric_section("last_sessions", true, 600);
+        let async_ = make_custom_metric_section("last_sessions", true, Some(600));
         let header = async_.to_work_header_for(&InstanceName::from("ORCL"));
         // section header must not carry cached(...)
         assert!(header.starts_with("<<<oracle_sql:sep(58)>>>\n"));
@@ -702,13 +757,126 @@ mod tests {
         assert!(header.ends_with(",600)]]]"), "unexpected tail: {header}");
     }
 
+    fn make_custom_metric_section_with_header(
+        name: &str,
+        header: CustomHeader,
+        async_: bool,
+        cache_age: Option<u32>,
+    ) -> Section {
+        let builder = section::SectionBuilder::new(name)
+            .sql("select 'details:hi' from dual")
+            .set_item_value(ItemValue::from(name.to_string()))
+            .set_async(async_)
+            .set_custom_header(header);
+        Section::new(&builder.build(), cache_age, &Options::default())
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_replaces_whole_header() {
+        let section = make_custom_metric_section_with_header(
+            "product_price",
+            CustomHeader::new("my_section", Some(b'|')),
+            false,
+            Some(600),
+        );
+        // Verbatim, without the `oracle_` prefix the built-in sections carry.
+        assert_eq!(section.to_work_header(), "<<<my_section:sep(124)>>>");
+        assert_eq!(
+            section.to_signaling_header().unwrap(),
+            "<<<my_section:sep(124)>>>"
+        );
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_without_sep_omits_sep_option() {
+        let section = make_custom_metric_section_with_header(
+            "product_price",
+            CustomHeader::new("my_section", None),
+            false,
+            Some(600),
+        );
+        assert_eq!(section.to_work_header(), "<<<my_section>>>");
+        assert_eq!(section.to_signaling_header().unwrap(), "<<<my_section>>>");
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_drops_item_subsection() {
+        let section = make_custom_metric_section_with_header(
+            "product_price",
+            CustomHeader::new("my_section", Some(b'|')),
+            false,
+            Some(600),
+        );
+        assert_eq!(
+            section.to_work_header_for(&InstanceName::from("ORCL")),
+            "<<<my_section:sep(124)>>>"
+        );
+        assert_eq!(
+            section.to_work_header_for_pdb(&InstanceName::from("ORCL"), &PdbName::from("MYPDB")),
+            "<<<my_section:sep(124)>>>"
+        );
+    }
+
+    #[test]
+    fn test_yaml_header_name_reaches_the_emitted_header() {
+        // Whole chain: config parsing -> runtime section -> emitted header.
+        let config = config::ora_sql::Config::from_string(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - myscn:
+          sql: "select 'a|b' from dual"
+          header_name: my_section
+          header_sep: 124
+"#,
+        )
+        .expect("yaml parses")
+        .expect("oracle config present");
+        let section_config = config
+            .all_sections()
+            .iter()
+            .find(|s| s.is_custom_metric())
+            .expect("custom metric parsed from yaml")
+            .clone();
+        let section = Section::new(&section_config, Some(0), &Options::default());
+        assert_eq!(
+            section.to_work_header_for(&InstanceName::from("ORCL")),
+            "<<<my_section:sep(124)>>>"
+        );
+    }
+
+    #[test]
+    fn test_async_custom_metric_header_name_carries_cached_marker() {
+        let section = make_custom_metric_section_with_header(
+            "last_sessions",
+            CustomHeader::new("my_section", Some(b'|')),
+            true,
+            Some(600),
+        );
+        // Without a subsection line the cached marker belongs on the section
+        // header, as the legacy plugin's run_cached put it.
+        let header = section.to_work_header_for(&InstanceName::from("ORCL"));
+        assert!(
+            header.starts_with("<<<my_section:cached("),
+            "unexpected header: {header}"
+        );
+        assert!(
+            header.ends_with(",600):sep(124)>>>"),
+            "unexpected header: {header}"
+        );
+    }
+
     #[test]
     fn test_inline_sql_takes_precedence_over_file_lookup() {
         let section_config = section::SectionBuilder::new("product_price")
             .sql("select 'details:inline' from dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -740,7 +908,7 @@ oracle:
             .iter()
             .find(|s| s.name().as_str() == names::INSTANCE)
             .expect("instance section parsed from yaml");
-        let overridden = Section::new(section_config, 0, &Options::default());
+        let overridden = Section::new(section_config, Some(0), &Options::default());
         // Empty search dirs: nothing on disk may shadow the inline `sql:`.
         let queries = overridden
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
@@ -772,7 +940,7 @@ oracle:
             ])
             .set_item_value(ItemValue::from("test".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -788,7 +956,7 @@ oracle:
             .sql_params(vec![("parameter_1".to_string(), "value_1".to_string())])
             .set_item_value(ItemValue::from("test".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -805,7 +973,7 @@ oracle:
             .sql_params(vec![("p".to_string(), "42".to_string())])
             .set_item_value(ItemValue::from("test".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -837,7 +1005,7 @@ oracle:
             .iter()
             .find(|s| s.is_custom_metric())
             .expect("custom metric parsed from yaml");
-        let runtime = Section::new(section_config, 0, &Options::default());
+        let runtime = Section::new(section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
             .expect("custom metric sql should yield queries");
@@ -852,7 +1020,7 @@ oracle:
             .path("queries/product_price.sql")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         assert_eq!(runtime.path(), Some(Path::new("queries/product_price.sql")));
         assert!(runtime.path().is_some_and(|p| p.is_relative()));
         assert!(runtime.inline_sql().is_none());
@@ -863,7 +1031,7 @@ oracle:
         let section_config = section::SectionBuilder::new("instance")
             .path("/opt/checkmk/sql/instance.sql")
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         assert_eq!(
             runtime.path(),
             Some(Path::new("/opt/checkmk/sql/instance.sql"))
@@ -877,7 +1045,7 @@ oracle:
             .sql("select 'details:fallback' from dual")
             .set_item_value(ItemValue::from("mixed".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         assert_eq!(runtime.path(), Some(Path::new("queries/mixed.sql")));
         assert_eq!(
             runtime.inline_sql(),
@@ -891,14 +1059,14 @@ oracle:
         // report hangs off this, and builtin sections carry no `path:` at all.
         let builtin = Section::new(
             &section::SectionBuilder::new("instance").build(),
-            0,
+            Some(0),
             &Options::default(),
         );
         assert!(builtin.configured_path().is_none());
 
         let empty = Section::new(
             &section::SectionBuilder::new("instance").path("").build(),
-            0,
+            Some(0),
             &Options::default(),
         );
         assert!(empty.configured_path().is_none());
@@ -907,7 +1075,7 @@ oracle:
             &section::SectionBuilder::new("instance")
                 .path("queries/instance.sql")
                 .build(),
-            0,
+            Some(0),
             &Options::default(),
         );
         assert_eq!(
@@ -929,7 +1097,7 @@ oracle:
         if !sql.is_empty() {
             builder = builder.sql(sql);
         }
-        Section::new(&builder.build(), 0, &Options::default())
+        Section::new(&builder.build(), Some(0), &Options::default())
     }
 
     #[test]
@@ -980,7 +1148,7 @@ oracle:
         let config = section::SectionBuilder::new("test")
             .set_pdb_patterns(patterns.iter().map(|s| s.to_string()).collect())
             .build();
-        Section::new(&config, 0, &Options::default())
+        Section::new(&config, Some(0), &Options::default())
     }
 
     #[test]
@@ -1053,7 +1221,7 @@ oracle:
     fn builtin_queries(name: &str, version: u32, tenant: Tenant) -> Vec<String> {
         Section::new(
             &section::SectionBuilder::new(name).build(),
-            0,
+            Some(0),
             &Options::default(),
         )
         .find_queries_with_search_dirs(InstanceNumVersion::from(version), tenant, &[], &[])
@@ -1187,7 +1355,7 @@ oracle:
             .sql("SELECT 'a;b' FROM dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -1201,7 +1369,7 @@ oracle:
             .sql("SELECT 1 FROM dual; SELECT 2 FROM dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0, &Options::default());
+        let runtime = Section::new(&section_config, Some(0), &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");

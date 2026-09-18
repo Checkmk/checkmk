@@ -58,7 +58,7 @@ class BackgroundJobSnapshotExtensionsModel:
 
 @api_model
 class BackgroundJobSnapshotObjectModel(DomainObjectModel):
-    domainType: Literal["background_job"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["background_job"] = api_field(
         description="The domain type of the object",
     )
     extensions: BackgroundJobSnapshotExtensionsModel = api_field(

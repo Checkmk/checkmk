@@ -39,7 +39,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -53,6 +52,7 @@ from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
 from cmk.gui.watolib.mode import mode_url
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
@@ -99,7 +99,7 @@ class FetchAgentOutputRequest:
         *,
         default_debug: bool,
         default_snmp_walk_download_timeout: int,
-    ) -> "FetchAgentOutputRequest":
+    ) -> FetchAgentOutputRequest:
         host_name = serialized["host_name"]
         assert isinstance(host_name, str)
         host = folder_tree().host(HostName(host_name))
@@ -402,7 +402,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
     @classmethod
     def from_api_request(
         cls, api_request: FetchAgentOutputRequest
-    ) -> "FetchAgentOutputBackgroundJob":
+    ) -> FetchAgentOutputBackgroundJob:
         return cls(api_request.host.site_id(), api_request.host.name(), api_request.agent_type)
 
     @classmethod

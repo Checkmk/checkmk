@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -33,7 +32,7 @@ class AttachedVolumeFactory(ModelFactory):
     __model__ = section.AttachedVolume
 
 
-def test_group_serialized_volumes_by_namespace():
+def test_group_serialized_volumes_by_namespace() -> None:
     namespace_name = api.NamespaceName("ns1")
     volumes = AttachedVolumeFactory.batch(size=3, namespace=namespace_name)
     namespaced_grouped_volumes = group_serialized_volumes_by_namespace(iter(volumes))
@@ -43,7 +42,7 @@ def test_group_serialized_volumes_by_namespace():
     }
 
 
-def test_group_parsed_pvcs_by_namespace():
+def test_group_parsed_pvcs_by_namespace() -> None:
     namespace_name = api.NamespaceName("ns1")
     api_pvc = factory.PersistentVolumeClaimFactory.build(
         metadata=factory.MetaDataFactory.build(namespace=namespace_name, factory_use_construct=True)
@@ -56,7 +55,7 @@ def test_group_parsed_pvcs_by_namespace():
     assert pvc.volume_name == api_pvc.spec.volume_name
 
 
-def test_create_pvc_sections():
+def test_create_pvc_sections() -> None:
     """Test the creation of the PVC & PV related sections
 
     This test also highlights how the PVC & PV objects are related to each other

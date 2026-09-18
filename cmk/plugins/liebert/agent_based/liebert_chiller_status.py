@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_liebert_chiller_status(section: StringTable) -> DiscoveryResult:
+def discover_liebert_chiller_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

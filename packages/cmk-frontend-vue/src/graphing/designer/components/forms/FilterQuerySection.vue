@@ -23,6 +23,7 @@ defineProps<{
   getFilterValues: (filterId: string) => ConfiguredValues | null
   addSuggestions: Suggestions
   filterDefinitions: FilterDefinitions
+  errors: TranslatedString[]
 }>()
 
 defineEmits<{
@@ -38,8 +39,8 @@ defineEmits<{
     class="graphing-filter-query-section"
     :label="title"
     label-variant="name"
-    :required="false"
-    :errors="[]"
+    required
+    :errors="errors"
   >
     <div class="graphing-filter-query-section__container">
       <div

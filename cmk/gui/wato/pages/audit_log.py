@@ -57,7 +57,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb.store import load_users
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
@@ -89,6 +89,8 @@ from cmk.web.utils import escaping
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri
 
 
@@ -603,8 +605,8 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     def _display_page_controls(
         self,
-        start_time: int,
-        end_time: int,
+        start_time: int,  # noqa: ARG002
+        end_time: int,  # noqa: ARG002
         previous_log_time: int | None,
         next_log_time: int | None,
     ) -> None:

@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import assert_never, Final, Literal, override, TYPE_CHECKING, TypedDict, Union
+from typing import assert_never, Final, Literal, override, TYPE_CHECKING, TypedDict
 
 from cmk.backup.utils.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.ccc.exceptions import MKGeneralException
@@ -96,7 +95,7 @@ class BlobStorage:
     @staticmethod
     def _credentials(
         configured_credentials: BlobStorageCredentials,
-    ) -> Union[str, "ClientSecretCredential"]:
+    ) -> str | ClientSecretCredential:
         # Conditional import to only consume the necessary memory when the feature is used
         from azure.identity import ClientSecretCredential
 
@@ -116,7 +115,7 @@ class BlobStorage:
                 client_id=ad_credentials["client_id"],
                 client_secret=client_secret,
             )
-        return assert_never(configured_credentials)
+        return assert_never(configured_credentials)  # type: ignore[unreachable]
 
 
 class BlobStorageTarget(RemoteTarget[BlobStorageParams, BlobStorage]):

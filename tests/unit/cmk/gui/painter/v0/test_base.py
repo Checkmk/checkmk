@@ -51,13 +51,13 @@ from cmk.web.utils.html import HTML
         ),
         pytest.param(
             'URL to test: <a href="https://checkmk.com/" title="https://checkmk.com/" target="_blank" '
-            'onfocus="if (this.blur) this.blur();" class="cmk-url-icon-link">'
+            'class="cmk-url-icon-link">'
             '<cmk-static-icon data="{&quot;icon&quot;: &quot;link&quot;}" class="iconbutton icon" data-v-app="">'
             '<img data-v-e04608b5="" data-v-02ca4a71="" class="cmk-icon cmk-icon--medium png cmk-icon-app__root iconbutton icon" '
             'src="http://localhost:3000/v260/check_mk/cmk-frontend-vue/assets/icon_www-DOG_jgjg.png" style="--v31288330: rotate(0deg);">'
             "</cmk-static-icon></a><br>"
             'Followed redirect to: <a href="https://www.checkmk.com/" title="https://www.checkmk.com/" target="_blank" '
-            'onfocus="if (this.blur) this.blur();" class="cmk-url-icon-link">'
+            'class="cmk-url-icon-link">'
             '<cmk-static-icon data="{&quot;icon&quot;: &quot;link&quot;}" class="iconbutton icon" data-v-app="">'
             '<img data-v-e04608b5="" data-v-02ca4a71="" class="cmk-icon cmk-icon--medium png cmk-icon-app__root iconbutton icon" '
             'src="http://localhost:3000/v260/check_mk/cmk-frontend-vue/assets/icon_www-DOG_jgjg.png" style="--v31288330: rotate(0deg);">'
@@ -98,9 +98,9 @@ def test_cell_render_html_content(input_html: str, expected_output: str) -> None
     )
 
     # Test with string input
-    result = cell._render_html_content(input_html)
+    result = cell._render_html_content(input_html)  # noqa: SLF001
     assert result == expected_output
 
     # Test with HTML object input
-    result_html = cell._render_html_content(HTML.without_escaping(input_html))
+    result_html = cell._render_html_content(HTML.without_escaping(input_html))  # noqa: SLF001
     assert result_html == expected_output

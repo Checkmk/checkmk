@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
 import type { DonutLegendMode } from '@/network-flow/CmkDonutChart'
@@ -13,11 +13,11 @@ export const panelConfig = {
   legendMode: {
     type: 'list' as const,
     title: 'Legend',
-    help: 'The table states the volume per category. The chips name the categories only and stack under the ring, for widgets with no width for both.',
-    options: [
-      { title: 'Table', name: 'table' },
-      { title: 'Compact', name: 'compact' }
-    ] satisfies Options<DonutLegendMode>[],
+    help: 'The table states the volume per category, and follows the box: beside the ring where there is room, under it where the widget stands upright, and down to the chips where a table would be a header and one row. The chips are the chips at every size.',
+    options: listOptions<DonutLegendMode>({
+      table: 'Table',
+      compact: 'Compact'
+    }),
     initialState: 'table' as const
   },
   centerLabel: {
@@ -37,6 +37,12 @@ export const panelConfig = {
     title: 'Aggregated remainder',
     help: 'Appends the "Other" slice. It is the one row drawn as drillable, with a chevron.',
     initialState: true
+  },
+  previousLabel: {
+    type: 'string' as const,
+    title: 'Comparison column',
+    help: 'Heads the comparison column. The widget names the window it compares against, e.g. "Prev 4 h"; empty falls back to "Previous".',
+    initialState: 'Prev 4 h'
   },
   previousPeriod: {
     type: 'boolean' as const,
@@ -145,6 +151,7 @@ const slices = computed<DonutSlice[]>(() => {
           :format-value="formatBytes"
           :center-label="propState.centerLabel"
           :legend-mode="propState.legendMode"
+          :previous-label="propState.previousLabel || undefined"
         />
       </div>
 

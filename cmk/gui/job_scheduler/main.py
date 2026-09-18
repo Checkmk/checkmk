@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import logging
 import os
@@ -23,6 +22,7 @@ import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.ccc.version import edition
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
@@ -76,7 +76,7 @@ def main(crash_report_callback: Callable[[Exception], str] = default_crash_repor
         _setup_console_logging()
 
         # This is only an intermediate handler until gunicorn run_server sets its own handler
-        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))  # noqa: ARG005
 
         daemonize()
 
@@ -144,28 +144,26 @@ def main(crash_report_callback: Callable[[Exception], str] = default_crash_repor
                 scheduler_thread.join()
     except MKGeneralException as exc:
         # Expected error, the traceback adds no value here.
-        logger.error("ERROR: %(error)s", {"error": exc})  # noqa: TRY400
+        logger.error("ERROR: %(error)s", {"error": exc})  # type: ignore[possibly-undefined]  # noqa: TRY400
         return 1
     except SystemExit:
         raise
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
-        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})
+        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})  # type: ignore[possibly-undefined]
         return 1
     return 0
 
 
 def _setup_console_logging() -> None:
     handler = logging.StreamHandler(stream=sys.stderr)
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
+    handler.setFormatter(CMKFormatter())
     logging.getLogger().addHandler(handler)
 
 
 def _setup_file_logging(log_file: Path) -> None:
     handler = WatchedFileHandler(log_file, encoding="UTF-8")
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s")
-    )
+    handler.setFormatter(CMKFormatter(with_process=True, with_thread=True))
     root_logger = logging.getLogger()
     del root_logger.handlers[:]  # Remove all previously existing handlers
     root_logger.addHandler(handler)

@@ -6,7 +6,7 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
-import { type Ref, computed, readonly, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import type { CustomGraphOptions, CustomGraphUnitNotationTypes } from '../api'
 
@@ -14,14 +14,22 @@ const { _t } = usei18n()
 
 type DataFields = 'precision_digits' | 'lower_range' | 'upper_range'
 export type DataFieldErrors = Partial<Record<DataFields, TranslatedString>>
-interface ValidationError {
-  isValid: boolean
-  errors: DataFieldErrors
+
+type DraftVerticalRange =
+  | { type: 'auto' }
+  | { type: 'fixed'; lower: number | null; upper: number | null }
+
+interface DraftGraphOptions {
+  unit: CustomGraphOptions['unit']
+  explicit_vertical_range: DraftVerticalRange
+  omit_zero_metrics: boolean
 }
 
-interface UseCustomGraphOptions {
-  graphOptions: Ref<CustomGraphOptions | null>
+export type ValidationResult =
+  | { isValid: true; graphOptions: CustomGraphOptions }
+  | { isValid: false; errors: DataFieldErrors }
 
+interface UseCustomGraphOptions {
   unitType: Ref<'first_entry_with_unit' | 'custom'>
   notation: Ref<CustomGraphUnitNotationTypes | 'time' | null>
   symbol: Ref<string>
@@ -34,7 +42,7 @@ interface UseCustomGraphOptions {
 
   showZeroValues: Ref<boolean>
 
-  validate: () => ValidationError
+  validate: () => ValidationResult
   reset: () => void
 }
 
@@ -49,7 +57,7 @@ const _isValidInteger = (value: number | string | null | undefined): boolean => 
 export const useCustomGraphOptions = (
   getGraphOptions: () => CustomGraphOptions
 ): UseCustomGraphOptions => {
-  const graphOptions = ref<CustomGraphOptions>(JSON.parse(JSON.stringify(getGraphOptions())))
+  const graphOptions = ref<DraftGraphOptions>(JSON.parse(JSON.stringify(getGraphOptions())))
 
   immediateWatch(
     getGraphOptions,
@@ -65,32 +73,24 @@ export const useCustomGraphOptions = (
 
   // Unit settings
   const unitType = computed({
-    get: (): 'first_entry_with_unit' | 'custom' =>
-      graphOptions.value?.unit?.type ?? 'first_entry_with_unit',
-    set: (value) => {
-      if (!graphOptions.value?.unit) {
-        return
-      }
-
-      if (value === 'first_entry_with_unit') {
-        graphOptions.value.unit = { type: 'first_entry_with_unit' }
-      } else if (value === 'custom') {
-        graphOptions.value.unit = {
-          type: 'custom',
-          notation: { notation: 'decimal', symbol: '' },
-          precision: { type: 'auto', digits: 2 }
-        }
-      }
+    get: () => graphOptions.value.unit.type,
+    set: (value: 'first_entry_with_unit' | 'custom') => {
+      graphOptions.value.unit =
+        value === 'custom'
+          ? {
+              type: 'custom',
+              notation: { notation: 'decimal', symbol: '' },
+              precision: { type: 'auto', digits: 2 }
+            }
+          : { type: 'first_entry_with_unit' }
     }
   })
 
   const notation = computed({
     get: () =>
-      graphOptions.value?.unit?.type === 'custom'
-        ? graphOptions.value.unit.notation.notation
-        : null,
+      graphOptions.value.unit.type === 'custom' ? graphOptions.value.unit.notation.notation : null,
     set: (newNotation) => {
-      if (graphOptions.value?.unit?.type !== 'custom' || !newNotation) {
+      if (graphOptions.value.unit.type !== 'custom' || !newNotation) {
         return
       }
 
@@ -100,8 +100,8 @@ export const useCustomGraphOptions = (
         graphOptions.value.unit.notation = {
           notation: newNotation,
           symbol:
-            graphOptions.value.unit?.notation.notation !== 'time'
-              ? (graphOptions.value.unit.notation?.symbol ?? '')
+            graphOptions.value.unit.notation.notation !== 'time'
+              ? graphOptions.value.unit.notation.symbol
               : ''
         }
       }
@@ -110,119 +110,125 @@ export const useCustomGraphOptions = (
 
   const symbol = computed({
     get: () => {
-      const unitOptions = graphOptions.value?.unit
-      if (unitOptions?.type === 'custom' && unitOptions.notation.notation !== 'time') {
-        return unitOptions.notation.symbol
-      }
-      return ''
+      const unit = graphOptions.value.unit
+      return unit.type === 'custom' && unit.notation.notation !== 'time' ? unit.notation.symbol : ''
     },
     set: (newSymbol: string) => {
-      if (
-        graphOptions.value?.unit?.type === 'custom' &&
-        graphOptions.value?.unit.notation.notation !== 'time'
-      ) {
-        graphOptions.value.unit.notation.symbol = newSymbol
+      const unit = graphOptions.value.unit
+      if (unit.type === 'custom' && unit.notation.notation !== 'time') {
+        unit.notation.symbol = newSymbol
       }
     }
   })
 
   const roundingMode = computed({
     get: () => {
-      const unitOptions = graphOptions.value?.unit
-      return unitOptions?.type === 'custom' ? unitOptions.precision.type : null
+      const unit = graphOptions.value.unit
+      return unit.type === 'custom' ? unit.precision.type : null
     },
     set: (newRoundingMode: 'auto' | 'strict') => {
-      if (graphOptions.value?.unit?.type === 'custom') {
-        graphOptions.value.unit.precision.type = newRoundingMode
+      const unit = graphOptions.value.unit
+      if (unit.type === 'custom') {
+        unit.precision.type = newRoundingMode
       }
     }
   })
 
   const roundingDigits = computed({
     get: (): number | undefined => {
-      const unitOptions = graphOptions.value?.unit
-      return unitOptions?.type === 'custom' ? unitOptions.precision.digits : undefined
+      const unit = graphOptions.value.unit
+      return unit.type === 'custom' ? unit.precision.digits : undefined
     },
     set: (value: number | undefined) => {
-      if (graphOptions.value?.unit?.type === 'custom') {
-        graphOptions.value.unit.precision.digits = value ?? 2
+      const unit = graphOptions.value.unit
+      if (unit.type === 'custom') {
+        unit.precision.digits = value ?? 2
       }
     }
   })
 
   // Vertical range settings
   const verticalRangeType = computed({
-    get: () => graphOptions.value?.explicit_vertical_range?.type ?? 'auto',
+    get: () => graphOptions.value.explicit_vertical_range.type,
     set: (value: string) => {
-      if (graphOptions.value) {
-        if (value === 'fixed') {
-          graphOptions.value.explicit_vertical_range = { type: 'fixed', lower: 0, upper: 1 }
-        } else {
-          graphOptions.value.explicit_vertical_range = { type: 'auto' }
-        }
-      }
+      graphOptions.value.explicit_vertical_range =
+        value === 'fixed' ? { type: 'fixed', lower: 0, upper: 1 } : { type: 'auto' }
     }
   })
 
   const lowerVerticalRange = computed({
-    get: (): number | null =>
-      graphOptions.value?.explicit_vertical_range?.type === 'fixed'
-        ? graphOptions.value.explicit_vertical_range.lower
-        : null,
+    get: (): number | null => {
+      const range = graphOptions.value.explicit_vertical_range
+      return range.type === 'fixed' ? range.lower : null
+    },
     set: (value: number | null) => {
-      if (graphOptions.value?.explicit_vertical_range?.type === 'fixed') {
-        graphOptions.value.explicit_vertical_range.lower = _isValidNumber(value) ? value : null
+      const range = graphOptions.value.explicit_vertical_range
+      if (range.type === 'fixed') {
+        range.lower = _isValidNumber(value) ? value : null
       }
     }
   })
 
   const upperVerticalRange = computed({
-    get: (): number | null =>
-      graphOptions.value?.explicit_vertical_range?.type === 'fixed'
-        ? graphOptions.value.explicit_vertical_range.upper
-        : null,
+    get: (): number | null => {
+      const range = graphOptions.value.explicit_vertical_range
+      return range.type === 'fixed' ? range.upper : null
+    },
     set: (value: number | null) => {
-      if (graphOptions.value?.explicit_vertical_range?.type === 'fixed') {
-        graphOptions.value.explicit_vertical_range.upper = _isValidNumber(value) ? value : null
+      const range = graphOptions.value.explicit_vertical_range
+      if (range.type === 'fixed') {
+        range.upper = _isValidNumber(value) ? value : null
       }
     }
   })
 
   // Show zero values setting
   const showZeroValues = computed({
-    get: () => !graphOptions.value?.omit_zero_metrics,
-    set: (value: boolean) => graphOptions.value && (graphOptions.value.omit_zero_metrics = !value)
+    get: () => !graphOptions.value.omit_zero_metrics,
+    set: (value: boolean) => {
+      graphOptions.value.omit_zero_metrics = !value
+    }
   })
 
-  const validate = (): ValidationError => {
+  const validate = (): ValidationResult => {
     const errors: DataFieldErrors = {}
+    const draft = graphOptions.value
 
     if (
-      unitType.value === 'custom' &&
-      (!_isValidInteger(roundingDigits.value) || roundingDigits.value! < 0)
+      draft.unit.type === 'custom' &&
+      (!_isValidInteger(draft.unit.precision.digits) || draft.unit.precision.digits < 0)
     ) {
       errors.precision_digits = _t(
         'The number of digits for rounding must be a non-negative integer'
       )
     }
 
-    if (
-      verticalRangeType.value === 'fixed' &&
-      _isValidNumber(lowerVerticalRange.value) &&
-      _isValidNumber(upperVerticalRange.value)
-    ) {
-      if (lowerVerticalRange.value! >= upperVerticalRange.value!) {
-        errors.lower_range = _t('The lower limit must be less than the upper limit')
-        errors.upper_range = _t('The upper limit must be greater than the lower limit')
+    const range = draft.explicit_vertical_range
+    let checkedRange: CustomGraphOptions['explicit_vertical_range'] | null = null
+    if (range.type === 'auto') {
+      checkedRange = range
+    } else if (range.lower === null || range.upper === null) {
+      const message = _t('Set both limits, or scale the range automatically')
+      if (range.lower === null) {
+        errors.lower_range = message
       }
+      if (range.upper === null) {
+        errors.upper_range = message
+      }
+    } else if (range.lower >= range.upper) {
+      errors.lower_range = _t('The lower limit must be less than the upper limit')
+      errors.upper_range = _t('The upper limit must be greater than the lower limit')
+    } else {
+      checkedRange = { type: 'fixed', lower: range.lower, upper: range.upper }
     }
 
-    return { isValid: Object.keys(errors).length === 0, errors }
+    if (checkedRange === null || Object.keys(errors).length > 0) {
+      return { isValid: false, errors }
+    }
+    return { isValid: true, graphOptions: { ...draft, explicit_vertical_range: checkedRange } }
   }
 
   return {
-    graphOptions: readonly(graphOptions),
-
     unitType,
     notation,
     symbol,

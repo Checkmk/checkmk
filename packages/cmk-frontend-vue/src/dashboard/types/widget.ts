@@ -4,15 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
-export type ComputedWidgetSpecResponse = components['schemas']['ComputedWidgetSpecResponse']
-export type ComputedTopListResponse = components['schemas']['ComputedTopListResponse']
+export type ComputedWidgetSpecResponse =
+  components['schemas']['ComputedWidgetResponse_ComputedWidgetSpec_']
+export type ComputedTopListResponse = components['schemas']['ComputedWidgetResponse_TopList_']
 export type ComputedTopList = components['schemas']['TopList']
 export type TopListEntry = components['schemas']['TopListEntry']
 export type TopListError = components['schemas']['TopListError']
-export type ComputedSingleMetricResponse = components['schemas']['ComputedSingleMetricResponse']
+export type ComputedSingleMetricResponse =
+  components['schemas']['ComputedWidgetResponse_SingleMetric_']
 export type ComputedSingleMetric = components['schemas']['SingleMetric']
-export type ComputedTimelineCountResponse = components['schemas']['ComputedTimelineCountResponse']
+export type ComputedTimelineCountResponse =
+  components['schemas']['ComputedWidgetResponse_TimelineCount_']
 export type ComputedTimelineCount = components['schemas']['TimelineCount']
 
 export type WidgetContent = components['schemas']['WidgetContent']
@@ -61,6 +65,7 @@ export type NetworkFlowTopTableContent = components['schemas']['NetworkFlowTopTa
 export type ComputedNetworkFlowTopTableResponse =
   components['schemas']['ComputedNetworkFlowTopTableResponse']
 export type NetworkFlowDonutContent = components['schemas']['NetworkFlowDonutContent']
+export type ComputedNetworkFlowDonutSlice = components['schemas']['ComputedNetworkFlowDonutSlice']
 export type ComputedNetworkFlowDonutResponse =
   components['schemas']['ComputedNetworkFlowDonutResponse']
 export type NetworkFlowKpiStatCardContent = components['schemas']['NetworkFlowKpiStatCardContent']
@@ -99,3 +104,20 @@ export type GraphWidgetContent = Pick<
 >
 export type WidgetAvailableInventory =
   components['schemas']['WidgetAvailableInventoryCollectionModel']
+
+export interface WidgetRefreshSignal {
+  tick: number
+}
+
+export interface WidgetInteractionState {
+  editMode: boolean
+  isPreview: boolean
+}
+
+export interface WidgetTimeRange {
+  range: DateTimeRange
+}
+
+export interface WidgetEmitTimeRange {
+  updateTimeRange: [range: DateTimeRange]
+}

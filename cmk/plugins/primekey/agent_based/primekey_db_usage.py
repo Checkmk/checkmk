@@ -42,7 +42,7 @@ snmp_section_primekey_db_usage = SimpleSNMPSection(
 )
 
 
-def discover(section: _Section) -> DiscoveryResult:
+def discover(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

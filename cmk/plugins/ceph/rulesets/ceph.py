@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Mapping
 
@@ -25,7 +24,7 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
 def migrate_bakery_rule(value: object) -> Mapping[str, object]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case bool(deploy):  # old mkp format
             return {"deploy": deploy, "interval": ("cached", 58.0)}
         case None:

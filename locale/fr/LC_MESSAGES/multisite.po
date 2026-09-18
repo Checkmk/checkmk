@@ -879,8 +879,8 @@ msgstr "%s : Utilise SSL"
 
 #, python-format
 msgid ""
-"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
-"version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
+"in version %s and must not be relied on for permanent configuration."
 msgstr ""
 
 msgid "&lt;None&gt;"
@@ -3498,6 +3498,11 @@ msgstr "Nombre absolu de connexions inactives"
 
 msgid "Absolute number of incoming connections"
 msgstr "Nombre absolu de connexions entrantes"
+
+msgid ""
+"Absolute path on the monitored host to a PEM file containing the CA "
+"certificate(s) to trust. Only these CAs are trusted."
+msgstr ""
 
 #, fuzzy
 msgid "Absolute path to catalog ZIP file"
@@ -23501,6 +23506,10 @@ msgid "Do not validate server certificate during port query"
 msgstr ""
 "Ne pas valider le certificat du serveur lors de l'interrogation du port"
 
+#, fuzzy
+msgid "Do not verify the server certificate"
+msgstr "Vérifier le certificat du serveur"
+
 msgid "Do now show reserved space"
 msgstr "Afficher maintenant l'espace réservé"
 
@@ -39228,6 +39237,10 @@ msgstr "État d'Is-Home (Netapp uniquement)"
 msgid "Issue type ID"
 msgstr "Type de problème ID"
 
+#, fuzzy
+msgid "Issued"
+msgstr "Émetteur"
+
 msgid "Issued by"
 msgstr "Publié par"
 
@@ -43111,6 +43124,10 @@ msgstr "MB/s"
 
 msgid "MByte/s"
 msgstr "MByte/s"
+
+#, fuzzy
+msgid "MCP"
+msgstr "CPU"
 
 msgid "MD5 (MD5-96)"
 msgstr "MD5 (MD5-96)"
@@ -50567,6 +50584,10 @@ msgid "OAUth authentication"
 msgstr "Authentification"
 
 #, fuzzy
+msgid "OAuth access tokens"
+msgstr "Token d'accès à l'API"
+
+#, fuzzy
 msgid "OAuth token"
 msgstr "Jeton API"
 
@@ -50914,6 +50935,10 @@ msgid "On selected services"
 msgstr "Sur des sites sélectionnés"
 
 msgid "On selected sites"
+msgstr "Sur des sites sélectionnés"
+
+#, fuzzy
+msgid "On selected tokens"
 msgstr "Sur des sites sélectionnés"
 
 msgid "On selected users"
@@ -51269,6 +51294,13 @@ msgstr ""
 "Ne concerne que le contrôleur d'agent livré avec Checkmk 2.1. Couplage des "
 "agents Checkmk avec le site de surveillance. Cette étape permet d'établir la "
 "confiance entre l'agent et le site de surveillance."
+
+msgid ""
+"Only relevant when connecting via HTTPS. By default, the certificate of the "
+"Jolokia server is verified against the certificate store of the monitored "
+"host (e.g. the Windows certificate store) and the CA bundle shipped with the "
+"Python requests library."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -54224,6 +54256,10 @@ msgstr "Chemin vers sapgenpse"
 msgid "Path to temporary directory (will be created)"
 msgstr "Chemin vers le répertoire temporaire (qui sera créé)"
 
+#, fuzzy
+msgid "Path to the CA file"
+msgstr "Chemin d'accès au fichier CA"
+
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
@@ -56850,12 +56886,11 @@ msgid "Prometheus API endpoint"
 msgstr "Point de terminaison de l'API Prometheus"
 
 #, fuzzy
-msgid "Prometheus Alertmanager"
-msgstr "Alertmanager"
-
-#, fuzzy
 msgid "Prometheus Quick Setup"
 msgstr "Installation rapide"
+
+msgid "Prometheus alerting rules (via Prometheus API)"
+msgstr ""
 
 msgid "Prometheus custom service"
 msgstr "Service personnalisé Prometheus"
@@ -60486,6 +60521,30 @@ msgid "Review your configuration and run preview service discovery"
 msgstr ""
 "La découverte de service de cet hôte a échoué lors d'une précédente "
 "découverte de service en masse."
+
+#, fuzzy
+msgid "Revoke access token"
+msgstr "Token d'accès à l'API"
+
+#, fuzzy
+msgid "Revoke selected access tokens"
+msgstr "Token d'accès à l'API"
+
+#, fuzzy
+msgid "Revoke this access token"
+msgstr "Token d'accès à l'API"
+
+#, fuzzy
+msgid "Revoke tokens"
+msgstr "Rafraîchir"
+
+#, fuzzy, python-format
+msgid "Revoked %(n)d access tokens."
+msgstr "Token d'accès à l'API"
+
+#, fuzzy
+msgid "Revoked the access token."
+msgstr "Token d'accès à l'API"
 
 msgid "Rewrite application"
 msgstr "Réécriture de l'application"
@@ -66963,6 +67022,16 @@ msgstr ""
 "réel. Il doit correspondre au port configuré dans l'agent <a href=\"wato.py?"
 "mode=edit_ruleset&varname=agent_config:real_time_checks\">agent</a>."
 
+msgid ""
+"Specify the address of your Prometheus server, e.g. "
+"<tt>prometheus.example.com:9090</tt>. Do not include the protocol. The "
+"special agent queries the Prometheus HTTP API (<tt>/api/v1/rules</tt>) to "
+"read the alerting rules and their current state. Do not point it at an "
+"Alertmanager instance (usually port 9093): Alertmanager does not provide "
+"this endpoint, and silences, receivers or cluster status are not covered by "
+"this agent."
+msgstr ""
+
 msgid "Specify the application"
 msgstr "Spécifier l'application"
 
@@ -71649,6 +71718,16 @@ msgstr ""
 "Les titres des agrégations ne sont pas uniques. \"%s\" est créé par "
 "l'agrégation <b>%s</b> et <b>%s</b>"
 
+msgid ""
+"The application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
+"The applications using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "L'aspect de l'image est préservé."
 
@@ -71844,6 +71923,10 @@ msgid ""
 "The central site refused the distributed-setup site secret (HTTP %d). The "
 "remote site may have lost its registration with the central site -- log in "
 "again under *Distributed monitoring* on the central site."
+msgstr ""
+
+msgid ""
+"The certificate is verified against the CAs trusted by the monitored host."
 msgstr ""
 
 #, python-format
@@ -73227,11 +73310,14 @@ msgstr "L'identifiant du capteur thermique."
 msgid "The identifiers need to be unique per value type."
 msgstr "L'identifiant d'une valeur doit être unique par type de valeur."
 
+msgid "The identity of the Jolokia server is not verified. This is insecure."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The ignore option can target alert rules on different levels including "
 "specific rules as well as entire rule groups. Matching rules will be "
-"filtered out on the Alertmanager agent side."
+"filtered out by the special agent."
 msgstr ""
 "L'option ignorer peut cibler les règles d'alerte à différents niveaux, y "
 "compris des règles spécifiques ainsi que des groupes de règles entiers. Les "
@@ -78602,8 +78688,8 @@ msgstr "Cette autorisation est nécessaire pour le module <i>Mots de passe</i>."
 
 #, fuzzy
 msgid ""
-"This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact groups</b>"
+"This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
+"<b>Contact groups</b> and <b>OAuth access tokens</b>"
 msgstr ""
 "Cette autorisation est nécessaire pour les modules <b>Utilisateurs</b>, "
 "<b>Rôles</b> et <b>Groupes de contacts</b>"
@@ -82495,6 +82581,10 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "invalide :"
+
+#, fuzzy
+msgid "Tokens"
+msgstr "Token"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Période de tolérance pour l’activation de l’état"
@@ -88026,6 +88116,10 @@ msgid "Use World Wide Name (WWN) as service name"
 msgstr "Utiliser le nom du port comme nom de service"
 
 #, fuzzy
+msgid "Use a CA file on the monitored host"
+msgstr "Ajouter les fichiers à surveiller"
+
+#, fuzzy
 msgid "Use a custom check plug-in..."
 msgstr "Utilisez un plugin de vérification personnalisé..."
 
@@ -88386,6 +88480,10 @@ msgstr "Utiliser l'alias comme nom DNS / adresse IP"
 #, fuzzy
 msgid "Use the catalog of check plug-ins."
 msgstr "Utilisez le catalogue des plugins de contrôle."
+
+#, fuzzy
+msgid "Use the certificate store of the monitored host"
+msgstr "Utiliser la couleur par défaut de la métrique."
 
 #, fuzzy
 msgid "Use the credentials of an automation user"
@@ -90345,6 +90443,10 @@ msgid "Verification failed: %s"
 msgstr "La vérification a échoué : %s"
 
 #, fuzzy
+msgid "Verification of the server certificate"
+msgstr "Vérifier le certificat du serveur"
+
+#, fuzzy
 msgid "Verify Certificates"
 msgstr "Vérifier les certificats"
 
@@ -90528,6 +90630,9 @@ msgstr "Visualiser et modifier les paramètres de ce service"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Visualisez et modifiez les règles et les agrégations de ce pack BI"
+
+msgid "View and revoke OAuth access tokens issued to users."
+msgstr ""
 
 #, fuzzy
 msgid "View any relay"
@@ -103361,6 +103466,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Prometheus Alertmanager"
+#~ msgstr "Alertmanager"
 
 #~ msgid "Bulk discovery successful"
 #~ msgstr "Découverte en vrac réussie"

@@ -876,8 +876,8 @@ msgstr "%s: SSLを使用"
 
 #, fuzzy, python-format
 msgid ""
-"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
-"version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
+"in version %s and must not be relied on for permanent configuration."
 msgstr ""
 "%s<br><br>これは一時的なリリースフラグです。バージョン%sで削除される予定であ"
 "り、恒久的な設定として依存してはなりません。"
@@ -3304,6 +3304,11 @@ msgstr "アイドル接続の絶対数"
 
 msgid "Absolute number of incoming connections"
 msgstr "着信接続の絶対数"
+
+msgid ""
+"Absolute path on the monitored host to a PEM file containing the CA "
+"certificate(s) to trust. Only these CAs are trusted."
+msgstr ""
 
 msgid "Absolute path to catalog ZIP file"
 msgstr "カタログZIPファイルの絶対パス"
@@ -21637,6 +21642,10 @@ msgstr "TLS証明書を検証する"
 msgid "Do not validate server certificate during port query"
 msgstr "ポート照会時にサーバー証明書を検証しない"
 
+#, fuzzy
+msgid "Do not verify the server certificate"
+msgstr "サーバー証明書を確認する"
+
 msgid "Do now show reserved space"
 msgstr "予約済みのスペースを表示する"
 
@@ -36539,6 +36548,10 @@ msgstr "Is-Home状態(Netappのみ)"
 msgid "Issue type ID"
 msgstr "発行タイプID"
 
+#, fuzzy
+msgid "Issued"
+msgstr "発行者"
+
 msgid "Issued by"
 msgstr "が発行"
 
@@ -40221,6 +40234,10 @@ msgstr "MB/s"
 
 msgid "MByte/s"
 msgstr "メガバイト/秒"
+
+#, fuzzy
+msgid "MCP"
+msgstr "CPU"
 
 msgid "MD5 (MD5-96)"
 msgstr "MD5(MD5-96)"
@@ -47319,6 +47336,10 @@ msgstr "OAUTH 2.0"
 msgid "OAUth authentication"
 msgstr "OAUth認証"
 
+#, fuzzy
+msgid "OAuth access tokens"
+msgstr "APIアクセストークン"
+
 msgid "OAuth token"
 msgstr "OAuth トークン"
 
@@ -47647,6 +47668,10 @@ msgid "On selected services"
 msgstr "選択したサイトにおいて"
 
 msgid "On selected sites"
+msgstr "選択したサイト"
+
+#, fuzzy
+msgid "On selected tokens"
 msgstr "選択したサイト"
 
 msgid "On selected users"
@@ -47988,6 +48013,13 @@ msgstr ""
 "Checkmk 2.1 に同梱されているエージェントコントローラにのみ関連します。"
 "Checkmk エージェントと監視サイトのペアリング。このステップは、エージェントと"
 "監視サイト間の信頼を確立します。"
+
+msgid ""
+"Only relevant when connecting via HTTPS. By default, the certificate of the "
+"Jolokia server is verified against the certificate store of the monitored "
+"host (e.g. the Windows certificate store) and the CA bundle shipped with the "
+"Python requests library."
+msgstr ""
 
 msgid ""
 "Only rename host names whose names <i>begin</i> with the regular expression "
@@ -50720,6 +50752,10 @@ msgstr "sapgenpseへの道"
 msgid "Path to temporary directory (will be created)"
 msgstr "一時ディレクトリへのパス(作成されます)"
 
+#, fuzzy
+msgid "Path to the CA file"
+msgstr "CAファイルのパス"
+
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
@@ -53148,12 +53184,12 @@ msgstr "プロメテウス"
 msgid "Prometheus API endpoint"
 msgstr "Prometheus APIエンドポイント"
 
-msgid "Prometheus Alertmanager"
-msgstr "Prometheus アラートマネージャ"
-
 #, fuzzy
 msgid "Prometheus Quick Setup"
 msgstr "クイックセットアップ"
+
+msgid "Prometheus alerting rules (via Prometheus API)"
+msgstr ""
 
 msgid "Prometheus custom service"
 msgstr "プロメテウスカスタムサービス"
@@ -56627,6 +56663,30 @@ msgstr "レビューとテスト設定"
 
 msgid "Review your configuration and run preview service discovery"
 msgstr "設定を確認し、プレビューサービスディスカバリーを実行する"
+
+#, fuzzy
+msgid "Revoke access token"
+msgstr "APIアクセストークン"
+
+#, fuzzy
+msgid "Revoke selected access tokens"
+msgstr "APIアクセストークン"
+
+#, fuzzy
+msgid "Revoke this access token"
+msgstr "APIアクセストークン"
+
+#, fuzzy
+msgid "Revoke tokens"
+msgstr "リフレッシュ"
+
+#, fuzzy, python-format
+msgid "Revoked %(n)d access tokens."
+msgstr "APIアクセストークン"
+
+#, fuzzy
+msgid "Revoked the access token."
+msgstr "APIアクセストークン"
 
 msgid "Rewrite application"
 msgstr "アプリケーションを書き換える"
@@ -62848,6 +62908,16 @@ msgstr ""
 "href=\"wato.py?mode=edit_ruleset&varname=agent_config:real_time_checks\">エー"
 "ジェント</a>で構成されているポートと一致する必要があります。"
 
+msgid ""
+"Specify the address of your Prometheus server, e.g. "
+"<tt>prometheus.example.com:9090</tt>. Do not include the protocol. The "
+"special agent queries the Prometheus HTTP API (<tt>/api/v1/rules</tt>) to "
+"read the alerting rules and their current state. Do not point it at an "
+"Alertmanager instance (usually port 9093): Alertmanager does not provide "
+"this endpoint, and silences, receivers or cluster status are not covered by "
+"this agent."
+msgstr ""
+
 msgid "Specify the application"
 msgstr "アプリケーションを指定します"
 
@@ -67302,6 +67372,16 @@ msgstr ""
 "集計タイトルは一意ではありません。\"%s\"は、<b>%s</b> と <b>%s</b>の集計に"
 "よって作成されます"
 
+msgid ""
+"The application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
+"The applications using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "画像のアスペクトは保持されます。"
 
@@ -67483,6 +67563,10 @@ msgstr ""
 "セントラルサイトが、分散設定サイトのシークレット（HTTP %d）を拒否しました。リ"
 "モートサイトがセントラルサイトへの登録を失った可能性があります。セントラルサ"
 "イトの「*分散監視*」から再度ログインしてください。"
+
+msgid ""
+"The certificate is verified against the CAs trusted by the monitored host."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -68844,11 +68928,14 @@ msgstr "温度センサーの識別子。"
 msgid "The identifiers need to be unique per value type."
 msgstr "識別子は、値タイプごとに一意である必要があります。"
 
+msgid "The identity of the Jolokia server is not verified. This is insecure."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The ignore option can target alert rules on different levels including "
 "specific rules as well as entire rule groups. Matching rules will be "
-"filtered out on the Alertmanager agent side."
+"filtered out by the special agent."
 msgstr ""
 "無視オプションは、特定のルールだけでなく、ルールグループ全体を含むさまざまな"
 "レベルのアラートルールを対象とすることができます。一致するルールは、"
@@ -74129,9 +74216,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "この権限は<i>パスワード</i>モジュールに必要です。"
 
+#, fuzzy
 msgid ""
-"This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact groups</b>"
+"This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
+"<b>Contact groups</b> and <b>OAuth access tokens</b>"
 msgstr ""
 "この権限は、<b>ユーザー</b>, <b>役割</b>と<b>連絡先グループ</b>のモジュールで"
 "必要です"
@@ -77897,6 +77985,10 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "無効:"
+
+#, fuzzy
+msgid "Tokens"
+msgstr "トークン"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "”アクティブ”状態の許容期間"
@@ -82700,6 +82792,10 @@ msgstr "WMIを使用する"
 msgid "Use World Wide Name (WWN) as service name"
 msgstr "サービス名としてワールドワイドネーム（WWN）を使用する"
 
+#, fuzzy
+msgid "Use a CA file on the monitored host"
+msgstr "監視するファイルを追加する"
+
 msgid "Use a custom check plug-in..."
 msgstr "カスタムチェックプラグインを使用する…"
 
@@ -83039,6 +83135,10 @@ msgstr "DNS名/IPアドレスとしてエイリアスを使用します"
 
 msgid "Use the catalog of check plug-ins."
 msgstr "チェックプラグインのカタログを使用します。"
+
+#, fuzzy
+msgid "Use the certificate store of the monitored host"
+msgstr "メトリックのデフォルトの色を使用します。"
 
 msgid "Use the credentials of an automation user"
 msgstr "automationユーザーの認証情報を使用する"
@@ -84896,6 +84996,10 @@ msgstr "認証に失敗しました（ステータスコード: %d, サーバー
 msgid "Verification failed: %s"
 msgstr "検証失敗: %s"
 
+#, fuzzy
+msgid "Verification of the server certificate"
+msgstr "サーバー証明書を確認する"
+
 msgid "Verify Certificates"
 msgstr "証明書の検証"
 
@@ -85074,6 +85178,9 @@ msgstr "このサービスのパラメーターを表示および編集する"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集する"
+
+msgid "View and revoke OAuth access tokens issued to users."
+msgstr ""
 
 #, fuzzy
 msgid "View any relay"
@@ -97793,6 +97900,9 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Prometheus Alertmanager"
+#~ msgstr "Prometheus アラートマネージャ"
 
 #~ msgid "Bulk discovery successful"
 #~ msgstr "一括検出に成功"

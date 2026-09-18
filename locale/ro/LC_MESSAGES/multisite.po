@@ -885,8 +885,8 @@ msgstr "%s: Utilizează SSL"
 
 #, python-format
 msgid ""
-"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
-"version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
+"in version %s and must not be relied on for permanent configuration."
 msgstr ""
 
 msgid "&lt;None&gt;"
@@ -3475,6 +3475,11 @@ msgstr "Numărul absolut de conexiuni inactive"
 
 msgid "Absolute number of incoming connections"
 msgstr "Numărul absolut de conexiuni primite"
+
+msgid ""
+"Absolute path on the monitored host to a PEM file containing the CA "
+"certificate(s) to trust. Only these CAs are trusted."
+msgstr ""
 
 #, fuzzy
 msgid "Absolute path to catalog ZIP file"
@@ -23395,6 +23400,10 @@ msgstr "Certificat invalid"
 msgid "Do not validate server certificate during port query"
 msgstr "Nu validați certificatul serverului în timpul interogării portului"
 
+#, fuzzy
+msgid "Do not verify the server certificate"
+msgstr "Verificarea certificatului serverului"
+
 msgid "Do now show reserved space"
 msgstr "Afișați acum spațiul rezervat"
 
@@ -39044,6 +39053,10 @@ msgstr "Starea Is-Home (numai Netapp)"
 msgid "Issue type ID"
 msgstr "Tipul de problemă ID"
 
+#, fuzzy
+msgid "Issued"
+msgstr "Emitent"
+
 msgid "Issued by"
 msgstr "Emis de"
 
@@ -42897,6 +42910,10 @@ msgstr "MB/s"
 
 msgid "MByte/s"
 msgstr "MByte/s"
+
+#, fuzzy
+msgid "MCP"
+msgstr "CPU"
 
 msgid "MD5 (MD5-96)"
 msgstr "MD5 (MD5-96)"
@@ -50311,6 +50328,10 @@ msgid "OAUth authentication"
 msgstr "Autentificare OAUth"
 
 #, fuzzy
+msgid "OAuth access tokens"
+msgstr "Token de acces la API"
+
+#, fuzzy
 msgid "OAuth token"
 msgstr "Token API"
 
@@ -50657,6 +50678,10 @@ msgid "On selected services"
 msgstr "Pe site-uri selectate"
 
 msgid "On selected sites"
+msgstr "Pe site-uri selectate"
+
+#, fuzzy
+msgid "On selected tokens"
 msgstr "Pe site-uri selectate"
 
 msgid "On selected users"
@@ -51013,6 +51038,13 @@ msgstr ""
 "Relevant numai pentru controlerul agent livrat cu Checkmk 2.1. Împerecherea "
 "agenților Checkmk cu site-ul de monitorizare. Această etapă stabilește "
 "încrederea între agent și site-ul de monitorizare."
+
+msgid ""
+"Only relevant when connecting via HTTPS. By default, the certificate of the "
+"Jolokia server is verified against the certificate store of the monitored "
+"host (e.g. the Windows certificate store) and the CA bundle shipped with the "
+"Python requests library."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -53952,6 +53984,10 @@ msgstr "Calea către sapgenpse"
 msgid "Path to temporary directory (will be created)"
 msgstr "Cale de acces la directorul temporar (va fi creat)"
 
+#, fuzzy
+msgid "Path to the CA file"
+msgstr "Cale de acces la fișierul CA"
+
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
@@ -56546,12 +56582,11 @@ msgid "Prometheus API endpoint"
 msgstr "Punct final API Prometheus"
 
 #, fuzzy
-msgid "Prometheus Alertmanager"
-msgstr "Alertmanager"
-
-#, fuzzy
 msgid "Prometheus Quick Setup"
 msgstr "Configurare rapidă"
+
+msgid "Prometheus alerting rules (via Prometheus API)"
+msgstr ""
 
 msgid "Prometheus custom service"
 msgstr "Serviciul personalizat Prometheus"
@@ -60144,6 +60179,30 @@ msgid "Review your configuration and run preview service discovery"
 msgstr ""
 "Descoperirea serviciilor acestei gazde a eșuat în timpul unei descoperiri de "
 "servicii în masă anterioare."
+
+#, fuzzy
+msgid "Revoke access token"
+msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "Revoke selected access tokens"
+msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "Revoke this access token"
+msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "Revoke tokens"
+msgstr "Reîmprospătare"
+
+#, fuzzy, python-format
+msgid "Revoked %(n)d access tokens."
+msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "Revoked the access token."
+msgstr "Token de acces la API"
 
 msgid "Rewrite application"
 msgstr "Rescrieți aplicația"
@@ -66643,6 +66702,16 @@ msgstr ""
 "href=\"wato.py?"
 "mode=edit_ruleset&varname=agent_config:real_time_checks\">agent</a>."
 
+msgid ""
+"Specify the address of your Prometheus server, e.g. "
+"<tt>prometheus.example.com:9090</tt>. Do not include the protocol. The "
+"special agent queries the Prometheus HTTP API (<tt>/api/v1/rules</tt>) to "
+"read the alerting rules and their current state. Do not point it at an "
+"Alertmanager instance (usually port 9093): Alertmanager does not provide "
+"this endpoint, and silences, receivers or cluster status are not covered by "
+"this agent."
+msgstr ""
+
 msgid "Specify the application"
 msgstr "Specificați aplicația"
 
@@ -71298,6 +71367,16 @@ msgstr ""
 "Titlurile agregării nu sunt unice. \"%s\" este creat prin agregarea <b>%s</"
 "b> și <b>%s</b>."
 
+msgid ""
+"The application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
+"The applications using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "Aspectul imaginii este păstrat."
 
@@ -71490,6 +71569,10 @@ msgid ""
 "The central site refused the distributed-setup site secret (HTTP %d). The "
 "remote site may have lost its registration with the central site -- log in "
 "again under *Distributed monitoring* on the central site."
+msgstr ""
+
+msgid ""
+"The certificate is verified against the CAs trusted by the monitored host."
 msgstr ""
 
 #, python-format
@@ -72871,11 +72954,14 @@ msgstr ""
 "Identificatorul unei valori trebuie să fie unic pentru fiecare tip de "
 "valoare."
 
+msgid "The identity of the Jolokia server is not verified. This is insecure."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The ignore option can target alert rules on different levels including "
 "specific rules as well as entire rule groups. Matching rules will be "
-"filtered out on the Alertmanager agent side."
+"filtered out by the special agent."
 msgstr ""
 "Opțiunea de ignorare poate viza reguli de alertă la diferite niveluri, "
 "inclusiv reguli specifice, precum și grupuri întregi de reguli. Regulile "
@@ -78250,8 +78336,8 @@ msgstr "Această permisiune este necesară pentru modulul <i>Passwords</i>."
 
 #, fuzzy
 msgid ""
-"This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact groups</b>"
+"This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
+"<b>Contact groups</b> and <b>OAuth access tokens</b>"
 msgstr ""
 "Această permisiune este necesară pentru modulele <b>Utilizatori</b>, "
 "<b>Roles</b> și <b>Grupuri de contacte</b>."
@@ -82148,6 +82234,10 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "invalidă:"
+
+#, fuzzy
+msgid "Tokens"
+msgstr "Token"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Perioada de toleranță pentru 'activarea' stării"
@@ -87567,6 +87657,10 @@ msgid "Use World Wide Name (WWN) as service name"
 msgstr "Utilizați numele portului ca nume de serviciu"
 
 #, fuzzy
+msgid "Use a CA file on the monitored host"
+msgstr "Adăugați fișierele care urmează să fie monitorizate"
+
+#, fuzzy
 msgid "Use a custom check plug-in..."
 msgstr "Utilizați un plugin de verificare personalizat..."
 
@@ -87922,6 +88016,10 @@ msgstr "Utilizați aliasul ca nume DNS / adresă IP"
 #, fuzzy
 msgid "Use the catalog of check plug-ins."
 msgstr "Utilizați catalogul de pluginuri de verificare."
+
+#, fuzzy
+msgid "Use the certificate store of the monitored host"
+msgstr "Utilizați culoarea implicită a metricii."
 
 #, fuzzy
 msgid "Use the credentials of an automation user"
@@ -89863,6 +89961,10 @@ msgstr "Verificarea a eșuat (Cod de stare: %d, Server: %s): %s"
 msgid "Verification failed: %s"
 msgstr "Verificarea a eșuat: %s"
 
+#, fuzzy
+msgid "Verification of the server certificate"
+msgstr "Verificarea certificatului serverului"
+
 msgid "Verify Certificates"
 msgstr "Verificarea certificatelor"
 
@@ -90044,6 +90146,9 @@ msgstr "Vizualizați și editați parametrii pentru acest serviciu"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Vizualizați și editați regulile și agregările din acest pachet BI"
+
+msgid "View and revoke OAuth access tokens issued to users."
+msgstr ""
 
 #, fuzzy
 msgid "View any relay"
@@ -102818,6 +102923,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Prometheus Alertmanager"
+#~ msgstr "Alertmanager"
 
 #~ msgid "Bulk discovery successful"
 #~ msgstr "Descoperire în masă reușită"

@@ -891,8 +891,8 @@ msgstr "%s: Verwendet SSL"
 
 #, fuzzy, python-format
 msgid ""
-"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
-"version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
+"in version %s and must not be relied on for permanent configuration."
 msgstr ""
 "%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
 "entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
@@ -3486,6 +3486,11 @@ msgstr "Gesamtanzahl an inaktiven Verbindungen"
 
 msgid "Absolute number of incoming connections"
 msgstr "Gesamtanzahl an eingehenden Verbindungen"
+
+msgid ""
+"Absolute path on the monitored host to a PEM file containing the CA "
+"certificate(s) to trust. Only these CAs are trusted."
+msgstr ""
 
 msgid "Absolute path to catalog ZIP file"
 msgstr "Absoluter Pfad zur Katalog-ZIP-Datei"
@@ -22510,6 +22515,10 @@ msgstr "TLS-Zertifikate nicht validieren"
 msgid "Do not validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage nicht validieren"
 
+#, fuzzy
+msgid "Do not verify the server certificate"
+msgstr "Serverzertifikat überprüfen"
+
 msgid "Do now show reserved space"
 msgstr "Reservierten Platz nicht anzeigen"
 
@@ -37518,6 +37527,10 @@ msgstr "Is-Home-Zustand (nur Netapp)"
 msgid "Issue type ID"
 msgstr "Problem Typ ID"
 
+#, fuzzy
+msgid "Issued"
+msgstr "Herausgeben"
+
 msgid "Issued by"
 msgstr "Ausgestellt von"
 
@@ -41163,6 +41176,10 @@ msgstr "MB/s"
 
 msgid "MByte/s"
 msgstr "MByte/s"
+
+#, fuzzy
+msgid "MCP"
+msgstr "CPU"
 
 msgid "MD5 (MD5-96)"
 msgstr "MD5 (MD5-96)"
@@ -48143,6 +48160,10 @@ msgstr "OAUTH 2.0"
 msgid "OAUth authentication"
 msgstr "OAUth-Authentifizierung"
 
+#, fuzzy
+msgid "OAuth access tokens"
+msgstr "API Zugriffstoken"
+
 msgid "OAuth token"
 msgstr "OAuth-Token"
 
@@ -48471,6 +48492,10 @@ msgid "On selected services"
 msgstr "Bei ausgewählten Services"
 
 msgid "On selected sites"
+msgstr "Bei ausgewählten Instanzen"
+
+#, fuzzy
+msgid "On selected tokens"
 msgstr "Bei ausgewählten Instanzen"
 
 msgid "On selected users"
@@ -48816,6 +48841,13 @@ msgstr ""
 "Nur relevant für den mit Checkmk 2.1 ausgelieferten Agent Controller. "
 "Kopplung von Checkmk-Agenten mit der Monitoring-Instanz. Dieser Schritt "
 "stellt das Vertrauen zwischen dem Agenten und der Monitoring-Instanz her."
+
+msgid ""
+"Only relevant when connecting via HTTPS. By default, the certificate of the "
+"Jolokia server is verified against the certificate store of the monitored "
+"host (e.g. the Windows certificate store) and the CA bundle shipped with the "
+"Python requests library."
+msgstr ""
 
 msgid ""
 "Only rename host names whose names <i>begin</i> with the regular expression "
@@ -51561,6 +51593,10 @@ msgstr "Pfad zu sapgenpse"
 msgid "Path to temporary directory (will be created)"
 msgstr "Verzeichnis für temporäre Dateien (wird erstellt)"
 
+#, fuzzy
+msgid "Path to the CA file"
+msgstr "Pfad zur CA-Datei"
+
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
@@ -54011,11 +54047,11 @@ msgstr "Prometheus"
 msgid "Prometheus API endpoint"
 msgstr "Prometheus API-Endpunkt"
 
-msgid "Prometheus Alertmanager"
-msgstr "Prometheus Alertmanager"
-
 msgid "Prometheus Quick Setup"
 msgstr "Prometheus Quick Setup"
+
+msgid "Prometheus alerting rules (via Prometheus API)"
+msgstr ""
 
 msgid "Prometheus custom service"
 msgstr "Benutzerdefinierter Prometheus-Service"
@@ -57425,6 +57461,30 @@ msgid "Review your configuration and run preview service discovery"
 msgstr ""
 "Überprüfen Sie Ihre Konfiguration und führen Sie eine Vorschau der Service-"
 "Erkennung aus"
+
+#, fuzzy
+msgid "Revoke access token"
+msgstr "Zugriffstoken wird angefragt"
+
+#, fuzzy
+msgid "Revoke selected access tokens"
+msgstr "Zugriffstoken wird angefragt"
+
+#, fuzzy
+msgid "Revoke this access token"
+msgstr "Zugriffstoken wird angefragt"
+
+#, fuzzy
+msgid "Revoke tokens"
+msgstr "Token aktualisieren"
+
+#, fuzzy, python-format
+msgid "Revoked %(n)d access tokens."
+msgstr "Zugriffstoken wird angefragt"
+
+#, fuzzy
+msgid "Revoked the access token."
+msgstr "Zugriffstoken wird angefragt"
 
 msgid "Rewrite application"
 msgstr "Umschreibe Anwendung"
@@ -63687,6 +63747,16 @@ msgstr ""
 "mode=edit_ruleset&varname=agent_config:real_time_checks\">Agent</a> "
 "konfigurierten Port übereinstimmen."
 
+msgid ""
+"Specify the address of your Prometheus server, e.g. "
+"<tt>prometheus.example.com:9090</tt>. Do not include the protocol. The "
+"special agent queries the Prometheus HTTP API (<tt>/api/v1/rules</tt>) to "
+"read the alerting rules and their current state. Do not point it at an "
+"Alertmanager instance (usually port 9093): Alertmanager does not provide "
+"this endpoint, and silences, receivers or cluster status are not covered by "
+"this agent."
+msgstr ""
+
 msgid "Specify the application"
 msgstr "Geben Sie die Anwendung an"
 
@@ -68198,6 +68268,16 @@ msgstr ""
 "Die Aggregatstitel sind nicht eindeutig. \"%s\" wird durch Aggregation "
 "<b>%s</b> und <b>%s</b> erstellt"
 
+msgid ""
+"The application using this token will no longer be able to access the API "
+"with it."
+msgstr ""
+
+msgid ""
+"The applications using the selected tokens will no longer be able to access "
+"the API with them."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "Das Seitenverhältnis des Bildes wird erhalten."
 
@@ -68397,6 +68477,10 @@ msgstr ""
 "abgelehnt (HTTP %d). Möglicherweise hat die Remote-Instanz ihre "
 "Registrierung bei der Zentralinstanz verloren -- melden Sie sich unter "
 "*Verteiltes Monitoring* auf der Zentralinstanz erneut an."
+
+msgid ""
+"The certificate is verified against the CAs trusted by the monitored host."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -69840,10 +69924,14 @@ msgstr "Der Identifier für den Wärme-Fühler."
 msgid "The identifiers need to be unique per value type."
 msgstr "Die Identifikatoren müssen pro Typ eindeutig sein."
 
+msgid "The identity of the Jolokia server is not verified. This is insecure."
+msgstr ""
+
+#, fuzzy
 msgid ""
 "The ignore option can target alert rules on different levels including "
 "specific rules as well as entire rule groups. Matching rules will be "
-"filtered out on the Alertmanager agent side."
+"filtered out by the special agent."
 msgstr ""
 "Die Option \"Ignorieren\" kann auf Alert-Regeln auf verschiedenen Ebenen "
 "angewendet werden, darunter sowohl einzelne Regeln als auch ganze "
@@ -75376,9 +75464,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Diese Berechtigung ist notwendig für das Modul <i>Passwörter</i>."
 
+#, fuzzy
 msgid ""
-"This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact groups</b>"
+"This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
+"<b>Contact groups</b> and <b>OAuth access tokens</b>"
 msgstr ""
 "Diese Berechtigung ist notwendig für die Module <b>Benutzer</b>, <b>Rollen</"
 "b> und <b>Kontaktgruppen</b>"
@@ -79242,6 +79331,10 @@ msgstr ""
 
 msgid "Token invalid"
 msgstr "Token ist ungültig"
+
+#, fuzzy
+msgid "Tokens"
+msgstr "Token"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Toleranzperiode für Zustand 'activating'"
@@ -83997,6 +84090,10 @@ msgstr "WMI verwenden"
 msgid "Use World Wide Name (WWN) as service name"
 msgstr "World Wide Name (WWN) als Service-Name verwenden"
 
+#, fuzzy
+msgid "Use a CA file on the monitored host"
+msgstr "Zu überwachende Dateien hinzufügen"
+
 msgid "Use a custom check plug-in..."
 msgstr "Benutzerdefiniertes Check-Plugin verwenden..."
 
@@ -84343,6 +84440,10 @@ msgstr "Den Alias als DNS-Name / IP-Adresse verwenden"
 
 msgid "Use the catalog of check plug-ins."
 msgstr "Verwenden Sie den Katalog der Check-Plugins."
+
+#, fuzzy
+msgid "Use the certificate store of the monitored host"
+msgstr "Standardfarbe der Metrik verwenden."
 
 msgid "Use the credentials of an automation user"
 msgstr "Die Anmeldeinformationen des Benutzers 'automation' verwenden"
@@ -86213,6 +86314,10 @@ msgstr "Verifizierung fehlgeschlagen (Status-Code: %d, Server: %s): %s"
 msgid "Verification failed: %s"
 msgstr "Verifizierung fehlgeschlagen (%s)"
 
+#, fuzzy
+msgid "Verification of the server certificate"
+msgstr "Serverzertifikat überprüfen"
+
 msgid "Verify Certificates"
 msgstr "Zertifikate verifizieren"
 
@@ -86393,6 +86498,9 @@ msgstr "Parameter für diesen Service ansehen und bearbeiten"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Regeln und Aggregationen in diesem BI-Paket anzeigen und bearbeiten"
+
+msgid "View and revoke OAuth access tokens issued to users."
+msgstr ""
 
 msgid "View any relay"
 msgstr "Ein Relay betrachten"
@@ -98834,6 +98942,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Prometheus Alertmanager"
+#~ msgstr "Prometheus Alertmanager"
 
 #~ msgid "Bulk discovery successful"
 #~ msgstr "Bulk-Erkennung erfolgreich"

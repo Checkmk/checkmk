@@ -186,7 +186,7 @@ function _renderForm(
     case 'telemetry_metrics_custom_query':
       return renderTelemetryMetricsCustomQuery(value as TelemetryMetricsCustomQuery)
     case 'dcd_telemetry_metrics_filter':
-      return h('div', 'DCD Metric Backend Filter does not support readonly')
+      return h('div', 'DCD Telemetry metrics Filter does not support readonly')
     case 'oauth2_connection_setup':
       return renderOAuth2ConnectionSetup(formSpec as Oauth2ConnectionSetup, value)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.

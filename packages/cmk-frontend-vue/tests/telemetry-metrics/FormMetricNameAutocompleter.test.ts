@@ -89,12 +89,12 @@ describe('FormMetricNameAutocompleter', () => {
   })
 
   test('keeps the free-text input available when the backend warns', async () => {
-    mockNamesWithTypes([{ name: 'cpu', types: ['gauge'] }], 'Metric backend is disabled.')
+    mockNamesWithTypes([{ name: 'cpu', types: ['gauge'] }], 'Data backend is disabled.')
     const user = userEvent.setup()
     renderFormMetricNameAutocompleter()
 
     await user.click(screen.getByRole('combobox', { name: 'Metric name' }))
-    expect(await screen.findByText('Metric backend is disabled.')).toBeInTheDocument()
+    expect(await screen.findByText('Data backend is disabled.')).toBeInTheDocument()
 
     const input = screen.getByRole('textbox', { name: 'filter' })
     await user.click(input)

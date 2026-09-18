@@ -34,7 +34,7 @@ test('flags an unknown reference (E2)', () => {
   expect(check('A + Z')).toEqual([{ code: 'unknown-ref', id: 'Z' }])
 })
 
-test('flags mixing RRD with metric backend (E3)', () => {
+test('flags mixing RRD with telemetry metrics (E3)', () => {
   expect(check('A + E')).toEqual([{ code: 'domain-mismatch', id: 'E' }])
 })
 

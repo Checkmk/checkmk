@@ -69,7 +69,7 @@ const {
   thresholds: { warning: string; critical: string }
   telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
-  /** What the engine expands `$DEFAULT_TITLE$` to for a metric-backend row. */
+  /** What the engine expands `$DEFAULT_TITLE$` to for a telemetry metrics row. */
   telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
@@ -195,7 +195,7 @@ const rowActions: CellAction[] = [
 
 const editCalculation: CellAction = { id: 'edit', label: _t('Edit calculation'), icon: 'edit' }
 
-/** Calculations are edited in the slideout; a complete metric-backend row can become a service. */
+/** Calculations are edited in the slideout; a complete telemetry metrics row can become a service. */
 function rowActionsFor(row: DesignerItem): CellAction[] {
   if (isFormula(row)) {
     return [editCalculation, ...rowActions]

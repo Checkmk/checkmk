@@ -60,7 +60,7 @@ describe('POST_SAVE_ACTIONS', () => {
 
   test('enableDataBackend action is present as the second registry entry', () => {
     expect(POST_SAVE_ACTIONS[1]!.key).toBe('enableDataBackend')
-    expect(POST_SAVE_ACTIONS[1]!.label()).toBe('Metric backend connection')
+    expect(POST_SAVE_ACTIONS[1]!.label()).toBe('Data backend connection')
   })
 
   describe('enableCollector.execute', () => {
@@ -149,7 +149,7 @@ describe('POST_SAVE_ACTIONS', () => {
   })
 
   describe('enableDataBackend.execute', () => {
-    test('PATCHes the metric backend update endpoint with the selected site', async () => {
+    test('PATCHes the data backend update endpoint with the selected site', async () => {
       const spy = vi
         .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
         .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
@@ -166,7 +166,7 @@ describe('POST_SAVE_ACTIONS', () => {
       )
     })
 
-    test('returns no rollback when the metric backend was already enabled', async () => {
+    test('returns no rollback when the data backend was already enabled', async () => {
       vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated')
         .mockResolvedValueOnce(makeFetchResponse(200, { type: 'enabled' }))
         .mockResolvedValueOnce(makeFetchResponse(204))
@@ -180,7 +180,7 @@ describe('POST_SAVE_ACTIONS', () => {
       }
     })
 
-    test('returns a rollback that disables the metric backend when it was previously disabled', async () => {
+    test('returns a rollback that disables the data backend when it was previously disabled', async () => {
       const spy = vi
         .spyOn(cmkFetch, 'fetchRestAPIDeprecated')
         .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
@@ -212,7 +212,7 @@ describe('POST_SAVE_ACTIONS', () => {
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        expect(result.error.title).toBe('Could not enable the metric backend')
+        expect(result.error.title).toBe('Could not enable the data backend')
         expect(result.error.detail).toBe('Site does not exist')
       }
     })
@@ -225,7 +225,7 @@ describe('POST_SAVE_ACTIONS', () => {
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        expect(result.error.title).toBe('Could not enable the metric backend')
+        expect(result.error.title).toBe('Could not enable the data backend')
         expect(result.error.detail).toBe('')
       }
     })

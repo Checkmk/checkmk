@@ -229,7 +229,7 @@ export const roots = [
     new Folder('Form Spec Elements', formSpecPages),
     new Folder('Global settings', globalSettingsPages),
     new Folder('Graphing', graphingPages),
-    new Folder('Metric backend', telemetryMetricsPages),
+    new Folder('Telemetry metrics', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
     new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)

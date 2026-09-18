@@ -17,7 +17,7 @@ const { _t } = usei18n()
  * Several REST API object DELETE endpoints enforce ETag locking: a DELETE
  * without an `If-Match` header is rejected with 428 Precondition Required. This
  * covers the standard password and folder endpoints as well as the internal
- * OTel collector receiver, Prometheus scrape config, and DCD metric backend
+ * OTel collector receiver, Prometheus scrape config, and DCD telemetry metrics
  * endpoints. We send the star tag rather than a captured ETag because the Quick
  * Setup mutates these records after creating them — the configuration bundle
  * stamps `locked_by` on them, which is part of the hashed state — so an ETag
@@ -108,7 +108,7 @@ async function isCollectorEnabled(siteId: string): Promise<boolean> {
 }
 
 /**
- * Returns whether the metric backend is currently enabled for a site.
+ * Returns whether the data backend is currently enabled for a site.
  * Throws on network or server errors so the calling action can fail cleanly
  * before any mutation is made.
  */
@@ -197,11 +197,11 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
       }
     }
   } catch (err) {
-    return errorFromUnknown(err, _t('Could not create the metric backend connector'))
+    return errorFromUnknown(err, _t('Could not create the telemetry metrics connector'))
   }
 }
 /**
- * Action: create the "Telemetry" DCD metric backend connector.
+ * Action: create the "Telemetry" DCD telemetry metrics connector.
  *
  * Uses `service.name` as the hostname resource attribute and creates hosts in
  * the "/telemetry" folder (created by createTelemetryFolderAction). The DCD ID
@@ -283,15 +283,15 @@ export const enableCollectorAction: PostSaveAction = {
 }
 
 /**
- * Action: enable the metric backend (ClickHouse) for the selected site.
+ * Action: enable the data backend (ClickHouse) for the selected site.
  *
- * Checks the current metric backend state first so that rollback only disables
+ * Checks the current data backend state first so that rollback only disables
  * it if it was disabled before this save operation — preventing an unintended
- * side-effect on an already-enabled metric backend.
+ * side-effect on an already-enabled data backend.
  */
 export const enableDataBackendAction: PostSaveAction = {
   key: 'enableDataBackend',
-  label: () => _t('Metric backend connection'),
+  label: () => _t('Data backend connection'),
   execute: async (ctx) => {
     try {
       const wasEnabled = await isDataBackendEnabled(ctx.siteId)
@@ -318,7 +318,7 @@ export const enableDataBackendAction: PostSaveAction = {
         }
       }
     } catch (err) {
-      return errorFromUnknown(err, _t('Could not enable the metric backend'))
+      return errorFromUnknown(err, _t('Could not enable the data backend'))
     }
   }
 }

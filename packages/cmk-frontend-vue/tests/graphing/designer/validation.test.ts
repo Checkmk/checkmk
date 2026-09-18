@@ -48,7 +48,7 @@ describe('validateRow', () => {
     ])
   })
 
-  test('a metric backend source only needs a metric', () => {
+  test('a telemetry metrics source only needs a metric', () => {
     expect(validateRow(newTelemetryMetricsDraft('B'), filterDefinitions)).toEqual([
       { id: 'B', field: 'metric_name', code: 'required' }
     ])

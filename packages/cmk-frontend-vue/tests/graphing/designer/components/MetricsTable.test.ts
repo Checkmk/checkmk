@@ -303,19 +303,19 @@ test('a formula row expands to the read-only formula form', async () => {
   expect(await screen.findByText(/= 5/)).toBeInTheDocument()
 })
 
-test('a telemetry_metrics row expands to the metric backend form', async () => {
+test('a telemetry_metrics row expands to the telemetry metrics form', async () => {
   renderTable([telemetryMetricsItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
-test('the metric backend source is offered only when the feature is available', async () => {
+test('the telemetry metrics source is offered only when the feature is available', async () => {
   renderTable([], false)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   expect(screen.queryByRole('option', { name: 'Metrics backend' })).not.toBeInTheDocument()
 })
 
-test('adding a metric backend source opens its form', async () => {
+test('adding a telemetry metrics source opens its form', async () => {
   const { store } = renderTable([], true)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   await fireEvent.click(await screen.findByRole('option', { name: 'Metrics backend' }))
@@ -347,7 +347,7 @@ test('the create-custom-service action is absent while the telemetry_metrics que
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the create-custom-service action is absent when the metric backend is unavailable', () => {
+test('the create-custom-service action is absent when telemetry metrics are unavailable', () => {
   renderTable([telemetryMetricsItem('A')], false)
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })

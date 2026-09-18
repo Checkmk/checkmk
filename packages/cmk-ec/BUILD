@@ -1,11 +1,13 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
+load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 
 exports_files([
     "dev-requirements.in",
@@ -159,6 +161,10 @@ filegroup(
 
 package_wheel(
     name = "pkg_tar",
+    additional_files = [
+        ":mkevent_bin",
+        ":mkeventd_open514_bin",
+    ],
     visibility = ["//visibility:public"],
     whl = "wheel",
 )
@@ -180,4 +186,55 @@ py_requirements_test(
         ":cmk-ec",
     ],
     requirements_in = "requirements.in",
+)
+
+cc_binary(
+    name = "mkevent",
+    srcs = ["src/mkevent.cc"],
+    copts = [
+        "-g",
+        "-O3",
+        "-Wall",
+        "-Wextra",
+    ],
+    features = [
+        "static_libstdcpp",
+    ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = ["no-lint"],
+)
+
+cc_binary(
+    name = "mkeventd_open514",
+    srcs = ["src/mkeventd_open514.cc"],
+    copts = [
+        "-g",
+        "-O3",
+        "-Wall",
+        "-Wextra",
+    ],
+    features = [
+        "static_libstdcpp",
+    ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = ["no-lint"],
+)
+
+pkg_files(
+    name = "mkevent_bin",
+    srcs = [":mkevent"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+)
+
+# Gets CAP_NET_BIND_SERVICE by the packaging, so it must not be world-executable.
+pkg_files(
+    name = "mkeventd_open514_bin",
+    srcs = [":mkeventd_open514"],
+    attributes = pkg_attributes(
+        mode = "0750",
+    ),
+    prefix = "bin",
 )

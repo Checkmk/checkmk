@@ -5007,6 +5007,16 @@ class DataBackendClient(RestApiClient):
             api_version=APIVersion.UNSTABLE,
         )
 
+    def update_feature_placement(
+        self, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "patch",
+            url=f"/domain-types/{self.domain}/actions/update_feature_placement/invoke",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
 
 class TelemetryMetricsClient(RestApiClient):
     domain: DomainType = "telemetry_metrics"

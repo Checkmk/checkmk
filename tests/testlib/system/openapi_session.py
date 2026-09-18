@@ -2383,6 +2383,15 @@ class DataBackendAPI(BaseAPI):
     def enable(self, site_id: str) -> None:
         self._request(site_id, "enabled")
 
+    def place_features(self, site_id: str, features: Mapping[str, str]) -> None:
+        response = self.session.patch(
+            "domain-types/data_backend/actions/update_feature_placement/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={"site_id": site_id, "features": features},
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
     def names_with_types(self, value: str) -> dict[str, list[str]]:
         """The metric names the backend offers for `value`, each with the types it carries."""
         response = self._post_internal_action(

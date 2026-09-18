@@ -110,7 +110,7 @@ const siteOverrideFilterLabel = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: var(--dimension-2);
 }
 
 .global-settings-topic__headline {

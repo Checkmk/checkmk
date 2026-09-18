@@ -65,9 +65,9 @@ const value = computed(() => props.variable.current.value)
 
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 4px 12px;
-  border-radius: 2px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-5);
+  border-radius: var(--border-radius-half);
   color: var(--global-settings-variable-color);
   cursor: pointer;
 
@@ -85,7 +85,7 @@ const value = computed(() => props.variable.current.value)
 .global-settings-variable-row__value {
   display: flex;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--dimension-3);
 }
 
 .global-settings-variable-row__modified {

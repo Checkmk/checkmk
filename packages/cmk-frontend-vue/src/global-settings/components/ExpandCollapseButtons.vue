@@ -29,6 +29,6 @@ const emit = defineEmits<{
 <style scoped>
 .global-settings-expand-collapse-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--dimension-4);
 }
 </style>

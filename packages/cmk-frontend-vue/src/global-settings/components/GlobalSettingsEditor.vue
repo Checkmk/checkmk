@@ -308,12 +308,12 @@ const currentStateText = computed<TranslatedString>(() => {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-6);
-  padding-bottom: 20px;
+  padding-bottom: var(--dimension-7);
 }
 
 .global-settings-editor__actions {
   display: flex;
-  gap: 8px;
+  gap: var(--dimension-4);
   margin-bottom: var(--dimension-6);
 }
 
@@ -347,17 +347,17 @@ const currentStateText = computed<TranslatedString>(() => {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: var(--dimension-3);
 }
 
 .global-settings-editor__overrides-intro {
-  margin: 0 0 12px;
+  margin: 0 0 var(--dimension-5);
 }
 
 .global-settings-editor__overrides {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--dimension-5);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -367,8 +367,8 @@ const currentStateText = computed<TranslatedString>(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
-  border-radius: 2px;
+  padding: var(--dimension-5);
+  border-radius: var(--border-radius-half);
   background: var(--ux-theme-6);
 }
 

@@ -30,8 +30,8 @@ defineProps<{
 .global-settings-row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 4px 0;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) 0;
 }
 
 .global-settings-row__label {

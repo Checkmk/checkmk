@@ -63,10 +63,10 @@ async function toggle(): Promise<void> {
 <style scoped>
 .global-settings-inline-toggle {
   display: inline-flex;
-  border-radius: 2px;
+  border-radius: var(--border-radius-half);
 
   &:focus-visible {
-    outline: 1px solid var(--success);
+    outline: var(--border-width-1) solid var(--success);
   }
 
   &[aria-busy='true'] {

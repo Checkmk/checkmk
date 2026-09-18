@@ -5,10 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed, inject } from 'vue'
 
 import type { RequestedLimit } from '@/monitoring/shared/types'
@@ -24,8 +22,6 @@ const UNLIMITED_NAME = 'all'
 function toName(limit: RequestedLimit): string {
   return limit === null ? UNLIMITED_NAME : String(limit)
 }
-
-const dropdownId = useId()
 
 const hasChoice = computed(() => (monitoringService?.offeredLimits.length ?? 0) > 1)
 
@@ -50,18 +46,8 @@ const selected = computed<string | null>({
 
 <template>
   <div v-if="hasChoice" class="monitoring-limit-selector">
-    <CmkLabel :for="dropdownId">{{ _t('Show:') }}</CmkLabel>
-    <!--
-      CmkDropdown's `label` prop only ever becomes an `aria-label`, which takes priority over
-      an associated `<label>` in accessible-name computation. Leaving it empty lets the visible
-      label above (linked via `component-id`) provide the dropdown's accessible name instead.
-    -->
-    <CmkDropdown
-      v-model="selected"
-      :options="options"
-      :component-id="dropdownId"
-      :label="untranslated('')"
-    />
+    <span class="monitoring-limit-selector__label">{{ _t('Show:') }}</span>
+    <CmkDropdown v-model="selected" :options="options" :label="_t('Row limit')" />
   </div>
 </template>
 

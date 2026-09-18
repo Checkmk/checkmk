@@ -56,7 +56,6 @@ pkg_files(
     srcs = [
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets.py",
-        ":cmk-migrate-oracle-rulesets.py",
         ":cmk-monitor-apache",
         ":cmk-monitor-broker",
         ":cmk-monitor-core",
@@ -73,7 +72,6 @@ pkg_files(
     prefix = "bin",
     renames = {
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
-        "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
     },
 )
 
@@ -108,20 +106,6 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-wsgi",
-    ],
-)
-
-py_library(
-    name = "cmk_migrate_oracle_rulesets_py",
-    srcs = ["cmk-migrate-oracle-rulesets.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/gui:app",
-        "//cmk/gui/watolib",
-        "//cmk/update_config",
-        "//cmk/utils:paths",
-        "//packages/cmk-ccc:log",
-        "//packages/cmk-ccc:version",
     ],
 )
 

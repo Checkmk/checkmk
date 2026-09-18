@@ -26,7 +26,9 @@ from cmk.utils import paths
 logger = logging.getLogger(__name__)
 
 
-def main(argv: Sequence[str]) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
     parser = argparse.ArgumentParser(
         description="Migrate legacy agent_config:mk_oracle rules to agent_config:mk_oracle_unified."
     )
@@ -131,4 +133,4 @@ def _print_report(
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

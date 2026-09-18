@@ -6,6 +6,7 @@ exports_files(["skel.permissions"])
 pkg_files(
     name = "bin_pkg",
     srcs = [
+        "cmk-monitor-diskusage",
         "logrotate",
     ],
     attributes = pkg_attributes(
@@ -86,4 +87,9 @@ py_library(
         "//cmk/utils:paths",
         "//omd/packages/omd:omdlib",
     ],
+)
+
+sh_library(
+    name = "helpers",
+    srcs = ["cmk-monitor-diskusage"],
 )

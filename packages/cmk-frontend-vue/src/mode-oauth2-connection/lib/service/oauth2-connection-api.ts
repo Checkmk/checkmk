@@ -13,6 +13,9 @@ import {
 
 export type PasswordValue = [string, string, string, boolean]
 
+/** Cascading choice of the Proxy form spec: ['environment' | 'no_proxy' | 'global_' | 'url', value] */
+export type ProxyValue = [string, string | null]
+
 export type OAuth2FormData = {
   ident: string
   title: string
@@ -20,6 +23,7 @@ export type OAuth2FormData = {
   tenant_id: string
   client_id: string
   client_secret: PasswordValue
+  proxy?: ProxyValue
   access_token?: PasswordValue
   refresh_token?: PasswordValue
   override_site?: string

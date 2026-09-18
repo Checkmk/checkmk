@@ -32,6 +32,7 @@ py_library(
         "//cmk/gui_plugins/internal",
         "//cmk/legacy_checks",
         "//cmk/legacy_includes",
+        "//cmk/mkp:cli",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:cli",
         "//cmk/piggyback:hub",

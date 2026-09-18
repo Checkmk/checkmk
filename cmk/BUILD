@@ -94,6 +94,7 @@ py_wheel(
         "cmk-validate-plugins = cmk.validate_plugins:main",
         "init-redis = cmk.gui.search.index:main",
         "message-broker-certs = cmk.message_broker_certs:main",
+        "mkp = cmk.mkp.cli:main",
     ]},
     requires = [
         # alphabetical order

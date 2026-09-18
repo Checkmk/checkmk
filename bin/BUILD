@@ -1,4 +1,3 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
@@ -67,7 +66,6 @@ pkg_files(
         ":cmk-monitor-otel-collector",
         ":cmk-ui-job-scheduler-health",
         ":mkevent",
-        ":mkp.py",
     ],
     attributes = pkg_attributes(
         mode = "0755",
@@ -76,7 +74,6 @@ pkg_files(
     renames = {
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
-        "mkp.py": "mkp",
     },
 )
 
@@ -125,21 +122,6 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version",
-    ],
-)
-
-py_library(
-    name = "mkp_py",
-    srcs = ["mkp.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/gui/search:index",
-        "//cmk/utils",
-        "//packages/cmk-ccc:store",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-ec",
-        "//packages/cmk-mkp-tool",
-        "//packages/cmk-plugin-apis:discover_plugins",
     ],
 )
 

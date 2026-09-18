@@ -79,7 +79,11 @@ _SITE_CONTEXT: Final = cli.SiteContext(
 )
 
 
-if __name__ == "__main__":
+def main() -> int:
     if (path_config := make_path_config()) is None:
         raise SystemExit("No writable local path available")
-    sys.exit(cli.main(path_config, _SITE_CONTEXT, cmk.ccc.store.save_bytes_to_file))
+    return cli.main(path_config, _SITE_CONTEXT, cmk.ccc.store.save_bytes_to_file)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

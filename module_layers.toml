@@ -885,6 +885,16 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[components."cmk.mkp"]
+allows = [
+  "@ccc",
+  "@mkp_tool",
+  "cmk.discover_plugins",
+  "cmk.ec",
+  "cmk.gui.search.index",
+  "cmk.utils",
+]
+
 [components."cmk.mkp_tool"]
 allows = []
 
@@ -2072,16 +2082,6 @@ allows = [
 
 # Files that depend on more than one component, yet we do not want to
 # add all those dependencies to one of those components.
-
-[file_dependencies."bin/mkp.py"]
-allows = [
-  "@ccc",
-  "@mkp_tool",
-  "cmk.discover_plugins",
-  "cmk.ec",
-  "cmk.gui.search.index",
-  "cmk.utils",
-]
 
 [file_dependencies."buildscripts/scripts/build-cmk-container.py"]
 allows = ["@ccc"]

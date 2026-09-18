@@ -1,14 +1,6 @@
+set noparent  # don't inherit owners information from parent folders
 
-#
-# Don't add new stuff to this file!
-#
-# See doc/documentation/arch-migrations.rst
-#
-
-per-file cmk-monitor-mknotifyd=file:/component_owners/notifications/OWNERS_DEFINITION
-per-file cmk-monitor-mknotifyd=set noparent
-per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_collector/OWNERS_DEFINITION
-per-file cmk-monitor-otel-collector=set noparent
+file:/component_owners/mkp_tool/OWNERS_DEFINITION
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

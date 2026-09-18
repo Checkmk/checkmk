@@ -982,32 +982,56 @@ def _get_cached_bi_manager() -> BIManager:
 
 
 def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
-    reference_name = row["aggr_id"]
-    frozen_info = row["aggr_compiled_aggregation"].frozen_info
+    """The live aggregation, annotated with its differences to the frozen snapshot.
 
+    The states shown are the live ones: an aggregation function is a property of the
+    compiled rule, and the tree is built from whichever rules were computed, so the
+    live branch has to be the one that gets combined, computed and converted.
+    """
+    frozen_aggregation = row["aggr_compiled_aggregation"]
+    frozen_info = frozen_aggregation.frozen_info
     original_aggr_group = row["aggr_group"]
-    other_aggregation = frozen_info.based_on_aggregation_id
-    other_branch = frozen_info.based_on_branch_title
+
     bi_manager = _get_cached_bi_manager()
-    bi_ref_aggregation, bi_ref_branch = bi_manager.get_aggregation_by_name(reference_name)
+    _frozen_aggr, frozen_branch = bi_manager.get_aggregation_by_name(row["aggr_id"])
 
-    # Load other aggregation from disk
-    other_aggr = storage.AggregationStore(get_default_site_filesystem().cache).get(
-        other_aggregation
+    # The compiler empties the live branches in memory once they are frozen, so the
+    # live aggregation has to come from the compilation cache on disk. A recompile
+    # between building this row and rendering it can take it away.
+    try:
+        live_aggr = storage.AggregationStore(get_default_site_filesystem().cache).get(
+            frozen_info.based_on_aggregation_id
+        )
+    except storage.AggregationNotFound:
+        # A recompile dropped the aggregation; there is no live tree to diff against.
+        return row, True
+
+    live_branch = next(
+        (
+            branch
+            for branch in live_aggr.branches
+            if branch.properties.title == frozen_info.based_on_branch_title
+        ),
+        None,
     )
+    if live_branch is None:
+        # The aggregation lost this branch since it was frozen.
+        return row, True
 
-    aggregations_are_equal = True
-    for bi_other_branch in other_aggr.branches:
-        if bi_other_branch.properties.title == other_branch:
-            aggregations_are_equal = _combine_branches(bi_ref_branch, bi_other_branch)
+    if _combine_branches(live_branch, frozen_branch):
+        # The caller discards the tree in this case, so do not pay for computing it.
+        return row, True
 
-    required_aggregations = [(bi_ref_aggregation, [bi_ref_branch])]
+    required_aggregations = [(live_aggr, [live_branch])]
     required_elements = bi_manager.computer.get_required_elements(required_aggregations)
     bi_manager.status_fetcher.update_states(required_elements)
     result = bi_manager.computer.compute_results(required_aggregations)
-    row = bi_ref_aggregation.convert_result_to_legacy_format(result[0][1][0])
+    row = live_aggr.convert_result_to_legacy_format(result[0][1][0])
     row["aggr_group"] = original_aggr_group
-    return row, aggregations_are_equal
+    # The lazy render URL carries this id back into a BIAggregationFilter, and the live
+    # aggregation has no branches in memory - only the frozen id resolves to a row.
+    row["aggr_tree"]["aggregation_id"] = frozen_aggregation.id
+    return row, False
 
 
 NodeIdentifier = tuple[tuple[int | str, ...], ...]
@@ -1041,17 +1065,22 @@ def branches_differ(reference_branch: BICompiledRule, other_branch: BICompiledRu
     return bool(changed_identifiers(reference_ids, other_ids))
 
 
-def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledRule) -> bool:
-    """Modifies the reference branch inline, returns true/false if the branches are equal"""
-    ref_idents = reference_branch.get_identifiers((), set())
-    other_idents = other_branch.get_identifiers((), set())
+def _combine_branches(live_branch: BICompiledRule, frozen_branch: BICompiledRule) -> bool:
+    """Modifies the live branch inline, returns true/false if the branches are equal
 
-    ref_ids = {x.id: x.node_ref for x in ref_idents}
-    other_ids = {x.id: x.node_ref for x in other_idents}
+    Markers are set from the live branch's point of view, since that is the tree that
+    gets rendered: a node only the live side has is "new", one only the frozen side
+    has is "missing" and is grafted in so the deletion stays visible.
+    """
+    live_idents = live_branch.get_identifiers((), set())
+    frozen_idents = frozen_branch.get_identifiers((), set())
 
-    changed_ids = changed_identifiers(ref_ids, other_ids)
+    live_ids = {x.id: x.node_ref for x in live_idents}
+    frozen_ids = {x.id: x.node_ref for x in frozen_idents}
 
-    if set(ref_ids) == set(other_ids) and not changed_ids:
+    changed_ids = changed_identifiers(live_ids, frozen_ids)
+
+    if set(live_ids) == set(frozen_ids) and not changed_ids:
         return True
 
     affected_parent_ids: set[NodeIdentifier] = set()
@@ -1064,16 +1093,10 @@ def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiled
         #   - ((1, "Host heute"), (1, "Performance"))
         affected_parent_ids.update(ident[: idx + 1] for idx in range(len(ident) - 1))
 
-    # Iterate over reference branch, mark missing elements
-    for missing_id in set(ref_ids) - set(other_ids):
-        # TODO: check if it wasn't shifted to another number
-        #    - detect sub-index where the missing part starts
-        #    - iterate available other_ident numbers for this sub-idx
-        #    - check for matches
-        #    will be implemented once the graphical representation is complete, easier to debug
-        #        html.debug("set missing", missing_id)
-        extract_and_update_affected_parents_ids(missing_id)
-        ref_ids[missing_id].set_frozen_marker(FrozenMarker("missing"))
+    # Nodes the live aggregation gained since it was frozen; already in the tree.
+    for new_id in set(live_ids) - set(frozen_ids):
+        extract_and_update_affected_parents_ids(new_id)
+        live_ids[new_id].set_frozen_marker(FrozenMarker("new"))
 
     def common_prefix(
         check_tuple: tuple[int | str, ...], other_tuples: set[tuple[int | str, ...]]
@@ -1084,31 +1107,42 @@ def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiled
             check_tuple = check_tuple[:-1]
         return None
 
-    mod_idents = reference_branch.get_identifiers((), set())
+    mod_idents = live_branch.get_identifiers((), set())
     mod_ids = {x.id: x.node_ref for x in mod_idents}
 
-    for new_id in set(other_ids) - set(ref_ids):
-        extract_and_update_affected_parents_ids(new_id)
-        other_ids[new_id].set_frozen_marker(FrozenMarker("new"))
-        if new_id in mod_ids:
+    # Nodes the live aggregation lost; graft them in so the deletion stays visible.
+    for missing_id in set(frozen_ids) - set(live_ids):
+        # TODO: check if it wasn't shifted to another number
+        #    - detect sub-index where the missing part starts
+        #    - iterate available other_ident numbers for this sub-idx
+        #    - check for matches
+        #    will be implemented once the graphical representation is complete, easier to debug
+        #        html.debug("set missing", missing_id)
+        extract_and_update_affected_parents_ids(missing_id)
+        frozen_ids[missing_id].set_frozen_marker(FrozenMarker("missing"))
+        if missing_id in mod_ids:
             continue
-        prefix = common_prefix(new_id, set(ref_ids))
+        prefix = common_prefix(missing_id, set(live_ids))
 
-        insert_location = ref_ids[prefix]  # type: ignore[index]
-        nodes_to_insert = other_ids[new_id[: len(prefix) + 1]]  # type: ignore[arg-type]
+        insert_location = live_ids[prefix]  # type: ignore[index]
+        nodes_to_insert = frozen_ids[missing_id[: len(prefix) + 1]]  # type: ignore[arg-type]
         assert isinstance(insert_location, BICompiledRule)
         insert_location.nodes.append(nodes_to_insert)
-        mod_idents = reference_branch.get_identifiers((), set())
+        mod_idents = live_branch.get_identifiers((), set())
         mod_ids = {x.id: x.node_ref for x in mod_idents}
 
+    # Nodes present in both trees but reconfigured, e.g. a rule whose aggregation
+    # function was changed after the aggregation had been frozen.
     for changed_id in changed_ids:
         extract_and_update_affected_parents_ids(changed_id)
-        ref_ids[changed_id].set_frozen_marker(FrozenMarker("changed"))
+        live_ids[changed_id].set_frozen_marker(FrozenMarker("changed"))
 
+    # Deliberately last: for an ancestor of a difference, "look inside" outranks
+    # whatever marker it carries in its own right.
     # A node that was reconfigured keeps saying so - "look inside" is only useful for
     # an ancestor that has nothing to report in its own right.
     for pid in affected_parent_ids:
-        if ((ref := ref_ids.get(pid)) or (ref := other_ids.get(pid))) and (
+        if ((ref := live_ids.get(pid)) or (ref := frozen_ids.get(pid))) and (
             (marker := ref.frozen_marker) is None or marker.status != "changed"
         ):
             ref.set_frozen_marker(FrozenMarker("parent"))

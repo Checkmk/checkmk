@@ -444,6 +444,8 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   color: inherit;
   cursor: pointer;
   border-radius: 0;
+  width: var(--dimension-8);
+  justify-content: center;
 
   &:focus-visible {
     outline: 1px solid var(--success);
@@ -469,7 +471,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 .monitoring-table-header__filter-dot {
   position: absolute;
   top: var(--dimension-3);
-  right: 0;
+  right: var(--dimension-3);
   width: var(--dimension-3);
   height: var(--dimension-3);
   border-radius: 50%;

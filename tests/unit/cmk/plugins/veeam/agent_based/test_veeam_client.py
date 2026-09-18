@@ -131,3 +131,68 @@ def test_check_veeam_client(
         result_obj = [r for r in results if isinstance(r, Result)][0]
         assert result_obj.state == expected_state
         assert result_obj.summary == expected_summary
+
+
+def _check_results(string_table: StringTable) -> list[Result]:
+    return [
+        result
+        for result in check_veeam_client(
+            "JOB_NAME", params={"age": (20, 40)}, section=parse_veeam_client(string_table)
+        )
+        if isinstance(result, Result)
+    ]
+
+
+@pytest.mark.parametrize(
+    "size_lines",
+    [
+        pytest.param([], id="field absent"),
+        pytest.param([["TotalSizeByte", ""]], id="field empty"),
+    ],
+)
+def test_unreported_total_size_is_omitted_from_the_summary(size_lines: StringTable) -> None:
+    results = _check_results(
+        [
+            ["Status", "Success"],
+            ["JobName", "JOB_NAME"],
+            *size_lines,
+            ["LastBackupAge", "5"],
+        ]
+    )
+
+    assert results == [
+        Result(state=State.OK, summary="Status: Success, Last backup: 5 seconds ago")
+    ]
+
+
+def test_unparseable_stop_time_reports_no_complete_backup() -> None:
+    results = _check_results(
+        [
+            ["Status", "Success"],
+            ["JobName", "JOB_NAME"],
+            ["TotalSizeByte", "100"],
+            ["StopTime", "not a date"],
+        ]
+    )
+
+    assert results == [
+        Result(
+            state=State.CRIT,
+            summary="Status: Success, Size (total): 100 B, No complete Backup(!!)",
+        )
+    ]
+
+
+def test_malformed_duration_is_omitted_from_the_summary() -> None:
+    results = _check_results(
+        [
+            ["Status", "Success"],
+            ["JobName", "JOB_NAME"],
+            ["LastBackupAge", "5"],
+            ["DurationDDHHMMSS", "00:01:00"],
+        ]
+    )
+
+    assert results == [
+        Result(state=State.OK, summary="Status: Success, Last backup: 5 seconds ago")
+    ]

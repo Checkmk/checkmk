@@ -25,6 +25,35 @@ from cmk.agent_based.v2 import (
 Section = dict[str, dict[str, str]]
 
 
+def _parse_int(raw: str | None) -> int | None:
+    """Fields may be absent or empty if Veeam did not report a value."""
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def _parse_float(raw: str | None) -> float | None:
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def _parse_duration(raw: str | None) -> int | None:
+    if not raw:
+        return None
+    try:
+        days, hours, minutes, seconds = (int(part) for part in raw.split(":"))
+    except ValueError:
+        return None
+    return seconds + minutes * 60 + hours * 3600 + days * 86400
+
+
 def parse_veeam_client(string_table: StringTable) -> Section:
     data: Section = {}
     last_status: str | bool = False
@@ -50,19 +79,22 @@ def discover_veeam_client(section: Section) -> DiscoveryResult:
 def _check_backup_age(
     data: dict[str, str], params: Mapping[str, Any], state: State
 ) -> tuple[State, str | None]:
-    if (backup_age := data.get("LastBackupAge")) is not None:
-        age = float(backup_age)
-    # elif section (StopTime) kept for compatibility with old agent version
-    # that was reporting StopTime and not LastBackupAge
-    elif (stop_time := data.get("StopTime")) is not None:
+    age = _parse_float(data.get("LastBackupAge"))
+    if age is None:
+        # This section (StopTime) is kept for compatibility with old agent versions
+        # that were reporting StopTime and not LastBackupAge
+        if (stop_time := data.get("StopTime")) is None:
+            return State.CRIT, "No complete Backup(!!)"
+
         # If the Backup is currently running, the stop time is strange
         if stop_time == "01.01.1900 00:00:00":
             return state, None
 
-        stop_time_epoch = time.mktime(time.strptime(stop_time, "%d.%m.%Y %H:%M:%S"))
+        try:
+            stop_time_epoch = time.mktime(time.strptime(stop_time, "%d.%m.%Y %H:%M:%S"))
+        except ValueError:
+            return State.CRIT, "No complete Backup(!!)"
         age = time.time() - stop_time_epoch
-    else:
-        return State.CRIT, "No complete Backup(!!)"
 
     warn, crit = params["age"]
     levels = ""
@@ -104,25 +136,20 @@ def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -
     size_legend = []
     metrics = []
 
-    total_size_byte = int(data["TotalSizeByte"])
-    metrics.append(Metric("totalsize", total_size_byte))
-    size_info.append(render.bytes(total_size_byte))
-    size_legend.append("total")
+    # Output the sizes that Veeam reported
+    for key, metric_name, legend in (
+        ("TotalSizeByte", "totalsize", "total"),
+        ("ReadSizeByte", "readsize", "read"),
+        ("TransferedSizeByte", "transferredsize", "transferred"),
+    ):
+        if (size_byte := _parse_int(data.get(key))) is None:
+            continue
+        metrics.append(Metric(metric_name, size_byte))
+        size_info.append(render.bytes(size_byte))
+        size_legend.append(legend)
 
-    # Output ReadSize and TransferedSize if available
-    if "ReadSizeByte" in data:
-        read_size_byte = int(data["ReadSizeByte"])
-        metrics.append(Metric("readsize", read_size_byte))
-        size_info.append(render.bytes(read_size_byte))
-        size_legend.append("read")
-
-    if "TransferedSizeByte" in data:
-        transfered_size_byte = int(data["TransferedSizeByte"])
-        metrics.append(Metric("transferredsize", transfered_size_byte))
-        size_info.append(render.bytes(transfered_size_byte))
-        size_legend.append("transferred")
-
-    infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
+    if size_info:
+        infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
 
     # Check duration only if currently not running
     if data["Status"] not in ["InProgress", "Pending"]:
@@ -133,18 +160,11 @@ def check_veeam_client(item: str, params: Mapping[str, Any], section: Section) -
             infotexts.append(info)
 
         # Information may missing
-        if data.get("DurationDDHHMMSS"):
-            duration = 0
-            days, hours, minutes, seconds = map(int, data["DurationDDHHMMSS"].split(":"))
-            duration += seconds
-            duration += minutes * 60
-            duration += hours * 60 * 60
-            duration += days * 60 * 60 * 24
+        if (duration := _parse_duration(data.get("DurationDDHHMMSS"))) is not None:
             infotexts.append(f"Duration: {render.timespan(duration)}")
             metrics.append(Metric("duration", duration))
 
-    if "AvgSpeedBps" in data:
-        avg_speed_bps = int(data["AvgSpeedBps"])
+    if (avg_speed_bps := _parse_int(data.get("AvgSpeedBps"))) is not None:
         metrics.append(Metric("avgspeed", avg_speed_bps))
         infotexts.append(f"Average Speed: {render.iobandwidth(avg_speed_bps)}")
 

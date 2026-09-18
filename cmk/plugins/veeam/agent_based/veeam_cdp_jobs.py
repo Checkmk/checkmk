@@ -34,6 +34,7 @@ class CDPJob(NamedTuple):
     name: str
     time_diff: float | None
     state: CDPState
+    raw_state: str
 
 
 STATE_MAPPING: Mapping[CDPState, State] = {
@@ -51,19 +52,33 @@ class CheckParams(TypedDict):
     age: tuple[float, float]
 
 
-def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
-    def _sanitize_last_sync(last_sync: str) -> float:
-        # Some agent outputs may provide lines like:
-        # ['"JOB-NAME"', '1695809510,31277', 'Running']
-        return float(last_sync.replace(",", "."))
+def _parse_time_diff(last_sync: str) -> float | None:
+    # Some agent outputs may provide lines like:
+    # ['"JOB-NAME"', '1695809510,31277', 'Running']
+    try:
+        return time.time() - float(last_sync.replace(",", "."))
+    except ValueError:
+        return None
 
+
+def _parse_state(raw_state: str) -> CDPState:
+    try:
+        return CDPState(raw_state)
+    except ValueError:
+        # Veeam may report policy states we do not model. A single unknown value
+        # must not render the whole section unparseable.
+        return CDPState.UNKNOWN
+
+
+def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
     return {
         name: CDPJob(
             name,
-            None if last_sync == "null" else time.time() - _sanitize_last_sync(last_sync),
-            CDPState(state),
+            None if last_sync == "null" else _parse_time_diff(last_sync),
+            _parse_state(state),
+            state,
         )
-        for name, last_sync, state in string_table
+        for name, last_sync, state in (line for line in string_table if len(line) == 3)
     }
 
 
@@ -84,7 +99,7 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
 
     yield Result(
         state=STATE_MAPPING.get(cdp.state, State.UNKNOWN),
-        summary=f"State: {cdp.state.value}",
+        summary=f"State: {cdp.raw_state}",
     )
 
     if cdp.time_diff is None:

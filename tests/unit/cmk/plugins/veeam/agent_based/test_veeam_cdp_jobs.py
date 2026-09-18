@@ -123,3 +123,31 @@ def test_veeam_cdp_jobs_check(
     with time_machine.travel(datetime.datetime.fromtimestamp(1632216660, tz=ZoneInfo("UTC"))):
         section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
         assert list(veeam_cdp_jobs.check_veeam_cdp_jobs(item, params, section)) == result
+
+
+def test_unmodelled_policy_state_is_reported_as_unknown() -> None:
+    section = veeam_cdp_jobs.parse_veeam_cdp_jobs([["Test 1", "null", "Starting"]])
+
+    assert list(
+        veeam_cdp_jobs.check_veeam_cdp_jobs(
+            "Test 1", veeam_cdp_jobs.CheckParams(age=(108000, 172800)), section
+        )
+    ) == [Result(state=State.UNKNOWN, summary="State: Starting")]
+
+
+def test_line_with_unexpected_field_count_is_skipped() -> None:
+    section = veeam_cdp_jobs.parse_veeam_cdp_jobs(
+        [["Test 1", "null"], ["Test 2", "null", "Running"]]
+    )
+
+    assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(section)) == [Service(item="Test 2")]
+
+
+def test_unparseable_last_sync_omits_the_age_check() -> None:
+    section = veeam_cdp_jobs.parse_veeam_cdp_jobs([["Test 1", "not-a-timestamp", "Running"]])
+
+    assert list(
+        veeam_cdp_jobs.check_veeam_cdp_jobs(
+            "Test 1", veeam_cdp_jobs.CheckParams(age=(108000, 172800)), section
+        )
+    ) == [Result(state=State.OK, summary="State: Running")]

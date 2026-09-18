@@ -11,13 +11,13 @@ def test_empty_body_is_not_deployed() -> None:
 
 
 def test_empty_body_auth_is_wallet() -> None:
-    assert dump(convert({}).rule)["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dump(convert({}).rule)["auth"] == {"auth_type": ("wallet", None)}
 
 
 def test_empty_body_auth_type_is_a_plain_str_not_an_enum_member() -> None:
     # StrEnum == str, so this catches what == "wallet" above can't: an unconverted enum
     # member, which pprints as invalid Python syntax.
-    auth_type = dump(convert({}).rule)["main"]["auth"]["auth_type"][0]
+    auth_type = dump(convert({}).rule)["auth"]["auth_type"][0]
     assert type(auth_type) is str
 
 
@@ -38,14 +38,14 @@ def test_do_not_deploy_when_activated_false() -> None:
 
 
 def test_async_interval_cache_age() -> None:
-    assert dump(convert({"async_interval": 600}).rule)["main"]["cache_age"] == 600
+    assert dump(convert({"async_interval": 600}).rule)["cache_age"] == 600
 
 
 def test_sections_supported_keys_are_mapped() -> None:
     new_rule = convert({"sections": {"instance": "sync"}})
 
     assert new_rule.warnings == ["No auth defined in legacy rule. Defaulting to Oracle wallet."]
-    assert dump(new_rule.rule)["main"]["sections"] == {"instance": "synchronous"}
+    assert dump(new_rule.rule)["sections"] == {"instance": "synchronous"}
 
 
 def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
@@ -53,7 +53,7 @@ def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
     list, so the migration must materialise it instead of leaving the unified plugin to
     apply its own defaults."""
     new_rule = convert({"login": {"auth": "wallet"}})
-    sections = dump(new_rule.rule)["main"]["sections"]
+    sections = dump(new_rule.rule)["sections"]
 
     assert new_rule.warnings == [
         (
@@ -76,29 +76,29 @@ def test_sections_unsupported_keys_are_skipped_with_warning() -> None:
         "Could not map section 'special_section'.",
         "No auth defined in legacy rule. Defaulting to Oracle wallet.",
     ]
-    assert dump(new_rule.rule)["main"]["sections"] == {}
+    assert dump(new_rule.rule)["sections"] == {}
 
 
 def test_sections_sync_becomes_synchronous() -> None:
-    assert dump(convert({"sections": {"instance": "sync"}}).rule)["main"]["sections"] == {
+    assert dump(convert({"sections": {"instance": "sync"}}).rule)["sections"] == {
         "instance": "synchronous"
     }
 
 
 def test_sections_async_becomes_asynchronous() -> None:
-    assert dump(convert({"sections": {"tablespaces": "async"}}).rule)["main"]["sections"] == {
+    assert dump(convert({"sections": {"tablespaces": "async"}}).rule)["sections"] == {
         "tablespaces": "asynchronous"
     }
 
 
 def test_sections_none_becomes_disabled() -> None:
-    assert dump(convert({"sections": {"iostats": None}}).rule)["main"]["sections"] == {
+    assert dump(convert({"sections": {"iostats": None}}).rule)["sections"] == {
         "iostats": "disabled"
     }
 
 
 def test_sections_unsupported_value_becomes_disabled() -> None:
-    assert dump(convert({"sections": {"iostats": "bad"}}).rule)["main"]["sections"] == {
+    assert dump(convert({"sections": {"iostats": "bad"}}).rule)["sections"] == {
         "iostats": "disabled"
     }
 
@@ -113,7 +113,7 @@ def test_sections_asm_sections_are_renamed() -> None:
             }
         }
     )
-    assert dump(new_rule.rule)["main"]["sections"] == {
+    assert dump(new_rule.rule)["sections"] == {
         "asm_instance": "synchronous",
         "asm_diskgroup": "asynchronous",
         "processes": "synchronous",
@@ -122,14 +122,14 @@ def test_sections_asm_sections_are_renamed() -> None:
 
 def test_missing_excluded_sections_are_not_mapped() -> None:
     new_rule = convert({})
-    assert "excluded_sections" not in dump(new_rule.rule)["main"]
+    assert "excluded_sections" not in dump(new_rule.rule)
 
 
 def test_excluded_sections_are_mapped_correctly() -> None:
     new_rule = convert(
         {"excluded_sections": [("test_sid", ["performance", "tablespaces", "locks"])]}
     )
-    assert dump(new_rule.rule)["main"]["excluded_sections"] == [
+    assert dump(new_rule.rule)["excluded_sections"] == [
         {
             "target_id": ("sid", {"sid": "test_sid"}),
             "sections": ["performance", "tablespaces", "locks"],
@@ -162,9 +162,9 @@ def test_unmappable_fields_ignored() -> None:
     dumped = dump(new_rule.rule)
     assert dumped["deploy"] == ("do_not_deploy", None)
     assert dumped["instances"] == []
-    assert set(dumped["main"]) == {"auth", "connection", "sections"}
-    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
-    assert dumped["main"]["connection"] == {}
+    assert set(dumped) == {"deploy", "auth", "connection", "sections", "instances"}
+    assert dumped["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["connection"] == {}
 
 
 def test_permissions_not_mapped_when_validate_permissions_absent() -> None:
@@ -202,39 +202,39 @@ def test_permissions_not_mapped_when_validate_permissions_unknown() -> None:
 
 
 def test_discovery_not_mapped_when_nothing_defined() -> None:
-    assert "discovery" not in dump(convert({"sids": None}).rule)["main"]
+    assert "discovery" not in dump(convert({"sids": None}).rule)
 
 
 def test_discovery_include_mapped_when_sids_defined() -> None:
-    assert dump(convert({"sids": ("only", ["a", "b"])}).rule)["main"]["discovery"] == {
+    assert dump(convert({"sids": ("only", ["a", "b"])}).rule)["discovery"] == {
         "enabled": True,
         "include": ["a", "b"],
     }
 
 
 def test_discovery_exclude_mapped_when_skip_defined() -> None:
-    assert dump(convert({"sids": ("skip", ["a"])}).rule)["main"]["discovery"] == {
+    assert dump(convert({"sids": ("skip", ["a"])}).rule)["discovery"] == {
         "enabled": True,
         "exclude": ["a"],
     }
 
 
 def test_discovery_include_mapped_when_exclude_defined() -> None:
-    assert dump(convert({"sids": ("exclude", ["a"])}).rule)["main"]["discovery"] == {
+    assert dump(convert({"sids": ("exclude", ["a"])}).rule)["discovery"] == {
         "enabled": True,
         "exclude": ["a"],
     }
 
 
 def test_auth_type_wallet_when_auth_is_wallet() -> None:
-    assert dump(convert({"login": {"auth": "wallet"}}).rule)["main"]["auth"] == {
+    assert dump(convert({"login": {"auth": "wallet"}}).rule)["auth"] == {
         "auth_type": ("wallet", None)
     }
 
 
 def test_standard_auth_type_with_password_when_auth_is_explicit_with_password() -> None:
     new_rule = convert({"login": {"auth": ("explicit", ("my_user", ("password", "my_password")))}})
-    assert dump(new_rule.rule)["main"]["auth"] == {
+    assert dump(new_rule.rule)["auth"] == {
         "auth_type": (
             "standard",
             {
@@ -247,7 +247,7 @@ def test_standard_auth_type_with_password_when_auth_is_explicit_with_password() 
 
 def test_standard_auth_type_with_store_when_auth_is_explicit_with_store() -> None:
     new_rule = convert({"login": {"auth": ("explicit", ("store_user", ("store", "password_1")))}})
-    assert dump(new_rule.rule)["main"]["auth"] == {
+    assert dump(new_rule.rule)["auth"] == {
         "auth_type": (
             "standard",
             {
@@ -260,34 +260,34 @@ def test_standard_auth_type_with_store_when_auth_is_explicit_with_store() -> Non
 
 def test_role_mapped_when_as_set() -> None:
     new_rule = convert({"login": {"auth": "wallet", "as": "sysdba"}})
-    assert dump(new_rule.rule)["main"]["auth"] == {"auth_type": ("wallet", None), "role": "sysdba"}
+    assert dump(new_rule.rule)["auth"] == {"auth_type": ("wallet", None), "role": "sysdba"}
 
 
 def test_role_omitted_when_as_none() -> None:
     new_rule = convert({"login": {"auth": "wallet", "as": None}})
-    assert dump(new_rule.rule)["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dump(new_rule.rule)["auth"] == {"auth_type": ("wallet", None)}
 
 
 def test_connection_empty_when_not_specified() -> None:
     new_rule = convert({"login": {"auth": "wallet"}})
-    assert dump(new_rule.rule)["main"]["connection"] == {}
+    assert dump(new_rule.rule)["connection"] == {}
 
 
 def test_connection_converts_without_tns_admin() -> None:
     new_rule = convert({"login": {"auth": "wallet", "host": "my_host", "port": 1521}})
-    assert dump(new_rule.rule)["main"]["connection"] == {"host": "my_host", "port": 1521}
+    assert dump(new_rule.rule)["connection"] == {"host": "my_host", "port": 1521}
 
 
 def test_connection_host_kept_when_explicitly_set_to_localhost() -> None:
     new_rule = convert({"login": {"auth": "wallet", "host": "localhost"}})
-    assert dump(new_rule.rule)["main"]["connection"] == {"host": "localhost"}
+    assert dump(new_rule.rule)["connection"] == {"host": "localhost"}
 
 
 def test_connection_converts_with_tns_admin() -> None:
     new_rule = convert(
         {"login": {"auth": "wallet", "host": "my_host", "port": 1521}, "tns_admin": "tadmin"}
     )
-    assert dump(new_rule.rule)["main"]["connection"] == {
+    assert dump(new_rule.rule)["connection"] == {
         "host": "my_host",
         "port": 1521,
         "tns_admin": "tadmin",
@@ -298,8 +298,8 @@ def test_login_without_tnsalias_has_no_instance() -> None:
     new_rule = convert({"login": {"auth": "wallet"}})
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
-    assert dumped["main"]["connection"] == {}
+    assert dumped["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["connection"] == {}
 
     assert dumped["instances"] == []
 
@@ -308,8 +308,8 @@ def test_login_with_tnsalias_creates_no_instance() -> None:
     new_rule = convert({"login": {"auth": "wallet", "tnsalias": "myalias"}})
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
-    assert dumped["main"]["connection"] == {}
+    assert dumped["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["connection"] == {}
 
     assert dumped["instances"] == []
 
@@ -332,8 +332,8 @@ def test_login_tnsalias_does_not_affect_main_auth_and_connection() -> None:
     )
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
-    assert dumped["main"]["connection"] == {"host": "mydata.db", "port": 3635}
+    assert dumped["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["connection"] == {"host": "mydata.db", "port": 3635}
 
     assert dumped["instances"] == []
 
@@ -371,7 +371,7 @@ def test_sid_specific_credentials_are_not_promoted_to_the_default_login() -> Non
     )
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert [instance["oracle_id"] for instance in dumped["instances"]] == [
         ("sid", {"sid": "proddb"}),
         ("sid", {"sid": "testdb"}),
@@ -543,7 +543,7 @@ def test_main_asm_auth_mapped_when_login_asm_present_without_host_and_port() -> 
         }
     )
     dumped = dump(new_rule.rule)
-    assert dumped["main"]["auth"]["asm_auth"] == {
+    assert dumped["auth"]["asm_auth"] == {
         "username": "asm_user",
         "password": ("cmk_postprocessed", "explicit_password", ("", "asm_pass")),
         "role": "sysasm",
@@ -563,7 +563,7 @@ def test_fallback_instance_created_when_login_asm_has_host_and_port() -> None:
             "connection": {"host": "asmhost", "port": 1521},
         }
     ]
-    assert "asm_auth" not in dumped["main"].get("auth", {})
+    assert "asm_auth" not in dumped.get("auth", {})
 
 
 def test_fallback_instance_created_when_login_asm_has_explicit_auth_and_host() -> None:
@@ -594,4 +594,4 @@ def test_fallback_instance_created_when_login_asm_has_explicit_auth_and_host() -
             "connection": {"host": "asmhost", "port": 1521},
         }
     ]
-    assert "asm_auth" not in dumped["main"].get("auth", {})
+    assert "asm_auth" not in dumped.get("auth", {})

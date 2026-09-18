@@ -6,13 +6,19 @@
 # mypy: disable-error-code="explicit-any"
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 import pytest
 
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.registration import register_form_specs
+from cmk.gui.form_specs.visitors import register_visitor_class
+from cmk.gui.watolib.password_visitor import PasswordVisitor
+from cmk.plugins.oracle.lib.unified_config import StoredConfig
 from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
     _agent_config_mk_oracle,
+    _migrate,
     USE_HOST_CLIENT_PATH_RE,
 )
 from cmk.rulesets.internal.form_specs import (
@@ -24,8 +30,72 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     FormSpec,
     List,
+    Password,
     SingleChoice,
 )
+
+PASSWORD = ("cmk_postprocessed", "explicit_password", ("uuid", "secret"))
+
+_SHARED: Mapping[str, object] = {
+    "auth": {
+        "auth_type": ("standard", {"username": "monitor", "password": PASSWORD}),
+        "role": "sysdba",
+    },
+    "connection": {"host": "db1.example.com", "port": 1521},
+    "cache_age": 900,
+    "custom_metrics_cache_age": 1200,
+    "discovery": {"enabled": True, "include": ["ORCL"]},
+    "sections": {"tablespaces": "asynchronous", "locks": "synchronous"},
+    "excluded_sections": [{"target_id": ("sid", {"sid": "XE"}), "sections": ["rman"]}],
+}
+
+# What the form wrote before the revision.
+OLD_RULE: Mapping[str, object] = {
+    "deploy": ("deploy", None),
+    "options": {"ignore_db_name": False},
+    "main": _SHARED,
+    "instances": [{"oracle_id": ("alias", {"alias": "PROD"})}],
+}
+
+CURRENT_RULE: Mapping[str, object] = {
+    "deploy": ("deploy", None),
+    "options": {"ignore_db_name": False},
+    "instances": [{"oracle_id": ("alias", {"alias": "PROD"})}],
+    **_SHARED,
+}
+
+
+@pytest.fixture(name="registered_visitors")
+def _registered_visitors() -> None:
+    register_form_specs()
+    # The Password visitor is registered by cmk.gui.watolib, which this suite does not load.
+    register_visitor_class(Password, PasswordVisitor)
+
+
+def test_migrate_maps_the_old_rule_onto_the_current_shape() -> None:
+    assert _migrate(OLD_RULE) == CURRENT_RULE
+
+
+def test_migrate_leaves_a_current_rule_alone() -> None:
+    assert _migrate(CURRENT_RULE) == CURRENT_RULE
+
+
+@pytest.mark.usefixtures("registered_visitors")
+def test_the_migrated_rule_is_what_the_form_stores() -> None:
+    visitor = get_visitor(
+        _agent_config_mk_oracle(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+    assert visitor.to_disk(RawDiskData(OLD_RULE)) == CURRENT_RULE
+    assert visitor.to_disk(RawDiskData(CURRENT_RULE)) == CURRENT_RULE
+
+
+def test_the_current_rule_parses_as_the_stored_model() -> None:
+    parsed = StoredConfig.model_validate(CURRENT_RULE)
+    assert parsed.model_dump(mode="python", exclude_unset=True) == CURRENT_RULE
+
+
+def test_the_form_shows_no_main_container() -> None:
+    assert "main" not in _agent_config_mk_oracle().elements
 
 
 def _walk(form_spec: FormSpec[Any]) -> Iterator[FormSpec[Any]]:
@@ -67,28 +137,15 @@ def test_the_form_declares_max_connections_as_ignored() -> None:
 
 
 def test_the_string_lists_are_offered_as_one_line_each() -> None:
-    main = _agent_config_mk_oracle().elements["main"].parameter_form
-    assert isinstance(main, Dictionary)
-    discovery = main.elements["discovery"].parameter_form
+    discovery = _agent_config_mk_oracle().elements["discovery"].parameter_form
     assert isinstance(discovery, Dictionary)
     for key in ("include", "exclude"):
         assert isinstance(discovery.elements[key].parameter_form, ListOfStrings)
 
 
-def test_options_is_top_level() -> None:
-    # `options` is a top-level GUI section; the bakery routes it into `oracle.main.options`
-    form = _agent_config_mk_oracle()
-    assert "options" in form.elements, "`options` must be a top-level element"
-    main_form = form.elements["main"].parameter_form
-    assert isinstance(main_form, Dictionary)
-    assert "options" not in main_form.elements, "`options` must not be nested under `main`"
-
-
 @pytest.mark.parametrize("section", ["instance", "asm_instance"])
 def test_instance_sections_offer_synchronous_only(section: str) -> None:
-    main = _agent_config_mk_oracle().elements["main"].parameter_form
-    assert isinstance(main, Dictionary)
-    sections = main.elements["sections"].parameter_form
+    sections = _agent_config_mk_oracle().elements["sections"].parameter_form
     assert isinstance(sections, Dictionary)
     modes = sections.elements[section].parameter_form
     assert isinstance(modes, SingleChoice)
@@ -97,9 +154,7 @@ def test_instance_sections_offer_synchronous_only(section: str) -> None:
 
 
 def test_other_sections_offer_all_modes() -> None:
-    main = _agent_config_mk_oracle().elements["main"].parameter_form
-    assert isinstance(main, Dictionary)
-    sections = main.elements["sections"].parameter_form
+    sections = _agent_config_mk_oracle().elements["sections"].parameter_form
     assert isinstance(sections, Dictionary)
     modes = sections.elements["tablespaces"].parameter_form
     assert isinstance(modes, SingleChoice)

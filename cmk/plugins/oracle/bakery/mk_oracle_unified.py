@@ -33,7 +33,6 @@ from cmk.plugins.oracle.lib.unified_config import (
     StoredDiscoveryConf,
     StoredExcludedSectionConf,
     StoredInstanceConf,
-    StoredMainConf,
     StoredOracleSafeEntries,
     StoredSectionOptions,
 )
@@ -162,7 +161,6 @@ class OracleAuthType(StrEnum):
 BakedAuthUserPasswordData = StoredAuthUserPasswordData[Secret]
 BakedAsmAuthConf = StoredAsmAuthConf[Secret]
 BakedAuthConf = StoredAuthConf[Secret]
-BakedMainConf = StoredMainConf[Secret]
 BakedInstanceConf = StoredInstanceConf[Secret]
 BakedConfig = StoredConfig[Secret]
 
@@ -256,8 +254,8 @@ def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
         return
 
     config_lines = list(_get_oracle_yaml_lines(confm))
-    cache_age = confm.main.get_active_cache_age()
-    custom_metrics_cache_age = confm.main.get_active_custom_metrics_cache_age()
+    cache_age = confm.get_active_cache_age()
+    custom_metrics_cache_age = confm.get_active_custom_metrics_cache_age()
     deploy_custom_metrics = cache_age != custom_metrics_cache_age
 
     for base_os, files in OS_ORACLE_FILES:
@@ -292,22 +290,19 @@ def _get_oracle_yaml_lines(config: BakedConfig) -> Iterable[str]:
 
 
 def _get_oracle_dict(config: BakedConfig) -> OracleMain:
-    main_config = config.main
-    instances_config = config.instances
-
-    if not (auth := _get_oracle_authentication(main_config.auth)):
-        raise ValueError("Authentication details must be provided in main configuration.")
+    if not (auth := _get_oracle_authentication(config.auth)):
+        raise ValueError("Authentication details must be provided.")
 
     return OracleMain(
         authentication=auth,
-        connection=_get_oracle_connection(main_config.connection),
+        connection=_get_oracle_connection(config.connection),
         options=_get_oracle_additional_options(config.options),
-        discovery=_get_oracle_discovery(main_config.discovery),
-        sections=_get_oracle_sections(main_config.sections),
-        instances=_get_oracle_instances(instances_config),
-        cache_age=main_config.get_active_cache_age(),
-        custom_metrics_cache_age=main_config.get_active_custom_metrics_cache_age(),
-        excluded_sections=_get_oracle_excluded_sections(main_config.excluded_sections),
+        discovery=_get_oracle_discovery(config.discovery),
+        sections=_get_oracle_sections(config.sections),
+        instances=_get_oracle_instances(config.instances),
+        cache_age=config.get_active_cache_age(),
+        custom_metrics_cache_age=config.get_active_custom_metrics_cache_age(),
+        excluded_sections=_get_oracle_excluded_sections(config.excluded_sections),
     )
 
 

@@ -4,9 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The stored configuration of the ``mk_oracle_unified`` agent rule.
 
-What an ``agent_config:mk_oracle_unified`` rule looks like in ``rules.mk``. The
-bakery parses it back to build ``mk-oracle.yml``, and the legacy ruleset
-migration in ``cmk/update_config`` writes it.
+What an ``agent_config:mk_oracle_unified`` rule looks like in ``rules.mk``, which
+is also what the Setup form offers. The bakery parses it back to build
+``mk-oracle.yml``, and the legacy ruleset migration in ``cmk/update_config``
+writes it.
+
+A key whose shape changes gets a new name rather than a new meaning, so that the
+name alone says which shape a stored value has. ``_migrate`` in
+``rulesets/mk_oracle_unified.py`` maps the retired names onto the current ones.
 
 ``SecretT`` is the one field the two sides model differently. A rule stores a
 password store reference, and the backend has replaced it with a ``Secret`` by
@@ -94,29 +99,6 @@ class StoredExcludedSectionConf(BaseModel):
     sections: list[str] | None = None
 
 
-class StoredMainConf[SecretT = StoredPassword](BaseModel):
-    auth: StoredAuthConf[SecretT]
-    connection: StoredConnectionConf
-    cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
-    discovery: StoredDiscoveryConf | None = None
-    sections: StoredSectionOptions | None = None
-    excluded_sections: list[StoredExcludedSectionConf] | None = None
-
-    def get_active_cache_age(self) -> int:
-        """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.cache_age or 600
-
-    def get_active_custom_metrics_cache_age(self) -> int:
-        """Return metrics cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.custom_metrics_cache_age or 600
-
-
-class StoredInstanceAdditionalOptionsConf(BaseModel):
-    ignore_db_name: bool | None = None
-    oracle_client_library: StoredOracleClientLibOptions | None = None
-
-
 class StoredInstanceConf[SecretT = StoredPassword](BaseModel):
     oracle_id: tuple[Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf]
     auth: StoredAuthConf[SecretT] | None = None
@@ -126,7 +108,20 @@ class StoredInstanceConf[SecretT = StoredPassword](BaseModel):
 
 class StoredConfig[SecretT = StoredPassword](BaseModel):
     deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
-    # `options` is a top-level GUI section; it is baked into `oracle.main.options`.
-    options: StoredAdditionalOptionsConf | None = None
-    main: StoredMainConf[SecretT]
+    auth: StoredAuthConf[SecretT]
+    connection: StoredConnectionConf
+    cache_age: int | None = None
+    custom_metrics_cache_age: int | None = None
+    discovery: StoredDiscoveryConf | None = None
+    sections: StoredSectionOptions | None = None
+    excluded_sections: list[StoredExcludedSectionConf] | None = None
     instances: list[StoredInstanceConf[SecretT]] | None = None
+    options: StoredAdditionalOptionsConf | None = None
+
+    def get_active_cache_age(self) -> int:
+        """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
+        return self.cache_age or 600
+
+    def get_active_custom_metrics_cache_age(self) -> int:
+        """Return metrics cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
+        return self.custom_metrics_cache_age or 600

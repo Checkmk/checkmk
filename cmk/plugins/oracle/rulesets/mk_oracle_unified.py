@@ -747,51 +747,30 @@ def _endpoint(
     }
 
 
-def _main() -> Dictionary:
-    return Dictionary(
-        title=Title("Default settings"),
-        help_text=Help(
-            "These settings apply to all monitored Oracle databases by default. "
-            "They define the authentication, connection, and data collection options "
-            "used unless overridden for a specific database in the instance list below."
+def _cache_ages() -> Mapping[str, DictElement[int]]:
+    return {
+        "cache_age": DictElement(
+            parameter_form=Integer(
+                title=Title("Cache age"),
+                help_text=Help(
+                    "How old (in seconds) the cache file for built-in sections is allowed to be."
+                ),
+                prefill=DefaultValue(600),
+            ),
+            required=False,
         ),
-        elements={
-            **_endpoint(is_main_entry=True),
-            "cache_age": DictElement(
-                parameter_form=Integer(
-                    title=Title("Cache age"),
-                    help_text=Help(
-                        "How old (in seconds) the cache file for built-in sections is allowed to be."
-                    ),
-                    prefill=DefaultValue(600),
+        "custom_metrics_cache_age": DictElement(
+            parameter_form=Integer(
+                title=Title("Custom metrics cache age"),
+                help_text=Help(
+                    "How old (in seconds) the cache file for custom metrics is allowed to be."
                 ),
-                required=False,
+                custom_validate=(validators.NumberInRange(min_value=30),),
+                prefill=DefaultValue(600),
             ),
-            "custom_metrics_cache_age": DictElement(
-                parameter_form=Integer(
-                    title=Title("Custom metrics cache age"),
-                    help_text=Help(
-                        "How old (in seconds) the cache file for custom metrics is allowed to be."
-                    ),
-                    custom_validate=(validators.NumberInRange(min_value=30),),
-                    prefill=DefaultValue(600),
-                ),
-                required=False,
-            ),
-            "discovery": DictElement(
-                parameter_form=_discovery(),
-                required=False,
-            ),
-            "sections": DictElement(
-                parameter_form=_sections(),
-                required=False,
-            ),
-            "excluded_sections": DictElement(
-                parameter_form=_excluded_sections(),
-                required=False,
-            ),
-        },
-    )
+            required=False,
+        ),
+    }
 
 
 # identical tp the legacy list
@@ -888,9 +867,47 @@ def _instances() -> List[_NamedOption]:
 # written before that still carries them.
 _KEPT_BUT_NOT_OFFERED: Final = ("max_connections", "max_queries")
 
+_LIFTED_FROM_MAIN: Final = (
+    "auth",
+    "connection",
+    "cache_age",
+    "custom_metrics_cache_age",
+    "discovery",
+    "sections",
+    "excluded_sections",
+)
+
+
+def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
+    """Dissolve "main" into the top level.
+
+    The step keys off a name that only the old shape has, so running it on a
+    value that has already been through it changes nothing.
+    """
+    migrated = {key: item for key, item in value.items() if key != "main"}
+    if isinstance(main := value.get("main"), Mapping):
+        migrated.update({key: main[key] for key in _LIFTED_FROM_MAIN if key in main})
+    return migrated
+
+
+# One entry per revision. A new revision appends a step; the existing ones are
+# never touched again. Each step keys off the presence of a retired name, so
+# running the chain on an already current value changes nothing.
+_MIGRATIONS: Final = (_to_rev2,)
+
+
+def _migrate(value: object) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"Invalid rule value: {value!r}")
+    migrated: Mapping[str, object] = value
+    for step in _MIGRATIONS:
+        migrated = step(migrated)
+    return migrated
+
 
 def _agent_config_mk_oracle() -> Dictionary:
     return Dictionary(
+        migrate=_migrate,
         elements={
             "deploy": DictElement(
                 required=True,
@@ -917,17 +934,27 @@ def _agent_config_mk_oracle() -> Dictionary:
                     ],
                 ),
             ),
-            "options": DictElement(
-                parameter_form=_options(),
+            **_endpoint(is_main_entry=True),
+            "discovery": DictElement(
+                parameter_form=_discovery(),
                 required=False,
-            ),
-            "main": DictElement(
-                parameter_form=_main(),
-                required=True,
             ),
             "instances": DictElement(
                 parameter_form=_instances(),
                 required=True,
+            ),
+            "sections": DictElement(
+                parameter_form=_sections(),
+                required=False,
+            ),
+            "excluded_sections": DictElement(
+                parameter_form=_excluded_sections(),
+                required=False,
+            ),
+            **_cache_ages(),
+            "options": DictElement(
+                parameter_form=_options(),
+                required=False,
             ),
         },
     )

@@ -21,7 +21,6 @@ from cmk.plugins.oracle.lib.unified_config import (
     StoredDiscoveryConf,
     StoredExcludedSectionConf,
     StoredInstanceConf,
-    StoredMainConf,
     StoredOracleIdentificationConf,
     StoredOracleSafeEntries,
     StoredPassword,
@@ -160,19 +159,20 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
         auth = (auth or StoredAuthConf()).model_copy(update={"auth_type": ("wallet", None)})
         warnings.append("No auth defined in legacy rule. Defaulting to Oracle wallet.")
 
-    main = StoredMainConf(
-        auth=auth,
-        connection=connection or StoredConnectionConf(),
-        cache_age=cache_age,
-        discovery=discovery,
-        sections=sections,
-        excluded_sections=excluded_sections,
-    )
-
     warnings.extend(msg for key, msg in field_warning_messages.items() if key in legacy)
 
     return MigratedRule(
-        rule=StoredConfig(deploy=deploy, instances=instances, main=main, options=options),
+        rule=StoredConfig(
+            deploy=deploy,
+            auth=auth,
+            connection=connection or StoredConnectionConf(),
+            cache_age=cache_age,
+            discovery=discovery,
+            sections=sections,
+            excluded_sections=excluded_sections,
+            instances=instances,
+            options=options,
+        ),
         warnings=warnings,
     )
 

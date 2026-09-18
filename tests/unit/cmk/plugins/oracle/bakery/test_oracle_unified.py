@@ -15,7 +15,6 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     BakedAuthUserPasswordData,
     BakedConfig,
     BakedInstanceConf,
-    BakedMainConf,
     bakery_plugin_oracle,
 )
 from cmk.plugins.oracle.lib.unified_config import (
@@ -156,27 +155,25 @@ def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plu
 # 1. Minimal config (already present)
 oracle_config_min: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="cmk",
-                    password=Secret("pw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="cmk",
+                password=Secret("pw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=None,
-            timeout=None,
-            tns_admin=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=None,
+        timeout=None,
+        tns_admin=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -202,51 +199,49 @@ oracle_config_full: BakedConfig = BakedConfig(
         ignore_db_name=True,
         oracle_client_library=None,
     ),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="admin",
-                    password=Secret("adminpw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="admin",
+                password=Secret("adminpw", "", ""),
             ),
-            role="sysdba",
         ),
-        connection=StoredConnectionConf(
-            host="dbhost",
-            port=1521,
-            timeout=10,
-            tns_admin="/etc/oracle/tns",
-        ),
-        cache_age=600,
-        discovery=StoredDiscoveryConf(
-            enabled=True,
-            include=["prod*", "test*"],
-            exclude=["old*"],
-        ),
-        sections={
-            "instance": "synchronous",
-            "asm_instance": "disabled",
-            "dataguard_stats": "disabled",
-            "locks": "disabled",
-            "logswitches": "disabled",
-            "longactivesessions": "disabled",
-            "performance": "asynchronous",
-            "processes": "disabled",
-            "recovery_area": "disabled",
-            "recovery_status": "disabled",
-            "sessions": "disabled",
-            "systemparameter": "disabled",
-            "undostat": "disabled",
-            "asm_diskgroup": "disabled",
-            "iostats": "disabled",
-            "jobs": "disabled",
-            "resumable": "disabled",
-            "rman": "disabled",
-            "tablespaces": "disabled",
-        },
+        role="sysdba",
     ),
+    connection=StoredConnectionConf(
+        host="dbhost",
+        port=1521,
+        timeout=10,
+        tns_admin="/etc/oracle/tns",
+    ),
+    cache_age=600,
+    discovery=StoredDiscoveryConf(
+        enabled=True,
+        include=["prod*", "test*"],
+        exclude=["old*"],
+    ),
+    sections={
+        "instance": "synchronous",
+        "asm_instance": "disabled",
+        "dataguard_stats": "disabled",
+        "locks": "disabled",
+        "logswitches": "disabled",
+        "longactivesessions": "disabled",
+        "performance": "asynchronous",
+        "processes": "disabled",
+        "recovery_area": "disabled",
+        "recovery_status": "disabled",
+        "sessions": "disabled",
+        "systemparameter": "disabled",
+        "undostat": "disabled",
+        "asm_diskgroup": "disabled",
+        "iostats": "disabled",
+        "jobs": "disabled",
+        "resumable": "disabled",
+        "rman": "disabled",
+        "tablespaces": "disabled",
+    },
     instances=[
         BakedInstanceConf(
             oracle_id=(
@@ -336,48 +331,46 @@ expected_yaml_lines_full = [
 # 3. Main config with auth, connection and one section
 oracle_config_section: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="secuser",
-                    password=Secret("secpw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="secuser",
+                password=Secret("secpw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=1521,
-            timeout=None,
-            tns_admin="some_tns_admin",
-            oracle_local_registry="some_registry",
-        ),
-        cache_age=None,
-        discovery=None,
-        sections={
-            "instance": "synchronous",
-            "asm_instance": "disabled",
-            "dataguard_stats": "disabled",
-            "locks": "disabled",
-            "logswitches": "disabled",
-            "longactivesessions": "disabled",
-            "performance": "disabled",
-            "processes": "disabled",
-            "recovery_area": "disabled",
-            "recovery_status": "disabled",
-            "sessions": "disabled",
-            "systemparameter": "disabled",
-            "undostat": "disabled",
-            "asm_diskgroup": "disabled",
-            "iostats": "disabled",
-            "jobs": "disabled",
-            "resumable": "disabled",
-            "rman": "disabled",
-            "tablespaces": "disabled",
-        },
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=1521,
+        timeout=None,
+        tns_admin="some_tns_admin",
+        oracle_local_registry="some_registry",
+    ),
+    cache_age=None,
+    discovery=None,
+    sections={
+        "instance": "synchronous",
+        "asm_instance": "disabled",
+        "dataguard_stats": "disabled",
+        "locks": "disabled",
+        "logswitches": "disabled",
+        "longactivesessions": "disabled",
+        "performance": "disabled",
+        "processes": "disabled",
+        "recovery_area": "disabled",
+        "recovery_status": "disabled",
+        "sessions": "disabled",
+        "systemparameter": "disabled",
+        "undostat": "disabled",
+        "asm_diskgroup": "disabled",
+        "iostats": "disabled",
+        "jobs": "disabled",
+        "resumable": "disabled",
+        "rman": "disabled",
+        "tablespaces": "disabled",
+    },
     instances=None,
 )
 
@@ -404,27 +397,25 @@ expected_yaml_lines_section = [
 # 4. Main config with auth, connection and instances with only one instance (only sid)
 oracle_config_instance_sid: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="onlysid",
-                    password=Secret("sidpw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="onlysid",
+                password=Secret("sidpw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=None,
-            timeout=None,
-            tns_admin=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=None,
+        timeout=None,
+        tns_admin=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=[
         BakedInstanceConf(
             oracle_id=(
@@ -456,31 +447,29 @@ expected_yaml_lines_instance_sid = [
 # 5. Main config with auth, connection, discovery and two instances (one only sid, one full)
 oracle_config_discovery_instances: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="mainuser",
-                    password=Secret("mainpw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="mainuser",
+                password=Secret("mainpw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=1521,
-            timeout=5,
-            tns_admin=None,
-        ),
-        cache_age=None,
-        discovery=StoredDiscoveryConf(
-            enabled=True,
-            include=None,
-            exclude=None,
-        ),
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=1521,
+        timeout=5,
+        tns_admin=None,
+    ),
+    cache_age=None,
+    discovery=StoredDiscoveryConf(
+        enabled=True,
+        include=None,
+        exclude=None,
+    ),
+    sections=None,
     instances=[
         BakedInstanceConf(
             oracle_id=(
@@ -556,28 +545,26 @@ oracle_config_use_host_client_always: BakedConfig = BakedConfig(
             use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
         )
     ),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="user",
-                    password=Secret("pw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="user",
+                password=Secret("pw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=1521,
-            timeout=None,
-            tns_admin=None,
-            oracle_local_registry=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=1521,
+        timeout=None,
+        tns_admin=None,
+        oracle_local_registry=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -606,28 +593,26 @@ oracle_config_use_host_client_path: BakedConfig = BakedConfig(
             use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
         )
     ),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="user",
-                    password=Secret("pw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="user",
+                password=Secret("pw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=1521,
-            timeout=None,
-            tns_admin=None,
-            oracle_local_registry=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=1521,
+        timeout=None,
+        tns_admin=None,
+        oracle_local_registry=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -657,28 +642,26 @@ oracle_config_deploy_oracle_binaries: BakedConfig = BakedConfig(
             deploy_lib=True,
         )
     ),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="user",
-                    password=Secret("pw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="user",
+                password=Secret("pw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=1521,
-            timeout=None,
-            tns_admin=None,
-            oracle_local_registry=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=1521,
+        timeout=None,
+        tns_admin=None,
+        oracle_local_registry=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -705,25 +688,23 @@ oracle_config_wallet_auth: BakedConfig = BakedConfig(
             deploy_lib=True,
         )
     ),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "wallet",
-                None,
-            ),
-            role=None,
+    auth=BakedAuthConf(
+        auth_type=(
+            "wallet",
+            None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=1521,
-            timeout=None,
-            tns_admin=None,
-            oracle_local_registry=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=1521,
+        timeout=None,
+        tns_admin=None,
+        oracle_local_registry=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -772,28 +753,26 @@ def test_oracle_min(config: BakedConfig, expected: Sequence[str]) -> None:
 
 oracle_config_custom_metrics_cache_age: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="cmk",
-                    password=Secret("pw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="cmk",
+                password=Secret("pw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host="localhost",
-            port=None,
-            timeout=None,
-            tns_admin=None,
-        ),
-        cache_age=None,
-        custom_metrics_cache_age=120,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host="localhost",
+        port=None,
+        timeout=None,
+        tns_admin=None,
+    ),
+    cache_age=None,
+    custom_metrics_cache_age=120,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -845,27 +824,25 @@ custom_metrics_files: list[Plugin] = [
 # elsewhere, so the bakery must not decide it here.
 oracle_config_no_host: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=BakedMainConf(
-        auth=BakedAuthConf(
-            auth_type=(
-                "standard",
-                BakedAuthUserPasswordData(
-                    username="cmk",
-                    password=Secret("pw", "", ""),
-                ),
+    auth=BakedAuthConf(
+        auth_type=(
+            "standard",
+            BakedAuthUserPasswordData(
+                username="cmk",
+                password=Secret("pw", "", ""),
             ),
-            role=None,
         ),
-        connection=StoredConnectionConf(
-            host=None,
-            port=None,
-            timeout=None,
-            tns_admin=None,
-        ),
-        cache_age=None,
-        discovery=None,
-        sections=None,
+        role=None,
     ),
+    connection=StoredConnectionConf(
+        host=None,
+        port=None,
+        timeout=None,
+        tns_admin=None,
+    ),
+    cache_age=None,
+    discovery=None,
+    sections=None,
     instances=None,
 )
 
@@ -888,9 +865,7 @@ def test_oracle_without_host_omits_hostname() -> None:
 
 def test_oracle_without_host_keeps_other_connection_keys() -> None:
     config = oracle_config_no_host.model_copy(deep=True)
-    config.main.connection = StoredConnectionConf(
-        host=None, port=1234, timeout=None, tns_admin=None
-    )
+    config.connection = StoredConnectionConf(host=None, port=1234, timeout=None, tns_admin=None)
     lines = [
         line
         for entry in _process(config)
@@ -910,20 +885,16 @@ def test_custom_metrics_cache_age_in_yaml() -> None:
 def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
     config = BakedConfig(
         deploy=(DEPLOY, None),
-        main=BakedMainConf(
-            auth=BakedAuthConf(
-                auth_type=(
-                    "standard",
-                    BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
-                ),
-                role=None,
+        auth=BakedAuthConf(
+            auth_type=(
+                "standard",
+                BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
             ),
-            connection=StoredConnectionConf(
-                host="localhost", port=None, timeout=None, tns_admin=None
-            ),
-            cache_age=300,
-            custom_metrics_cache_age=300,
+            role=None,
         ),
+        connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        cache_age=300,
+        custom_metrics_cache_age=300,
         instances=None,
     )
     result = _process(config)
@@ -945,7 +916,8 @@ def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
 def test_get_active_custom_metrics_cache_age(
     custom_metrics_cache_age: int | None, expected: int
 ) -> None:
-    conf = BakedMainConf(
+    conf = BakedConfig(
+        deploy=(DEPLOY, None),
         auth=BakedAuthConf(
             auth_type=(
                 "standard",
@@ -997,19 +969,15 @@ def _config_with_excluded_sections(
 ) -> BakedConfig:
     return BakedConfig(
         deploy=(DEPLOY, None),
-        main=BakedMainConf(
-            auth=BakedAuthConf(
-                auth_type=(
-                    "standard",
-                    BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
-                ),
-                role=None,
+        auth=BakedAuthConf(
+            auth_type=(
+                "standard",
+                BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
             ),
-            connection=StoredConnectionConf(
-                host="localhost", port=None, timeout=None, tns_admin=None
-            ),
-            excluded_sections=excluded_sections,
+            role=None,
         ),
+        connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        excluded_sections=excluded_sections,
         instances=None,
     )
 

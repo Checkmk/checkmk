@@ -15,6 +15,9 @@ from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
     _agent_config_mk_oracle,
     USE_HOST_CLIENT_PATH_RE,
 )
+from cmk.rulesets.internal.form_specs import (
+    ListOfStrings,
+)
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     Dictionary,
@@ -61,6 +64,15 @@ def test_the_form_declares_max_connections_as_ignored() -> None:
     options_form = _agent_config_mk_oracle().elements["options"].parameter_form
     assert isinstance(options_form, Dictionary)
     assert "max_connections" in options_form.ignored_elements
+
+
+def test_the_string_lists_are_offered_as_one_line_each() -> None:
+    main = _agent_config_mk_oracle().elements["main"].parameter_form
+    assert isinstance(main, Dictionary)
+    discovery = main.elements["discovery"].parameter_form
+    assert isinstance(discovery, Dictionary)
+    for key in ("include", "exclude"):
+        assert isinstance(discovery.elements[key].parameter_form, ListOfStrings)
 
 
 def test_options_is_top_level() -> None:

@@ -9,6 +9,10 @@ from typing import Final, Literal, override
 
 from pydantic import BaseModel
 
+from cmk.rulesets.internal.form_specs import (
+    ListOfStrings,
+    ListOfStringsLayout,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -434,6 +438,7 @@ def _connection_options(*, include_tns_admin: bool) -> Dictionary:
         "timeout": DictElement(
             parameter_form=Integer(
                 title=Title("Connection timeout"),
+                unit_symbol="s",
                 prefill=DefaultValue(5),
             ),
             required=False,
@@ -547,30 +552,23 @@ def _discovery() -> Dictionary:
                 required=True,
             ),
             "include": DictElement(
-                parameter_form=List(
+                parameter_form=ListOfStrings(
                     title=Title("Include patterns"),
                     help_text=Help(
-                        "Only services matching one of these patterns"
-                        " will be discovered. If no pattern is defined,"
-                        " all services are included."
+                        "Only instances matching one of these patterns are monitored. "
+                        "If no pattern is defined, all of them are."
                     ),
-                    add_element_label=Label("Add new include pattern"),
-                    element_template=String(
-                        title=Title("Include pattern"),
-                    ),
+                    string_spec=String(),
+                    layout=ListOfStringsLayout.horizontal,
                 ),
                 required=False,
             ),
             "exclude": DictElement(
-                parameter_form=List(
+                parameter_form=ListOfStrings(
                     title=Title("Exclude patterns"),
-                    help_text=Help(
-                        "Services matching one of these patterns will be excluded from discovery."
-                    ),
-                    add_element_label=Label("Add new exclude pattern"),
-                    element_template=String(
-                        title=Title("Exclude pattern"),
-                    ),
+                    help_text=Help("Instances matching one of these patterns are not monitored."),
+                    string_spec=String(),
+                    layout=ListOfStringsLayout.horizontal,
                 ),
                 required=False,
             ),
@@ -609,15 +607,14 @@ def _permissions() -> CascadingSingleChoice:
                     elements={
                         "safe_entries": DictElement(
                             required=False,
-                            parameter_form=List(
+                            parameter_form=ListOfStrings(
                                 title=Title("Safe groups and/or users"),
                                 help_text=Help(
                                     "Account names on Windows, user or group names - or "
                                     "numeric IDs - on Linux and UNIX."
                                 ),
-                                element_template=String(),
-                                add_element_label=Label("Add new group or user"),
-                                editable_order=False,
+                                string_spec=String(),
+                                layout=ListOfStringsLayout.horizontal,
                             ),
                         ),
                     }

@@ -65,7 +65,6 @@ pkg_files(
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
         ":cmk-monitor-otel-collector",
-        ":cmk-piggyback-hub.py",
         ":cmk-ui-job-scheduler-health",
         ":mkevent",
         ":mkp.py",
@@ -77,7 +76,6 @@ pkg_files(
     renames = {
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
-        "cmk-piggyback-hub.py": "cmk-piggyback-hub",
         "mkp.py": "mkp",
     },
 )
@@ -94,19 +92,6 @@ pkg_tar(
 
 # Not shipped — only exists so that static analysis tools (ruff, …)
 # can discover these .py files via Bazel.
-py_library(
-    name = "cmk_piggyback_hub_py",
-    srcs = ["cmk-piggyback-hub.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/piggyback:hub",
-        "//cmk/utils",
-        "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:version-info",
-        "//packages/cmk-crash:crash",
-    ],
-)
-
 py_library(
     name = "cmk_migrate_extension_rulesets_py",
     srcs = ["cmk-migrate-extension-rulesets.py"],

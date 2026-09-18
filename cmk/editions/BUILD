@@ -35,6 +35,7 @@ py_library(
         "//cmk/piggyback:backend",
         "//cmk/piggyback:cli",
         "//cmk/piggyback:hub",
+        "//cmk/piggyback:hub_cli",
         "//cmk/plugins",
         "//cmk/plugins/checkmk/post_rename_site",
         "//cmk/post_rename_site",

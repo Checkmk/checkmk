@@ -16,7 +16,7 @@ from cmk.crash import (
     CrashReportStore,
     make_crash_report_base_path,
 )
-from cmk.piggyback.hub import main
+from cmk.piggyback.hub import main as _hub_main
 from cmk.utils.paths import omd_root
 from cmk.utils.security_event import (
     InputValidationFailureEvent,
@@ -55,11 +55,15 @@ def invalid_hostname_callback(exc: HostNameValidationError) -> None:
     )
 
 
-if __name__ == "__main__":
-    sys.exit(
-        main(
-            sys.argv,
-            crash_report_callback=create_crash_report_callback,
-            invalid_hostname_callback=invalid_hostname_callback,
-        )
+def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv
+    return _hub_main(
+        argv,
+        crash_report_callback=create_crash_report_callback,
+        invalid_hostname_callback=invalid_hostname_callback,
     )
+
+
+if __name__ == "__main__":
+    sys.exit(main())

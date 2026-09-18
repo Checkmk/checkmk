@@ -18,7 +18,10 @@ py_library(
 
 py_library(
     name = "hub",
-    srcs = glob(["hub/**/*.py"]),
+    srcs = glob(
+        ["hub/**/*.py"],
+        exclude = ["hub/cli.py"],
+    ),
     imports = ["../.."],
     visibility = [
         "//bin:__subpackages__",
@@ -43,5 +46,19 @@ py_library(
         ":backend",
         "//cmk/utils:paths",
         "//packages/cmk-livestatus-client",
+    ],
+)
+
+py_library(
+    name = "hub_cli",
+    srcs = ["hub/cli.py"],
+    imports = ["../.."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":hub",
+        "//cmk/utils",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:version-info",
+        "//packages/cmk-crash:crash",
     ],
 )

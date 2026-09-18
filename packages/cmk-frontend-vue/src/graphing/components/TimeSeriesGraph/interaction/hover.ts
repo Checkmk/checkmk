@@ -12,7 +12,7 @@ export interface HoverSample {
   formattedValue: string
   /** Empty for a line fetched from an RRD. */
   attributes: MetricAttribute[]
-  pixelY: number | null
+  drawnPoint: { x: number; y: number } | null
   snapTime: number | null
   isClosest: boolean
 }

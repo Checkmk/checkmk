@@ -54,8 +54,8 @@ function constantPoints(value: number | null): (number | null)[] {
   return Array.from({ length: 11 }, () => value)
 }
 
-function pointsValuedAtTheirOwnTimestamp(): (number | null)[] {
-  return Array.from({ length: 10 }, (_, index) => (index + 1) * 10)
+function pointsValuedAtTheirOwnTimestamp(count = 10, step = TIME_RANGE.step): number[] {
+  return Array.from({ length: count }, (_, index) => (index + 1) * step)
 }
 
 const PLOT_CLIENT_LEFT = 200
@@ -132,10 +132,10 @@ function sweep(hover: ReturnType<typeof useHover>, fromX: number, toX: number): 
   return states
 }
 
-function pixelYsOf(states: HoverState[], metricName: string): number[] {
+function drawnPointsOf(states: HoverState[], metricName: string): Array<{ x: number; y: number }> {
   return states.flatMap((state) => {
-    const { pixelY } = state.samples.find((sample) => sample.metricName === metricName)!
-    return pixelY === null ? [] : [pixelY]
+    const { drawnPoint } = state.samples.find((sample) => sample.metricName === metricName)!
+    return drawnPoint === null ? [] : [drawnPoint]
   })
 }
 
@@ -178,7 +178,7 @@ describe('useHover — hit-test', () => {
     const samples = hover.hoverState.value!.samples
     expect(samples.find((sample) => sample.metricName === 'empty')).toMatchObject({
       formattedValue: 'n/a',
-      pixelY: null,
+      drawnPoint: null,
       isClosest: false
     })
     expect(samples.find((sample) => sample.metricName === 'high')!.isClosest).toBe(true)
@@ -266,7 +266,7 @@ describe('useHover — hit-test', () => {
     expect(state.samples[0]).toMatchObject({
       metricName: 'low',
       formattedValue: 'n/a',
-      pixelY: null,
+      drawnPoint: null,
       isClosest: false
     })
     expect(Math.abs(state.snapX - 80)).toBeLessThanOrEqual(1)
@@ -292,7 +292,7 @@ describe('useHover — snapping to drawn points', () => {
     const state = hover.hoverState.value!
     expect(state.snapTime).toBe(50)
     expect(state.snapX).toBe(50)
-    expect(state.samples[0]).toMatchObject({ formattedValue: '50', pixelY: 50 })
+    expect(state.samples[0]).toMatchObject({ formattedValue: '50', drawnPoint: { x: 50, y: 50 } })
   })
 
   test('a cursor past the midpoint between two samples snaps forward to the next one', () => {
@@ -303,7 +303,7 @@ describe('useHover — snapping to drawn points', () => {
     const state = hover.hoverState.value!
     expect(state.snapTime).toBe(60)
     expect(state.snapX).toBe(60)
-    expect(state.samples[0]).toMatchObject({ formattedValue: '60', pixelY: 40 })
+    expect(state.samples[0]).toMatchObject({ formattedValue: '60', drawnPoint: { x: 60, y: 40 } })
   })
 
   // A plot width the sample step does not divide leaves one column per sample pair straddling
@@ -323,7 +323,7 @@ describe('useHover — snapping to drawn points', () => {
 
     // Every sample is valued at its own timestamp, so a reported point is only a point of the
     // curve when its value and the time it is reported at agree.
-    const reported = states.filter((state) => state.samples[0]!.pixelY !== null)
+    const reported = states.filter((state) => state.samples[0]!.drawnPoint !== null)
     expect(reported.length).toBeGreaterThan(0)
     for (const state of reported) {
       expect(state.samples[0]!.formattedValue).toBe(String(state.snapTime))
@@ -340,9 +340,9 @@ describe('useHover — snapping to drawn points', () => {
 
     const states = sweep(hover, 0, 97)
 
-    const lineDots = pixelYsOf(states, 'as-line')
+    const lineDots = drawnPointsOf(states, 'as-line')
     expect(lineDots.length).toBeGreaterThan(0)
-    expect(pixelYsOf(states, 'as-area')).toEqual(lineDots)
+    expect(drawnPointsOf(states, 'as-area')).toEqual(lineDots)
   })
 
   // An inverse metric is drawn mirrored, so the top of its curve is the bucket's minimum. The
@@ -358,17 +358,17 @@ describe('useHover — snapping to drawn points', () => {
 
     const states = sweep(hover, 0, 97)
 
-    const reported = states.filter((state) => state.samples[0]!.pixelY !== null)
+    const reported = states.filter((state) => state.samples[0]!.drawnPoint !== null)
     expect(reported.length).toBeGreaterThan(0)
     for (const state of reported) {
       const sample = state.samples[0]!
       expect(sample.formattedValue).toBe(String(state.snapTime))
-      expect(sample.pixelY).toBeCloseTo(yScale(-Number(sample.formattedValue)))
+      expect(sample.drawnPoint!.y).toBeCloseTo(yScale(-Number(sample.formattedValue)))
     }
   })
 
   test('a cursor over a gap stays n/a instead of snapping to a neighbouring sample', () => {
-    const gappedPoints = pointsValuedAtTheirOwnTimestamp()
+    const gappedPoints: (number | null)[] = pointsValuedAtTheirOwnTimestamp()
     const indexOfSampleAtT50 = 4
     gappedPoints[indexOfSampleAtT50] = null
     const hover = mountHover([makeLineMetric('gapped', gappedPoints)])
@@ -377,8 +377,91 @@ describe('useHover — snapping to drawn points', () => {
 
     expect(hover.hoverState.value!.samples[0]).toMatchObject({
       formattedValue: 'n/a',
-      pixelY: null
+      drawnPoint: null
     })
+  })
+})
+
+describe('useHover — one time for every metric', () => {
+  const RANGE_SAMPLED_EVERY_SECOND = { start: TIME_RANGE.start, end: TIME_RANGE.end, step: 1 }
+  const SAMPLES_PER_COLUMN = 2
+  const PLOT_WIDTH_DENSE =
+    (RANGE_SAMPLED_EVERY_SECOND.end - RANGE_SAMPLED_EVERY_SECOND.start) /
+    (SAMPLES_PER_COLUMN * RANGE_SAMPLED_EVERY_SECOND.step)
+  const rising = pointsValuedAtTheirOwnTimestamp(
+    PLOT_WIDTH_DENSE * SAMPLES_PER_COLUMN,
+    RANGE_SAMPLED_EVERY_SECOND.step
+  )
+  const falling = [...rising].reverse()
+
+  const valueAtTime = (points: number[], time: number): number =>
+    points[
+      Math.round((time - RANGE_SAMPLED_EVERY_SECOND.start) / RANGE_SAMPLED_EVERY_SECOND.step) - 1
+    ]!
+
+  function mountMetricsWhoseColumnMaximaFallOnDifferentSamples(): ReturnType<typeof useHover> {
+    return mountHover(
+      [makeLineMetric('rising', rising), makeLineMetric('falling', falling)],
+      RANGE_SAMPLED_EVERY_SECOND,
+      { consolidation: 'max', plotWidth: PLOT_WIDTH_DENSE }
+    )
+  }
+
+  test('every dot is drawn on its own curve', () => {
+    const hover = mountMetricsWhoseColumnMaximaFallOnDifferentSamples()
+    const { xScale, yScale } = makeScales(PLOT_WIDTH_DENSE)
+    const timeAtPixel = (x: number): number => xScale.invert(x).getTime() / 1000
+
+    const states = sweep(hover, 0, PLOT_WIDTH_DENSE)
+
+    const risingDots = drawnPointsOf(states, 'rising')
+    expect(risingDots.length).toBeGreaterThan(0)
+    for (const dot of risingDots) {
+      expect(dot.y).toBeCloseTo(yScale(valueAtTime(rising, timeAtPixel(dot.x))))
+    }
+    for (const dot of drawnPointsOf(states, 'falling')) {
+      expect(dot.y).toBeCloseTo(yScale(valueAtTime(falling, timeAtPixel(dot.x))))
+    }
+  })
+
+  test('the tooltip time applies to every value it lists', () => {
+    const hover = mountMetricsWhoseColumnMaximaFallOnDifferentSamples()
+
+    const states = sweep(hover, 0, PLOT_WIDTH_DENSE)
+
+    for (const state of states) {
+      const listedTimes = state.samples.map((sample) => sample.snapTime)
+      expect(new Set(listedTimes)).toEqual(new Set([state.snapTime]))
+    }
+  })
+
+  test('a metric without a drawn sample at the crosshair time keeps its own reading on its curve', () => {
+    const SAMPLES_PER_WIDER_COLUMN = 4
+    const plotWidth =
+      (RANGE_SAMPLED_EVERY_SECOND.end - RANGE_SAMPLED_EVERY_SECOND.start) /
+      (SAMPLES_PER_WIDER_COLUMN * RANGE_SAMPLED_EVERY_SECOND.step)
+    const sampleCount = plotWidth * SAMPLES_PER_WIDER_COLUMN
+    const PEAK = 60
+    const peakingMidColumn = Array.from({ length: sampleCount }, (_, index) =>
+      index % SAMPLES_PER_WIDER_COLUMN === 1 ? PEAK : PEAK - 10
+    )
+    const risingNearTheBottom = Array.from({ length: sampleCount }, (_, index) => index / 10)
+    const hover = mountHover(
+      [makeLineMetric('peaking', peakingMidColumn), makeLineMetric('rising', risingNearTheBottom)],
+      RANGE_SAMPLED_EVERY_SECOND,
+      { consolidation: 'max', plotWidth }
+    )
+    const { xScale, yScale } = makeScales(plotWidth)
+    const timeAtPixel = (x: number): number => xScale.invert(x).getTime() / 1000
+
+    hover.moveHoverTo(pointAt(plotWidth / 2, yScale(PEAK)))
+
+    const state = hover.hoverState.value!
+    const risingSample = state.samples.find((sample) => sample.metricName === 'rising')!
+    expect(risingSample.snapTime).not.toBe(state.snapTime)
+    expect(risingSample.drawnPoint).not.toBeNull()
+    const { x, y } = risingSample.drawnPoint!
+    expect(y).toBeCloseTo(yScale(valueAtTime(risingNearTheBottom, timeAtPixel(x))))
   })
 })
 
@@ -392,7 +475,7 @@ describe('useHover — sample order', () => {
 
     hover.moveHoverTo(pointAt(50, 50))
 
-    const listedPixelYs = hover.hoverState.value!.samples.map((sample) => sample.pixelY!)
+    const listedPixelYs = hover.hoverState.value!.samples.map((sample) => sample.drawnPoint!.y)
     expect(listedPixelYs).toHaveLength(3)
     expect(listedPixelYs).toEqual([...listedPixelYs].sort((first, second) => first - second))
   })

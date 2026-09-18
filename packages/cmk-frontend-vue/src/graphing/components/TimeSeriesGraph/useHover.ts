@@ -12,8 +12,8 @@ import { attributesOf } from '../metricAttributes'
 import { orderMetricsTopToBottom } from '../metricOrder'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
-import { consolidatedSampleTime, selectConsolidatedValue } from './render/bucket'
-import { valueAt } from './render/polyline'
+import { consolidatedSampleTime, keptSamples, selectConsolidatedValue } from './render/bucket'
+import { type TimeValuePoint, valueAt } from './render/polyline'
 import type { StackedColumn, StackedSeries } from './render/stacked'
 import type { Metric, UnitFormat } from './types'
 import { valueRenderer } from './valueRenderer'
@@ -36,6 +36,11 @@ const bisectDrawnPoint: Record<ConsolidationFn, ReturnType<typeof bisectorFor>> 
   min: bisectorFor('min'),
   max: bisectorFor('max'),
   avg: bisectorFor('avg')
+}
+const bisectColumnStart = bisector<M4Bucket, number>((bucket) => bucket.startTime)
+
+function keptSampleAt(bucket: M4Bucket | undefined, time: number): TimeValuePoint | undefined {
+  return bucket === undefined ? undefined : keptSamples(bucket).find((kept) => kept.time === time)
 }
 
 interface DrawnEdge {
@@ -84,6 +89,24 @@ const coversTime = (buckets: M4Cache, time: number): boolean =>
   time >= buckets[0]!.startTime &&
   time <= buckets[buckets.length - 1]!.endTime
 
+interface Reading {
+  value: number
+  time: number
+  edge: DrawnEdge
+}
+
+function indexOfClosest(distances: Array<number | null>): number {
+  let closestIdx = -1
+  let closestDistance = CLOSEST_METRIC_REACH_PX
+  distances.forEach((distance, i) => {
+    if (distance !== null && distance <= closestDistance) {
+      closestDistance = distance
+      closestIdx = i
+    }
+  })
+  return closestIdx
+}
+
 export interface HoverOptions {
   metrics: () => Metric[]
   consolidation: () => ConsolidationFn
@@ -112,6 +135,93 @@ export function useHover(options: HoverOptions) {
     drawnStacks = stacks
   }
 
+  function toReading(
+    metric: Metric,
+    metricIndex: number,
+    columnIndex: number,
+    value: number,
+    time: number
+  ): Reading | null {
+    if (!Number.isFinite(value)) {
+      return null
+    }
+    const series: StackedSeries = drawnStacks[metricIndex] ?? { kind: 'line' }
+    const edge = drawnEdge(series, columnIndex, metric.render.inverse ? -value : value, time)
+    return edge === null ? null : { value, time, edge }
+  }
+
+  function readingAtCursor(
+    metric: Metric,
+    metricIndex: number,
+    cursorTime: number
+  ): Reading | null {
+    const buckets = drawnBuckets[metricIndex] ?? []
+    const isStackReference = metric.render.hidden
+    if (isStackReference || !coversTime(buckets, cursorTime)) {
+      return null
+    }
+    const consolidation = asDrawn(options.consolidation(), metric.render.inverse)
+    const columnIndex = Math.min(
+      bisectDrawnPoint[consolidation](buckets, cursorTime),
+      buckets.length - 1
+    )
+    const bucket = buckets[columnIndex]!
+    return toReading(
+      metric,
+      metricIndex,
+      columnIndex,
+      selectConsolidatedValue(bucket, consolidation),
+      drawnTime(bucket, consolidation)
+    )
+  }
+
+  function drawnReadingAtTime(metric: Metric, metricIndex: number, time: number): Reading | null {
+    const buckets = drawnBuckets[metricIndex] ?? []
+    const columnOfTime = bisectColumnStart.right(buckets, time) - 1
+    const columnStraddledInto = columnOfTime + 1
+    for (const columnIndex of [columnOfTime, columnStraddledInto]) {
+      const sample = keptSampleAt(buckets[columnIndex], time)
+      if (sample !== undefined) {
+        return toReading(metric, metricIndex, columnIndex, sample.value, time)
+      }
+    }
+    return null
+  }
+
+  function hitDistance(cursorY: number, reading: Reading): number {
+    return metricHitDistance(
+      cursorY,
+      options.yScale(reading.edge.upper),
+      options.yScale(reading.edge.lower)
+    )
+  }
+
+  function toSample(metric: Metric, reading: Reading | null, isClosest: boolean): HoverSample {
+    const sampleBase = {
+      metricName: metric.metadata.name,
+      label: metric.metadata.title,
+      color: metric.metadata.color,
+      attributes: attributesOf(metric),
+      isClosest
+    }
+    if (reading === null) {
+      return { ...sampleBase, formattedValue: 'n/a', drawnPoint: null, snapTime: null }
+    }
+    const renderValue = valueRenderer(
+      options.axisUnit() ?? metric.metadata.unit,
+      options.valueResolution()
+    )
+    return {
+      ...sampleBase,
+      formattedValue: renderValue(reading.value),
+      drawnPoint: {
+        x: options.xScale(new Date(reading.time * 1000)),
+        y: options.yScale(reading.edge.upper)
+      },
+      snapTime: reading.time
+    }
+  }
+
   function computeHover(point: HoverPoint): HoverState | null {
     // An empty frame still has axes to hover, but nothing to report over them.
     if (options.metrics().length === 0) {
@@ -128,94 +238,38 @@ export function useHover(options: HoverOptions) {
     }
     const cursorTime = (options.xScale.invert(cursorX) as Date).getTime() / 1000
 
-    const hitDistances: Array<number | null> = []
-
     const metricsList = options.metrics()
-    const samples: HoverSample[] = metricsList.map((metric, i) => {
-      const buckets = drawnBuckets[i] ?? []
-      const series: StackedSeries = drawnStacks[i] ?? { kind: 'line' }
-      const consolidation = asDrawn(options.consolidation(), metric.render.inverse)
-      const sampleBase = {
-        metricName: metric.metadata.name,
-        label: metric.metadata.title,
-        color: metric.metadata.color,
-        attributes: attributesOf(metric),
-        isClosest: false
-      }
-      const sampleWithoutValue = {
-        ...sampleBase,
-        formattedValue: 'n/a',
-        pixelY: null,
-        snapTime: null
-      }
-      // Hidden metrics (stack references) are structural: no tooltip row, never "closest".
-      if (metric.render.hidden || !coversTime(buckets, cursorTime)) {
-        hitDistances.push(null)
-        return sampleWithoutValue
-      }
-      const bucketIdx = Math.min(
-        bisectDrawnPoint[consolidation](buckets, cursorTime),
-        buckets.length - 1
-      )
-      const bucket = buckets[bucketIdx]!
-      const value = selectConsolidatedValue(bucket, consolidation)
-      const time = drawnTime(bucket, consolidation)
-      const drawnValue = metric.render.inverse ? -value : value
-      const edge = Number.isFinite(value) ? drawnEdge(series, bucketIdx, drawnValue, time) : null
-      if (edge === null) {
-        hitDistances.push(null)
-        return sampleWithoutValue
-      }
-      const drawnTopPixel = options.yScale(edge.upper)
-      const drawnBottomPixel = options.yScale(edge.lower)
-      hitDistances.push(metricHitDistance(cursorY, drawnTopPixel, drawnBottomPixel))
-      const renderValue = valueRenderer(
-        options.axisUnit() ?? metric.metadata.unit,
-        options.valueResolution()
-      )
-      return {
-        ...sampleBase,
-        formattedValue: renderValue(value),
-        pixelY: drawnTopPixel,
-        snapTime: time
-      }
-    })
+    const readingsAtCursor = metricsList.map((metric, i) => readingAtCursor(metric, i, cursorTime))
+    const closestIdx = indexOfClosest(
+      readingsAtCursor.map((reading) => (reading === null ? null : hitDistance(cursorY, reading)))
+    )
 
-    let closestIdx = -1
-    let closestDistance = CLOSEST_METRIC_REACH_PX
-    for (let i = 0; i < hitDistances.length; i++) {
-      const distance = hitDistances[i]
-      if (distance === null || distance === undefined) {
-        continue
-      }
-      if (distance <= closestDistance) {
-        closestDistance = distance
-        closestIdx = i
-      }
-    }
-    const closestSample = samples[closestIdx]
-    if (closestSample) {
-      closestSample.isClosest = true
-    }
-
-    // Listed as the legend lists them, topmost series first; the placeholder samples of
-    // hidden metrics drop out. Index alignment with hitDistances is no longer needed.
-    const sampleOfMetric = new Map(metricsList.map((metric, i) => [metric, samples[i]!]))
-    const visibleSamples = orderMetricsTopToBottom(metricsList)
+    const indexOfMetric = new Map(metricsList.map((metric, i) => [metric, i]))
+    const indicesInLegendOrder = orderMetricsTopToBottom(metricsList)
       .filter((metric) => !metric.render.hidden)
-      .map((metric) => sampleOfMetric.get(metric)!)
-    const snapSample = closestSample ?? visibleSamples.find((sample) => sample.snapTime !== null)
-    const snapTime = snapSample?.snapTime ?? cursorTime
-    const snapX = options.xScale(new Date(snapTime * 1000))
+      .map((metric) => indexOfMetric.get(metric)!)
+
+    const hoverTime =
+      readingsAtCursor[closestIdx]?.time ??
+      indicesInLegendOrder.map((i) => readingsAtCursor[i]!).find((reading) => reading !== null)
+        ?.time ??
+      cursorTime
+    const readings = readingsAtCursor.map((cursorReading, i) =>
+      cursorReading === null || cursorReading.time === hoverTime
+        ? cursorReading
+        : (drawnReadingAtTime(metricsList[i]!, i, hoverTime) ?? cursorReading)
+    )
 
     return {
       cursorX,
       cursorY,
       clientX: point.clientX,
       clientY: point.clientY,
-      snapX,
-      snapTime,
-      samples: visibleSamples
+      snapX: options.xScale(new Date(hoverTime * 1000)),
+      snapTime: hoverTime,
+      samples: indicesInLegendOrder.map((i) =>
+        toSample(metricsList[i]!, readings[i]!, i === closestIdx)
+      )
     }
   }
 

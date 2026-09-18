@@ -74,10 +74,10 @@ function redraw(): void {
     drawCrosshair(ctx, props.hoverState.snapX, props.plotHeight)
     const dots: FocusDot[] = []
     for (const sample of props.hoverState.samples) {
-      if (sample.pixelY !== null) {
+      if (sample.drawnPoint !== null) {
         dots.push({
-          x: props.hoverState.snapX,
-          y: sample.pixelY,
+          x: sample.drawnPoint.x,
+          y: sample.drawnPoint.y,
           color: sample.color,
           closest: sample.isClosest
         })

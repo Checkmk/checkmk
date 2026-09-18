@@ -19,7 +19,7 @@ function makeSample(overrides: Partial<HoverSample>): HoverSample {
     color: '#ff0000',
     formattedValue: '42 %',
     attributes: [],
-    pixelY: 10,
+    drawnPoint: { x: 5, y: 10 },
     snapTime: 1000,
     isClosest: false,
     ...overrides

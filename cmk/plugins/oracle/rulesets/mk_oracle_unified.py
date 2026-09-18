@@ -449,10 +449,30 @@ def _connection_options(*, include_tns_admin: bool) -> Dictionary:
             ),
             required=False,
         ),
+        "oracle_local_registry": DictElement(
+            parameter_form=String(
+                title=Title("Oracle local registry path"),
+                help_text=Help(
+                    "Path to the olr.loc file of Oracle Grid Infrastructure, which "
+                    "covers both Oracle Clusterware and Oracle Restart. If not "
+                    "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
+                    "probed in that order. Once the Grid home named in that file is "
+                    "found, the plug-in connects to this node by its own name instead "
+                    "of localhost, because a listener under Grid Infrastructure binds "
+                    "the node address. The Grid home is also used as the last "
+                    "candidate for ORACLE_HOME, since Grid Infrastructure stops "
+                    "maintaining oratab from version 12.2 on. Set this to a path that "
+                    "does not exist to switch the behavior off."
+                ),
+                custom_validate=(
+                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+                ),
+            ),
+            required=False,
+        ),
     }
-    # TNS_ADMIN is honored only for the default (main) connection. A per-instance
-    # override is reserved and currently ignored by the plug-in, so the field is
-    # offered on the main connection only.
+    # TNS_ADMIN is honored for the default connection only. A per-instance
+    # override is reserved and currently ignored by the plug-in.
     if include_tns_admin:
         base["tns_admin"] = DictElement(
             parameter_form=String(
@@ -471,27 +491,6 @@ def _connection_options(*, include_tns_admin: bool) -> Dictionary:
             ),
             required=False,
         )
-    base["oracle_local_registry"] = DictElement(
-        parameter_form=String(
-            title=Title("Oracle local registry path"),
-            help_text=Help(
-                "Path to the olr.loc file of Oracle Grid Infrastructure, which "
-                "covers both Oracle Clusterware and Oracle Restart. If not "
-                "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
-                "probed in that order. Once the Grid home named in that file is "
-                "found, the plug-in connects to this node by its own name instead "
-                "of localhost, because a listener under Grid Infrastructure binds "
-                "the node address. The Grid home is also used as the last "
-                "candidate for ORACLE_HOME, since Grid Infrastructure stops "
-                "maintaining oratab from version 12.2 on. Set this to a path that "
-                "does not exist to switch the behavior off."
-            ),
-            custom_validate=(
-                validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
-            ),
-        ),
-        required=False,
-    )
     return Dictionary(
         title=Title("Connection options"),
         elements=base,
@@ -701,11 +700,10 @@ def _use_host_client() -> CascadingSingleChoice:
     )
 
 
-def _options() -> Dictionary:
-    elements: dict[
-        str,
-        DictElement[bool] | DictElement[_NamedOption] | DictElement[_AuthOptions],
-    ] = {
+def _other_settings() -> Mapping[
+    str, DictElement[bool] | DictElement[_NamedOption] | DictElement[_AuthOptions]
+]:
+    return {
         "ignore_db_name": DictElement(
             parameter_form=FixedValue(
                 title=Title("Ignore database name"),
@@ -724,11 +722,6 @@ def _options() -> Dictionary:
         ),
         "validate_permissions": DictElement(parameter_form=_permissions(), required=False),
     }
-    return Dictionary(
-        title=Title("Additional options"),
-        elements=elements,
-        ignored_elements=_KEPT_BUT_NOT_OFFERED,
-    )
 
 
 def _endpoint(
@@ -968,8 +961,8 @@ def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
         migrated["deploy_rev2"] = deploy[0] if isinstance(deploy, tuple) else deploy
     if "instances" in migrated:
         migrated["instances_rev2"] = _entries_to_rev2(migrated.pop("instances"), "oracle_id")
-    if isinstance(options := migrated.get("options"), Mapping):
-        migrated["options"] = _options_to_rev2(options)
+    if isinstance(options := migrated.pop("options", None), Mapping):
+        migrated.update(_options_to_rev2(options))
     return migrated
 
 
@@ -1027,11 +1020,9 @@ def _agent_config_mk_oracle() -> Dictionary:
                 required=False,
             ),
             **_cache_ages(),
-            "options": DictElement(
-                parameter_form=_options(),
-                required=False,
-            ),
+            **_other_settings(),
         },
+        ignored_elements=_KEPT_BUT_NOT_OFFERED,
     )
 
 

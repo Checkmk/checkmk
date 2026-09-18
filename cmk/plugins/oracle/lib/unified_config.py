@@ -90,19 +90,6 @@ class StoredOracleSafeEntries(BaseModel):
     safe_entries: list[str] | None = None
 
 
-class StoredAdditionalOptionsConf(BaseModel):
-    # Dropped from the form by CMK-37226. Rules written before that still carry
-    # it and the bakery still writes it to mk-oracle.yml.
-    max_connections: int | None = None
-    ignore_db_name: bool | None = None
-    use_host_client: UseHostClient | None = None
-    validate_permissions: (
-        tuple[Literal["enabled"], StoredOracleSafeEntries | None]
-        | tuple[Literal["disabled"], None]
-        | None
-    ) = None
-
-
 class StoredExcludedSectionConf(BaseModel):
     target_id: StoredOracleId
     sections: list[str] | None = None
@@ -125,7 +112,18 @@ class StoredConfig[SecretT = StoredPassword](BaseModel):
     sections: StoredSectionOptions | None = None
     excluded_sections: list[StoredExcludedSectionConf] | None = None
     instances_rev2: list[StoredInstanceConf[SecretT]] | None = None
-    options: StoredAdditionalOptionsConf | None = None
+    # Dropped from the form by CMK-37226, but a rule written before that still
+    # carries it and the bakery still writes it to mk-oracle.yml. CMK-37191
+    # dropped max_queries the same way, and the bakery no longer writes it, so
+    # it is not a field here at all.
+    max_connections: int | None = None
+    ignore_db_name: bool | None = None
+    use_host_client: UseHostClient | None = None
+    validate_permissions: (
+        tuple[Literal["enabled"], StoredOracleSafeEntries | None]
+        | tuple[Literal["disabled"], None]
+        | None
+    ) = None
 
     def get_active_cache_age(self) -> int:
         """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""

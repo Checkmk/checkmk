@@ -74,7 +74,8 @@ OLD_RULE: Mapping[str, object] = {
 
 CURRENT_RULE: Mapping[str, object] = {
     "deploy_rev2": "deploy",
-    "options": {"ignore_db_name": False, "use_host_client": ("custom", "$ORACLE_HOME/lib")},
+    "ignore_db_name": False,
+    "use_host_client": ("custom", "$ORACLE_HOME/lib"),
     "instances_rev2": [
         {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
         {"oracle_id": ("alias", "PROD")},
@@ -154,15 +155,14 @@ def test_discovery_is_offered_as_a_choice() -> None:
 
 
 def test_the_client_library_is_offered_flat() -> None:
-    options_form = _agent_config_mk_oracle().elements["options"].parameter_form
-    assert isinstance(options_form, Dictionary)
-    assert "use_host_client" in options_form.elements
-    assert "oracle_client_library" not in options_form.elements
+    elements = _agent_config_mk_oracle().elements
+    assert "use_host_client" in elements
+    assert "oracle_client_library" not in elements
 
 
 def test_an_empty_client_library_block_names_no_client() -> None:
     migrated = _migrate({**OLD_RULE, "options": {"oracle_client_library": {}}})
-    assert migrated["options"] == {}
+    assert "use_host_client" not in migrated
 
 
 def test_deploy_is_offered_as_a_choice() -> None:
@@ -207,9 +207,15 @@ def test_every_checkbox_and_fixed_value_renders_something() -> None:
 
 
 def test_the_form_declares_max_connections_as_ignored() -> None:
-    options_form = _agent_config_mk_oracle().elements["options"].parameter_form
-    assert isinstance(options_form, Dictionary)
-    assert "max_connections" in options_form.ignored_elements
+    assert "max_connections" in _agent_config_mk_oracle().ignored_elements
+
+
+def test_every_setting_that_stands_alone_merges_on_its_own_key() -> None:
+    # Two rules merge on the top-level keys they store, so a setting nested one
+    # level deeper can only be overridden together with its neighbours.
+    elements = _agent_config_mk_oracle().elements
+    assert {"ignore_db_name", "use_host_client", "validate_permissions"} <= set(elements)
+    assert "options" not in elements
 
 
 def test_the_string_lists_are_offered_as_one_line_each() -> None:

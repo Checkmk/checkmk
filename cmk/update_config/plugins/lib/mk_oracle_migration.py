@@ -12,7 +12,6 @@ from typing import Any, Final, Literal, NamedTuple
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset
 from cmk.plugins.oracle.lib.unified_config import (
     AuthType,
-    StoredAdditionalOptionsConf,
     StoredAsmAuthConf,
     StoredAuthConf,
     StoredAuthUserPasswordData,
@@ -113,12 +112,6 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     cache_age = legacy.get("async_interval") or None
 
     validate_permissions = _convert_permissions(legacy.get("validate_permissions"))
-    options = (
-        None
-        if validate_permissions is None
-        else StoredAdditionalOptionsConf(validate_permissions=validate_permissions)
-    )
-
     if legacy_sections := legacy.get("sections"):
         sections = _convert_sections(legacy_sections, warnings)
     else:
@@ -169,7 +162,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
             sections=sections,
             excluded_sections=excluded_sections,
             instances_rev2=instances,
-            options=options,
+            validate_permissions=validate_permissions,
         ),
         warnings=warnings,
     )

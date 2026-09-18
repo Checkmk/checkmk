@@ -24,7 +24,6 @@ from cmk.bakery.v2 import (
     Secret,
 )
 from cmk.plugins.oracle.lib.unified_config import (
-    StoredAdditionalOptionsConf,
     StoredAsmAuthConf,
     StoredAuthConf,
     StoredAuthUserPasswordData,
@@ -297,7 +296,7 @@ def _get_oracle_dict(config: BakedConfig) -> OracleMain:
     return OracleMain(
         authentication=auth,
         connection=_get_oracle_connection(config.connection),
-        options=_get_oracle_additional_options(config.options),
+        options=_get_oracle_additional_options(config),
         discovery=_get_oracle_discovery(config.discovery),
         sections=_get_oracle_sections(config.sections),
         instances=_get_oracle_instances(config.instances_rev2),
@@ -363,11 +362,7 @@ def _get_oracle_connection(
     return connection
 
 
-def _get_oracle_additional_options(
-    options: StoredAdditionalOptionsConf | None,
-) -> OracleAdditionalOptions | None:
-    if options is None:
-        return None
+def _get_oracle_additional_options(options: BakedConfig) -> OracleAdditionalOptions | None:
     if (
         options.use_host_client is None
         and options.ignore_db_name is None

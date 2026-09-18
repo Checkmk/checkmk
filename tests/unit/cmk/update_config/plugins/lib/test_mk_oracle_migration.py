@@ -164,37 +164,40 @@ def test_unmappable_fields_ignored() -> None:
 
 
 def test_permissions_not_mapped_when_validate_permissions_absent() -> None:
-    assert "options" not in dump(convert({"activated": True}).rule)
+    assert "validate_permissions" not in dump(convert({"activated": True}).rule)
 
 
 def test_permissions_disabled_when_validate_permissions_disabled() -> None:
-    assert dump(convert({"validate_permissions": "disable"}).rule)["options"] == {
-        "validate_permissions": ("disabled", None)
-    }
+    assert dump(convert({"validate_permissions": "disable"}).rule)["validate_permissions"] == (
+        "disabled",
+        None,
+    )
 
 
 def test_permissions_enabled_with_safe_entries_when_white_list_set() -> None:
     new_rule = convert(
         {"validate_permissions": ("enable", {"groups_and_users_white_list": ["aaaaaa", "bbbbb"]})}
     )
-    assert dump(new_rule.rule)["options"] == {
-        "validate_permissions": ("enabled", {"safe_entries": ["aaaaaa", "bbbbb"]})
-    }
+    assert dump(new_rule.rule)["validate_permissions"] == (
+        "enabled",
+        {"safe_entries": ["aaaaaa", "bbbbb"]},
+    )
 
 
 def test_permissions_enabled_without_safe_entries_when_white_list_empty() -> None:
     new_rule = convert({"validate_permissions": ("enable", {"groups_and_users_white_list": []})})
-    assert dump(new_rule.rule)["options"] == {"validate_permissions": ("enabled", {})}
+    assert dump(new_rule.rule)["validate_permissions"] == ("enabled", {})
 
 
 def test_permissions_enabled_without_safe_entries_when_white_list_absent() -> None:
-    assert dump(convert({"validate_permissions": ("enable", {})}).rule)["options"] == {
-        "validate_permissions": ("enabled", {})
-    }
+    assert dump(convert({"validate_permissions": ("enable", {})}).rule)["validate_permissions"] == (
+        "enabled",
+        {},
+    )
 
 
 def test_permissions_not_mapped_when_validate_permissions_unknown() -> None:
-    assert "options" not in dump(convert({"validate_permissions": "nonsense"}).rule)
+    assert "validate_permissions" not in dump(convert({"validate_permissions": "nonsense"}).rule)
 
 
 def test_discovery_not_mapped_when_nothing_defined() -> None:

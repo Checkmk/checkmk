@@ -18,7 +18,6 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     bakery_plugin_oracle,
 )
 from cmk.plugins.oracle.lib.unified_config import (
-    StoredAdditionalOptionsConf,
     StoredConnectionConf,
     StoredDescriptorConf,
     StoredDiscoveryConf,
@@ -193,10 +192,8 @@ expected_yaml_lines_min = [
 # 2. Full config
 oracle_config_full: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
-    options=StoredAdditionalOptionsConf(
-        max_connections=10,
-        ignore_db_name=True,
-    ),
+    max_connections=10,
+    ignore_db_name=True,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -501,9 +498,7 @@ expected_yaml_lines_discovery_instances = [
 # 6. Main config with auth, connection and additional option use_host_client set to 'always'
 oracle_config_use_host_client_always: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
-    options=StoredAdditionalOptionsConf(
-        use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
-    ),
+    use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -547,9 +542,7 @@ expected_yaml_lines_use_host_client_always = [
 # 7. Main config with auth, connection and additional option use_host_client set to path
 oracle_config_use_host_client_path: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
-    options=StoredAdditionalOptionsConf(
-        use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
-    ),
+    use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -878,30 +871,33 @@ def test_get_active_custom_metrics_cache_age(
     assert conf.get_active_custom_metrics_cache_age() == expected
 
 
-def test_additional_options_parses_validate_permissions_enabled() -> None:
-    options = StoredAdditionalOptionsConf.model_validate(
-        {"validate_permissions": ("enabled", {"safe_entries": ["grp1", "user2"]})}
+def _parsed(**stored: object) -> BakedConfig:
+    return BakedConfig.model_validate(
+        {"deploy_rev2": DEPLOY, "auth": {}, "connection": {}, **stored}
     )
-    assert options.validate_permissions == (
+
+
+def test_additional_options_parses_validate_permissions_enabled() -> None:
+    parsed = _parsed(validate_permissions=("enabled", {"safe_entries": ["grp1", "user2"]}))
+    assert parsed.validate_permissions == (
         "enabled",
         StoredOracleSafeEntries(safe_entries=["grp1", "user2"]),
     )
 
 
 def test_additional_options_parses_validate_permissions_disabled() -> None:
-    options = StoredAdditionalOptionsConf.model_validate(
-        {"validate_permissions": ("disabled", None)}
+    assert _parsed(validate_permissions=("disabled", None)).validate_permissions == (
+        "disabled",
+        None,
     )
-    assert options.validate_permissions == ("disabled", None)
 
 
 def test_additional_options_ignores_legacy_permissions_check_key() -> None:
     # Regression guard: the ruleset key is `validate_permissions`. A stray `permissions_check`
     # key (the previous, wrong field name) must not bind and is ignored.
-    options = StoredAdditionalOptionsConf.model_validate(
-        {"permissions_check": ("enabled", {"safe_entries": ["x"]})}
+    assert (
+        _parsed(permissions_check=("enabled", {"safe_entries": ["x"]})).validate_permissions is None
     )
-    assert options.validate_permissions is None
 
 
 # --- excluded_sections tests ---

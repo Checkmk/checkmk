@@ -186,6 +186,7 @@ py_library(
         "//non-free/packages/cmk-liveproxyd:__subpackages__",
         "//non-free/packages/cmk-network-flow:__subpackages__",
         "//non-free/packages/cmk-notification-plugins-nonfree:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__subpackages__",
         "//non-free/packages/cmk-telemetry:__subpackages__",
         "//non-free/tests:__subpackages__",

@@ -4,6 +4,7 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 pkg_files(
     name = "bin_pkg",
     srcs = [
+        "cmk-monitor-core",
         "lq",
     ],
     attributes = pkg_attributes(
@@ -61,4 +62,9 @@ pkg_tar(
     stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
+)
+
+sh_library(
+    name = "helpers",
+    srcs = ["cmk-monitor-core"],
 )

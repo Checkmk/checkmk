@@ -55,7 +55,6 @@ pkg_files(
     name = "bin_755",
     srcs = [
         ":cmk-generate-api-spec",
-        ":cmk-monitor-core",
         ":cmk-ui-job-scheduler-health",
         ":mkevent",
     ],
@@ -80,7 +79,6 @@ sh_library(
     srcs = [
         ".f12",
         "apply_unsign_msi_patch.sh",
-        "cmk-monitor-core",
         "cmk-ui-job-scheduler-health",
     ],
 )

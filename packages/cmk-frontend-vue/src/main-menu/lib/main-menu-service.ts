@@ -37,8 +37,9 @@ export class MainMenuService extends ServiceBase {
   public showKeyHints: Ref<boolean> = ref<boolean>(false)
   protected showAllTopic = ref<{ id: string; topic: NavItemTopic } | null>(null)
   protected showMoreActive: { [key: string]: Ref<boolean> } = {}
-  protected userMessageTrigger: UserHintMessages | null = null
-  protected unackIncompWerksTrigger: UnackIncompWerksResult | null = null
+  protected userMessageTrigger: Ref<UserHintMessages | null> = ref<UserHintMessages | null>(null)
+  protected unackIncompWerksTrigger: Ref<UnackIncompWerksResult | null> =
+    ref<UnackIncompWerksResult | null>(null)
   protected userPopupMessages: UserPopupMessageRef[] = []
   protected itemBadge: { [key: string]: Ref<MenuItemBadge | null> } = {}
   protected api: MainMenuApiClient = new MainMenuApiClient()
@@ -177,8 +178,8 @@ export class MainMenuService extends ServiceBase {
   public triggerHeader(mode: HeaderTriggerModeEnum): string | null {
     switch (mode) {
       case 'unack-incomp-werks':
-        if (this.unackIncompWerksTrigger && this.unackIncompWerksTrigger.count > 0) {
-          return this.unackIncompWerksTrigger.text
+        if (this.unackIncompWerksTrigger.value && this.unackIncompWerksTrigger.value.count > 0) {
+          return this.unackIncompWerksTrigger.value.text
         }
         return null
       default:
@@ -189,8 +190,8 @@ export class MainMenuService extends ServiceBase {
   public chipEntry(mode: ChipModeEnum): string | null {
     switch (mode) {
       case 'user-messages-hint':
-        if (this.userMessageTrigger && this.userMessageTrigger.count > 0) {
-          return `${this.userMessageTrigger.count} ${this.userMessageTrigger.text}`
+        if (this.userMessageTrigger.value && this.userMessageTrigger.value.count > 0) {
+          return `${this.userMessageTrigger.value.count} ${this.userMessageTrigger.value.text}`
         }
         return null
       default:
@@ -216,10 +217,10 @@ export class MainMenuService extends ServiceBase {
   protected async updateUserMessages() {
     const res = await this.api.getUserMessages()
 
-    this.userMessageTrigger = res.hint_messages
-    if (this.userMessageTrigger.count > 0) {
+    this.userMessageTrigger.value = res.hint_messages
+    if (this.userMessageTrigger.value.count > 0) {
       this.setNavItemBadge('user', {
-        content: this.userMessageTrigger.count.toString(),
+        content: this.userMessageTrigger.value.count.toString(),
         color: 'danger'
       })
     }
@@ -239,13 +240,13 @@ export class MainMenuService extends ServiceBase {
   }
 
   protected async updateUnacknowledgedIncompatibleWerks() {
-    this.unackIncompWerksTrigger = await this.api.getUnacknowledgedIncompatibleWerks()
-    if (this.unackIncompWerksTrigger.count === 0) {
+    this.unackIncompWerksTrigger.value = await this.api.getUnacknowledgedIncompatibleWerks()
+    if (this.unackIncompWerksTrigger.value.count === 0) {
       this.setNavItemBadge('help', null)
     } else {
       this.setNavItemBadge('help', {
         color: 'danger',
-        content: this.unackIncompWerksTrigger.count.toString()
+        content: this.unackIncompWerksTrigger.value.count.toString()
       })
     }
   }

@@ -74,8 +74,7 @@ fn inaccessible_database_error() -> anyhow::Error {
     anyhow::anyhow!("database is not accessible")
 }
 
-/// The sections served from a per-database connection, which is what makes them
-/// shareable: one connection to a database answers all of them.
+/// The sections served from a per-database connection.
 ///
 /// Naming them keeps every place that has to know them - the query, the error
 /// rendering - exhaustive, so a section added here cannot be forgotten in one
@@ -88,24 +87,13 @@ enum DbSection {
 }
 
 impl DbSection {
-    /// `None` for a section that is not served per database. `CLUSTERS` is one:
-    /// it needs no per-database connection at all, see
-    /// [`SqlInstance::discover_cluster_status`].
+    /// `None` for a section that is not served per database, CLUSTERS being one.
     fn from_name(name: &str) -> Option<Self> {
         match name {
             names::TABLE_SPACES => Some(Self::TableSpaces),
             names::TRANSACTION_LOG => Some(Self::TransactionLog),
             names::DATAFILES => Some(Self::Datafiles),
             _ => None,
-        }
-    }
-
-    /// The name this section is configured and emitted under.
-    fn name(self) -> &'static str {
-        match self {
-            Self::TableSpaces => names::TABLE_SPACES,
-            Self::TransactionLog => names::TRANSACTION_LOG,
-            Self::Datafiles => names::DATAFILES,
         }
     }
 }
@@ -621,155 +609,13 @@ impl SqlInstance {
     ) -> String {
         let mut data: Vec<String> = Vec::new();
         let databases = self.gather_active_databases(client, sections).await;
-        // These sections each need a connection to every database.
-        // Running them in one pass lets that connection serve all of them,
-        // instead of every section opening its own.
-        let mut shared = self.generate_shared_connection_sections(
-            endpoint,
-            sections,
-            &databases,
-            &client.get_edition(),
-        );
         for section in sections.iter() {
-            match shared.remove(section.name()) {
-                Some(body) => data.push(section.to_work_header() + body.as_str()),
-                None => data.push(
-                    self.generate_section(client, endpoint, section, &databases)
-                        .await,
-                ),
-            }
+            data.push(
+                self.generate_section(client, endpoint, section, &databases)
+                    .await,
+            );
         }
         data.join("")
-    }
-
-    /// Runs those sections of `sections` together, sharing one
-    /// connection per database, and returns their bodies by section name.
-    ///
-    /// Caching stays per section exactly as [`Self::generate_section`] does it:
-    /// a section served from the cache is returned without being queried, and
-    /// only the remaining ones take part in the shared pass.
-    fn generate_shared_connection_sections(
-        &self,
-        endpoint: &Endpoint,
-        sections: &[Section],
-        databases: &[DatabaseEntry],
-        edition: &Edition,
-    ) -> HashMap<String, String> {
-        let wanted = sections
-            .iter()
-            .filter_map(|s| DbSection::from_name(s.name()).map(|db_section| (s, db_section)));
-
-        let mut bodies: HashMap<String, String> = HashMap::new();
-        let mut pending: Vec<(&Section, DbSection)> = Vec::new();
-        let mut requests: Vec<DbSectionRequest> = Vec::new();
-        for (section, db_section) in wanted {
-            if let Some(cached) =
-                self.read_data_from_cache(section.name(), section.cache_age() as u64)
-            {
-                bodies.insert(section.name().to_owned(), cached);
-                continue;
-            }
-            match section.select_query(get_sql_dir(), self.version_major(), edition) {
-                Some(query) => {
-                    pending.push((section, db_section));
-                    requests.push(DbSectionRequest {
-                        section: db_section,
-                        query,
-                        sep: section.sep(),
-                    });
-                }
-                None => {
-                    log::error!("Bad section query: {}", section.name());
-                    bodies.insert(section.name().to_owned(), String::default());
-                }
-            }
-        }
-        if pending.is_empty() {
-            return bodies;
-        }
-
-        let mut generated = self
-            .generate_shared_connection_sections_threading(databases, endpoint, &requests, edition);
-        for (section, db_section) in pending {
-            let body = generated.remove(&db_section).unwrap_or_default();
-            if section.kind() == &SectionKind::Async {
-                self.write_data_in_cache(section.name(), &body);
-            }
-            bodies.insert(section.name().to_owned(), body);
-        }
-        bodies
-    }
-
-    /// Chunks the databases over threads; every chunk serves all `requests`.
-    fn generate_shared_connection_sections_threading(
-        &self,
-        databases: &[DatabaseEntry],
-        endpoint: &Endpoint,
-        requests: &[DbSectionRequest],
-        edition: &Edition,
-    ) -> HashMap<DbSection, String> {
-        if databases.is_empty() {
-            for request in requests {
-                log::warn!(
-                    "No active databases, skip section {}",
-                    request.section.name()
-                );
-            }
-            return HashMap::new();
-        }
-
-        let per_chunk: Vec<HashMap<DbSection, String>> = thread::scope(|s| {
-            let handles: Vec<_> = chunk_databases(databases)
-                .map(|chunk| {
-                    s.spawn(|| {
-                        // Accessible databases are connected to for real data;
-                        // inaccessible ones are reported with a simulated error
-                        // line and never connected to - a per-database login to
-                        // an offline / forbidden database is what floods the SQL
-                        // Server error log (18456 / 4060).
-                        let (accessible, inaccessible) =
-                            partition_by_access(chunk, endpoint.conn().exclude_databases());
-                        let rt = tokio::runtime::Runtime::new().unwrap();
-                        let mut real = rt.block_on(self.generate_per_database_sections(
-                            endpoint,
-                            &accessible,
-                            requests,
-                            edition,
-                        ));
-                        for request in requests {
-                            let simulated = self.format_inaccessible_databases(
-                                request.section.name(),
-                                &inaccessible,
-                                request.sep,
-                            );
-                            real.entry(request.section)
-                                .or_default()
-                                .push_str(&simulated);
-                        }
-                        real
-                    })
-                })
-                .collect();
-            handles
-                .into_iter()
-                .map(|h| {
-                    h.join().unwrap_or_else(|_| {
-                        requests
-                            .iter()
-                            .map(|r| (r.section, "ERROR: failed to join".to_string()))
-                            .collect()
-                    })
-                })
-                .collect()
-        });
-
-        let mut bodies: HashMap<DbSection, String> = HashMap::new();
-        for chunk_bodies in per_chunk {
-            for (section, body) in chunk_bodies {
-                bodies.entry(section).or_default().push_str(&body);
-            }
-        }
-        bodies
     }
 
     /// Create a client for an Instance based on Config
@@ -880,16 +726,11 @@ impl SqlInstance {
                         .await
                 }
                 names::CONNECTIONS => self.generate_connections_section(client, &query, sep).await,
-                // [`Self::generate_shared_connection_sections`] has already
-                // produced these before the section loop runs, so they never
-                // reach here. Guarded rather than left to fall through to the
-                // custom section arm, which would look for a SQL file instead.
-                names::TRANSACTION_LOG | names::TABLE_SPACES | names::DATAFILES => {
-                    log::error!("{} is served by the shared pass", section.name());
-                    String::default()
-                }
-                names::CLUSTERS => self.generate_clusters_section_threading(
-                    databases, endpoint, &query, sep, &edition,
+                names::TRANSACTION_LOG
+                | names::TABLE_SPACES
+                | names::DATAFILES
+                | names::CLUSTERS => self.generate_per_database_section_threading(
+                    databases, endpoint, section, &query, sep, &edition,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     if client.get_edition() == Edition::Azure && section.name() == names::JOBS {
@@ -1277,26 +1118,21 @@ impl SqlInstance {
             .collect()
     }
 
-    /// Chunks the databases over threads for the `CLUSTERS` section.
-    ///
-    /// Unlike the other per-database sections, `CLUSTERS` needs no
-    /// per-database connection and handles its own simulated entries
-    /// internally, so it does not take part in the shared pass of
-    /// [`Self::generate_shared_connection_sections`].
-    pub fn generate_clusters_section_threading(
+    pub fn generate_per_database_section_threading(
         &self,
         databases: &[DatabaseEntry],
         endpoint: &Endpoint,
+        section: &Section,
         query: &str,
         sep: char,
         edition: &Edition,
     ) -> String {
         if databases.is_empty() {
-            log::warn!("No active databases, skip section {}", names::CLUSTERS);
+            log::warn!("No active databases, skip section {}", section.name());
             return String::new();
         }
         thread::scope(|s| {
-            let handles: Vec<_> = chunk_databases(databases)
+            let s: Vec<_> = chunk_databases(databases)
                 .map(|chunk| {
                     s.spawn(|| {
                         // Accessible databases are connected to for real data;
@@ -1306,20 +1142,40 @@ impl SqlInstance {
                         // Server error log (18456 / 4060).
                         let (accessible, inaccessible) =
                             partition_by_access(chunk, endpoint.conn().exclude_databases());
+                        let simulated =
+                            self.format_inaccessible_databases(section.name(), &inaccessible, sep);
                         let rt = tokio::runtime::Runtime::new().unwrap();
-                        rt.block_on(self.generate_clusters_section(
-                            endpoint,
-                            &accessible,
-                            &inaccessible,
-                            query,
-                            sep,
-                            edition,
-                        ))
+                        let real = match DbSection::from_name(section.name()) {
+                            Some(db_section) => {
+                                rt.block_on(self.generate_single_per_database_section(
+                                    endpoint,
+                                    &accessible,
+                                    db_section,
+                                    query,
+                                    sep,
+                                    edition,
+                                ))
+                            }
+                            // Unlike above, CLUSTERS handles its own simulated
+                            // entries internally (needs live is_clustered state).
+                            // `simulated` below is always "" for it.
+                            None if section.name() == names::CLUSTERS => {
+                                rt.block_on(self.generate_clusters_section(
+                                    endpoint,
+                                    &accessible,
+                                    &inaccessible,
+                                    query,
+                                    sep,
+                                    edition,
+                                ))
+                            }
+                            None => format!("{} not implemented\n", section.name()),
+                        };
+                        real + &simulated
                     })
                 })
                 .collect();
-            handles
-                .into_iter()
+            s.into_iter()
                 .map(|h| h.join().unwrap_or("ERROR: failed to join".to_string()))
                 .collect::<Vec<String>>()
                 .join("")
@@ -3245,8 +3101,7 @@ mod tests {
         }
     }
 
-    /// Only sections that really open a connection per database resolve - those
-    /// are the ones that share one. CLUSTERS has its own path.
+    /// Only the per-database sections resolve; CLUSTERS has its own path.
     #[test]
     fn test_db_section_from_name() {
         assert_eq!(

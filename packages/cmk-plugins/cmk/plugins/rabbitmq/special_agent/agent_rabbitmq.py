@@ -20,7 +20,7 @@ from typing import Any, NamedTuple
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 
 LOGGER = logging.getLogger(__name__)
 

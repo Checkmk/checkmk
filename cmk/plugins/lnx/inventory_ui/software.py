@@ -6,7 +6,7 @@
 import re
 import time
 
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory_ui.v1 import (
     Label,
     Node,
     NumberField,

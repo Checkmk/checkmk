@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Protocol
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir
-from cmk.password_store.v1_unstable import get_store_secret, PasswordStore
-from cmk.password_store.v1_unstable import Secret as StoreSecret
+from cmk.password_store.v1 import get_store_secret, PasswordStore
+from cmk.password_store.v1 import Secret as StoreSecret
 from cmk.server_side_calls.v1 import Secret
 from cmk.utils import config_warnings, password_store
 

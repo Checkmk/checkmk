@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin
+from cmk.bakery.v2 import BakeryPlugin, OS, Plugin
 
 
 class _Config(BaseModel):

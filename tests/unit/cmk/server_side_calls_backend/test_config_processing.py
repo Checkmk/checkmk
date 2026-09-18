@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.server_side_calls import internal, v1
 from cmk.server_side_calls_backend.config_processing import (
     BackendProxy,

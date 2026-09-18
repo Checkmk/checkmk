@@ -15,7 +15,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RGBColor
-from cmk.inventory_ui import v1_unstable as inventory_ui_api
+from cmk.inventory_ui import v1 as inventory_ui_api
 from cmk.web.utils.html import HTML
 
 # Colors:

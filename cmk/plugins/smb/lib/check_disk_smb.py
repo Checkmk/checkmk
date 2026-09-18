@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import override, Protocol
 
 from cmk.agent_based.v2 import render
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 PASSWORD_OPTION = "password"
 

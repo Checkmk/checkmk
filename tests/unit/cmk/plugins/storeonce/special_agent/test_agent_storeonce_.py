@@ -10,7 +10,7 @@ from unittest import mock
 import pytest
 import requests
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.storeonce.special_agent import agent_storeonce
 
 

@@ -59,31 +59,31 @@ from cmk.inventory.structured_data import (
     SDValue,
     TreeSource,
 )
-from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_unstable import AutoPrecision as AutoPrecisionFromAPI
-from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
-from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1 import AutoPrecision as AutoPrecisionFromAPI
+from cmk.inventory_ui.v1 import BackgroundColor as BackgroundColorFromAPI
+from cmk.inventory_ui.v1 import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1 import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1 import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1 import (
     EngineeringScientificNotation as EngineeringScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_unstable import entry_point_prefixes
-from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
-from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_unstable import Node as NodeFromAPI
-from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory_ui.v1 import entry_point_prefixes
+from cmk.inventory_ui.v1 import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1 import Label as LabelFromAPI
+from cmk.inventory_ui.v1 import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1 import Node as NodeFromAPI
+from cmk.inventory_ui.v1 import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1 import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1 import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_unstable import StrictPrecision as StrictPrecisionFromAPI
-from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
-from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
+from cmk.inventory_ui.v1 import StrictPrecision as StrictPrecisionFromAPI
+from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1 import Title as TitleFromAPI
+from cmk.inventory_ui.v1 import Unit as UnitFromAPI
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
 
@@ -98,7 +98,7 @@ from .registry import (
 )
 
 # The value type of a choice field is constrained to these three, so this is the whole set.
-# Keep it in step with OrderedAttributes and OrderedColumns in cmk.inventory_ui.v1_unstable.
+# Keep it in step with OrderedAttributes and OrderedColumns in cmk.inventory_ui.v1.
 type _AnyChoiceField = ChoiceFieldFromAPI[int] | ChoiceFieldFromAPI[float] | ChoiceFieldFromAPI[str]
 type _AnyField = BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | _AnyChoiceField
 

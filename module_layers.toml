@@ -374,11 +374,7 @@ allows = ["cmk.utils.paths"]
 allows = []
 
 [components."cmk.ai_control_plane"]
-allows = [
-  "@ccc",
-  "cmk.ai_control_plane.protocols",
-  "cmk.password_store.v1_unstable",
-]
+allows = ["@ccc", "cmk.ai_control_plane.protocols", "cmk.password_store.v1"]
 
 [components."cmk.ai_control_plane.protocols"]
 allows = []

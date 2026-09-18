@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 
 from cmk.ccc.site import SiteId
-from cmk.password_store.v1_unstable import Secret as StoreSecret
+from cmk.password_store.v1 import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings
 

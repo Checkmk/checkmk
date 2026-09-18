@@ -14,7 +14,7 @@ import polyfactory.factories.pydantic_factory
 import pytest
 import requests
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.kube import common, query
 from cmk.plugins.kube.api_server import (
     _verify_version_support,

@@ -9,7 +9,7 @@ from copy import deepcopy
 from cmk.gui.quick_setup.v0_unstable.predefined import complete
 from cmk.gui.watolib.configuration_bundle_store import BundleId
 from cmk.gui.watolib.configuration_bundles import CreateBundleEntities, CreateDCDConnection
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 
 from .constants import QUICK_SETUP_ID
 

@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret
 from cmk.plugins.sap.bakery.mk_sap import bakery_plugin_mk_sap
 
 CONFIG = {

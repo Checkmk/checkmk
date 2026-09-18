@@ -14,8 +14,8 @@ from http.client import HTTPConnection
 from pathlib import Path
 from typing import Any
 
-from cmk.password_store.v1_unstable import dereference_secret
-from cmk.server_side_programs.v1_unstable import report_agent_crashes
+from cmk.password_store.v1 import dereference_secret
+from cmk.server_side_programs.v1 import report_agent_crashes
 
 __version__ = "3.0.0b1"
 

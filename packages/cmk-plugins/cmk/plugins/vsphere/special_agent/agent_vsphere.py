@@ -29,12 +29,12 @@ import requests
 import urllib3
 from defusedxml.minidom import parseString
 
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     parser_add_secret_option,
     resolve_secret_option,
     Secret,
 )
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage, vcrtrace
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, Storage, vcrtrace
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |

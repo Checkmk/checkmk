@@ -11,7 +11,7 @@ import pytest
 import requests
 import responses
 
-from cmk.password_store.v1_unstable import resolve_secret_option
+from cmk.password_store.v1 import resolve_secret_option
 from cmk.plugins.couchbase.special_agent import agent_couchbase
 
 HOST = "couchbase.example.com"

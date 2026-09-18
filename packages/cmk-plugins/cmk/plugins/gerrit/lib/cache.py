@@ -9,7 +9,7 @@ import uuid
 from collections.abc import Callable, Hashable
 from typing import Final, TypedDict
 
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 # A namespace to match a string to a uuid hash.
 _HASH_NAMESPACE: Final = uuid.UUID("5871b8db-dcef-4c22-9b36-e81d7d4d66bb")

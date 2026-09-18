@@ -95,7 +95,7 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
 from cmk.checkengine.source_abc import SourceConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher
 from cmk.ruleset_matcher import tuple_rulesets

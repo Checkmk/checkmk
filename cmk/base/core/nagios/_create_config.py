@@ -66,7 +66,7 @@ from cmk.events.notify import (
 )
 from cmk.events.notify_types import Contact
 from cmk.licensing.handler import LicensingHandler
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import LabelManager, Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.server_side_calls_backend import ActiveServiceData

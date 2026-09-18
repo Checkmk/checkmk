@@ -26,8 +26,8 @@ import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]

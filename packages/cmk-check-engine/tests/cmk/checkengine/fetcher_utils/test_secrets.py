@@ -7,7 +7,7 @@
 from pathlib import Path
 
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 
 
 def test_ad_hoc_secrets_serialization() -> None:

@@ -10,7 +10,7 @@ import pytest
 import responses
 import time_machine
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.storeonce.special_agent.agent_storeonce4x import (
     agent_storeonce4x_main,
     parse_arguments,

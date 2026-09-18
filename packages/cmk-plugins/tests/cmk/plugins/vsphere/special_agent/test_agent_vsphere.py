@@ -23,7 +23,7 @@ from cmk.plugins.vsphere.special_agent.agent_vsphere import (
     get_section_snapshot_summary,
     get_vm_power_states,
 )
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, Storage
 
 
 def _build_id(lun_id: str) -> str:

@@ -15,7 +15,7 @@ from collections.abc import Sequence
 import requests
 import urllib3
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.rulesets.v1 import Title
 
 PASSWORD_OPTION = "password"

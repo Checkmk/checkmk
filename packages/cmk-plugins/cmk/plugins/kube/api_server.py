@@ -31,7 +31,7 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1ResourceQuota,
 )
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.kube import query
 from cmk.plugins.kube.controllers import ControllerGraph
 from cmk.plugins.kube.from_json.deployment import deployment_from_json, JSONDeploymentList

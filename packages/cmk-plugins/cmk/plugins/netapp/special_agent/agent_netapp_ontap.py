@@ -27,9 +27,9 @@ from netapp_ontap.host_connection import HostConnection
 from netapp_ontap.resource import Resource
 from pydantic import BaseModel
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.netapp import models
-from cmk.server_side_programs.v1_unstable import (
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,

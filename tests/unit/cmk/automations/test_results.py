@@ -27,7 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.checkengine.plugins import SectionName
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.ip_lookup import IPStackConfig
 

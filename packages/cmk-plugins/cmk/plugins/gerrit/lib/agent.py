@@ -14,11 +14,11 @@ import sys
 from collections.abc import Sequence
 from typing import NewType
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gerrit.lib.cache import cache_ttl
 from cmk.plugins.gerrit.lib.collectors import Collector, GerritVersion
 from cmk.plugins.gerrit.lib.schema import VersionInfo
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, Storage, vcrtrace
 
 __version__ = "3.0.0b1"
 

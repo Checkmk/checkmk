@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import assert_never, Literal
 
-from cmk.password_store.v1_unstable import dereference_secret
+from cmk.password_store.v1 import dereference_secret
 
 type HTTPProxyConfig = MutableMapping[str, str]
 

@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from cmk.plugins.redfish.special_agents import agent_redfish
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 
 def _make_redfishobj(debug: bool = False) -> agent_redfish.RedfishData:

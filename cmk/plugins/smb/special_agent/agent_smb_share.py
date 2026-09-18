@@ -25,8 +25,8 @@ from smb.base import NotConnectedError, ProtocolError, SharedFile
 from smb.smb_structs import OperationFailure
 from smb.SMBConnection import SMBConnection
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 

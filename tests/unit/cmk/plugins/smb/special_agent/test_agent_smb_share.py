@@ -15,7 +15,7 @@ import time_machine
 from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped,unused-ignore]
 from smb.smb_structs import OperationFailure  # type: ignore[import-untyped,unused-ignore]
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.smb.special_agent.agent_smb_share import (
     connect,
     File,

@@ -21,7 +21,7 @@ from jira import JIRA
 from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 LOGGER = logging.getLogger(__name__)
 

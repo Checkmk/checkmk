@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.bakery.v2 import OS, Plugin
 from cmk.plugins.veeam.bakery.veeam_backup_status import bakery_plugin_veeam_backup_status
 
 

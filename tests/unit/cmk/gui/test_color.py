@@ -15,7 +15,7 @@ from cmk.gui.color import (
     indexed_color,
     parse_color_from_api,
 )
-from cmk.inventory_ui import v1_unstable as inventory_ui_api
+from cmk.inventory_ui import v1 as inventory_ui_api
 
 
 @pytest.mark.parametrize(

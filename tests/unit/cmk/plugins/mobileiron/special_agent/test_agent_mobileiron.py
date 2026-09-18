@@ -13,7 +13,7 @@ import pytest
 import requests
 import responses
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.mobileiron.special_agent.agent_mobileiron import agent_mobileiron_main
 
 URL1 = "https://example.com/api/v1/device?rows=200&start=0&dmPartitionId=103881"

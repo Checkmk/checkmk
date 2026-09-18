@@ -79,7 +79,7 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
 from cmk.livestatus_client import SiteConfiguration
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
 from cmk.rulesets.v1.form_specs import Dictionary

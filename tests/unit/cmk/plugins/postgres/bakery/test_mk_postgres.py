@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig
+from cmk.bakery.v2 import OS, Plugin, PluginConfig
 from cmk.plugins.postgres.bakery.mk_postgres import bakery_plugin_mk_postgres
 
 _INSTANCES_SETTINGS = {

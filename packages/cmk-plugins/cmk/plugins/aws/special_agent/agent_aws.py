@@ -31,11 +31,11 @@ from typing import (
 import boto3
 import botocore
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.aws.constants import (
     AWS_REGIONS,
 )
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 from .config import AGENT, AWSConfig, LOGGER, NamingConvention, TagsImportPatternOption
 from .runner import AWSSectionsGeneric, AWSSectionsUSEast

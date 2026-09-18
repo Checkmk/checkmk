@@ -15,8 +15,8 @@ import msal
 import requests
 from requests import JSONDecodeError
 
-from cmk.password_store.v1_unstable import PasswordStore, Secret
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.password_store.v1 import PasswordStore, Secret
+from cmk.server_side_programs.v1 import Storage
 
 
 class AuthorityURLs(NamedTuple):

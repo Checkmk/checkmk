@@ -34,9 +34,9 @@ from typing import Any, Literal, NamedTuple, override
 import msal
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_deprecated.http_proxies import deserialize_proxy_config, ProxyConfig
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import vcrtrace
 
 from ._data_cache import DataCache
 

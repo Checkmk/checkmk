@@ -37,7 +37,7 @@ from typing import Any, Final, Literal, override, Required, TypedDict
 import requests
 from pydantic import BaseModel, RootModel
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_v2.lib import (
     compute_unique_name_hash,
     get_params_from_azure_id,
@@ -67,7 +67,7 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Intervals,
     OPTIONAL_METRICS,
 )
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 type ResourceId = str
 

@@ -15,8 +15,8 @@ from xml.etree import ElementTree as etree
 
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import vcrtrace
 
 PASSWORD_OPTION = "password"
 

@@ -40,7 +40,7 @@ from typing import Final
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 

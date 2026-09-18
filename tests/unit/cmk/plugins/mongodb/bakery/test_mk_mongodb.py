@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret
 from cmk.plugins.mongodb.bakery.mk_mongodb import (
     _AuthConfig,
     _TlsConfig,

@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Sequence
 from typing import TypeVar
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.kube import common, prometheus_api, query
 from cmk.plugins.kube.schemata import section
 from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr

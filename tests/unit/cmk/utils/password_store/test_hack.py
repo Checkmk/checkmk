@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from pathlib import Path
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.utils.password_store.hack import apply_password_hack, resolve_password_hack
 
 APPLIED = [

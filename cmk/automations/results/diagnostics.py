@@ -23,7 +23,7 @@ from cmk.automations.results._base import (
 )
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.oauth2_connection import OAuth2Connection

@@ -12,7 +12,7 @@ from typing import Literal, Never, Self
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
 
 type _ValueTypeType = Literal["number", "string", "rate"]
 

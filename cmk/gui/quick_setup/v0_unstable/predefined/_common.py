@@ -31,7 +31,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.watolib.passwords import load_passwords
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 from cmk.utils.ip_lookup import IPStackConfig
 

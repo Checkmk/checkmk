@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, FileGenerator, OS, Plugin
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin
 
 HyperVPluginName = Literal["hyperv_host"]
 

@@ -17,7 +17,7 @@ import logging
 import time
 from typing import Any
 
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 LOGGER = logging.getLogger(__name__)
 

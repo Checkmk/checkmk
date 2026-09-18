@@ -27,7 +27,7 @@ import sys
 from collections.abc import Sequence
 from typing import Any, NoReturn
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 LOG = logging.getLogger(__name__)
 

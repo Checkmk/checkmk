@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.bakery.v2 import OS, Plugin
 from cmk.plugins.suseconnect.bakery.mk_suseconnect import bakery_plugin_mk_suseconnect
 
 

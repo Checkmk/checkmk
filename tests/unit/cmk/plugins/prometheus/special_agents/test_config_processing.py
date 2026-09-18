@@ -10,7 +10,7 @@ from io import StringIO
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.prometheus.special_agents.agent_prometheus import process_config_and_args
 
 

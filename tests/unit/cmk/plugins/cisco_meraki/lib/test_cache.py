@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cmk.plugins.cisco_meraki.lib.cache import cache_ttl
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 
 @pytest.fixture

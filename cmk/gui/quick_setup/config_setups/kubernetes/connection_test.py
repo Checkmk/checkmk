@@ -20,7 +20,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.utils.automation_config import LocalAutomationConfig
 
 from .constants import QUICK_SETUP_ID

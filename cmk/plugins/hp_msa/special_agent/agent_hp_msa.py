@@ -24,7 +24,7 @@ import requests
 import urllib3
 from requests.structures import CaseInsensitiveDict
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 LOGGER = logging.getLogger(__name__)
 

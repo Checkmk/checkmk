@@ -18,7 +18,7 @@ from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreClient
 from cmk.licensing.handler import LicensingHandler
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.utils import ip_lookup

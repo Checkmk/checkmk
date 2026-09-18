@@ -17,7 +17,7 @@ from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Literal, TypedDict
 
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 AGENT = "aws"
 

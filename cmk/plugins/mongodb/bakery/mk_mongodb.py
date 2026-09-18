@@ -10,7 +10,7 @@ from typing import assert_never, Literal
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import BakeryPlugin, OS, Plugin, PluginConfig, Secret
 
 _CertKeyChoices = Literal["cert_filepath", "uploaded_cert_file"]
 

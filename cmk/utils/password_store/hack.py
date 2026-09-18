@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import NoReturn
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 
 from ._pwstore import lookup
 

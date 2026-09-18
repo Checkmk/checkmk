@@ -21,7 +21,7 @@ from lxml.html import fromstring
 from pydantic import BaseModel
 
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 

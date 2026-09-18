@@ -247,7 +247,9 @@ def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     return f"{db_name} {backup.type.title()}"
 
 
-def discover_mssql_backup_per_type(params: Mapping[str, Any], section: SectionBackup) -> DiscoveryResult:
+def discover_mssql_backup_per_type(
+    params: Mapping[str, Any], section: SectionBackup
+) -> DiscoveryResult:
     if params["mode"] != "per_type":
         return
     for db_name, attrs in section.items():

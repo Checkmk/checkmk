@@ -38,7 +38,9 @@ def _get_section(string_table: list[list[str]]) -> msb.Section:
 
 def test_discovery_default() -> None:
     assert sorted(
-        msb.discover_mssql_backup({"mode": "summary"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES)
+        msb.discover_mssql_backup(
+            {"mode": "summary"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+        )
     ) == sorted(
         [
             Service(item="MSSQL_SQL0x4 master"),
@@ -49,14 +51,22 @@ def test_discovery_default() -> None:
         ]
     )
     assert not list(
-        msb.discover_mssql_backup_per_type({"mode": "summary"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES)
+        msb.discover_mssql_backup_per_type(
+            {"mode": "summary"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+        )
     )
 
 
 def test_discovery_single() -> None:
-    assert not list(msb.discover_mssql_backup({"mode": "per_type"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES))
+    assert not list(
+        msb.discover_mssql_backup(
+            {"mode": "per_type"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+        )
+    )
     assert sorted(
-        msb.discover_mssql_backup_per_type({"mode": "per_type"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES)
+        msb.discover_mssql_backup_per_type(
+            {"mode": "per_type"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+        )
     ) == sorted(
         [
             Service(item="MSSQL_SQL0x4 master Database"),
@@ -113,14 +123,22 @@ def test_check(
 ) -> None:
     with time_machine.travel(datetime.datetime(2016, 7, 15, tzinfo=ZoneInfo(local_timezone))):
         assert (
-            list(msb.check_mssql_backup("MSSQL_SQL0x4 master", {}, _get_section(string_table), STRING_TABLE_DATABASES))
+            list(
+                msb.check_mssql_backup(
+                    "MSSQL_SQL0x4 master", {}, _get_section(string_table), STRING_TABLE_DATABASES
+                )
+            )
             == result
         )
 
 
 def test_check_with_seconds_metric() -> None:
     with time_machine.travel(datetime.datetime(2016, 7, 15, tzinfo=ZoneInfo("UTC"))):
-        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 bar", {}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES)) == [
+        assert list(
+            msb.check_mssql_backup(
+                "MSSQL_SQL0x4 bar", {}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+            )
+        ) == [
             Result(state=State.OK, summary="[database] Last backup: 1970-05-23 21:21:18"),
             Result(state=State.OK, summary="Time since last backup: 46 years 64 days"),
             Metric("seconds", 1456195122.0),
@@ -128,6 +146,10 @@ def test_check_with_seconds_metric() -> None:
 
 
 def test_check_error() -> None:
-    assert list(msb.check_mssql_backup("MSSQL_Parrot Polly", {}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES)) == [
+    assert list(
+        msb.check_mssql_backup(
+            "MSSQL_Parrot Polly", {}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+        )
+    ) == [
         Result(state=State.CRIT, summary="Polly has no crackers"),
     ]

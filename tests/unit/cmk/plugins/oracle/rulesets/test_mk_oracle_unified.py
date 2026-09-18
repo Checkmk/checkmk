@@ -134,6 +134,19 @@ def test_an_empty_database_list_points_at_instance_discovery() -> None:
     assert "discovery" in instances.no_element_label.localize(str).lower()
 
 
+@pytest.mark.usefixtures("registered_visitors")
+def test_a_cache_age_reaches_the_bakery_as_an_integer() -> None:
+    # TimeSpan works in floats, so rules.mk holds 900.0 where it used to hold
+    # 900. The bakery parses through StoredConfig, which coerces it back.
+    visitor = get_visitor(
+        _agent_config_mk_oracle(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+    stored = visitor.to_disk(RawDiskData(CURRENT_RULE))
+    assert isinstance(stored, Mapping)
+    assert type(stored["cache_age"]) is float
+    assert type(StoredConfig.model_validate(stored).cache_age) is int
+
+
 def test_discovery_is_offered_as_a_choice() -> None:
     discovery = _agent_config_mk_oracle().elements["discovery"].parameter_form
     assert isinstance(discovery, Dictionary)

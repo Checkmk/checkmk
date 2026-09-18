@@ -31,6 +31,8 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
@@ -755,26 +757,37 @@ def _endpoint(
     }
 
 
-def _cache_ages() -> Mapping[str, DictElement[int]]:
+def _cache_age(*, title: Title, help_text: Help) -> TimeSpan:
+    return TimeSpan(
+        title=title,
+        help_text=help_text,
+        displayed_magnitudes=[TimeMagnitude.MINUTE, TimeMagnitude.SECOND],
+        custom_validate=(validators.NumberInRange(min_value=30),),
+        prefill=DefaultValue(600.0),
+    )
+
+
+def _cache_ages() -> Mapping[str, DictElement[float]]:
     return {
         "cache_age": DictElement(
-            parameter_form=Integer(
-                title=Title("Cache age"),
+            parameter_form=_cache_age(
+                title=Title("Cache age for asynchronous built-in sections"),
                 help_text=Help(
-                    "How old (in seconds) the cache file for built-in sections is allowed to be."
+                    "How old the cached output of the built-in sections marked 'async' "
+                    "is allowed to be."
                 ),
-                prefill=DefaultValue(600),
             ),
             required=False,
         ),
         "custom_metrics_cache_age": DictElement(
-            parameter_form=Integer(
-                title=Title("Custom metrics cache age"),
+            parameter_form=_cache_age(
+                title=Title("Cache age for asynchronous custom metrics"),
                 help_text=Help(
-                    "How old (in seconds) the cache file for custom metrics is allowed to be."
+                    "How old the cached output of the asynchronous custom metrics is "
+                    "allowed to be. When this equals the cache age above, a single "
+                    "agent plug-in collects both. A different value deploys a second "
+                    "plug-in for the custom metrics."
                 ),
-                custom_validate=(validators.NumberInRange(min_value=30),),
-                prefill=DefaultValue(600),
             ),
             required=False,
         ),

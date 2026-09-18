@@ -76,6 +76,28 @@ This helps catch potential issues early and ensures your code adheres to the exp
 **Important:** The behavior for code that violates the type annotations is unspecified and may change without warning.
 While the type annotations document the expected types, runtime behavior when passing incorrect types is not guaranteed to be stable across versions.
 
+API stability and the road to Checkmk 3.0
+=========================================
+
+The plugin APIs newly declared stable with Checkmk 3.0 are:
+
+   * ``cmk.bakery.v2`` (formerly ``cmk.bakery.v2_unstable``)
+   * ``cmk.inventory_ui.v1`` (formerly ``cmk.inventory_ui.v1_unstable``)
+   * ``cmk.password_store.v1`` (formerly ``cmk.password_store.v1_unstable``)
+   * ``cmk.server_side_programs.v1`` (formerly ``cmk.server_side_programs.v1_unstable``)
+
+.. warning::
+   Checkmk 3.0 is not released yet.
+   Until it is, these APIs may still change.
+   The stability guarantee only takes effect with the 3.0 release.
+
+The former ``*_unstable`` namespaces continue to work as aliases, so plug-ins written
+against Checkmk 2.5 keep running without modification.
+**These aliases will be removed in Checkmk 3.1.**
+Migrating is a matter of replacing the module path in your imports, for example
+``from cmk.bakery.v2_unstable import BakeryPlugin`` becomes
+``from cmk.bakery.v2 import BakeryPlugin``.
+
 "Internal" and "unstable" APIs
 ==============================
 
@@ -86,6 +108,7 @@ They might change without prior notice.
 
 "Unstable" APIs are still in an experimental state, but they are built with the intention of becoming the next version of a regular API in the future.
 Third party developers are encouraged to try them out and provide feedback.
+They are not documented here.
 
 The "internal" APIs are used by plugins maintained by Checkmk, but they are not intended for use by third party developers.
 Their contents may or may not become part of a future regular API.

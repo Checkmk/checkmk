@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.server_side_programs.v1_unstable import report_agent_crashes
+from cmk.server_side_programs.v1 import report_agent_crashes
 
 TEST_AGENT = "test_agent"
 TEST_HOST = "test_host"

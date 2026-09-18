@@ -26,11 +26,11 @@ from typing import assert_never, final, Literal, override, Self, TypedDict, Type
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cmk.password_store.v1._impl import _read_store_secret
 from cmk.password_store.v1_unstable import (
     PasswordStore,
     PasswordStoreError,
 )
-from cmk.password_store.v1_unstable._impl import _read_store_secret
 from cmk.plugins.emailchecks.lib.ac_args import (
     BasicAuth,
     HTTPProxyConfig,

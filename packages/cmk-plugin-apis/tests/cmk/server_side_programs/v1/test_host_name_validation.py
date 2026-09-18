@@ -5,7 +5,7 @@
 
 from requests import Session
 
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
+from cmk.server_side_programs.v1 import HostnameValidationAdapter
 
 
 class TestHostnameValidationAdapter:

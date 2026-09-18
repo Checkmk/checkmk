@@ -8,10 +8,10 @@ import argparse
 
 import pytest
 
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     _convenience as mocktarget,
 )
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     parser_add_secret_option,
     resolve_secret_option,
     Secret,

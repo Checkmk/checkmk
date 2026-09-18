@@ -13,12 +13,13 @@
 +----------------------------------------------------------+
 """
 
-from cmk.server_side_programs import v1_unstable as api
+from cmk.server_side_programs import v1 as api
 
 
 def test_api_names() -> None:
     assert set(api.__all__) == {
         "report_agent_crashes",
+        "report_check_crashes",
         "vcrtrace",
         "HostnameValidationAdapter",
         "Storage",

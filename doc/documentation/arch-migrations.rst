@@ -48,7 +48,7 @@ Bakery plugin API: ``bakery_api.v1`` to ``cmk.bakery``
 
 The old bakery API lives in the ``cmk.base`` tree and is tied to the monolith, and its import location no longer matches the current edition naming.
 The current API is a proper plugin-API package, and bakery plugins move next to the family that owns them (around 30 families are already there).
-The old API is being replaced by ``cmk.bakery.v2_unstable`` and is intended to be removed with Checkmk 2.7 (see Werk #18600).
+The old API is being replaced by ``cmk.bakery.v2`` and is intended to be removed with Checkmk 2.7 (see Werk #18600).
 
 This migration is meant to be finished before the 3.0 release.
 

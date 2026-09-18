@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 TEST_AGENT = "test_agent"
 TEST_HOST = "test_host"

@@ -60,6 +60,7 @@ plugin_apis = [
   "cmk.agent_based.v3_unstable",
   "cmk.bakery.internal",
   "cmk.bakery.v1",
+  "cmk.bakery.v2",
   "cmk.bakery.v2_unstable",
   "cmk.cli.internal",
   "cmk.dcd_connector_parameters.internal",
@@ -67,8 +68,10 @@ plugin_apis = [
   "cmk.diagnostics.internal",
   "cmk.graphing.v1",
   "cmk.graphing.v2_unstable",
+  "cmk.inventory_ui.v1",
   "cmk.inventory_ui.v1_unstable",
   "cmk.licensing.internal",
+  "cmk.password_store.v1",
   "cmk.password_store.v1_unstable",
   "cmk.post_rename_site.internal",
   "cmk.rulesets.internal",
@@ -77,6 +80,7 @@ plugin_apis = [
   "cmk.rulesets.v1.form_specs",
   "cmk.server_side_calls.internal",
   "cmk.server_side_calls.v1",
+  "cmk.server_side_programs.v1",
   "cmk.server_side_programs.v1_unstable",
 ]
 
@@ -437,8 +441,12 @@ allows = ["@ccc", "@crypto", "@plugin_apis"]
 [components."cmk.bakery.v1"]
 allows = []
 
-[components."cmk.bakery.v2_unstable"]
+[components."cmk.bakery.v2"]
 allows = ["cmk.bakery.v1"]
+
+# deprecated alias for cmk.bakery.v2, removed in 3.1
+[components."cmk.bakery.v2_unstable"]
+allows = ["cmk.bakery.v2"]
 
 # only allow itself, this is the future :-)
 [components."cmk.bakery"]

@@ -73,12 +73,12 @@ class CoreBakelet:
     Instances are picked up by Checkmk if their variable name starts with
     ``core_bakelet_`` and they live under ``cmk/plugins/<family>/bakery/``.
 
-    Unlike :class:`cmk.bakery.v2_unstable.BakeryPlugin`, the functions receive
+    Unlike :class:`cmk.bakery.v2.BakeryPlugin`, the functions receive
     keyword arguments dispatched by name (``agconf``, ``conf``, ``aghash``).
     That signature is fixed, so a bakelet which does not need all three
     suppresses ARG001 on the unused ones.
 
-    The functions yield recipes: the artifact types of :mod:`cmk.bakery.v2_unstable`
+    The functions yield recipes: the artifact types of :mod:`cmk.bakery.v2`
     or the types of this package such as ``SiteFile`` and ``TextFile``. The
     bakery turns them into its file containers, knows the module the bakelet was
     discovered in, and looks sources up in the agents folder of the bakelet's

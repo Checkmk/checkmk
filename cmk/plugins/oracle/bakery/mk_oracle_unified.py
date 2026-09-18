@@ -369,10 +369,7 @@ def _get_oracle_additional_options(
     if options is None:
         return None
     if (
-        (
-            options.oracle_client_library is None
-            or options.oracle_client_library.use_host_client is None
-        )
+        options.use_host_client is None
         and options.ignore_db_name is None
         and options.max_connections is None
         and options.validate_permissions is None
@@ -380,14 +377,13 @@ def _get_oracle_additional_options(
         return None
 
     use_host_client: str | None = None
-    if options.oracle_client_library is not None:
-        match options.oracle_client_library.use_host_client:
-            case (("auto" | "never" | "always") as predefined, None):  # type: ignore[unreachable]
-                use_host_client = predefined
-            case ("custom", custom_path):
-                use_host_client = str(custom_path)
-            case None:
-                pass
+    match options.use_host_client:
+        case (("auto" | "never" | "always") as predefined, _):
+            use_host_client = predefined
+        case ("custom", custom_path):
+            use_host_client = custom_path
+        case None:
+            pass
     permissions_check: bool | None = None
     permissions_safe_entries: list[str] | None = None
     match options.validate_permissions:  # type: ignore[exhaustive-match]

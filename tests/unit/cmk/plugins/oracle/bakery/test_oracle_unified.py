@@ -23,7 +23,6 @@ from cmk.plugins.oracle.lib.unified_config import (
     StoredDescriptorConf,
     StoredDiscoveryConf,
     StoredExcludedSectionConf,
-    StoredOracleClientLibOptions,
     StoredOracleSafeEntries,
 )
 
@@ -197,7 +196,6 @@ oracle_config_full: BakedConfig = BakedConfig(
     options=StoredAdditionalOptionsConf(
         max_connections=10,
         ignore_db_name=True,
-        oracle_client_library=None,
     ),
     auth=BakedAuthConf(
         auth_type=(
@@ -538,9 +536,7 @@ expected_yaml_lines_discovery_instances = [
 oracle_config_use_host_client_always: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
-        oracle_client_library=StoredOracleClientLibOptions(
-            use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
-        )
+        use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
     ),
     auth=BakedAuthConf(
         auth_type=(
@@ -586,9 +582,7 @@ expected_yaml_lines_use_host_client_always = [
 oracle_config_use_host_client_path: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
-        oracle_client_library=StoredOracleClientLibOptions(
-            use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
-        )
+        use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
     ),
     auth=BakedAuthConf(
         auth_type=(
@@ -631,14 +625,9 @@ expected_yaml_lines_use_host_client_path = [
 ]
 
 # 8. Main config with auth, connection and additional option deploy_lib
-# set to True to deploy oracle binaries
+# 8. Main config with auth and connection only
 oracle_config_deploy_oracle_binaries: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
-    options=StoredAdditionalOptionsConf(
-        oracle_client_library=StoredOracleClientLibOptions(
-            deploy_lib=True,
-        )
-    ),
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -680,11 +669,6 @@ expected_yaml_lines_deploy_oracle_binaries = [
 # 9. Main config with wallet auth, connection
 oracle_config_wallet_auth: BakedConfig = BakedConfig(
     deploy_rev2=DEPLOY,
-    options=StoredAdditionalOptionsConf(
-        oracle_client_library=StoredOracleClientLibOptions(
-            deploy_lib=True,
-        )
-    ),
     auth=BakedAuthConf(
         auth_type=(
             "wallet",

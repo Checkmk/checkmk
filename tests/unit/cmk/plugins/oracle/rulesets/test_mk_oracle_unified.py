@@ -59,14 +59,17 @@ _INSTANCES = [
 # What the form wrote before the revision.
 OLD_RULE: Mapping[str, object] = {
     "deploy": ("deploy", None),
-    "options": {"ignore_db_name": False},
+    "options": {
+        "ignore_db_name": False,
+        "oracle_client_library": {"use_host_client": ("custom", "$ORACLE_HOME/lib")},
+    },
     "main": _SHARED,
     "instances": _INSTANCES,
 }
 
 CURRENT_RULE: Mapping[str, object] = {
     "deploy_rev2": "deploy",
-    "options": {"ignore_db_name": False},
+    "options": {"ignore_db_name": False, "use_host_client": ("custom", "$ORACLE_HOME/lib")},
     "instances_rev2": [
         {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
         {"oracle_id": ("alias", "PROD")},
@@ -122,6 +125,18 @@ def test_an_empty_database_list_points_at_instance_discovery() -> None:
     instances = _agent_config_mk_oracle().elements["instances_rev2"].parameter_form
     assert isinstance(instances, List)
     assert "discovery" in instances.no_element_label.localize(str).lower()
+
+
+def test_the_client_library_is_offered_flat() -> None:
+    options_form = _agent_config_mk_oracle().elements["options"].parameter_form
+    assert isinstance(options_form, Dictionary)
+    assert "use_host_client" in options_form.elements
+    assert "oracle_client_library" not in options_form.elements
+
+
+def test_an_empty_client_library_block_names_no_client() -> None:
+    migrated = _migrate({**OLD_RULE, "options": {"oracle_client_library": {}}})
+    assert migrated["options"] == {}
 
 
 def test_deploy_is_offered_as_a_choice() -> None:

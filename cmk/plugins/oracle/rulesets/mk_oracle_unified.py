@@ -622,73 +622,66 @@ def _permissions() -> CascadingSingleChoice:
     )
 
 
-def _oracle_client_library_options() -> Dictionary:
-    return Dictionary(
-        title=Title("Oracle Instant Client options"),
-        elements={
-            "use_host_client": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Oracle Instant Client usage"),
-                    help_text=Help(
-                        "Controls which Oracle Instant Client the plug-in uses to connect to databases. "
-                        "Two sources are available: "
-                        "the <b>agent-local client</b> — Oracle Instant Client libraries manually installed "
-                        "alongside the Checkmk agent under "
-                        "<tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — "
-                        "and the <b>host client</b> — an Oracle installation already present on the monitored host. "
-                        "Note: Checkmk does <b>not</b> deploy Oracle Instant Client automatically; "
-                        "you must install it manually if you want to use the agent-local client. "
-                        "<b>Auto-detect</b>: tries the host client first, falls back to the agent-local client. "
-                        "<b>Never use host client</b>: uses only the agent-local client, ignores any host installation. "
-                        "<b>Always use host client</b>: uses only the host client, ignores the agent-local client. "
-                        "<b>Custom path</b>: uses the Oracle Instant Client at the specified path; "
-                        "supports environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
-                    ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="auto",
-                            title=Title("Auto-detect (default)"),
-                            parameter_form=FixedValue(
-                                value=None,
-                                label=Label("(host client first, then the agent-local client)"),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="never",
-                            title=Title("Never use host client (only agent-local client)"),
-                            parameter_form=FixedValue(
-                                value=None,
-                                label=Label("(agent-local client only)"),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="always",
-                            title=Title("Always use host client (ignore agent-local client)"),
-                            parameter_form=FixedValue(
-                                value=None,
-                                label=Label("(host client only)"),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="custom",
-                            title=Title("Use custom path"),
-                            parameter_form=String(
-                                title=Title("Custom path to Oracle client libraries"),
-                                custom_validate=(
-                                    validators.MatchRegex(
-                                        USE_HOST_CLIENT_PATH_RE,
-                                        Message(
-                                            "Please enter an absolute path or a path starting with an environment variable (e.g. $VAR/lib)."
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ],
+def _use_host_client() -> CascadingSingleChoice:
+    return CascadingSingleChoice(
+        title=Title("Oracle Instant Client usage"),
+        prefill=DefaultValue("auto"),
+        help_text=Help(
+            "Controls which Oracle Instant Client the plug-in uses to connect to databases. "
+            "Two sources are available: "
+            "the <b>agent-local client</b> — Oracle Instant Client libraries manually installed "
+            "alongside the Checkmk agent under "
+            "<tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — "
+            "and the <b>host client</b> — an Oracle installation already present on the monitored host. "
+            "Note: Checkmk does <b>not</b> deploy Oracle Instant Client automatically; "
+            "you must install it manually if you want to use the agent-local client. "
+            "<b>Auto-detect</b>: tries the host client first, falls back to the agent-local client. "
+            "<b>Never use host client</b>: uses only the agent-local client, ignores any host installation. "
+            "<b>Always use host client</b>: uses only the host client, ignores the agent-local client. "
+            "<b>Custom path</b>: uses the Oracle Instant Client at the specified path; "
+            "supports environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
+        ),
+        elements=[
+            CascadingSingleChoiceElement(
+                name="auto",
+                title=Title("Auto-detect (default)"),
+                parameter_form=FixedValue(
+                    value=None,
+                    label=Label("(host client first, then the agent-local client)"),
                 ),
-                required=False,
             ),
-        },
+            CascadingSingleChoiceElement(
+                name="never",
+                title=Title("Never use host client (only agent-local client)"),
+                parameter_form=FixedValue(
+                    value=None,
+                    label=Label("(agent-local client only)"),
+                ),
+            ),
+            CascadingSingleChoiceElement(
+                name="always",
+                title=Title("Always use host client (ignore agent-local client)"),
+                parameter_form=FixedValue(
+                    value=None,
+                    label=Label("(host client only)"),
+                ),
+            ),
+            CascadingSingleChoiceElement(
+                name="custom",
+                title=Title("Use custom path"),
+                parameter_form=String(
+                    title=Title("Custom path to Oracle client libraries"),
+                    custom_validate=(
+                        validators.MatchRegex(
+                            USE_HOST_CLIENT_PATH_RE,
+                            Message(
+                                "Please enter an absolute path or a path starting with an environment variable (e.g. $VAR/lib)."
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ],
     )
 
 
@@ -709,8 +702,8 @@ def _options() -> Dictionary:
             ),
             required=False,
         ),
-        "oracle_client_library": DictElement(
-            parameter_form=_oracle_client_library_options(),
+        "use_host_client": DictElement(
+            parameter_form=_use_host_client(),
             required=False,
         ),
         "validate_permissions": DictElement(parameter_form=_permissions(), required=False),
@@ -895,6 +888,16 @@ def _entries_to_rev2(entries: object, id_key: str) -> object:
     return converted
 
 
+def _options_to_rev2(options: Mapping[str, object]) -> Mapping[str, object]:
+    hoisted: dict[str, object] = {
+        key: value for key, value in options.items() if key != "oracle_client_library"
+    }
+    library = options.get("oracle_client_library")
+    if isinstance(library, Mapping) and "use_host_client" in library:
+        hoisted.setdefault("use_host_client", library["use_host_client"])
+    return hoisted
+
+
 def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
     """Dissolve "main", and give the keys whose shape changed a new name.
 
@@ -914,6 +917,8 @@ def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
         migrated["deploy_rev2"] = deploy[0] if isinstance(deploy, tuple) else deploy
     if "instances" in migrated:
         migrated["instances_rev2"] = _entries_to_rev2(migrated.pop("instances"), "oracle_id")
+    if isinstance(options := migrated.get("options"), Mapping):
+        migrated["options"] = _options_to_rev2(options)
     return migrated
 
 

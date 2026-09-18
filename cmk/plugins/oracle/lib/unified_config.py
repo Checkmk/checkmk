@@ -32,6 +32,7 @@ StoredPassword = tuple[
 
 StoredSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
 type AuthType = Literal["standard", "wallet"]
+type UseHostClient = tuple[Literal["auto", "never", "always"], None] | tuple[Literal["custom"], str]
 
 
 class StoredAuthUserPasswordData[SecretT = StoredPassword](BaseModel):
@@ -83,21 +84,16 @@ class StoredDiscoveryConf(BaseModel):
     exclude: list[str] | None = None
 
 
-class StoredOracleClientLibOptions(BaseModel):
-    deploy_lib: bool = False
-    use_host_client: (
-        tuple[Literal["auto", "never", "always"], None] | tuple[Literal["custom"], str] | None
-    ) = None
-
-
 class StoredOracleSafeEntries(BaseModel):
     safe_entries: list[str] | None = None
 
 
 class StoredAdditionalOptionsConf(BaseModel):
+    # Dropped from the form by CMK-37226. Rules written before that still carry
+    # it and the bakery still writes it to mk-oracle.yml.
     max_connections: int | None = None
     ignore_db_name: bool | None = None
-    oracle_client_library: StoredOracleClientLibOptions | None = None
+    use_host_client: UseHostClient | None = None
     validate_permissions: (
         tuple[Literal["enabled"], StoredOracleSafeEntries | None]
         | tuple[Literal["disabled"], None]

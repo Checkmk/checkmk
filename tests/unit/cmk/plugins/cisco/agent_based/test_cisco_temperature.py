@@ -1013,8 +1013,10 @@ def test_discovery_dom(section_dom: ct.Section) -> None:
         ct.discover_cisco_temperature_dom(
             {
                 "admin_states": ["1", "3"],
-                "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"]
-            }, section_dom)
+                "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"],
+            },
+            section_dom,
+        )
     ) == sorted(
         [
             Service(item="Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"),
@@ -1031,8 +1033,10 @@ def test_discovery_not_ok_sensors(section_not_ok_sensors: ct.Section) -> None:
         ct.discover_cisco_temperature_dom(
             {
                 "admin_states": ["1", "3"],
-                "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"]
-            }, section_not_ok_sensors)
+                "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"],
+            },
+            section_not_ok_sensors,
+        )
     )
 
 

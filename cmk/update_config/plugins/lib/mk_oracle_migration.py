@@ -157,6 +157,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
             deploy_rev2=deploy,
             auth=auth,
             connection=connection or StoredConnectionConf(),
+            tns_admin=legacy.get("tns_admin") or None,
             cache_age=cache_age,
             discovery=discovery,
             sections=sections,
@@ -245,8 +246,6 @@ def _convert_login(
     auth = _convert_auth(login, auth_required=True, warnings=warnings)
     assert auth is not None  # auth_required=True always yields a real StoredAuthConf
     connection = _convert_connection(login) or StoredConnectionConf()
-    if admin := legacy.get("tns_admin"):
-        connection.tns_admin = admin
 
     if tns_alias := login.get("tnsalias"):
         warnings.append(

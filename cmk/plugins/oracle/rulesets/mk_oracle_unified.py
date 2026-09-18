@@ -425,27 +425,53 @@ def _oracle_id() -> CascadingSingleChoice:
     )
 
 
-def _connection_options(*, include_tns_admin: bool) -> Dictionary:
-    base: dict[str, DictElement[str] | DictElement[int]] = {
-        "host": DictElement(
+def _connection_options() -> Dictionary:
+    return Dictionary(
+        title=Title("Connection options"),
+        elements={
+            "host": DictElement(
+                parameter_form=String(
+                    title=Title("Host name"),
+                    prefill=DefaultValue("localhost"),
+                ),
+                required=False,
+            ),
+            "port": DictElement(
+                parameter_form=Integer(
+                    title=Title("Port"),
+                    prefill=DefaultValue(1521),
+                ),
+                required=False,
+            ),
+            "timeout": DictElement(
+                parameter_form=Integer(
+                    title=Title("Connection timeout"),
+                    unit_symbol="s",
+                    prefill=DefaultValue(5),
+                ),
+                required=False,
+            ),
+        },
+    )
+
+
+def _oracle_files() -> Mapping[str, DictElement[str]]:
+    """The two paths the plug-in reads once per run, not once per database."""
+    return {
+        "tns_admin": DictElement(
             parameter_form=String(
-                title=Title("Host name"),
-                prefill=DefaultValue("localhost"),
-            ),
-            required=False,
-        ),
-        "port": DictElement(
-            parameter_form=Integer(
-                title=Title("Port"),
-                prefill=DefaultValue(1521),
-            ),
-            required=False,
-        ),
-        "timeout": DictElement(
-            parameter_form=Integer(
-                title=Title("Connection timeout"),
-                unit_symbol="s",
-                prefill=DefaultValue(5),
+                title=Title("TNS_ADMIN directory path"),
+                help_text=Help(
+                    "Sets the TNS_ADMIN environment variable for the Oracle "
+                    "plug-in. This directory should contain Oracle network "
+                    "configuration files such as tnsnames.ora, sqlnet.ora, "
+                    "or wallet files. The plug-in must have read access to "
+                    "all files in this directory. If not specified, the "
+                    "default plug-in's config directory will be used."
+                ),
+                custom_validate=(
+                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+                ),
             ),
             required=False,
         ),
@@ -471,30 +497,6 @@ def _connection_options(*, include_tns_admin: bool) -> Dictionary:
             required=False,
         ),
     }
-    # TNS_ADMIN is honored for the default connection only. A per-instance
-    # override is reserved and currently ignored by the plug-in.
-    if include_tns_admin:
-        base["tns_admin"] = DictElement(
-            parameter_form=String(
-                title=Title("TNS_ADMIN directory path"),
-                help_text=Help(
-                    "Sets the TNS_ADMIN environment variable for the Oracle "
-                    "plug-in. This directory should contain Oracle network "
-                    "configuration files such as tnsnames.ora, sqlnet.ora, "
-                    "or wallet files. The plug-in must have read access to "
-                    "all files in this directory. If not specified, the "
-                    "default plug-in's config directory will be used."
-                ),
-                custom_validate=(
-                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
-                ),
-            ),
-            required=False,
-        )
-    return Dictionary(
-        title=Title("Connection options"),
-        elements=base,
-    )
 
 
 def _configurable_sections() -> Iterator[SectionOptions]:
@@ -733,7 +735,7 @@ def _endpoint(
             required=is_main_entry,
         ),
         "connection": DictElement(
-            parameter_form=_connection_options(include_tns_admin=is_main_entry),
+            parameter_form=_connection_options(),
             required=is_main_entry,
         ),
     }
@@ -870,6 +872,12 @@ def _instances() -> List[_NamedOption]:
 # written before that still carries them.
 _KEPT_BUT_NOT_OFFERED: Final = ("max_connections", "max_queries")
 
+# The plug-in reads these two once per run: TNS_ADMIN becomes a process-wide
+# environment variable (connection.rs:146), and the Grid home found through
+# olr.loc picks the Oracle client (setup.rs:753). A per-database value never
+# reached either one.
+_ORACLE_FILE_PATHS: Final = ("tns_admin", "oracle_local_registry")
+
 _LIFTED_FROM_MAIN: Final = (
     "auth",
     "connection",
@@ -963,6 +971,13 @@ def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
         migrated["instances_rev2"] = _entries_to_rev2(migrated.pop("instances"), "oracle_id")
     if isinstance(options := migrated.pop("options", None), Mapping):
         migrated.update(_options_to_rev2(options))
+    if isinstance(connection := migrated.get("connection"), Mapping):
+        lifted = {key: connection[key] for key in _ORACLE_FILE_PATHS if key in connection}
+        if lifted:
+            migrated["connection"] = {
+                key: item for key, item in connection.items() if key not in lifted
+            }
+            migrated.update({key: item for key, item in lifted.items() if key not in migrated})
     return migrated
 
 
@@ -1019,6 +1034,7 @@ def _agent_config_mk_oracle() -> Dictionary:
                 parameter_form=_excluded_sections(),
                 required=False,
             ),
+            **_oracle_files(),
             **_cache_ages(),
             **_other_settings(),
         },

@@ -286,11 +286,15 @@ def test_connection_converts_with_tns_admin() -> None:
     new_rule = convert(
         {"login": {"auth": "wallet", "host": "my_host", "port": 1521}, "tns_admin": "tadmin"}
     )
-    assert dump(new_rule.rule)["connection"] == {
-        "host": "my_host",
-        "port": 1521,
-        "tns_admin": "tadmin",
-    }
+    dumped = dump(new_rule.rule)
+    assert dumped["connection"] == {"host": "my_host", "port": 1521}
+    assert dumped["tns_admin"] == "tadmin"
+
+
+def test_tns_admin_survives_a_rule_without_a_login() -> None:
+    # The legacy ruleset holds tns_admin beside 'login', not inside it, so a rule
+    # can name one without the other.
+    assert dump(convert({"tns_admin": "tadmin"}).rule)["tns_admin"] == "tadmin"
 
 
 def test_login_without_tnsalias_has_no_instance() -> None:

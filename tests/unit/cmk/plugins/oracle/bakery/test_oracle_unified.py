@@ -167,7 +167,6 @@ oracle_config_min: BakedConfig = BakedConfig(
         host="localhost",
         port=None,
         timeout=None,
-        tns_admin=None,
     ),
     cache_age=None,
     discovery=None,
@@ -208,8 +207,8 @@ oracle_config_full: BakedConfig = BakedConfig(
         host="dbhost",
         port=1521,
         timeout=10,
-        tns_admin="/etc/oracle/tns",
     ),
+    tns_admin="/etc/oracle/tns",
     cache_age=600,
     discovery=StoredDiscoveryConf(
         enabled="enabled",
@@ -250,8 +249,6 @@ oracle_config_full: BakedConfig = BakedConfig(
                 host="dbhost2",
                 port=1522,
                 timeout=20,
-                # per-instance tns_admin is reserved and dropped by the bakery (main-only)
-                tns_admin="/etc/oracle/tns2",
             ),
         ),
     ],
@@ -321,9 +318,9 @@ oracle_config_section: BakedConfig = BakedConfig(
         host="localhost",
         port=1521,
         timeout=None,
-        tns_admin="some_tns_admin",
-        oracle_local_registry="some_registry",
     ),
+    tns_admin="some_tns_admin",
+    oracle_local_registry="some_registry",
     cache_age=None,
     discovery=None,
     sections={},
@@ -369,7 +366,6 @@ oracle_config_instance_sid: BakedConfig = BakedConfig(
         host="localhost",
         port=None,
         timeout=None,
-        tns_admin=None,
     ),
     cache_age=None,
     discovery=None,
@@ -419,7 +415,6 @@ oracle_config_discovery_instances: BakedConfig = BakedConfig(
         host="localhost",
         port=1521,
         timeout=5,
-        tns_admin=None,
     ),
     cache_age=None,
     discovery=StoredDiscoveryConf(
@@ -458,8 +453,6 @@ oracle_config_discovery_instances: BakedConfig = BakedConfig(
                 host="hostb",
                 port=1522,
                 timeout=10,
-                # per-instance tns_admin is reserved and dropped by the bakery (main-only)
-                tns_admin="/etc/oracle/tnsb",
             ),
         ),
     ],
@@ -513,8 +506,6 @@ oracle_config_use_host_client_always: BakedConfig = BakedConfig(
         host="localhost",
         port=1521,
         timeout=None,
-        tns_admin=None,
-        oracle_local_registry=None,
     ),
     cache_age=None,
     discovery=None,
@@ -557,8 +548,6 @@ oracle_config_use_host_client_path: BakedConfig = BakedConfig(
         host="localhost",
         port=1521,
         timeout=None,
-        tns_admin=None,
-        oracle_local_registry=None,
     ),
     cache_age=None,
     discovery=None,
@@ -601,8 +590,6 @@ oracle_config_deploy_oracle_binaries: BakedConfig = BakedConfig(
         host="localhost",
         port=1521,
         timeout=None,
-        tns_admin=None,
-        oracle_local_registry=None,
     ),
     cache_age=None,
     discovery=None,
@@ -639,8 +626,6 @@ oracle_config_wallet_auth: BakedConfig = BakedConfig(
         host="localhost",
         port=1521,
         timeout=None,
-        tns_admin=None,
-        oracle_local_registry=None,
     ),
     cache_age=None,
     discovery=None,
@@ -707,7 +692,6 @@ oracle_config_custom_metrics_cache_age: BakedConfig = BakedConfig(
         host="localhost",
         port=None,
         timeout=None,
-        tns_admin=None,
     ),
     cache_age=None,
     custom_metrics_cache_age=120,
@@ -778,7 +762,6 @@ oracle_config_no_host: BakedConfig = BakedConfig(
         host=None,
         port=None,
         timeout=None,
-        tns_admin=None,
     ),
     cache_age=None,
     discovery=None,
@@ -805,7 +788,7 @@ def test_oracle_without_host_omits_hostname() -> None:
 
 def test_oracle_without_host_keeps_other_connection_keys() -> None:
     config = oracle_config_no_host.model_copy(deep=True)
-    config.connection = StoredConnectionConf(host=None, port=1234, timeout=None, tns_admin=None)
+    config.connection = StoredConnectionConf(host=None, port=1234, timeout=None)
     lines = [
         line
         for entry in _process(config)
@@ -832,7 +815,7 @@ def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
             ),
             role=None,
         ),
-        connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        connection=StoredConnectionConf(host="localhost", port=None, timeout=None),
         cache_age=300,
         custom_metrics_cache_age=300,
         instances_rev2=None,
@@ -865,7 +848,7 @@ def test_get_active_custom_metrics_cache_age(
             ),
             role=None,
         ),
-        connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        connection=StoredConnectionConf(host="localhost", port=None, timeout=None),
         custom_metrics_cache_age=custom_metrics_cache_age,
     )
     assert conf.get_active_custom_metrics_cache_age() == expected
@@ -919,7 +902,7 @@ def _config_with_excluded_sections(
             ),
             role=None,
         ),
-        connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        connection=StoredConnectionConf(host="localhost", port=None, timeout=None),
         excluded_sections=excluded_sections,
         instances_rev2=None,
     )

@@ -295,7 +295,11 @@ def _get_oracle_dict(config: BakedConfig) -> OracleMain:
 
     return OracleMain(
         authentication=auth,
-        connection=_get_oracle_connection(config.connection),
+        connection=_get_oracle_connection(
+            config.connection,
+            tns_admin=config.tns_admin,
+            oracle_local_registry=config.oracle_local_registry,
+        ),
         options=_get_oracle_additional_options(config),
         discovery=_get_oracle_discovery(config.discovery),
         sections=_get_oracle_sections(config.sections),
@@ -341,7 +345,10 @@ def _get_oracle_authentication(auth_config: BakedAuthConf | None) -> OracleAuth 
 
 
 def _get_oracle_connection(
-    conn: StoredConnectionConf | None, *, include_tns_admin: bool = True
+    conn: StoredConnectionConf | None,
+    *,
+    tns_admin: str | None = None,
+    oracle_local_registry: str | None = None,
 ) -> OracleConnection | None:
     if conn is None:
         return None
@@ -350,10 +357,8 @@ def _get_oracle_connection(
         hostname=conn.host,
         port=conn.port,
         timeout=conn.timeout,
-        # tns_admin applies to the main connection only; per-instance it is
-        # reserved and ignored by the plug-in, so it is never baked.
-        tns_admin=conn.tns_admin if include_tns_admin else None,
-        oracle_local_registry=conn.oracle_local_registry,
+        tns_admin=tns_admin,
+        oracle_local_registry=oracle_local_registry,
     )
     # An entirely empty block would say nothing that the plug-in does not
     # already default to.
@@ -465,7 +470,7 @@ def _get_oracle_instances(instances: list[BakedInstanceConf] | None) -> list[Ora
             sid=identification.sid,
             alias=identification.alias,
             authentication=_get_oracle_authentication(instance.auth),
-            connection=_get_oracle_connection(instance.connection, include_tns_admin=False),
+            connection=_get_oracle_connection(instance.connection),
             piggyback=OraclePiggyback(hostname=instance.piggyback_host)
             if instance.piggyback_host
             else None,

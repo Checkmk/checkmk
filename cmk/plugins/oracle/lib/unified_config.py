@@ -76,8 +76,6 @@ class StoredConnectionConf(BaseModel):
     host: str | None = None
     port: int | None = None
     timeout: int | None = None
-    tns_admin: str | None = None
-    oracle_local_registry: str | None = None
 
 
 class StoredDiscoveryConf(BaseModel):
@@ -106,6 +104,9 @@ class StoredConfig[SecretT = StoredPassword](BaseModel):
     deploy_rev2: Literal["deploy", "do_not_deploy"]
     auth: StoredAuthConf[SecretT]
     connection: StoredConnectionConf
+    # The plug-in reads both once per run, never per database.
+    tns_admin: str | None = None
+    oracle_local_registry: str | None = None
     cache_age: int | None = None
     custom_metrics_cache_age: int | None = None
     discovery: StoredDiscoveryConf | None = None

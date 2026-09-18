@@ -18,6 +18,8 @@ from cmk.gui.watolib.password_visitor import PasswordVisitor
 from cmk.plugins.oracle.lib.unified_config import StoredConfig
 from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
     _agent_config_mk_oracle,
+    _connection_options,
+    _instances,
     _migrate,
     _oracle_id,
     SECTIONS,
@@ -43,23 +45,10 @@ from cmk.rulesets.v1.form_specs import (
 
 PASSWORD = ("cmk_postprocessed", "explicit_password", ("uuid", "secret"))
 
-_SHARED: Mapping[str, object] = {
-    "auth": {
-        "auth_type": ("standard", {"username": "monitor", "password": PASSWORD}),
-        "role": "sysdba",
-    },
-    "connection": {"host": "db1.example.com", "port": 1521},
-    "cache_age": 900,
-    "custom_metrics_cache_age": 1200,
-    "discovery": {"enabled": True, "include": ["ORCL"]},
-    "sections": {"tablespaces": "asynchronous", "locks": "synchronous"},
-    "excluded_sections": [{"target_id": ("sid", {"sid": "XE"}), "sections": ["rman"]}],
+_AUTH: Mapping[str, object] = {
+    "auth_type": ("standard", {"username": "monitor", "password": PASSWORD}),
+    "role": "sysdba",
 }
-
-_INSTANCES = [
-    {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
-    {"oracle_id": ("alias", {"alias": "PROD"})},
-]
 
 # What the form wrote before the revision.
 OLD_RULE: Mapping[str, object] = {
@@ -68,22 +57,37 @@ OLD_RULE: Mapping[str, object] = {
         "ignore_db_name": False,
         "oracle_client_library": {"use_host_client": ("custom", "$ORACLE_HOME/lib")},
     },
-    "main": _SHARED,
-    "instances": _INSTANCES,
+    "main": {
+        "auth": _AUTH,
+        "connection": {"host": "db1.example.com", "port": 1521, "tns_admin": "/etc/oracle"},
+        "cache_age": 900,
+        "custom_metrics_cache_age": 1200,
+        "discovery": {"enabled": True, "include": ["ORCL"]},
+        "sections": {"tablespaces": "asynchronous", "locks": "synchronous"},
+        "excluded_sections": [{"target_id": ("sid", {"sid": "XE"}), "sections": ["rman"]}],
+    },
+    "instances": [
+        {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
+        {"oracle_id": ("alias", {"alias": "PROD"})},
+    ],
 }
 
 CURRENT_RULE: Mapping[str, object] = {
     "deploy_rev2": "deploy",
     "ignore_db_name": False,
     "use_host_client": ("custom", "$ORACLE_HOME/lib"),
+    "auth": _AUTH,
+    "connection": {"host": "db1.example.com", "port": 1521},
+    "tns_admin": "/etc/oracle",
+    "cache_age": 900,
+    "custom_metrics_cache_age": 1200,
+    "discovery": {"enabled": "enabled", "include": ["ORCL"]},
+    "sections": {"tablespaces": True, "locks": False},
+    "excluded_sections": [{"target_id": ("sid", "XE"), "sections": ["rman"]}],
     "instances_rev2": [
         {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
         {"oracle_id": ("alias", "PROD")},
     ],
-    **_SHARED,
-    "discovery": {"enabled": "enabled", "include": ["ORCL"]},
-    "sections": {"tablespaces": True, "locks": False},
-    "excluded_sections": [{"target_id": ("sid", "XE"), "sections": ["rman"]}],
 }
 
 
@@ -118,7 +122,9 @@ def test_the_current_rule_parses_as_the_stored_model() -> None:
 
 def test_migrate_drops_an_entry_that_names_no_database() -> None:
     # The bakery dropped these silently, so a rule can carry one.
-    old = {**OLD_RULE, "instances": [{"oracle_id": ("sid", {})}, *_INSTANCES]}
+    instances = OLD_RULE["instances"]
+    assert isinstance(instances, list)
+    old = {**OLD_RULE, "instances": [{"oracle_id": ("sid", {})}, *instances]}
     assert _migrate(old)["instances_rev2"] == CURRENT_RULE["instances_rev2"]
 
 
@@ -208,6 +214,16 @@ def test_every_checkbox_and_fixed_value_renders_something() -> None:
 
 def test_the_form_declares_max_connections_as_ignored() -> None:
     assert "max_connections" in _agent_config_mk_oracle().ignored_elements
+
+
+def test_the_oracle_file_paths_are_offered_once_and_not_per_database() -> None:
+    # The plug-in sets TNS_ADMIN process wide and picks the client from one Grid
+    # home, so neither path means anything per database.
+    elements = _agent_config_mk_oracle().elements
+    assert {"tns_admin", "oracle_local_registry"} <= set(elements)
+    for form in (_connection_options(), _instances().element_template):
+        assert isinstance(form, Dictionary)
+        assert not {"tns_admin", "oracle_local_registry"} & set(form.elements)
 
 
 def test_every_setting_that_stands_alone_merges_on_its_own_key() -> None:

@@ -117,3 +117,19 @@ test('all-zero total renders a single neutral track and an empty aria-label', ()
   expect(segments[0]).toHaveClass('cmk-state-count-bar__segment--empty')
   expect(screen.getByRole('img')).toHaveAttribute('aria-label', 'No services')
 })
+
+test('wears the medium size unless a smaller bar is asked for', () => {
+  const { container } = render(CmkStateCountBar, { props: { segments: MIX } })
+
+  expect(container.querySelector('.cmk-state-count-bar')).toHaveClass(
+    'cmk-state-count-bar--size-medium'
+  )
+})
+
+test('thins the bar down to the small size on request', () => {
+  const { container } = render(CmkStateCountBar, { props: { segments: MIX, size: 'small' } })
+
+  expect(container.querySelector('.cmk-state-count-bar')).toHaveClass(
+    'cmk-state-count-bar--size-small'
+  )
+})

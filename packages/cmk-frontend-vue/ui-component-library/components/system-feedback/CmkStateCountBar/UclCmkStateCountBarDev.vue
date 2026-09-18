@@ -11,16 +11,18 @@ defineProps<{ screenshotMode: boolean }>()
 
 const { _t } = usei18n()
 
+const mix: StateSegment[] = [
+  { label: _t('OK'), count: 24, color: 'success' },
+  { label: _t('WARN'), count: 3, color: 'warning' },
+  { label: _t('CRIT'), count: 1, color: 'danger' },
+  { label: _t('UNKNOWN'), count: 0, color: 'unknown' },
+  { label: _t('PENDING'), count: 2, color: 'default' }
+]
+
 const variants: { title: string; segments: StateSegment[] }[] = [
   {
     title: 'Typical mix',
-    segments: [
-      { label: _t('OK'), count: 24, color: 'success' },
-      { label: _t('WARN'), count: 3, color: 'warning' },
-      { label: _t('CRIT'), count: 1, color: 'danger' },
-      { label: _t('UNKNOWN'), count: 0, color: 'unknown' },
-      { label: _t('PENDING'), count: 2, color: 'default' }
-    ]
+    segments: mix
   },
   {
     title: 'Single state',
@@ -60,6 +62,14 @@ const variants: { title: string; segments: StateSegment[] }[] = [
     <div v-for="variant in variants" :key="variant.title" class="ucl-cmk-state-count-bar-dev__item">
       <h4 class="ucl-cmk-state-count-bar-dev__title">{{ variant.title }}</h4>
       <CmkStateCountBar :segments="variant.segments" />
+    </div>
+    <div class="ucl-cmk-state-count-bar-dev__item">
+      <h4 class="ucl-cmk-state-count-bar-dev__title">Size medium (default)</h4>
+      <CmkStateCountBar :segments="mix" size="medium" />
+    </div>
+    <div class="ucl-cmk-state-count-bar-dev__item">
+      <h4 class="ucl-cmk-state-count-bar-dev__title">Size small</h4>
+      <CmkStateCountBar :segments="mix" size="small" />
     </div>
   </div>
 </template>

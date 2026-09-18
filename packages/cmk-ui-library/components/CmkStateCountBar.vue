@@ -32,7 +32,17 @@ interface LegendEntry {
   target: string | undefined
 }
 
-const props = defineProps<{ segments: StateSegment[]; total?: StateTotal | undefined }>()
+/** `small` thins the bar where a list repeats one per row. */
+export type StateCountBarSize = 'small' | 'medium'
+
+const props = withDefaults(
+  defineProps<{
+    segments: StateSegment[]
+    total?: StateTotal | undefined
+    size?: StateCountBarSize
+  }>(),
+  { total: undefined, size: 'medium' }
+)
 
 const { _t } = usei18n()
 
@@ -76,7 +86,7 @@ const ariaLabel = computed<string>(() =>
 </script>
 
 <template>
-  <div class="cmk-state-count-bar">
+  <div class="cmk-state-count-bar" :class="`cmk-state-count-bar--size-${size}`">
     <div class="cmk-state-count-bar__bar" role="img" :aria-label="ariaLabel">
       <template v-if="totalCount > 0">
         <div
@@ -120,9 +130,16 @@ const ariaLabel = computed<string>(() =>
   display: flex;
   gap: var(--dimension-2);
   width: 100%;
-  height: var(--dimension-6);
   overflow: hidden;
   border-radius: var(--border-radius);
+}
+
+.cmk-state-count-bar--size-medium .cmk-state-count-bar__bar {
+  height: var(--dimension-6);
+}
+
+.cmk-state-count-bar--size-small .cmk-state-count-bar__bar {
+  height: var(--dimension-4);
 }
 
 .cmk-state-count-bar__segment {

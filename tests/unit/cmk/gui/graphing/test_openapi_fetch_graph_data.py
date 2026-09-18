@@ -88,11 +88,11 @@ def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
         fallback_time_range=TimeRange(start=0, end=60, step=10),
         diagnostics=FetchDiagnostics(
             limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100, num_series=100)],
-            errors=["metric backend unavailable"],
+            errors=["telemetry metrics unavailable"],
         ),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
-    assert response.errors == ["metric backend unavailable"]
+    assert response.errors == ["telemetry metrics unavailable"]
     assert len(response.warnings) == 1
     assert "cpu" in response.warnings[0]
 

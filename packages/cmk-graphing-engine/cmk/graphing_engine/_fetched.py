@@ -54,7 +54,7 @@ def value_of(data: PerformanceData, scalar_kind: ScalarKind) -> float | None:
 MACRO_SERIES_ID: Final = "$SERIES_ID$"
 
 # The attributes of a fetched series, kind -> name -> value. The kinds are the fetch layer's to name
-# (e.g. a metric backend's "resource" / "scope" / "data_point").
+# (e.g. a telemetry metrics source's "resource" / "scope" / "data_point").
 type SeriesAttributes = Mapping[str, Mapping[str, str]]
 
 

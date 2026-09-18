@@ -279,7 +279,7 @@ class QueryLimitReached:
 @dataclass
 class FetchDiagnostics:
     # Non-fatal fetch diagnostics surfaced to the caller: query series caps that were hit and
-    # per-query fetch errors. Only the metric-backend fetch fills these today; the RRD fetch leaves
+    # per-query fetch errors. Only the telemetry metrics fetch fills these today; the RRD fetch leaves
     # them empty. Mutable so the fetch can accumulate into it while resolving the data.
     limits_reached: list[QueryLimitReached] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)

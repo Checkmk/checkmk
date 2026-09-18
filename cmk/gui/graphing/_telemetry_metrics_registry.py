@@ -33,7 +33,7 @@ class FetchTimeSeriesProtocol(Protocol):
 
 
 class BackendQueryBuilderProtocol(Protocol):
-    """Builds the graph-engine quantity for a metric-backend V2 data source."""
+    """Builds the graph-engine quantity for a telemetry metrics V2 data source."""
 
     def __call__(
         self,

@@ -33,7 +33,7 @@ class EvaluatedCurve:
     value: float | None
     time_series: TimeSeries
     source_id: str | None = None
-    # The attributes of the series the curve was evaluated from, e.g. a metric backend's resource,
+    # The attributes of the series the curve was evaluated from, e.g. a telemetry metrics source's resource,
     # scope and data point attributes. Empty for a curve fetched from RRDs.
     series_attributes: SeriesAttributes = field(default_factory=dict)
 

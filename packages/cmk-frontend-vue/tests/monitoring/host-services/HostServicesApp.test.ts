@@ -20,6 +20,12 @@ type ApiHostEntry = components['schemas']['HostEntry']
 
 const HOSTS_PATH = '/monitor/hosts'
 
+// Several tests here drive the Mode filter panel through multiple userEvent interactions.
+// That's enough combined work to overrun the default 5s budget when the suite runs alongside
+// CI's other workers, even though each test takes well under a second on its own. Raising it
+// once for the file avoids bumping them one at a time as more filters join the funnel.
+vi.setConfig({ testTimeout: 20_000 })
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -335,8 +341,6 @@ test('requests services that are not acknowledged and not in downtime', async ()
   )
 })
 
-// Drives the Mode funnel twice over, which is enough work to overrun the default 5s budget
-// while the rest of the suite runs alongside it - it takes well under a second on its own.
 test('clearing the mode filter restores the full, unfiltered list', async () => {
   mockServices([makeApiEntry()])
   renderApp()
@@ -361,7 +365,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
       body: { limit: 1000, fields: [] }
     })
   )
-}, 20000)
+})
 
 test('activating the unhandled-problems quick filter requests the WARN/CRIT, unacked, no-downtime preset', async () => {
   mockServices([makeApiEntry()])

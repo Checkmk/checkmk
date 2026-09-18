@@ -52,6 +52,7 @@ pkg_files(
 pkg_files(
     name = "bin_755",
     srcs = [
+        ":apply_unsign_msi_patch.sh",
         ":check_mk",
         ":cmk-automation-helper",
         ":cmk-broker-test",

@@ -13,6 +13,7 @@ import { type Edition, availableEditions } from '../core/editions'
 import { error, log, notifyError } from '../core/log'
 import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
+import { ensureMockAuthRunning } from './mockAuth'
 import { promptSocketProxy, registerProxyCleanup } from './proxy'
 import {
   BRIDGE_DIR,
@@ -104,6 +105,21 @@ export async function runOmdSudo(
 
 // ── Site discovery (no sudo required) ──
 
+/** Edition suffixes an OMD_VERSION can end in — the legacy three-letter codes
+ *  plus the current long-form edition names. */
+const OMD_EDITION_SUFFIXES = [
+  'cre',
+  'cee',
+  'cce',
+  'cme',
+  'cse',
+  'community',
+  'pro',
+  'cloud',
+  'ultimate',
+  'ultimatemt'
+]
+
 export function detectOmdSites(): OmdSite[] {
   const sitesDir = '/omd/sites'
   if (!fs.existsSync(sitesDir)) return []
@@ -144,7 +160,7 @@ export function detectOmdSites(): OmdSite[] {
     if (site.version) {
       const parts = site.version.split('.')
       const last = parts[parts.length - 1]
-      if (['cre', 'cee', 'cce', 'cme', 'pro'].includes(last)) site.edition = last
+      if (OMD_EDITION_SUFFIXES.includes(last)) site.edition = last
     }
 
     return site
@@ -281,6 +297,13 @@ export async function createSite(): Promise<void> {
       ? editionChoices[0]
       : await vscode.window.showQuickPick(editionChoices, { placeHolder: 'Select edition' })
   if (!edition) return
+
+  // cmk-dev-install-site aborts on a cloud site while the mock OIDC provider
+  // isn't listening, so bring it up before the install starts.
+  if (edition.label === 'cloud' && !(await ensureMockAuthRunning())) {
+    notifyError('CMK: Mock auth server is required for a cloud site but did not start')
+    return
+  }
 
   const siteNameDefault = versionToSiteName(version)
   const name = await vscode.window.showInputBox({

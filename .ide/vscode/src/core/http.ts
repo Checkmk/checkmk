@@ -6,7 +6,8 @@
 import * as http from 'http'
 import * as https from 'https'
 
-function probe(url: string, perTryTimeoutMs: number): Promise<boolean> {
+// Single-shot reachability check: any HTTP response counts as "up".
+export function probeHttp(url: string, perTryTimeoutMs = 2000): Promise<boolean> {
   return new Promise((resolve) => {
     const lib = url.startsWith('https:') ? https : http
     const req = lib.get(url, (res) => {
@@ -32,7 +33,7 @@ export async function waitForHttp(
 ): Promise<boolean> {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    if (await probe(url, perTryTimeoutMs)) return true
+    if (await probeHttp(url, perTryTimeoutMs)) return true
     await new Promise((r) => setTimeout(r, intervalMs))
   }
   return false

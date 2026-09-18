@@ -134,61 +134,62 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 
 ### Modules (`src/`)
 
-| File                                  | Purpose                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------ |
-| `sidebar.ts`                          | Sidebar orchestrator: state cache, section providers, message dispatch   |
-| `sidebar/html.ts`                     | Shared HTML utilities: esc, getNonce, wrap (with density class), renderLoading |
-| `sidebar/base.css`                    | Shared CSS (cards, buttons, badges, env rows, ext-family, compact density overrides) |
-| `sidebar/types.ts`                    | Shared sidebar type definitions, incl. `GitStateInfo`                    |
-| `sidebar/issues.ts`                   | IssuesProvider tree + activity bar badge (consumes `enumerateIssues` + `sortIssues` + `summaryHeader`) |
-| `sidebar/overview/`                   | Cockpit section (chip rows, per-item drill-down, onboarding banner)      |
-| `sidebar/overview/domainSummary.ts`   | Shared aggregator — `enumerateIssues`, `getDomainSummary`, `sortIssues`, `summaryHeader`, `getProfileSeverity` (used by both Cockpit and Issues view) |
-| `sidebar/activity/`                   | Activity feed section (ring-buffer-backed event log)                     |
-| `sidebar/environment/`                | Environment section (env-grid + per-target build rows; "Build all stale" stays in the Cockpit) |
-| `sidebar/profiles/`                   | Profiles section (cards reflect cockpit severity per family)             |
-| `sidebar/ideHealth/`                  | IDE Health section — Settings / Extensions / Python details (Apply-All header and version banner removed; surfaced in Cockpit instead) |
-| `sidebar/omd/`                        | OMD Sites section (render, messages, CSS)                                |
-| `scm/gitState.ts`                     | Stale-while-revalidate getter for `preCommitSkipping` + `preCommitMissing` + `qaTestDataDirty`; registers `cmk.installPreCommit` + `cmk.fixQaTestDataSubmodule` |
-| `core/config.ts`                      | JSON config loading (workspace-first), variable resolution, shell escape |
-| `core/constants.ts`                   | Display names for families (`FAMILY_DISPLAY`) and profile labels         |
-| `core/shell.ts`                       | `safeExec()` wrapper around `execSync`, returns empty string on failure  |
-| `core/http.ts`                        | `waitForHttp()` — poll a URL until it answers (dev-server readiness for `openBrowser`) |
-| `core/tasks.ts`                       | Shell task execution helpers (`runCommand`, `waitForTask`)               |
-| `core/log.ts`                         | Logging and error handling utilities                                     |
-| `core/version.ts`                     | Semver parsing, `versionNewer()`, `versionAtLeast()` comparisons         |
-| `core/versionCheck.ts`                | Version mismatch detection + "Rebuild & Install" prompt                  |
-| `profiles/profileManager.ts`          | Language profile lifecycle (Py/UI/Rs)                                    |
-| `profiles/profileDetector.ts`         | Auto-suggest profiles from file activity                                 |
-| `profiles/python/mypyConfig.ts`       | Auto-generate `.mypy.ini` from `pyproject.toml`                          |
-| `profiles/python/dmypyHealth.ts`      | `getDmypyHealthSnapshot()` + `cmk.mypy.restartDmypy` — detect daemon vs config drift |
-| `profiles/python/interpreter.ts`      | Python interpreter resolution                                            |
-| `profiles/python/snippets.ts`         | Code snippet registration                                                |
-| `profiles/python/bazelTest.ts`        | Bazel-based Python test runner                                           |
-| `build/buildStatus.ts`                | Build target staleness detection, status bar                             |
-| `build/bazelCache.ts`                 | `getBazelCacheSnapshot()` + `cmk.bazel.cleanDiskCache` — disk-cache size vs. `cmk.bazel.cacheSizeWarnGiB` |
-| `build/settings.ts`                   | Settings mismatch detection, apply logic, context keys                   |
-| `omd/omd.ts`                          | OMD site discovery, status, auth, service commands, site creation        |
-| `omd/devSiteTools.ts`                 | cmk-dev-site install/update detection, PyPI update check                 |
-| `omd/proxy.ts`                        | Unix socket → TCP proxy via socat (livestatus, Redis, etc.)              |
-| `setup/idePicker.ts`                  | Multi-select QuickPick for IDE setup families                            |
-| `setup/templates.ts`                  | File template creation                                                   |
-| `scm/index.ts`                        | Barrel re-exporting all `scm/` register-functions                        |
-| `scm/git.ts`                          | Shared git helpers (`repoRoot`, `currentBranch`)                         |
-| `scm/gerrit.ts`                       | Gerrit push integration (status bar + push command)                      |
-| `scm/preCommit.ts`                    | Pre-commit hook toggle + commit-in-progress status bar spinner           |
-| `scm/sandboxBranch.ts`                | Branch checkout quickpick + Create Sandbox Branch (git workon)           |
-| `whatsNew.ts`                         | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`) |
+| File                                | Purpose                                                                                                                                                         |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sidebar.ts`                        | Sidebar orchestrator: state cache, section providers, message dispatch                                                                                          |
+| `sidebar/html.ts`                   | Shared HTML utilities: esc, getNonce, wrap (with density class), renderLoading                                                                                  |
+| `sidebar/base.css`                  | Shared CSS (cards, buttons, badges, env rows, ext-family, compact density overrides)                                                                            |
+| `sidebar/types.ts`                  | Shared sidebar type definitions, incl. `GitStateInfo`                                                                                                           |
+| `sidebar/issues.ts`                 | IssuesProvider tree + activity bar badge (consumes `enumerateIssues` + `sortIssues` + `summaryHeader`)                                                          |
+| `sidebar/overview/`                 | Cockpit section (chip rows, per-item drill-down, onboarding banner)                                                                                             |
+| `sidebar/overview/domainSummary.ts` | Shared aggregator — `enumerateIssues`, `getDomainSummary`, `sortIssues`, `summaryHeader`, `getProfileSeverity` (used by both Cockpit and Issues view)           |
+| `sidebar/activity/`                 | Activity feed section (ring-buffer-backed event log)                                                                                                            |
+| `sidebar/environment/`              | Environment section (env-grid + per-target build rows; "Build all stale" stays in the Cockpit)                                                                  |
+| `sidebar/profiles/`                 | Profiles section (cards reflect cockpit severity per family)                                                                                                    |
+| `sidebar/ideHealth/`                | IDE Health section — Settings / Extensions / Python details (Apply-All header and version banner removed; surfaced in Cockpit instead)                          |
+| `sidebar/omd/`                      | OMD Sites section (render, messages, CSS)                                                                                                                       |
+| `scm/gitState.ts`                   | Stale-while-revalidate getter for `preCommitSkipping` + `preCommitMissing` + `qaTestDataDirty`; registers `cmk.installPreCommit` + `cmk.fixQaTestDataSubmodule` |
+| `core/config.ts`                    | JSON config loading (workspace-first), variable resolution, shell escape                                                                                        |
+| `core/constants.ts`                 | Display names for families (`FAMILY_DISPLAY`) and profile labels                                                                                                |
+| `core/shell.ts`                     | `safeExec()` wrapper around `execSync`, returns empty string on failure                                                                                         |
+| `core/http.ts`                      | `waitForHttp()` — poll a URL until it answers (dev-server readiness for `openBrowser`)                                                                          |
+| `core/tasks.ts`                     | Shell task execution helpers (`runCommand`, `waitForTask`)                                                                                                      |
+| `core/log.ts`                       | Logging and error handling utilities                                                                                                                            |
+| `core/version.ts`                   | Semver parsing, `versionNewer()`, `versionAtLeast()` comparisons                                                                                                |
+| `core/versionCheck.ts`              | Version mismatch detection + "Rebuild & Install" prompt                                                                                                         |
+| `profiles/profileManager.ts`        | Language profile lifecycle (Py/UI/Rs)                                                                                                                           |
+| `profiles/profileDetector.ts`       | Auto-suggest profiles from file activity                                                                                                                        |
+| `profiles/python/mypyConfig.ts`     | Auto-generate `.mypy.ini` from `pyproject.toml`                                                                                                                 |
+| `profiles/python/dmypyHealth.ts`    | `getDmypyHealthSnapshot()` + `cmk.mypy.restartDmypy` — detect daemon vs config drift                                                                            |
+| `profiles/python/interpreter.ts`    | Python interpreter resolution                                                                                                                                   |
+| `profiles/python/snippets.ts`       | Code snippet registration                                                                                                                                       |
+| `profiles/python/bazelTest.ts`      | Bazel-based Python test runner                                                                                                                                  |
+| `build/buildStatus.ts`              | Build target staleness detection, status bar                                                                                                                    |
+| `build/bazelCache.ts`               | `getBazelCacheSnapshot()` + `cmk.bazel.cleanDiskCache` — disk-cache size vs. `cmk.bazel.cacheSizeWarnGiB`                                                       |
+| `build/settings.ts`                 | Settings mismatch detection, apply logic, context keys                                                                                                          |
+| `omd/omd.ts`                        | OMD site discovery, status, auth, service commands, site creation                                                                                               |
+| `omd/devSiteTools.ts`               | cmk-dev-site install/update detection, PyPI update check                                                                                                        |
+| `omd/proxy.ts`                      | Unix socket → TCP proxy via socat (livestatus, Redis, etc.)                                                                                                     |
+| `omd/mockAuth.ts`                   | Mock OIDC provider (`cmk-dev-site-mock-auth`) lifecycle for cloud/SaaS sites                                                                                    |
+| `setup/idePicker.ts`                | Multi-select QuickPick for IDE setup families                                                                                                                   |
+| `setup/templates.ts`                | File template creation                                                                                                                                          |
+| `scm/index.ts`                      | Barrel re-exporting all `scm/` register-functions                                                                                                               |
+| `scm/git.ts`                        | Shared git helpers (`repoRoot`, `currentBranch`)                                                                                                                |
+| `scm/gerrit.ts`                     | Gerrit push integration (status bar + push command)                                                                                                             |
+| `scm/preCommit.ts`                  | Pre-commit hook toggle + commit-in-progress status bar spinner                                                                                                  |
+| `scm/sandboxBranch.ts`              | Branch checkout quickpick + Create Sandbox Branch (git workon)                                                                                                  |
+| `whatsNew.ts`                       | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`)                                                                                      |
 
 ### Configuration (`config/`)
 
-| File               | Purpose                                                          |
-| ------------------ | ---------------------------------------------------------------- |
+| File               | Purpose                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------- |
 | `commands.json`    | Build commands (name, shell cmd, required profile, post-actions, `force`, `openBrowser` URL) |
-| `extensions.json`  | Extension families (IDs, required flag, disable-settings)        |
-| `settings.json`    | Expected settings per family at folder/workspace/user scope      |
-| `snippets.json`    | Code snippets                                                    |
-| `templates.json`   | File templates with placeholder substitution                     |
-| `checkmk.dict.txt` | cSpell dictionary                                                |
+| `extensions.json`  | Extension families (IDs, required flag, disable-settings)                                    |
+| `settings.json`    | Expected settings per family at folder/workspace/user scope                                  |
+| `snippets.json`    | Code snippets                                                                                |
+| `templates.json`   | File templates with placeholder substitution                                                 |
+| `checkmk.dict.txt` | cSpell dictionary                                                                            |
 
 ## UI Conventions
 
@@ -308,6 +309,24 @@ background `socat` process. Active proxies are tracked in the `activeProxies` fi
 `StateCache` and displayed in the OMD sidebar section.
 
 Proxy processes are cleaned up on extension deactivation via `registerProxyCleanup()`.
+
+### Mock Auth Server (`src/omd/mockAuth.ts`)
+
+Cloud (`cce`/`cloud`) and legacy SaaS (`cse`) sites authenticate against the fake
+OIDC provider shipped with `cmk-dev-site` as `cmk-dev-site-mock-auth`. It binds
+`127.0.0.1:8089` and answers `/healthz`; `cmk-dev-install-site` refuses to create
+a cloud site while that port is free.
+
+- `isMockAuthRunning()` — one-shot `probeHttp()` against `/healthz`.
+- `startMockAuth()` — `runCommand()` in a dedicated terminal (uvicorn runs in the
+  foreground and calls `sudo` to write `/etc/cse`, so it needs a visible TTY),
+  then `waitForHttp()` for up to 60 s.
+- `ensureMockAuthRunning()` — the idempotent entry point; also called from
+  `createSite()` when the picked edition is `cloud`.
+- `registerMockAuth(context, sites)` fires the auto-start once per session when a
+  cloud/SaaS site exists, `cmk.omd.autoStartMockAuth` is on, and the port is
+  silent. It takes the sites as a parameter rather than calling `detectOmdSites()`
+  itself so `omd.ts` → `mockAuth.ts` stays the only runtime import direction.
 
 ### cmk-dev-site Integration (`src/omd/devSiteTools.ts`)
 

@@ -189,6 +189,8 @@ Expanding a site shows individual service status with per-service start/stop/res
 
 **Create Site:** If `cmk-dev-site` is installed, a **+** button in the OMD section title bar lets you create new sites. The extension also checks PyPI daily for `cmk-dev-site` updates and prompts to upgrade when a newer version is available.
 
+**Mock Auth Server:** Cloud and SaaS sites authenticate against a fake OIDC provider that `cmk-dev-site` ships as `cmk-dev-site-mock-auth` (it listens on `127.0.0.1:8089`). F1 → `CMK ▸ OMD: Start Mock Auth Server` starts it in a terminal, or reports that it is already running. The extension also starts it on its own when a local cloud/SaaS site exists and the port is silent, and before creating a cloud site — `cmk-dev-install-site` aborts otherwise. Set `cmk.omd.autoStartMockAuth` to `false` to opt out of the automatic start.
+
 **Socket Proxy:** F1 → `CMK ▸ OMD: Socket Proxy` exposes OMD Unix sockets (livestatus, Redis, mkeventd, rrdcached) as TCP ports on localhost via `socat`. This allows external tools (database clients, monitoring dashboards) to connect to site sockets without sudo. Active proxies are shown in the OMD section with their assigned ports.
 
 **Authentication:** OMD commands require sudo. Click "Authenticate (sudo)" to cache credentials. A background keepalive extends the sudo cache for up to 1 hour. Subsequent read-only OMD queries (status refresh, log discovery) are piped through the keepalive terminal's authenticated TTY so they reuse the same sudo ticket — no re-prompt per action.

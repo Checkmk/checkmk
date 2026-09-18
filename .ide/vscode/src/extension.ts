@@ -24,6 +24,7 @@ import { registerDoctor } from './doctor'
 import { deployToSite } from './omd/devDeployTools'
 import { checkForUpdates, isInstalledAsync as isDevSiteInstalledAsync } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
+import { registerMockAuth } from './omd/mockAuth'
 import { createSite, detectOmdSites, registerOmd } from './omd/omd'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
@@ -120,6 +121,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(...registerBazelCache())
   registerSandboxBranch(context)
   registerOmd(context, refreshAll, refreshOmd)
+  registerMockAuth(context, detectOmdSites())
   registerLogs()
 
   context.subscriptions.push(registerDoctor(context))

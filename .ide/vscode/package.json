@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.30",
+  "version": "0.4.31",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -185,6 +185,10 @@
       {
         "command": "cmk.omdProxy",
         "title": "CMK ▸ OMD: Socket Proxy"
+      },
+      {
+        "command": "cmk.omdMockAuth",
+        "title": "CMK ▸ OMD: Start Mock Auth Server"
       },
       {
         "command": "cmk.omdDeploy",
@@ -520,6 +524,12 @@
           ],
           "default": "builtin",
           "description": "Which browser to use when a dev-server command opens its URL on start (see cmk.devServer.openBrowserOnStart)."
+        },
+        "cmk.omd.autoStartMockAuth": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Start the cmk-dev-site mock auth server (fake OIDC provider on port 8089) on activation when a local cloud/SaaS OMD site exists and the server is not already running."
         }
       }
     },
@@ -681,6 +691,10 @@
         {
           "command": "cmk.omdProxy",
           "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdMockAuth",
+          "when": "cmk.devSiteInstalled"
         },
         {
           "command": "cmk.omdDeploy",

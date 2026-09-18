@@ -55,7 +55,6 @@ pkg_files(
     name = "bin_755",
     srcs = [
         ":cmk-generate-api-spec",
-        ":cmk-monitor-broker",
         ":cmk-monitor-core",
         ":cmk-monitor-diskusage",
         ":cmk-monitor-mknotifyd",
@@ -84,7 +83,6 @@ sh_library(
     srcs = [
         ".f12",
         "apply_unsign_msi_patch.sh",
-        "cmk-monitor-broker",
         "cmk-monitor-core",
         "cmk-monitor-diskusage",
         "cmk-monitor-mknotifyd",

@@ -61,10 +61,20 @@ pkg_tar(
     ],
 )
 
+pkg_files(
+    name = "monitor_broker_bin",
+    srcs = ["cmk-monitor-broker"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+)
+
 pkg_tar(
     name = "rabbitmq",
     srcs = [
         ":85-rabbitmq",
+        ":monitor_broker_bin",
         ":rabbitmq_hooks",
         ":skel",
         ":skel_755",
@@ -80,6 +90,7 @@ pkg_tar(
 sh_library(
     name = "omd_packages_rabbitmq_sh",
     srcs = [
+        "cmk-monitor-broker",
         "skel/etc/init.d/rabbitmq",
     ],
 )

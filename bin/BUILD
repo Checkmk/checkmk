@@ -55,7 +55,6 @@ pkg_files(
     name = "bin_755",
     srcs = [
         ":cmk-generate-api-spec",
-        ":cmk-migrate-extension-rulesets.py",
         ":cmk-monitor-apache",
         ":cmk-monitor-broker",
         ":cmk-monitor-core",
@@ -70,9 +69,6 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
-    renames = {
-        "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
-    },
 )
 
 pkg_tar(
@@ -83,30 +79,6 @@ pkg_tar(
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
-)
-
-# Not shipped — only exists so that static analysis tools (ruff, …)
-# can discover these .py files via Bazel.
-py_library(
-    name = "cmk_migrate_extension_rulesets_py",
-    srcs = ["cmk-migrate-extension-rulesets.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/gui:app",
-        "//cmk/gui:config",
-        "//cmk/gui:session_context",
-        "//cmk/gui/rule_specs:loader",
-        "//cmk/gui/rule_specs:types",
-        "//cmk/gui/watolib",
-        "//cmk/update_config",
-        "//cmk/utils:redis",
-        "//packages/cmk-ccc:log",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-mkp-tool",
-        "//packages/cmk-plugin-apis:discover_plugins",
-        "//packages/cmk-plugin-apis:rulesets",
-        "//packages/cmk-wsgi",
-    ],
 )
 
 sh_library(

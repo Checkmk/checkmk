@@ -53,6 +53,8 @@ py_library(
         "//cmk/gui/form_specs",
         "//cmk/gui/job_scheduler",
         "//cmk/gui/pagetypes",
+        "//cmk/gui/rule_specs:loader",
+        "//cmk/gui/rule_specs:types",
         "//cmk/gui/search:index",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:middle",

@@ -366,8 +366,10 @@ def real_config() -> ModuleLayersConfig:
 def test_real_config_loads_without_error(real_config: ModuleLayersConfig) -> None:
     # Should have a substantial number of components
     assert len(real_config.components) > 100
-    assert len(real_config.file_components) > 5
-    assert len(real_config.file_dependencies) > 5
+    # Both are exception lists that shrink as files move into a component, so
+    # assert they were parsed rather than pinning a count.
+    assert real_config.file_components
+    assert real_config.file_dependencies
 
 
 def test_real_config_first_party(real_config: ModuleLayersConfig) -> None:

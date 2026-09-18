@@ -276,11 +276,13 @@ def migrate_extension_rulesets(args: argparse.Namespace) -> int:
     return 0
 
 
-if __name__ == "__main__":
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
     try:
-        arguments = _parse_args(sys.argv[1:])
+        arguments = _parse_args(argv)
         _initialize_logger(arguments.log_level)
-        sys.exit(migrate_extension_rulesets(arguments))
+        return migrate_extension_rulesets(arguments)
     except Exception:
         if logger.getEffectiveLevel() <= logging.DEBUG:
             raise
@@ -288,4 +290,8 @@ if __name__ == "__main__":
             "An error occurred during migration.\n"
             "Run the script with '--log-level DEBUG' for the full output\n"
         )
-        sys.exit(1)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

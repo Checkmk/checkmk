@@ -84,6 +84,7 @@ py_wheel(
         "cmk-config-anonymizer = cmk.config_anonymizer.main:main",
         "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
         "cmk-create-rrd = cmk.rrd.create_rrd.__main__:main",
+        "cmk-migrate-extension-rulesets = cmk.update_config.migrate_extension_rulesets:main",
         "cmk-migrate-oracle-rulesets = cmk.update_config.migrate_oracle_rulesets:main",
         "cmk-passwd = cmk.cmkpasswd.main:main",
         "cmk-piggyback = cmk.piggyback.cli:main",

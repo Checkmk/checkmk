@@ -278,8 +278,7 @@ npm_link_package(
     name = "node_modules/cmk-shared-typing-bzl",
     src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
     package = "cmk-shared-typing",
-    root_package = "packages/cmk-frontend-vue",
-    visibility = ["//packages:__subpackages__"],
+    visibility = ["//visibility:private"],
 )
 
 vite_bin.vite(

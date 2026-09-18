@@ -74,6 +74,12 @@ common --enable_bzlmod
 common --remote_upload_local_results=false
 common --lockfile_mode=error
 
+# The Aspect rulesets pull in aspect_tools_telemetry, which POSTs a report about
+# our module graph, OS and CI environment to telemetry.aspect.build from a repo
+# rule.  Its one-time opt-out notice is suppressed as soon as MODULE.bazel.lock
+# records that somebody has seen it, so opt out explicitly instead.
+common --repo_env=DO_NOT_TRACK=1
+
 # Required for tools using java such as plantuml
 common --java_runtime_version=remotejdk_21
 common --java_language_version=21

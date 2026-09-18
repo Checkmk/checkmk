@@ -178,7 +178,10 @@ ts_project(
     no_emit = True,
     transpiler = "tsc",
     visibility = ["//packages:__subpackages__"],
-    deps = BUILD_DEPS,
+    # "bundler" module resolution reports unresolvable side-effect imports, which
+    # the previous "node10" resolution silently ignored. Only the tests import
+    # this one, hence the addition here rather than in BUILD_DEPS.
+    deps = BUILD_DEPS + [":node_modules/fake-indexeddb"],
 )
 
 build_test(

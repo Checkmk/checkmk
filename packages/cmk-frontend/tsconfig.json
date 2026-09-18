@@ -12,12 +12,10 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noEmit": true,
-    "moduleResolution": "node",
-    "esModuleInterop": false,
-    "module": "CommonJS",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "allowJs": false,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
     "paths": {
       "@/*": ["./src/js/*"]
     }

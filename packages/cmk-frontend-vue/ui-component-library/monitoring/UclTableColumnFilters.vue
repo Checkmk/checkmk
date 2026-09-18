@@ -68,11 +68,13 @@ import type { ColumnFilterNode, FilterField, HostEntry } from '@/monitoring/shar
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type {
+  BooleanGroupFilter,
   CheckboxListFilter,
   DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { FILLED_MODE_COLUMN_WIDTH, MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -104,6 +106,15 @@ const stateFilter = computed<CheckboxListFilter>(() => ({
     title: state
   }))
 }))
+const modesFilter = computed<BooleanGroupFilter>(() => ({
+  type: 'boolean-group',
+  groups: [
+    { field: 'in_downtime', title: 'In downtime' },
+    { field: 'acknowledged', title: 'Acknowledged' },
+    { field: 'notifications_enabled', title: 'Notifications enabled' }
+  ]
+}))
+
 const nameFilter = computed<StringInputFilter>(() => ({
   type: 'string-input',
   field: 'name'
@@ -147,11 +158,7 @@ const labelsFilter = computed<StringInputFilter>(() => ({
 
 const servicesFilter = computed<NumericFilter>(() => ({
   type: 'numeric',
-  field: 'num_services',
-  presets: [
-    { label: 'Any', op: 'gt', value: 0 },
-    { label: 'None', op: 'eq', value: 0 }
-  ]
+  field: 'num_services'
 }))
 
 const lastCheckFilter = computed<DateTimeRangeFilter>(() => ({
@@ -166,6 +173,14 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
     minSize: 60,
     maxSize: 130,
     meta: { filter: stateFilter.value }
+  },
+  {
+    accessorKey: MODE_COLUMN_ID,
+    header: 'Mode',
+    enableSorting: false,
+    minSize: FILLED_MODE_COLUMN_WIDTH,
+    maxSize: FILLED_MODE_COLUMN_WIDTH,
+    meta: { justify: 'left', filter: modesFilter.value }
   },
   {
     accessorKey: 'name',
@@ -254,6 +269,13 @@ const activeFilters = computed(() =>
 const rows: HostEntry[] = [
   {
     name: 'web-server-01',
+    modes: [
+      {
+        icon_name: 'downtime',
+        link: 'view.py?view_name=downtimes_of_host&host=web-server-01',
+        title: 'In scheduled downtime'
+      }
+    ],
     state: 'UP',
     is_flapping: false,
     stale: false,
@@ -276,6 +298,18 @@ const rows: HostEntry[] = [
   },
   {
     name: 'db-primary-02',
+    modes: [
+      {
+        icon_name: 'ack',
+        link: 'view.py?view_name=hostproblems&host=db-primary-02',
+        title: 'Problem acknowledged'
+      },
+      {
+        icon_name: 'notif_disabled',
+        link: 'view.py?view_name=hoststatus&host=db-primary-02',
+        title: 'Notifications disabled'
+      }
+    ],
     state: 'DOWN',
     is_flapping: false,
     stale: false,
@@ -298,6 +332,7 @@ const rows: HostEntry[] = [
   },
   {
     name: 'cache-node-03',
+    modes: [],
     state: 'UP',
     is_flapping: false,
     stale: false,
@@ -386,9 +421,11 @@ const sortedRows = computed<HostEntry[]>(() => {
           popover and all keyboard handling; the checkbox list only renders the active row. Selected
           values persist in the table's column-filter state, so they survive closing the dropdown
           and drive the (server-side) query. Future filter types — numeric range, IP range — plug in
-          as additional dropdown contents without changing this wiring. The Labels column shows the
-          same <code>string-input</code> type with a <code>suggest</code> callback, which swaps its
-          plain text field for a CmkChipAutocomplete: several picks become an <code>or</code> of one
+          as additional dropdown contents without changing this wiring. The Mode column declares a
+          <code>boolean-group</code> filter: one tri-state group per boolean field, whose non-"All"
+          groups are AND-combined into the node. The Labels column shows the same
+          <code>string-input</code> type with a <code>suggest</code> callback, which swaps its plain
+          text field for a CmkChipAutocomplete: several picks become an <code>or</code> of one
           <code>contains</code> each. It targets the host name here because the API carries no label
           condition yet; the column filter itself needs no change once it does.
         </p>

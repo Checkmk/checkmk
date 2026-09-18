@@ -80,6 +80,8 @@ refresh_compile_commands(
     # exclude_headers = "all",
     targets = {
         # target: build-flags
+        "//agents/wnx:check_mk_service-windows": "--platforms=//bazel/platforms:x86_64-windows-msvc",
+        "//agents/wnx:watest-windows": "--platforms=//bazel/platforms:x86_64-windows-msvc",
         "//non-free/packages/cmc:all": "",
         "//packages/livestatus:all": "",
         "//packages/neb:all": "",

@@ -52,6 +52,7 @@ check-mk-*.tar.gz
 check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
+/compile_commands.json
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/

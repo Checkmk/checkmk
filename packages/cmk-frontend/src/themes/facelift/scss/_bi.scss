@@ -60,6 +60,10 @@ td.aggrtree .frozen_aggregation,
     background: $bi-missing-element-dim;
   }
 
+  &.changed_in_frozen_aggregation {
+    background: $bi-changed-element-dim;
+  }
+
   & .frozen_marker {
     margin-left: -24px;
     padding: 8px;
@@ -75,6 +79,10 @@ td.aggrtree .frozen_aggregation,
 
     &.new {
       background: $bi-new-element-bright;
+    }
+
+    &.changed {
+      background: $bi-changed-element-bright;
     }
   }
 }

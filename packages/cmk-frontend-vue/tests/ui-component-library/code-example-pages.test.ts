@@ -43,6 +43,7 @@ import UclCmkHeadingCodeExample from '@ucl/components/foundation-elements/typogr
 import UclCmkParagraphCodeExample from '@ucl/components/foundation-elements/typography/UclCmkParagraphCodeExample.vue'
 import UclArrowDownCodeExample from '@ucl/components/graphics/ArrowDown/UclArrowDownCodeExample.vue'
 import UclCmkLinkCardCodeExample from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCardCodeExample.vue'
+import UclCmkAlertCodeExample from '@ucl/components/system-feedback/CmkAlert/UclCmkAlertCodeExample.vue'
 import UclCmkAlertBoxCodeExample from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBoxCodeExample.vue'
 import UclCmkCopyButtonCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButtonCodeExample.vue'
 import UclCmkCopyCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyCodeExample.vue'
@@ -273,6 +274,11 @@ test('CmkLinkCard code example renders without errors', () => {
 
 test('CmkPopup code example renders without errors', () => {
   const { container } = render(UclCmkPopupCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
+test('CmkAlert code example renders without errors', () => {
+  const { container } = render(UclCmkAlertCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

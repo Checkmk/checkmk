@@ -82,6 +82,7 @@ import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vu
 import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkBreadcrumb from './navigation/CmkBreadcrumb/UclCmkBreadcrumb.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
+import UclCmkAlert from './system-feedback/CmkAlert/UclCmkAlert.vue'
 import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkAsyncContent from './system-feedback/CmkAsyncContent/UclCmkAsyncContent.vue'
 import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
@@ -191,6 +192,7 @@ const navigationPages = [
 ]
 
 const systemFeedbackPages = [
+  new Page('CmkAlert', UclCmkAlert),
   new Page('CmkAlertBox', UclCmkAlertBox),
   new Page('CmkAsyncContent', UclCmkAsyncContent),
   new Page('CmkCopy', UclCmkCopy),

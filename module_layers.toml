@@ -1420,6 +1420,9 @@ allows = []
 [components."cmk.plugins"]
 allows = ["@plugin_apis"]
 
+[components."cmk.plugins.data_backend"]
+allows = ["@plugin_apis", "@data_backend"]
+
 [components."cmk.profiling.backend"]
 allows = ["cmk.ccc.store", "cmk.shared_typing.profiling_flamegraph"]
 

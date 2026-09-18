@@ -79,6 +79,9 @@ if [ -z "$mysql_socket_string" ]; then
     mysql_socket_string=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
 fi
 if [ -z "$mysql_socket_string" ]; then
+    mysql_socket_string=$(find /run/mysqld -type s)
+fi
+if [ -z "$mysql_socket_string" ]; then
     do_query "" ""
 else
     IFS=" " mapfile -t mysql_sockets <<<"$mysql_socket_string"

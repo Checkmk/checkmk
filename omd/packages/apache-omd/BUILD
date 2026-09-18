@@ -14,6 +14,13 @@ py_binary(
 )
 
 pkg_files(
+    name = "monitor_apache_bin",
+    srcs = ["cmk-monitor-apache"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+)
+
+pkg_files(
     name = "apache_pidof_bin",
     srcs = ["apache_pidof.py"],
     attributes = pkg_attributes(mode = "0755"),
@@ -150,6 +157,7 @@ pkg_tar(
         ":apache_pidof_bin",
         ":apache_skel_dirs",
         ":bin_htpasswd",
+        ":monitor_apache_bin",
         ":omd_hooks",
         ":share_omd",
     ] + select({
@@ -171,4 +179,9 @@ pkg_tar(
     }),
     stamp = 1,
     visibility = ["//omd:__subpackages__"],
+)
+
+sh_library(
+    name = "helpers",
+    srcs = ["cmk-monitor-apache"],
 )

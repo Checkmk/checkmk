@@ -10,6 +10,7 @@ import { RescheduleApi } from '@/monitoring/shared/api/actions/reschedule'
 
 import type { MonitoringAction } from '../types'
 import RescheduleForm, { type RescheduleValues } from './RescheduleForm.vue'
+import { commandFailed } from './feedback'
 
 export const RESCHEDULE_ACTION_ID = 'reschedule'
 
@@ -18,12 +19,12 @@ const DEFAULT_SPREAD_MINUTES = 5
 export interface RescheduleKindConfig<Target> {
   /** Perform the API call for the selected targets and return the count actually rescheduled. */
   reschedule(api: RescheduleApi, targets: Target[], spreadMinutes: number): Promise<number>
-  errorMessage: TranslatedString
+  errorHeading: TranslatedString
 }
 
 /**
  * Shared reschedule flow for hosts and services. The wording is the same for both, because the
- * command reschedules checks either way; only the API call and the error message differ.
+ * command reschedules checks either way; only the API call and the error heading differ.
  */
 export function createRescheduleAction<Target>(
   config: RescheduleKindConfig<Target>
@@ -50,7 +51,7 @@ export function createRescheduleAction<Target>(
           })
         }
       } catch {
-        return { variant: 'error', message: config.errorMessage }
+        return commandFailed(config.errorHeading)
       }
     }
   }

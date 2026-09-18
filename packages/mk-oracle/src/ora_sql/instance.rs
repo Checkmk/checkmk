@@ -18,13 +18,18 @@ use crate::config::ora_sql::Piggyback;
 use crate::config::{self, OracleConfig};
 use crate::emit::{header, piggyback_footer, piggyback_header};
 use crate::ora_sql::backend::{
-    make_custom_spot, make_spot, with_container, ClosedSpot, Opened, OpenedSpot, Spot,
+    make_custom_spot, make_spot, sanitize_failure_message, with_container, ClosedSpot, Opened,
+    OpenedSpot, Spot,
 };
+use crate::ora_sql::detect::parse_tns_names_ora;
 use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::section::Section;
-use crate::setup::Env;
-use crate::types::{InstanceName, SectionFilter, SqlQuery};
+use crate::setup::{
+    Env, LOCAL_ORACLE_HOME_TARGETS_ENV_VAR, ORACLE_HOME_ENV_VAR, TNS_ADMIN_ENV_VAR,
+};
+use crate::types::{InstanceName, LocalInstance, SectionFilter, Sid, SqlQuery};
 use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 use crate::config::authentication::AuthType;
 use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
@@ -34,8 +39,12 @@ use crate::config::section::names;
 use crate::ora_sql::spots::{
     make_spot_work_results, ClosedSpotWorks, OpenedSpotWorks, PostProcessing, QueryBlock,
 };
+use crate::platform::{get_local_instances, get_oracle_home_sids, home_key};
 use anyhow::{Context, Result};
 use std::sync::Mutex;
+
+/// The alias file both the client and this module look for.
+pub const TNS_NAMES_FILE: &str = "tnsnames.ora";
 
 type ClosedSpotResults = (ClosedSpot, Vec<String>);
 
@@ -90,8 +99,14 @@ pub async fn generate_data(
         // TODO: customize instances
         // TODO: resulting in the list of endpoints
 
-        let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
-        let all = filter_spots(all, ora_sql.discovery());
+        let all_raw = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
+        let all_raw = filter_spots(all_raw, ora_sql.discovery());
+        let local_instances = get_local_instances().unwrap_or_else(|e| {
+            log::warn!("Cannot determine the local instances: {e}");
+            Vec::new()
+        });
+
+        let all = filter_spots_by_oracle_home(all_raw, environment, &local_instances);
 
         // Set up wallet environment (creates sqlnet.ora with wallet location)
         // Only if tns_admin is NOT explicitly set in config.
@@ -109,19 +124,21 @@ pub async fn generate_data(
             }
         }
 
+        let global = if environment.disable_caching() {
+            None
+        } else {
+            Some(ora_sql.product().cache_age())
+        };
+        log::info!("Running with the {} section filter", filter);
         let sections = ora_sql
             .product()
             .sections()
             .iter()
             .filter_map(|s| {
                 if s.is_allowed(filter) {
-                    Some(Section::new(
-                        s,
-                        ora_sql.product().cache_age(),
-                        ora_sql.options(),
-                    ))
+                    Some(Section::new(s, global, ora_sql.options()))
                 } else {
-                    log::info!("Skip section: {:?} not allowed in {:?}", s, filter);
+                    log::info!("Skipping section {}", s.name());
                     None
                 }
             })
@@ -136,7 +153,8 @@ pub async fn generate_data(
             root_spots,
             sections,
             ora_sql.instances(),
-            ora_sql.product().cache_age(),
+            ora_sql.excluded_sections(),
+            Some(ora_sql.product().cache_age()),
             ora_sql.params(),
             ora_sql.options(),
         );
@@ -198,7 +216,7 @@ fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
     works
         .into_iter()
         .map(|(spot, instance_works)| {
-            log::info!("Spot: {:?}", spot.target());
+            log::debug!("Spot: {:?}", spot.target());
             let results = instance_works
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
@@ -209,7 +227,7 @@ fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
                     let output = query_blocks
                         .iter()
                         .filter_map(|query_block| {
-                            log::info!("Query: {}", query_block.title);
+                            log::info!("Executing {}", query_block.label);
                             with_container(&spot, query_block.container.as_ref(), || {
                                 let mut results = vec![query_block.title.clone()];
                                 results.extend(_exec_queries(
@@ -241,55 +259,59 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
     works
         .into_iter()
         .flat_map(|(closed, instance_works)| {
-            log::info!("Spot: {:?}", closed.target());
+            log::debug!("Spot: {:?}", closed.target());
 
             instance_works
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
+                    // no more threads than blocks to run
+                    let work_threads = threads.min(query_blocks.len());
+                    if work_threads == 0 {
+                        log::warn!("No queries for instance {instance}, nothing to run");
+                        return vec![];
+                    }
                     let session_timer =
                         PerfTimer::start("session", Label::Block(&instance.to_string()));
-                    let opened_spots = open_spots(&closed, instance, threads);
+                    let opened_spots = open_spots(&closed, instance, work_threads);
                     if opened_spots.is_empty() {
                         log::error!("Failed to connect to instance {}", instance);
                         session_timer.stop();
                         return vec![];
                     }
                     let job_data: Vec<JobData> = make_job_data(opened_spots, query_blocks);
-                    let thread_pool = build_thread_pool(threads);
+                    let thread_pool = build_thread_pool(work_threads);
                     let global_output = Mutex::new(Vec::new());
                     thread_pool.scope(|scope| {
                         for job in job_data {
                             let thread_output = &global_output;
                             scope.spawn(move |_| {
-                                let results = job
-                                    .query_blocks
-                                    .iter()
-                                    .flat_map(|query_block| {
-                                        log::debug!("Executing queries for instance: {}", instance);
-                                        with_container(
-                                            &job.spot,
-                                            query_block.container.as_ref(),
-                                            || {
-                                                _exec_queries_on_spot(
-                                                    &job.spot,
-                                                    instance,
-                                                    &query_block.queries,
-                                                    query_block.title.as_str(),
-                                                    &query_block.post_processing,
-                                                )
-                                            },
-                                        )
-                                        .unwrap_or_else(
-                                            |e| {
+                                let results =
+                                    job.query_blocks
+                                        .iter()
+                                        .flat_map(|query_block| {
+                                            log::info!("Executing {}", query_block.label);
+                                            with_container(
+                                                &job.spot,
+                                                query_block.container.as_ref(),
+                                                || {
+                                                    _exec_queries_on_spot(
+                                                        &job.spot,
+                                                        instance,
+                                                        &query_block.queries,
+                                                        query_block.title.as_str(),
+                                                        &query_block.post_processing,
+                                                    )
+                                                },
+                                            )
+                                            .unwrap_or_else(|e| {
                                                 log::warn!(
                                                     "Cannot switch container: {e}, skipping"
                                                 );
                                                 vec![]
-                                            },
-                                        )
-                                    })
-                                    .collect::<Vec<String>>();
+                                            })
+                                        })
+                                        .collect::<Vec<String>>();
                                 let results = wrap_for_piggyback(job.spot.piggyback(), results);
 
                                 thread_output
@@ -305,6 +327,196 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>()
+}
+
+/// Keep only the spots this run is responsible for, as `LOCAL_ORACLE_HOME_TARGETS`
+/// defines it.
+///
+/// `LOCAL_ORACLE_HOME_TARGETS` defines which half of the targets a run is responsible for:
+///
+/// * **`yes`**: this oracle home's own targets - the aliases of its `tnsnames.ora` and
+///   its own sids with wallet.
+/// * **`no`**: the targets that need no oracle home - a sid no local instance owns, a
+///   sid needing no wallet, a descriptor, and an alias a global `TNS_ADMIN`
+///   resolves.
+/// * **absent**: nothing states how the targets are divided, so none is dropped.
+///
+/// `pub` only so the component tests in `tests/` can reach it: they are a
+/// separate crate, so `pub(crate)` is not enough. Hidden from the documented
+/// API - nothing outside this module uses it in production.
+#[doc(hidden)]
+pub fn filter_spots_by_oracle_home(
+    spots: Vec<ClosedSpot>,
+    environment: &Env,
+    local_instances: &[LocalInstance],
+) -> Vec<ClosedSpot> {
+    let Some(local_oracle_home_targets) = environment.local_oracle_home_targets() else {
+        log::info!(
+            "{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR} is not set: monitoring every configured target"
+        );
+        return spots;
+    };
+
+    let received = spots.len();
+    let homes_to_sids = get_oracle_home_sids(local_instances);
+    let kept: Vec<ClosedSpot> = if local_oracle_home_targets {
+        // Gather wallets SID of the home and aliases from home tns_aliases
+        let Some(oracle_home) = environment.oracle_home() else {
+            log::warn!(
+                "{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}=yes without an {ORACLE_HOME_ENV_VAR}: \
+                 no target for this run"
+            );
+            return vec![];
+        };
+        let Some(local_sids) = homes_to_sids.get(&home_key(oracle_home)) else {
+            log::warn!(
+                "No local instance belongs to {ORACLE_HOME_ENV_VAR} '{}': no target for this run",
+                oracle_home.display()
+            );
+            return vec![];
+        };
+        let local_aliases = local_tns_aliases(environment);
+        spots
+            .into_iter()
+            .filter(|spot| is_spot_local(spot, local_sids, &local_aliases))
+            .collect()
+    } else {
+        log::info!("{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}=no: taking the targets that need no home");
+        let global_aliases = global_tns_aliases(environment);
+        // Every sid: which home owns it does not matter
+        let all_local_sids: HashSet<Sid> = homes_to_sids.into_values().flatten().collect();
+        spots
+            .into_iter()
+            .filter(|spot| {
+                if let Some(alias) = spot.target.alias() {
+                    return global_aliases.contains(&alias.to_string().to_uppercase());
+                }
+                if spot.target.standalone_sid().is_some() {
+                    return !(is_sid_from_list(spot, &all_local_sids) && uses_wallet_auth(spot));
+                }
+                // descriptors and similar need no home and will be processed here
+                true
+            })
+            .collect()
+    };
+
+    // Unusual to have an empty kept list, but not impossible - log it
+    if kept.is_empty() && received > 0 {
+        log::warn!(
+            "{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={} left none of {received} configured targets: \
+             the run taking the other half has to exist too",
+            if local_oracle_home_targets {
+                "yes"
+            } else {
+                "no"
+            }
+        );
+    } else {
+        log::info!("Monitoring {} of {received} configured targets", kept.len());
+    }
+    kept
+}
+
+/// SID is standalone and case-insensitive
+fn is_sid_from_list(spot: &ClosedSpot, sids: &HashSet<Sid>) -> bool {
+    spot.target
+        .standalone_sid()
+        .map(|sid| Sid::from(sid.to_string().to_uppercase()))
+        .is_some_and(|sid| sids.contains(&sid))
+}
+
+fn is_spot_local(
+    spot: &ClosedSpot,
+    local_sids: &HashSet<Sid>,
+    local_aliases: &HashSet<String>,
+) -> bool {
+    // local alias is to be processed
+    if is_alias_from_list(spot, local_aliases) {
+        return true;
+    }
+
+    // local sid with wallet to be processed
+    if is_sid_from_list(spot, local_sids) && uses_wallet_auth(spot) {
+        return true;
+    }
+    log::debug!(
+        "Skip {}: handled by the run that owns it, not by this {ORACLE_HOME_ENV_VAR}",
+        spot.target().display_name()
+    );
+    false
+}
+
+fn uses_wallet_auth(spot: &ClosedSpot) -> bool {
+    spot.target().connection_auth().auth_type == AuthType::Wallet
+}
+
+/// The aliases of the `tnsnames.ora` of the inherited `ORACLE_HOME`, upper-cased
+/// as the parser reports them. Empty when the file is absent: an alias that
+/// cannot be resolved is not one this home owns.
+///
+/// `pub` only so the component tests in `tests/` can reach it: they are a
+/// separate crate, so `pub(crate)` is not enough. Hidden from the documented
+/// API - nothing outside this module uses it in production.
+#[doc(hidden)]
+pub fn local_tns_aliases(environment: &Env) -> HashSet<String> {
+    if global_tns_file(environment).is_some_and(|file| file.is_file()) {
+        return HashSet::new();
+    }
+
+    let Some(tns_admin) = environment.local_tns_admin() else {
+        return HashSet::new();
+    };
+    let file = tns_admin.join(TNS_NAMES_FILE);
+    extract_aliases(&file)
+}
+
+/// The aliases of the `tnsnames.ora` that `TNS_ADMIN` names, upper-cased as the
+/// parser reports them. Empty when there is no such file.
+fn global_tns_aliases(env: &Env) -> HashSet<String> {
+    if let Some(file) = global_tns_file(env) {
+        extract_aliases(&file)
+    } else {
+        log::info!("No global {TNS_ADMIN_ENV_VAR} file, no global aliases");
+        HashSet::new()
+    }
+}
+
+/// uppercased aliases of the `tnsnames.ora` at `file`, or empty if the file is absent/not readable
+fn extract_aliases(file: &Path) -> HashSet<String> {
+    match parse_tns_names_ora(file) {
+        Ok(entries) => entries
+            .into_iter()
+            .map(|entry| entry.alias.to_string().to_uppercase())
+            .collect(),
+        Err(e) => {
+            log::info!("No usable {}: {e}", file.display());
+            HashSet::new()
+        }
+    }
+}
+
+fn global_tns_file(env: &Env) -> Option<PathBuf> {
+    // if exists TNS_ADMIN/tnsnames.ora return empty - we can't use local tnsnames.ora in this case
+    if let Some(dir) = env.global_tns_admin() {
+        let external = dir.join(TNS_NAMES_FILE);
+        if external.is_file() {
+            log::info!(
+                "'{}' resolves the aliases, not the one of {ORACLE_HOME_ENV_VAR}",
+                external.display()
+            );
+            return Some(external);
+        }
+    }
+    None
+}
+
+/// Whether the spot names an alias that the local `tnsnames.ora` defines.
+/// Compared case-insensitively, since only a SID is upper-cased on parsing.
+fn is_alias_from_list(spot: &ClosedSpot, aliases: &HashSet<String>) -> bool {
+    spot.target()
+        .target_id()
+        .and_then(|target_id| target_id.alias())
+        .is_some_and(|alias| aliases.contains(&alias.to_string().to_uppercase()))
 }
 
 fn open_spots(
@@ -396,7 +608,6 @@ fn _exec_queries(
     post_processing: &PostProcessing,
     title: &str,
 ) -> Vec<String> {
-    log::info!("Connected to : {}", service_name);
     let section_timer = PerfTimer::start("section", Label::Block(title));
     let results = queries
         .iter()
@@ -429,7 +640,11 @@ fn run_query(
     };
     outcome.unwrap_or_else(|e| {
         log::error!("Failed to execute query for instance {}: {}", instance, e);
-        vec![e.to_string()]
+        vec![format!(
+            "{}|FAILURE|{}",
+            instance,
+            sanitize_failure_message(&e.to_string())
+        )]
     })
 }
 
@@ -444,7 +659,7 @@ fn connect_spots(
             let name = t.target().display_name();
             match t.connect(instance_name) {
                 Ok(opened) => {
-                    log::info!("Connected to instance: {:?}", &opened.target());
+                    log::info!("Connected to {}", &opened.target().display_name());
                     Ok(opened)
                 }
                 Err(e) => {
@@ -452,7 +667,7 @@ fn connect_spots(
                     anyhow::bail!(
                         "{}|FAILURE|ERROR: {} ",
                         name,
-                        e.to_string().replace("OCI Error: ", "")
+                        sanitize_failure_message(&e.to_string())
                     )
                 }
             }
@@ -483,7 +698,10 @@ fn calc_all_spots(
     all.into_iter()
         .filter(|spot| {
             if !spot.target.is_defined() {
-                log::info!("Spot is not defined, it may happen: {:?}", spot.target());
+                log::debug!(
+                    "Endpoint has no sid, service_name or alias, skipping it: {:?}",
+                    spot.target()
+                );
                 return false;
             }
             true
@@ -545,7 +763,7 @@ fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) 
 }
 
 fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot> {
-    log::info!("ENDPOINTS: {:?}", endpoints);
+    log::debug!("ENDPOINTS: {:?}", endpoints);
     endpoints
         .into_iter()
         .filter_map(|ep| {
@@ -560,8 +778,12 @@ fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot>
         .collect::<Vec<ClosedSpot>>()
 }
 
-fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
-    log::info!("CUSTOM INSTANCES: {:?}", instances);
+/// `pub` only so the component tests in `tests/` can reach it: they are a
+/// separate crate, so `pub(crate)` is not enough. Hidden from the documented
+/// API - nothing outside this module uses it in production.
+#[doc(hidden)]
+pub fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
+    log::debug!("Instances: {:?}", instances);
     instances
         .iter()
         .filter_map(|instance| {
@@ -588,6 +810,37 @@ mod tests {
     #[test]
     fn test_make_job_data_no_query_blocks() {
         assert!(make_job_data(vec![], &[]).is_empty());
+    }
+
+    #[test]
+    fn test_run_query_error_becomes_failure_row() {
+        let result = crate::ora_sql::backend::QueryResult(Err(anyhow::anyhow!(
+            "OCI Error: ORA-00942: table or view does not exist"
+        )));
+        assert_eq!(
+            run_query(
+                result,
+                &PostProcessing::Standard,
+                &InstanceName::from("free")
+            ),
+            vec!["FREE|FAILURE|ORA-00942: table or view does not exist".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_run_query_error_stays_a_single_failure_row() {
+        // if the row splits, the server drops it and the error is hidden
+        let result = crate::ora_sql::backend::QueryResult(Err(anyhow::anyhow!(
+            "OCI Error: ORA-00600: [foo|bar]\nORA-12514: continued"
+        )));
+        assert_eq!(
+            run_query(
+                result,
+                &PostProcessing::Standard,
+                &InstanceName::from("free")
+            ),
+            vec!["FREE|FAILURE|ORA-00600: [foo bar] ORA-12514: continued".to_string()]
+        );
     }
 
     #[test]
@@ -699,6 +952,157 @@ mod tests {
                 "<<<<>>>>".to_string(),
             ]
         );
+    }
+
+    /// One instance per target shape the filter distinguishes.
+    fn instance_for_home(
+        target: Option<crate::config::target::TargetId>,
+        wallet: bool,
+    ) -> CustomInstance {
+        let auth = if wallet {
+            config::authentication::Authentication::from_yaml(&create_yaml(
+                "authentication:\n  username: u\n  password: p\n  type: wallet",
+            ))
+            .unwrap()
+            .unwrap()
+        } else {
+            config::authentication::Authentication::default()
+        };
+        CustomInstance::new(auth, Connection::default(), target, None, None)
+    }
+
+    fn sid_target(sid: &str) -> Option<crate::config::target::TargetId> {
+        TargetIdBuilder::new().sid(Some(sid)).build()
+    }
+
+    fn alias_target(alias: &str) -> Option<crate::config::target::TargetId> {
+        TargetIdBuilder::new()
+            .alias(Some(&crate::types::InstanceAlias::from(alias.to_string())))
+            .build()
+    }
+
+    /// One spot of the given shape.
+    fn one_spot(target: Option<crate::config::target::TargetId>, wallet: bool) -> ClosedSpot {
+        calc_custom_spots(&[instance_for_home(target, wallet)])
+            .pop()
+            .expect("a defined target yields a spot")
+    }
+
+    fn local_instance(name: &str, home: &str) -> LocalInstance {
+        LocalInstance {
+            name: InstanceName::from(name),
+            home: std::path::PathBuf::from(home),
+            base: None,
+        }
+    }
+
+    #[test]
+    fn test_global_tns_without_tns_admin() {
+        // Hermetic: the empty Env carries no global TNS_ADMIN, regardless of what
+        // the process environment holds.
+        let env = Env::default();
+        assert!(global_tns_file(&env).is_none());
+        assert!(global_tns_aliases(&env).is_empty());
+    }
+
+    #[test]
+    fn test_local_tns_admin_without_tns_admin_and_oracle_home() {
+        if std::env::var_os(TNS_ADMIN_ENV_VAR).is_some()
+            || std::env::var_os(ORACLE_HOME_ENV_VAR).is_some()
+        {
+            return;
+        }
+
+        let inherited = Env::new(&crate::args::Args::default());
+        assert!(inherited.oracle_home().is_none());
+        assert!(inherited.local_tns_admin().is_none());
+        assert!(local_tns_aliases(&inherited).is_empty());
+
+        // An empty value names no home, so it arrives as none at all.
+        let empty = Env::with_oracle_home(Some(""), None);
+        assert!(empty.oracle_home().is_none());
+        assert!(empty.local_tns_admin().is_none());
+        assert!(local_tns_aliases(&empty).is_empty());
+
+        let set = Env::with_oracle_home(Some("/opt/oracle"), None);
+        assert!(set.oracle_home().is_some());
+        assert_eq!(
+            set.local_tns_admin(),
+            Some(std::path::PathBuf::from("/opt/oracle/network/admin"))
+        );
+    }
+
+    #[test]
+    fn test_is_sid_from_list() {
+        // As `get_oracle_home_sids` builds it: upper-cased.
+        let known = get_oracle_home_sids(&[local_instance("xe", "/opt/oracle")]);
+        let known = &known[&std::path::PathBuf::from("/opt/oracle")];
+
+        // Matched ignoring case, in both directions.
+        assert!(is_sid_from_list(&one_spot(sid_target("xe"), false), known));
+        assert!(is_sid_from_list(&one_spot(sid_target("XE"), false), known));
+        assert!(!is_sid_from_list(
+            &one_spot(sid_target("other"), false),
+            known
+        ));
+        // An alias target names no sid.
+        assert!(!is_sid_from_list(
+            &one_spot(alias_target("xe"), false),
+            known
+        ));
+        assert!(!is_sid_from_list(
+            &one_spot(sid_target("xe"), false),
+            &HashSet::new()
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_from_list() {
+        let known: HashSet<String> = ["XE".to_string()].into_iter().collect();
+
+        assert!(is_alias_from_list(
+            &one_spot(alias_target("xe"), false),
+            &known
+        ));
+        assert!(!is_alias_from_list(
+            &one_spot(alias_target("other"), false),
+            &known
+        ));
+        // A sid target names no alias.
+        assert!(!is_alias_from_list(
+            &one_spot(sid_target("xe"), false),
+            &known
+        ));
+    }
+
+    #[test]
+    fn test_is_spot_local() {
+        let sids: HashSet<Sid> = [Sid::from("XE")].into_iter().collect();
+        let aliases: HashSet<String> = ["KNOWN".to_string()].into_iter().collect();
+
+        // A local alias counts, whatever the authentication.
+        assert!(is_spot_local(
+            &one_spot(alias_target("known"), false),
+            &sids,
+            &aliases
+        ));
+        // A local sid counts only with wallet authentication.
+        assert!(is_spot_local(
+            &one_spot(sid_target("xe"), true),
+            &sids,
+            &aliases
+        ));
+        assert!(!is_spot_local(
+            &one_spot(sid_target("xe"), false),
+            &sids,
+            &aliases
+        ));
+        // A sid of another home never counts.
+        assert!(!is_spot_local(
+            &one_spot(sid_target("other"), true),
+            &sids,
+            &aliases
+        ));
     }
 
     #[test]
@@ -829,7 +1233,7 @@ mod yaml_to_output_tests {
             .sections()
             .iter()
             .filter(|s| s.is_custom_metric())
-            .map(|s| Section::new(s, cache_age, config.options()))
+            .map(|s| Section::new(s, Some(cache_age), config.options()))
             .collect()
     }
 
@@ -841,7 +1245,7 @@ mod yaml_to_output_tests {
             .sections()
             .iter()
             .filter(|s| !s.is_custom_metric())
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect()
     }
 
@@ -876,7 +1280,8 @@ oracle:
             vec![open_spot(db, None)],
             builtin_sections(&config),
             &[],
-            0,
+            &[],
+            Some(0),
             config.params(),
             config.options(),
         );
@@ -908,7 +1313,8 @@ oracle:
             spots,
             sections,
             instances,
-            cache_age,
+            &[],
+            Some(cache_age),
             &[],
             &Options::default(),
         );

@@ -230,7 +230,7 @@ def _fs_cpu_credits_balance() -> Mapping[str, DictElement]:
 
 def _fs_elements_http_errors(
     http_err_codes: Iterable[str],
-    title_add: Callable[[str], Title] = lambda http_err_code: Title(""),
+    title_add: Callable[[str], Title] = lambda http_err_code: Title(""),  # noqa: ARG005
 ) -> Mapping[str, DictElement]:
     return {
         "levels_http_%s_perc" % http_err_code: DictElement(

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -103,7 +102,7 @@ def check_oracle_recovery_status(
 
             if backup_state == "ACTIVE":
                 backup_count += 1
-                oldest_backup_age = max(int(backup_age), oldest_backup_age)
+                oldest_backup_age = max(int(backup_age), oldest_backup_age)  # type: ignore[possibly-undefined]
 
             if datafilestatus == "ONLINE":
                 if backup_state == "FILE MISSING":
@@ -125,7 +124,7 @@ def check_oracle_recovery_status(
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login into database failed")
 
-    infotext = "%s database" % (database_role.lower())
+    infotext = "%s database" % (database_role.lower())  # type: ignore[possibly-undefined]
 
     if oldest_checkpoint_age is None:
         infotext += ", no online datafiles found(!!)"
@@ -143,9 +142,12 @@ def check_oracle_recovery_status(
         infotext += ", oldest Checkpoint %s ago" % (render.timespan(int(oldest_checkpoint_age)))
 
     if (
-        (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")
-        or not params.get("levels")
-    ) or db_name[db_name.rfind(".") + 1 :] == "PDB$SEED":
+        (
+            (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")  # type: ignore[possibly-undefined]
+            or not params.get("levels")
+        )
+        or db_name[db_name.rfind(".") + 1 :] == "PDB$SEED"
+    ):
         # We ignore the state of the check when no parameters are known
         # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
         # ignore PDB$SEED because this PDB is always in READ ONLY mode

@@ -11,7 +11,6 @@
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
 import errno
-import getopt
 import logging
 import os
 import sys
@@ -33,11 +32,12 @@ import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.base.app import make_app
 from cmk.base.modes.call import call
-from cmk.base.modes.check_mk import general_options
 from cmk.base.modes.modes import (
     discover_modes,
+    general_options,
     Modes,
     Option,
+    parse_general_options,
 )
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -45,6 +45,7 @@ from cmk.ccc.exceptions import (
     MKTerminate,
     raise_mkterminate_on_sigint,
 )
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.crash import (
     ABCCrashReport,
@@ -53,12 +54,16 @@ from cmk.crash import (
     make_crash_report_base_path,
     VersionInfo,
 )
-from cmk.profiling.backend import output_profile
+from cmk.profiling import backend as profiling
 from cmk.trace.export import (
     exporter_from_config,
     init_span_processor,
 )
+from cmk.utils import log
 from cmk.utils.paths import profile_dir
+
+from .arguments import InvalidArguments, parse, ShowHelp
+from .modes import write_paged
 
 
 class CrashReport(ABCCrashReport[BaseDetails]):
@@ -108,7 +113,10 @@ def main() -> int:
     root_logger = logging.getLogger("cmk")
     root_logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+    handler.setFormatter(
+        # astrein: disable=logging-formatter
+        logging.Formatter("[%(levelname)s] %(message)s")
+    )
     root_logger.addHandler(handler)
     logger = root_logger.getChild("base")
 
@@ -134,16 +142,13 @@ def main() -> int:
         _path = Path(path)
         _path.parent.mkdir(parents=True, exist_ok=True)
         handler = WatchedFileHandler(_path)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s")
-        )
+        handler.setFormatter(CMKFormatter())
         del root_logger.handlers[:]  # Remove the default stream handler.
         root_logger.addHandler(handler)
 
     _log_file_option = Option(
         long_option="log-file",
         short_help="Log to the given file (with timestamps) instead of stderr",
-        handler_function=_enable_file_logging,
         argument=True,
         argument_descr="PATH",
     )
@@ -153,47 +158,37 @@ def main() -> int:
         general_options=[*general_options(), _log_file_option],
     )
 
-    try:
-        opts, args = getopt.getopt(
-            sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs()
-        )
-    except getopt.GetoptError as err:
-        prog = sys.argv[0].split("/")[-1]
-        sys.stdout.write(f"ERROR: {err} (see `{prog} --help` for valid options)\n")
+    parsed = parse(modes, sys.argv)
+    if isinstance(parsed, InvalidArguments):
+        sys.stdout.write(parsed.message)
         return 1
 
-    # First load the general modifying options
-    modes.process_general_options(opts)
+    for option, argument in parsed.options:
+        if option.lstrip("-") == _log_file_option.long_option:
+            _enable_file_logging(argument)
+    global_options = parse_general_options(parsed.options)
+    if global_options.verbosity:
+        log.logger.setLevel(log.verbosity_to_log_level(global_options.verbosity))
+    if global_options.debug:
+        cmk.ccc.debug.enable()
+    if global_options.profile:
+        profiling.enable()
+        log.logger.debug("Enabled profiling")
 
     try:
-        # Now find the requested mode and execute it
-        mode_name, mode_args = None, None
-        for o, a in opts:
-            if modes.exists(o := o.lstrip("-")):
-                mode_name, mode_args = o, a
-                break
-
-        if not opts and not args:
-            sys.stdout.write(modes.help())
+        if isinstance(parsed, ShowHelp):
+            write_paged(modes.help())
             return 0
 
-        app = make_app(cmk_version.edition(OMD_ROOT))
-
-        done, exit_status = False, 0
-        trace_context = trace.extract_context_from_environment(dict(os.environ))
-        if mode_name is not None and mode_args is not None:
-            exit_status = call(app, modes.get(mode_name), mode_args, opts, args, trace_context)
-            done = True
-
-        # When no mode was found, Checkmk is running the "check" mode
-        if not done:
-            if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-                exit_status = call(app, modes.get("check"), None, opts, args, trace_context)
-            else:
-                sys.stdout.write(modes.help())
-                exit_status = 0
-
-        return exit_status
+        return call(
+            make_app(cmk_version.edition(OMD_ROOT)),
+            parsed.mode,
+            global_options,
+            parsed.argument,
+            parsed.options,
+            parsed.arguments,
+            trace.extract_context_from_environment(dict(os.environ)),
+        )
 
     except MKTerminate:
         logger.error("<Interrupted>")  # noqa: TRY400
@@ -225,4 +220,4 @@ def main() -> int:
         return 1
 
     finally:
-        output_profile(profile_dir)
+        profiling.output_profile(profile_dir)

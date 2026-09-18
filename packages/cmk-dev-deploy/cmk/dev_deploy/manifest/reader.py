@@ -9,12 +9,9 @@
 Does NOT import ``cmk.dev_deploy.output`` to avoid circular dependencies.
 """
 
-from __future__ import annotations
-
 import functools
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
@@ -33,15 +30,12 @@ from cmk.dev_deploy.types import (
 
 logger = logging.getLogger(__name__)
 
-MANIFEST_VERSION = "3"
+MANIFEST_VERSION = "4"
 """Manifest format version; a mismatch triggers regeneration."""
 
 
 def _manifest_dir() -> Path:
-    """Return the manifest directory, using BUILD_WORKSPACE_DIRECTORY when under bazel run."""
-    workspace = os.environ.get("BUILD_WORKSPACE_DIRECTORY")
-    if workspace:
-        return Path(workspace) / "packages" / "cmk-dev-deploy" / "cmk" / "dev_deploy" / "manifest"
+    """Return the manifest directory inside the checkout's source tree."""
     return Path(__file__).parent
 
 
@@ -85,6 +79,7 @@ def _parse_install_spec(raw: dict[str, Any]) -> InstallSpec:
         needs_faked_artifacts=raw.get("needs_faked_artifacts", False),
         use_copytree=raw["use_copytree"],
         frontend_supervised=raw.get("frontend_supervised", False),
+        input_prefixes=tuple(raw.get("input_prefixes", ())),
     )
 
 
@@ -179,8 +174,18 @@ def get_service_specs() -> tuple[ServiceSpec, ...]:
 
 
 def get_frontend_supervised_prefixes() -> frozenset[str]:
-    """Return path prefixes for frontend-supervised install specs."""
-    return frozenset(spec.package + "/" for spec in get_install_specs() if spec.frontend_supervised)
+    """Return the path prefixes Vite HMR takes over under ``--frontend``.
+
+    Covers the frontend-supervised install specs and their input packages:
+    iBazel watches the vite target's transitive sources, so those get
+    hot-reloaded too.
+    """
+    return frozenset(
+        prefix
+        for spec in get_install_specs()
+        if spec.frontend_supervised
+        for prefix in (spec.package + "/", *spec.input_prefixes)
+    )
 
 
 def get_deploy_deps() -> dict[str, tuple[str, ...]]:

@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Sequence
+
+import pytest
 
 from cmk.graphing_engine import (
     AutoPrecision,
@@ -11,11 +14,17 @@ from cmk.graphing_engine import (
     CurveAttributes,
     DecimalNotation,
     EngineeringScientificNotation,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    EvaluatedStack,
+    FixedRange,
     Graph,
     HostName,
     IECNotation,
     Line,
     MetricName,
+    MinimalRange,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -25,20 +34,47 @@ from cmk.graphing_engine import (
     Stack,
     StandardScientificNotation,
     TimeNotation,
+    TimeRange,
+    TimeSeries,
     Unit,
+    VerticalRange,
 )
-from cmk.gui.graphing._engine_codec import community_graph_codec
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.gui.graphing._frontend import (
+from cmk.gui.graphing import (
+    BuiltGraph,
+    EngineDisplayOptions,
+    evaluated_to_graph_spec,
     global_time_picker_props,
-    resolve_default_time_range_seconds,
+    global_time_picker_refresh,
+    stored_time_range_seconds,
     to_cmk_time_series_graph,
+    user_first_day_of_week,
 )
-from cmk.gui.type_defs import GraphTimerange
+from cmk.gui.graphing._frontend import (
+    derive_y_axis_unit,
+    resolve_default_time_range_seconds,
+    value_axis_width_px,
+)
+from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
+from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import DropdownChoice
-from cmk.shared_typing.cmk_time_series_graph import GraphHeader, GraphOptions, Interaction, Size
-from cmk.shared_typing.global_time_picker import CustomGraphTimeRange, FirstDayOfWeek
+from cmk.shared_typing.cmk_time_series_graph import (
+    ExplicitRange,
+    GraphHeader,
+    GraphOptions,
+    Interaction,
+    Precision,
+    Size,
+    UnitFormat,
+    YAxis,
+)
+from cmk.shared_typing.global_time_picker import (
+    CustomGraphTimeRange,
+    FirstDayOfWeek,
+    GlobalTimePickerRefresh,
+)
 
 _Notation = (
     DecimalNotation
@@ -74,14 +110,26 @@ def test_to_cmk_time_series_graph_shell() -> None:
             )
         ],
     )
-    result = to_cmk_time_series_graph(graph, size=_SIZE)
+    result = to_cmk_time_series_graph(
+        BuiltGraph(graph=graph, specification=None),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
 
     assert result.size == _SIZE
     assert result.options == GraphOptions(
         header=GraphHeader(title="My Graph", show_graph_time=True),
         name="mygraph",
         x_axis=None,
-        y_axis=None,
+        y_axis=YAxis(
+            unit=UnitFormat(
+                notation="decimal",
+                symbol="X",
+                precision=Precision(type="auto", digits=2),
+                # Already converted by the shell, so the renderer must not convert it again.
+                convertible=False,
+            ),
+        ),
         font_size_pt=8.0,
     )
     assert result.interaction == Interaction(
@@ -120,37 +168,142 @@ def test_resolve_default_time_range_seconds_stale_preference_falls_back() -> Non
     assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, 90000) == 3600
 
 
+def test_stored_time_range_seconds_is_the_views_own_setting() -> None:
+    assert (
+        stored_time_range_seconds(
+            painter_parameters=PainterParameters(set_default_time_range=14400),
+            stored_by_the_view=True,
+        )
+        == 14400
+    )
+
+
+def test_stored_time_range_seconds_ignores_the_valuespec_default() -> None:
+    # What a painter with nothing stored reports: the valuespec default carries the key.
+    assert (
+        stored_time_range_seconds(
+            painter_parameters=PainterParameters(set_default_time_range=14400),
+            stored_by_the_view=False,
+        )
+        is None
+    )
+
+
+def test_stored_time_range_seconds_without_the_setting() -> None:
+    assert (
+        stored_time_range_seconds(
+            painter_parameters=PainterParameters(graph_render_options={}),
+            stored_by_the_view=True,
+        )
+        is None
+    )
+
+
+def test_stored_time_range_seconds_for_a_painter_without_parameters() -> None:
+    assert stored_time_range_seconds(painter_parameters=None, stored_by_the_view=True) is None
+
+
 def test_global_time_picker_props() -> None:
+    refresh = GlobalTimePickerRefresh(
+        interval_seconds=60, starts_live=True, reloads_page_content=True
+    )
+
     props = global_time_picker_props(
         _GRAPH_TIMERANGES,
         14400,
         first_day_of_week=FirstDayOfWeek.monday,
-        default_refresh_time=60,
+        refresh=refresh,
     )
+
     assert props.custom_time_ranges == [
         CustomGraphTimeRange(title="Last 1 h", total_seconds=3600),
         CustomGraphTimeRange(title="Last 4 h", total_seconds=14400),
     ]
     assert props.default_time_range == 14400
     assert props.first_day_of_week is FirstDayOfWeek.monday
-    assert props.default_refresh_time == 60
+    assert props.refresh is refresh
 
 
 def test_global_time_picker_props_without_preferences() -> None:
     props = global_time_picker_props(
-        _GRAPH_TIMERANGES, 3600, first_day_of_week=None, default_refresh_time=None
+        _GRAPH_TIMERANGES,
+        3600,
+        first_day_of_week=None,
+        refresh=GlobalTimePickerRefresh(
+            interval_seconds=None, starts_live=False, reloads_page_content=False
+        ),
     )
+
     assert props.first_day_of_week is None
-    assert props.default_refresh_time is None
 
 
-def test_start_of_week_choices_match_first_day_of_week() -> None:
-    # user_first_day_of_week falls back to the browser locale for values it does not know, so
-    # drift between the two lists would silently disable the preference rather than fail.
+@pytest.mark.usefixtures("request_context")
+def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained() -> None:
+    refresh = global_time_picker_refresh()
+
+    assert refresh.starts_live is False
+    assert refresh.reloads_page_content is False
+
+
+def test_global_time_picker_refresh_falls_back_to_the_user_preference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    preferred_interval = 90
+    monkeypatch.setattr(
+        "cmk.gui.graphing._frontend.user_default_refresh_time", lambda: preferred_interval
+    )
+
+    refresh = global_time_picker_refresh()
+
+    assert refresh.interval_seconds == preferred_interval
+
+
+def test_global_time_picker_refresh_prefers_the_interval_of_the_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("cmk.gui.graphing._frontend.user_default_refresh_time", lambda: 90)
+    interval_of_the_page = 60
+
+    refresh = global_time_picker_refresh(interval_seconds=interval_of_the_page)
+
+    assert refresh.interval_seconds == interval_of_the_page
+
+
+class _UserStub:
+    """Stands in for the `user` proxy, which resolves only inside a session."""
+
+    def __init__(self, attribute: object) -> None:
+        self._attribute = attribute
+
+    def get_attribute(self, key: str, deflt: object = None) -> object:  # noqa: ARG002
+        return self._attribute
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        (None, FirstDayOfWeek.monday),
+        ("browser_locale", None),
+        ("sunday", FirstDayOfWeek.sunday),
+        ("funday", FirstDayOfWeek.monday),
+    ],
+)
+def test_user_first_day_of_week(
+    monkeypatch: pytest.MonkeyPatch, stored: str | None, expected: FirstDayOfWeek | None
+) -> None:
+    monkeypatch.setattr("cmk.gui.graphing._frontend.user", _UserStub(stored))
+    assert user_first_day_of_week() is expected
+
+
+def test_start_of_week_choices_are_all_honored(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Drift between the choices and the wire enum would silently ignore a preference.
     valuespec = StartOfWeekUserAttribute().valuespec()
     assert isinstance(valuespec, DropdownChoice)
-    configurable_days = {value for value, _title in valuespec.choices() if value is not None}
-    assert configurable_days == {day.value for day in FirstDayOfWeek}
+    resolved = set()
+    for value, _title in valuespec.choices():
+        monkeypatch.setattr("cmk.gui.graphing._frontend.user", _UserStub(value))
+        resolved.add(user_first_day_of_week())
+    assert resolved == {None, *FirstDayOfWeek}
 
 
 def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
@@ -186,8 +339,293 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
             )
         ],
     )
-    result = to_cmk_time_series_graph(graph, size=_SIZE)
+    result = to_cmk_time_series_graph(
+        BuiltGraph(graph=graph, specification=None),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
 
     assert result.options.header.title == "My Graph"
     [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
     assert restored == graph
+
+
+def test_derive_y_axis_unit_takes_the_unit_of_the_first_stack_member() -> None:
+    graph = Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        stacks=[
+            Stack(
+                members=[
+                    Curve(
+                        quantity=_RRD, attributes=CurveAttributes(title="m", unit=_UNIT, color="#m")
+                    )
+                ],
+                inverse=False,
+            )
+        ],
+    )
+    assert derive_y_axis_unit(graph) == UnitFormat(
+        notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
+    )
+
+
+def test_derive_y_axis_unit_falls_back_to_a_line_when_there_are_no_stacks() -> None:
+    graph = Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    y_axis_unit = derive_y_axis_unit(graph)
+    assert y_axis_unit is not None
+    assert y_axis_unit.symbol == "X"
+
+
+def test_derive_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
+    graph = Graph(name="mygraph", title="Empty", kind="template")
+    assert derive_y_axis_unit(graph) is None
+
+
+def test_value_axis_width_is_sent_in_pixels_only_when_set_explicitly() -> None:
+    assert value_axis_width_px("fixed") is None
+    assert value_axis_width_px(("explicit", SizePT(36.0))) == 48.0
+
+
+def test_display_props_carry_every_option_so_none_reads_as_off() -> None:
+    assert EngineDisplayOptions(show_legend=False).as_props() == {
+        "show_consolidation": True,
+        "show_legend": False,
+        "show_title": True,
+        "show_vertical_axis": True,
+        "show_time_axis": True,
+    }
+
+
+def test_display_props_name_the_axis_width_the_floor_it_is() -> None:
+    assert "min_value_axis_width" not in EngineDisplayOptions().as_props()
+    assert (
+        EngineDisplayOptions(vertical_axis_width=("explicit", SizePT(36.0))).as_props()[
+            "min_value_axis_width"
+        ]
+        == 48.0
+    )
+
+
+def _one_curve_graph(*, vertical_range: VerticalRange | None = None) -> Graph:
+    return Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        vertical_range=vertical_range,
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
+                ),
+                inverse=False,
+            )
+        ],
+    )
+
+
+def test_the_shell_axis_keeps_the_unit_the_graph_names_over_the_one_its_curves_imply() -> None:
+    named = UnitFormat(
+        notation="si", symbol="W", precision=Precision(type="strict", digits=0), convertible=False
+    )
+    result = to_cmk_time_series_graph(
+        BuiltGraph(graph=_one_curve_graph(), specification=None, y_axis_unit=named),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    assert result.options.y_axis == YAxis(unit=named, explicit_range=None)
+
+
+def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=FixedRange(lower=0.0, upper=100.0)),
+            specification=None,
+        ),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.explicit_range == ExplicitRange(min=0.0, max=100.0)
+    # The graph names no unit, so the axis still takes the one its curves are drawn in.
+    assert y_axis.unit is not None
+    assert y_axis.unit.symbol == "X"
+
+
+def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_extent() -> None:
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=MinimalRange(lower=0.0, upper=100.0)),
+            specification=None,
+        ),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.explicit_range is None
+
+
+_RANGE = TimeRange(start=0, end=120, step=60)
+_REQUESTED = TimeRange(start=0, end=300, step=60)
+
+
+def _curve(
+    name: str,
+    *,
+    color: str = "#112233",
+    values: Sequence[float | None] = (1.0, 2.0),
+    attributes: dict[str, dict[str, str]] | None = None,
+    time_range: TimeRange = _RANGE,
+) -> EvaluatedCurve:
+    return EvaluatedCurve(
+        id=name,
+        attributes=CurveAttributes(
+            title=name.title(),
+            unit=Unit(notation=DecimalNotation(symbol=""), precision=AutoPrecision(digits=2)),
+            color=color,
+        ),
+        value=None,
+        time_series=TimeSeries(time_range=time_range, values=list(values)),
+        series_attributes=attributes or {},
+    )
+
+
+def _graph(
+    *, stacks: Sequence[EvaluatedStack] = (), lines: Sequence[EvaluatedLine] = ()
+) -> EvaluatedGraph:
+    return EvaluatedGraph(
+        name="graph",
+        title="Graph",
+        vertical_range=None,
+        stacks=list(stacks),
+        lines=list(lines),
+    )
+
+
+def test_the_curves_carry_their_title_colour_data_and_attributes() -> None:
+    spec = evaluated_to_graph_spec(
+        _graph(
+            lines=[
+                EvaluatedLine(
+                    curve=_curve(
+                        "a",
+                        color="#ff0000",
+                        values=[1.0, None],
+                        attributes={"resource": {"host.name": "heute"}},
+                    ),
+                    inverse=False,
+                )
+            ]
+        ),
+        fallback_time_range=_REQUESTED,
+    )
+
+    assert spec["curves"] == [
+        {
+            "line_type": "line",
+            "color": "#ff0000",
+            "title": "A",
+            "attributes": {"resource": {"host.name": "heute"}},
+            "rrddata": [1.0, None],
+        }
+    ]
+
+
+def test_the_time_range_is_the_one_the_first_curve_came_back_with() -> None:
+    spec = evaluated_to_graph_spec(
+        _graph(
+            lines=[
+                EvaluatedLine(curve=_curve("a"), inverse=False),
+                EvaluatedLine(
+                    curve=_curve("b", time_range=TimeRange(start=0, end=600, step=300)),
+                    inverse=False,
+                ),
+            ]
+        ),
+        fallback_time_range=_REQUESTED,
+    )
+
+    assert (spec["start_time"], spec["end_time"], spec["step"]) == (0, 120, 60)
+
+
+def test_a_graph_without_curves_reports_the_requested_range() -> None:
+    spec = evaluated_to_graph_spec(_graph(), fallback_time_range=_REQUESTED)
+
+    assert (spec["start_time"], spec["end_time"], spec["step"], spec["curves"]) == (0, 300, 60, [])
+
+
+def test_an_attribute_group_the_source_left_empty_is_still_reported() -> None:
+    spec = evaluated_to_graph_spec(
+        _graph(
+            lines=[
+                EvaluatedLine(
+                    curve=_curve(
+                        "a",
+                        attributes={"resource": {}, "scope": {}, "data_point": {"unit": "By"}},
+                    ),
+                    inverse=False,
+                )
+            ]
+        ),
+        fallback_time_range=_REQUESTED,
+    )
+
+    assert spec["curves"][0]["attributes"] == {
+        "resource": {},
+        "scope": {},
+        "data_point": {"unit": "By"},
+    }
+
+
+def test_an_attribute_group_the_graph_spec_does_not_report_is_left_out() -> None:
+    spec = evaluated_to_graph_spec(
+        _graph(
+            lines=[
+                EvaluatedLine(
+                    curve=_curve("a", attributes={"resource": {"host.name": "heute"}, "other": {}}),
+                    inverse=False,
+                )
+            ]
+        ),
+        fallback_time_range=_REQUESTED,
+    )
+
+    assert spec["curves"][0]["attributes"] == {"resource": {"host.name": "heute"}}
+
+
+def test_the_shell_axis_takes_the_users_temperature_unit() -> None:
+    # The axis labels have to agree with the converted values the fetch serves.
+    celsius = UnitFormat(
+        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
+    )
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=FixedRange(lower=0.0, upper=100.0)),
+            specification=None,
+            y_axis_unit=celsius,
+        ),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.FAHRENHEIT,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.unit is not None
+    assert y_axis.unit.symbol == "°F"
+    assert y_axis.unit.convertible is False
+    # The bounds are in the metric's own scale, so they move with the unit.
+    assert y_axis.explicit_range == ExplicitRange(min=32.0, max=212.0)

@@ -4,12 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
 import type { IconEmblems } from './types'
 
 withDefaults(
   defineProps<{
     emblem: IconEmblems | undefined
     colored?: boolean | undefined
+    /** Accessible name for the emblem. Omit when its meaning is already conveyed elsewhere */
+    ariaLabel?: TranslatedString | undefined
   }>(),
   {
     colored: true
@@ -23,6 +27,9 @@ withDefaults(
     <!-- "emblem" is coming from legacy css -->
     <img
       v-if="emblem"
+      role="img"
+      :aria-label="ariaLabel"
+      :aria-hidden="ariaLabel ? undefined : 'true'"
       :class="[
         'emblem',
         'cmk-icon-emblem__emblem',

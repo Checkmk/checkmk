@@ -14,7 +14,7 @@ import pytest
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def add_tmp_path_to_sys_path(tmp_path: Path) -> Iterator[Path]:
     sys.path.insert(0, str(tmp_path))
     try:

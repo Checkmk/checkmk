@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Annotated
+from typing import Annotated, assert_never
 
 import fastapi
 
@@ -30,8 +30,10 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.localhost_authorization imp
     validate_localhost_authorization,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    ActiveCheckSpec,
     FetchSpec,
     ResultType,
+    Spec,
     TaskStatus,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
@@ -81,12 +83,21 @@ async def create_task_endpoint(
         - Task IDs are unique
         - Maximum number of stored tasks has limits
     """
-    # In case a new TaskCreateRequestSpec is added in the future, extend this match-case
-    # match request_body.spec:
-    spec = FetchSpec(
-        payload=request_body.spec.payload,
-        timeout=request_body.spec.timeout,
-    )
+    spec: Spec
+    match request_body.spec:
+        case tasks_protocol.FetchAdHocTask():
+            spec = FetchSpec(
+                payload=request_body.spec.payload,
+                timeout=request_body.spec.timeout,
+            )
+        case tasks_protocol.AdHocActiveCheckTask():
+            spec = ActiveCheckSpec(
+                host=request_body.spec.host,
+                command=request_body.spec.command,
+                timeout=request_body.spec.timeout,
+            )
+        case _:  # pragma: no cover
+            assert_never(request_body.spec)
 
     try:
         task_id = handler.process(RelayID(relay_id), spec)

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import socket
 from collections.abc import Sequence
 
@@ -22,19 +24,19 @@ def make_config_cache_mock(
 ) -> object:
     class ConfigCacheMock:
         @staticmethod
-        def ip_stack_config(host_name: str) -> ip_lookup.IPStackConfig:
+        def ip_stack_config(host_name: str) -> ip_lookup.IPStackConfig:  # noqa: ARG004
             return ip_stack
 
         @staticmethod
-        def default_address_family(host_name: str) -> socket.AddressFamily:
+        def default_address_family(host_name: str) -> socket.AddressFamily:  # noqa: ARG004
             return family
 
         @staticmethod
-        def additional_ipaddresses(host_name: str) -> tuple[Sequence[str], Sequence[str]]:
+        def additional_ipaddresses(host_name: str) -> tuple[Sequence[str], Sequence[str]]:  # noqa: ARG004
             return additional_ipaddresses
 
         @staticmethod
-        def alias(host_name: str) -> str:
+        def alias(host_name: str) -> str:  # noqa: ARG004
             return "host alias"
 
     return ConfigCacheMock()
@@ -108,7 +110,8 @@ def test_get_host_config_no_ip() -> None:
     )
 
 
-def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_host_config_ipv4() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
         ip_stack=ip_lookup.IPStackConfig.IPv4,
@@ -142,7 +145,8 @@ def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_host_config_ipv6() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("ignore.v4.ipv6")], [HostAddress("::42")]),
         ip_stack=ip_lookup.IPStackConfig.IPv6,
@@ -176,7 +180,8 @@ def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_host_config_dual() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("2.3.4.2")], [HostAddress("::42")]),
         ip_stack=ip_lookup.IPStackConfig.DUAL_STACK,

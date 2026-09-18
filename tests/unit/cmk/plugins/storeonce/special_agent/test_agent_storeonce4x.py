@@ -110,8 +110,8 @@ def test_invalid_tokenfile() -> None:  # not sure what this meant to test. There
 
     mysession = StoreOnceOauth2Session(HOST, PORT, "user", Secret("secret"), False)
 
-    assert mysession._json_token["expires_in"] == EXPIRES_IN
-    assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"
+    assert mysession._json_token["expires_in"] == EXPIRES_IN  # noqa: SLF001
+    assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"  # noqa: SLF001
 
 
 @time_machine.travel(NOW_SIMULATED, tick=False)

@@ -74,7 +74,7 @@ snmp_section_juniper_alarm = SimpleSNMPSection(
 )
 
 
-def discover_juniper_alarm(section: JuniperAlarm) -> DiscoveryResult:
+def discover_juniper_alarm(section: JuniperAlarm) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

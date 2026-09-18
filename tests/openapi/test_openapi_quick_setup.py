@@ -53,12 +53,12 @@ def _make_action(
     """Helper function to create a callable action that returns a fixed URL."""
 
     def action(
-        all_stages_form_data: ParsedFormData,
-        mode: QuickSetupActionMode,
+        all_stages_form_data: ParsedFormData,  # noqa: ARG001
+        mode: QuickSetupActionMode,  # noqa: ARG001
         _progress_logger: ProgressLogger,
-        object_id: str | None,
-        use_git: bool,
-        pprint_value: bool,
+        object_id: str | None,  # noqa: ARG001
+        use_git: bool,  # noqa: ARG001
+        pprint_value: bool,  # noqa: ARG001
     ) -> str:
         return return_value
 

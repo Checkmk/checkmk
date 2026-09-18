@@ -2,8 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence, Set
-from functools import partial
+from collections.abc import Callable, Sequence, Set
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -25,6 +24,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.web.utils import permission_verification as permissions
 
+from .._customer import customer_resolver
 from .._folder import monitor_folders
 from .._impl import LiveStatusHostRepository
 from .._models import (
@@ -39,6 +39,7 @@ from .._models import (
     UnixTimestamp,
 )
 from .._repositories import HostRepository
+from .._site import MonitorSite, MonitorSites
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import extract_site_scope, FilterNode, parse_as_livestatus_filter
 from ._modes import build_host_modes, ModeInfo
@@ -69,7 +70,17 @@ _DEFAULT_FIELDS: frozenset[HostOptionalField] = frozenset(
 @api_model
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
-    state: HostStateLabel = api_field(description="Host state", example="UP")
+    state: HostStateLabel = api_field(
+        description=(
+            "Host state. 'PENDING' means the host has never been checked, i.e. its state is "
+            "still pending the first check result"
+        ),
+        example="UP",
+    )
+    is_flapping: bool = api_field(description="Whether the host state is flapping", example=False)
+    stale: bool = api_field(
+        description="Whether the host hasn't been checked recently enough", example=False
+    )
     site_id: str = api_field(description="Site ID", example="local")
     address: str | ApiOmitted = api_field(
         description="Primary IP address",
@@ -113,11 +124,11 @@ class HostEntry:
     )
     folder: str | ApiOmitted = api_field(
         description=(
-            "The Setup folder path the host is configured in, '/' for the root folder. Empty "
-            "when the host isn't managed via Setup, e.g. it was added directly to the "
-            "monitoring core."
+            "The title Setup gives the folder the host is configured in: the titles down to it, "
+            "'Main' for the root folder. Empty when Setup knows no such folder, e.g. the host "
+            "isn't managed via Setup or a remote site owns it."
         ),
-        example="/network/switches",
+        example="Data center Munich / Rack 1",
         default_factory=ApiOmitted,
     )
     last_check: UnixTimestamp | ApiOmitted = api_field(
@@ -150,6 +161,15 @@ class HostEntry:
         example=["all"],
         default_factory=ApiOmitted,
     )
+    customer: str | ApiOmitted = api_field(
+        description=(
+            "Name of the customer the host belongs to, which is the customer of the site "
+            "monitoring it. Only editions with multi-tenancy support assign customers, so this "
+            "is omitted everywhere else."
+        ),
+        example="Customer A",
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -164,7 +184,7 @@ class HostEntry:
     )
 
     @classmethod
-    def from_domain(cls, host: Host, fields: Set[HostOptionalField]) -> Self:
+    def from_domain(cls, host: Host, fields: Set[HostOptionalField], customer: str | None) -> Self:
         def included[T](field: HostOptionalField, value: T | None) -> T | ApiOmitted:
             """Return the value only if it was asked for and therefore actually read."""
             return value if field in fields and value is not None else ApiOmitted()
@@ -173,6 +193,8 @@ class HostEntry:
         return cls(
             name=host.name,
             state=host.state_label,
+            is_flapping=host.is_flapping,
+            stale=host.stale,
             site_id=host.site_id,
             address=included(HostOptionalField.ADDRESS, host.address),
             alias=included(HostOptionalField.ALIAS, host.alias),
@@ -201,6 +223,7 @@ class HostEntry:
             tags=included(HostOptionalField.TAGS, host.tags),
             contacts=included(HostOptionalField.CONTACTS, host.contacts),
             contact_groups=included(HostOptionalField.CONTACT_GROUPS, host.contact_groups),
+            customer=ApiOmitted() if customer is None else customer,
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )
@@ -255,8 +278,10 @@ class HostsRequestBody:
         PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
     ] = api_field(
         description=(
-            "Search text, matched against the host name and every text field asked for through "
-            "`fields` (alias, address, folder). Omit or pass empty string to return all hosts."
+            "Search text, matched against the host name, the site, the customer and every "
+            "text field asked for through `fields` (alias, address, folder, labels, tags, "
+            "contacts, contact groups). Site and customer are searched whether or not their "
+            "column is shown. Omit or pass empty string to return all hosts."
         ),
         example="web-server",
         default_factory=ApiOmitted,
@@ -306,7 +331,15 @@ def list_hosts(
                 status=400, title="Invalid filter", detail=str(exc)
             ) from exc
 
-    host_repo = LiveStatusHostRepository(connection=sites.live())
+    customer_of = customer_resolver(sites=api_context.config.sites)
+    host_repo = LiveStatusHostRepository(
+        connection=sites.live(),
+        folders=monitor_folders,
+        sites=MonitorSites(
+            MonitorSite(id=site_id, customer=customer_of(site_id))
+            for site_id in api_context.config.sites
+        ),
+    )
 
     # NOTE: we never want this value scoped by the selected sites. It should always get full count.
     # As a temporary solution, we are querying count here and passing the result to the handler.
@@ -336,13 +369,11 @@ def list_hosts(
             filters=(
                 HostFilter("")
                 if filters is None
-                else parse_as_livestatus_filter(
-                    filters,
-                    setup_folders=partial(monitor_folders.visible_to, api_context.user),
-                )
+                else parse_as_livestatus_filter(filters, setup_folders=monitor_folders.titles)
             ),
             fields=fields,
             site_ids=site_ids,
+            customer_of=customer_of,
         )
 
 
@@ -356,6 +387,7 @@ def _handle_list_hosts(
     filters: HostFilter = HostFilter(""),
     fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
     site_ids: Sequence[SiteId] | None = None,
+    customer_of: Callable[[str], str | None] = lambda _site_id: None,
 ) -> HostsResponse:
     # Derived from the same `site_ids` the caller scoped the connection with via `only_sites`,
     # rather than taken as a separately-passed flag, so the two can't drift apart.
@@ -382,7 +414,7 @@ def _handle_list_hosts(
         matched_host_count = total_host_count
 
     return HostsResponse(
-        hosts=[HostEntry.from_domain(host, fields) for host in hosts],
+        hosts=[HostEntry.from_domain(host, fields, customer_of(host.site_id)) for host in hosts],
         meta=HostsPageMeta(
             limit=limit,
             matched=matched_host_count,
@@ -408,8 +440,10 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
-                    # Read when a folder condition is matched against Setup's folder titles.
+                    # Read while titling a folder, on an installation that keeps the folders a
+                    # user may not read out of sight.
                     permissions.OkayToIgnorePerm("wato.see_all_folders"),
+                    permissions.OkayToIgnorePerm("view.allhosts"),
                 ]
             )
         )

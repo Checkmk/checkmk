@@ -22,7 +22,7 @@ description:
 
  You can find a description for a basic configuration below. More details for
  special setups will be available on the homepage of the Checkmk project.
- https://mathias-kettner.de/checkmk_oracle.html
+ https://docs.checkmk.com/latest/en/monitoring_oracle.html
 
  There are two configuration files important and stored in $MK_CONFDIR.
  {sqlnet.ora} is a static file and is essential for the connection to the
@@ -107,7 +107,7 @@ description:
  for the other checks.
 
  More details can be found in the documentation in
- https://mathias-kettner.de/checkmk_oracle.html
+ https://docs.checkmk.com/latest/en/monitoring_oracle.html
 
 item:
  The ORACLE_SID

@@ -11,6 +11,7 @@ from werkzeug.datastructures import ETags
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
+from cmk.gui.customer import is_provider_site
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
@@ -23,6 +24,7 @@ from cmk.gui.type_defs import (
     CustomUserAttrSpec,
     GraphTimerange,
     PasswordPolicy,
+    ReadOnlySpec,
     UserSpec,
 )
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
@@ -84,16 +86,19 @@ class ApiConfig:
     debug: bool
     default_temperature_unit: str
     graph_timeranges: list[GraphTimerange]
+    is_provider_site: bool
     liveproxyd_enabled: bool
     password_policy: PasswordPolicy
     sites: SiteConfigurations
     tags: TagConfig
     ui_theme: str
+    wato_enabled: bool
     wato_hide_folders_without_read_permissions: bool
     wato_host_attrs: Sequence[CustomHostAttrSpec]
     wato_icon_categories: list[tuple[str, str]]
     wato_max_snapshots: int
     wato_pprint_config: bool
+    wato_read_only: ReadOnlySpec
     wato_use_git: bool
     roles: Mapping[str, CustomUserRole | BuiltInUserRole]
     wato_user_attrs: Sequence[CustomUserAttrSpec]
@@ -108,16 +113,19 @@ class ApiConfig:
             debug=config.debug,
             default_temperature_unit=config.default_temperature_unit,
             graph_timeranges=config.graph_timeranges,
+            is_provider_site=is_provider_site(config),
             liveproxyd_enabled=config.liveproxyd_enabled,
             password_policy=config.password_policy,
             sites=config.sites,
             tags=config.tags,
             ui_theme=config.ui_theme,
+            wato_enabled=config.wato_enabled,
             wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
             wato_host_attrs=config.wato_host_attrs,
             wato_icon_categories=config.wato_icon_categories,
             wato_max_snapshots=config.wato_max_snapshots,
             wato_pprint_config=config.wato_pprint_config,
+            wato_read_only=config.wato_read_only,
             wato_use_git=config.wato_use_git,
             roles=config.roles,
             wato_user_attrs=config.wato_user_attrs,
@@ -126,7 +134,7 @@ class ApiConfig:
             user_connections=config.user_connections,
         )
 
-    def user_permissions(self) -> "UserPermissions":
+    def user_permissions(self) -> UserPermissions:
         return UserPermissions(
             roles=self.roles,
             permissions=permission_registry,

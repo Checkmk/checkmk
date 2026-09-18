@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone, now } from '@internationalized/date'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -13,11 +14,46 @@ import {
 
 import type { ActionTargetKind, MonitoringAction } from '../types'
 import AcknowledgeForm, { type AcknowledgeValues } from './AcknowledgeForm.vue'
+import { commandFailed } from './feedback'
 
 export const ACK_ACTION_ID = 'acknowledge'
 
+/** The setup pages the form links to; the server omits what the user may not edit. */
+export interface AcknowledgeLinks {
+  presetsUrl: string | null
+  notificationRulesUrl: string | null
+}
+
+/** The option states the site starts the dialog from, as configured under Setup. */
+export interface AcknowledgeDefaults {
+  sticky: boolean
+  persistent: boolean
+  notify: boolean
+  expireSeconds: number
+}
+
+/**
+ * The payload's defaults, structurally typed so this stays independent of which page's
+ * generated module they arrived in. Falls back to the values the classic form assumes
+ * when a page has not sent any.
+ */
+export function acknowledgeDefaults(
+  payload:
+    | { sticky: boolean; persistent: boolean; notify: boolean; expire_seconds: number }
+    | undefined
+): AcknowledgeDefaults {
+  return {
+    sticky: payload?.sticky ?? false,
+    persistent: payload?.persistent ?? false,
+    notify: payload?.notify ?? true,
+    expireSeconds: payload?.expire_seconds ?? 3600
+  }
+}
+
 export interface AcknowledgeKindConfig<Target> {
   targetKind: ActionTargetKind
+  links: AcknowledgeLinks
+  defaults: AcknowledgeDefaults
   /** Perform the API call for the selected targets and return the count actually acted on. */
   acknowledge(api: AcknowledgeApi, targets: Target[], options: AcknowledgeOptions): Promise<number>
   successMessage(count: number): TranslatedString
@@ -35,14 +71,20 @@ export function createAcknowledgeAction<Target>(
     title: _t('Acknowledge problems'),
     submitLabel: _t('Acknowledge'),
     form: AcknowledgeForm,
-    formProps: { targetKind: config.targetKind },
+    formProps: {
+      targetKind: config.targetKind,
+      presetsUrl: config.links.presetsUrl,
+      notificationRulesUrl: config.links.notificationRulesUrl
+    },
+    // Read per open, not once: the expiry is an offset from the moment the dialog is
+    // opened, and the classic form prefills the field while leaving the box unticked.
     defaultValues: () => ({
       comment: '',
       expireOnEnabled: false,
-      expireOn: null,
-      sticky: false,
-      persistent: false,
-      notify: true
+      expireOn: now(getLocalTimeZone()).add({ seconds: config.defaults.expireSeconds }),
+      sticky: config.defaults.sticky,
+      persistent: config.defaults.persistent,
+      notify: config.defaults.notify
     }),
     perform: async (targets: Target[], values: AcknowledgeValues) => {
       try {
@@ -54,13 +96,8 @@ export function createAcknowledgeAction<Target>(
           expireOn: values.expireOnEnabled ? values.expireOn?.toDate().toISOString() : undefined
         })
         return { variant: 'success', message: config.successMessage(count) }
-      } catch (error) {
-        return {
-          variant: 'error',
-          message: _t('Could not acknowledge the problems: %{detail}', {
-            detail: error instanceof Error ? error.message : String(error)
-          })
-        }
+      } catch {
+        return commandFailed(_t('Could not acknowledge the problems'))
       }
     }
   }

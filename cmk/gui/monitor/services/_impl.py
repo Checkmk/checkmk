@@ -10,10 +10,12 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Mapping, Sequence, Set
+from collections.abc import Callable, Collection, Mapping, Sequence, Set
+from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
@@ -58,7 +60,7 @@ class LiveStatusHostServicesRepository:
         filters: ServiceFilter,
         fields: Set[ServiceOptionalField],
     ) -> Sequence[Service]:
-        extra_headers = [*filters.splitlines(), _build_primary_sort(sorters)]
+        extra_headers = [*_split_filter_lines(filters), _build_primary_sort(sorters)]
 
         if limit is not None:
             extra_headers.append(f"Limit: {limit}")
@@ -68,11 +70,21 @@ class LiveStatusHostServicesRepository:
                 Services.description,
                 Services.host_name,
                 Services.state,
+                Services.has_been_checked,
                 Services.plugin_output,
                 Services.acknowledged,
                 Services.scheduled_downtime_depth,
                 Services.notifications_enabled,
+                Services.comments,
+                Services.modified_attributes_list,
+                Services.active_checks_enabled,
+                Services.accept_passive_checks,
+                Services.in_notification_period,
+                Services.in_service_period,
+                Services.in_check_period,
+                Services.in_passive_check_period,
                 Services.is_flapping,
+                Services.staleness,
                 Services.last_check,
                 Services.last_state_change,
                 Services.perf_data,
@@ -84,7 +96,7 @@ class LiveStatusHostServicesRepository:
                     for column in columns
                 ),
             ],
-            filter_expr=_build_host_services_filter(hostname, _sanitize_query(query)),
+            filter_expr=_build_host_services_filter(hostname, _sanitize_query(query), fields),
             extra_headers=extra_headers,
         )
 
@@ -93,11 +105,24 @@ class LiveStatusHostServicesRepository:
                 [
                     Service(
                         name=row["description"],
-                        state=ServiceState(row["state"]),
+                        state=(
+                            ServiceState.PENDING
+                            if row["has_been_checked"] == 0
+                            else ServiceState(row["state"])
+                        ),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
+                        num_comments=len(row["comments"]),
+                        active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        passive_checks_disabled=_manually_disabled(
+                            row, "passive_checks_enabled", column="accept_passive_checks"
+                        ),
+                        in_notification_period=bool(row["in_notification_period"]),
+                        in_service_period=bool(row["in_service_period"]),
+                        in_check_period=_in_check_period(row),
                         is_flapping=bool(row["is_flapping"]),
+                        stale=row["staleness"] >= active_config.staleness_threshold,
                         summary=row["plugin_output"],
                         last_check=int(row["last_check"]) or None,
                         last_state_change=int(row["last_state_change"]),
@@ -125,15 +150,26 @@ class LiveStatusHostServicesRepository:
                 Services.description,
                 Services.host_name,
                 Services.state,
+                Services.has_been_checked,
                 Services.plugin_output,
                 Services.last_check,
                 Services.last_state_change,
                 Services.acknowledged,
                 Services.scheduled_downtime_depth,
                 Services.notifications_enabled,
+                Services.comments,
+                Services.modified_attributes_list,
+                Services.active_checks_enabled,
+                Services.accept_passive_checks,
+                Services.in_notification_period,
+                Services.in_service_period,
+                Services.in_check_period,
+                Services.in_passive_check_period,
                 Services.is_flapping,
+                Services.staleness,
                 Services.host_alias,
                 Services.host_state,
+                Services.host_has_been_checked,
                 Services.host_acknowledged,
                 Services.host_scheduled_downtime_depth,
                 Services.contact_groups,
@@ -160,7 +196,9 @@ class LiveStatusHostServicesRepository:
             name=row["description"],
             host_name=row["host_name"],
             site_id=row["site"],
-            state=ServiceState(row["state"]),
+            state=(
+                ServiceState.PENDING if row["has_been_checked"] == 0 else ServiceState(row["state"])
+            ),
             summary=row["plugin_output"],
             last_check=int(row["last_check"]) or None,
             last_state_change=int(row["last_state_change"]),
@@ -170,9 +208,22 @@ class LiveStatusHostServicesRepository:
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
+            num_comments=len(row["comments"]),
+            active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            passive_checks_disabled=_manually_disabled(
+                row, "passive_checks_enabled", column="accept_passive_checks"
+            ),
+            in_notification_period=bool(row["in_notification_period"]),
+            in_service_period=bool(row["in_service_period"]),
+            in_check_period=_in_check_period(row),
             is_flapping=bool(row["is_flapping"]),
+            stale=row["staleness"] >= active_config.staleness_threshold,
             host_alias=row["host_alias"],
-            host_state=HostState(row["host_state"]),
+            host_state=(
+                HostState.PENDING
+                if row["host_has_been_checked"] == 0
+                else HostState(row["host_state"])
+            ),
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
             contact_groups=list(row["contact_groups"]),
@@ -188,22 +239,34 @@ class LiveStatusHostServicesRepository:
     def count_total(self, hostname: str) -> int:
         return self._count_services(hostname)
 
-    def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
+    def count_matched(
+        self,
+        hostname: str,
+        *,
+        query: str,
+        filters: ServiceFilter,
+        fields: Set[ServiceOptionalField],
+    ) -> int:
         # A filtered total can't be read from the ``status`` table, so the matches are counted
         # server-side via ``Stats`` instead of transferring and counting every matching row.
-        return self._count_services(hostname, query=query, filters=filters)
+        return self._count_services(hostname, query=query, filters=filters, fields=fields)
 
     def _count_services(
-        self, hostname: str, *, query: str = "", filters: ServiceFilter = ServiceFilter("")
+        self,
+        hostname: str,
+        *,
+        query: str = "",
+        filters: ServiceFilter = ServiceFilter(""),
+        fields: Set[ServiceOptionalField] = frozenset(),
     ) -> int:
-        filter_expr = _build_host_services_filter(hostname, _sanitize_query(query))
+        filter_expr = _build_host_services_filter(hostname, _sanitize_query(query), fields)
         stats_query = "\n".join(
-            [
+            (
                 f"GET {Services.__tablename__}",
                 "Stats: state >= 0",
                 *(": ".join(line) for line in filter_expr.render()),
-                *filters.splitlines(),
-            ]
+                *_split_filter_lines(filters),
+            )
         )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
@@ -263,21 +326,68 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"
 
 
+def _in_check_period(row: Mapping[str, object]) -> bool:
+    """Whether a service is currently being checked at all.
+
+    A service has two periods, one per check kind, and leaving either of them stops the checks
+    it governs - so it counts as checked only while inside both.
+    """
+    return bool(row["in_check_period"]) and bool(row["in_passive_check_period"])
+
+
+def _manually_disabled(
+    row: Mapping[str, object], attribute: str, *, column: str | None = None
+) -> bool:
+    """Whether a check setting was turned off by a user rather than left off by configuration.
+
+    Livestatus reports the setting alone, which is also 0 for everything a plugin never
+    enables; only a mention in ``modified_attributes_list`` says a user switched it off. Pass
+    ``column`` where the setting's own column is named differently from the modified attribute.
+    """
+    modified = cast(Collection[str], row["modified_attributes_list"])
+    return attribute in modified and not row[column or attribute]
+
+
 def _sanitize_query(q: str) -> str:
     # TODO: decide on how we want to handle invalid regex? This will likely require coordinating
     # with frontend implementation to pass down errors to the response.
     return q.replace("*", ".*")
 
 
-def _build_query_filter(query: str) -> QueryExpression:
+def _split_filter_lines(filters: ServiceFilter) -> list[str]:
+    return filters.split("\n") if filters else []
+
+
+_SEARCHED_FIELDS: Mapping[ServiceOptionalField, Callable[[str], QueryExpression]] = {
+    ServiceOptionalField.LABELS: lambda query: Or(
+        Services.label_names.contains(query, ignore_case=True),
+        Services.label_values.contains(query, ignore_case=True),
+    ),
+    ServiceOptionalField.TAGS: lambda query: Or(
+        Services.tag_names.contains(query, ignore_case=True),
+        Services.tag_values.contains(query, ignore_case=True),
+    ),
+    ServiceOptionalField.CONTACTS: lambda query: Services.contacts.contains(
+        query, ignore_case=True
+    ),
+    ServiceOptionalField.CONTACT_GROUPS: lambda query: Services.contact_groups.contains(
+        query, ignore_case=True
+    ),
+}
+
+
+def _build_query_filter(query: str, fields: Set[ServiceOptionalField]) -> QueryExpression:
     if not query:
         return NothingExpression()
 
     return Or(
         Services.description.contains(query, ignore_case=True),
         Services.plugin_output.contains(query, ignore_case=True),
+        *(build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields),
     )
 
 
-def _build_host_services_filter(hostname: str, query: str) -> QueryExpression:
-    return And(Services.host_name == hostname, _build_query_filter(query))
+def _build_host_services_filter(
+    hostname: str, query: str, fields: Set[ServiceOptionalField]
+) -> QueryExpression:
+    return And(Services.host_name == hostname, _build_query_filter(query, fields))

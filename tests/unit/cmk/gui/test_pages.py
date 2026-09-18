@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import sys
 from typing import override
 
@@ -145,7 +147,6 @@ def test_registered_pages() -> None:
         "view",
         "widget_edit_view",
         "widget_figure",
-        "widget_graph",
         "widget_iframe_sidebar",
         "widget_iframe_view",
         "wato",
@@ -155,10 +156,9 @@ def test_registered_pages() -> None:
         "wato_ajax_diag_snmp",
         "wato_ajax_execute_check",
         "wato_ajax_fetch_site_status",
+        "global_settings",
         "welcome",
         "werk",
-        "ajax_graph_values_at_time",
-        "ajax_render_graph",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",
         "ajax_graph_images",
@@ -208,10 +208,8 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
     assert capsys.readouterr()[0] == "234"
 
 
-def test_page_registry_register_page_handler(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_page_registry_register_page_handler(capsys: pytest.CaptureFixture[str]) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
     def page(ctx: PageContext) -> None:

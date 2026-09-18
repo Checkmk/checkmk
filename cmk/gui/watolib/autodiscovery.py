@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -25,6 +26,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.audit_log import log_audit, make_audit_log_change_hook
 from cmk.gui.watolib.check_mk_automations import autodiscovery
 from cmk.gui.watolib.config_domain_name import (
@@ -42,7 +44,6 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
-from cmk.utils.auto_queue import AutoQueue
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):
@@ -143,6 +144,9 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                 message="Started activation of site %s" % self.site_id,
                 user_id=acting_user,
                 use_git=use_git,
+            )
+            bakery.try_bake_agents_on_activation(
+                call_site="Autodiscovery", use_git=use_git, debug=debug
             )
 
         job_interface.send_result_message(_("Successfully discovered hosts"))

@@ -4,7 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { describe, expect, it } from 'vitest'
+import { computed } from 'vue'
 
 import WidgetTiles from '@/dashboard/components/Wizard/components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '@/dashboard/components/Wizard/components/WidgetSelection/types'
@@ -33,6 +35,31 @@ describe('WidgetTiles', () => {
     expect(tooltipOf('Service state')).toBe(
       'Only available for a single host and a single service.'
     )
+  })
+
+  it('unwraps a tooltip that arrives as a ref', () => {
+    // Outside a setup context usei18n() returns computed refs, not plain strings.
+    render(WidgetTiles, {
+      props: {
+        availableItems,
+        enabledWidgets: ['service_stats'],
+        disabledTooltip: computed(
+          () => 'Only available for a single host and a single service.' as TranslatedString
+        )
+      }
+    })
+
+    expect(tooltipOf('Service state')).toBe(
+      'Only available for a single host and a single service.'
+    )
+  })
+
+  it('renders no title when a disabled tile has no tooltip', () => {
+    render(WidgetTiles, {
+      props: { availableItems, enabledWidgets: ['service_stats'] }
+    })
+
+    expect(tooltipOf('Service state')).toBeNull()
   })
 
   it('does not explain anything on a tile that can be chosen', () => {

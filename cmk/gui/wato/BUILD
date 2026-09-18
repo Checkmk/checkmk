@@ -42,7 +42,6 @@ py_library(
         "//cmk/gui:customer",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui/background_job/job",
         "//cmk/gui/form_specs",
         "//cmk/gui/search:matchers",
         "//cmk/gui/userdb",
@@ -51,7 +50,6 @@ py_library(
         "//cmk/gui/valuespec",
         "//cmk/gui/views",
         "//cmk/gui/views:components",
-        "//cmk/gui/visuals",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",
@@ -77,7 +75,6 @@ py_library(
             "_levels.py",
             "_main_module_topics.py",
             "_permissions.py",
-            "_pre_21_plugin_api.py",
             "pages/_match_conditions.py",
             "pages/_password_store_valuespecs.py",
             "pages/_rule_conditions.py",
@@ -116,6 +113,7 @@ py_library(
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",
         "//cmk/gui/painter:v0_base",
+        "//cmk/gui/plugins/wato",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/search:index",
@@ -123,7 +121,6 @@ py_library(
         "//cmk/gui/sidebar",
         "//cmk/gui/userdb",
         "//cmk/gui/utils",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/views",
@@ -164,28 +161,6 @@ py_library(
         requirement("recurring_ical_events"),
         requirement("requests"),
         requirement("urllib3"),
-    ],
-)
-
-# Pre-2.1 plugin API compatibility shim. Separate target to break the
-# wato:wato <-> plugins/wato cycle: this target depends on both, while
-# wato:wato itself does not depend on plugins/wato.
-py_library(
-    name = "pre_21_plugin_api",
-    srcs = ["_pre_21_plugin_api.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":base",
-        ":wato",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui/plugins/wato",
-        "//cmk/gui/valuespec",
-        "//cmk/gui/watolib",
-        "//cmk/gui/watolib:config_infra",
     ],
 )
 

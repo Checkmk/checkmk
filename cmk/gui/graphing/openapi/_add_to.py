@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Mapping
 
 from cmk.graphing_engine import Graph
-from cmk.gui.graphing._engine_codec import ensure_type
-from cmk.gui.graphing._engine_dispatch import graph_dispatcher_registry
+from cmk.gui.graphing._decoding import ensure_type
+from cmk.gui.graphing._graph_dispatch import graph_dispatcher_registry
 from cmk.gui.graphing._graph_specification import GraphSpecification, parse_graph_specification
 from cmk.gui.openapi.utils import ProblemException
 

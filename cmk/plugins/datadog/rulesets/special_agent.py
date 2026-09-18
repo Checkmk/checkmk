@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, Sequence
@@ -442,7 +441,7 @@ def _migrate_to_float(v: object) -> float:
     >>> _migrate_to_float(1.0)
     1.0
     """
-    match v:
+    match v:  # type: ignore[exhaustive-match]
         case int() | float():
             return float(v)
     raise ValueError(f"Expected int or float, got {type(v)}")
@@ -452,7 +451,7 @@ def _tuple_do_dict_with_keys(*keys: str) -> Callable[[object], Mapping[str, obje
     def _tuple_to_dict(
         param: object,
     ) -> Mapping[str, object]:
-        match param:
+        match param:  # type: ignore[exhaustive-match]
             case tuple():
                 return dict(zip(keys, param))
             case dict() as already_migrated:
@@ -463,7 +462,7 @@ def _tuple_do_dict_with_keys(*keys: str) -> Callable[[object], Mapping[str, obje
 
 
 def _migrate_facility(value: object) -> tuple[str, int]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case tuple((str(s), int(i))):
             return (s, i)
         case int(i):
@@ -474,7 +473,7 @@ def _migrate_facility(value: object) -> tuple[str, int]:
 
 
 def _migrate_priority(value: object) -> tuple[str, int]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case tuple((str(s), int(i))):
             return (s, i)
         case int(i):
@@ -485,7 +484,7 @@ def _migrate_priority(value: object) -> tuple[str, int]:
 
 
 def _migrate_service_levels(value: object) -> tuple[str, int]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case tuple((str(s), int(i))) if s.startswith("internal_id_"):
             # Already migrated to e.g. ("internal_id_10", 10)
             return s, i

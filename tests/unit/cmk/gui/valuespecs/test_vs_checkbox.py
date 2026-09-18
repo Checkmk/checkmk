@@ -4,17 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.gui.valuespec as vs
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import expect_validate_failure_untypeable, expect_validate_success, request_var
 
 
 class TestCheckbox:
     def test_validate(self) -> None:
         expect_validate_success(vs.Checkbox(), True)
         expect_validate_success(vs.Checkbox(), False)
-        expect_validate_failure(vs.Checkbox(), "abc")  # type: ignore[misc]
-        expect_validate_failure(vs.Checkbox(), 123)  # type: ignore[misc]
+        expect_validate_failure_untypeable(vs.Checkbox(), "abc")
+        expect_validate_failure_untypeable(vs.Checkbox(), 123)
 
     def test_canonical_value(self) -> None:
         assert vs.Checkbox().canonical_value() is False
@@ -29,7 +31,8 @@ class TestCheckbox:
         assert vs.Checkbox(true_label="an").value_to_html(True) == "an"
         assert vs.Checkbox(false_label="aus").value_to_html(False) == "aus"
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(checkbox="on"):
             assert vs.Checkbox().from_html_vars("checkbox") is True
         assert vs.Checkbox().from_html_vars("checkbox") is False

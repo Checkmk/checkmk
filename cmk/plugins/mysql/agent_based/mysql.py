@@ -175,7 +175,7 @@ def check_mysql_iostat(item: str, params: Mapping[str, Any], section: Section) -
 
 def check_diskstat_line(
     this_time: float,
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     read_value: int,
     write_value: int,

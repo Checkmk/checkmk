@@ -22,6 +22,11 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework._validation import ParameterValidator
 from cmk.gui.openapi.framework.endpoint_model import SignatureParametersProcessor
+from cmk.gui.openapi.framework.model import ApiOmitted
+from tests.unit.cmk.gui.openapi.framework._future_annotation_models import (
+    StringAnnotationModel,
+    StringAnnotationWithDefault,
+)
 from tests.unit.cmk.gui.openapi.framework.factories import EndpointDefinitionFactory
 
 
@@ -268,3 +273,241 @@ def test_request_body_valid(handler: HandlerFunction) -> None:
             metadata={"method": "post", "content_type": "application/json"},
         )
     )
+
+
+@dataclass
+class _GenericCollection[T, D]:
+    domainType: D
+    value: list[T]
+
+
+@dataclass
+class _GenericValue[T]:
+    value: T
+
+
+def _handler_generic_response() -> _GenericCollection[_ModelA, Literal["a"]]:
+    raise NotImplementedError
+
+
+def _handler_generic_union_argument_response() -> _GenericCollection[
+    _ModelA | _ModelB, Literal["a"]
+]:
+    raise NotImplementedError
+
+
+def _handler_union_of_parameterizations_response() -> (
+    _GenericValue[_ModelA] | _GenericValue[_ModelB]
+):
+    raise NotImplementedError
+
+
+def _handler_nested_generic_response() -> _GenericValue[_GenericValue[_ModelA]]:
+    raise NotImplementedError
+
+
+def _handler_generic_body(body: _GenericValue[_ModelA]) -> _ModelA:
+    raise NotImplementedError
+
+
+def _handler_generic_body_with_default(body: _GenericValue[_ModelWithDefault]) -> _ModelA:
+    raise NotImplementedError
+
+
+def _handler_bare_generic_response() -> _GenericValue:
+    raise NotImplementedError
+
+
+def _handler_generic_argument_with_default_response() -> _GenericValue[_ModelWithDefault]:
+    raise NotImplementedError
+
+
+def _handler_generic_omittable_argument_response() -> _GenericValue[str | ApiOmitted]:
+    raise NotImplementedError
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [
+        _handler_generic_response,
+        _handler_generic_union_argument_response,
+        _handler_union_of_parameterizations_response,
+        _handler_nested_generic_response,
+    ],
+)
+def test_generic_response_valid(handler: HandlerFunction) -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": handler},
+            metadata={"content_type": "application/json"},
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [
+        _handler_generic_body,
+        _handler_generic_body_with_default,
+    ],
+)
+def test_generic_request_body_valid(handler: HandlerFunction) -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": handler},
+            metadata={"method": "post", "content_type": "application/json"},
+        )
+    )
+
+
+def test_bare_generic_response_invalid() -> None:
+    with pytest.raises(ValueError, match="Generic models must be fully parameterized"):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": _handler_bare_generic_response},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+def test_generic_argument_with_default_response_invalid() -> None:
+    """The type argument is validated as part of the response, so its default is forbidden."""
+    with pytest.raises(ValueError, match="Forbidden `default` for `response.value.value`"):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": _handler_generic_argument_with_default_response},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+def test_generic_omittable_argument_response_invalid() -> None:
+    """A type argument cannot make a field omittable, the generic declares no default for it."""
+    with pytest.raises(
+        ValueError, match="Missing `default_factory=ApiOmitted` for `response.value`"
+    ):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": _handler_generic_omittable_argument_response},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+@dataclass
+class _ModelInContainer:
+    in_list: list[_ModelWithDefault]
+
+
+@dataclass
+class _ModelInDict:
+    in_dict: dict[str, _ModelWithDefault]
+
+
+@dataclass
+class _ModelInUnion:
+    in_union: _ModelWithDefault | None
+
+
+@dataclass
+class _BareGenericInContainer:
+    in_list: list[_GenericValue]
+
+
+@dataclass
+class _SelfReferential:
+    children: list[_SelfReferential]
+
+
+def _handler_model_in_list() -> _ModelInContainer:
+    raise NotImplementedError
+
+
+def _handler_model_in_dict() -> _ModelInDict:
+    raise NotImplementedError
+
+
+def _handler_model_in_union() -> _ModelInUnion:
+    raise NotImplementedError
+
+
+def _handler_bare_generic_in_container() -> _BareGenericInContainer:
+    raise NotImplementedError
+
+
+def _handler_self_referential() -> _SelfReferential:
+    raise NotImplementedError
+
+
+@pytest.mark.parametrize(
+    "handler, match",
+    [
+        pytest.param(
+            _handler_model_in_list,
+            r"Forbidden `default` for `response\.in_list\.value`",
+            id="list",
+        ),
+        pytest.param(
+            _handler_model_in_dict,
+            r"Forbidden `default` for `response\.in_dict\.value`",
+            id="dict",
+        ),
+        pytest.param(
+            _handler_model_in_union,
+            r"Forbidden `default` for `response\.in_union\.value`",
+            id="union",
+        ),
+        pytest.param(
+            _handler_bare_generic_in_container,
+            "Generic models must be fully parameterized",
+            id="bare-generic",
+        ),
+    ],
+)
+def test_nested_model_in_container_is_validated(handler: HandlerFunction, match: str) -> None:
+    """A model only reachable through a container must be validated as well."""
+    with pytest.raises(ValueError, match=match):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": handler},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+def test_self_referential_model_terminates() -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": _handler_self_referential},
+            metadata={"content_type": "application/json"},
+        )
+    )
+
+
+def _handler_string_annotations() -> StringAnnotationModel:
+    raise NotImplementedError
+
+
+def _handler_string_annotations_with_default() -> StringAnnotationWithDefault:
+    raise NotImplementedError
+
+
+def test_string_annotations_are_resolved() -> None:
+    """A model of a module with `from __future__ import annotations` must validate."""
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": _handler_string_annotations},
+            metadata={"content_type": "application/json"},
+        )
+    )
+
+
+def test_string_annotations_are_validated() -> None:
+    """Resolving the annotations must not skip the checks on them."""
+    with pytest.raises(ValueError, match="Forbidden `default` for `response.value`"):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": _handler_string_annotations_with_default},
+                metadata={"content_type": "application/json"},
+            )
+        )

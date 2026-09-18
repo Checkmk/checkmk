@@ -4,8 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
 import { type HeadingType } from 'cmk-ui-library/components/typography/CmkHeading.vue'
 
 import codeExample from './UclCmkAccordionCodeExample.vue?raw'
@@ -50,12 +51,12 @@ export const itemPanelConfig = {
   headerAs: {
     type: 'list' as const,
     title: 'headerAs',
-    options: [
-      { title: 'h1', name: 'h1' },
-      { title: 'h2', name: 'h2' },
-      { title: 'h3', name: 'h3' },
-      { title: 'h4', name: 'h4' }
-    ] satisfies Options<NonNullable<HeadingType>>[],
+    options: listOptions<NonNullable<HeadingType>>({
+      h1: 'h1',
+      h2: 'h2',
+      h3: 'h3',
+      h4: 'h4'
+    }),
     initialState: 'h3' as NonNullable<HeadingType>,
     help: 'HTML element used to render the accordion item header.'
   },
@@ -64,6 +65,17 @@ export const itemPanelConfig = {
     title: 'disabled',
     initialState: false,
     help: 'Disables all items in the accordion.'
+  },
+  icon: {
+    type: 'list' as const,
+    title: 'icon',
+    options: [
+      { title: 'users', name: 'users' },
+      { title: 'passwords', name: 'passwords' },
+      { title: 'notifications', name: 'notifications' }
+    ] satisfies Options<SimpleIcons>[],
+    initialState: 'users' as SimpleIcons,
+    help: 'Icon shown in front of the open/closed chevron.'
   }
 } satisfies PanelConfigFor<typeof CmkAccordionItem, 'value'>
 </script>
@@ -81,8 +93,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkAccordionItemStateIndicator from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItemStateIndicator.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 
 import UclCmkAccordionDev from './UclCmkAccordionDev.vue'
 
@@ -107,15 +118,17 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
       >
         <CmkAccordionItem
           value="item-1"
+          :icon="itemPropState.icon"
           :header-as="itemPropState.headerAs"
           :disabled="itemPropState.disabled"
         >
           <template #header>
             <div style="display: flex; align-items: center; gap: 8px">
-              <CmkIcon name="users" />
               <span>Personal Information</span>
-              <CmkAccordionItemStateIndicator value="item-1" />
             </div>
+          </template>
+          <template #header-right>
+            <CmkTag size="medium" variant="fill" content="3 fields" />
           </template>
           <template #content>
             <p>Manage your personal details, email address, and profile settings.</p>
@@ -124,12 +137,12 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
 
         <CmkAccordionItem
           value="item-2"
+          :icon="itemPropState.icon"
           :header-as="itemPropState.headerAs"
           :disabled="itemPropState.disabled"
         >
           <template #header>
             <div style="display: flex; align-items: center; gap: 8px">
-              <CmkIcon name="passwords" />
               <span>Security Settings</span>
             </div>
           </template>
@@ -140,12 +153,12 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
 
         <CmkAccordionItem
           value="item-3"
+          :icon="itemPropState.icon"
           :header-as="itemPropState.headerAs"
           :disabled="itemPropState.disabled"
         >
           <template #header>
             <div style="display: flex; align-items: center; gap: 8px">
-              <CmkIcon name="notifications" />
               <span>Notifications</span>
             </div>
           </template>

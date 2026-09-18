@@ -220,6 +220,7 @@ import lightIconEventConsoleStatusSvg from '~cmk-frontend/themes/facelift/images
 import lightIconEventSvg from '~cmk-frontend/themes/facelift/images/icon_event.svg?url&no-inline'
 import lightIconEventConsoleSvg from '~cmk-frontend/themes/facelift/images/icon_event_console.svg?url&no-inline'
 import lightIconExpandPng from '~cmk-frontend/themes/facelift/images/icon_expand.png?url&no-inline'
+import lightIconExperimentSvg from '~cmk-frontend/themes/facelift/images/icon_experiment.svg?url&no-inline'
 import lightIconExportPng from '~cmk-frontend/themes/facelift/images/icon_export.png?url&no-inline'
 import lightIconExportLinkSvg from '~cmk-frontend/themes/facelift/images/icon_export_link.svg?url&no-inline'
 import lightIconExportRuleSvg from '~cmk-frontend/themes/facelift/images/icon_export_rule.svg?url&no-inline'
@@ -421,6 +422,7 @@ import lightIconReloadSvg from '~cmk-frontend/themes/facelift/images/icon_reload
 import lightIconReloadCmkSvg from '~cmk-frontend/themes/facelift/images/icon_reload_cmk.svg?url&no-inline'
 import lightIconReloadsnapinPng from '~cmk-frontend/themes/facelift/images/icon_reloadsnapin.png?url&no-inline'
 import lightIconReloadsnapinLoAltPng from '~cmk-frontend/themes/facelift/images/icon_reloadsnapin_lo_alt.png?url&no-inline'
+import lightIconRemindersSvg from '~cmk-frontend/themes/facelift/images/icon_reminders.svg?url&no-inline'
 import lightIconRenameHostSvg from '~cmk-frontend/themes/facelift/images/icon_rename_host.svg?url&no-inline'
 import lightIconRepl25Png from '~cmk-frontend/themes/facelift/images/icon_repl_25.png?url&no-inline'
 import lightIconRepl50Png from '~cmk-frontend/themes/facelift/images/icon_repl_50.png?url&no-inline'
@@ -590,6 +592,7 @@ import lightIconTopicVisualizationPng from '~cmk-frontend/themes/facelift/images
 import lightIconTransSvg from '~cmk-frontend/themes/facelift/images/icon_trans.svg?url&no-inline'
 import lightIconTreeClosedSvg from '~cmk-frontend/themes/facelift/images/icon_tree_closed.svg?url&no-inline'
 import lightIconTrustPng from '~cmk-frontend/themes/facelift/images/icon_trust.png?url&no-inline'
+import lightIconUiComponentLibrarySvg from '~cmk-frontend/themes/facelift/images/icon_ui_component_library.svg?url&no-inline'
 import lightIconUnacknowledgeTestPng from '~cmk-frontend/themes/facelift/images/icon_unacknowledge_test.png?url&no-inline'
 import lightIconUnavailableSvg from '~cmk-frontend/themes/facelift/images/icon_unavailable.svg?url&no-inline'
 import lightIconUndecidedServiceSvg from '~cmk-frontend/themes/facelift/images/icon_undecided_service.svg?url&no-inline'
@@ -745,6 +748,7 @@ export const emblems = [
 
 export const oneColorIcons = [
   'burger-menu',
+  'cancel',
   'changes',
   'check-circle',
   'checkmark',
@@ -780,11 +784,15 @@ export const oneColorIcons = [
   'share',
   'stale',
   'reload',
+  'triangle-up',
   'filter',
   'pause',
   'play',
   'waiting',
-  'more-actions'
+  'more-actions',
+  'open-details',
+  'dash',
+  'dashlet-resize'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment'] as const
 
@@ -1036,6 +1044,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   event: lightIconEventSvg,
   'event-console': lightIconEventConsoleSvg,
   expand: lightIconExpandPng,
+  experiment: lightIconExperimentSvg,
   export: lightIconExportPng,
   'export-rule': lightIconExportRuleSvg,
   factoryreset: lightIconFactoryresetPng,
@@ -1222,6 +1231,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   reload: lightIconReloadSvg,
   reloadsnapin: lightIconReloadsnapinPng,
   'reloadsnapin-lo-alt': lightIconReloadsnapinLoAltPng,
+  reminders: lightIconRemindersSvg,
   'rename-host': lightIconRenameHostSvg,
   'repl-25': lightIconRepl25Png,
   'repl-50': lightIconRepl50Png,
@@ -1371,6 +1381,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   trust: lightIconTrustPng,
   twofa: lightIcon2faSvg,
   'twofa-backup-codes': lightIcon2faBackupCodesSvg,
+  'ui-component-library': lightIconUiComponentLibrarySvg,
   'unacknowledge-test': lightIconUnacknowledgeTestPng,
   'undecided-service': lightIconUndecidedServiceSvg,
   undo: lightIconUndoSvg,

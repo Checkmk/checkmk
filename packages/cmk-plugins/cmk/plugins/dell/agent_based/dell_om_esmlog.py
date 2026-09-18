@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 
-def discover_dell_om_esmlog(section: StringTable) -> DiscoveryResult:
+def discover_dell_om_esmlog(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

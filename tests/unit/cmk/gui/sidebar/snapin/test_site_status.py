@@ -39,12 +39,13 @@ class RecordingSiteConfig:
         self.saved += 1
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         m.setattr(sites, "update_site_states_from_dead_sites", lambda: None)
         yield
 
@@ -73,7 +74,7 @@ def _show(
         m.setattr(
             user_sites,
             "sorted_sites",
-            lambda site_configs: [(SiteId(s), a) for s, a in aliases.items()],
+            lambda site_configs: [(SiteId(s), a) for s, a in aliases.items()],  # noqa: ARG005
         )
         with output_funnel.plugged():
             SiteStatusSnapin().show(_config_with_sites(config, aliases))
@@ -174,7 +175,7 @@ def test_switch_site_needs_the_snapin_permission(
         recorded.install(m)
         request.set_var("_site_switch", "heute:off")
 
-        SiteStatusSnapin()._ajax_switch_site(_page_context(load_config))
+        SiteStatusSnapin()._ajax_switch_site(_page_context(load_config))  # noqa: SLF001
 
     assert recorded.disabled == []
     assert recorded.saved == 0
@@ -203,7 +204,7 @@ def test_switch_site_applies_the_requested_states(
         recorded.install(m)
         request.set_var("_site_switch", switch_var)
 
-        SiteStatusSnapin()._ajax_switch_site(_page_context(config))
+        SiteStatusSnapin()._ajax_switch_site(_page_context(config))  # noqa: SLF001
 
     assert recorded.enabled == [SiteId(s) for s in expected_enabled]
     assert recorded.disabled == [SiteId(s) for s in expected_disabled]
@@ -218,7 +219,7 @@ def test_switch_site_without_a_request_variable(
         m.setattr("cmk.gui.sidebar._snapin._site_status.check_csrf_token", lambda: None)
         recorded.install(m)
 
-        SiteStatusSnapin()._ajax_switch_site(_page_context(load_config))
+        SiteStatusSnapin()._ajax_switch_site(_page_context(load_config))  # noqa: SLF001
 
     assert recorded.saved == 0
 
@@ -256,11 +257,11 @@ def test_set_all_sites_skips_sites_already_in_the_target_state(
         m.setattr(
             user_sites,
             "sorted_sites",
-            lambda site_configs: [(SiteId(s), a) for s, a in aliases.items()],
+            lambda site_configs: [(SiteId(s), a) for s, a in aliases.items()],  # noqa: ARG005
         )
         request.set_var("_new_state", new_state)
 
-        SiteStatusSnapin()._ajax_set_all_sites(
+        SiteStatusSnapin()._ajax_set_all_sites(  # noqa: SLF001
             _page_context(_config_with_sites(load_config, aliases))
         )
 
@@ -280,11 +281,11 @@ def test_set_all_sites_ignores_sites_without_a_state(
         m.setattr(
             user_sites,
             "sorted_sites",
-            lambda site_configs: [(SiteId(s), a) for s, a in aliases.items()],
+            lambda site_configs: [(SiteId(s), a) for s, a in aliases.items()],  # noqa: ARG005
         )
         request.set_var("_new_state", "online")
 
-        SiteStatusSnapin()._ajax_set_all_sites(
+        SiteStatusSnapin()._ajax_set_all_sites(  # noqa: SLF001
             _page_context(_config_with_sites(load_config, aliases))
         )
 

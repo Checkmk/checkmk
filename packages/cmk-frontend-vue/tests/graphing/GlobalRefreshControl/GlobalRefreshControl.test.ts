@@ -9,17 +9,14 @@ import { afterEach, beforeEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import GlobalRefreshControl from '@/graphing/GlobalRefreshControl/GlobalRefreshControl.vue'
-import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 
 beforeEach(() => {
-  resetGlobalRefresh()
+  resetGlobalTimeState()
 })
 
 afterEach(() => {
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   vi.useRealTimers()
 })
 
@@ -32,7 +29,7 @@ test('starts in the paused state showing "Refresh off" and Resume', () => {
 })
 
 test('live state shows the badge and the interval dropdown', () => {
-  useGlobalRefresh().setRefreshPaused(false)
+  useGlobalRefresh().resumeRefresh()
 
   render(GlobalRefreshControl)
 
@@ -43,7 +40,7 @@ test('live state shows the badge and the interval dropdown', () => {
 
 test('selecting another interval stores it unpaused', async () => {
   const user = userEvent.setup()
-  useGlobalRefresh().setRefreshPaused(false)
+  useGlobalRefresh().resumeRefresh()
   render(GlobalRefreshControl)
 
   await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
@@ -55,7 +52,7 @@ test('selecting another interval stores it unpaused', async () => {
 
 test('"Turn off" pauses and keeps the interval', async () => {
   const user = userEvent.setup()
-  useGlobalRefresh().setRefreshPaused(false)
+  useGlobalRefresh().resumeRefresh()
   render(GlobalRefreshControl)
 
   await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
@@ -69,10 +66,10 @@ test('paused state shows the time of the last refresh tick', async () => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date(2026, 6, 9, 10, 33, 49))
   render(GlobalRefreshControl)
-  useGlobalRefresh().setRefreshPaused(false)
+  useGlobalRefresh().resumeRefresh()
 
   vi.advanceTimersByTime(30_000)
-  useGlobalRefresh().setRefreshPaused(true)
+  useGlobalRefresh().pauseRefresh()
   await nextTick()
   await nextTick()
 
@@ -83,9 +80,9 @@ test('the last refresh time stays put while paused instead of following the cloc
   vi.useFakeTimers()
   vi.setSystemTime(new Date(2026, 6, 9, 10, 33, 49))
   render(GlobalRefreshControl)
-  useGlobalRefresh().setRefreshPaused(false)
+  useGlobalRefresh().resumeRefresh()
   vi.advanceTimersByTime(30_000)
-  useGlobalRefresh().setRefreshPaused(true)
+  useGlobalRefresh().pauseRefresh()
   await nextTick()
   await nextTick()
   const timeOfLastRefresh = screen.getByText(/Last refresh/).textContent!
@@ -102,11 +99,24 @@ test('the last refresh time is omitted when never refreshed', () => {
   expect(screen.queryByText(/Last refresh/)).not.toBeInTheDocument()
 })
 
-test('Resume unpauses with the kept interval', async () => {
+test('picking an interval changes the rhythm, not the data on screen', async () => {
+  const user = userEvent.setup()
+  useGlobalRefresh().resumeRefresh()
+  render(GlobalRefreshControl)
+  const ticksBefore = useGlobalRefresh().refreshTick.value
+
+  await user.click(screen.getByRole('combobox', { name: 'Refresh interval' }))
+  await user.click(await screen.findByText('60 sec'))
+
+  expect(useGlobalRefresh().refreshTick.value).toBe(ticksBefore)
+})
+
+test('Resume goes live, keeping the interval that was chosen before', async () => {
+  const chosenInterval = useGlobalRefresh().refreshIntervalSeconds.value
   render(GlobalRefreshControl)
 
   await fireEvent.click(screen.getByRole('button', { name: /Resume/ }))
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
-  expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(30)
+  expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(chosenInterval)
 })

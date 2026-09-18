@@ -5,10 +5,12 @@
 
 from collections.abc import Sequence
 
+import pytest
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.page_menu import PageMenuLink
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 
 
 class _LegacyEntry:
@@ -56,7 +58,7 @@ class _LegacySource:
     def add(self, menu: _LegacyMenu) -> None:
         self._menus.append(menu)
 
-    def host_menus(self, *, hostname: str, site_id: str) -> Sequence[_LegacyMenu]:
+    def host_menus(self, *, hostname: str, site_id: str) -> Sequence[_LegacyMenu]:  # noqa: ARG002
         return self._menus
 
 
@@ -121,9 +123,8 @@ def test_an_entry_keeps_the_icon_the_legacy_side_named() -> None:
     assert offered[0].topics[0].entries[0].icon == icon
 
 
-def test_the_page_menu_carries_the_offered_menus_before_display_and_help(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_the_page_menu_carries_the_offered_menus_before_display_and_help() -> None:
     menu = build_page_menu(
         host_menus=_wired(_menu("host"), _menu("services")),
         hostname="myhost",
@@ -139,9 +140,8 @@ def test_the_page_menu_carries_the_offered_menus_before_display_and_help(
     ]
 
 
-def test_the_page_menu_links_each_entry_where_the_legacy_side_pointed(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_the_page_menu_links_each_entry_where_the_legacy_side_pointed() -> None:
     menu = build_page_menu(
         host_menus=_wired(
             _menu(entries=[_LegacyEntry(title="Availability", url="view.py?mode=availability")])
@@ -156,7 +156,8 @@ def test_the_page_menu_links_each_entry_where_the_legacy_side_pointed(
     assert entry.item.link.url == "view.py?mode=availability"
 
 
-def test_the_page_menu_drops_the_inline_help_entry(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_the_page_menu_drops_the_inline_help_entry() -> None:
     menu = build_page_menu(
         host_menus=_wired(),
         hostname="myhost",

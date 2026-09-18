@@ -3,21 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence, Set
+from collections.abc import Iterator, Sequence, Set
+from contextlib import contextmanager
 
 from polyfactory.factories import DataclassFactory
 
+from cmk.ccc.user import UserId
 from cmk.gui.monitor.hosts._exceptions import HostNotFoundError
 from cmk.gui.monitor.hosts._models import (
     Event,
     Host,
     HostFilter,
     HostOptionalField,
-    HostOverview,
     HostSort,
     UnixTimestamp,
 )
 from cmk.gui.monitor.hosts._repositories import EventRepository, HostRepository
+from cmk.gui.permissions import permission_registry
+from cmk.gui.role_types import BuiltInUserRole
+from cmk.gui.session_context import UserContext
+from cmk.gui.utils.roles import UserPermissions
 
 
 class HostFactory(DataclassFactory[Host]):
@@ -27,20 +32,24 @@ class HostFactory(DataclassFactory[Host]):
     __allow_none_optionals__ = False
 
 
-class HostOverviewFactory(DataclassFactory[HostOverview]):
-    __check_model__ = False
-    __allow_none_optionals__ = False
-
-
-def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ()) -> HostRepository:
+def get_fake_host_repository(
+    *,
+    n_hosts: int = 0,
+    hostnames: Sequence[str] = (),
+    hosts: Sequence[Host] | None = None,
+) -> HostRepository:
     class HostFakeRepository:
         def __init__(self) -> None:
-            self._hosts = [
-                *(HostFactory.build(name=name) for name in hostnames),
-                *(HostFactory.build() for _ in range(n_hosts)),
-            ]
+            self._hosts = (
+                list(hosts)
+                if hosts is not None
+                else [
+                    *(HostFactory.build(name=name) for name in hostnames),
+                    *(HostFactory.build() for _ in range(n_hosts)),
+                ]
+            )
             self._host_overviews = {
-                (h.site_id, h.name): HostOverviewFactory.build(site_id=h.site_id, name=h.name)
+                (h.site_id, h.name): HostFactory.build(site_id=h.site_id, name=h.name)
                 for h in self._hosts
             }
 
@@ -51,14 +60,14 @@ def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ())
             self,
             *,
             limit: int | None,
-            query: str,
-            sorters: Sequence[HostSort],
-            filters: HostFilter,
-            fields: Set[HostOptionalField] = frozenset(),
+            query: str,  # noqa: ARG002
+            sorters: Sequence[HostSort],  # noqa: ARG002
+            filters: HostFilter,  # noqa: ARG002
+            fields: Set[HostOptionalField] = frozenset(),  # noqa: ARG002
         ) -> Sequence[Host]:
             return self._hosts[:limit]
 
-        def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:
+        def get_overview(self, *, hostname: str, site_id: str) -> Host:
             try:
                 return self._host_overviews[(site_id, hostname)]
             except KeyError:
@@ -68,7 +77,11 @@ def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ())
             return len(self._hosts)
 
         def count_matched(
-            self, *, query: str, filters: HostFilter, fields: Set[HostOptionalField]
+            self,
+            *,
+            query: str,  # noqa: ARG002
+            filters: HostFilter,  # noqa: ARG002
+            fields: Set[HostOptionalField],  # noqa: ARG002
         ) -> int:
             # Not implementing this as we don't need to test a fake implementation of this.
             return self.count_total()
@@ -86,7 +99,7 @@ def get_fake_event_repository(events: Sequence[Event]) -> EventRepository:
         def fetch(
             self,
             *,
-            hostname: str,
+            hostname: str,  # noqa: ARG002
             service_name: str | None,
             since: UnixTimestamp,
             limit: int,
@@ -100,3 +113,13 @@ def get_fake_event_repository(events: Sequence[Event]) -> EventRepository:
             return sorted(matching, key=lambda event: event.recency, reverse=True)[:limit]
 
     return EventFakeRepository()
+
+
+@contextmanager
+def login_with(permissions: dict[str, bool]) -> Iterator[None]:
+    """A logged-in user whose role spells out exactly these permissions."""
+    role: BuiltInUserRole = {"alias": "Test", "permissions": permissions, "builtin": True}
+    with UserContext(
+        UserId("test"), UserPermissions({"user": role}, permission_registry, {}, ["user"])
+    ):
+        yield

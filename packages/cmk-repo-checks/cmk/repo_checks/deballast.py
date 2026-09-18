@@ -22,18 +22,19 @@ This is a src-import-vs-declared-dep check with the following implemented:
   runtime rules.
 - Relative imports (`from . import X`, `from .._utils import Y`) are resolved
   against the containing package of each src file.
-- Imports are recorded in two tiers. Every path named by an import statement is
-  `referenced`. The subset that also matches modules below it is `namespaces`:
-  `import X.Y`, each name bound by `from X import Y`, and the `X` of
-  `from X import *`. The bare `X` of `from X import Y` is left out on purpose.
-  Otherwise `from cmk import trace` would be satisfied by any dep that provides
-  something under `cmk.`.
-- The descendant match is unsound by design. It exists for implicit namespace
-  packages, where the parent path is all a consumer can name (for example
-  `//cmk/gui/plugins/views:views`, whose srcs all live under `icons/`). There is
-  no depth limit, so a shallow `import cmk.utils` is satisfied by any dep under
-  `cmk.utils.` too. The statement form does not tell us which of the two cases
-  we are in.
+- Every module path an import statement names is recorded, and a dep counts as
+  used when it provides one of those paths, or provides a package one of them
+  lives under (`import X.Y.Z` cannot resolve without loading `X.Y`). Both
+  follow from the statement alone.
+- Reachability beyond that is not inferred. Whether naming a package reaches a
+  particular module inside it depends on what that package's `__init__.py`
+  imports - a dep's file content, which the aspect does not ship. Deps
+  reachable only that way, or only at runtime, are declared with
+  `deballast-keep`. `//cmk/gui/plugins/views:views` is one: it ships a single
+  empty `icons/utils.py`, so the only thing it contributes is the existence of
+  the `cmk.gui.plugins.views[.icons]` import paths, which
+  `cmk/gui/views/__init__.py` imports and fills by name injection for pre-2.1
+  plug-ins.
 - Namespace-shim deps (whose Python srcs are all `__init__.py` or generated
   `_namespace.py` files) are treated as implicitly used. They provide runtime
   package structure rather than anything AST-visible. (e.g.
@@ -66,10 +67,6 @@ This is a src-import-vs-declared-dep check with the following implemented:
 - Targets with an own src that fails to parse (e.g. Python-2-only agent
   plugins) are skipped as analysis roots: with incomplete import evidence,
   any finding could be a false positive.
-- Targets whose srcs reference a known plugin-discovery API (`load_plugins`,
-  `discover_plugins_from_modules`, `discover_submodules`, `iter_modules`,
-  `iter_namespace`, `entry_points`, `iter_entry_points`) are skipped as
-  analysis roots.
 
 Usage (interactive, prints findings to the terminal):
     bazel lint //cmk/gui/wato:wato
@@ -93,8 +90,6 @@ Output:
     those files and the process exits 0; without them the process itself
     exits 1 on findings (aspect_rules_lint fail-on-violation mode).
 """
-
-from __future__ import annotations
 
 import argparse
 import ast
@@ -120,25 +115,6 @@ class TargetSpec(NamedTuple):
     dep_attr_labels: list[str]
     dep_json_paths: list[str]
     keep_deps: list[str]
-
-
-class ModuleRefs(NamedTuple):
-    """Module paths a target's srcs import, in the two tiers described above."""
-
-    referenced: frozenset[str]
-    namespaces: frozenset[str]
-
-    @classmethod
-    def empty(cls) -> ModuleRefs:
-        return cls(referenced=frozenset(), namespaces=frozenset())
-
-    def __or__(self, other: object) -> ModuleRefs:
-        if not isinstance(other, ModuleRefs):
-            return NotImplemented
-        return ModuleRefs(
-            referenced=self.referenced | other.referenced,
-            namespaces=self.namespaces | other.namespaces,
-        )
 
 
 class DepInfo(NamedTuple):
@@ -188,7 +164,7 @@ def load_dep_info(path: Path) -> DepInfo:
 def parse_python_source(path: Path) -> ast.Module | None:
     try:
         return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    except (OSError, SyntaxError, UnicodeDecodeError, ValueError):
+    except OSError, SyntaxError, UnicodeDecodeError, ValueError:
         return None
 
 
@@ -229,36 +205,42 @@ def _module_under_root(file_path: str, module_root: str) -> str | None:
     return ".".join(parts)
 
 
-def candidate_modules_for_path(short_path: str, imports: Iterable[str], package: str) -> set[str]:
-    """Candidate absolute module paths a src file is exposed as.
+def module_roots(package: str, imports: Iterable[str]) -> set[str]:
+    """PYTHONPATH roots that a rule's srcs are reachable under.
 
-    Each entry in the rule's `imports` attribute yields a module root; the src
-    is mapped to that root. Workspace root is always included too - the
-    `imports` attribute adds to PYTHONPATH but doesn't remove the workspace
-    root, so downstream targets can import srcs via either path. Missing that
-    candidate caused e.g. `//agents/plugins:agent-plugins-python` (with
-    `imports=["."]`, so its files are `mk_podman` under its own root) to be
-    flagged as unused by tests that import them as `agents.plugins.mk_podman`.
+    Each entry in the rule's `imports` attribute yields a module root. The
+    workspace root is always included too - the `imports` attribute adds to
+    PYTHONPATH but doesn't remove the workspace root, so downstream targets can
+    import srcs via either path. Missing that root caused e.g.
+    `//agents/plugins:agent-plugins-python` (with `imports=["."]`, so its files
+    are `mk_podman` under its own root) to be flagged as unused by tests that
+    import them as `agents.plugins.mk_podman`.
     """
+    return {""}.union(resolve_imports_root(package, e) for e in imports)
+
+
+def candidate_modules_for_path(short_path: str, roots: Iterable[str]) -> set[str]:
+    """Candidate absolute module paths a src file is exposed as."""
     if not short_path.endswith(".py"):
         return set()
-    # Always include the workspace-root resolution, then add any shifts
-    # declared in `imports`.
-    roots = {""}
-    roots.update(resolve_imports_root(package, e) for e in imports)
-    out: set[str] = set()
-    for root in roots:
-        mod = _module_under_root(short_path, root)
-        if mod:
-            out.add(mod)
-    return out
+    return {mod for root in roots if (mod := _module_under_root(short_path, root))}
 
 
-def modules_provided_by_dep(dep: DepInfo) -> set[str]:
-    """Absolute Python module paths provided by the dep's direct srcs."""
+def modules_provided_by_dep(dep: DepInfo, consumer_roots: Iterable[str]) -> set[str]:
+    """Absolute Python module paths provided by the dep's direct srcs.
+
+    `consumer_roots` are the roots the *consuming* target puts on PYTHONPATH.
+    They apply to the whole runfiles tree, so a dep's src is importable under
+    them as well as under the dep's own roots. Ignoring them flagged
+    `//bazel/rules:console_scripts_gen` as unused by
+    `//bazel/rules:console_scripts_gen_test`, which declares `imports = ["."]`
+    and does `from console_scripts_gen import ...` - a name that only exists
+    under the consumer's root, not under the dep's.
+    """
+    roots = module_roots(dep.package, dep.imports) | set(consumer_roots)
     out: set[str] = set()
     for short_path in dep.srcs:
-        out |= candidate_modules_for_path(short_path, dep.imports, dep.package)
+        out |= candidate_modules_for_path(short_path, roots)
     return out
 
 
@@ -276,43 +258,6 @@ def is_namespace_shim(src_paths: Sequence[str]) -> bool:
     if not src_paths:
         return False
     return all(_basename(p) in _NAMESPACE_SCAFFOLDING_BASENAMES for p in src_paths)
-
-
-# The repo's plugin-discovery entry points. Generic dynamic-import primitives
-# (importlib.import_module, __import__) are deliberately NOT listed: they
-# appear in plenty of infrastructure code with statically-known module names,
-# and matching them would exempt large parts of the tree from analysis.
-_PLUGIN_DISCOVERY_API_NAMES: frozenset[str] = frozenset(
-    {
-        "load_plugins",
-        "discover_plugins_from_modules",
-        "discover_submodules",
-        "iter_modules",
-        "iter_namespace",
-        "entry_points",
-        "iter_entry_points",
-    }
-)
-
-
-def uses_plugin_discovery_api(tree: ast.Module) -> bool:
-    """True if the module references a known runtime plugin-discovery API.
-
-    Plugin contribution deps (filesystem / entry-point discovered) never appear
-    as static imports in the consuming target. When the target's srcs call into
-    such APIs, dropping a plugin dep silently empties the discovered set -
-    something the import-vs-dep check can't see.
-    """
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and node.attr in _PLUGIN_DISCOVERY_API_NAMES:
-            return True
-        if isinstance(node, ast.Name) and node.id in _PLUGIN_DISCOVERY_API_NAMES:
-            return True
-        if isinstance(node, ast.ImportFrom):
-            for alias in node.names:
-                if alias.name in _PLUGIN_DISCOVERY_API_NAMES:
-                    return True
-    return False
 
 
 def is_pytest_conftest(src_paths: Sequence[str]) -> bool:
@@ -348,19 +293,18 @@ def shares_srcs_with_target(
     return any(s in target_src_paths for s in dep_srcs)
 
 
-def imports_in_tree(tree: ast.Module, containing_packages: Iterable[str] = ()) -> ModuleRefs:
+def imports_in_tree(tree: ast.Module, containing_packages: Iterable[str] = ()) -> frozenset[str]:
     """Return the module paths imported by a parsed Python module.
 
     `containing_packages` is the set of candidate packages the module belongs
     to (derived from its rule's imports attribute). Relative `from . import X`
     statements are resolved against each candidate — the union is returned.
     """
-    refs = ModuleRefs.empty()
+    refs: set[str] = set()
     pkgs = list(containing_packages)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                refs |= _plain_import_refs(alias.name)
+            refs.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
             names = [alias.name for alias in node.names]
             if node.level == 0:
@@ -378,31 +322,16 @@ def imports_in_tree(tree: ast.Module, containing_packages: Iterable[str] = ()) -
                     base.extend(node.module.split("."))
                 if base:
                     refs |= _from_import_refs(".".join(base), names)
-    return refs
+    return frozenset(refs)
 
 
-def _plain_import_refs(module: str) -> ModuleRefs:
-    return ModuleRefs(referenced=frozenset({module}), namespaces=frozenset({module}))
+def _from_import_refs(module: str, names: Iterable[str]) -> set[str]:
+    """`from <module> import <names>`: the module itself and each named child.
 
-
-def _from_import_refs(module: str, names: Iterable[str]) -> ModuleRefs:
-    """`from <module> import <names>`: `module` is referenced, each child also a namespace.
-
-    `module` itself is not a namespace, because the statement names the children
-    it wants and each of them is recorded on its own. A star import is the
-    exception: it binds whatever the package re-exports, so there is no child to
-    record and `module` becomes the namespace.
+    A `*` names no child - it binds whatever the package re-exports - so it
+    contributes only `module`.
     """
-    referenced = {module}
-    namespaces: set[str] = set()
-    for name in names:
-        if name == "*":
-            namespaces.add(module)
-            continue
-        child = f"{module}.{name}"
-        referenced.add(child)
-        namespaces.add(child)
-    return ModuleRefs(referenced=frozenset(referenced), namespaces=frozenset(namespaces))
+    return {module} | {f"{module}.{name}" for name in names if name != "*"}
 
 
 def _containing_packages_for_path(
@@ -416,7 +345,7 @@ def _containing_packages_for_path(
     """
     is_init = _basename(short_path) == "__init__.py"
     out: set[str] = set()
-    for mod in candidate_modules_for_path(short_path, imports, package):
+    for mod in candidate_modules_for_path(short_path, module_roots(package, imports)):
         if is_init:
             out.add(mod)
         else:
@@ -426,29 +355,25 @@ def _containing_packages_for_path(
     return out
 
 
-def dep_is_used(dep_modules: set[str], target_imports: ModuleRefs) -> bool:
-    """True if any module from the dep is referenced by the target's imports.
+def dep_is_used(dep_modules: set[str], target_imports: frozenset[str]) -> bool:
+    """True if any module from the dep is reached by the target's imports.
 
-    Three ways a dep module M can be reached:
-    - Exact: M appears verbatim in the references.
-    - Ancestor: the target references something below M, as `import X.Y.Z` does
-      for a dep providing `X.Y`.
-    - Descendant: the target references a namespace M lives under. Only
-      namespaces match here, see `_from_import_refs`.
+    Two ways a dep module M can be reached, both implied by the import
+    statement on its own:
+    - Exact: M is imported verbatim.
+    - Ancestor: something below M is imported, as `import X.Y.Z` does for a dep
+      providing `X.Y` - Python cannot resolve `X.Y.Z` without loading `X.Y`.
+
+    Naming a package does not reach the modules inside it; that depends on what
+    the package's `__init__.py` imports, which is content of a dep and not
+    available here. Deps used only that way carry a `deballast-keep` tag.
     """
     for mod in dep_modules:
-        if mod in target_imports.referenced:
+        if mod in target_imports:
             return True
-        if any(imp.startswith(mod + ".") for imp in target_imports.referenced):
-            return True
-        if any(anc in target_imports.namespaces for anc in _ancestors(mod)):
+        if any(imp.startswith(mod + ".") for imp in target_imports):
             return True
     return False
-
-
-def _ancestors(module: str) -> list[str]:
-    parts = module.split(".")
-    return [".".join(parts[:i]) for i in range(len(parts) - 1, 0, -1)]
 
 
 def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
@@ -458,7 +383,7 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
         # Umbrella targets (srcs = __init__.py, deps = the subpackages) exist
         # to hand consumers the whole package; their deps are intentional.
         return []
-    target_imports = ModuleRefs.empty()
+    target_imports: frozenset[str] = frozenset()
     parsed_any = False
     for src in spec.srcs:
         if not src.is_source or not src.short_path.endswith(".py"):
@@ -473,8 +398,6 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
             # positive. Skip the whole target.
             return []
         parsed_any = True
-        if uses_plugin_discovery_api(tree):
-            return []  # runtime plugin discovery; deps invisible to AST
         pkgs = _containing_packages_for_path(src.short_path, spec.imports, spec.package)
         target_imports |= imports_in_tree(tree, pkgs)
     if not parsed_any:
@@ -482,6 +405,7 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
         # outputs) - no AST evidence to work from.
         return []
     target_src_paths = set(own_paths)
+    spec_roots = module_roots(spec.package, spec.imports)
     keep_deps = set(spec.keep_deps)
     pruneable: list[str] = []
     for dep in deps:
@@ -493,7 +417,7 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
             continue  # auto-discovered by pytest; never imported
         if shares_srcs_with_target(target_src_paths, spec.src_attr_labels, dep.label, dep.srcs):
             continue  # dep's srcs are used directly by target (e.g. py_pytest_main)
-        modules = modules_provided_by_dep(dep)
+        modules = modules_provided_by_dep(dep, spec_roots)
         if not modules:
             continue  # dep provides no Python modules (e.g. data-only target)
         if not dep_is_used(modules, target_imports):

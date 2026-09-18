@@ -12,7 +12,6 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
-from __future__ import annotations
 
 import abc
 import ast
@@ -43,6 +42,7 @@ import cmk.ccc.daemon
 import cmk.ccc.profile
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.translations import translate
 from cmk.ccc.version_info import get_general_version_infos
@@ -106,7 +106,7 @@ def setup_logging_handler(stream: IO[str]) -> None:
     logging format.
     """
     handler = logging.StreamHandler(stream=stream)
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
+    handler.setFormatter(CMKFormatter())
     logger = logging.getLogger("cmk")
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
@@ -552,7 +552,7 @@ class EventServer(ECServerThread):
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for syslog-udp...")
                         self._syslog_udp.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for syslog-udp"
                         )
@@ -596,7 +596,7 @@ class EventServer(ECServerThread):
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for syslog-tcp...")
                         self._syslog_tcp.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for syslog-tcp"
                         )
@@ -643,7 +643,7 @@ class EventServer(ECServerThread):
                         self._snmp_trap_socket.setsockopt(
                             socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0
                         )
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for snmptrap"
                         )
@@ -2111,7 +2111,7 @@ class StatusServer(ECServerThread):
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for tcp socket...")
                         self._tcp_socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for tcp socket"
                         )
@@ -3640,7 +3640,7 @@ def main() -> None:
 
         with cmk.ccc.daemon.pid_file_lock(pid_path):
 
-            def signal_handler(signum: int, stack_frame: FrameType | None) -> None:
+            def signal_handler(signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG001
                 logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
                 raise MKSignalException(signum)
 

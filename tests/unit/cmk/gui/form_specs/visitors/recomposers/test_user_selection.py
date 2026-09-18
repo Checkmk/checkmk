@@ -18,7 +18,7 @@ def _known_user(monkeypatch: pytest.MonkeyPatch) -> UserId:
     monkeypatch.setattr(
         user_selection,
         "generate_wato_users_elements_function",
-        lambda *args, **kwargs: lambda: [(user_id, f"{user_id} - Administrator")],
+        lambda *args, **kwargs: lambda: [(user_id, f"{user_id} - Administrator")],  # noqa: ARG005
     )
     return user_id
 
@@ -26,9 +26,8 @@ def _known_user(monkeypatch: pytest.MonkeyPatch) -> UserId:
 _OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
 
 
-def test_user_selection_saves_selected_user_as_plain_str(
-    request_context: None, known_user: UserId
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_selection_saves_selected_user_as_plain_str(known_user: UserId) -> None:
     # Regression for crash SUP-29570: selecting a user and saving must not raise.
     visitor = get_visitor(UserSelection(), _OPTIONS)
     selected = RawFrontendData(SingleChoiceVisitor.option_id(known_user))
@@ -37,7 +36,8 @@ def test_user_selection_saves_selected_user_as_plain_str(
     assert visitor.to_disk(selected) == "cmkadmin"
 
 
-def test_user_selection_renders_stored_user(request_context: None, known_user: UserId) -> None:
+@pytest.mark.usefixtures("request_context", "known_user")
+def test_user_selection_renders_stored_user() -> None:
     # A user name stored on disk round-trips back to its frontend selection.
     visitor = get_visitor(UserSelection(), _OPTIONS)
     stored = RawDiskData("cmkadmin")
@@ -47,7 +47,8 @@ def test_user_selection_renders_stored_user(request_context: None, known_user: U
     assert frontend_value == SingleChoiceVisitor.option_id(UserId("cmkadmin"))
 
 
-def test_user_selection_rejects_unknown_user(request_context: None, known_user: UserId) -> None:
+@pytest.mark.usefixtures("request_context", "known_user")
+def test_user_selection_rejects_unknown_user() -> None:
     visitor = get_visitor(UserSelection(), _OPTIONS)
     unknown = RawFrontendData(SingleChoiceVisitor.option_id(UserId("ghost")))
 

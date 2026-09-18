@@ -38,7 +38,7 @@ const getTransformRotate = () => {
     ]"
     :src="iconSrc"
     :title="title || undefined"
-    :alt="title || undefined"
+    :alt="title || ''"
   />
 </template>
 

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { CmkKeyboardKeyProps, Sizes } from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 
 import codeExample from './UclCmkKeyboardKeyCodeExample.vue?raw'
@@ -13,28 +13,28 @@ export const panelConfig = {
   keyboardKey: {
     type: 'list' as const,
     title: 'Key Content',
-    options: [
-      { title: 'Arrow Left', name: 'arrow-left' },
-      { title: 'Arrow Right', name: 'arrow-right' },
-      { title: 'Arrow Up', name: 'arrow-up' },
-      { title: 'Arrow Down', name: 'arrow-down' },
-      { title: 'Enter', name: 'enter' },
-      { title: 'Backspace', name: 'backspace' },
-      { title: 'Ctrl', name: 'Ctrl' },
-      { title: 'Shift', name: 'Shift' },
-      { title: 'A', name: 'A' }
-    ] satisfies Options<CmkKeyboardKeyProps['keyboardKey']>[],
+    options: listOptions<CmkKeyboardKeyProps['keyboardKey']>({
+      'arrow-left': 'Arrow Left',
+      'arrow-right': 'Arrow Right',
+      'arrow-up': 'Arrow Up',
+      'arrow-down': 'Arrow Down',
+      enter: 'Enter',
+      backspace: 'Backspace',
+      Ctrl: 'Ctrl',
+      Shift: 'Shift',
+      A: 'A'
+    }),
     help: 'Custom keys can be added by passing any string value. For example, passing "Ctrl,Shift,A" will render a key with the text inside.',
     initialState: 'enter' as const
   },
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<Sizes>[],
+    options: listOptions<Sizes>({
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large'
+    }),
     initialState: 'medium' as const
   }
 } satisfies PanelConfigFor<typeof CmkKeyboardKey>

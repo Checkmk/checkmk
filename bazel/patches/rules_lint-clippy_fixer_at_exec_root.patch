@@ -1,0 +1,44 @@
+Run the clippy fixer at the exec root
+
+Belongs to rules_lint-no_copy.patch (https://github.com/aspect-build/rules_lint/pull/747):
+Without the copy of the sources to the bindir, the fixer must not run there.
+
+`run_patcher` hands `patch_cfg_env` to the fixer it spawns, and the patcher
+script (`lint/private/patcher.mjs`) additionally uses `BAZEL_BINDIR` from it as
+the prefix under which it expects the files to fix.  Pointing that at the bindir
+only works together with `copy_files_to_bin_actions`, which we dropped, so every
+clippy finding made `bazel lint` fail with
+
+    Applying Clippy fixes to //packages/check-cert:check-cert-lib failed: (Exit 1)
+    Error processing files: ENOENT: no such file or directory, open 'packages/check-cert/src/lib.rs'
+
+instead of reporting the finding.  The paths in rustc's diagnostics are relative
+to the exec root, which is where the unmodified sources are, too, so run the
+fixer there.  This gets rid of the hard-coded "../../../" for the diagnostics
+file, as well.
+
+diff --git a/lint/clippy.bzl b/lint/clippy.bzl
+--- a/lint/clippy.bzl
++++ b/lint/clippy.bzl
+@@ -168,8 +168,7 @@
+ def _run_patcher(ctx, srcs, rustc_diagnostics_file, patch_file):
+     args = [
+         "patch",
+-        # This path is relative to the execroot, we must relativize it to the bindir.
+-        "../../../" + rustc_diagnostics_file.path,
++        rustc_diagnostics_file.path,
+     ]
+ 
+     run_patcher(
+@@ -180,7 +179,10 @@
+         tools = [ctx.executable._rustc_diagnostic_parser],
+         files_to_diff = [s.path for s in srcs],
+         patch_out = patch_file,
+-        patch_cfg_env = {"BAZEL_BINDIR": ctx.bin_dir.path},
++        # The fixer resolves both the diagnostics file and the source paths within
++        # it relative to this directory.  Those paths are relative to the exec
++        # root, and we don't copy the sources to the bindir, either.
++        patch_cfg_env = {"BAZEL_BINDIR": "."},
+         env = {},
+         mnemonic = _MNEMONIC,
+         progress_message = "Applying Clippy fixes to %{label}",

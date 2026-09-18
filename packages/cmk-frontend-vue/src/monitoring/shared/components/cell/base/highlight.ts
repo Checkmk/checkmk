@@ -15,4 +15,9 @@ export type CellHighlightColor =
 export interface CellHighlight {
   color: CellHighlightColor
   minWidth?: number | undefined
+  /**
+   * Set to false to keep the highlight's layout (accent bar space, minWidth) for alignment
+   * purposes, without showing its color — e.g. a zero count next to non-zero, colored counts.
+   */
+  active?: boolean | undefined
 }

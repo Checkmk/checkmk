@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from __future__ import annotations
-
 import json
 from collections.abc import Mapping
 from typing import Literal, TypedDict
@@ -18,10 +16,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.inventory.structured_data import SDRawTree, serialize_tree
+from cmk.inventory.structured_data import (
+    make_filter_choices_from_api_request_paths,
+    SDRawTree,
+    serialize_tree,
+)
 
 from . import _xml
-from ._tree import inventory_of_host, make_filter_choices_from_api_request_paths
+from ._tree import inventory_of_host
 
 
 def _check_for_valid_hostname(hostname: str) -> None:

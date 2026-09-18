@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime as dt
 from zoneinfo import ZoneInfo
@@ -20,7 +19,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="check_time")
-def _check_time():
+def _check_time() -> dt.datetime:
     return dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
 
 

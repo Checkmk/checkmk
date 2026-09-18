@@ -116,7 +116,7 @@ def _parse_esx_vsphere_counters_swap(parsed: SectionCounter) -> Mapping[str, str
             valid = [v for v in samples if v != ESX_COUNTER_UNAVAILABLE]
             if valid:
                 swap_values[key] = valid[0]
-        except (KeyError, IndexError, TypeError, ValueError):
+        except KeyError, IndexError, TypeError, ValueError:
             continue
 
     return swap_values

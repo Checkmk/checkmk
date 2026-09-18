@@ -5,27 +5,28 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
-import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
+import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
-import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
+import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
@@ -34,7 +35,6 @@ import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
   type SlideInUrlDescriptor,
-  exactPattern,
   readSlideInFromHash,
   slideInWriter
 } from '../shared/urlState/slideInState'
@@ -43,7 +43,6 @@ import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
-import { HostApi } from './api/hosts'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
@@ -90,6 +89,10 @@ const rowCommands: CellAction[] = (props.actions ?? [])
 
 const hasRowActions = rowActionButtons.length > 0 || rowCommands.length > 0
 
+// Checkboxes only make sense where the selection can be acted on, so the permitted-action list
+// that decides the action bar decides the select column too.
+const mayActOnSelection = hostActions.length > 0
+
 const actionMenuApi = new HostActionMenuApi()
 
 // Overflow-menu entries for a host: the immediate commands (reschedule) followed by the fetched
@@ -108,8 +111,19 @@ async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
   ]
 }
 
-const columns = buildHostColumns({ includeActions: hasRowActions, sites: props.sites })
-const columnPinning = buildHostColumnPinning({ includeActions: hasRowActions })
+// Only hosts monitored by an edition with multi-tenancy support belong to a customer.
+const showCustomer = props.edition === 'ultimatemt'
+
+const columns = buildHostColumns({
+  includeSelect: mayActOnSelection,
+  includeActions: hasRowActions,
+  showCustomer,
+  sites: props.sites
+})
+const columnPinning = buildHostColumnPinning({
+  includeSelect: mayActOnSelection,
+  includeActions: hasRowActions
+})
 
 const schema = buildTableStateSchema({
   columns,
@@ -158,16 +172,29 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   ]
 })
 
-const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
+const tableColumns = computed(() => sizeModeColumn(columns, modeColumnSize.value))
+
+const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
 const actionRegistry = createActionRegistry([
-  useAcknowledgeHostsAction(),
+  useAcknowledgeHostsAction(
+    {
+      presetsUrl: props.acknowledge_presets_url ?? null,
+      notificationRulesUrl: props.notification_rules_url ?? null
+    },
+    acknowledgeDefaults(props.acknowledge_defaults)
+  ),
   useRescheduleHostsAction(),
-  useScheduleHostDowntimeAction(props.downtime_recurrences ?? [])
+  useScheduleHostDowntimeAction(
+    props.downtime_recurrences ?? [],
+    downtimePresets(props.downtime_presets),
+    props.downtime_presets_url ?? null
+  )
 ])
 
 onMounted(() => {
-  hostService.onFocusSearch(() => searchInput.value?.focus())
+  hostService.onFocusSearch(() => toolbar.value?.focus())
 })
 
 onBeforeUnmount(() => {
@@ -186,6 +213,15 @@ function hostRef(row: HostEntry): HostRef {
 
 function hostSelectionLabel(count: number): TranslatedString {
   return _tn('%{count} host selected', '%{count} hosts selected', count, { count })
+}
+
+function hostCountsLabel(selected: number, total: number): TranslatedString {
+  return _tn(
+    'Selected host: %{selected} | Total hosts: %{total}',
+    'Selected hosts: %{selected} | Total hosts: %{total}',
+    selected,
+    { selected, total }
+  )
 }
 
 const slideInHost = ref<HostEntry | null>(null)
@@ -221,25 +257,7 @@ const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
       : { site_id: siteId, name }
   },
   matches: (host, identity) => host.name === identity.name && host.site_id === identity.site_id,
-  load: async (identity) => {
-    // `name` offers no equality operator, so an anchored pattern stands in for
-    // one and the exact row is picked out of what comes back.
-    const response = await hostApi.fetchHosts({
-      filter: {
-        type: 'and',
-        children: [
-          { type: 'condition', field: 'name', op: 'matches', value: exactPattern(identity.name) },
-          { type: 'condition', field: 'site_id', op: 'one_of', value: [identity.site_id] }
-        ]
-      },
-      limit: 1
-    })
-    return (
-      response.hosts.find(
-        (host) => host.name === identity.name && host.site_id === identity.site_id
-      ) ?? null
-    )
-  }
+  load: async (identity) => hostApi.fetchHost(identity)
 }
 
 useUrlSync([
@@ -275,54 +293,23 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       :url="legacy_view_button.url"
     />
     <div class="monitoring-all-hosts-app">
-      <div class="monitoring-all-hosts-app__header">
-        <div class="monitoring-all-hosts-app__toolbar">
-          <CmkSearchInput
-            ref="searchInput"
-            v-model="hostService.searchQuery.value"
-            class="monitoring-all-hosts-app__search"
-            :placeholder="_t('Search hosts…')"
-            @search="hostService.updateSearch($event)"
-            @focusin="hostService.beginAutoPause()"
-            @focusout="hostService.endAutoPause()"
-          />
-          <div class="monitoring-all-hosts-app__quick-filters">
-            <QuickFilterChip
-              v-for="chip in hostService.filters.quickFilters"
-              :key="chip.label"
-              :label="chip.label"
-              :tooltip="chip.tooltip"
-              :active="chip.isActive.value"
-              @activate="hostService.activateQuickFilter(chip)"
-              @deactivate="hostService.deactivateQuickFilter(chip)"
-            />
-          </div>
-          <CmkButton variant="text" size="small" @click="hostService.clearAllFilters()">
-            {{ _t('Reset all filters') }}
-          </CmkButton>
-        </div>
-        <div class="monitoring-all-hosts-app__header-end">
-          <RefreshCountdown
-            :remaining="hostService.secondsRemaining.value"
-            :interval="hostService.pollIntervalSeconds"
-            :paused="hostService.paused.value"
-            :manual-paused="hostService.manualPaused.value"
-            size="small"
-            @toggle="hostService.togglePause()"
-          />
-        </div>
-      </div>
+      <MonitoringToolbar
+        ref="toolbar"
+        :service="hostService"
+        :search-placeholder="_t('Search hosts…')"
+      />
       <MonitoringSplitPane
         :service="hostService"
         :actions="actionRegistry"
         :bulk-actions="hostActions"
-        :columns="columns"
+        :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="hostRef"
         :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
         :selection-label="hostSelectionLabel"
         :actions-label="_t('Actions for selected hosts')"
+        :counts-label="hostCountsLabel"
         @performed="onActionPerformed"
       >
         <template #row="{ row, tableRow, onCommand }">
@@ -358,37 +345,5 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   height: 100%;
   min-height: 0;
   padding-bottom: var(--spacing);
-  padding-right: var(--spacing);
-}
-
-.monitoring-all-hosts-app__header {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.monitoring-all-hosts-app__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-all-hosts-app__header-end {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-all-hosts-app__search {
-  flex: 1;
-  max-width: 360px;
-}
-
-.monitoring-all-hosts-app__quick-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dimension-4);
 }
 </style>

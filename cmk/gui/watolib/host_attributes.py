@@ -10,8 +10,6 @@
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""
 
-from __future__ import annotations
-
 import abc
 import functools
 import re
@@ -49,7 +47,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
-from cmk.gui.type_defs import Choices, CustomHostAttrSpec
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
@@ -58,6 +56,7 @@ from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, Single
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import String as StringFormSpec
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
 
 # A host attribute's labels() may return this sentinel as the value for a label
@@ -377,7 +376,7 @@ class ABCHostAttribute(abc.ABC):
         request context (e.g. the logged in user)."""
         return None
 
-    def effective_default_value(self, sites: SiteConfigurations) -> Any:
+    def effective_default_value(self, sites: SiteConfigurations) -> Any:  # noqa: ARG002
         """Return the default value used when computing effective attributes
 
         In contrast to default_value() this must not depend on request
@@ -387,7 +386,7 @@ class ABCHostAttribute(abc.ABC):
         override this method."""
         return self.default_value()
 
-    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
+    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:  # noqa: ARG002
         """Render HTML code displaying a value"""
         return "", str(value)
 
@@ -490,22 +489,22 @@ class ABCHostAttribute(abc.ABC):
             and (for_what != "host_search" or self.show_in_host_search())
         )
 
-    def validate_input(self, value: Any, varprefix: str) -> None:
+    def validate_input(self, value: Any, varprefix: str) -> None:  # noqa: ARG002
         """Check if the value entered by the user is valid.
         This method may raise MKUserError in case of invalid user input."""
         return
 
-    def to_nagios(self, value: Any) -> str | None:
+    def to_nagios(self, value: Any) -> str | None:  # noqa: ARG002
         """If this attribute should be present in Nagios as a host custom
         macro, then the value of that macro should be returned here - otherwise None"""
         return None
 
-    def filter_matches(self, crit: Any, value: Any, hostname: HostName) -> bool:
+    def filter_matches(self, crit: Any, value: Any, hostname: HostName) -> bool:  # noqa: ARG002
         """Checks if the give value matches the search attributes
         that are represented by the current HTML variables."""
         return crit == value
 
-    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
+    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:  # noqa: ARG002
         """Each attribute may set multiple tag groups for a host
         This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}
 
@@ -515,7 +514,7 @@ class ABCHostAttribute(abc.ABC):
         """
         return {}
 
-    def labels(self, value: Any) -> Labels:
+    def labels(self, value: Any) -> Labels:  # noqa: ARG002
         """Set host labels based on the attribute's value
 
         Returns a set of host labels which are added to the effective explicit host
@@ -532,7 +531,7 @@ class ABCHostAttribute(abc.ABC):
     def is_tag_attribute(self) -> bool:
         return False
 
-    def is_show_more(self, config: Config) -> bool:
+    def is_show_more(self, config: Config) -> bool:  # noqa: ARG002
         """Whether or not this attribute is treated as an element only shown on
         show more button in the GUI"""
         return False
@@ -560,11 +559,11 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
         # FIXME: Replace this automatic implementation of sort_index in derived classes without
         # an own implementation by something more sane.
         if instance.sort_index.__code__ is ABCHostAttribute.sort_index.__code__:
-            instance._sort_index = self.__class__._index  # type: ignore[attr-defined]
-            instance.sort_index = classmethod(lambda c: c._sort_index)  # type: ignore[assignment]
-            self.__class__._index += 1
+            instance._sort_index = self.__class__._index  # type: ignore[attr-defined]  # noqa: SLF001
+            instance.sort_index = classmethod(lambda c: c._sort_index)  # type: ignore[assignment]  # noqa: SLF001
+            self.__class__._index += 1  # noqa: SLF001
         else:
-            self.__class__._index = max(instance.sort_index(), self.__class__._index)
+            self.__class__._index = max(instance.sort_index(), self.__class__._index)  # noqa: SLF001
 
 
 host_attribute_registry = HostAttributeRegistry()
@@ -602,7 +601,7 @@ def sorted_host_attributes_by_topic(
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
-    def sort_host_attributes(a: ABCHostAttribute, b: ABCHostAttribute) -> int:
+    def sort_host_attributes(a: ABCHostAttribute, b: ABCHostAttribute) -> int:  # noqa: ARG001
         if a.name() == "tag_address_family":
             return -1
         return 0
@@ -662,7 +661,7 @@ def declare_host_attribute(
 
     if sort_index is not None:
         attrs["_sort_index"] = sort_index
-        attrs["sort_index"] = classmethod(lambda c: c._sort_index)
+        attrs["sort_index"] = classmethod(lambda c: c._sort_index)  # noqa: SLF001
 
     attrs.update(
         {
@@ -743,15 +742,15 @@ def config_based_tag_group_attributes(
                         else host_attribute_topic_registry[topic_id]
                     ),
                     "topic": lambda self: self._topic,
-                    "show_in_table": lambda self: False,
-                    "show_in_folder": lambda self: True,
-                    "from_config": lambda self: True,
+                    "show_in_table": lambda self: False,  # noqa: ARG005
+                    "show_in_folder": lambda self: True,  # noqa: ARG005
+                    "from_config": lambda self: True,  # noqa: ARG005
                     "openapi_field": lambda self: String(description=self.help()),
                 }
                 | (
                     {
                         "_sort_index": sort_index,
-                        "sort_index": classmethod(lambda c: c._sort_index),
+                        "sort_index": classmethod(lambda c: c._sort_index),  # noqa: SLF001
                     }
                     if (sort_index := _tag_attribute_sort_index(tag_group))
                     else {}
@@ -862,7 +861,7 @@ def config_based_custom_host_attribute_sync_plugins(
             "%sCustomHostAttr" % a.__name__,
             (a,),
             {
-                "from_config": lambda self: True,
+                "from_config": lambda self: True,  # noqa: ARG005
                 "openapi_field": lambda self: String(description=self.help()),
                 # Previous to 1.6 the topic was a the "topic title". Since 1.6
                 # it's the internal ID of the topic. Because referenced topics may
@@ -870,6 +869,8 @@ def config_based_custom_host_attribute_sync_plugins(
                 # in case one is missing.
                 "_topic": _declare_host_attribute_topic(attr["topic"], attr["topic"].title()),
                 "topic": lambda self: self._topic,
+                "_show_in_table": attr["show_in_table"] or False,
+                "show_in_table": lambda self: self._show_in_table,
             },
         )
         attributes[attr["name"]] = final_class()

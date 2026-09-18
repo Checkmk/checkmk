@@ -21,7 +21,7 @@ def discover_datapower_mem(info: StringTable) -> Iterable[tuple[None, Mapping[st
         yield None, {}
 
 
-def check_datapower_mem(item: None, params: Mapping[str, Any], info: StringTable) -> LegacyResult:
+def check_datapower_mem(item: None, params: Mapping[str, Any], info: StringTable) -> LegacyResult:  # noqa: ARG001
     mem_total_bytes = int(info[0][0]) * 1024
     mem_used_bytes = int(info[0][1]) * 1024
 

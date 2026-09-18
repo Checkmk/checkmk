@@ -14,8 +14,8 @@ competing ones.
 -->
 <script setup lang="ts">
 import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
-import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
@@ -25,6 +25,8 @@ const SUGGEST_DEBOUNCE_MS = 200
 const KEY_VALUE_SEPARATOR = ':'
 
 const WILDCARD = '*'
+
+const WILDCARD_MIN_MATCHES = 2
 
 const props = defineProps<{
   /** Suggestions for what has been typed so far. A rejection reads as "no matches". */
@@ -41,7 +43,10 @@ const props = defineProps<{
   keyValue?: boolean | undefined
   /**
    * Offer what was typed with a trailing `*` as the first entry, for selecting
-   * everything starting with it rather than one named value.
+   * everything starting with it rather than one named value. Only while more
+   * than one value it could commit matches, since below that it stands for
+   * nothing extra. In `key:value` mode a bare key is not such a value: picking
+   * it only continues the query.
    */
   wildcardOption?: boolean | undefined
   /** Refuse further picks once this many are selected. Unbounded when unset. */
@@ -56,7 +61,7 @@ const query = ref('')
 const suggestions = ref<string[]>([])
 const isLoading = ref(false)
 
-const field = useTemplateRef<HTMLInputElement>('field')
+const field = useTemplateRef<InstanceType<typeof CmkSearchInput>>('field')
 const list = useTemplateRef<HTMLElement>('list')
 
 let debounceHandle: ReturnType<typeof setTimeout> | undefined
@@ -95,10 +100,10 @@ const wildcardEntry = computed<string[]>(() => {
   return [`${typed}${WILDCARD}`]
 })
 
-const openSuggestions = computed<string[]>(() => {
+const matchedEntries = computed<string[]>(() => {
   const seen = new Set<string>()
   const listed: string[] = []
-  for (const entry of [...wildcardEntry.value, ...matchingKeys.value, ...suggestions.value]) {
+  for (const entry of [...matchingKeys.value, ...suggestions.value]) {
     if (selectedSet.value.has(entry) || seen.has(entry)) {
       continue
     }
@@ -106,6 +111,21 @@ const openSuggestions = computed<string[]>(() => {
     listed.push(entry)
   }
   return listed
+})
+
+const matchedValues = computed<string[]>(() =>
+  matchedEntries.value.filter((entry) => !props.keyValue || completesPair(entry))
+)
+
+const openSuggestions = computed<string[]>(() => {
+  const matched = matchedEntries.value
+  if (matchedValues.value.length < WILDCARD_MIN_MATCHES) {
+    return matched
+  }
+  const wildcard = wildcardEntry.value.filter(
+    (entry) => !selectedSet.value.has(entry) && !matched.includes(entry)
+  )
+  return [...wildcard, ...matched]
 })
 
 const showEmptyHint = computed(
@@ -231,30 +251,27 @@ defineExpose({ focus })
 
 <template>
   <div class="cmk-chip-autocomplete">
-    <div class="cmk-chip-autocomplete__search">
-      <CmkMultitoneIcon
-        name="search"
-        :primary-color="{ custom: 'var(--color-mist-grey-60)' }"
-        size="small"
-        aria-hidden="true"
-      />
-      <input
-        ref="field"
-        v-model="query"
-        type="text"
-        class="cmk-chip-autocomplete__field"
-        :placeholder="placeholder ?? _t('Search')"
-        :aria-label="ariaLabel ?? _t('Search')"
-        autocomplete="off"
-        @focus="onFocus"
-        @keydown.down.prevent="onArrowDown"
-        @keydown.up.prevent="onArrowUp"
-        @keydown.backspace="onBackspace"
-        @keydown.escape="onEscape"
-      />
-    </div>
+    <CmkSearchInput
+      ref="field"
+      v-model="query"
+      class="cmk-chip-autocomplete__search"
+      inline-search-icon
+      :show-submit-button="false"
+      :placeholder="placeholder ?? _t('Search')"
+      :aria-label="ariaLabel ?? _t('Search')"
+      @focusin="onFocus"
+      @keydown.down.prevent="onArrowDown"
+      @keydown.up.prevent="onArrowUp"
+      @keydown.backspace="onBackspace"
+      @keydown.escape="onEscape"
+    />
 
-    <ul v-if="openSuggestions.length > 0" ref="list" class="cmk-chip-autocomplete__suggestions">
+    <ul
+      v-if="openSuggestions.length > 0"
+      ref="list"
+      class="cmk-chip-autocomplete__suggestions"
+      :aria-label="_t('Search results')"
+    >
       <li v-for="suggestion in openSuggestions" :key="suggestion">
         <button
           type="button"
@@ -281,7 +298,7 @@ defineExpose({ focus })
             <CmkIconButton
               class="cmk-chip-autocomplete__remove"
               name="close"
-              size="xsmall"
+              size="xxsmall"
               :title="_t('Remove %{value}', { value })"
               @click="remove(value)"
             />
@@ -304,36 +321,7 @@ defineExpose({ focus })
 }
 
 .cmk-chip-autocomplete__search {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-3);
-  box-sizing: border-box;
-  width: 100%;
   margin: 0 0 var(--dimension-3);
-  padding: var(--dimension-2) var(--dimension-4);
-  background: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-border-color);
-  border-radius: 2px;
-
-  &:focus-within {
-    outline: 1px solid var(--success);
-    outline-offset: 1px;
-  }
-}
-
-.cmk-chip-autocomplete__field {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  color: var(--font-color);
-
-  &:focus-visible {
-    outline: none;
-  }
 }
 
 .cmk-chip-autocomplete__suggestions,
@@ -354,7 +342,7 @@ defineExpose({ focus })
   display: block;
   width: 100%;
   margin: 0;
-  padding: var(--dimension-2) var(--dimension-4);
+  padding: 6px;
   border: 0;
   background: transparent;
   color: var(--font-color);
@@ -364,7 +352,7 @@ defineExpose({ focus })
 
   &:hover,
   &:focus-visible {
-    background: var(--ux-theme-3);
+    background: var(--cmk-chip-autocomplete-hover-bg-color);
     outline: none;
   }
 
@@ -386,6 +374,10 @@ defineExpose({ focus })
 }
 
 .cmk-chip-autocomplete__remove {
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
   margin-left: var(--dimension-2);
 }
 
@@ -393,5 +385,14 @@ defineExpose({ focus })
   margin: var(--dimension-3) 0 0;
   font-style: italic;
   opacity: 0.7;
+}
+
+body[data-theme='facelift'] .cmk-chip-autocomplete {
+  --cmk-chip-autocomplete-hover-bg-color: var(--color-conference-grey-10);
+  --chip-outline-bg-color: var(--color-daylight-grey-60);
+}
+
+body[data-theme='modern-dark'] .cmk-chip-autocomplete {
+  --cmk-chip-autocomplete-hover-bg-color: var(--color-white-10);
 }
 </style>

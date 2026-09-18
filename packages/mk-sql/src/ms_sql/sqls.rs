@@ -169,6 +169,10 @@ WHERE object_name NOT LIKE '%Deprecated%'
             CAST(blocking_session_id AS varchar) AS blocking_session_id
     FROM sys.dm_os_waiting_tasks";
 
+    /// Every database, unfiltered. Consumed only by the backup section, which
+    /// reads backup history from `msdb` over the instance connection and never
+    /// opens a database - so an offline or otherwise inaccessible database must
+    /// keep its last-backup reporting and stay in this list.
     pub const DATABASE_NAMES_ALL: &str = "SELECT name FROM sys.databases";
 
     /// Skips secondary replica databases participating in availability groups
@@ -177,16 +181,23 @@ WHERE object_name NOT LIKE '%Deprecated%'
     /// 0 for secondary replica
     /// NULL for databases not participating in availability groups
     /// ONLY SUPPORTED since version 12 (SQL Server 2014)
+    ///
+    /// The second column `has_access` is `HAS_DBACCESS(d.name)` (1 / 0 / NULL):
+    /// whether the monitoring login can open the database. Inaccessible databases
+    /// are deliberately KEPT in the result - the caller reports them with a
+    /// simulated error line instead of attempting a per-database login, which is
+    /// what floods the SQL Server error log (18456 / 4060). A NULL result (the
+    /// database vanished mid-query) counts as no access.
     pub const DATABASE_NAMES_ACTIVE: &str = r#"IF CAST(PARSENAME(CAST(SERVERPROPERTY('ProductVersion') AS varchar(30)), 4) AS int) >= 12
 BEGIN
-    SELECT d.name
+    SELECT d.name, CAST(HAS_DBACCESS(d.name) AS NVARCHAR(1)) AS has_access
     FROM sys.databases AS d
     WHERE sys.fn_hadr_is_primary_replica(d.name) IS NULL
        OR sys.fn_hadr_is_primary_replica(d.name) = 1;
 END
 ELSE
 BEGIN
-    SELECT d.name
+    SELECT d.name, CAST(HAS_DBACCESS(d.name) AS NVARCHAR(1)) AS has_access
     FROM sys.databases AS d;
 END;"#;
 
@@ -406,7 +417,25 @@ IF OBJECT_ID('sys.dm_hadr_availability_group_states') IS NOT NULL
     FROM sys.dm_hadr_availability_group_states Groups
     INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
+    /// Normal editions: `@@SERVICENAME` is the reliable instance name
+    /// ('MSSQLSERVER' for a default instance, the instance name for a named one).
+    /// It must match the Normal branch of `obtain_instance_name`. The Azure
+    /// `SERVERPROPERTY` fallback chain (see `INSTANCE_PROPERTIES_AZURE`) must NOT be
+    /// used here: on a default instance `SERVERPROPERTY('InstanceName')` is NULL, so
+    /// the chain would wrongly fall back to `FilestreamShareName`/`ServerName` and
+    /// yield a name that never matches the real instance.
     pub const INSTANCE_PROPERTIES: &str = r"SELECT
+    CAST(@@SERVICENAME AS NVARCHAR(MAX)) AS InstanceName,
+    CAST(SERVERPROPERTY( 'ProductVersion' ) AS NVARCHAR(MAX)) AS ProductVersion,
+    CAST(SERVERPROPERTY( 'MachineName' ) AS NVARCHAR(MAX)) AS MachineName,
+    CAST(SERVERPROPERTY( 'Edition' ) AS NVARCHAR(MAX)) AS Edition,
+    CAST(SERVERPROPERTY( 'ProductLevel' ) AS NVARCHAR(MAX)) AS ProductLevel,
+    CAST(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) AS NVARCHAR(MAX)) AS NetBios";
+
+    /// Azure SQL has no `@@SERVICENAME` instance concept, so the name is derived
+    /// from `SERVERPROPERTY`: InstanceName, else FilestreamShareName, else ServerName.
+    /// Kept identical to the Azure branch of `obtain_instance_name`.
+    pub const INSTANCE_PROPERTIES_AZURE: &str = r"SELECT
     CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR(MAX)) AS InstanceName,
     CAST(SERVERPROPERTY( 'ProductVersion' ) AS NVARCHAR(MAX)) AS ProductVersion,
     CAST(SERVERPROPERTY( 'MachineName' ) AS NVARCHAR(MAX)) AS MachineName,
@@ -426,9 +455,6 @@ pub fn get_wow64_32_registry_instances_query() -> String {
     query::WINDOWS_REGISTRY_INSTANCES_BASE
         .to_string()
         .replace(r"SOFTWARE\Microsoft\", r"SOFTWARE\WOW6432Node\Microsoft\")
-}
-pub fn _get_blocking_sessions_query() -> String {
-    format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string()
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -461,7 +487,7 @@ lazy_static::lazy_static! {
         (Id::Mirroring, QueryMap::new(query::MIRRORING_NORMAL, Some(query::MIRRORING_AZURE))),
         (Id::Jobs, QueryMap::new(query::JOBS, None)),
         (Id::AvailabilityGroups, QueryMap::new(query::AVAILABILITY_GROUP_NORMAL, Some(query::AVAILABILITY_GROUP_AZURE))),
-        (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, None)),
+        (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, Some(query::INSTANCE_PROPERTIES_AZURE))),
         (Id::UtcEntry, QueryMap::new(query::UTC_ENTRY, None)),
         (Id::ClusterActiveNodes, QueryMap::new(query::CLUSTER_ACTIVE_NODES, None)),
         (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES_NORMAL, Some(query::CLUSTER_NODES_AZURE))),
@@ -492,4 +518,63 @@ pub fn find_known_query<T: Borrow<Id>>(query_id: T, edition: &Edition) -> Result
             "Query for {:?} not found",
             query_id.borrow()
         ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const REGISTRY_KEY_NORMAL: &str = r"SOFTWARE\Microsoft\Microsoft SQL Server";
+    const REGISTRY_KEY_WOW64: &str = r"SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server";
+
+    #[test]
+    fn test_win_registry_instances_query() {
+        let query = get_win_registry_instances_query();
+        assert_eq!(query, query::WINDOWS_REGISTRY_INSTANCES_BASE);
+        assert!(query.contains(REGISTRY_KEY_NORMAL));
+    }
+
+    #[test]
+    fn test_wow64_32_registry_instances_query() {
+        // Every registry key of the base query must be redirected to the 32 bit hive.
+        let query = get_wow64_32_registry_instances_query();
+        assert!(query.contains(REGISTRY_KEY_WOW64));
+        assert!(!query.contains(REGISTRY_KEY_NORMAL));
+    }
+
+    #[test]
+    fn test_find_known_query_azure_override() {
+        assert_eq!(
+            find_known_query(Id::Mirroring, &Edition::Azure).unwrap(),
+            query::MIRRORING_AZURE
+        );
+        assert_eq!(
+            find_known_query(Id::Mirroring, &Edition::Normal).unwrap(),
+            query::MIRRORING_NORMAL
+        );
+        // Anything that is not Azure falls back to the normal query.
+        assert_eq!(
+            find_known_query(Id::Mirroring, &Edition::Undefined).unwrap(),
+            query::MIRRORING_NORMAL
+        );
+    }
+
+    #[test]
+    fn test_find_known_query_without_azure_override() {
+        for edition in [Edition::Azure, Edition::Normal, Edition::Undefined] {
+            assert_eq!(find_known_query(Id::Jobs, &edition).unwrap(), query::JOBS);
+        }
+    }
+
+    #[test]
+    fn test_find_known_query_composed() {
+        assert_eq!(
+            find_known_query(Id::BlockedSessions, &Edition::Normal).unwrap(),
+            format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS)
+        );
+        assert_eq!(
+            find_known_query(Id::Counters, &Edition::Azure).unwrap(),
+            format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES_AZURE)
+        );
+    }
 }

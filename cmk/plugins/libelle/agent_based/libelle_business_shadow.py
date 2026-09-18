@@ -287,7 +287,7 @@ def check_libelle_business_shadow_parse(info: StringTable) -> dict[str, Any]:
 #   '----------------------------------------------------------------------'
 
 
-def discover_libelle_business_shadow_info(section: StringTable) -> DiscoveryResult:
+def discover_libelle_business_shadow_info(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

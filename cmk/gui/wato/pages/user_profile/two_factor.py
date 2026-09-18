@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """The user can change own 2FA related settings on this page"""
@@ -20,7 +19,6 @@ from typing import assert_never, Literal, override
 from urllib import parse
 from uuid import uuid4
 
-import fido2
 import fido2.features
 from fido2.server import Fido2Server
 from fido2.webauthn import (
@@ -71,8 +69,6 @@ from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import (
-    IconNames,
-    StaticIcon,
     TotpCredential,
     TwoFactorCredentials,
     WebAuthnActionState,
@@ -96,7 +92,6 @@ from cmk.gui.userdb.session import (
     save_session_infos,
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
@@ -111,8 +106,10 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .page_menu import page_menu_dropdown_user_related
@@ -197,7 +194,7 @@ def _sync_valid_session_2fa_checking() -> None:
     )
 
     updated_infos = {}
-    for id, session_info in all_user_sessions_infos.items():
+    for id, session_info in all_user_sessions_infos.items():  # noqa: A001
         if session_info.session_state == "logged_in" and id != session.session_info.session_id:
             session_info.session_state = "second_factor_auth_needed"
         updated_infos[id] = session_info
@@ -545,7 +542,7 @@ class UserTwoFactorOverview(Page):
             "",
             backup_codes_content
             + backup_codes_info
-            + (invalidate_codes_button if backup_codes else ""),
+            + (invalidate_codes_button if backup_codes else ""),  # type: ignore[possibly-undefined]
         )
 
     def _show_form(self, request: Request, config: Config) -> None:
@@ -818,6 +815,7 @@ class UserTwoFactorEnforce(Page):
             title=title,
             breadcrumb=breadcrumb,
             page_menu=self._page_menu(ctx.config.sites, breadcrumb),
+            show_main_navigation=False,
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,
@@ -1447,6 +1445,7 @@ class UserLoginTwoFactor(Page):
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            show_main_navigation=False,
             load_frontend_vue=ctx.config.load_frontend_vue,
             custom_style_sheet=ctx.config.custom_style_sheet,
             screenshotmode=ctx.config.screenshotmode,

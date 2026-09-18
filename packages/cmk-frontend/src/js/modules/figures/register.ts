@@ -17,8 +17,6 @@ import { HostStateSummary, ServiceStateSummary } from './cmk_state_summary'
 import { EventStats, HostStats, ServiceStats } from './cmk_stats'
 import { TableFigure } from './cmk_table'
 import { AverageScatterplotFigure } from './timeseries/average_scatterplot_figure'
-import { CmkGraphShifter } from './timeseries/cmk_graph_shifter'
-import { CmkGraphTimeseriesFigure } from './timeseries/cmk_graph_timeseries_figure'
 import { TimeseriesFigure } from './timeseries/cmk_timeseries'
 
 export function register() {
@@ -39,6 +37,4 @@ export function register() {
   figure_registry.register(ServiceStateSummary)
   figure_registry.register(TimeseriesFigure)
   figure_registry.register(AverageScatterplotFigure)
-  figure_registry.register(CmkGraphTimeseriesFigure)
-  figure_registry.register(CmkGraphShifter)
 }

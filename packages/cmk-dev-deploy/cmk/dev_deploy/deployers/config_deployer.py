@@ -8,8 +8,6 @@ Data-driven deployer for agents/, notifications/, locale/, doc/, etc.
 using copy_dir, install_files, or locale_compile methods.
 """
 
-from __future__ import annotations
-
 import os
 import shutil
 import subprocess

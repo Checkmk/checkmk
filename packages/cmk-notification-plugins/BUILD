@@ -10,7 +10,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -24,6 +23,7 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-events",
         requirement("jinja2"),
         requirement("opsgenie-sdk"),
         requirement("requests"),

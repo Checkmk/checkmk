@@ -19,7 +19,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 
 # Mocking wato_audit.log as its contents are not used in these tests and accessing it causes flaky results.
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def mock_log_audit_file(mocker: MockerFixture) -> Iterator[None]:
     mocker.patch("cmk.gui.watolib.audit_log.log_audit")
     yield
@@ -59,10 +59,10 @@ def test_test_connection_returns_structured_results(
 ) -> None:
     _create_ldap_connection("LDAP_1")
 
-    def _passing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
+    def _passing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:  # noqa: ARG001
         return True, "All fine"
 
-    def _failing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
+    def _failing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:  # noqa: ARG001
         return False, "Something is wrong"
 
     mocker.patch(
@@ -91,7 +91,7 @@ def test_test_connection_handles_test_exceptions(
 ) -> None:
     _create_ldap_connection("LDAP_1")
 
-    def _raising_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
+    def _raising_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:  # noqa: ARG001
         raise RuntimeError("boom")
 
     mocker.patch(

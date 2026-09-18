@@ -44,7 +44,7 @@ while (!(Test-Path "$root_dir/.werks" -ErrorAction SilentlyContinue)) {
 Write-Host "Building $package_name..." -ForegroundColor White
 Push-Location $PSScriptRoot
 $temp_dir = Join-Path $env:TEMP "mk-oracle-perms-check-$([System.IO.Path]::GetRandomFileName())"
-$runtime_path = "$temp_dir/runtimes/plugins/packages/mk-oracle/runtime"
+$runtime_path = "$temp_dir/runtimes/plugins/libexec/mk-oracle-v2/oic"
 $current_user_sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 New-Item -ItemType Directory -Path $temp_dir -Force | Out-Null
 try {
@@ -75,9 +75,9 @@ try {
 
     # Custom-metric SQL fixture: created unconditionally — the elevated check
     # needs an existing Users-writable SQL file to refuse reading.
-    $orasql_dir = "$temp_dir/runtimes/plugins/packages/mk-oracle/orasql"
+    $orasql_dir = "$temp_dir/runtimes/plugins/libexec/mk-oracle-v2/orasql"
     New-Item -ItemType Directory -Path $orasql_dir -Force | Out-Null
-    Copy-Item -Path "runtimes/plugins/packages/mk-oracle/orasql/simple_custom_metric.sql" -Destination (Join-Path $orasql_dir "simple_custom_metric.sql") -Force
+    Copy-Item -Path "runtimes/plugins/libexec/mk-oracle-v2/orasql/simple_custom_metric.sql" -Destination (Join-Path $orasql_dir "simple_custom_metric.sql") -Force
 
     if ($only_escalated) {
         Write-Host "--root: skipping current-user checks" -ForegroundColor Yellow
@@ -141,37 +141,40 @@ icacls '$runtime_path' /grant '*${current_user_sid}:(OI)(CI)F' /T /C | Out-Null
         }
     }
 
-    # Both runs must be refused by the runtime permission check: no section
-    # output, and the refusal reported on stderr (`*>` captures it here).
-    $refusal = "No Oracle client runtime found"
+    # Both runs must be refused: the reason on stderr (`*>` captures it here)
+    # and in an oracle_instance FAILURE section, with no data row.
+    $refusal = "Execution is blocked because you try to load an unsafe Oracle client library"
 
     $output_before = Get-Content $admin_out_before -Raw
-    if ($output_before -match '<<<' -or $output_before -notmatch $refusal) {
+    $rows_before = $output_before -split "`n" | Where-Object { $_ -match '\|' -and $_ -notmatch '\|FAILURE\|' }
+    if ($output_before -notmatch [regex]::Escape($refusal) -or $rows_before) {
         Write-Host $output_before -ForegroundColor Red
-        Write-Error "FAIL: expected '$refusal' and no section output from admin run before restricting permissions"
+        Write-Error "FAIL: expected the refusal and no data from admin run before restricting permissions"
     }
     Write-Host "OK: root can't exec non-root code" -ForegroundColor Green
 
     $sql_output_before = Get-Content $admin_sql_out_before -Raw
-    if ($sql_output_before -match '<<<' -or $sql_output_before -notmatch $refusal) {
+    $sql_rows_before = $sql_output_before -split "`n" | Where-Object { $_ -match '\|' -and $_ -notmatch '\|FAILURE\|' }
+    if ($sql_output_before -notmatch [regex]::Escape($refusal) -or $sql_rows_before) {
         Write-Host $sql_output_before -ForegroundColor Red
-        Write-Error "FAIL: expected '$refusal' and no section output from admin run with custom SQL file"
+        Write-Error "FAIL: expected the refusal and no data from admin run with custom SQL file"
     }
     Write-Host "OK: root can't read non-root custom SQL file" -ForegroundColor Green
 
     $output_after = Get-Content $admin_out_after -Raw
-    # Same shape as the non-elevated run (step 3): real section output, not
-    # just any bytes — error text on stderr must not count as success.
+    # Real section output, not just any bytes: neither stderr noise nor the
+    # refusal's own section counts as success.
     $after_lines = ($output_after -split "`n" | Where-Object { $_.Trim() -ne "" })
-    if ($after_lines.Count -ge 3 -and $output_after -match '<<<') {
+    if ($after_lines.Count -ge 3 -and $output_after -match '<<<' -and
+        $output_after -notmatch [regex]::Escape($refusal)) {
         Write-Host $output_after
         Write-Host "---"
         Write-Host "OK: root can exec root code" -ForegroundColor Green
     }
     else {
         Write-Host $output_after -ForegroundColor Red
-        Write-Error ("FAIL: expected section output (>=3 non-empty lines containing '<<<') " +
-            "from admin run after restricting permissions")
+        Write-Error ("FAIL: expected section output (>=3 non-empty lines containing '<<<', " +
+            "without the refusal) from admin run after restricting permissions")
     }
 
 }

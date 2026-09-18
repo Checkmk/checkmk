@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """Modes for managing folders"""
@@ -52,17 +51,9 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference, YouTubeReference
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -84,7 +75,7 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
@@ -118,11 +109,15 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.doc_references import DocReference, YouTubeReference
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes
@@ -196,7 +191,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     )
 
 
-def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
@@ -944,14 +939,14 @@ class ModeFolder(WatoMode):
             for name in sorted_subfolder_names:
                 subfolder = subfolders_dict[name]
                 if searched_folder is not None:
-                    if not match_regex.search(subfolder.title()):
+                    if not match_regex.search(subfolder.title()):  # type: ignore[possibly-undefined]
                         continue
-                    search_results += 1
+                    search_results += 1  # type: ignore[possibly-undefined]
 
                 self._show_subfolder(subfolder, show_file_names=show_file_names)
 
             if searched_folder is not None:
-                set_inpage_search_result_info(search_results)
+                set_inpage_search_result_info(search_results)  # type: ignore[possibly-undefined]
 
             html.close_div()
             html.open_div(
@@ -1415,7 +1410,7 @@ class ModeFolder(WatoMode):
     def _show_host_actions_menu(self, host: Host) -> None:
         action_menu_show_flags: list[str] = []
         if not host.locked() and user.may("wato.manage_hosts"):
-            if not is_locked_by_quick_setup(host.locked_by()):
+            if not is_locked_by_config_bundle(host.locked_by()):
                 action_menu_show_flags.append("show_delete_link")
 
             if user.may("wato.clone_hosts"):
@@ -1429,7 +1424,7 @@ class ModeFolder(WatoMode):
                 action_menu_show_flags.append(entry.ident)
 
         if action_menu_show_flags:
-            url_vars: HTTPVariables = [
+            url_vars: list[HTTPVariable] = [
                 ("hostname", host.name()),
                 *[(flag_name, True) for flag_name in action_menu_show_flags],
             ]

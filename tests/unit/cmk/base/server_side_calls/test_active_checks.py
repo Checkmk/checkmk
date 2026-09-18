@@ -105,7 +105,7 @@ def test_get_active_service_data_respects_finalizer(
             path=Path("/pw/store"),
             secrets={},
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
     )
@@ -131,7 +131,7 @@ def test_get_active_service_data_raises_for_relay(
             path=Path("/pw/store"),
             secrets={},
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=True,
     )
@@ -140,7 +140,7 @@ def test_get_active_service_data_raises_for_relay(
         active_check.get_active_service_data("my_active_check", [{}])
 
 
-def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
+def argument_function_with_exception(*args: object, **kwargs: object) -> Never:  # noqa: ARG001
     raise Exception("Can't create argument list")
 
 
@@ -320,7 +320,7 @@ def test_get_active_service_data(  # type: ignore[misc]
             path=Path("/pw/store"),
             secrets=stored_passwords,
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
     )
@@ -370,7 +370,7 @@ def test_get_active_service_data_password_with_hack(
             path=Path("/pw/store"),
             secrets={"uuid1234": Secret("p4ssw0rd!")},
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
     )
@@ -422,7 +422,7 @@ def test_get_active_service_data_password_without_hack() -> None:
             path=Path("/pw/store"),
             secrets={"uuid1234": Secret("p4ssw0rd!")},
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
     )
@@ -501,7 +501,7 @@ def test_test_get_active_service_data_crash_with_debug(  # type: ignore[misc]
             path=Path("/pw/store"),
             secrets={},
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
     )
@@ -526,7 +526,7 @@ def test_test_get_active_service_data_crash_with_debug(  # type: ignore[misc]
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    commands_function=lambda p, *_: (
+                    commands_function=lambda p, *_: (  # noqa: ARG005
                         [
                             ActiveCheckCommand(
                                 service_description="",
@@ -626,7 +626,7 @@ def test_get_active_service_data_warnings(  # type: ignore[misc]
             path=Path("/pw/store"),
             secrets={},
         ),
-        finder=lambda executable, module: f"/path/to/{executable}",
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
     )

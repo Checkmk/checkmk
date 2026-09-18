@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """check_form_submit
 
@@ -168,7 +165,7 @@ def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
         urllib.request.HTTPSHandler(
             debuglevel=0,
             context=(
-                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305 # TODO & FIXME: Do *NOT* use private functions of ssl module!
+                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305 # TODO & FIXME: Do *NOT* use private functions of ssl module!  # noqa: SLF001
             ),
         ),
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
@@ -213,7 +210,7 @@ def open_url(
     except TimeoutError as e:
         new_state(2, f"Unable to open {url} : {e}")
 
-    real_url = fd.geturl()
+    real_url = fd.geturl()  # type: ignore[possibly-undefined]
     code = fd.getcode()
     content = fd.read()
 
@@ -257,7 +254,7 @@ class FormParser(html.parser.HTMLParser):
         elif tag == "input":
             if self.current_form is None:
                 debug("Ignoring form field out of form tag", self.debug_enabled)
-            elif "name" in attrs_dict:
+            elif "name" in attrs_dict:  # type: ignore[unreachable]
                 self.current_form["elements"][attrs_dict["name"]] = attrs_dict.get("value", "")
             else:
                 debug("Ignoring form field without name %r" % attrs_dict, self.debug_enabled)
@@ -306,7 +303,7 @@ def parse_form(content: str, form_name: str | None) -> dict[str, Any]:
                 ),
             )
 
-    return form
+    return form  # type: ignore[possibly-undefined]
 
 
 def update_form_vars(form_elem: dict[str, Any], params: Mapping[str, str]) -> dict[str, str]:

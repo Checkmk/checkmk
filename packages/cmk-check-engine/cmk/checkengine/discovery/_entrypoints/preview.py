@@ -44,6 +44,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.specs.checkresults import (
     ActiveCheckResult,
+    MetricTuple,
     SubmittableServiceCheckResult,
 )
 from cmk.checkengine.specs.parameters import (
@@ -52,7 +53,6 @@ from cmk.checkengine.specs.parameters import (
 )
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import Item
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]

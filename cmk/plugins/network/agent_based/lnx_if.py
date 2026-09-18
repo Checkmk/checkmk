@@ -287,7 +287,7 @@ agent_section_lnx_if = AgentSection(
 def discover_lnx_if(
     params: Sequence[Mapping[str, Any]],
     section_lnx_if: Section | None,
-    section_bonding: bonding.Section | None,
+    section_bonding: bonding.Section | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_lnx_if is None:
         return

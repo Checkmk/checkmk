@@ -37,6 +37,11 @@ Below the family folder, plugins are categorized into plugin groups:
    * man pages are found in ``checkman``
    * executables (to be run by the code, for instance) go into ``libexec``
    * inventory UI plugins are located under the ``inventory_ui`` folder
+   * support diagnostics plugins under the ``diagnostics`` folder
+   * post-rename-site actions under the ``post_rename_site`` folder
+   * license usage counters under the ``licensing`` folder
+   * DCD connectors and their parameters under the ``dcd_connectors`` and ``dcd_connector_parameters`` folders
+   * commands of the ``cmk`` command line under the ``cli`` folder
 
 In order for Checkmk to load your plugin, you have to follow the folder structure described above.
 Checkmk will load an agent based plugin only if it's located under ``~/local/lib/python3/cmk/plugins/{family_name}/agent_based`` or ``~/local/lib/python3/cmk_addons/plugins/{family_name}/agent_based`` folder.

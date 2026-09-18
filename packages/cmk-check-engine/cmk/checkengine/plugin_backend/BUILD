@@ -6,7 +6,6 @@ py_library(
     imports = ["../../.."],
     visibility = ["//visibility:public"],
     deps = [
-        "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-check-engine:snmplib",

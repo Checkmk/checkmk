@@ -9,24 +9,34 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
+import type { Metric } from '../../../components/TimeSeriesGraph'
 import type { GraphItemsStore } from '../../composables/useGraphItems'
+import { useItemValidation } from '../../composables/useItemValidation'
 import { useValidationMessages } from '../../composables/useValidationMessages'
 import type { DesignerItem } from '../../drafts'
-import { type RowField, type RowIssue, isValid } from '../../validation'
+import type { RowField, RowIssue } from '../../validation'
+import MetricsPreview from '../MetricsPreview.vue'
 import ConstantLineForm from './ConstantLineForm.vue'
 import FormulaForm from './FormulaForm.vue'
-import MetricBackendForm from './MetricBackendForm.vue'
 import RrdForm from './RrdForm.vue'
 import ServiceReferenceLineForm from './ServiceReferenceLineForm.vue'
+import TelemetryMetricsForm from './TelemetryMetricsForm.vue'
 
-const { row, store, thresholds, issues } = defineProps<{
+const { row, store, thresholds, issues, metrics } = defineProps<{
   row: DesignerItem
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
   issues: readonly RowIssue[]
+  metrics: Metric[]
+}>()
+
+const emit = defineEmits<{
+  hoverMetrics: [names: string[]]
 }>()
 
 const { _t } = usei18n()
+
+const { isValid } = useItemValidation(store.items)
 const { issueMessage } = useValidationMessages()
 
 type PreviewAlert = 'added' | 'updated'
@@ -99,6 +109,8 @@ function messagesFor(field: RowField): TranslatedString[] {
         :host-name-errors="messagesFor('host_name')"
         :service-name-errors="messagesFor('service_name')"
         :metric-name-errors="messagesFor('metric_name')"
+        :host-filter-errors="messagesFor('host_filter')"
+        :service-filter-errors="messagesFor('service_filter')"
       />
       <ConstantLineForm
         v-else-if="row.type === 'constant'"
@@ -115,13 +127,20 @@ function messagesFor(field: RowField): TranslatedString[] {
         :service-name-errors="messagesFor('service_name')"
         :metric-name-errors="messagesFor('metric_name')"
       />
-      <MetricBackendForm
-        v-else-if="row.type === 'metric_backend'"
-        :item="row"
-        :store="formStore"
-        :metric-name-errors="messagesFor('metric_name')"
-        :consolidation-errors="messagesFor('consolidation_function')"
-      />
+      <template v-else-if="row.type === 'metric_backend'">
+        <TelemetryMetricsForm
+          :item="row"
+          :store="formStore"
+          :metric-name-errors="messagesFor('metric_name')"
+          :consolidation-errors="messagesFor('consolidation_function')"
+        />
+        <MetricsPreview
+          v-if="metrics.length > 0"
+          class="graphing-row-editor__preview"
+          :metrics="metrics"
+          @hover-metrics="emit('hoverMetrics', $event)"
+        />
+      </template>
     </template>
   </div>
 </template>
@@ -130,6 +149,10 @@ function messagesFor(field: RowField): TranslatedString[] {
 .graphing-row-editor {
   position: relative;
   padding: var(--dimension-5) var(--dimension-4) var(--dimension-7) 0;
+}
+
+.graphing-row-editor__preview {
+  margin-top: var(--dimension-7);
 }
 
 .graphing-row-editor__alert {

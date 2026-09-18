@@ -49,7 +49,7 @@ class Progress:
         self.report_interval = report_interval
         self.next_report = 0.0
 
-    def __enter__(self) -> "Progress":
+    def __enter__(self) -> Progress:
         self.started = time.time()
         self.next_report = self.started + self.report_interval
         self.done_total = 0
@@ -673,6 +673,17 @@ class XssCrawler(Crawler):
         if error_type in ("HtmlError", "HtmlTagImbalance"):
             return False
         if error_type == "UnknownContentType" and message == "application/problem+json":
+            return False
+        if (
+            error_type == "JavascriptError"
+            and not url.follow
+            and "Failed to load resource: the server responded with a status of" in message
+        ):
+            # A payload-mutated URL (follow=False, see mutate_url_with_xss_payload) is
+            # expected to be rejected by the server, not to succeed. Checkmk now
+            # correctly answers such requests with a real non-2xx status instead of
+            # 200, which Chrome logs to the console; that's the fix working, not an
+            # XSS finding.
             return False
         return super().handle_error(url, error_type, message)
 

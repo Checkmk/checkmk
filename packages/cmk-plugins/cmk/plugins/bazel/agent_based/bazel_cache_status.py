@@ -39,7 +39,7 @@ def parse_bazel_cache_status(string_table: StringTable) -> CacheSection:
     }
 
 
-def discover_bazel_cache_status(section: CacheSection) -> DiscoveryResult:
+def discover_bazel_cache_status(section: CacheSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

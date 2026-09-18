@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 import { type CSSProperties, computed, inject, useSlots } from 'vue'
 
 import {
@@ -84,7 +84,7 @@ const activeSlot = computed<string>(() => {
 
 const highlightClasses = computed<string[]>(() => {
   const classes = ['monitoring-base-cell__highlight']
-  if (props.highlight) {
+  if (props.highlight && props.highlight.active !== false) {
     classes.push(`monitoring-base-cell__highlight--color-${props.highlight.color}`)
   }
   return classes
@@ -98,10 +98,12 @@ const highlightStyle = computed<CSSProperties>(() =>
 <template>
   <td
     class="monitoring-base-cell"
+    :data-column-id="columnId"
     :class="{
       'monitoring-base-cell--pinned': pinnedLeft !== null || pinnedRight !== null,
       'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned,
       'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight,
+      'monitoring-base-cell--button': button === true,
       'monitoring-base-cell--vertical-middle': verticalAlign === 'middle',
       'monitoring-base-cell--no-wrap': noWrap === true
     }"
@@ -120,10 +122,10 @@ const highlightStyle = computed<CSSProperties>(() =>
         <slot :name="activeSlot" />
       </div>
       <CmkMultitoneIcon
-        class="monitoring-base-cell__chevron"
-        name="chevron-right"
-        primary-color="font"
-        size="small"
+        class="monitoring-base-cell__action-icon"
+        name="open-details"
+        :primary-color="{ custom: 'var(--font-color-secondary)' }"
+        size="medium"
       />
     </button>
     <a
@@ -147,13 +149,14 @@ const highlightStyle = computed<CSSProperties>(() =>
       <div v-else class="monitoring-base-cell__plain">
         <slot :name="activeSlot" />
       </div>
-      <a
+      <CmkIconLink
         v-if="linkedTo && linkedTo.variant === 'icon'"
+        class="monitoring-base-cell__link-icon"
+        name="external"
+        size="small"
         :href="linkedTo.href"
         :target="linkedTo.target"
-      >
-        <CmkIcon class="monitoring-base-cell__link-icon" name="external" size="small" />
-      </a>
+      />
     </div>
   </td>
 </template>
@@ -213,33 +216,53 @@ const highlightStyle = computed<CSSProperties>(() =>
     margin: 0;
     background: transparent;
     border: none;
-    color: inherit;
+    color: var(--font-color);
     font: inherit;
     text-align: left;
     cursor: pointer;
-
-    &:hover {
-      background-color: var(--ux-theme-3);
-    }
 
     &:focus-visible {
       outline: 1px solid var(--success);
       outline-offset: -1px;
     }
 
-    .monitoring-base-cell__chevron {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
+
+    .monitoring-base-cell__action-icon {
       flex: 0 0 auto;
       align-self: center;
-      margin-left: auto;
-      margin-top: calc(-1 * var(--dimension-2));
+      margin-left: var(--dimension-3);
       margin-right: var(--dimension-3);
+      width: var(--dimension-6);
       height: var(--dimension-6);
+      visibility: hidden;
+    }
+
+    &:hover .monitoring-base-cell__action-icon,
+    &:focus-visible .monitoring-base-cell__action-icon {
+      visibility: visible;
     }
   }
 
   .monitoring-base-cell__plain {
     padding: 5px var(--dimension-4);
   }
+
+  /* Underline the name only, so the reserved icon slot stays undecorated. */
+  .monitoring-base-cell__button .monitoring-base-cell__plain {
+    min-width: 0;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--font-underline-color);
+    text-underline-offset: var(--dimension-2);
+  }
+}
+
+.monitoring-base-cell--button {
+  position: relative;
 }
 
 .monitoring-base-cell--vertical-middle {
@@ -292,9 +315,10 @@ const highlightStyle = computed<CSSProperties>(() =>
   width: fit-content;
   min-height: 31px;
   align-items: center;
+  justify-content: v-bind(justifyContent);
   gap: var(--dimension-4);
   margin: 0 var(--dimension-3);
-  color: var(--cell-highlight-font-color);
+  color: var(--cell-highlight-font-color, inherit);
 }
 
 .monitoring-base-cell
@@ -309,7 +333,7 @@ const highlightStyle = computed<CSSProperties>(() =>
   flex: 0 0 auto;
   width: var(--cell-highlight-bar-width);
   height: var(--cell-highlight-bar-height);
-  background: var(--cell-highlight-accent-color);
+  background: var(--cell-highlight-accent-color, transparent);
 }
 
 /* The accent bar holds across both themes; only the value adapts to its background. */

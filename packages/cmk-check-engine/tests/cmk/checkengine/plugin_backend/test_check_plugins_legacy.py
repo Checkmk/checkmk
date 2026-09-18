@@ -3,16 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-
-# ruff: noqa: ARG001
-# ruff: noqa: SLF001
 
 import inspect
 from dataclasses import replace
 
-from pytest import MonkeyPatch
+import pytest
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v1 import Metric, Result, Service, State
@@ -33,7 +32,8 @@ MINIMAL_CHECK_INFO = LegacyCheckDefinition(
 )
 
 
-def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_create_discovery_function() -> None:
     def insane_discovery(info):
         """Completely crazy discovery function:
 
@@ -47,7 +47,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
             "some string",
         ]
 
-    new_function = check_plugins_legacy._create_discovery_function(
+    new_function = check_plugins_legacy._create_discovery_function(  # noqa: SLF001
         LegacyCheckDefinition(name="test_plugin", discovery_function=insane_discovery),
     )
 
@@ -76,7 +76,7 @@ def test_create_check_function() -> None:
         yield 0, "additional6", [("metric4", 42, r"¯\(o_o)/¯")]
         yield 1, "additional7"
 
-    new_function = check_plugins_legacy._create_check_function(
+    new_function = check_plugins_legacy._create_check_function(  # noqa: SLF001
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
@@ -124,7 +124,7 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
         yield 0, "Main info"
         yield 0, "\nadditional3"
 
-    new_function = check_plugins_legacy._create_check_function(
+    new_function = check_plugins_legacy._create_check_function(  # noqa: SLF001
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
@@ -157,7 +157,7 @@ def test_create_check_function_without_details() -> None:
         assert info == ["info"]
         yield 0, "Main info"
 
-    new_function = check_plugins_legacy._create_check_function(
+    new_function = check_plugins_legacy._create_check_function(  # noqa: SLF001
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
@@ -186,7 +186,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
         yield 0, "Main info"
         yield 0, "\n"
 
-    new_function = check_plugins_legacy._create_check_function(
+    new_function = check_plugins_legacy._create_check_function(  # noqa: SLF001
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
@@ -221,7 +221,7 @@ def test_convert_legacy_check_plugins_wo_params() -> None:
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
-    assert plugin.check_function.__name__ == "check_migration_wrapper"
+    assert plugin.check_function.__name__ == "check_migration_wrapper_without_item"
     assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
     assert plugin.cluster_check_function is None
@@ -248,7 +248,7 @@ def test_convert_legacy_check_plugins_with_params() -> None:
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
-    assert plugin.check_function.__name__ == "check_migration_wrapper"
+    assert plugin.check_function.__name__ == "check_migration_wrapper_without_item"
     assert plugin.check_default_parameters == {
         "levels": (23, 42),
     }

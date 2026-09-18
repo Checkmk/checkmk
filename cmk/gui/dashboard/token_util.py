@@ -19,6 +19,7 @@ from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.store import DashboardStore
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig, LinkedViewDashletConfig
 from cmk.gui.exceptions import HTTPRedirect, MKMethodNotAllowed, MKMissingDataError, MKUserError
+from cmk.gui.graphing import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
@@ -36,6 +37,7 @@ from cmk.gui.token_auth import (
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.views.store import get_permitted_views, ViewStore
 from cmk.utils import paths
 from cmk.web.utils.urls import urlencode_vars
@@ -128,7 +130,7 @@ def get_dashboard_auth_token(
     try:
         with edit_dashboard_auth_token(dashboard, token_store) as (token, _details):
             return token
-    except (DashboardTokenNotFound, InvalidDashboardTokenReference):
+    except DashboardTokenNotFound, InvalidDashboardTokenReference:
         return None
 
 
@@ -286,11 +288,11 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     def _before_method_handler(self, ctx: PageContext) -> None:
         """Override this to implement any pre-method logic"""
 
-    def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:
+    def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement any post-method logic"""
         return result
 
-    def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
+    def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement custom exception handling logic"""
         if isinstance(exception, WidgetRenderError):
             content = html.render_error(str(exception))
@@ -299,12 +301,15 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
         html.write_html(content)
         return None
 
-    def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> PageResult:
+    def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement GET method logic"""
         raise MKMethodNotAllowed("Method not supported")
 
     def _post(
-        self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
+        self,
+        token: AuthToken,  # noqa: ARG002
+        token_details: DashboardToken,  # noqa: ARG002
+        ctx: PageContext,  # noqa: ARG002
     ) -> PageResult:
         """Override this to implement POST method logic"""
         raise MKMethodNotAllowed("Method not supported")
@@ -420,6 +425,12 @@ class ImpersonatedDashboardTokenIssuer:
             return permitted[view_name]
         except KeyError:
             raise InvalidWidgetError(disable_token=True)
+
+    def temperature_unit(self, default_temperature_unit: str) -> TemperatureUnit:
+        """A shared dashboard shows the unit its owner configured, not the visitor's."""
+        self._check_valid()
+
+        return get_temperature_unit(user, default_temperature_unit)
 
 
 @contextlib.contextmanager

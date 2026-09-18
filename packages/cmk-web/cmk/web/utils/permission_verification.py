@@ -18,16 +18,16 @@ With this, we can ensure we always have some understanding of the required and u
 
 """
 
-from __future__ import annotations
-
 import abc
 import itertools
 from collections.abc import Iterable, Sequence
 from typing import override, Protocol
 
+PermissionName = str
+
 
 class UserLike(Protocol):
-    def has_permission(self, pname: str) -> bool: ...
+    def has_permission(self, pname: PermissionName) -> bool: ...
 
 
 class FakeUser:
@@ -39,11 +39,11 @@ class FakeUser:
 
     def __init__(
         self,
-        perms: Sequence[str],
+        perms: Sequence[PermissionName],
     ) -> None:
         self.perms = perms
 
-    def has_permission(self, perm: str) -> bool:
+    def has_permission(self, perm: PermissionName) -> bool:
         return perm in self.perms
 
 
@@ -57,12 +57,12 @@ class BasePerm(abc.ABC):
     def iter_perms(self) -> Iterable[Perm]:
         raise NotImplementedError
 
-    def validate(self, permissions: Sequence[str]) -> bool:
+    def validate(self, permissions: Sequence[PermissionName]) -> bool:
         """Verify that a user with these permissions fulfills the requirements."""
         return self.has_permission(FakeUser(permissions))
 
     def __contains__(self, item: object) -> bool:
-        return isinstance(item, str) and item in (p.name for p in self.iter_perms())
+        return isinstance(item, PermissionName) and item in (p.name for p in self.iter_perms())
 
 
 class Optional(BasePerm):
@@ -91,7 +91,7 @@ class Optional(BasePerm):
 
     @override
     def __contains__(self, item: object) -> bool:
-        return isinstance(item, str) and item in self.perm
+        return isinstance(item, PermissionName) and item in self.perm
 
 
 class Undocumented(Optional):
@@ -114,7 +114,7 @@ class MultiPerm(BasePerm, abc.ABC):
 
     @override
     def __contains__(self, item: object) -> bool:
-        return isinstance(item, str) and any(item in perm for perm in self.perms)
+        return isinstance(item, PermissionName) and any(item in perm for perm in self.perms)
 
 
 class NoPerm(BasePerm):
@@ -143,7 +143,7 @@ class NoPerm(BasePerm):
 class Perm(BasePerm):
     """A permission identified by a string."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: PermissionName) -> None:
         self.name = name
 
     @override
@@ -316,4 +316,4 @@ class PrefixPerm(BasePerm):
     @override
     def __contains__(self, item: object) -> bool:
         """Check if the given permission is within this prefix."""
-        return isinstance(item, str) and item.startswith(self.prefix + ".")
+        return isinstance(item, PermissionName) and item.startswith(self.prefix + ".")

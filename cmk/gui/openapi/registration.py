@@ -6,7 +6,6 @@
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
-    audit_log,
     aux_tags,
     broker_connection,
     cert,
@@ -32,6 +31,9 @@ from .api_endpoints import (
     site_management,
 )
 from .api_endpoints import (
+    audit_log as api_audit_log,
+)
+from .api_endpoints import (
     autocomplete as api_autocomplete,
 )
 from .api_endpoints import background_job as api_background_job
@@ -43,6 +45,7 @@ from .api_endpoints import (
 )
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import folder_config as api_folder_config
+from .api_endpoints import global_settings as api_global_settings
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import host_group_config as api_host_group_config
@@ -72,7 +75,6 @@ def register(
 
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
-    audit_log.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)
@@ -134,6 +136,10 @@ def register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )
+    api_global_settings.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     api_graph_timerange.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
@@ -163,6 +169,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_autocomplete.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_audit_log.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

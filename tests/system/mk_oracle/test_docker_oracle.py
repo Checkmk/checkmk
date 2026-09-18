@@ -239,9 +239,8 @@ def test_mk_oracle_section_performance(
     _assert_rows_start_with_sid(rows, f"{oracle.SID}.")
 
 
-def test_mk_oracle_section_performance_categories(
-    oracle: OracleDatabase, mk_oracle_sections: dict[str, list[str]]
-) -> None:
+@pytest.mark.usefixtures("oracle")
+def test_mk_oracle_section_performance_categories(mk_oracle_sections: dict[str, list[str]]) -> None:
     """Each performance row must use a known category and the expected column count."""
     rows = mk_oracle_sections.get("oracle_performance", [])
     assert rows, "oracle_performance is empty"
@@ -879,7 +878,7 @@ def _assert_runtime_refused(
     )
     assert isinstance(output, bytes)  # stream/socket/demux not used above
     text = output.decode("utf-8")
-    assert "No Oracle client runtime found" in text, (
+    assert "Execution is blocked because you try to load an unsafe Oracle client library" in text, (
         f"Runtime {runtime_dir} was accepted as root but should not be:\n{text}"
     )
 

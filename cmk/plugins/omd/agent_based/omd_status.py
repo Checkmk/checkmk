@@ -115,7 +115,7 @@ def discovery_omd_status(
 
 
 def _check_omd_status(
-    item: str,
+    item: str,  # noqa: ARG001
     site_services: Mapping[str, Any],
     others_running: bool,
     extra_text: str,
@@ -150,7 +150,7 @@ def _check_omd_status(
 def check_omd_status(
     item: str,
     section_omd_status: Section | None,
-    section_omd_info: Section | None,
+    section_omd_info: Section | None,  # noqa: ARG001
 ) -> CheckResult:
     """
     >>> for result in check_omd_status(
@@ -171,7 +171,7 @@ def check_omd_status(
 def cluster_check_omd_status(
     item: str,
     section_omd_status: Mapping[str, Section | None],
-    section_omd_info: Mapping[str, Section | None],
+    section_omd_info: Mapping[str, Section | None],  # noqa: ARG001
 ) -> CheckResult:
     """
     >>> for result in cluster_check_omd_status(

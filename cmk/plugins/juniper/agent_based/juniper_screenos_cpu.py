@@ -33,7 +33,7 @@ def _migrate_levels(levels: object) -> LevelsT[float] | None:
     return levels  # type: ignore[return-value]
 
 
-def discover_juniper_screenos_cpu(section: Section) -> DiscoveryResult:
+def discover_juniper_screenos_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

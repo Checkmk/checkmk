@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ColumnDef } from '@tanstack/vue-table'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
@@ -20,13 +20,10 @@ import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.v
 
 import MetricAttributesTable from '../../components/MetricAttributesTable.vue'
 import type { Metric } from '../../components/TimeSeriesGraph'
-import {
-  type MetricStats,
-  metricStats,
-  orderMetricsForLegend
-} from '../../components/legend/legendUtils'
+import { type MetricStats, metricStats } from '../../components/legend/legendUtils'
 import { attributesOf, hasAttributes } from '../../components/metricAttributes'
-import type { GraphItemsStore } from '../composables/useGraphItems'
+import { orderMetricsTopToBottom } from '../../components/metricOrder'
+import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
@@ -38,6 +35,11 @@ const { store, metricsBySource, resolvedTitles } = defineProps<{
   metricsBySource: Map<ItemId, Metric[]>
   /** The title each row resolved to in the last fetch; rows that resolved to none are absent. */
   resolvedTitles: ReadonlyMap<ItemId, string>
+}>()
+
+const emit = defineEmits<{
+  /** The series the hovered element stands for. */
+  hoverMetrics: [names: string[]]
 }>()
 
 const { _t } = usei18n()
@@ -61,6 +63,17 @@ const columns: ColumnDef<DesignerItem>[] = [
 const colorColumnIndex = columns.findIndex((column) => column.id === 'color')
 
 const expandedRows = ref<Record<string, boolean>>({})
+
+function isExpanded(row: DesignerItem): boolean {
+  return !isSingleLine(row) && (expandedRows.value[row.id] ?? true)
+}
+
+watch(
+  () => store.items.value,
+  (rows) => {
+    expandedRows.value = retainKnownRows(expandedRows.value, rows)
+  }
+)
 
 /** Second expansion level: the attributes of a single resolved series. */
 const expandedSeries = ref<Record<string, boolean>>({})
@@ -92,7 +105,7 @@ const linesBySource = computed(() => {
   for (const [id, series] of metricsBySource) {
     out.set(
       id,
-      orderMetricsForLegend([...series]).map((metric) => ({
+      orderMetricsTopToBottom([...series]).map((metric) => ({
         metric,
         stats: metricStats(metric)
       }))
@@ -100,6 +113,22 @@ const linesBySource = computed(() => {
   }
   return out
 })
+
+/** A hidden row is fetched but not drawn, so highlighting it would dim the plot for nothing. */
+function onRowHover(row: DesignerItem | null): void {
+  if (row === null || !row.visible) {
+    emit('hoverMetrics', [])
+    return
+  }
+  emit(
+    'hoverMetrics',
+    (linesBySource.value.get(row.id) ?? []).map((entry) => entry.metric.metadata.name)
+  )
+}
+
+function onSeriesHover(row: DesignerItem, metric: Metric | null): void {
+  emit('hoverMetrics', metric === null || !row.visible ? [] : [metric.metadata.name])
+}
 
 function onLineStyleChange(row: DesignerItem, value: string | null): void {
   const lineType = parseLineType(value)
@@ -120,8 +149,9 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
       :rows="[...store.items.value]"
       :columns="columns"
       :get-row-key="(row: DesignerItem) => row.id"
-      :expanded-rows="expandedRows"
+      :is-row-expanded="isExpanded"
       @reorder="(from: number, to: number) => store.move(from, to)"
+      @row-hover="onRowHover"
     >
       <template #row="{ row }">
         <DragHandleCell column-id="drag" vertical-align="middle" />
@@ -150,7 +180,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           v-else
           column-id="title"
           vertical-align="middle"
-          :expanded="expandedRows[row.id] === true"
+          :expanded="isExpanded(row)"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
           >{{ resolvedTitles.get(row.id) ?? row.title }}</CollapsibleCell
         >
@@ -176,7 +206,11 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           v-for="entry in linesBySource.get(row.id) ?? []"
           :key="entry.metric.metadata.name"
         >
-          <tr class="graphing-appearance-table__expanded-row">
+          <tr
+            class="graphing-appearance-table__expanded-row"
+            @mouseenter="onSeriesHover(row, entry.metric)"
+            @mouseleave="onSeriesHover(row, null)"
+          >
             <td :colspan="colorColumnIndex" />
             <BaseCell column-id="color" vertical-align="middle">
               <span
@@ -203,7 +237,11 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
             <td :colspan="2" />
             <StatsCells :stats="entry.stats" />
           </tr>
-          <tr v-if="showsAttributes(row.id, entry.metric)">
+          <tr
+            v-if="showsAttributes(row.id, entry.metric)"
+            @mouseenter="onSeriesHover(row, entry.metric)"
+            @mouseleave="onSeriesHover(row, null)"
+          >
             <td :colspan="columns.length" class="graphing-appearance-table__attributes">
               <MetricAttributesTable :attributes="attributesOf(entry.metric)" />
             </td>

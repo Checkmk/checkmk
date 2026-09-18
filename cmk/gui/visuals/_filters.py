@@ -28,13 +28,13 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.regex import validate_regex
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib.groups_io import all_groups
 from cmk.web.utils.autocompleter_config import (
     AutocompleterConfig,
     GroupAutocompleterConfig,
 )
+from cmk.web.utils.speaklater import LazyString
 
 from ._livestatus import get_only_sites_from_context
 from .filter import (
@@ -198,7 +198,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             description=_l("Search field allowing regular expressions and partial matches"),
-            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -215,7 +214,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
-            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -230,7 +228,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 op="~~",
             ),
             is_show_more=True,
-            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -1337,7 +1334,7 @@ class FilterLogContactName(InputTextFilter):
         if current_value := value.get(self.htmlvars[0]):
             new_value = dict(value.items())
             new_value[self.htmlvars[0]] = "(,|^)" + current_value.replace(".", "\\.") + "(,|$)"
-            return self.query_filter._filter(new_value)
+            return self.query_filter._filter(new_value)  # noqa: SLF001
         return ""
 
 

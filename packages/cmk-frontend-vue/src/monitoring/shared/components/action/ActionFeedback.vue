@@ -12,6 +12,7 @@ import { computed } from 'vue'
 export interface ActionFeedback {
   variant: 'success' | 'error'
   message: TranslatedString
+  heading?: TranslatedString
 }
 
 const props = defineProps<{
@@ -22,8 +23,8 @@ const open = defineModel<boolean>('open', { default: false })
 
 const alertProps = computed<CmkAlertBoxProps>(() =>
   props.feedback.variant === 'success'
-    ? { variant: 'success', dismissible: true, autoDismiss: true }
-    : { variant: 'error' }
+    ? { variant: 'success', dismissible: true, autoDismiss: true, heading: props.feedback.heading }
+    : { variant: 'error', heading: props.feedback.heading }
 )
 </script>
 

@@ -118,7 +118,7 @@ def make_application(
     )
 
     @app.exception_handler(CacheError)
-    async def cache_exception_handler(request: Request, exc: CacheError) -> JSONResponse:
+    async def cache_exception_handler(request: Request, exc: CacheError) -> JSONResponse:  # noqa: ARG001
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content={

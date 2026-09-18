@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Setup can be set into read only mode manually."""
 
-# mypy: disable-error-code="unreachable"
-
 import time
 
 from cmk.gui.http import request
@@ -37,7 +35,7 @@ def message(read_only_config: ReadOnlySpec) -> str:
 
 def is_enabled(read_only_config: ReadOnlySpec) -> bool:
     if not read_only_config:
-        return False
+        return False  # type: ignore[unreachable]
     if read_only_config["enabled"] is True:
         return True
     if isinstance(read_only_config["enabled"], tuple):

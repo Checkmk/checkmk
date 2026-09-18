@@ -35,7 +35,7 @@ def check_couchbase_nodes_cpu_util(
         return
     try:
         util = float(data["cpu_utilization_rate"])
-    except (ValueError, KeyError):
+    except ValueError, KeyError:
         return
     yield from check_cpu_util(
         util=util,

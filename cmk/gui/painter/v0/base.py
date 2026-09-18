@@ -6,9 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import abc
 import os
@@ -35,7 +33,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    HTTPVariables,
     PainterName,
     PainterParameters,
     PermittedViewSpecs,
@@ -57,7 +54,7 @@ from cmk.gui.view_utils import (
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri
+from cmk.web.utils.urls import HTTPVariable, makeuri
 
 from ..v1.painter_lib import (
     experimental_painter_registry,
@@ -109,7 +106,7 @@ class Painter(abc.ABC):
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
 
-        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:
+        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:  # noqa: ARG001
             return rows
 
         # Needed because of old calling conventions. Doesn't have any effect.
@@ -151,7 +148,7 @@ class Painter(abc.ABC):
         )
 
     @staticmethod
-    def uuid_col(cell: Cell) -> str:
+    def uuid_col(cell: Cell) -> str:  # noqa: ARG004
         # This method is only overwritten in two subclasses and does not even
         # use `self`.  This is all very fishy.
         return ""
@@ -177,7 +174,7 @@ class Painter(abc.ABC):
         """Livestatus columns needed for this painter"""
         raise NotImplementedError
 
-    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
+    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:  # noqa: ARG002
         """Return list of dynamically generated column as specified by Cell
 
         Some columns for the Livestatus query need to be generated at
@@ -185,7 +182,7 @@ class Painter(abc.ABC):
         generated the required column names."""
         return []
 
-    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:
+    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:  # noqa: ARG002
         """Post process query according to cell
 
         This function processes data immediately after it is handled back
@@ -215,7 +212,7 @@ class Painter(abc.ABC):
         Falls back to the full title if no tooltip title is given"""
         return self.title(cell)
 
-    def export_title(self, cell: Cell) -> str:
+    def export_title(self, cell: Cell) -> str:  # noqa: ARG002
         """Used for exporting views in JSON/CSV/python format"""
         return self.ident
 
@@ -226,8 +223,8 @@ class Painter(abc.ABC):
 
     def group_by(
         self,
-        row: Row,
-        cell: Cell,
+        row: Row,  # noqa: ARG002
+        cell: Cell,  # noqa: ARG002
     ) -> None | str | tuple[str, ...] | tuple[tuple[str, str], ...]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
@@ -517,7 +514,7 @@ class Cell:
         onclick = ""
         title = ""
         if display_options.enabled(display_options.L) and self._sort_url_parameter:
-            params: HTTPVariables = [
+            params: list[HTTPVariable] = [
                 ("sort", self._sort_url_parameter),
                 ("_show_filter_form", 0),
             ]
@@ -584,7 +581,10 @@ class Cell:
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
     def render_for_pdf(
-        self, row: Row, time_range: tuple[int, int], user: LoggedInUser
+        self,
+        row: Row,
+        time_range: tuple[int, int],  # noqa: ARG002
+        user: LoggedInUser,
     ) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename: str) -> str | None:
@@ -604,7 +604,7 @@ class Cell:
             if css_classes is None:
                 css_classes = ""
             if rendered_txt is None:
-                return css_classes.split(), ""
+                return css_classes.split(), ""  # type: ignore[unreachable]
             assert isinstance(rendered_txt, str | HTML)
 
             txt = rendered_txt.strip()
@@ -613,7 +613,7 @@ class Cell:
             # Handle <img...>. Our PDF writer cannot draw arbitrary
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
-            assert not isinstance(txt, tuple)
+            assert not isinstance(txt, tuple)  # type: ignore[unreachable]
             if (isinstance(txt, str) and txt.lower().startswith("<img")) or (
                 isinstance(txt, HTML) and txt.lower().startswith(HTML.without_escaping("<img"))
             ):
@@ -627,7 +627,7 @@ class Cell:
                     html_str = replace_anchor_tags_with_urls(html_str)
                     html_str = replace_br_with_newlines(html_str)
                     content = escaping.strip_tags(html_str)
-                elif not isinstance(txt, tuple):
+                elif not isinstance(txt, tuple):  # type: ignore[unreachable]
                     content = escaping.strip_tags(unescape(txt))
 
             return css_classes.split(), content

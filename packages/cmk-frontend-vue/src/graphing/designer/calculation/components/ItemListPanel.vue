@@ -17,13 +17,13 @@ const {
   items,
   domain,
   actionLabel,
-  isItemDisabled,
+  itemBlockReason,
   alert = null
 } = defineProps<{
   items: readonly GraphItem[]
   domain: Domain
   actionLabel: (id: ItemId) => TranslatedString
-  isItemDisabled?: ((item: GraphItem) => boolean) | undefined
+  itemBlockReason?: ((item: GraphItem) => TranslatedString | null) | undefined
   alert?: SectionAlert | null | undefined
 }>()
 
@@ -46,7 +46,7 @@ const sourceMetrics = computed(() => inDomain.value.filter((item) => !isFormula(
       :empty-text="_t('No calculations yet.')"
       :items="calculations"
       :action-label="actionLabel"
-      :is-item-disabled="isItemDisabled"
+      :item-block-reason="itemBlockReason"
       :alert="alert"
       show-actions
       @insert-id="emit('insertId', $event)"
@@ -59,7 +59,7 @@ const sourceMetrics = computed(() => inDomain.value.filter((item) => !isFormula(
       :empty-text="_t('No metrics available.')"
       :items="sourceMetrics"
       :action-label="actionLabel"
-      :is-item-disabled="isItemDisabled"
+      :item-block-reason="itemBlockReason"
       @insert-id="emit('insertId', $event)"
     />
   </div>

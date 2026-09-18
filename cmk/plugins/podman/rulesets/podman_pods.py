@@ -17,7 +17,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _simple_levels_element(property: str) -> DictElement:
+def _simple_levels_element(property: str) -> DictElement:  # noqa: A002
     """Create threshold levels for upper and lower bounds for a specific pod state."""
     return DictElement(
         required=False,

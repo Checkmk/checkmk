@@ -24,7 +24,6 @@ py_library(
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:tty",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:checker-plugin",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",

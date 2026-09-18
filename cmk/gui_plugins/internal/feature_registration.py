@@ -50,4 +50,4 @@ class RegistrationContext:
 class GuiFeaturePlugin:
     name: str
     register: Callable[[RegistrationContext], None]
-    enabled: Callable[[RegistrationContext], bool] = lambda ctx: True
+    enabled: Callable[[RegistrationContext], bool] = lambda ctx: True  # noqa: ARG005

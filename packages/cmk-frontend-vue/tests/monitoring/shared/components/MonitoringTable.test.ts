@@ -7,6 +7,7 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
+  Row as TableRow,
   VisibilityState
 } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
@@ -61,6 +62,12 @@ const COLUMNS: ColumnDef<Row>[] = [
   { id: 'actions', header: 'Actions', enableSorting: false }
 ]
 
+/** The same table as {@link COLUMNS}, plus the column that turns row selection on. */
+const COLUMNS_WITH_SELECT: ColumnDef<Row>[] = [
+  { id: 'select', header: '', enableSorting: false, meta: { selectColumn: true } },
+  ...COLUMNS
+]
+
 function makeRows(count: number): Row[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `row-${i}`,
@@ -80,7 +87,9 @@ function makeMockService(
       onSortUpdate(newSort)
     }),
     columnVisibility,
-    rowToReveal: ref<Row | null>(null)
+    rowToReveal: ref<Row | null>(null),
+    beginAutoPause: vi.fn(),
+    endAutoPause: vi.fn()
   }
 }
 
@@ -98,8 +107,11 @@ function probedLayout(): string {
 
 function mountTable(overrides: {
   rows?: Row[]
+  columns?: ColumnDef<Row>[]
   fetchState?: FetchState
   hasLoaded?: boolean
+  loadFailed?: boolean
+  onRetry?: () => void
   sortState?: SortingState
   filterState?: ColumnFiltersState
   columnVisibility?: Ref<VisibilityState>
@@ -108,8 +120,11 @@ function mountTable(overrides: {
   getRowKey?: (row: Row, index: number) => string | number
 }) {
   const rows = overrides.rows ?? makeRows(3)
+  const columns = overrides.columns ?? COLUMNS
   const fetchState = overrides.fetchState ?? 'idle'
   const hasLoaded = overrides.hasLoaded ?? true
+  const loadFailed = overrides.loadFailed ?? false
+  const onRetry = overrides.onRetry ?? (() => {})
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
@@ -126,7 +141,17 @@ function mountTable(overrides: {
         components: { MonitoringTable },
         setup() {
           provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-          return { rows, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
+          return {
+            rows,
+            columns,
+            fetchState,
+            hasLoaded,
+            loadFailed,
+            onRetry,
+            filterState,
+            onFilterUpdate,
+            getRowKey
+          }
         },
         render() {
           return h(
@@ -135,14 +160,25 @@ function mountTable(overrides: {
               rows: this.rows,
               fetchState: this.fetchState,
               hasLoaded: this.hasLoaded,
-              columns: COLUMNS,
+              loadFailed: this.loadFailed,
+              columns: this.columns,
               filterState: this.filterState,
               ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
-              'onUpdate:filterState': this.onFilterUpdate
+              'onUpdate:filterState': this.onFilterUpdate,
+              onRetry: this.onRetry
             },
             {
-              row: ({ row, index }: { row: Row; index: number }) => [
+              row: ({
+                row,
+                index,
+                tableRow
+              }: {
+                row: Row
+                index: number
+                tableRow: TableRow<Row>
+              }) => [
                 h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+                h('td', { 'data-testid': `can-select-${row.id}` }, String(tableRow.getCanSelect())),
                 h(layoutProbe)
               ],
               'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
@@ -203,6 +239,64 @@ test('aria-sort reflects the active sort direction', () => {
     'descending'
   )
   expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'none')
+})
+
+async function pickSortDirection(column: string, direction: string): Promise<void> {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: `Filter ${column}` }))
+  await user.click(screen.getByRole('button', { name: direction }))
+}
+
+test('the column panel sorts the column ascending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ onSortUpdate })
+
+  await pickSortDirection('Name', 'Sort ascending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: false }])
+})
+
+test('the column panel sorts the column descending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ onSortUpdate })
+
+  await pickSortDirection('Name', 'Sort descending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: true }])
+})
+
+test('the column panel drops only its own column out of a multi-column sort', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: true },
+      { id: 'state', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await pickSortDirection('Name', 'No sorting / default sorting')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'state', desc: false }])
+})
+
+test('the column panel marks the direction the column is sorted by', async () => {
+  const user = userEvent.setup()
+  mountTable({ sortState: [{ id: 'name', desc: true }] })
+
+  await user.click(screen.getByRole('button', { name: 'Filter Name' }))
+
+  expect(screen.getByRole('button', { name: 'Sort descending' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.getByRole('button', { name: 'Sort ascending' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
 })
 
 test('aria-busy is true while a fetch is in flight', () => {
@@ -273,6 +367,27 @@ test('uses getRowKey for row keying when provided', async () => {
 
   expect(screen.getByTestId('row-row-0')).toBeInTheDocument()
   expect(screen.getByTestId('row-row-1')).toBeInTheDocument()
+})
+
+test('says the results could not be loaded when the fetch failed', () => {
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true })
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not load the results')
+})
+
+test('does not pass a failed fetch off as an empty result', () => {
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true })
+
+  expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
+})
+
+test('offers a retry for a failed fetch', async () => {
+  const onRetry = vi.fn()
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true, onRetry })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(onRetry).toHaveBeenCalledOnce()
 })
 
 test('renders the empty-state slot when there are no rows and not loading', () => {
@@ -377,4 +492,25 @@ test('consumes a reveal request for a row it does not list, rather than holding 
   await flushVirtualizer()
 
   expect(mockService.rowToReveal.value).toBeNull()
+})
+
+/*
+ * The select column is the switch for row selection: a table without it belongs to a user who may
+ * run no command, and must not offer a selection at all - not even to a programmatic caller.
+ */
+
+test('offers no row selection while no column declares itself the select column', async () => {
+  mountTable({})
+  await flushVirtualizer()
+
+  expect(screen.queryByRole('checkbox', { name: 'Select all rows' })).not.toBeInTheDocument()
+  expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('false')
+})
+
+test('offers row selection once a column declares itself the select column', async () => {
+  mountTable({ columns: COLUMNS_WITH_SELECT })
+  await flushVirtualizer()
+
+  expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
+  expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('true')
 })

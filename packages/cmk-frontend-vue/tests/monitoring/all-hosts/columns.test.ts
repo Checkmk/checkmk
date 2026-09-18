@@ -8,6 +8,7 @@ import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import {
+  type HostColumnOptions,
   buildHostColumnPinning,
   buildHostColumns,
   visibleHostFields
@@ -31,17 +32,25 @@ class HostColumnService extends MonitoringService<HostEntry> {
   }
 }
 
-function makeService() {
-  const service = new HostColumnService(
-    buildHostColumns({ includeActions: true, sites: [] }),
-    makeKeyShortcutService()
-  )
+/** The columns of a table without multi-tenancy, unless a test asks for something else. */
+function hostColumns(options: Partial<HostColumnOptions> = {}): ColumnDef<HostEntry>[] {
+  return buildHostColumns({
+    includeSelect: true,
+    includeActions: true,
+    showCustomer: false,
+    sites: [],
+    ...options
+  })
+}
+
+function makeService(options: Partial<HostColumnOptions> = {}) {
+  const service = new HostColumnService(hostColumns(options), makeKeyShortcutService())
   service.stopPolling()
   return service
 }
 
-function columnIds(includeActions = true): (string | undefined)[] {
-  return buildHostColumns({ includeActions, sites: [] }).map(columnId)
+function columnIds(options: Partial<HostColumnOptions> = {}): (string | undefined)[] {
+  return hostColumns(options).map(columnId)
 }
 
 beforeEach(() => {
@@ -53,7 +62,7 @@ afterEach(() => {
 })
 
 test('no pinned column is offered in the picker', () => {
-  const pinning = buildHostColumnPinning({ includeActions: true })
+  const pinning = buildHostColumnPinning({ includeSelect: true, includeActions: true })
   const offered = makeService().toggleableColumns.map((column) => column.id)
 
   const pinned = [...(pinning.left ?? []), ...(pinning.right ?? [])]
@@ -156,13 +165,23 @@ test('the fields of the fixed columns are never asked for, the API always sendin
 })
 
 test('the actions column is neither rendered nor pinned when no row action is permitted', () => {
-  expect(columnIds(false)).not.toContain('actions')
-  expect(buildHostColumnPinning({ includeActions: false }).right).toBeUndefined()
+  expect(columnIds({ includeActions: false })).not.toContain('actions')
+  expect(
+    buildHostColumnPinning({ includeSelect: true, includeActions: false }).right
+  ).toBeUndefined()
+})
+
+test('the select column is neither rendered nor pinned when no action is permitted', () => {
+  expect(columnIds({ includeSelect: false })).not.toContain('select')
+  expect(buildHostColumnPinning({ includeSelect: false, includeActions: true }).left).toEqual([
+    'state',
+    'modes',
+    'name'
+  ])
 })
 
 test('the site column filter offers the configured sites as options', () => {
-  const columns = buildHostColumns({
-    includeActions: true,
+  const columns = hostColumns({
     sites: [
       { id: 'local', alias: 'Local site' },
       { id: 'remote', alias: 'Remote site' }
@@ -180,8 +199,48 @@ test('the site column filter offers the configured sites as options', () => {
   })
 })
 
+test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
+  const columns = hostColumns({ includeActions: true })
+  const stateColumn = columns.find((column) => columnId(column) === 'state')
+
+  expect(stateColumn?.meta?.filter).toEqual({
+    type: 'checkbox-list-with-flags',
+    field: 'state',
+    options: [
+      { value: 'UP', title: 'UP' },
+      { value: 'DOWN', title: 'DOWN' },
+      { value: 'UNREACHABLE', title: 'UNREACH' },
+      { value: 'PENDING', title: 'PENDING' }
+    ],
+    flags: [
+      { field: 'is_flapping', title: 'Flapping' },
+      { field: 'stale', title: 'Stale' }
+    ]
+  })
+})
+
+test('the mode column filter no longer offers flapping, which moved to the state column', () => {
+  const columns = hostColumns({ includeActions: true })
+  const modesColumn = columns.find((column) => columnId(column) === 'modes')
+
+  expect(modesColumn?.meta?.filter).toEqual({
+    type: 'boolean-group',
+    groups: [
+      { field: 'in_downtime', title: 'In downtime' },
+      { field: 'acknowledged', title: 'Acknowledged' },
+      { field: 'notifications_enabled', title: 'Notifications enabled' },
+      { field: 'has_comments', title: 'Has comments' },
+      { field: 'active_checks_disabled', title: 'Active checks disabled' },
+      { field: 'passive_checks_disabled', title: 'Passive checks disabled' },
+      { field: 'in_notification_period', title: 'In notification period' },
+      { field: 'in_service_period', title: 'In service period' },
+      { field: 'in_check_period', title: 'In check period' }
+    ]
+  })
+})
+
 test('the folder column offers a text filter', () => {
-  const columns = buildHostColumns({ includeActions: true, sites: [] })
+  const columns = hostColumns()
   const folderColumn = columns.find((column) => columnId(column) === 'folder')
 
   expect(folderColumn?.meta?.filter).toEqual({ type: 'string-input', field: 'folder' })
@@ -190,7 +249,7 @@ test('the folder column offers a text filter', () => {
 test.each(['last_check', 'last_state_change'])(
   'the %s column offers a from/to filter on the instant',
   (field) => {
-    const columns = buildHostColumns({ includeActions: true, sites: [] })
+    const columns = hostColumns()
     const column = columns.find((candidate) => columnId(candidate) === field)
 
     expect(column?.meta?.filter).toEqual({ type: 'date-time-range', field })
@@ -198,8 +257,35 @@ test.each(['last_check', 'last_state_change'])(
 )
 
 test('a timestamp column stays hidden until the user shows it', () => {
-  const columns = buildHostColumns({ includeActions: true, sites: [] })
+  const columns = hostColumns()
   const column = columns.find((candidate) => columnId(candidate) === 'last_check')
 
   expect(column?.meta?.hidden).toBe(true)
+})
+
+test('the customer column is absent from a table without multi-tenancy', () => {
+  expect(columnIds()).not.toContain('customer')
+  expect(makeService().toggleableColumns.map((column) => column.id)).not.toContain('customer')
+})
+
+test('the customer column is offered last, before the actions, under multi-tenancy', () => {
+  const offered = makeService({ showCustomer: true }).toggleableColumns
+
+  expect(offered.at(-1)).toEqual({ id: 'customer', label: 'Customer' })
+  expect(columnIds({ showCustomer: true }).slice(-3)).toEqual([
+    'contact_groups',
+    'customer',
+    'actions'
+  ])
+})
+
+test('the customer column stays hidden until the user shows it', () => {
+  const service = makeService({ showCustomer: true })
+
+  expect(service.defaultColumnVisibility).toMatchObject({ customer: false })
+})
+
+test('the customer field is never asked for, the API deriving it from the site', () => {
+  expect(visibleHostFields({})).not.toContain('customer')
+  expect(visibleHostFields({ customer: true })).not.toContain('customer')
 })

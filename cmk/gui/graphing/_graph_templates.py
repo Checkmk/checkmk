@@ -3,79 +3,53 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
 
-from __future__ import annotations
-
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, override, Self
+from typing import Final, Literal, override, Self
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName as GUIHostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
+from cmk.graphing_engine import (
+    build_matched_graphs,
+    evaluate_graphs,
+    FetchMetricNamesProtocol,
+    Graph,
+    HostName,
+    RRDMetric,
+    ServiceName,
+)
+from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import ServiceName as GUIServiceName
 
-from ._evaluations_from_api import (
-    evaluate_graph_plugin_metrics,
-    evaluate_graph_plugin_range,
-    evaluate_graph_plugin_scalars,
-    evaluate_graph_plugin_title,
+from ._built_graphs import BuiltGraph, DiscoveredGraphs
+from ._from_api import GraphFromAPI
+from ._graph_choices import GraphPluginChoice
+from ._graph_codec import GraphCodec
+from ._graph_dispatch import (
+    CommonGraphOptions,
+    EvaluatedGraphs,
+    FetchDataWithDiagnosticsProtocol,
+    GraphDispatcher,
+    legacy_graph_id,
 )
-from ._from_api import GraphFromAPI, RegisteredMetric
-from ._graph_metric_expressions import (
-    AnnotatedHostName,
-    create_graph_metric_expression_from_translated_metric,
-    GraphConsolidationFunction,
-)
-from ._graph_specification import (
-    compute_warn_crit_rules_from_translated_metric,
-    FixedVerticalRange,
-    graph_specification_registry,
-    GraphEnvironment,
-    GraphMetric,
-    GraphRecipe,
-    GraphRecipeWithOverrides,
-    GraphSpecification,
-    HorizontalRule,
-    MinimalVerticalRange,
-)
-from ._graphs_order import GRAPHS_ORDER
-from ._rrd import fetch_graph_row, HostGraphRow, ServiceGraphRow
-from ._translated_metrics import TranslatedMetric
-from ._unit import ConvertibleUnitSpecification, user_specific_unit
+from ._graph_specification import AnnotatedHostName, GraphSpecification
+from ._graphs_order import sort_registered_graph_plugins
+from ._plugins import registered_graphs, registered_metrics, registered_translations
+from ._source import RRDFetchData, RRDFetchMetricNames
 
 tracer = trace.get_tracer()
 
 
 class MKGraphNotFound(MKGeneralException): ...
-
-
-def sort_registered_graph_plugins(
-    registered_graphs: Mapping[str, GraphFromAPI],
-) -> list[tuple[str, GraphFromAPI]]:
-    def _by_index(graph_name: str) -> int:
-        try:
-            return GRAPHS_ORDER.index(graph_name)
-        except ValueError:
-            return -1
-
-    return sorted(registered_graphs.items(), key=lambda t: _by_index(t[0]))
-
-
-@dataclass(frozen=True)
-class GraphPluginChoice:
-    id: str
-    title: str
 
 
 def get_graph_plugin_choices(
@@ -115,198 +89,10 @@ def get_graph_plugin_from_id(
     )
 
 
-def get_graph_plugin_and_single_metric_choices(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, GraphFromAPI]],
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
-    graph_plugin_choices = []
-    already_graphed_metrics: set[str] = set()
-    for _graph_id, graph_plugin in sorted_graph_plugins:
-        if (
-            graphed_metrics := evaluate_graph_plugin_metrics(
-                registered_metrics,
-                site_id,
-                host_name,
-                service_name,
-                "max",
-                graph_plugin,
-                translated_metrics,
-            )
-        ).graph_metrics:
-            already_graphed_metrics.update(graphed_metrics.metric_names)
-            graph_plugin_choices.append(
-                GraphPluginChoice(
-                    graph_plugin.name,
-                    graph_plugin.title.localize(translate_to_current_language),
-                )
-            )
-
-    single_metric_choices = []
-    for metric_name, translated_metric in sorted(translated_metrics.items()):
-        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            single_metric_choices.append(
-                GraphPluginChoice(
-                    f"METRIC_{metric_name}",
-                    _("Metric: %(title)s") % {"title": translated_metric.title},
-                )
-            )
-    return graph_plugin_choices, single_metric_choices
-
-
-def _create_graph_recipe_from_translated_metric(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    consolidation_function: GraphConsolidationFunction,
-    translated_metric: TranslatedMetric,
-    *,
-    temperature_unit: TemperatureUnit,
-) -> GraphRecipe:
-    title = translated_metric.title
-    graph_metric = GraphMetric(
-        title=title,
-        line_type="area",
-        operation=create_graph_metric_expression_from_translated_metric(
-            site_id,
-            host_name,
-            service_name,
-            translated_metric,
-            consolidation_function,
-        ),
-        unit=translated_metric.unit_spec,
-        color=translated_metric.color,
-    )
-    return GraphRecipe(
-        title=title,
-        metrics=[graph_metric],
-        unit_spec=graph_metric.unit,
-        explicit_vertical_range=None,
-        horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-            user_specific_unit(translated_metric.unit_spec, temperature_unit),
-            translated_metric,
-        ),
-        omit_zero_metrics=False,
-    )
-
-
-def _create_graph_recipe(
-    *,
-    title: str,
-    graph_metrics: Sequence[GraphMetric],
-    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
-    horizontal_rules: Sequence[HorizontalRule],
-) -> GraphRecipe:
-    units = {m.unit for m in graph_metrics}
-
-    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
-    if (
-        all(isinstance(m.unit, str) for m in graph_metrics)
-        or all(isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics)
-    ) and len(units) > 1:
-        raise MKGeneralException(
-            _("Cannot create graph with metrics of different units '%(units)s'")
-            % {"units": ", ".join(repr(unit) for unit in units)}
-        )
-
-    if not title:
-        title = next((m.title for m in graph_metrics), "")
-
-    return GraphRecipe(
-        title=title,
-        metrics=graph_metrics,
-        unit_spec=units.pop(),
-        explicit_vertical_range=explicit_vertical_range,
-        horizontal_rules=horizontal_rules,
-        omit_zero_metrics=False,
-    )
-
-
-def _evaluate_graph_plugins(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, GraphFromAPI]],
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    *,
-    consolidation_function: GraphConsolidationFunction,
-    temperature_unit: TemperatureUnit,
-) -> Iterator[tuple[str, GraphRecipe]]:
-    already_graphed_metrics: set[str] = set()
-    for graph_id, graph_plugin in sorted_graph_plugins:
-        if (
-            graphed_metrics := evaluate_graph_plugin_metrics(
-                registered_metrics,
-                site_id,
-                host_name,
-                service_name,
-                consolidation_function,
-                graph_plugin,
-                translated_metrics,
-            )
-        ).graph_metrics:
-            already_graphed_metrics.update(graphed_metrics.metric_names)
-            yield (
-                graph_id,
-                _create_graph_recipe(
-                    title=evaluate_graph_plugin_title(
-                        registered_metrics,
-                        graph_plugin.title.localize(translate_to_current_language),
-                        translated_metrics,
-                    ),
-                    graph_metrics=graphed_metrics.graph_metrics,
-                    explicit_vertical_range=evaluate_graph_plugin_range(
-                        registered_metrics,
-                        graph_plugin,
-                        translated_metrics,
-                    ),
-                    horizontal_rules=evaluate_graph_plugin_scalars(
-                        registered_metrics,
-                        graph_plugin,
-                        translated_metrics,
-                        temperature_unit=temperature_unit,
-                    ),
-                ),
-            )
-
-    for metric_name, translated_metric in sorted(translated_metrics.items()):
-        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield (
-                metric_name if metric_name.startswith("METRIC_") else f"METRIC_{metric_name}",
-                _create_graph_recipe(
-                    title="",
-                    graph_metrics=[
-                        GraphMetric(
-                            title=translated_metric.title,
-                            line_type="area",
-                            operation=create_graph_metric_expression_from_translated_metric(
-                                site_id,
-                                host_name,
-                                service_name,
-                                translated_metric,
-                                consolidation_function,
-                            ),
-                            unit=translated_metric.unit_spec,
-                            color=translated_metric.color,
-                        )
-                    ],
-                    explicit_vertical_range=None,
-                    horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-                        user_specific_unit(translated_metric.unit_spec, temperature_unit),
-                        translated_metric,
-                    ),
-                ),
-            )
-
-
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
     site: SiteId | None
     host_name: AnnotatedHostName
-    service_description: ServiceName
+    service_description: GUIServiceName
     graph_id: str | None = None
     destination: str | None = None
 
@@ -320,195 +106,149 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def add_visual_type(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
 
-    @override
-    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
-        return [
-            fetch_graph_row(
-                self.site,
-                self.host_name,
-                self.service_description,
-                env.registered_metrics,
-                debug=env.debug,
-                temperature_unit=env.temperature_unit,
-            )
-        ]
+
+TEMPLATE_KIND: Final = "template"
+
+
+def _assert_uniform_unit(graph: Graph) -> None:
+    drawn = [
+        *(member for stack in graph.stacks for member in stack.members),
+        *(stack.reference for stack in graph.stacks if stack.reference is not None),
+        *(line.curve for line in graph.lines),
+    ]
+    units = {curve.attributes.unit for curve in drawn}
+    if len(units) > 1:
+        raise MKGeneralException(
+            _("Cannot create graph with metrics of different units: %(units)s")
+            % {"units": ", ".join(sorted(repr(unit) for unit in units))}
+        )
+
+
+def _resolved_site(graph: Graph) -> SiteId | None:
+    # The metric-name fetch tagged the service (hence its metrics) with the site its data lives on;
+    # a template graph is single-service, so any RRD metric carries that resolved site.
+    for metric in graph.metrics():
+        if isinstance(metric, RRDMetric) and metric.site_id is not None:
+            return SiteId(str(metric.site_id))
+    return None
+
+
+def build_template_graphs(
+    specification: TemplateGraphSpecification,
+    *,
+    registered_graphs: Sequence[GraphFromAPI],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    fetch_metric_names: FetchMetricNamesProtocol,
+) -> Sequence[BuiltGraph]:
+    graphs = build_matched_graphs(
+        localizer=translate_to_current_language,
+        fetch_metric_names=fetch_metric_names,
+        kind=TEMPLATE_KIND,
+        registered_graphs=registered_graphs,
+        registered_metrics=registered_metrics,
+        graph_name=specification.graph_id,
+    )
+    for graph in graphs:
+        _assert_uniform_unit(graph)
+    return [
+        BuiltGraph(
+            graph=graph,
+            specification=TemplateGraphSpecification(
+                site=_resolved_site(graph) or specification.site,
+                host_name=specification.host_name,
+                service_description=specification.service_description,
+                graph_id=legacy_graph_id(graph, registered_graphs),
+                destination=specification.destination,
+            ),
+        )
+        for graph in graphs
+    ]
+
+
+@dataclass(frozen=True)
+class _EvaluateTemplateGraphs:
+    options: CommonGraphOptions
+    fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
-    def _make_specification(
-        cls,
-        *,
-        site: SiteId | None,
-        host_name: AnnotatedHostName,
-        service_description: ServiceName,
-        graph_id: str | None,
-        destination: str | None,
-    ) -> Self:
+    def make(cls, options: Mapping[str, object]) -> Self:
         return cls(
-            site=site,
-            host_name=host_name,
-            service_description=service_description,
-            destination=destination,
-            graph_id=graph_id,
-        )
-
-    def _post_process_recipe(
-        self,
-        user_permissions: UserPermissions,
-        site_id: SiteId,
-        host_name: HostName,
-        service_name: ServiceName,
-        show_graph_ids: bool,
-        *,
-        graph_id: str,
-        recipe: GraphRecipe,
-        consolidation_function: GraphConsolidationFunction,
-    ) -> GraphRecipeWithOverrides | None:
-        return GraphRecipeWithOverrides(
-            recipe=GraphRecipe(
-                title=(
-                    f"{recipe.title} (Graph ID: {graph_id})" if show_graph_ids else recipe.title
-                ),
-                unit_spec=recipe.unit_spec,
-                explicit_vertical_range=recipe.explicit_vertical_range,
-                horizontal_rules=recipe.horizontal_rules,
-                omit_zero_metrics=recipe.omit_zero_metrics,
-                metrics=recipe.metrics,
+            CommonGraphOptions.from_request_options(options),
+            RRDFetchData(
+                debug=active_config.debug,
+                registered_translations=registered_translations(),
             ),
-            specification=self._make_specification(
-                site=site_id,
-                host_name=host_name,
-                service_description=service_name,
-                graph_id=graph_id,
-                destination=self.destination,
+        )
+
+    def __call__(self, graph: Graph) -> EvaluatedGraphs:
+        return EvaluatedGraphs(
+            graphs=evaluate_graphs(
+                consolidation_function=self.options.consolidation_function,
+                time_range=self.options.time_range,
+                graphs=[graph],
+                fetch_data=self.fetch_data,
             ),
-            consolidation_function=consolidation_function,
+            diagnostics=self.fetch_data.diagnostics,
         )
 
-    @tracer.instrument("graphing.TemplateGraphSpecification.recipes")
-    @override
-    def recipes(
-        self,
-        env: GraphEnvironment,
-        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
-        consolidation_function: GraphConsolidationFunction = "max",
-    ) -> Sequence[GraphRecipeWithOverrides]:
-        if not graph_rows:
-            return []
 
-        graph_row = graph_rows[0]
-        if not graph_row.translated_metrics:
-            return []
-
-        site_id = graph_row.site_id
-        host_name = graph_row.host_name
-        service_name = graph_row.service_name
-        if (
-            isinstance(self.graph_id, str)
-            and self.graph_id.startswith("METRIC_")
-            and self.graph_id[7:] in graph_row.translated_metrics
-        ):
-            recipes = [
-                (
-                    self.graph_id,
-                    _create_graph_recipe_from_translated_metric(
-                        site_id,
-                        host_name,
-                        service_name,
-                        consolidation_function,
-                        graph_row.translated_metrics[self.graph_id[7:]],
-                        temperature_unit=env.temperature_unit,
-                    ),
-                )
-            ]
-        else:
-            recipes = [
-                (graph_recipe_id, recipe)
-                for graph_recipe_id, recipe in _evaluate_graph_plugins(
-                    env.registered_metrics,
-                    sort_registered_graph_plugins(env.registered_graphs),
-                    site_id,
-                    host_name,
-                    service_name,
-                    graph_row.translated_metrics,
-                    consolidation_function=consolidation_function,
-                    temperature_unit=env.temperature_unit,
-                )
-                if self.graph_id is None or self.graph_id == graph_recipe_id
-            ]
-        return [
-            post_processed_recipe
-            for graph_id, recipe in recipes
-            if (
-                post_processed_recipe := self._post_process_recipe(
-                    env.user_permissions,
-                    site_id,
-                    host_name,
-                    service_name,
-                    env.show_graph_ids,
-                    graph_id=graph_id,
-                    recipe=recipe,
-                    consolidation_function=consolidation_function,
-                )
-            )
-        ]
+def template_graph_dispatcher(codec: GraphCodec) -> GraphDispatcher:
+    # The codec is the edition's, not this kind's: every graph of an edition is read with all of
+    # its quantities, so a definition holding one another kind introduced still round-trips.
+    return GraphDispatcher(
+        kind=TEMPLATE_KIND,
+        codec=codec,
+        make_evaluate=_EvaluateTemplateGraphs.make,
+    )
 
 
-def get_template_graph_specification(
-    *,
-    site_id: SiteId | None,
-    host_name: HostName,
-    service_name: ServiceName,
-    graph_id: str | None = None,
-    destination: str | None = None,
-) -> TemplateGraphSpecification:
-    if issubclass(
-        graph_specification := graph_specification_registry["template"], TemplateGraphSpecification
-    ):
-        return graph_specification(
-            site=site_id,
-            host_name=host_name,
-            service_description=service_name,
-            graph_id=graph_id,
-            destination=destination,
+def discover_template_graphs(
+    specification: TemplateGraphSpecification, *, debug: bool
+) -> DiscoveredGraphs:
+    """Discover the template graphs of a service."""
+    try:
+        graphs = build_template_graphs(
+            specification,
+            registered_graphs=registered_graphs(),
+            registered_metrics=registered_metrics(),
+            fetch_metric_names=RRDFetchMetricNames(
+                host_name=HostName(specification.host_name),
+                service_name=ServiceName(specification.service_description),
+                debug=debug,
+                site_id=specification.site,
+                registered_translations=registered_translations(),
+            ),
         )
-    raise TypeError(graph_specification)
+    except MKMissingDataError as exc:
+        return DiscoveredGraphs.nothing(str(exc))
+
+    if not graphs:
+        return DiscoveredGraphs.nothing(
+            _("The service '%(service)s' of host '%(host)s' has no matching template graphs.")
+            % {
+                "service": specification.service_description,
+                "host": specification.host_name,
+            }
+        )
+    return DiscoveredGraphs.found(graphs)
 
 
 def resolve_graph_id_from_index(
     *,
-    env: GraphEnvironment,
     site_id: SiteId | None,
-    host_name: HostName,
-    service_name: ServiceName,
+    host_name: GUIHostName,
+    service_name: GUIServiceName,
     graph_index: int,
+    debug: bool,
 ) -> str | None:
-    """Resolve a 0-based positional graph index to its stable ``graph_id``.
-
-    Computes the recipes for the given (host, service) and returns the id at
-    ``graph_index`` position, or ``None`` when out of range / no metrics.
-    """
-    graph_row = fetch_graph_row(
-        site_id,
-        host_name,
-        service_name,
-        env.registered_metrics,
-        debug=env.debug,
-        temperature_unit=env.temperature_unit,
+    discovered = discover_template_graphs(
+        TemplateGraphSpecification(
+            site=site_id,
+            host_name=host_name,
+            service_description=service_name,
+        ),
+        debug=debug,
     )
-    if not graph_row.translated_metrics:
+    if not 0 <= graph_index < len(discovered.graphs):
         return None
-    for i, (graph_id, _recipe) in enumerate(
-        _evaluate_graph_plugins(
-            env.registered_metrics,
-            sort_registered_graph_plugins(env.registered_graphs),
-            graph_row.site_id,
-            graph_row.host_name,
-            graph_row.service_name,
-            graph_row.translated_metrics,
-            consolidation_function="max",
-            temperature_unit=env.temperature_unit,
-        )
-    ):
-        if i == graph_index:
-            return graph_id
-    return None
+    return legacy_graph_id(discovered.graphs[graph_index].graph, registered_graphs())

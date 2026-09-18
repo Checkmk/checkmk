@@ -19,6 +19,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
+import { applyToken } from '../../lib/commandTemplate'
 import type { AgentSlideOutTabs } from '../../lib/type_def'
 import GenerateToken from '../GenerateToken.vue'
 
@@ -50,16 +51,9 @@ const activeRegistrationCmd = computed<string | undefined>(() => {
   return props.tab.registrationCmd
 })
 
-const regAgentOttCmd = computed(() => {
-  const cmd = activeRegistrationCmd.value
-  if (!cmd) {
-    return ''
-  }
-  if (ott.value && !(ott.value instanceof Error)) {
-    return cmd.replace('--user agent_registration', `--ott 0:${ott.value}`)
-  }
-  return cmd
-})
+const regAgentOttCmd = computed(() =>
+  applyToken(activeRegistrationCmd.value, 'registration', ott.value)
+)
 
 function reset() {
   ott.value = null

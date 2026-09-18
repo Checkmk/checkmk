@@ -92,7 +92,7 @@ Oaxu+XnWKm3p
 
 
 @pytest.fixture
-def forbid_agent_pairing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:
+def forbid_agent_pairing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     with patch(
         "cmk.gui.logged_in.LoggedInUser.may",
         return_value=False,

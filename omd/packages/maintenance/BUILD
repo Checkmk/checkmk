@@ -18,7 +18,7 @@ pkg_files(
 pkg_files(
     name = "bin_diskspace_pkg",
     srcs = [
-        "diskspace.py",
+        ":diskspace_py",
     ],
     attributes = pkg_attributes(
         mode = "0755",

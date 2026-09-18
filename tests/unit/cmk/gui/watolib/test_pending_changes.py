@@ -98,7 +98,7 @@ def _audit_log_cleanup() -> Iterator[None]:
     try:
         yield
     finally:
-        AuditLogStore()._path.unlink(missing_ok=True)
+        AuditLogStore()._path.unlink(missing_ok=True)  # noqa: SLF001
 
 
 def test_change_scope_all_activation_sites() -> None:

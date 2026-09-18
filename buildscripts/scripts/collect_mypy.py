@@ -26,7 +26,7 @@ MYPY_ERROR_RE = re.compile(
     r"^(?P<file>[^:]+):(?P<line>\d+):(?P<column>\d+): (?P<kind>error|note|warning): (?P<msg>.*)$"
 )
 
-STDOUT_SUFFIX: int = ".mypy_stdout"
+STDOUT_SUFFIX = ".mypy_stdout"
 
 
 def parse_mypy_output(lines: Iterable[str]) -> Iterator[MypyErrorLine]:

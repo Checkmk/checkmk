@@ -35,7 +35,7 @@ check_plugin_citrix_controller = CheckPlugin(
 )
 
 
-def discovery_citrix_controller_licensing(section: Section) -> DiscoveryResult:
+def discovery_citrix_controller_licensing(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

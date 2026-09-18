@@ -104,7 +104,7 @@ def show_rule(params: Mapping[str, Any]) -> Response:
     permissions_required=RO_PERMISSIONS,
     family_name=NOTIFICATION_RULES_FAMILY.name,
 )
-def show_rules(params: Mapping[str, Any]) -> Response:
+def show_rules(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all notification rules
 
     The rules are returned in the order in which they are evaluated. Each rule exposes its

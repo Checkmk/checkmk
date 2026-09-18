@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type {
   CustomGraphDesignerMode,
   TitleMacroGroup
@@ -16,22 +17,28 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, ref, watch } from 'vue'
 
-import { useGlobalRefresh } from '../../GlobalRefreshControl/useGlobalRefresh'
+import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
+import {
+  clippedToNavigableTime,
+  navigableBounds
+} from '../../components/TimeSeriesGraph/interaction/timeBounds'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
-import { useBrushCoordination } from '../../composables/useBrushCoordination'
+import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
 import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types'
-import type { CustomGraphOptions } from '../api'
+import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
+import type { CustomGraphMetric, CustomGraphOptions } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import type { GraphItemsStore } from '../composables/useGraphItems'
+import { useItemValidation } from '../composables/useItemValidation'
 import type { FormulaDraft, ItemId } from '../types'
-import { type RowIssue, isValid } from '../validation'
+import type { RowIssue } from '../validation'
+import { yAxisUnitOf } from '../yAxisUnit'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
@@ -46,9 +53,9 @@ const {
   title,
   mode,
   thresholds,
-  metricBackendAvailable,
+  telemetryMetricsAvailable,
   createServicesAvailable,
-  metricBackendDefaultTitle,
+  telemetryMetricsDefaultTitle,
   titleMacros,
   issuesByRow
 } = defineProps<{
@@ -57,9 +64,9 @@ const {
   title: string
   mode: CustomGraphDesignerMode
   thresholds: { warning: string; critical: string }
-  metricBackendAvailable: boolean
+  telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
-  metricBackendDefaultTitle: string
+  telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
 }>()
@@ -72,25 +79,27 @@ const displaySettings = defineModel<boolean>('displaySettings', { default: false
 
 const { _t } = usei18n()
 
-const validItems = computed(() => store.items.value.filter(isValid))
+const { validItems } = useItemValidation(store.items)
 
 const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.
-const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange()
+const { requestedTimeRange, setRequestedTimeRange, rangeChange } = useRequestedTimeRange()
+const PREVIEW_PANEL_KEY: PanelKey = 0
 
-const brushCoordination = useBrushCoordination(
-  () => Math.floor(Date.now() / 1000),
-  () => requestedTimeRange.value
-)
+const brush = useBrushSnapshot<{ metrics: CustomGraphMetric[]; dataTimeRange: TimeRange }>({
+  getNow: () => Math.floor(Date.now() / 1000),
+  getRequestedTimeRange: () => requestedTimeRange.value
+})
 
-function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
-  brushCoordination.onBrushChange(range, kind)
-  setRequestedTimeRange(range)
+function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  const range = clippedToNavigableTime(requested, navigableBounds())
+  brush.onRangeCommitted(range, kind)
+  setRequestedTimeRange(range, PREVIEW_PANEL_KEY)
 }
 
 const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
-const highlightedMetricName = ref<string | null>(null)
+const highlightedMetricNames = ref<string[]>([])
 
 const graphContainer = ref<HTMLElement | null>(null)
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
@@ -108,7 +117,7 @@ const data = useCustomGraphData({
   getRequestedTimeRange: () => requestedTimeRange.value,
   getConsolidationFn: () => consolidationFn.value,
   getFigureWidth: () => figureWidth.value,
-  getOverviewRange: () => (mode === 'view' ? brushCoordination.brushDomain.value : null),
+  getOverviewRange: () => (mode === 'view' ? brush.requestedDomain.value : null),
   // Edit mode fetches hidden rows too, so the appearance table can show their stats.
   getFetchHidden: () => mode === 'edit'
 })
@@ -120,15 +129,33 @@ const hiddenSourceIds = computed(
 const drawnMetrics = computed(() =>
   data.metrics.value.filter((metric) => !hiddenSourceIds.value.has(metric.source_id))
 )
-const drawnOverview = computed(() => {
-  const overview = data.overview.value
-  return overview === undefined
-    ? undefined
-    : {
-        metrics: overview.metrics.filter((metric) => !hiddenSourceIds.value.has(metric.source_id)),
-        dataTimeRange: overview.dataTimeRange,
-        viewTimeRange: overview.viewTimeRange
-      }
+watch(
+  () => data.overview.value,
+  (overview) => {
+    if (overview !== undefined) {
+      brush.onOverviewFetched({
+        requestedDomain: overview.requestedTimeRange,
+        drawnDomain: overview.viewTimeRange,
+        data: { metrics: overview.metrics, dataTimeRange: overview.dataTimeRange }
+      })
+    }
+  }
+)
+
+const drawnBrushSnapshot = computed(() => {
+  const snapshot = brush.snapshot.value
+  if (snapshot === null) {
+    return undefined
+  }
+  return {
+    ...snapshot,
+    data: {
+      ...snapshot.data,
+      metrics: snapshot.data.metrics.filter(
+        (metric) => !hiddenSourceIds.value.has(metric.source_id)
+      )
+    }
+  }
 })
 
 const fetchNotice = useGraphNotice({
@@ -154,8 +181,7 @@ const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
 // to fail - but which wins should be stated rather than left to that coincidence.
 const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
 
-const { refreshTick, setRefreshPaused } = useGlobalRefresh()
-watch(refreshTick, () => data.refetch())
+const { pauseRefresh } = useGlobalRefresh()
 watch(
   () => mode,
   (newMode) => {
@@ -163,6 +189,7 @@ watch(
       hiddenMetricNames.value = []
       hiddenLineNames.value = []
     }
+    highlightedMetricNames.value = []
     data.refetch()
   }
 )
@@ -182,7 +209,8 @@ function onTabChange(value: string | number): void {
   }
 }
 
-const slideoutOpen = ref(false)
+/** null closes the slideout; `editing` names the calculation to load, or null for a fresh form. */
+const calculationSlideout = ref<{ editing: ItemId | null } | null>(null)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
   if (refVisibility !== null) {
@@ -206,6 +234,19 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
   emit('update-graph-options', newGraphOptions)
   displaySettings.value = false
 }
+
+const yAxis = computed<YAxis | null>(() => {
+  const unit = yAxisUnitOf(graphOptions)
+  const range = graphOptions.explicit_vertical_range
+  const explicitRange = range.type === 'fixed' ? { min: range.lower, max: range.upper } : null
+  if (unit === null && explicitRange === null) {
+    return null
+  }
+  return {
+    ...(unit === null ? {} : { unit }),
+    ...(explicitRange === null ? {} : { explicit_range: explicitRange })
+  }
+})
 </script>
 
 <template>
@@ -220,13 +261,15 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
       <GraphPanel
         v-model:hidden-metric-names="hiddenMetricNames"
         v-model:hidden-line-names="hiddenLineNames"
-        v-model:highlighted-metric-name="highlightedMetricName"
+        v-model:highlighted-metric-names="highlightedMetricNames"
         class="graphing-designer-body__preview"
         :metrics="drawnMetrics"
         :data-time-range="data.dataTimeRange.value"
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
-        :time-picker-requests="timePickerRequests"
+        :panel-key="PREVIEW_PANEL_KEY"
+        :range-change="rangeChange"
+        :y-axis="yAxis"
         :title="title"
         show-title
         show-timestamp
@@ -241,9 +284,9 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
           zoom: 'enabled',
           pin: 'enabled'
         }"
-        :overview="drawnOverview"
+        :brush-snapshot="drawnBrushSnapshot"
         @update:requested-time-range="onPanelTimeRange"
-        @inspect="setRefreshPaused(true)"
+        @inspect="pauseRefresh"
       />
       <GraphNotice
         v-if="previewNotice"
@@ -264,13 +307,14 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
         :metrics="drawnMetrics"
         :horizontal-lines="data.horizontalLines.value"
         :consolidation-fn="consolidationFn"
-        @hover-metric="highlightedMetricName = $event"
+        @hover-metrics="highlightedMetricNames = $event"
       />
 
       <CmkTabs
         v-else
         class="graphing-designer-body__tabs"
         :model-value="activeTab"
+        :unmount-on-hide="false"
         @update:model-value="onTabChange"
       >
         <template #tabs>
@@ -295,19 +339,23 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
               :store="store"
               :metrics-by-source="data.metricsBySource.value"
               :resolved-titles="data.resolvedTitles.value"
+              @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>
           <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
             <MetricsTable
               :store="store"
               :thresholds="thresholds"
-              :metric-backend-available="metricBackendAvailable"
+              :telemetry-metrics-available="telemetryMetricsAvailable"
               :create-services-available="createServicesAvailable"
-              :metric-backend-default-title="metricBackendDefaultTitle"
+              :telemetry-metrics-default-title="telemetryMetricsDefaultTitle"
               :title-macros="titleMacros"
               :issues-by-row="issuesByRow"
               :resolved-titles="data.resolvedTitles.value"
-              @add-calculation="slideoutOpen = true"
+              :metrics-by-source="data.metricsBySource.value"
+              @add-calculation="calculationSlideout = { editing: null }"
+              @edit-calculation="calculationSlideout = { editing: $event }"
+              @hover-metrics="highlightedMetricNames = $event"
             />
           </CmkTabContent>
         </template>
@@ -316,14 +364,15 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
 
     <template v-if="mode === 'edit'">
       <MetricsCalculationSlideout
-        :open="slideoutOpen"
+        :open="calculationSlideout !== null"
+        :editing="calculationSlideout?.editing ?? null"
         :items="validItems"
         :next-id="store.nextId.value"
         :next-color="store.nextColor.value"
         @add="onCalculationAdd"
         @update="onCalculationUpdate"
         @delete="(id) => calculationDelete.request([id])"
-        @close="slideoutOpen = false"
+        @close="calculationSlideout = null"
       />
 
       <DeleteWithDependentsPopup

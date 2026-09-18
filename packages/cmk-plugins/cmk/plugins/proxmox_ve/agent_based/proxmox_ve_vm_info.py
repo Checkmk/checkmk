@@ -63,7 +63,7 @@ def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:
         yield HostLabel(f"cmk/pve/tag/{tag}", "yes")
 
 
-def discover_single(section: SectionVMInfo) -> DiscoveryResult:
+def discover_single(section: SectionVMInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

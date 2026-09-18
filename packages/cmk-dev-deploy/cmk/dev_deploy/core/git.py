@@ -4,8 +4,6 @@
 
 """Git queries shared by change detection, deploy state, and the watch loop."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 
@@ -37,7 +35,7 @@ def query_untracked_files(repo_root: Path) -> list[str]:
             cwd=str(repo_root),
             timeout=GIT_QUICK,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return []
     if result.returncode != 0:
         return []

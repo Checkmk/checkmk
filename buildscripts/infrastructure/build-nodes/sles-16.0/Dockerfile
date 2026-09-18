@@ -51,6 +51,7 @@ RUN zypper ref -s && \
         libltdl7 \
         libmariadb-devel \
         libopenssl-devel \
+        libopenssl3 \
         libpcap-devel \
         libpng16-devel \
         libtiff-devel \
@@ -59,7 +60,7 @@ RUN zypper ref -s && \
         libxml2-devel \
         libxmlsec1-1 \
         libxslt-devel \
-        libzstd-dev \
+        libzstd-devel \
         make \
         mariadb-client \
         mpfr-devel \

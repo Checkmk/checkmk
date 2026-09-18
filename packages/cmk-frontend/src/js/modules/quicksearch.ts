@@ -9,7 +9,34 @@ let iCurrent: number | null = null
 let oCurrent: HTMLAnchorElement | null = null
 let oldValue = ''
 
-const QUICKSEARCH_AUTOFOCUS_KEY = 'cmk.quicksearch.autofocus'
+class QuicksearchSessionState {
+  private static readonly QUERY_KEY = 'cmk.quicksearch.query'
+  private static readonly AUTOFOCUS_KEY = 'cmk.quicksearch.autofocus'
+
+  remember_query(query: string) {
+    sessionStorage.setItem(QuicksearchSessionState.QUERY_KEY, query)
+  }
+
+  request_autofocus() {
+    sessionStorage.setItem(QuicksearchSessionState.AUTOFOCUS_KEY, '1')
+  }
+
+  restore(oField: HTMLInputElement) {
+    const query = sessionStorage.getItem(QuicksearchSessionState.QUERY_KEY)
+    if (query !== null) {
+      oField.value = query
+    }
+
+    if (sessionStorage.getItem(QuicksearchSessionState.AUTOFOCUS_KEY) === null) {
+      return
+    }
+    sessionStorage.removeItem(QuicksearchSessionState.AUTOFOCUS_KEY)
+    oField.focus()
+    oField.setSelectionRange(oField.value.length, oField.value.length)
+  }
+}
+
+const session_state = new QuicksearchSessionState()
 
 // Register an input field to be a search field and add eventhandlers
 export function register_search_field(field: string) {
@@ -21,6 +48,9 @@ export function register_search_field(field: string) {
     oField.onkeyup = function (e) {
       return mkSearchKeyUp(e, oField)
     }
+    oField.oninput = function () {
+      session_state.remember_query(oField.value)
+    }
     oField.onclick = function () {
       close_popup()
       return true
@@ -31,23 +61,8 @@ export function register_search_field(field: string) {
       toggle_popup(oField)
     }
 
-    restore_autofocus(oField)
+    session_state.restore(oField)
   }
-}
-
-function remember_navigation(query: string) {
-  sessionStorage.setItem(QUICKSEARCH_AUTOFOCUS_KEY, query)
-}
-
-function restore_autofocus(oField: HTMLInputElement) {
-  const query = sessionStorage.getItem(QUICKSEARCH_AUTOFOCUS_KEY)
-  if (query === null) {
-    return
-  }
-  sessionStorage.removeItem(QUICKSEARCH_AUTOFOCUS_KEY)
-  oField.value = query
-  oField.focus()
-  oField.setSelectionRange(query.length, query.length)
 }
 
 // On key release event handler
@@ -95,14 +110,14 @@ function mkSearchKeyDown(e: KeyboardEvent, oField: HTMLInputElement): false | vo
     // Return/Enter
     case 13:
       if (oCurrent != null) {
-        remember_navigation(oField.value)
+        session_state.request_autofocus()
         mkSearchNavigate()
         oField.value = search_dropdown_value() ?? ''
         close_popup()
       } else {
         if (oField.value == '') return /* search field empty, rather not show all services! */
         // When nothing selected, navigate with the current contents of the field
-        remember_navigation(oField.value)
+        session_state.request_autofocus()
         window.location.href = 'search_open.py?q=' + encodeURIComponent(oField.value)
         close_popup()
       }

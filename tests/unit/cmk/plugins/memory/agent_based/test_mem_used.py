@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -742,8 +741,11 @@ def test_check_memory_fails(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_memory(  # type: ignore[misc]
-    params: Mapping, meminfo: memory.SectionMemUsed, expected: CheckResult, empty_value_store: None
+    params: Mapping,
+    meminfo: memory.SectionMemUsed,
+    expected: CheckResult,
 ) -> None:
     copy_info = meminfo.copy()
 
@@ -809,13 +811,13 @@ def test_inventorize_memory(
         (1000, 1024000, 1000, 0.9765625, "1000 KiB"),
     ],
 )
-def test_mem_bytes(  # type: ignore[misc]
-    value_as_kb,
-    expected_bytes,
-    expected_kb,
-    expected_mb,
-    expected_render,
-):
+def test_mem_bytes(
+    value_as_kb: int,
+    expected_bytes: int,
+    expected_kb: float,
+    expected_mb: float,
+    expected_render: str,
+) -> None:
     mem = MemBytes(value_as_kb)
     assert mem.bytes == expected_bytes
     assert mem.kb == expected_kb

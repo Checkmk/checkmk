@@ -9,7 +9,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -87,9 +86,8 @@ def check_widget_create(
 
 
 class TestProblemGraphContent:
-    def test_create(
-        self, clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-    ) -> None:
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_create(self, clients: ClientRegistry) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
         check_widget_create(
@@ -103,9 +101,8 @@ class TestProblemGraphContent:
 
 
 class TestCombinedGraphContent:
-    def test_create(
-        self, clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-    ) -> None:
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_create(self, clients: ClientRegistry) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
         check_widget_create(
@@ -121,9 +118,8 @@ class TestCombinedGraphContent:
 
 
 class TestSingleTimeseriesContent:
-    def test_create(
-        self, clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-    ) -> None:
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_create(self, clients: ClientRegistry) -> None:
         # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
         # No queries are actually executed.
         check_widget_create(
@@ -197,6 +193,8 @@ class TestSingleMetricContent:
                 "status_display": {"type": "text", "for_states": "not_ok"},
                 "display_range": "automatic",
                 "show_display_range_limits": False,
+                "spark_height_mode": "full",
+                "show_delta": True,
             },
         )
 

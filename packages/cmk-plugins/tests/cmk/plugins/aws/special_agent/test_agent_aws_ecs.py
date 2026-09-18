@@ -3,29 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Final, Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import (
+from cmk.plugins.aws.special_agent.agent_aws import ECS, ECSLimits, ECSSummary, StatusEnum
+from cmk.plugins.aws.special_agent.config import (
     AWSConfig,
+    NamingConvention,
+    OverallTags,
+    TagsImportPatternOption,
+    TagsOption,
+)
+from cmk.plugins.aws.special_agent.sections.core import (
     AWSRegionLimit,
     AWSSectionResult,
     AWSSectionResults,
-    ECS,
-    ECSLimits,
-    ECSSummary,
-    NamingConvention,
-    OverallTags,
     ResultDistributor,
-    StatusEnum,
-    TagsImportPatternOption,
-    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
@@ -86,7 +83,7 @@ CLUSTERS_CLIENT_RESPONSE2: Final[Sequence[Mapping[str, object]]] = [
 
 
 class Paginator:
-    def paginate(self):
+    def paginate(self) -> Iterator[Mapping[str, object]]:
         yield {
             "clusterArns": [
                 "arn:aws:ecs:us-east-1:710145618630:cluster/cluster-test1",
@@ -108,7 +105,7 @@ class Paginator:
 
 
 class FakeECSClient:
-    def __init__(self, client_response):
+    def __init__(self, client_response: Sequence[Mapping[str, object]]) -> None:
         self.client_response = client_response
 
     def get_paginator(self, function: str) -> Paginator:
@@ -117,7 +114,9 @@ class FakeECSClient:
         return Paginator()
 
     def describe_clusters(
-        self, clusters: Sequence[str] = "default", include: Sequence[str] | None = None
+        self,
+        clusters: Sequence[str] = "default",
+        include: Sequence[str] | None = None,  # noqa: ARG002
     ) -> object:
         return {
             "clusters": [
@@ -296,9 +295,8 @@ def test_agent_aws_ecs_limits(
     assert result.content == LIMITS
 
 
-def test_agent_aws_ecs_limits_without_quota_client(
-    get_ecs_sections: ECSSections,
-) -> None:
+@pytest.mark.usefixtures("get_ecs_sections")
+def test_agent_aws_ecs_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)

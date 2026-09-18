@@ -30,7 +30,7 @@ def parse_viprinet_mem(string_table: StringTable) -> MemoryUsedInBytes | None:
             return None
 
 
-def discover_viprinet_mem(section: MemoryUsedInBytes) -> DiscoveryResult:
+def discover_viprinet_mem(section: MemoryUsedInBytes) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

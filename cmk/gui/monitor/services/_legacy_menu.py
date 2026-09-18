@@ -19,7 +19,7 @@ satisfies these without any adapter on the legacy side.
 from collections.abc import Sequence
 from typing import Protocol
 
-from cmk.gui.type_defs import DynamicIcon, StaticIcon
+from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 
 class LegacyHostMenuEntry(Protocol):

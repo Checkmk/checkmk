@@ -11,6 +11,7 @@ import useTimer from 'cmk-ui-library/lib/useTimer'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import CmkKpiStatCard, {
+  type KpiDeltaConfig,
   type KpiState,
   type TimestampedSample
 } from '@/dashboard/components/CmkKpiStatCard'
@@ -99,14 +100,15 @@ const state = computed<KpiState | undefined>(() => {
     : undefined
 })
 
-// The single metric endpoint (cmk/gui/nonfree/pro/dashboard/_single_metric_data.py)
-// drops timestamps and filters out None values before they reach here, so it
-// cannot express gaps or staleness. The index is used as a stand-in timestamp
-// purely to satisfy CmkKpiStatCard's contract - it does not represent real time,
-// and this card never shows a real gap until that endpoint is migrated.
-const series = computed<TimestampedSample[]>(
-  () => data.value?.series.map((value, index) => ({ timestamp: index, value })) ?? []
-)
+const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
+
+const deltaConfig = computed<KpiDeltaConfig>(() => ({ show: props.content.show_delta }))
+
+function formatValue(value: number): string {
+  const rendered = value.toFixed(1)
+  const unit = data.value?.unit
+  return unit ? `${rendered} ${unit}` : rendered
+}
 </script>
 
 <template>
@@ -122,13 +124,19 @@ const series = computed<TimestampedSample[]>(
       <CmkLoading v-else-if="data === undefined" />
       <CmkKpiStatCard
         v-else
+        :title="effectiveTitle"
         :value="data.value"
         :unit="data.unit"
         :series="series"
         :color="data.color"
         :state="state"
         :range-limits="data.range_limits"
+        :range="data.range"
+        :stale="data.stale"
         :href="href"
+        :format-value="formatValue"
+        :spark-height-mode="content.spark_height_mode"
+        :delta="deltaConfig"
       />
     </div>
   </DashboardContentContainer>

@@ -23,7 +23,7 @@ from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_status import 
     inventorize_power_supplies,
     parse_device_status,
 )
-from cmk.plugins.cisco_meraki.lib.schema._devices_statuses import RawDevicesStatus
+from cmk.plugins.cisco_meraki.lib.schema import RawDevicesStatus
 
 
 class _RawDevicesStatusFactory(TypedDictFactory[RawDevicesStatus]):

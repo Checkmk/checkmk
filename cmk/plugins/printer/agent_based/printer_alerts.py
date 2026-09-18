@@ -190,7 +190,7 @@ snmp_section_printer_alerts = SNMPSection(
 )
 
 
-def discovery_printer_alerts(section: Section) -> DiscoveryResult:
+def discovery_printer_alerts(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import type { MaybeRefOrGetter } from 'vue'
 
 import DisabledTooltipWrapper from '@/dashboard/components/WidgetWorkflow/DisabledTooltipWrapper.vue'
 
@@ -14,7 +15,7 @@ import type { WidgetItemList } from './types'
 interface WidgetTilesProps {
   availableItems: WidgetItemList
   enabledWidgets: string[]
-  disabledTooltip?: TranslatedString | undefined
+  disabledTooltip?: MaybeRefOrGetter<TranslatedString> | undefined
   compact?: boolean
 }
 

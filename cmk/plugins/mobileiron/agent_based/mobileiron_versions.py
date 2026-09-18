@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import contextlib
 import datetime
@@ -128,7 +127,7 @@ def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
         )
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -36,7 +36,7 @@ class ReadyCount:
         control_plane_roles: Sequence[str],
         worker_node_roles: Sequence[str],
         section: NodeCount,
-    ) -> tuple["ReadyCount", "ReadyCount"]:
+    ) -> tuple[ReadyCount, ReadyCount]:
         w_nodes = []
         cp_nodes = []
         for node in section.nodes:
@@ -94,7 +94,7 @@ def parse(string_table: StringTable) -> NodeCount:
     return NodeCount.model_validate_json(string_table[0][0])
 
 
-def discovery(section: NodeCount) -> DiscoveryResult:
+def discovery(section: NodeCount) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

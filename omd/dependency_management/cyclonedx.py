@@ -4,9 +4,10 @@
 """CycloneDX data"""
 
 import base64
+import re
 import uuid
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import Annotated, Literal, NewType, override, Self
@@ -29,11 +30,29 @@ VulnerabilityState = Literal[
 ]
 
 
+def _normalized_name(type_: str, name: str) -> str:
+    """Spell a package name the way its purl type demands.
+
+    pypi is the one type we have a rule for that we know our producers agree on: PEP
+    503 compares names lowercased with runs of `-`, `_` and `.` collapsed into a
+    single `-`, and pip, uv and rules_python all spell their purls that way. The spec
+    demands a lowercase name for some other types too, but cpan for one is genuinely
+    case sensitive, so leave everything else as it is until we have a reason not to.
+    """
+    return re.sub(r"[-_.]+", "-", name).lower() if type_ == "pypi" else name
+
+
 @dataclass(frozen=True)
 class PUrl:
     """A package URL
     A package url has the following scheme:
         scheme:type/namespace/name@version?qualifiers#subpath
+
+    Instances are normalized on construction, so that two spellings of the same
+    package compare equal and hash alike however they were obtained. Without that,
+    `pkg:pypi/PyYAML@6.0.3` from a hand-written manifest and `pkg:pypi/pyyaml@6.0.3`
+    from a lock file are two different packages, neither unifying with the other nor
+    matching the other's researched license.
     """
 
     type_: str
@@ -42,6 +61,11 @@ class PUrl:
     namespace: str | None = None
     qualifiers: frozenset[tuple[str, str]] = field(default_factory=frozenset)
     subpath: str | None = None
+
+    def __post_init__(self) -> None:
+        # We are frozen, so the generated __setattr__ refuses to do this for us.
+        object.__setattr__(self, "type_", self.type_.lower())
+        object.__setattr__(self, "name", _normalized_name(self.type_, self.name))
 
     @classmethod
     def from_str(cls, some_str: str) -> Self:
@@ -66,6 +90,13 @@ class PUrl:
             unquote(parsed_url.fragment) if parsed_url.fragment else None,
         )
 
+    def without_qualifiers(self, keys: Iterable[str]) -> Self:
+        """Return a copy with the given qualifiers dropped."""
+        dropped = frozenset(keys)
+        return replace(
+            self, qualifiers=frozenset((k, v) for k, v in self.qualifiers if k not in dropped)
+        )
+
     def purl_str(self) -> str:
         path = quote(self.type_)
         path += f"/{quote(self.namespace)}" if self.namespace else ""
@@ -77,7 +108,11 @@ class PUrl:
                 "",
                 path,
                 "",
-                urlencode(dict(self.qualifiers)),
+                # Sorted by key, as the purl spec demands. Without that, iterating
+                # the frozenset would follow the randomized string hash order, so a
+                # purl with more than one qualifier would serialize differently on
+                # every build.
+                urlencode(sorted(self.qualifiers)),
                 quote(self.subpath or ""),
             )
         )
@@ -103,7 +138,7 @@ class LicenseInfo:
     id_: SPDXId
     text: str | None
 
-    def merge(self, other: Self) -> "LicenseInfo":
+    def merge(self, other: Self) -> LicenseInfo:
         if self.id_ != other.id_:
             raise ValueError(f"Conflicting license ids: {self.id_!r} != {other.id_!r}")
         return LicenseInfo(

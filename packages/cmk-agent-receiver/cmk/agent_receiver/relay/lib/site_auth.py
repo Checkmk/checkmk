@@ -5,7 +5,7 @@
 from collections.abc import AsyncGenerator, Generator
 from typing import Final, final, override
 
-import httpx
+import httpx2
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.auth import async_internal_credentials, internal_credentials
@@ -14,7 +14,7 @@ SUPPORTED_AUTH_PREFIXES: Final = ("Bearer ", "CMK-TOKEN ")
 
 
 @final
-class InternalAuth(httpx.Auth):
+class InternalAuth(httpx2.Auth):
     def __init__(self) -> None:
         self._cached_token: str | None = None
 
@@ -33,7 +33,7 @@ class InternalAuth(httpx.Auth):
         self._cached_token = None
 
     @override
-    def sync_auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
+    def sync_auth_flow(self, request: httpx2.Request) -> Generator[httpx2.Request, httpx2.Response]:
         request.headers["Authorization"] = self._get_auth_header_sync()
         response = yield request
 
@@ -45,8 +45,8 @@ class InternalAuth(httpx.Auth):
 
     @override
     async def async_auth_flow(
-        self, request: httpx.Request
-    ) -> AsyncGenerator[httpx.Request, httpx.Response]:
+        self, request: httpx2.Request
+    ) -> AsyncGenerator[httpx2.Request, httpx2.Response]:
         request.headers["Authorization"] = await self._get_auth_header_async()
         response = yield request
 
@@ -58,12 +58,12 @@ class InternalAuth(httpx.Auth):
 
 
 @final
-class SecretAuth(httpx.Auth):
+class SecretAuth(httpx2.Auth):
     def __init__(self, secret: SecretStr) -> None:
         self.secret = secret
 
     @override
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
+    def auth_flow(self, request: httpx2.Request) -> Generator[httpx2.Request, httpx2.Response]:
         request.headers["Authorization"] = self.secret.get_secret_value()
         yield request
 

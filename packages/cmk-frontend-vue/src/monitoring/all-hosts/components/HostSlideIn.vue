@@ -10,8 +10,12 @@ import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/Cmk
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
-import { HostApi } from '@/monitoring/all-hosts/api/hosts'
+import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
+import { fetchEvents } from '@/monitoring/events/api'
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
+import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
@@ -23,7 +27,6 @@ import { useSlideInActions } from '@/monitoring/shared/services/useSlideInAction
 
 import HostOverviewSkeleton from './slide-in/HostOverviewSkeleton.vue'
 import HostOverviewTab from './slide-in/HostOverviewTab.vue'
-import HostSlideInHeader from './slide-in/HostSlideInHeader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -119,6 +122,14 @@ const tabs = computed<SlideInTab[]>(() => {
       component: markRaw(HostOverviewTab),
       skeleton: markRaw(HostOverviewSkeleton),
       load: () => hostApi.fetchHostOverview({ site_id: host.site_id, name: host.name })
+    },
+    {
+      id: 'history',
+      title: _t('History'),
+      component: markRaw(EventHistoryApp),
+      skeleton: markRaw(TableSkeleton),
+      props: { subject: 'host' },
+      load: () => fetchEvents({ site_id: host.site_id, name: host.name })
     }
   ]
 })
@@ -129,7 +140,13 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
 </script>
 
 <template>
+  <!--
+    Keyed on the host so picking another row while the panel is open remounts the tabs.
+    CmkSlideInTabbed only drops its cached tab data when `open` flips, which never happens
+    here: AllHostsApp reassigns the host without closing the panel first.
+  -->
   <CmkSlideInTabbed
+    :key="host ? `${host.site_id}/${host.name}` : ''"
     :open="open"
     :tabs="tabs"
     :active-tab-id="activeTabId"
@@ -139,7 +156,7 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
     @update:active-tab-id="emit('update:activeTabId', $event)"
   >
     <template #above-tabs>
-      <HostSlideInHeader
+      <HostHeader
         v-if="host"
         :host="host"
         :actions="inlineActions"

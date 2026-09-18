@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import re
 
@@ -37,7 +36,7 @@ def _validate_item(value: str) -> str:
     return value
 
 
-def _parameter_form_esx_vsphere_objects():
+def _parameter_form_esx_vsphere_objects() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "

@@ -68,7 +68,8 @@ class CoreBakelet:
 
     Unlike :class:`cmk.bakery.v2_unstable.BakeryPlugin`, the functions receive
     keyword arguments dispatched by name (``agconf``, ``conf``, ``aghash``) and
-    yield the bakery artifact types directly.
+    yield the bakery artifact types directly. That signature is fixed, so a
+    bakelet which does not need all three suppresses ARG001 on the unused ones.
 
     ``default_parameters`` are merged underneath the user-provided configuration
     for this bakelet (the user's values win). They are applied during config

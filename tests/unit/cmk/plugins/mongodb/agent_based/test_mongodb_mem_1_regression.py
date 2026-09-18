@@ -80,7 +80,7 @@ def test_discover_mongodb_mem_1_regression(
     ],
 )
 def test_check_mongodb_mem_1_regression(
-    item: str | None,
+    item: str | None,  # noqa: ARG001
     params: Mapping[str, object],
     string_table: StringTable,
     expected_results: Sequence[object],

@@ -63,6 +63,7 @@ py_library(
         ":types",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui:customer",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/restful_objects:type_defs",

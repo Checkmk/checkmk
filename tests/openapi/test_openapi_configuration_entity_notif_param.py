@@ -53,7 +53,7 @@ def form_spec() -> DictionaryExtended:
     )
 
 
-@pytest.fixture(name="registry", autouse=True)
+@pytest.fixture(name="registry", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[NotificationParameterRegistry]:
     notification_parameter_registry = NotificationParameterRegistry()
     notification_parameter_registry.register(
@@ -281,9 +281,8 @@ def test_list_configuration_entities(
     assert resp.json["value"][0]["title"] == "foo"
 
 
-def test_list_configuration_entities_without_permissions(
-    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
-) -> None:
+@pytest.mark.usefixtures("registry", "with_admin_login")
+def test_list_configuration_entities_without_permissions(clients: ClientRegistry) -> None:
     # GIVEN
     clients.User.create(
         username="guest_user1",
@@ -306,9 +305,7 @@ def test_list_configuration_entities_without_permissions(
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_get_notif_param(
-    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
-) -> None:
+def test_get_notif_param(clients: ClientRegistry, registry: NotificationParameterRegistry) -> None:
     # GIVEN
     entity = save_notification_parameter(
         registry,
@@ -341,7 +338,7 @@ def test_get_notif_param(
 
 @pytest.mark.usefixtures("with_admin_login")
 def test_get_notif_param_without_permissions(
-    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+    clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
     # GIVEN
     entity = save_notification_parameter(

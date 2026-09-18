@@ -51,7 +51,7 @@ def check_disk_io_utilization(params: Params, section: float) -> CheckResult:
     )
 
 
-def discover_disk_io_utilization(section: float) -> DiscoveryResult:
+def discover_disk_io_utilization(section: float) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

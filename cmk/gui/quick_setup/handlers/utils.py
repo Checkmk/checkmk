@@ -70,7 +70,9 @@ class ProgressState:
 class InfoLogger:
     @staticmethod
     def log_new_progress_step(
-        step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+        step_name: str,
+        step_title: str,  # noqa: ARG004
+        status: StepStatus = StepStatus.ACTIVE,
     ) -> None:
         logger.info(f"[QuickSetup] {step_name} - {status}")
 

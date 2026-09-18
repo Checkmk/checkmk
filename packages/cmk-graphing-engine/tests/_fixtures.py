@@ -8,6 +8,7 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
+    ConsolidationFunction,
     FetchedData,
     HostName,
     MetricName,
@@ -28,8 +29,25 @@ def _metric(name: str) -> RRDMetric:
     )
 
 
-def _data(*, value: float | None, warning: float | None = None) -> PerformanceData:
-    return PerformanceData(value=value, warning=warning)
+def _data(
+    *,
+    value: float | None,
+    warning: float | None = None,
+    critical: float | None = None,
+    lower_warning: float | None = None,
+    lower_critical: float | None = None,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> PerformanceData:
+    return PerformanceData(
+        value=value,
+        warning=warning,
+        critical=critical,
+        lower_warning=lower_warning,
+        lower_critical=lower_critical,
+        minimum=minimum,
+        maximum=maximum,
+    )
 
 
 def _time_series(*values: float | None) -> TimeSeries:
@@ -49,3 +67,19 @@ def _fetched(
             )
         ]
     return fetched
+
+
+class _FakeRRDFetchData:
+    def __init__(
+        self, fetched: Mapping[MetricProtocol, Sequence[FetchedData]] | None = None
+    ) -> None:
+        self._fetched = fetched or {}
+
+    def __call__(
+        self,
+        metrics: Sequence[MetricProtocol],
+        *,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG002
+        time_range: TimeRange,  # noqa: ARG002
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+        return {metric: self._fetched[metric] for metric in metrics if metric in self._fetched}

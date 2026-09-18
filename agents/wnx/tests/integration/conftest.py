@@ -80,7 +80,7 @@ def default_yaml_config_fixture() -> YamlDict:
     return yaml.safe_load(_DEFAULT_CONFIG.format(INTEGRATION_PORT))
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def setup_all(data_dir: Path) -> YieldFixture[None]:
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)

@@ -185,6 +185,7 @@ py_library(
     srcs = [
         "omdlib/admin_mail.py",
         "omdlib/agent_receiver.py",
+        "omdlib/ai_control_plane.py",
         "omdlib/args_site_user.py",
         "omdlib/automation_helper.py",
         "omdlib/autostart.py",
@@ -249,6 +250,7 @@ py_library(
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
+        "//packages/cmk-flags",
         requirement("psutil"),
     ],
 )
@@ -277,7 +279,7 @@ py_binary(
 pkg_files(
     name = "omdlib_pkg",
     srcs = [":omdlib"],
-    prefix = "lib/python3.13/site-packages/omdlib",
+    prefix = "lib/python3.14/site-packages/omdlib",
 )
 
 pkg_files(

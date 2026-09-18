@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 import re
 import time
@@ -181,7 +180,7 @@ def _parse_perftxt(string: str) -> tuple[Iterable[Perfdata], str]:
     for entry in string.split("|"):
         try:
             perfdata.append(_parse_perfentry(entry))
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             msg.append(entry)
     if msg:
         return perfdata, "Invalid performance data: %r. " % "|".join(msg)
@@ -310,7 +309,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         # (will be converted back later individually for the different cores)
         text = (raw_info or "").replace("\\n", "\n")
         if state_msg or perf_msg:  # type: ignore[redundant-expr]
-            state = 3
+            state = 3  # type: ignore[unreachable]
             text = f"{state_msg}{perf_msg}Output is: {text}"
 
         parsed_data[item] = LocalResult(
@@ -417,7 +416,7 @@ def discover_local(section: LocalSection) -> DiscoveryResult:
         yield Service(item=key)
 
 
-def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
+def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:  # noqa: ARG001
     if (local_error := section.errors.get(item)) is not None:
         # Do *not* raise an exception here. Users will send us crash reports if we do.
         yield Result(

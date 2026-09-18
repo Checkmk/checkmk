@@ -30,8 +30,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
 from cmk.gui.log import logger
-from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import (
     DEF_VALUE,
     Dictionary,
@@ -57,8 +55,9 @@ from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
 from cmk.utils import paths
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, makeuri_contextless_rulespec_group
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless_rulespec_group
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
@@ -80,7 +79,7 @@ class RulespecAllowList:
     visible_rulespecs: set[str] = field(default_factory=set)
 
     @classmethod
-    def from_config(cls) -> "RulespecAllowList":
+    def from_config(cls) -> RulespecAllowList:
         global_config = get_global_config()
         model = global_config.rulespec_allow_list
         visible_rulespecs = set()
@@ -841,7 +840,7 @@ def _get_manual_check_parameter_rulespec_instance(
     is_optional: bool = False,
     is_deprecated: bool = False,
     form_spec_definition: FormSpecDefinition | None = None,
-) -> "ManualCheckParameterRulespec":
+) -> ManualCheckParameterRulespec:
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
     try:
@@ -911,7 +910,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
-        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,  # noqa: ARG002
         create_manual_check: bool = True,
         form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
@@ -989,7 +988,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         match_type: MatchType | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
-        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,  # noqa: ARG002
         create_manual_check: bool = True,
         form_spec_definition: FormSpecDefinition | None = None,
     ):
@@ -1151,7 +1150,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             )
 
         if parameter_vs.title() is None:
-            parameter_vs._title = _("Parameters")
+            parameter_vs._title = _("Parameters")  # noqa: SLF001
 
         return Tuple(
             title=parameter_vs.title(),
@@ -1244,7 +1243,7 @@ def _get_check_type_group_choice(
 def _registration_should_be_skipped(instance: object) -> bool:
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
-    caller_file = str(sys._getframe(2).f_globals["__file__"])
+    caller_file = str(sys._getframe(2).f_globals["__file__"])  # noqa: SLF001
     if not caller_file.startswith(_LOCAL_ROOT):
         return False
 
@@ -1324,7 +1323,7 @@ class CheckTypeGroupSelection(ElementSelection):
         empty_text: str | None = None,
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
@@ -1389,7 +1388,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
         vars_copy[self.tp_toggle_var] = str(int(not is_active))
 
-        url_vars: HTTPVariables = []
+        url_vars: list[HTTPVariable] = []
         url_vars += vars_copy.items()
         toggle_url = makeuri(request, url_vars)
 

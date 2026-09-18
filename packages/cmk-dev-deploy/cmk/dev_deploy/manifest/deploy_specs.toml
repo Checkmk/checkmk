@@ -220,6 +220,11 @@ package_target = "//non-free/packages/cmc:all"
 services = ["cmc:restart"]
 
 [[service]]
+name = "deploy_svc_cmk_ai_control_plane"
+package_target = "//non-free/packages/cmk-ai-control-plane:wheel"
+services = ["ai-control-plane:restart"]
+
+[[service]]
 name = "deploy_svc_cmk_core_helpers"
 package_target = "//non-free/packages/cmk-core-helpers:wheel"
 services = ["apache:reload", "cmc:restart"]

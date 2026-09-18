@@ -28,7 +28,7 @@ from .permissions import PERMISSIONS
 
 
 def show_historical_event_unstable(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     event_id: Annotated[
         int,
         PathParam(description="An existing event ID.", example="42"),

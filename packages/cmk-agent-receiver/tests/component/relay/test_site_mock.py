@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from http import HTTPStatus
 
-import httpx
+import httpx2
 import pytest
 
 from cmk.testlib.agent_receiver.site_mock import (
@@ -18,8 +18,8 @@ from cmk.testlib.agent_receiver.site_mock import (
 
 
 @pytest.fixture
-def client(site: SiteMock, user: User) -> httpx.Client:
-    return httpx.Client(
+def client(site: SiteMock, user: User) -> httpx2.Client:
+    return httpx2.Client(
         base_url=site.base_url,
         headers={
             "Content-Type": "application/json",
@@ -29,8 +29,8 @@ def client(site: SiteMock, user: User) -> httpx.Client:
 
 
 @pytest.fixture
-def internal_client(site: SiteMock, user: User) -> httpx.Client:
-    return httpx.Client(
+def internal_client(site: SiteMock, user: User) -> httpx2.Client:
+    return httpx2.Client(
         base_url=site.internal_base_url,
         headers={
             "Content-Type": "application/json",
@@ -54,7 +54,7 @@ def test_can_only_setup_one_scenario(site: SiteMock) -> None:
     ],
 )
 def test_scenario_initial_conditions_match(
-    site: SiteMock, relays: list[str], client: httpx.Client
+    site: SiteMock, relays: list[str], client: httpx2.Client
 ) -> None:
     site.set_scenario(relays=relays)
 
@@ -74,7 +74,7 @@ def test_scenario_initial_conditions_match(
 
 
 def test_scenario_can_add_relay(
-    site: SiteMock, client: httpx.Client, internal_client: httpx.Client
+    site: SiteMock, client: httpx2.Client, internal_client: httpx2.Client
 ) -> None:
     relays = ["a", "b"]
     new_relay = "relay2"
@@ -105,7 +105,7 @@ def test_scenario_can_add_relay(
     assert new_relay in {r.id for r in list_parsed.value}
 
 
-def test_scenario_can_delete_relay(site: SiteMock, client: httpx.Client) -> None:
+def test_scenario_can_delete_relay(site: SiteMock, client: httpx2.Client) -> None:
     relays = ["a", "b"]
     to_delete_relay = "b"
     site.set_scenario(relays=relays, changes=[(to_delete_relay, OP.DEL)])
@@ -126,7 +126,7 @@ def test_scenario_can_delete_relay(site: SiteMock, client: httpx.Client) -> None
 
 
 def test_scenario_start_empty_add_relay(
-    site: SiteMock, client: httpx.Client, internal_client: httpx.Client
+    site: SiteMock, client: httpx2.Client, internal_client: httpx2.Client
 ) -> None:
     new_relay = "relay_first"
     site.set_scenario(relays=[], changes=[(new_relay, OP.ADD)])
@@ -166,7 +166,7 @@ def test_scenario_start_empty_add_relay(
 
 
 def test_scenario_multiple_changes(
-    site: SiteMock, client: httpx.Client, internal_client: httpx.Client
+    site: SiteMock, client: httpx2.Client, internal_client: httpx2.Client
 ) -> None:
     initial_relays = ["relay_a", "relay_b"]
     changes = [
@@ -285,7 +285,7 @@ def test_scenario_multiple_changes(
         assert get_parsed.id == relay_id
 
 
-def test_sitename_alias_return_bodies(site: SiteMock, client: httpx.Client) -> None:
+def test_sitename_alias_return_bodies(site: SiteMock, client: httpx2.Client) -> None:
     test_relays = ["relay_with_alias", "another_relay"]
     site.set_scenario(relays=test_relays)
 

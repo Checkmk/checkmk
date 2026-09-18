@@ -19,6 +19,6 @@ def test_parse_snmp_mib_header_handles_non_utf8_bytes(tmp_path: Path) -> None:
         b"END\n"
     )
 
-    info = ModeEventConsoleMIBs._parse_snmp_mib_header(None, mib)  # type: ignore[arg-type]
+    info = ModeEventConsoleMIBs._parse_snmp_mib_header(None, mib)  # type: ignore[arg-type]  # noqa: SLF001
 
     assert info.name == "BAD-MIB"

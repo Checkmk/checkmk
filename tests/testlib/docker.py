@@ -30,7 +30,6 @@ from typing import Any, Final, Literal, Self, TypedDict
 
 import docker.client
 import docker.errors
-import docker.models
 import docker.models.containers
 import docker.models.images
 import requests
@@ -123,7 +122,7 @@ def package_name(package_info: CMKPackageInfo) -> str:
 
 
 def prepare_build() -> None:
-    assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
+    subprocess.run(["make", "needed-packages"], cwd=build_path, check=True)
 
 
 def prepare_package(package_info: CMKPackageInfo) -> None:
@@ -248,7 +247,7 @@ def build_checkmk(
     attrs = image.attrs
     config = attrs["Config"]
 
-    assert config["Labels"] == {
+    expected_labels = {
         "org.opencontainers.image.vendor": "Checkmk GmbH",
         "org.opencontainers.image.version": package_info.version.version,
         "maintainer": "feedback@checkmk.com",
@@ -259,7 +258,7 @@ def build_checkmk(
         "org.opencontainers.image.url": "https://checkmk.com/",
     }
 
-    assert config["Env"] == [
+    expected_env = [
         "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "CMK_SITE_ID=cmk",
         "CMK_LIVESTATUS_TCP=",
@@ -269,16 +268,19 @@ def build_checkmk(
         "CMK_CONTAINERIZED=TRUE",
     ]
 
-    assert "Healthcheck" in config
-
-    assert config["Entrypoint"] == ["/docker-entrypoint.sh"]
-
-    assert config["ExposedPorts"] == {
-        "5000/tcp": {},
-        "6557/tcp": {},
+    expected = {
+        "Labels": expected_labels,
+        "Env": expected_env,
+        "Entrypoint": ["/docker-entrypoint.sh"],
+        "ExposedPorts": {"5000/tcp": {}, "6557/tcp": {}},
     }
-
-    assert len(attrs["RootFS"]["Layers"]) == 6
+    for key, value in expected.items():
+        if config[key] != value:
+            raise AssertionError(f"Image config {key!r} is {config[key]!r}, expected {value!r}")
+    if "Healthcheck" not in config:
+        raise AssertionError("Image config has no Healthcheck")
+    if (layers := len(attrs["RootFS"]["Layers"])) != 6:
+        raise AssertionError(f"Image has {layers} layers, expected 6")
 
     return image, build_logs
 
@@ -395,7 +397,7 @@ class CheckmkApp:
                 c.remove(force=True)
                 self._remove_volumes()
                 raise docker.errors.NotFound(self.name)
-        except (docker.errors.NotFound, docker.errors.NullResource):
+        except docker.errors.NotFound, docker.errors.NullResource:
 
             class RunContainersKwargs(TypedDict, total=False):
                 name: str
@@ -433,10 +435,14 @@ class CheckmkApp:
                 wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
                 output = c.logs().decode("utf-8")
 
-                assert ("Created new site" in output) != self.is_update
-                assert ("cmkadmin with password:" in output) != self.is_update
-
-                assert "STARTING SITE" in output
+                for marker in ("Created new site", "cmkadmin with password:"):
+                    if (marker in output) == self.is_update:
+                        raise AssertionError(
+                            f"{marker!r} {'found' if self.is_update else 'missing'} in the log of "
+                            f"{'an update' if self.is_update else 'a fresh start'}:\n{output}"
+                        )
+                if "STARTING SITE" not in output:
+                    raise AssertionError(f"'STARTING SITE' missing in the log:\n{output}")
             except TimeoutError:
                 logger.exception(
                     "TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8")
@@ -445,7 +451,8 @@ class CheckmkApp:
 
         status_rc, status_output = c.exec_run(["omd", "status"], user=self.site_id)
         assert isinstance(status_output, bytes)  # stream/socket/demux not used above
-        assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
+        if status_rc != 0:
+            raise RuntimeError(f"Status is {status_rc}. Output: {status_output.decode('utf-8')}")
 
         # reload() to make sure all attributes are set (e.g. NetworkSettings)
         c.reload()
@@ -527,15 +534,17 @@ class CheckmkApp:
             )
 
         logger.info('Installing Checkmk agent "%s"...', agent_path)
-        assert copy_to_container(app, agent_path, "/")
+        if not copy_to_container(app, agent_path, "/"):
+            raise RuntimeError(f"Failed to copy {agent_path} into the container")
         install_agent_rc, install_agent_output = app.exec_run(
             f"{'rpm' if agent_type == 'rpm' else 'dpkg'} --install '/{os.path.basename(agent_path)}'",
             user="root",
         )
         assert isinstance(install_agent_output, bytes)  # stream/socket/demux not used above
-        assert install_agent_rc == 0, (
-            f"Error during agent installation: {install_agent_output.decode('utf-8')}"
-        )
+        if install_agent_rc != 0:
+            raise RuntimeError(
+                f"Error during agent installation: {install_agent_output.decode('utf-8')}"
+            )
 
     def register_agent(self, app: docker.models.containers.Container, hostname: str) -> None:
         """Register an agent in an application container with a site."""
@@ -560,9 +569,8 @@ class CheckmkApp:
             user="root",
         )
         assert isinstance(register_agent_output, bytes)  # stream/socket/demux not used above
-        assert register_agent_rc == 0, (
-            f"Error registering agent: {register_agent_output.decode('utf-8')}"
-        )
+        if register_agent_rc != 0:
+            raise RuntimeError(f"Error registering agent: {register_agent_output.decode('utf-8')}")
 
     @staticmethod
     def install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
@@ -578,12 +586,14 @@ class CheckmkApp:
             user="root",
         )
         assert isinstance(install_python_output, bytes)  # stream/socket/demux not used above
-        assert install_python_rc == 0, (
-            f"Error during {python_pkg_name} setup: {install_python_output.decode('utf-8')}"
-        )
+        if install_python_rc != 0:
+            raise RuntimeError(
+                f"Error during {python_pkg_name} setup: {install_python_output.decode('utf-8')}"
+            )
 
         logger.info('Installing Checkmk agent controller daemon "%s"...', daemon_path)
-        assert copy_to_container(app, daemon_path, "/")
+        if not copy_to_container(app, daemon_path, "/"):
+            raise RuntimeError(f"Failed to copy {daemon_path} into the container")
         app.exec_run(
             f'{python_bin_name} "/{os.path.basename(daemon_path)}"',
             user="root",

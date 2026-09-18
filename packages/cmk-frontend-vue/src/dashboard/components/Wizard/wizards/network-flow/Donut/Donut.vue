@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
+import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
@@ -92,6 +93,15 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
               type="number"
               :unit="_t('slices (max. %{max_slices})', { max_slices: `${MAX_SLICES}` })"
               :external-errors="handler.limitToValidationErrors.value"
+            />
+          </FieldComponent>
+        </TableFormRow>
+        <TableFormRow>
+          <FieldDescription>{{ _t('Change indicator') }}</FieldDescription>
+          <FieldComponent>
+            <CmkCheckbox
+              v-model="handler.showDelta.value"
+              :label="_t('Show the change versus the previous period')"
             />
           </FieldComponent>
         </TableFormRow>

@@ -20,7 +20,7 @@ from .lib import SectionPodmanContainerStats
 
 
 def discover_podman_container_cpu_utilization(
-    section: SectionPodmanContainerStats,
+    section: SectionPodmanContainerStats,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

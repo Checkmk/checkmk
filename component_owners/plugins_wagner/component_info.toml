@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: Wagner Titanus"
 has_support_component = true
 members_required = 0
+tier = 4
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 Plugins for Wagner Titanus Top-Sense aspirating smoke-detection systems.

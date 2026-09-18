@@ -32,7 +32,7 @@ class TimeoutManager:
     """
 
     def enable_timeout(self, duration: int) -> None:
-        def handle_request_timeout(signum: int, frame: FrameType | None) -> None:
+        def handle_request_timeout(signum: int, frame: FrameType | None) -> None:  # noqa: ARG001
             raise RequestTimeout(
                 _(
                     "Your request timed out after %(duration)d seconds. This issue may be "

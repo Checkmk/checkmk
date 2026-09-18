@@ -103,7 +103,7 @@ test('CmkCheckbox page renders its component', () => {
 
 test('CmkChipAutocomplete page renders its component', () => {
   render(UclCmkChipAutocomplete, { props: { screenshotMode: false } })
-  within(componentPreview()).getByRole('textbox')
+  within(componentPreview()).getByRole('searchbox')
 })
 
 test('CmkSlideInDropdown page renders its component', async () => {
@@ -338,7 +338,7 @@ test('CmkAlertBox page renders its component', () => {
 test('CmkCopyIcon page renders its component', () => {
   render(UclCmkCopy, { props: { screenshotMode: false } })
   const previews = screen.getAllByRole('region', { name: 'component preview' })
-  within(previews[0]!).getByRole('img', { name: 'Copy' })
+  within(previews[0]!).getByRole('button', { name: 'Copy' })
   within(previews[1]!).getByRole('button', { name: 'Copy' })
 })
 

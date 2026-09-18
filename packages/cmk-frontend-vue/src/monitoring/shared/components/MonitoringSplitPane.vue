@@ -35,6 +35,8 @@ const props = withDefaults(
     selectionLabel: (count: number) => TranslatedString
     /** Names the action bar for screen readers, e.g. "Actions for selected hosts". */
     actionsLabel: TranslatedString
+    /** Relates the selection to the loaded rows in the action pane's subtitle. */
+    countsLabel: (selected: number, total: number) => TranslatedString
     columns: ColumnDef<T>[]
     columnPinning: ColumnPinningState
     getRowKey: (row: T) => string
@@ -164,11 +166,13 @@ function onRightPaneCollapse(collapsed: boolean): void {
           :rows="service.items.value"
           :fetch-state="service.fetchState.value"
           :has-loaded="service.hasLoaded.value"
+          :load-failed="service.loadFailed.value"
           :columns="columns"
           :filter-state="service.tableColumnFilters.value"
           :column-pinning="columnPinning"
           :get-row-key="getRowKey"
           @update:filter-state="service.onColumnFiltersUpdate($event)"
+          @retry="service.retry()"
         >
           <template #row="{ row, tableRow }">
             <slot name="row" :row="row" :table-row="tableRow" :on-command="onRowCommand" />
@@ -190,6 +194,8 @@ function onRightPaneCollapse(collapsed: boolean): void {
         :action-id="activeAction"
         :actions="actions"
         :targets="selectedTargets"
+        :show-close="true"
+        :counts-label="countsLabel"
         @feedback="onFeedback"
         @cancel="closeAction"
       />
@@ -204,10 +210,12 @@ function onRightPaneCollapse(collapsed: boolean): void {
 }
 
 .monitoring-split-pane__left-pane {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  padding: 0 var(--dimension-5);
 }
 
 .monitoring-split-pane__results-count {

@@ -23,8 +23,6 @@ cmk-components -- otherwise commits older than the last reorganisation of the
 codebase classify as ``None`` even when their source file simply moved.
 """
 
-from __future__ import annotations
-
 import codecs
 import json
 import logging
@@ -83,7 +81,7 @@ def _is_utf8_decodable(path: Path) -> bool:
             while chunk := fh.read(_UTF8_DECODE_CHUNK):
                 decoder.decode(chunk)
             decoder.decode(b"", final=True)
-    except (OSError, UnicodeDecodeError):
+    except OSError, UnicodeDecodeError:
         return False
     return True
 

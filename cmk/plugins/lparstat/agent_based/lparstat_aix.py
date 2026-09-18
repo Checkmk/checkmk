@@ -57,7 +57,7 @@ def parse_lparstat_aix(string_table: StringTable) -> Section | None:
         uom = "%" if "%" in key else ""
         try:
             value = float(string_table[3][index])
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             continue
 
         if name in ("user", "sys", "idle", "wait"):
@@ -164,7 +164,7 @@ def check_lparstat_aix_cpu(params: Mapping[str, Any], section: Section) -> Check
     try:
         cpu_entitlement = float(section["system_config"]["ent"])
         phys_cpu_consumption, _unit = section["util"]["physc"]
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         return
     yield from check_levels(
         phys_cpu_consumption,

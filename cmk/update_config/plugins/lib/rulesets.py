@@ -28,7 +28,20 @@ from cmk.ruleset_matcher.tags import TagGroupID
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.log import VERBOSE
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
+# 3.0: metric backend -> data backend / telemetry metrics
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
+    "special_agents:custom_query_metric_backend": "special_agents:telemetry_metrics_custom_query",
+    "checkgroup_parameters:custom_query_metric_backend_monitoring": (
+        "checkgroup_parameters:telemetry_metrics_custom_query_monitoring"
+    ),
+    "static_checks:custom_query_metric_backend_monitoring": (
+        "static_checks:telemetry_metrics_custom_query_monitoring"
+    ),
+    "checkgroup_parameters:metric_backend_omd": (
+        "checkgroup_parameters:data_backend_telemetry_metrics_omd"
+    ),
+    "static_checks:metric_backend_omd": "static_checks:data_backend_telemetry_metrics_omd",
+}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
@@ -61,6 +74,10 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
     # * the rule validation with the replaced ruleset will happen after the replacing anyway again
     # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
     *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
+    # Same situation, without a rename: the parameters are still a positional tuple until
+    # the migrate_wmic_process_params action rewrites them, and that runs after this
+    # pre-action. Validating them here can only ever fail.
+    RuleGroup.StaticChecks("wmic_process"),
 }
 
 

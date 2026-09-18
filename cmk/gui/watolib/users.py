@@ -25,8 +25,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, Users, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
-from cmk.gui.userdb import add_internal_attributes, UserAttribute
-from cmk.gui.userdb._connections import get_connection
+from cmk.gui.userdb import add_internal_attributes, get_connection, UserAttribute
 from cmk.gui.userdb.userdata import (
     UserAlreadyExistsError,
     UserData,

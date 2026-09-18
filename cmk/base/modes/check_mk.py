@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
-
 import dataclasses
 import enum
 import itertools
@@ -65,10 +62,11 @@ from cmk.ccc import tty
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, Hosts
 from cmk.ccc.store import activation_lock
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
@@ -111,13 +109,14 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
-from cmk.checkengine.snmp_backend_builder import make_backend
+from cmk.checkengine.snmp_backend_builder import BackendError, make_backend
 from cmk.checkengine.snmplib import (
     get_single_oid,
     OID,
     oids_to_walk,
     SNMPBackend,
     SNMPBackendEnum,
+    SNMPHostConfig,
     SNMPSectionName,
     walk_for_export,
 )
@@ -126,6 +125,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
@@ -151,8 +151,7 @@ from cmk.server_side_calls_backend import (
     load_active_checks,
     load_secrets_file,
 )
-from cmk.utils import config_warnings, ip_lookup, log, timeperiod
-from cmk.utils.auto_queue import AutoQueue
+from cmk.utils import config_warnings, ip_lookup, timeperiod
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import ConfiguredIPLookup
@@ -160,16 +159,9 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
-from .modes import Mode, Option
+from .modes import option_count, option_names, option_string, option_strings, write_stdout
 
 tracer = trace.get_tracer()
-
-
-def load_config(edition: cmk_version.Edition) -> config.LoadingResult:
-    # Read the configuration files (main.mk, autochecks, etc.), but not for
-    # certain operation modes that does not need them and should not be harmed
-    # by a broken configuration
-    return config.load(edition)
 
 
 def load_checks() -> AgentBasedPlugins:
@@ -194,15 +186,8 @@ def load_checks() -> AgentBasedPlugins:
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
 
-_verbosity = 0
 _fake_dns: HostAddress | None = None
 _enforce_localhost = False
-
-
-def print_(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
 
 
 def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
@@ -219,72 +204,33 @@ def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
             raise ValueError(backend)
 
 
-def option_verbosity() -> None:
-    global _verbosity
-    _verbosity += 1
-    log.logger.setLevel(log.verbosity_to_log_level(_verbosity))
+def _host_address(raw_host_address: str) -> HostAddress:
+    try:
+        return HostAddress(raw_host_address)
+    except HostNameValidationError as exc:
+        raise MKBailOut(str(exc)) from exc
 
 
-_VERBOSE_OPTION = Option(
-    long_option="verbose",
-    short_option="v",
-    short_help="Enable verbose output (Use twice for more)",
-    handler_function=option_verbosity,
-)
+def _host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
+    return [_host_address(raw_host_address) for raw_host_address in raw_host_addresses]
 
 
-def option_debug() -> None:
-    cmk.ccc.debug.enable()
+def _set_fake_dns(raw_address: str | None) -> None:
+    """Remember --fake-dns for the ip lookup of this command.
 
-
-_DEBUG_OPTION = Option(
-    long_option="debug",
-    short_help="Let most Python exceptions raise through",
-    handler_function=option_debug,
-)
-
-
-def option_profile() -> None:
-    profiling.enable()
-    log.logger.debug("Enabled profiling")
-
-
-_PROFILE_OPTION = Option(
-    long_option="profile",
-    short_help="Enable profiling mode",
-    handler_function=option_profile,
-)
-
-
-def option_fake_dns(a: HostAddress) -> None:
+    The engine hands the raw value to every handler; the ones that look up IP
+    addresses store it here, where _forced_ip_lookup() picks it up.
+    """
     global _fake_dns
-    _fake_dns = a
-
-
-_FAKE_DNS_OPTION = Option(
-    long_option="fake-dns",
-    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    handler_function=option_fake_dns,
-    argument=True,
-    argument_descr="IP",
-)
+    _fake_dns = None if raw_address is None else _host_address(raw_address)
 
 
 def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
     if _fake_dns is not None:
-        return lambda hn, family: _fake_dns
+        return lambda hn, family: _fake_dns  # noqa: ARG005
     if _enforce_localhost:
         return ip_lookup.local_ip_for
     return None
-
-
-def general_options() -> list[Option]:
-    return [
-        _VERBOSE_OPTION,
-        _DEBUG_OPTION,
-        _PROFILE_OPTION,
-        _FAKE_DNS_OPTION,
-    ]
 
 
 # .
@@ -336,27 +282,27 @@ def _handle_fetcher_options(
 
 
 _FETCHER_OPTIONS: Final = [
-    Option(
+    CLIOption(
         long_option="cache",
         short_help="Read info from data source cache files when existent, even when it "
         "is outdated. Only contact the data sources when the cache file "
         "is absent",
     ),
-    Option(
+    CLIOption(
         long_option="no-cache",
         short_help="Never use cached information",
     ),
-    Option(
+    CLIOption(
         long_option="no-tcp",
         short_help="Only use cache files. Skip hosts without cache files.",
     ),
-    Option(
+    CLIOption(
         long_option="usewalk",
         short_help="Use snmpwalk stored with --snmpwalk",
     ),
 ]
 
-_SNMP_BACKEND_OPTION: Final = Option(
+_SNMP_BACKEND_OPTION: Final = CLIOption(
     long_option="snmp-backend",
     short_help="Override default SNMP backend",
     argument=True,
@@ -374,35 +320,13 @@ _SNMP_BACKEND_OPTION: Final = Option(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> None:
-    loading_result = config.load(
-        edition=app.edition,
-    )
-    config_cache = loading_result.config_cache
-    core_objects_config = config.CoreObjectsConfig(
-        loading_result.loaded_config,
-        config_cache.ruleset_matcher,
-        config_cache.label_manager,
-    )
-    hosts = _list_all_hosts(
-        config_cache,
-        loading_result.hosts_config,
-        core_objects_config,
-        args,
-        options,
-    )
-    with suppress(IOError):
-        sys.stdout.write("\n".join(hosts) + "\n")
-        sys.stdout.flush()
-
-
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     core_objects_config: config.CoreObjectsConfig,
-    hostgroups: list[str],
-    options: dict,
+    hostgroups: Sequence[str],
+    options: Mapping[str, object],
 ) -> list[HostName]:
     hostnames: Iterable[HostName]
 
@@ -434,29 +358,52 @@ def _list_all_hosts(
     return hostlist
 
 
-mode_list_hosts = Mode(
+def _mode_list_hosts(
+    _app: object, _global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    loading_result = config.load()
+    config_cache = loading_result.config_cache
+    core_objects_config = config.CoreObjectsConfig(
+        loading_result.loaded_config,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+    )
+    hosts = _list_all_hosts(
+        config_cache,
+        loading_result.hosts_config,
+        core_objects_config,
+        args,
+        options,
+    )
+    with suppress(IOError):
+        sys.stdout.write("\n".join(hosts) + "\n")
+        sys.stdout.flush()
+    return 0
+
+
+cli_command_list_hosts = CLICommand(
     long_option="list-hosts",
     short_option="l",
     handler_function=_mode_list_hosts,
     argument=True,
     argument_descr="G1 G2...",
     argument_optional=True,
+    sub_options=[
+        CLIOption(
+            long_option="all-sites",
+            short_help="Include hosts of foreign sites",
+        ),
+        CLIOption(
+            long_option="include-offline",
+            short_help="Include offline hosts",
+        ),
+    ],
     short_help="Print list of all hosts or members of host groups",
     long_help=[
         (
             "Called without argument lists all hosts. You may "
             "specify one or more host groups to restrict the output to hosts "
             "that are in at least one of those groups."
-        ),
-    ],
-    sub_options=[
-        Option(
-            long_option="all-sites",
-            short_help="Include hosts of foreign sites",
-        ),
-        Option(
-            long_option="include-offline",
-            short_help="Include offline hosts",
         ),
     ],
 )
@@ -470,21 +417,6 @@ mode_list_hosts = Mode(
 #   |                  |_|_|___/\__|     \__\__,_|\__, |                   |
 #   |                                             |___/                    |
 #   '----------------------------------------------------------------------'
-
-
-def _mode_list_tag(app: CheckmkBaseApp, args: list[str]) -> None:
-    loading_result = config.load(
-        edition=app.edition,
-    )
-    hosts = _list_all_hosts_with_tags(
-        tuple(TagID(_) for _ in args),
-        loading_result.config_cache,
-        loading_result.hosts_config,
-        loading_result.host_tags,
-    )
-    print_("\n".join(sorted(hosts)))
-    if hosts:
-        print_("\n")
 
 
 def _list_all_hosts_with_tags(
@@ -512,7 +444,23 @@ def _list_all_hosts_with_tags(
     return hosts
 
 
-mode_list_tag = Mode(
+def _mode_list_tag(
+    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
+    loading_result = config.load()
+    hosts = _list_all_hosts_with_tags(
+        tuple(TagID(_) for _ in args),
+        loading_result.config_cache,
+        loading_result.hosts_config,
+        loading_result.host_tags,
+    )
+    write_stdout("\n".join(sorted(hosts)))
+    if hosts:
+        write_stdout("\n")
+    return 0
+
+
+cli_command_list_tag = CLICommand(
     long_option="list-tag",
     handler_function=_mode_list_tag,
     argument=True,
@@ -584,7 +532,9 @@ def _get_ds_type(
     return _DSType.AGENT_SNMP
 
 
-def _mode_list_checks(app: CheckmkBaseApp) -> None:
+def _mode_list_checks(
+    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     from cmk.utils import man_pages
 
     plugins = load_checks()
@@ -627,10 +577,11 @@ def _mode_list_checks(app: CheckmkBaseApp) -> None:
     ]
 
     for e in sorted(table, key=lambda e: e.name):
-        print_(f"{e.render_tty()}\n")
+        write_stdout(f"{e.render_tty()}\n")
+    return 0
 
 
-mode_list_checks = Mode(
+cli_command_list_checks = CLICommand(
     long_option="list-checks",
     short_option="L",
     handler_function=_mode_list_checks,
@@ -649,8 +600,11 @@ mode_list_checks = Mode(
 
 
 def _mode_dump_agent(
-    app: CheckmkBaseApp, options: Mapping[str, object], hostname: HostName
-) -> None:
+    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    raw_host_name = args[0]
+    hostname = _host_address(raw_host_name)
     file_cache_options = _handle_fetcher_options(options)
 
     try:
@@ -659,7 +613,7 @@ def _mode_dump_agent(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -848,17 +802,19 @@ def _mode_dump_agent(
             assert raw_data.ok is not None
             output.append(raw_data.ok)
 
-    print_(b"".join(output).decode(errors="surrogateescape"))
+    write_stdout(b"".join(output).decode(errors="surrogateescape"))
     if has_errors:
         sys.exit(1)
+    return 0
 
 
-mode_dump_agent = Mode(
+cli_command_dump_agent = CLICommand(
     long_option="dump-agent",
     short_option="d",
     handler_function=_mode_dump_agent,
     argument=True,
     argument_descr="HOSTNAME|ADDRESS",
+    sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
     short_help="Show raw information from agent",
     long_help=[
         (
@@ -867,7 +823,6 @@ mode_dump_agent = Mode(
             "Does not work on clusters but only on real hosts. "
         )
     ],
-    sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
 )
 
 # .
@@ -881,10 +836,14 @@ mode_dump_agent = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
+def _mode_dump_hosts(
+    _app: object, global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    hostlist: Iterable[HostName] = _host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -947,9 +906,10 @@ def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ).get,
         )
+    return 0
 
 
-mode_dump = Mode(
+cli_command_dump = CLICommand(
     long_option="dump",
     short_option="D",
     handler_function=_mode_dump_hosts,
@@ -981,12 +941,14 @@ mode_dump = Mode(
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
-def _fail_with_deprecation_msg(argv: list[str]) -> Literal[1]:
+def _fail_with_deprecation_msg(
+    _app: object, _global_options: GlobalOptions, _options: Options, argv: Args
+) -> int:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
     return 1
 
 
-mode_package = Mode(
+cli_command_package = CLICommand(
     long_option="package",
     short_option="P",
     handler_function=_fail_with_deprecation_msg,
@@ -1008,10 +970,11 @@ mode_package = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_update_dns_cache(app: CheckmkBaseApp) -> None:
-    loading_result = config.load(
-        edition=app.edition,
-    )
+def _mode_update_dns_cache(
+    _app: object, global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    loading_result = config.load()
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
@@ -1027,9 +990,10 @@ def _mode_update_dns_cache(app: CheckmkBaseApp) -> None:
             or ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ),
     )
+    return 0
 
 
-mode_update_dns_cache = Mode(
+cli_command_update_dns_cache = CLICommand(
     long_option="update-dns-cache",
     handler_function=_mode_update_dns_cache,
     short_help="Update IP address lookup cache",
@@ -1046,18 +1010,19 @@ mode_update_dns_cache = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_cleanup_piggyback(app: CheckmkBaseApp) -> None:
-    loaded_config = config.load(
-        edition=app.edition,
-    ).loaded_config
+def _mode_cleanup_piggyback(
+    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
+    loaded_config = config.load().loaded_config
     piggyback_backend.cleanup_piggyback_files(
         loaded_config.piggyback_max_cachefile_age,
         (r["value"] for r in loaded_config.piggybacked_host_files),
         cmk.utils.paths.omd_root,
     )
+    return 0
 
 
-mode_cleanup_piggyback = Mode(
+cli_command_cleanup_piggyback = CLICommand(
     long_option="cleanup-piggyback",
     handler_function=_mode_cleanup_piggyback,
     short_help="Cleanup outdated piggyback files",
@@ -1079,7 +1044,10 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
     return omd_root / "local/share/snmp/mibs"
 
 
-def _mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:
+def _mode_snmptranslate(
+    _app: object, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
+    walk_filename = args[0]
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
@@ -1127,9 +1095,10 @@ def _mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:
         sys.stdout.buffer.write(b" --> ")
         sys.stdout.buffer.write(element_translated.strip())
         sys.stdout.buffer.write(b"\n")
+    return 0
 
 
-mode_snmptranslate = Mode(
+cli_command_snmptranslate = CLICommand(
     long_option="snmptranslate",
     handler_function=_mode_snmptranslate,
     argument=True,
@@ -1154,40 +1123,7 @@ mode_snmptranslate = Mode(
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-_oids: list[str] = []
-_extra_oids: list[str] = []
 _SNMPWalkOptions = dict[str, list[OID]]
-
-
-def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
-    cmk.utils.paths.snmpwalks_dir.mkdir(parents=True, exist_ok=True)
-
-    # TODO: What about SNMP management boards?
-    try:
-        _do_snmpwalk_on(
-            options,
-            cmk.utils.paths.snmpwalks_dir / backend.hostname,
-            backend=backend,
-        )
-    except Exception as e:
-        console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
-        if cmk.ccc.debug.enabled():
-            raise
-    cmk.ccc.cleanup.cleanup_globals()
-
-
-def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
-    console.verbose(f"{backend.hostname}:")
-
-    oids = oids_to_walk(options)
-
-    with filename.open("w", encoding="utf-8") as file:
-        for rows in _execute_walks_for_dump(oids, backend=backend):
-            for oid, value in rows:
-                file.write(f"{oid} {value}\n")
-            console.verbose(f"{len(rows)} variables.")
-
-    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
 
 
 def _execute_walks_for_dump(
@@ -1211,13 +1147,59 @@ def _execute_walks_for_dump(
                 raise
 
 
-def _mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> None:
-    if _oids:
-        options["oids"] = _oids
-    if _extra_oids:
-        options["extraoids"] = _extra_oids
-    if "oids" in options and "extraoids" in options:
+def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
+    console.verbose(f"{backend.hostname}:")
+
+    oids = oids_to_walk(options)
+
+    with filename.open("w", encoding="utf-8") as file:
+        for rows in _execute_walks_for_dump(oids, backend=backend):
+            for oid, value in rows:
+                file.write(f"{oid} {value}\n")
+            console.verbose(f"{len(rows)} variables.")
+
+    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
+
+
+def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
+    cmk.utils.paths.snmpwalks_dir.mkdir(parents=True, exist_ok=True)
+
+    # TODO: What about SNMP management boards?
+    try:
+        _do_snmpwalk_on(
+            options,
+            cmk.utils.paths.snmpwalks_dir / backend.hostname,
+            backend=backend,
+        )
+    except Exception as e:
+        console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
+        if cmk.ccc.debug.enabled():
+            raise
+    cmk.ccc.cleanup.cleanup_globals()
+
+
+def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
+    """Create the configured backend, reporting an unavailable one as user error"""
+    try:
+        return make_backend(snmp_config)
+    except BackendError as exc:
+        raise MKGeneralException(str(exc)) from exc
+
+
+def _mode_snmpwalk(
+    _app: object, global_options: GlobalOptions, options: Options, hostnames: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    oids = option_strings(options, "oid")
+    extra_oids = option_strings(options, "extraoid")
+    if oids and extra_oids:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
+
+    walk_options: _SNMPWalkOptions = {}
+    if oids:
+        walk_options["oids"] = list(oids)
+    if extra_oids:
+        walk_options["extraoids"] = list(extra_oids)
 
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -1227,9 +1209,7 @@ def _mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> 
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    config_cache = config.load(
-        edition=app.edition,
-    ).config_cache
+    config_cache = config.load().config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
@@ -1246,17 +1226,38 @@ def _mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> 
             hostname, ip_family, ipaddress, SourceType.HOST, backend_override=snmp_backend_override
         )
         _do_snmpwalk(
-            options,
-            backend=make_backend(snmp_config),
+            walk_options,
+            backend=_make_backend(snmp_config),
         )
+    return 0
 
 
-mode_snmpwalk = Mode(
+cli_command_snmpwalk = CLICommand(
     long_option="snmpwalk",
     handler_function=_mode_snmpwalk,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
+    sub_options=[
+        _SNMP_BACKEND_OPTION,
+        CLIOption(
+            long_option="extraoid",
+            argument=True,
+            argument_descr="A",
+            repeat=True,
+            short_help="Walk also on this OID, in addition to mib-2 and "
+            "enterprises. You can specify this option multiple "
+            "times.",
+        ),
+        CLIOption(
+            long_option="oid",
+            argument=True,
+            argument_descr="A",
+            repeat=True,
+            short_help="Walk on this OID instead of mib-2 and enterprises. "
+            "You can specify this option multiple times.",
+        ),
+    ],
     short_help="Do snmpwalk on one or more hosts",
     long_help=[
         "Does a complete snmpwalk for the specified hosts both "
@@ -1266,26 +1267,6 @@ mode_snmpwalk = Mode(
         "specify numeric OIDs. If you want to keep the two standard OIDS "
         ".1.3.6.1.2.1 and .1.3.6.1.4.1 then use --extraoid for just adding "
         "additional OIDs to walk." % cmk.utils.paths.snmpwalks_dir,
-    ],
-    sub_options=[
-        _SNMP_BACKEND_OPTION,
-        Option(
-            long_option="extraoid",
-            argument=True,
-            argument_descr="A",
-            argument_conv=_extra_oids.append,
-            short_help="Walk also on this OID, in addition to mib-2 and "
-            "enterprises. You can specify this option multiple "
-            "times.",
-        ),
-        Option(
-            long_option="oid",
-            argument=True,
-            argument_descr="A",
-            argument_conv=_oids.append,
-            short_help="Walk on this OID instead of mib-2 and enterprises. "
-            "You can specify this option multiple times.",
-        ),
     ],
 )
 
@@ -1300,7 +1281,8 @@ mode_snmpwalk = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequence[str]) -> None:
+def _mode_snmpget(_app: object, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    _set_fake_dns(global_options.fake_dns)
     if not args:
         raise MKBailOut("You need to specify an OID.")
     try:
@@ -1308,9 +1290,7 @@ def _mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequ
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    loading_result = config.load(
-        edition=app.edition,
-    )
+    loading_result = config.load()
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
 
@@ -1344,17 +1324,19 @@ def _mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequ
             SourceType.HOST,
             backend_override=snmp_backend_override,
         )
-        backend = make_backend(snmp_config)
+        backend = _make_backend(snmp_config)
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
+    return 0
 
 
-mode_snmpget = Mode(
+cli_command_snmpget = CLICommand(
     long_option="snmpget",
     handler_function=_mode_snmpget,
     argument=True,
     argument_descr="OID [HOST1 HOST2...]",
     argument_optional=True,
+    sub_options=[_SNMP_BACKEND_OPTION],
     short_help="Fetch single OID from one or multiple hosts",
     long_help=[
         (
@@ -1362,7 +1344,6 @@ mode_snmpget = Mode(
             "no host is given, all known SNMP hosts are queried."
         )
     ],
-    sub_options=[_SNMP_BACKEND_OPTION],
 )
 
 # .
@@ -1376,9 +1357,10 @@ mode_snmpget = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
+def _mode_flush(_app: object, _global_options: GlobalOptions, _options: Options, args: Args) -> int:
+    hosts = _host_addresses(args)
     plugins = load_checks()
-    loading_result = load_config(edition=app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     hosts_config = loading_result.hosts_config
@@ -1402,13 +1384,13 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
         )
 
     for host in hosts:
-        print_("%-20s: " % host)
+        write_stdout("%-20s: " % host)
         flushed = False
 
         # counters
         try:
             (cmk.utils.paths.counters_dir / host).unlink()
-            print_(tty.bold + tty.blue + " counters")
+            write_stdout(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
             pass
@@ -1426,14 +1408,14 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
                     except OSError:
                         pass
             if d == 1:
-                print_(tty.bold + tty.green + " cache")
+                write_stdout(tty.bold + tty.green + " cache")
             elif d > 1:
-                print_(tty.bold + tty.green + " cache(%d)" % d)
+                write_stdout(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
         d = piggyback_backend.remove_source_status_file(host, cmk.utils.paths.omd_root)
         if d:
-            print_(tty.bold + tty.magenta + " piggyback(1)")
+            write_stdout(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.utils.paths.logwatch_dir / host
@@ -1448,7 +1430,7 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
                     except OSError:
                         pass
             if d > 0:
-                print_(tty.bold + tty.magenta + " logfiles(%d)" % d)
+                write_stdout(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = sum(
@@ -1460,22 +1442,23 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
         # config_cache.remove_autochecks(host)
         if count:
             flushed = True
-            print_(tty.bold + tty.cyan + " autochecks(%d)" % count)
+            write_stdout(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         tree_path = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
         if tree_path.path.exists() or tree_path.legacy.exists():
             tree_path.path.unlink(missing_ok=True)
             tree_path.legacy.unlink(missing_ok=True)
-            print_(tty.bold + tty.yellow + " inventory")
+            write_stdout(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
-            print_("(nothing)")
+            write_stdout("(nothing)")
 
-        print_(tty.normal + "\n")
+        write_stdout(tty.normal + "\n")
+    return 0
 
 
-mode_flush = Mode(
+cli_command_flush = CLICommand(
     long_option="flush",
     handler_function=_mode_flush,
     argument=True,
@@ -1503,12 +1486,17 @@ mode_flush = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
+def _mode_dump_nagios_config(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    args = _host_addresses(raw_host_names)
+
     from cmk.base.core.nagios import create_config
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
     plugins = load_checks()
-    loading_result = load_config(edition=app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -1600,9 +1588,10 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
     )
+    return 0
 
 
-mode_nagios_config = Mode(
+cli_command_nagios_config = CLICommand(
     long_option="nagios-config",
     short_option="N",
     handler_function=_mode_dump_nagios_config,
@@ -1633,7 +1622,7 @@ mode_nagios_config = Mode(
 def _make_configured_notify_relay(
     relays_present: bool,
 ) -> Callable[[Callable[[str], object]], None]:
-    noop = lambda *a, **kw: None
+    noop = lambda *a, **kw: None  # noqa: ARG005
 
     if not relays_present:
         return noop
@@ -1656,9 +1645,12 @@ def _make_configured_notify_relay(
     ).publish_new_config
 
 
-def _mode_update(app: CheckmkBaseApp) -> None:
+def _mode_update(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1672,7 +1664,6 @@ def _mode_update(app: CheckmkBaseApp) -> None:
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    bake_on_restart = app.make_bake_on_restart(loading_result, hosts_config.hosts)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config
@@ -1729,7 +1720,6 @@ def _mode_update(app: CheckmkBaseApp) -> None:
                         )
                     )
                 ),
-                bake_on_restart=bake_on_restart,
                 notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
                 checker_config_writer=make_packed_config_writer(
                     raw_config,
@@ -1746,9 +1736,10 @@ def _mode_update(app: CheckmkBaseApp) -> None:
 
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
+    return 0
 
 
-mode_update = Mode(
+cli_command_update = CLICommand(
     long_option="update",
     short_option="U",
     handler_function=_mode_update,
@@ -1761,7 +1752,6 @@ mode_update = Mode(
             "When using the CheckMK Micro Core, the core configuration is created "
             "and the configuration for the Core helper processes is being created."
         ),
-        "The Agent Bakery is updating the agents.",
     ],
 )
 
@@ -1776,9 +1766,13 @@ mode_update = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
+def _mode_restart(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    args = _host_addresses(raw_host_names)
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1846,7 +1840,6 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
                 )
             )
         ),
-        bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         checker_config_writer=make_packed_config_writer(
             raw_config,
@@ -1857,14 +1850,17 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
+    return 0
 
 
-mode_restart = Mode(
+cli_command_restart = CLICommand(
     long_option="restart",
     short_option="R",
+    handler_function=_mode_restart,
     argument=True,
-    argument_optional=True,
     argument_descr="[HostA, HostB]",
+    argument_optional=True,
+    short_help="Create core config + core restart",
     long_help=[
         (
             "You may add host names as additional arguments. This enables the incremental "
@@ -1872,8 +1868,6 @@ mode_restart = Mode(
             "other hosts. Only supported with Checkmk Micro Core."
         )
     ],
-    handler_function=_mode_restart,
-    short_help="Create core config + core restart",
 )
 
 # .
@@ -1887,9 +1881,13 @@ mode_restart = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
+def _mode_reload(
+    app: CheckmkBaseApp, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    args = _host_addresses(raw_host_names)
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     raw_config = {f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)}
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1957,7 +1955,6 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
                 )
             ),
         ),
-        bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         checker_config_writer=make_packed_config_writer(
             raw_config,
@@ -1968,14 +1965,17 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
+    return 0
 
 
-mode_reload = Mode(
+cli_command_reload = CLICommand(
     long_option="reload",
     short_option="O",
+    handler_function=_mode_reload,
     argument=True,
-    argument_optional=True,
     argument_descr="[HostA, HostB]",
+    argument_optional=True,
+    short_help="Create core config + core reload",
     long_help=[
         (
             "You may add host names as additional arguments. This enables the incremental "
@@ -1983,8 +1983,6 @@ mode_reload = Mode(
             "other hosts. Only supported with Checkmk Micro Core."
         )
     ],
-    handler_function=_mode_reload,
-    short_help="Create core config + core reload",
 )
 
 # .
@@ -1998,7 +1996,7 @@ mode_reload = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) -> None:
+def _mode_man(_app: object, _global_options: GlobalOptions, options: Options, args: Args) -> int:
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -2008,7 +2006,7 @@ def _mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) 
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
-        return
+        return 0
 
     if (man_page_path := man_page_path_map.get(args[0])) is None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
@@ -2027,18 +2025,28 @@ def _mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) 
         rendered = renderer(man_page).render_page()
     except Exception as exc:
         sys.stdout.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
-        return
+        return 0
 
     man_pages.write_output(rendered)
+    return 0
 
 
-mode_man = Mode(
+cli_command_man = CLICommand(
     long_option="man",
     short_option="M",
     handler_function=_mode_man,
     argument=True,
     argument_descr="CHECKTYPE",
     argument_optional=True,
+    sub_options=[
+        CLIOption(
+            long_option="renderer",
+            short_option="r",
+            argument=True,
+            argument_descr="RENDERER",
+            short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+        ),
+    ],
     short_help="Show manpage for check CHECKTYPE",
     long_help=[
         (
@@ -2046,15 +2054,6 @@ mode_man = Mode(
             "available it is used as pager. Exit by pressing Q. "
             "Use -M without an argument to show a list of all manual pages."
         )
-    ],
-    sub_options=[
-        Option(
-            long_option="renderer",
-            short_option="r",
-            argument=True,
-            argument_descr="RENDERER",
-            short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
-        ),
     ],
 )
 
@@ -2069,7 +2068,9 @@ mode_man = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_browse_man(app: CheckmkBaseApp) -> None:
+def _mode_browse_man(
+    _app: object, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
     from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(
@@ -2079,9 +2080,10 @@ def _mode_browse_man(app: CheckmkBaseApp) -> None:
             blocked_paths=blocked_feature_files(omd_root),
         )
     )
+    return 0
 
 
-mode_browse_man = Mode(
+cli_command_browse_man = CLICommand(
     long_option="browse-man",
     short_option="m",
     handler_function=_mode_browse_man,
@@ -2099,7 +2101,9 @@ mode_browse_man = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
+def _mode_automation(
+    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, args: Args
+) -> int:
     from cmk.automations.types import AutomationID
     from cmk.base.automations.automations import (
         AutomationError,
@@ -2111,7 +2115,7 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
     if not args:
         raise MKAutomationError("You need to provide arguments")
 
-    name, automation_args = AutomationID(args[0]), args[1:]
+    name, automation_args = AutomationID(args[0]), list(args[1:])
     automations = Automations(discover_automations())
     with tracer.span(
         f"mode_automation[{name}]",
@@ -2134,7 +2138,7 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
         return 0
 
 
-mode_automation = Mode(
+cli_command_automation = CLICommand(
     long_option="automation",
     handler_function=_mode_automation,
     argument=True,
@@ -2154,9 +2158,19 @@ mode_automation = Mode(
 #   '----------------------------------------------------------------------'
 
 
+def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
+    return check_result.state
+
+
 def _mode_check_discovery(
-    app: CheckmkBaseApp, options: Mapping[str, object], hostname: HostName
+    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    raw_host_name = args[0]
+    hostname = _host_address(raw_host_name)
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -2167,12 +2181,19 @@ def _mode_check_discovery(
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
     label_manager = config_cache.label_manager
     hosts_config = loading_result.hosts_config
+    if hostname not in hosts_config.all_configured_hosts:
+        # There is no configuration to discover from, hence no data source to contact.
+        # Such a host must not be reported as "all up to date".
+        return _write_active_check_result(
+            ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
+        )
+
     host_tags = loading_result.host_tags
     set_global_logwatch_config(
         loaded_config,
@@ -2248,8 +2269,6 @@ def _mode_check_discovery(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
@@ -2348,18 +2367,15 @@ def _mode_check_discovery(
     if error_handler.result is not None:
         check_results = (error_handler.result,)
 
-    check_result = ActiveCheckResult.from_subresults(*check_results)
-    with suppress(IOError):
-        sys.stdout.write(check_result.as_text() + "\n")
-        sys.stdout.flush()
-    return check_result.state
+    return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
 
 
-mode_check_discovery = Mode(
+cli_command_check_discovery = CLICommand(
     long_option="check-discovery",
     handler_function=_mode_check_discovery,
     argument=True,
     argument_descr="HOSTNAME",
+    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
     short_help="Check for not yet monitored services",
     long_help=[
         (
@@ -2369,7 +2385,6 @@ mode_check_discovery = Mode(
             "autodiscovery"
         )
     ],
-    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
 )
 
 
@@ -2392,7 +2407,7 @@ def _convert_sections_argument(arg: str) -> set[SectionName]:
         raise MKBailOut("Error in --detect-sections argument: %s" % exc)
 
 
-_option_sections = Option(
+_option_sections = CLIOption(
     long_option="detect-sections",
     short_help=(
         "Comma separated list of sections. The provided sections (but no more) will be"
@@ -2406,7 +2421,7 @@ _option_sections = Option(
 
 def _get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, SectionName)](
     type_: type[TName],
-) -> Option:
+) -> CLIOption:
     def _convert_plugins_argument(arg: str) -> set[TName]:
         try:
             # kindly forgive empty strings
@@ -2414,7 +2429,7 @@ def _get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, Secti
         except ValueError as exc:
             raise MKBailOut("Error in --plugins argument: %s" % exc) from exc
 
-    return Option(
+    return CLIOption(
         long_option="plugins",
         short_help="Restrict discovery, checking or inventory to these plugins",
         argument=True,
@@ -2432,9 +2447,9 @@ def _convert_detect_plugins_argument(arg: str) -> set[str]:
         raise MKBailOut("Error in --detect-plugins argument: %s" % exc) from exc
 
 
-_option_detect_plugins = Option(
+_option_detect_plugins = CLIOption(
     long_option="detect-plugins",
-    deprecated_long_options={"checks"},
+    deprecated_long_options=frozenset({"checks"}),
     short_help="Same as '--plugins', but implies a best efford guess for --detect-sections",
     argument=True,
     argument_descr="P",
@@ -2451,24 +2466,77 @@ def _lookup_plugin[PluginName: (CheckPluginName, InventoryPluginName)](
         raise MKBailOut(f"Unknown check plugin '{plugin_name}'") from exc
 
 
+_CheckingOptions = TypedDict(
+    "_CheckingOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "no-submit": bool,
+        "perfdata": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
+
+
+_DiscoveryOptions = TypedDict(
+    "_DiscoveryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+        "discover": int,
+        "only-host-labels": bool,
+    },
+    total=False,
+)
+
+
+_InventoryOptions = TypedDict(
+    "_InventoryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "force": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[InventoryPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
+
+
 def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
-    options: "_CheckingOptions | _DiscoveryOptions | _InventoryOptions",
+    *,
+    detect_plugins: frozenset[str] | None,
+    detect_sections: frozenset[SectionName] | None,
+    selected_plugins: frozenset[PluginName] | None,
     plugins: Mapping[PluginName, CheckPlugin | InventoryPlugin],
     sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin],
     type_: type[PluginName],
-) -> tuple[SectionNameCollection, Container]:
-    detect_plugins = options.get("detect-plugins")
+) -> tuple[SectionNameCollection, Container[PluginName]]:
     if detect_plugins is None:
         return (
-            options.get("detect-sections", NO_SELECTION),
-            options.get("plugins", EVERYTHING),
+            NO_SELECTION if detect_sections is None else detect_sections,
+            EVERYTHING if selected_plugins is None else selected_plugins,
         )
 
-    conflicting_options = {"detect-sections", "plugins"}
-    if conflicting_options.intersection(options):
+    if detect_sections is not None or selected_plugins is not None:
         raise MKBailOut(
-            "Option '--detect-plugins' must not be combined with %s"
-            % "/".join(f"--{o}" for o in conflicting_options)
+            "Option '--detect-plugins' must not be combined with --detect-sections/--plugins"
         )
 
     if detect_plugins == {"@all"}:
@@ -2489,21 +2557,29 @@ def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)
     )
 
 
-_DiscoveryOptions = TypedDict(
-    "_DiscoveryOptions",
-    {
-        "cache": Literal[True],
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[CheckPluginName],
-        "detect-plugins": frozenset[str],
-        "discover": int,
-        "only-host-labels": bool,
-    },
-    total=False,
-)
+def _discovery_options(parsed: Mapping[str, object]) -> _DiscoveryOptions:
+    options = _DiscoveryOptions()
+    if "cache" in parsed:
+        options["cache"] = True
+    if "no-cache" in parsed:
+        options["no-cache"] = True
+    if "no-tcp" in parsed:
+        options["no-tcp"] = True
+    if "usewalk" in parsed:
+        options["usewalk"] = True
+    if "snmp-backend" in parsed:
+        options["snmp-backend"] = option_string(parsed, "snmp-backend") or ""
+    if "detect-sections" in parsed:
+        options["detect-sections"] = option_names(parsed, "detect-sections", SectionName)
+    if "plugins" in parsed:
+        options["plugins"] = option_names(parsed, "plugins", CheckPluginName)
+    if "detect-plugins" in parsed:
+        options["detect-plugins"] = option_names(parsed, "detect-plugins", str)
+    if "discover" in parsed:
+        options["discover"] = option_count(parsed, "discover")
+    if "only-host-labels" in parsed:
+        options["only-host-labels"] = True
+    return options
 
 
 def _preprocess_hostnames(
@@ -2532,9 +2608,13 @@ def _preprocess_hostnames(
     return node_names
 
 
-def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[str]) -> None:
+def _mode_discover(
+    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    options = _discovery_options(parsed)
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
@@ -2595,10 +2675,12 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
 
     on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(
-        options,
-        plugins.check_plugins,
-        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        CheckPluginName,
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.check_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=CheckPluginName,
     )
     parser = CMKParser(
         config.make_parser_config(
@@ -2650,8 +2732,6 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=_forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
@@ -2671,6 +2751,8 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             secrets=secrets,
         ),
     )
+    any_failed = False
+    known_hosts = frozenset(hosts_config.all_configured_hosts)
     for hostname in sorted(
         _preprocess_hostnames(
             frozenset(hostnames),
@@ -2681,6 +2763,10 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             only_host_labels="only-host-labels" in options,
         )
     ):
+        if hostname not in known_hosts:
+            sys.stderr.write(f"unknown host: {hostname}\n")
+            any_failed = True
+            continue
 
         def section_error_handling(
             section_name: SectionName,
@@ -2695,7 +2781,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
                 rtc_package=None,
             )
 
-        commandline_discovery(
+        succeeded = commandline_discovery(
             hostname,
             clear_ruleset_matcher_caches=ruleset_matcher.clear_caches,
             parser=parser,
@@ -2713,22 +2799,46 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
                 check_plugins=plugins.check_plugins,
             ),
             run_plugin_names=run_plugin_names,
-            ignore_plugin=config_cache.check_plugin_ignored,
+            autochecks_config=config.AutochecksConfigurer(
+                config_cache, plugins.check_plugins, service_name_config
+            ),
+            enforced_services=enforced_services_table(hostname),
             arg_only_new=options["discover"] == 1,
             only_host_labels="only-host-labels" in options,
             on_error=on_error,
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
+        any_failed |= not succeeded
+
+    return 1 if any_failed else 0
 
 
-mode_discover = Mode(
+cli_command_discover = CLICommand(
     long_option="discover",
     short_option="I",
     handler_function=_mode_discover,
     argument=True,
     argument_descr="[-I] HOST1 HOST2...",
     argument_optional=True,
+    sub_options=[
+        *_FETCHER_OPTIONS,
+        _SNMP_BACKEND_OPTION,
+        CLIOption(
+            long_option="discover",
+            short_option="I",
+            short_help="Delete existing services before starting discovery",
+            repeat=True,
+        ),
+        _option_sections,
+        _get_plugins_option(CheckPluginName),
+        _option_detect_plugins,
+        CLIOption(
+            long_option="only-host-labels",
+            short_option="L",
+            short_help="Restrict discovery to host labels only",
+        ),
+    ],
     short_help="Find new services",
     long_help=[
         (
@@ -2747,23 +2857,11 @@ mode_discover = Mode(
             "Use: '--only-host-labels' or '-L' "
         ),
         "-II does the same as -I but deletes all existing checks of the specified types and hosts.",
-    ],
-    sub_options=[
-        *_FETCHER_OPTIONS,
-        _SNMP_BACKEND_OPTION,
-        Option(
-            long_option="discover",
-            short_option="I",
-            short_help="Delete existing services before starting discovery",
-            count=True,
-        ),
-        _option_sections,
-        _get_plugins_option(CheckPluginName),
-        _option_detect_plugins,
-        Option(
-            long_option="only-host-labels",
-            short_option="L",
-            short_help="Restrict discovery to host labels only",
+        (
+            "Exits with 1 if the discovery failed for at least one host, or if one of "
+            "a host's data sources could not be contacted -- the services of such a "
+            "source are missing from the result. The discovery of the remaining hosts "
+            "is carried out regardless."
         ),
     ],
 )
@@ -2778,59 +2876,30 @@ mode_discover = Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-_CheckingOptions = TypedDict(
-    "_CheckingOptions",
-    {
-        "cache": Literal[True],
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "no-submit": bool,
-        "perfdata": bool,
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[CheckPluginName],
-        "detect-plugins": frozenset[str],
-    },
-    total=False,
-)
 
-
-def _mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) -> ServiceState:
-    plugins = load_checks()
-    loading_result = load_config(app.edition)
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-
-    secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-
-    return run_checking(
-        app,
-        loaded_config,
-        ruleset_matcher,
-        label_manager,
-        plugins,
-        loading_result.config_cache,
-        config.make_hosts_config(loaded_config),
-        loading_result.host_tags,
-        loaded_config.monitoring_core,
-        config.ServiceDependsOn(
-            tag_list=loading_result.host_tags.tag_list,
-            service_dependencies=loaded_config.service_dependencies,
-        ),
-        options,
-        args,
-        secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-                cmk.utils.paths.relative_tmp_dir
-            ),
-            secrets=secrets,
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
-        ),
-        trusted_ca_file=cmk.utils.paths.trusted_ca_file,
-    )
+def _checking_options(parsed: Mapping[str, object]) -> _CheckingOptions:
+    options = _CheckingOptions()
+    if "cache" in parsed:
+        options["cache"] = True
+    if "no-cache" in parsed:
+        options["no-cache"] = True
+    if "no-tcp" in parsed:
+        options["no-tcp"] = True
+    if "usewalk" in parsed:
+        options["usewalk"] = True
+    if "snmp-backend" in parsed:
+        options["snmp-backend"] = option_string(parsed, "snmp-backend") or ""
+    if "no-submit" in parsed:
+        options["no-submit"] = True
+    if "perfdata" in parsed:
+        options["perfdata"] = True
+    if "detect-sections" in parsed:
+        options["detect-sections"] = option_names(parsed, "detect-sections", SectionName)
+    if "plugins" in parsed:
+        options["plugins"] = option_names(parsed, "plugins", CheckPluginName)
+    if "detect-plugins" in parsed:
+        options["detect-plugins"] = option_names(parsed, "detect-plugins", str)
+    return options
 
 
 # also used in precompiled host checks!
@@ -2846,7 +2915,7 @@ def run_checking(
     monitoring_core: Literal["cmc", "nagios"],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     options: _CheckingOptions,
-    args: list[str],
+    args: Sequence[str],
     *,
     secrets_config_relay: AdHocSecrets | StoredSecrets,
     secrets_config_site: StoredSecrets,
@@ -2881,10 +2950,12 @@ def run_checking(
     )
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(
-        options,
-        plugins.check_plugins,
-        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        CheckPluginName,
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.check_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=CheckPluginName,
     )
 
     service_name_config = make_passive_service_name_config(
@@ -3017,6 +3088,7 @@ def run_checking(
             value_store_manager,
             clusters=hosts_config.clusters,
             rtc_package=None,
+            omd_root=cmk.utils.paths.omd_root,
         )
         with CPUTracker(console.debug) as tracker:
             checks_result = execute_checkmk_checks(
@@ -3084,12 +3156,71 @@ def run_checking(
     return check_result.state
 
 
-mode_check = Mode(
+def _mode_check(
+    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    options = _checking_options(parsed)
+    plugins = load_checks()
+    loading_result = config.load()
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+
+    secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+
+    return run_checking(
+        app,
+        loaded_config,
+        ruleset_matcher,
+        label_manager,
+        plugins,
+        loading_result.config_cache,
+        config.make_hosts_config(loaded_config),
+        loading_result.host_tags,
+        loaded_config.monitoring_core,
+        config.ServiceDependsOn(
+            tag_list=loading_result.host_tags.tag_list,
+            service_dependencies=loaded_config.service_dependencies,
+        ),
+        options,
+        args,
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
+            ),
+            secrets=secrets,
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
+        ),
+        trusted_ca_file=cmk.utils.paths.trusted_ca_file,
+    )
+
+
+cli_command_check = CLICommand(
     long_option="check",
     handler_function=_mode_check,
     argument=True,
     argument_descr="HOST [IPADDRESS]",
     argument_optional=True,
+    sub_options=[
+        *_FETCHER_OPTIONS,
+        _SNMP_BACKEND_OPTION,
+        CLIOption(
+            long_option="no-submit",
+            short_option="n",
+            short_help="Do not submit results to core, do not save counters",
+        ),
+        CLIOption(
+            long_option="perfdata",
+            short_option="p",
+            short_help="Also show performance data (use with -v)",
+        ),
+        _option_sections,
+        _get_plugins_option(CheckPluginName),
+        _option_detect_plugins,
+    ],
     short_help="Check all services on the given HOST",
     long_help=[
         (
@@ -3111,23 +3242,6 @@ mode_check = Mode(
             "'snmp' for all SNMP based checks."
         ),
     ],
-    sub_options=[
-        *_FETCHER_OPTIONS,
-        _SNMP_BACKEND_OPTION,
-        Option(
-            long_option="no-submit",
-            short_option="n",
-            short_help="Do not submit results to core, do not save counters",
-        ),
-        Option(
-            long_option="perfdata",
-            short_option="p",
-            short_help="Also show performance data (use with -v)",
-        ),
-        _option_sections,
-        _get_plugins_option(CheckPluginName),
-        _option_detect_plugins,
-    ],
 )
 
 # .
@@ -3140,23 +3254,35 @@ mode_check = Mode(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-_InventoryOptions = TypedDict(
-    "_InventoryOptions",
-    {
-        "cache": Literal[True],
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "force": bool,
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[InventoryPluginName],
-        "detect-plugins": frozenset[str],
-    },
-    total=False,
-)
+
+def _inventory_options(parsed: Mapping[str, object]) -> _InventoryOptions:
+    options = _InventoryOptions()
+    if "cache" in parsed:
+        options["cache"] = True
+    if "no-cache" in parsed:
+        options["no-cache"] = True
+    if "no-tcp" in parsed:
+        options["no-tcp"] = True
+    if "usewalk" in parsed:
+        options["usewalk"] = True
+    if "snmp-backend" in parsed:
+        options["snmp-backend"] = option_string(parsed, "snmp-backend") or ""
+    if "force" in parsed:
+        options["force"] = True
+    if "detect-sections" in parsed:
+        options["detect-sections"] = option_names(parsed, "detect-sections", SectionName)
+    if "plugins" in parsed:
+        options["plugins"] = option_names(parsed, "plugins", InventoryPluginName)
+    if "detect-plugins" in parsed:
+        options["detect-plugins"] = option_names(parsed, "detect-plugins", str)
+    return options
 
 
-def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[str]) -> None:
+def _mode_inventory(
+    app: CheckmkBaseApp, global_options: GlobalOptions, parsed: Options, args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
+    options = _inventory_options(parsed)
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -3164,7 +3290,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -3213,10 +3339,12 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(
-        options,
-        plugins.inventory_plugins,
-        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        InventoryPluginName,
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.inventory_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=InventoryPluginName,
     )
     fetcher = CMKFetcher(
         config_cache,
@@ -3356,27 +3484,20 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
             section.section_error("%s" % e)
         finally:
             cmk.ccc.cleanup.cleanup_globals()
+    return 0
 
 
-mode_inventory = Mode(
+cli_command_inventory = CLICommand(
     long_option="inventory",
     short_option="i",
     handler_function=_mode_inventory,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
-    short_help="Do a HW/SW Inventory on some or all hosts",
-    long_help=[
-        (
-            "Does a HW/SW Inventory for all, one or several "
-            "hosts. If you add the option -f, --force then persisted sections "
-            "will be used even if they are outdated."
-        )
-    ],
     sub_options=[
         *_FETCHER_OPTIONS,
         _SNMP_BACKEND_OPTION,
-        Option(
+        CLIOption(
             long_option="force",
             short_option="f",
             short_help="Use cached agent data even if it's outdated.",
@@ -3385,7 +3506,56 @@ mode_inventory = Mode(
         _get_plugins_option(InventoryPluginName),
         _option_detect_plugins,
     ],
+    short_help="Do a HW/SW Inventory on some or all hosts",
+    long_help=[
+        (
+            "Does a HW/SW Inventory for all, one or several "
+            "hosts. If you add the option -f, --force then persisted sections "
+            "will be used even if they are outdated."
+        )
+    ],
 )
+
+
+class _SaveTreeActions(NamedTuple):
+    do_archive: bool
+    do_save: bool
+
+
+def _render_update_results(
+    update_results: Mapping[SDPath, Sequence[str]],
+) -> str:
+    lines = ["Updated inventory tree:"]
+    for path, messages in update_results.items():
+        lines.append(f"  Path '{' > '.join(path)}':")
+        lines.extend(f"    {r}" for r in sorted(messages))
+    return "\n".join(lines) + "\n"
+
+
+def _get_save_tree_actions(
+    *,
+    previous_tree: ImmutableTree,
+    inventory_tree: MutableTree,
+) -> _SaveTreeActions:
+    if not inventory_tree:
+        # Archive current inventory tree file if it exists. Important for host inventory icon
+        console.verbose("No inventory tree.")
+        return _SaveTreeActions(do_archive=True, do_save=False)
+
+    if not previous_tree:
+        console.verbose("New inventory tree.")
+        return _SaveTreeActions(do_archive=False, do_save=True)
+
+    if has_changed := previous_tree != inventory_tree:
+        console.verbose("Inventory tree has changed.")
+
+    if update_results := inventory_tree.get_update_results():
+        console.verbose_no_lf(_render_update_results(update_results))
+
+    return _SaveTreeActions(
+        do_archive=has_changed,
+        do_save=(has_changed or len(update_results) > 0),
+    )
 
 
 def execute_active_check_inventory(
@@ -3459,48 +3629,10 @@ def execute_active_check_inventory(
     return result.check_results
 
 
-class _SaveTreeActions(NamedTuple):
-    do_archive: bool
-    do_save: bool
-
-
-def _render_update_results(
-    update_results: Mapping[SDPath, Sequence[str]],
-) -> str:
-    lines = ["Updated inventory tree:"]
-    for path, messages in update_results.items():
-        lines.append(f"  Path '{' > '.join(path)}':")
-        lines.extend(f"    {r}" for r in sorted(messages))
-    return "\n".join(lines) + "\n"
-
-
-def _get_save_tree_actions(
-    *,
-    previous_tree: ImmutableTree,
-    inventory_tree: MutableTree,
-) -> _SaveTreeActions:
-    if not inventory_tree:
-        # Archive current inventory tree file if it exists. Important for host inventory icon
-        console.verbose("No inventory tree.")
-        return _SaveTreeActions(do_archive=True, do_save=False)
-
-    if not previous_tree:
-        console.verbose("New inventory tree.")
-        return _SaveTreeActions(do_archive=False, do_save=True)
-
-    if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed.")
-
-    if update_results := inventory_tree.get_update_results():
-        console.verbose_no_lf(_render_update_results(update_results))
-
-    return _SaveTreeActions(
-        do_archive=has_changed,
-        do_save=(has_changed or len(update_results) > 0),
-    )
-
-
-def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, object]) -> None:
+def _mode_inventorize_marked_hosts(
+    app: CheckmkBaseApp, global_options: GlobalOptions, options: Options, _args: Args
+) -> int:
+    _set_fake_dns(global_options.fake_dns)
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -3509,13 +3641,13 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
 
     if not (queue := AutoQueue(InventoryPaths(cmk.utils.paths.omd_root).auto_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return
+        return 0
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
     plugins = load_checks()
-    loading_result = load_config(app.edition)
+    loading_result = config.load()
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
@@ -3626,7 +3758,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
 
     if queue.oldest() is None:
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return
+        return 0
 
     console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
@@ -3634,7 +3766,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
         process_hosts: Container[HostName] = {
             HostName(name) for name, state in response if state == 0
         }
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+    except livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError:
         process_hosts = EVERYTHING
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
@@ -3668,17 +3800,18 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))
+    return 0
 
 
-mode_inventorize_marked_hosts = Mode(
+cli_command_inventorize_marked_hosts = CLICommand(
     long_option="inventorize-marked-hosts",
     handler_function=_mode_inventorize_marked_hosts,
+    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
     short_help="Run inventory for hosts which previously had no tree data",
     long_help=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",
         "in the previous run",
     ],
-    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
 )
 
 # .
@@ -3692,8 +3825,10 @@ mode_inventorize_marked_hosts = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _mode_version(app: CheckmkBaseApp) -> None:
-    print_(
+def _mode_version(
+    app: CheckmkBaseApp, _global_options: GlobalOptions, _options: Options, _args: Args
+) -> int:
+    write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
 
@@ -3718,9 +3853,10 @@ Copyright (C) 2009 Checkmk GmbH
             cmk_version.__version__,
         )
     )
+    return 0
 
 
-mode_version = Mode(
+cli_command_version = CLICommand(
     long_option="version",
     short_option="V",
     handler_function=_mode_version,

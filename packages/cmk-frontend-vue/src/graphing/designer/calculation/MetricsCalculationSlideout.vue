@@ -16,8 +16,10 @@ import type { RefVisibility } from './composables/useCalculationEditor'
 
 const { _t } = usei18n()
 
-const { open, items, nextId, nextColor } = defineProps<{
+const { open, editing, items, nextId, nextColor } = defineProps<{
   open: boolean
+  /** Calculation to load into the form when the slideout opens; null starts a fresh form. */
+  editing: ItemId | null
   items: readonly GraphItem[]
   /** Id the next added item will get. */
   nextId: ItemId
@@ -67,6 +69,7 @@ function onTabChange(value: string | number): void {
             <div class="graphing-metrics-calculation-slideout__tab">
               <RrdTab
                 ref="rrdTabRef"
+                :editing="editing"
                 :items="items"
                 :next-id="nextId"
                 :next-color="nextColor"

@@ -10,10 +10,11 @@ from cmk.gui.monitor.services._models import (
     ServiceSort,
     ServiceSortColumn,
     ServiceSortDirection,
+    ServiceState,
 )
 from cmk.gui.openapi.utils import ProblemException
 
-from .testlib import get_fake_host_services_repository, KNOWN_HOSTNAME
+from .testlib import get_fake_host_services_repository, KNOWN_HOSTNAME, ServiceFactory
 
 # Building the response entries renders each service's Perf-O-Meter, which reaches into the
 # request-scoped configuration, user and theme.
@@ -51,7 +52,19 @@ def test_handle_list_services_state_label_conversion() -> None:
     response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
     service_states = [service.state for service in response.services]
 
-    assert all(state in {"OK", "WARN", "CRIT", "UNKNOWN"} for state in service_states)
+    assert all(state in {"OK", "WARN", "CRIT", "UNKNOWN", "PENDING"} for state in service_states)
+
+
+def test_handle_list_services_pending_state_round_trips() -> None:
+    services = [
+        ServiceFactory.build(name="Pending service", state=ServiceState.PENDING),
+        ServiceFactory.build(name="Checked service", state=ServiceState.OK),
+    ]
+    services_repo = get_fake_host_services_repository(services=services)
+    response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
+
+    state_by_name = {service.name: service.state for service in response.services}
+    assert state_by_name == {"Pending service": "PENDING", "Checked service": "OK"}
 
 
 def test_handle_list_services_meta_round_trips_hostname_and_site() -> None:

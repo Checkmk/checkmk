@@ -13,10 +13,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import MetricAttributeGroups from '../MetricAttributeGroups.vue'
-import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion } from '../TimeSeriesGraph'
 import { type MetricAttribute, attributesOf } from '../metricAttributes'
+import { orderMetricsTopToBottom } from '../metricOrder'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
-import { orderMetricsForLegend, withNameToggled } from './legendUtils'
+import { withNameToggled } from './legendUtils'
 
 const { _t } = usei18n()
 
@@ -24,12 +25,14 @@ const props = withDefaults(
   defineProps<{
     metrics: Metric[]
     horizontalLines?: HorizontalLine[]
+    shadedRegions?: ShadedRegion[]
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
     clickableMetricNames?: string[]
   }>(),
   {
     horizontalLines: () => [],
+    shadedRegions: () => [],
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
     clickableMetricNames: () => []
@@ -39,7 +42,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
-  hoverMetric: [metricName: string | null]
+  hoverMetrics: [names: string[]]
   metricClick: [metricName: string]
 }>()
 
@@ -91,7 +94,7 @@ function withTruncationLayout(
 }
 
 const items = computed((): CompactLegendItem[] => [
-  ...orderMetricsForLegend(props.metrics).map((metric) =>
+  ...orderMetricsTopToBottom(props.metrics).map((metric) =>
     withTruncationLayout({
       key: `metric:${metric.metadata.name}`,
       title: metric.metadata.title,
@@ -119,6 +122,18 @@ const items = computed((): CompactLegendItem[] => [
       toggle: () =>
         emit('update:hiddenLineNames', withNameToggled(props.hiddenLineNames, line.name))
     })
+  ),
+  ...props.shadedRegions.map((region) =>
+    withTruncationLayout({
+      key: `region:${region.name}`,
+      title: region.title,
+      color: region.color,
+      hidden: false,
+      metricName: null,
+      clickable: false,
+      attributes: [],
+      toggle: () => {}
+    })
   )
 ])
 
@@ -130,13 +145,13 @@ function setAttributesOpen(key: string, open: boolean): void {
 
 function onItemEnter(item: CompactLegendItem): void {
   if (item.metricName !== null) {
-    emit('hoverMetric', item.metricName)
+    emit('hoverMetrics', [item.metricName])
   }
 }
 
 function onItemLeave(item: CompactLegendItem): void {
   if (item.metricName !== null) {
-    emit('hoverMetric', null)
+    emit('hoverMetrics', [])
   }
 }
 

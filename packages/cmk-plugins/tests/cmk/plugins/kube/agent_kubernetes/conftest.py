@@ -4,14 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 from kubernetes import client
-from kubernetes.client import ApiClient  # type: ignore[attr-defined]
+from kubernetes.client import (  # type: ignore[attr-defined]
+    ApiClient,
+    AppsV1Api,
+    BatchV1Api,
+    CoreV1Api,
+)
 
 
-def kubernetes_api_client():
+def kubernetes_api_client() -> ApiClient:
     config = client.Configuration()  # type: ignore[attr-defined]
     config.host = "http://dummy"
     config.api_key_prefix["authorization"] = "Bearer"
@@ -21,20 +25,20 @@ def kubernetes_api_client():
 
 
 @pytest.fixture
-def core_client():
-    return client.CoreV1Api(kubernetes_api_client())  # type: ignore[attr-defined]
+def core_client() -> CoreV1Api:
+    return CoreV1Api(kubernetes_api_client())
 
 
 @pytest.fixture
-def batch_client():
-    return client.BatchV1Api(kubernetes_api_client())  # type: ignore[attr-defined]
+def batch_client() -> BatchV1Api:
+    return BatchV1Api(kubernetes_api_client())
 
 
 @pytest.fixture
-def apps_client():
-    return client.AppsV1Api(kubernetes_api_client())  # type: ignore[attr-defined]
+def apps_client() -> AppsV1Api:
+    return AppsV1Api(kubernetes_api_client())
 
 
 @pytest.fixture
-def dummy_host():
-    return kubernetes_api_client().configuration.host
+def dummy_host() -> str:
+    return str(kubernetes_api_client().configuration.host)

@@ -15,7 +15,7 @@ from ._filter_context import get_filter, get_singlecontext_vars, get_ubiquitary_
 
 
 def visual_title(
-    what: str,
+    what: str,  # noqa: ARG001
     visual: Visual,
     context: VisualContext,
     skip_title_context: bool = False,

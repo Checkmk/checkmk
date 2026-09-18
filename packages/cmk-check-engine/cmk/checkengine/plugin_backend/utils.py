@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import inspect
 from collections import defaultdict
@@ -79,7 +78,7 @@ def validate_function_arguments(
         type_label=type_label,
         has_item=has_item,
     )
-    return None
+    return None  # type: ignore[unreachable]
 
 
 def _raise_appropriate_type_error(
@@ -160,7 +159,7 @@ def _validate_optional_section_annotation(
 
 def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
     if not isinstance(ruleset_type, RuleSetType):
-        allowed = ", ".join(str(c) for c in RuleSetType)
+        allowed = ", ".join(str(c) for c in RuleSetType)  # type: ignore[unreachable]
         raise ValueError(f"invalid ruleset type {ruleset_type!r}. Allowed are {allowed}")
 
 

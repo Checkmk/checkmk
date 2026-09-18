@@ -35,6 +35,18 @@ const draggedSnapin = ref<HTMLElement | null>(null)
 const dropPlaceholder = ref<HTMLDivElement | null>(null)
 const lastDragoverSnapinIndex = ref<number | null>(null)
 const dragStartIndex = ref<number | null>(null)
+const dragSuppressed = ref(false)
+
+const TEXT_ENTRY_SELECTOR = 'input, textarea, select, [contenteditable]'
+
+function suppressDrag(e: PointerEvent) {
+  dragSuppressed.value =
+    e.target instanceof Element && e.target.closest(TEXT_ENTRY_SELECTOR) !== null
+}
+
+function releaseDragSuppression() {
+  dragSuppressed.value = false
+}
 
 function dragStart(e: DragEvent, index: number) {
   if (e.dataTransfer) {
@@ -89,7 +101,9 @@ function dragEnd(_e: DragEvent, index: number) {
         class="sidebar-app__snapin"
         v-bind="snapin"
         :is-dragged="dragStartIndex === index"
-        draggable="true"
+        :draggable="!dragSuppressed"
+        @pointerdown="suppressDrag"
+        @pointerup="releaseDragSuppression"
         @dragover="dragOver($event, index)"
         @dragend="dragEnd($event, index)"
         @dragstart="dragStart($event, index)"

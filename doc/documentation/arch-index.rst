@@ -19,13 +19,14 @@ Topology and interfaces
    arch-comp-omd.rst
    arch-comp-hosts.rst
 
-Ongoing migrations
-==================
+Cross cutting concerns
+======================
 
 .. toctree::
    :maxdepth: 1
 
    arch-migrations.rst
+   arch-licensing-feature-filter.rst
 
 Components
 ==========
@@ -59,6 +60,9 @@ Components
    arch-comp-metric-backend.rst
    arch-comp-otel-monitoring-dcd.rst
    arch-comp-otel-monitoring-custom-query.rst
+   arch-comp-mcp.rst
+   arch-comp-oauth.rst
+   arch-comp-product-usage-analytics.rst
 
    arch-comp-agent-abstract.rst
    arch-comp-agent-linux.rst

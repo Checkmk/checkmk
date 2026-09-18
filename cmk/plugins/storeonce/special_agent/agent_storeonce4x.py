@@ -113,7 +113,7 @@ class StoreOnceOauth2Session:
         dt_expires_in_earlier = dt.timedelta(0, expires_in_earlier)
         return dt.datetime.strftime(now + dt_expires_in - dt_expires_in_earlier, self._dt_fmt)
 
-    def get(self, path: str, parameters: StringMap | None = None) -> Any:
+    def get(self, path: str, parameters: StringMap | None = None) -> Any:  # noqa: ARG002
         url = f"https://{self._host}:{self._port}{path}"
         resp = self._oauth_session.request(
             method="GET",

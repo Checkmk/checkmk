@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -477,7 +476,7 @@ def _send_header_args(headers: Sequence[HeaderSpec], macros: Mapping[str, str]) 
 
 
 def _response_time_arguments(response_time: FloatLevels) -> Iterator[str]:
-    match response_time:
+    match response_time:  # type: ignore[exhaustive-match]
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time-levels"
             yield f"{warn},{crit}"
@@ -495,7 +494,7 @@ def _cert_args(cert_validation: tuple[CertificateValidity, FloatLevels | None]) 
             yield "--disable-cert"
             return
         case (CertificateValidity.VALIDATE, cert_levels):
-            match cert_levels:
+            match cert_levels:  # type: ignore[exhaustive-match]
                 case (LevelsType.FIXED, (float(warn), float(crit))):
                     yield "--certificate-levels"
                     yield f"{round(warn / _DAY)},{round(crit / _DAY)}"

@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 from collections.abc import Iterator
 
@@ -41,7 +42,8 @@ def _switch_core(site: Site) -> Iterator[None]:
 
 
 @pytest.mark.skip_if_not_edition("pro")
-def test_core_switch(site: Site, switch_core: Iterator[None]) -> None:
+@pytest.mark.usefixtures("switch_core")
+def test_core_switch(site: Site) -> None:
     """Test switching the core from cmc to nagios.
 
     Verify changes in the site can be activated after such core switch.

@@ -10,8 +10,10 @@ import { defineComponent, h, ref } from 'vue'
 
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import { downsampleToColumns, m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
+import { invertBucket } from '@/graphing/components/TimeSeriesGraph/render/bucket'
 import { computeStackedSeries } from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import { useHover } from '@/graphing/components/TimeSeriesGraph/useHover'
+import type { ConsolidationFn } from '@/graphing/components/consolidation'
 
 const UNIT: Metric['metadata']['unit'] = {
   notation: 'decimal',
@@ -26,10 +28,25 @@ const PLOT_HEIGHT = 100
 
 function makeLineMetric(name: string, dataPoints: (number | null)[]): Metric {
   return {
-    metadata: { name, title: name, unit: UNIT, color: '#ff0000' },
+    metadata: { name, title: name, unit: UNIT, color: '#ff0000', attributes: [] },
     render: { stack: null, inverse: false, hidden: false },
     data_points: dataPoints
   }
+}
+
+function makeInverseLineMetric(name: string, dataPoints: (number | null)[]): Metric {
+  const metric = makeLineMetric(name, dataPoints)
+  return { ...metric, render: { ...metric.render, inverse: true } }
+}
+
+function makeStackedMetric(
+  name: string,
+  dataPoints: (number | null)[],
+  stack: string,
+  hidden = false
+): Metric {
+  const metric = makeLineMetric(name, dataPoints)
+  return { ...metric, render: { ...metric.render, stack, hidden } }
 }
 
 function constantPoints(value: number | null): (number | null)[] {
@@ -47,18 +64,33 @@ function pointAt(x: number, y: number): { x: number; y: number; clientX: number;
   return { x, y, clientX: PLOT_CLIENT_LEFT + x, clientY: PLOT_CLIENT_TOP + y }
 }
 
-function mountHover(metrics: Metric[], dataRange = TIME_RANGE): ReturnType<typeof useHover> {
+interface HoverOverrides {
+  consolidation?: ConsolidationFn
+  plotWidth?: number
+  /** Widen to cover the mirrored half of the plot when a metric is inverse. */
+  valueDomain?: [number, number]
+}
+
+function mountHover(
+  metrics: Metric[],
+  dataRange = TIME_RANGE,
+  overrides: HoverOverrides = {}
+): ReturnType<typeof useHover> {
+  const consolidation = overrides.consolidation ?? 'avg'
+  const plotWidth = overrides.plotWidth ?? PLOT_WIDTH
   const xScale = scaleTime()
     .domain([new Date(TIME_RANGE.start * 1000), new Date(TIME_RANGE.end * 1000)])
-    .range([0, PLOT_WIDTH])
-  const yScale = scaleLinear().domain([0, 100]).range([PLOT_HEIGHT, 0])
+    .range([0, plotWidth])
+  const yScale = scaleLinear()
+    .domain(overrides.valueDomain ?? [0, 100])
+    .range([PLOT_HEIGHT, 0])
   let api!: ReturnType<typeof useHover>
   const harness = defineComponent({
     setup() {
       api = useHover({
         metrics: () => metrics,
-        consolidation: () => 'avg',
-        plotWidth: ref(PLOT_WIDTH),
+        consolidation: () => consolidation,
+        plotWidth: ref(plotWidth),
         plotHeight: ref(PLOT_HEIGHT),
         xScale,
         yScale
@@ -67,14 +99,18 @@ function mountHover(metrics: Metric[], dataRange = TIME_RANGE): ReturnType<typeo
     }
   })
   render(harness)
+  // One column per plot pixel, the way the renderer composes them.
   const buckets = metrics.map((metric) =>
     downsampleToColumns(
       m4(metric.data_points, dataRange, 4000),
       [dataRange.start, dataRange.end],
-      PLOT_WIDTH
+      plotWidth
     )
   )
-  api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, buckets, 'avg'))
+  const drawnBuckets = buckets.map((metricBuckets, i) =>
+    metrics[i]!.render.inverse ? metricBuckets.map(invertBucket) : metricBuckets
+  )
+  api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, drawnBuckets, consolidation))
   return api
 }
 
@@ -88,10 +124,9 @@ describe('useHover — hit-test', () => {
     hover.moveHoverTo(pointAt(50, 85))
 
     const samples = hover.hoverState.value!.samples
-    expect(samples.map((sample) => [sample.metricName, sample.isClosest])).toEqual([
-      ['low', true],
-      ['high', false]
-    ])
+    expect(samples.filter((sample) => sample.isClosest).map((sample) => sample.metricName)).toEqual(
+      ['low']
+    )
   })
 
   test('carries the cursor position and snaps the crosshair near it', () => {
@@ -116,13 +151,12 @@ describe('useHover — hit-test', () => {
     hover.moveHoverTo(pointAt(50, 15))
 
     const samples = hover.hoverState.value!.samples
-    expect(samples[0]).toMatchObject({
-      metricName: 'empty',
+    expect(samples.find((sample) => sample.metricName === 'empty')).toMatchObject({
       formattedValue: 'n/a',
       pixelY: null,
       isClosest: false
     })
-    expect(samples[1]!.isClosest).toBe(true)
+    expect(samples.find((sample) => sample.metricName === 'high')!.isClosest).toBe(true)
   })
 
   test('a cursor out of reach of every curve singles none of them out', () => {
@@ -147,7 +181,7 @@ describe('useHover — hit-test', () => {
     hover.moveHoverTo(pointAt(50, 50))
 
     const samples = hover.hoverState.value!.samples
-    expect(samples.map((sample) => sample.formattedValue)).toEqual(['10', '90'])
+    expect(samples.map((sample) => sample.formattedValue).sort()).toEqual(['10', '90'])
   })
 
   test('a plot with no metrics yields no hover state', () => {
@@ -220,6 +254,54 @@ describe('useHover — snapping to drawn points', () => {
     expect(state.samples[0]).toMatchObject({ formattedValue: '60', pixelY: 40 })
   })
 
+  // A plot width the sample step does not divide leaves one column per sample pair straddling
+  // both of them: the value consolidated over such a column belongs to one of the two samples,
+  // and reporting it at the midpoint between them would float the focus dot off the curve.
+  test('a column straddling two samples reports one of them, never the midpoint', () => {
+    const hover = mountHover(
+      [makeLineMetric('sloped', pointsValuedAtTheirOwnTimestamp())],
+      {
+        start: 0,
+        end: 100,
+        step: 10
+      },
+      { consolidation: 'max', plotWidth: 97 }
+    )
+
+    for (let x = 0; x <= 97; x++) {
+      hover.moveHoverTo(pointAt(x, 50))
+      const state = hover.hoverState.value!
+      const sample = state.samples[0]!
+      if (sample.pixelY === null) {
+        continue
+      }
+      // Every sample is valued at its own timestamp, so a reported point is only a point of
+      // the curve when its value and the time it is reported at agree.
+      expect(sample.formattedValue).toBe(String(state.snapTime))
+    }
+  })
+
+  // An inverse metric is drawn mirrored, so the top of its curve is the bucket's minimum. The
+  // hover reads the buckets as fetched, where that minimum is still the minimum.
+  test('an inverse metric reports the sample its mirrored curve peaks at', () => {
+    const hover = mountHover(
+      [makeInverseLineMetric('mirrored', pointsValuedAtTheirOwnTimestamp())],
+      { start: 0, end: 100, step: 10 },
+      { consolidation: 'max', plotWidth: 97, valueDomain: [-100, 100] }
+    )
+
+    for (let x = 0; x <= 97; x++) {
+      hover.moveHoverTo(pointAt(x, 50))
+      const sample = hover.hoverState.value!.samples[0]!
+      if (sample.pixelY === null) {
+        continue
+      }
+      // Every sample is valued at its own timestamp, and the dot is drawn at the negated value.
+      expect(sample.formattedValue).toBe(String(hover.hoverState.value!.snapTime))
+      expect(sample.pixelY).toBeCloseTo((100 + Number(sample.formattedValue)) / 2)
+    }
+  })
+
   test('a cursor over a gap stays n/a instead of snapping to a neighbouring sample', () => {
     const gappedPoints = pointsValuedAtTheirOwnTimestamp()
     const indexOfSampleAtT50 = 4
@@ -232,6 +314,53 @@ describe('useHover — snapping to drawn points', () => {
       formattedValue: 'n/a',
       pixelY: null
     })
+  })
+})
+
+describe('useHover — sample order', () => {
+  test('lists a stack topmost layer first, the way it reads down the graph', () => {
+    const hover = mountHover([
+      makeStackedMetric('bottom', constantPoints(10), 's1'),
+      makeStackedMetric('middle', constantPoints(20), 's1'),
+      makeStackedMetric('top', constantPoints(30), 's1')
+    ])
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const listedPixelYs = hover.hoverState.value!.samples.map((sample) => sample.pixelY!)
+    expect(listedPixelYs).toHaveLength(3)
+    expect(listedPixelYs).toEqual([...listedPixelYs].sort((first, second) => first - second))
+  })
+
+  test('lists lines above the areas they overlay, then the mirrored half, minus the baseline', () => {
+    const drawOrder = [
+      makeStackedMetric('user', constantPoints(10), 's1'),
+      makeStackedMetric('system', constantPoints(10), 's1'),
+      makeStackedMetric('baseline', constantPoints(5), 's1', true),
+      makeInverseLineMetric('outbound', constantPoints(20)),
+      makeLineMetric('util', constantPoints(60))
+    ]
+    const hover = mountHover(drawOrder, TIME_RANGE, { valueDomain: [-100, 100] })
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const listedNames = hover.hoverState.value!.samples.map((sample) => sample.metricName)
+    expect(listedNames).toEqual(['util', 'system', 'user', 'outbound'])
+  })
+
+  test('the reordering keeps each sample on its own metric', () => {
+    const hover = mountHover([
+      makeStackedMetric('bottom', constantPoints(10), 's1'),
+      makeStackedMetric('top', constantPoints(30), 's1')
+    ])
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const samplesByName = new Map(
+      hover.hoverState.value!.samples.map((sample) => [sample.metricName, sample])
+    )
+    expect(samplesByName.get('bottom')!.formattedValue).toBe('10')
+    expect(samplesByName.get('top')!.formattedValue).toBe('30')
   })
 })
 

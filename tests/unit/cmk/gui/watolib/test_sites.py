@@ -26,6 +26,7 @@ from typing import Any, cast
 import pytest
 
 from cmk.ccc.site import omd_site, SiteId
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -178,9 +179,8 @@ def _choice_names(form_spec: object) -> list[str]:
     return [element.name for element in inner.elements]
 
 
-def test_authentication_connections_form_spec_choices(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_authentication_connections_form_spec_choices() -> None:
     """The choices are the same for every site — there is no
     "inherit from the central site" option."""
     assert _choice_names(SiteManagement.authentication_connections_form_spec()) == [
@@ -195,8 +195,8 @@ def test_saml_endpoint_widgets_carry_pending_placeholder() -> None:
     computed on save), so both widgets must announce the pending URL via
     their placeholder instead of rendering an empty field."""
     for widget in (
-        SiteManagement._saml_metadata_endpoint_widget(),
-        SiteManagement._saml_acs_endpoint_widget(),
+        SiteManagement._saml_metadata_endpoint_widget(),  # noqa: SLF001
+        SiteManagement._saml_acs_endpoint_widget(),  # noqa: SLF001
     ):
         assert widget.placeholder is not None
         assert (
@@ -299,9 +299,8 @@ def test_user_attribute_sync_to_disk(form_value: tuple[str, object], disk_value:
     assert _user_attribute_sync_to_disk(form_value) == disk_value
 
 
-def test_user_attribute_sync_form_spec_choices(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_attribute_sync_form_spec_choices() -> None:
     """The choices are the same for every site — there is no
     "inherit from the central site" option."""
     assert _choice_names(SiteManagement.user_attribute_sync_connections_form_spec()) == [
@@ -318,10 +317,8 @@ def _ldap_connection(connection_id: str) -> LDAPUserConnectionConfig:
     )
 
 
-def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(
-    set_config: SetConfig,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(set_config: SetConfig) -> None:
     """A dashed LDAP connection id can be offered for attribute sync.
 
     Element names in the public form-spec API must be Python identifiers, so
@@ -353,7 +350,7 @@ def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(
 def _editable_connection_elements(*, saml_supported: bool) -> list[Any]:
     """Return the per-entry connection choices of the nested ``"list"`` widget
     built from stubbed connection choices."""
-    template = SiteManagement._editable_connections_form_spec(
+    template = SiteManagement._editable_connections_form_spec(  # noqa: SLF001
         ldap_choices=[("ldap_a", "LDAP A")],
         saml_choices=[("saml_a", "SAML A")] if saml_supported else None,
     ).element_template
@@ -384,7 +381,7 @@ def test_connection_pick_accepts_dash_in_connection_id() -> None:
     otherwise required to be Python identifiers, which a dash is not — so
     building the pick must not choke on an id the creation form let through.
     """
-    template = SiteManagement._editable_connections_form_spec(
+    template = SiteManagement._editable_connections_form_spec(  # noqa: SLF001
         ldap_choices=[("ldap-with-dash", "LDAP dashed")],
         saml_choices=[("saml-with-dash", "SAML dashed")],
     ).element_template
@@ -415,11 +412,12 @@ def test_editable_connections_form_spec_omits_saml_when_not_supported() -> None:
     assert [element.name for element in elements] == ["ldap"]
 
 
-def test_editable_connections_form_spec_rejects_empty_list(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_editable_connections_form_spec_rejects_empty_list() -> None:
     """Choosing "Use the following" requires at least one connection entry —
     an empty list would be semantically "disabled" behind a misleading label."""
     visitor = get_visitor(
-        SiteManagement._editable_connections_form_spec(
+        SiteManagement._editable_connections_form_spec(  # noqa: SLF001
             ldap_choices=[("ldap_a", "LDAP A")], saml_choices=None
         ),
         VisitorOptions(migrate_values=False, mask_values=False),
@@ -431,3 +429,51 @@ def test_editable_connections_form_spec_rejects_empty_list(request_context: None
     ]
 
     assert visitor.validate(RawDiskData([("ldap", "ldap_a")])) == []
+
+
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("remote-1", id="dash"),
+        pytest.param("1remote", id="leading_digit"),
+        pytest.param("a" * 17, id="too_long"),
+        pytest.param("sitä", id="non_ascii"),
+        pytest.param("remote\n", id="trailing_newline"),
+        pytest.param("", id="empty"),
+    ],
+)
+def test_validate_configuration_rejects_invalid_new_site_id(site_id: str) -> None:
+    with pytest.raises(MKUserError, match="site id"):
+        SiteManagement.validate_configuration(
+            SiteId(site_id),
+            _remote_site_config(),
+            SiteConfigurations({SiteId("central"): _local_site_config()}),
+        )
+
+
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("remote", id="letters"),
+        pytest.param("remote_1", id="digits_and_underscore"),
+        pytest.param("_r", id="leading_underscore"),
+        pytest.param("a" * 16, id="maximum_length"),
+    ],
+)
+def test_validate_configuration_accepts_valid_new_site_id(site_id: str) -> None:
+    SiteManagement.validate_configuration(
+        SiteId(site_id),
+        _remote_site_config(),
+        SiteConfigurations({SiteId("central"): _local_site_config()}),
+    )
+
+
+def test_validate_configuration_accepts_invalid_site_id_of_existing_connection() -> None:
+    site_id = SiteId("remote-1")
+    SiteManagement.validate_configuration(
+        site_id,
+        _remote_site_config(),
+        SiteConfigurations(
+            {SiteId("central"): _local_site_config(), site_id: _remote_site_config()}
+        ),
+    )

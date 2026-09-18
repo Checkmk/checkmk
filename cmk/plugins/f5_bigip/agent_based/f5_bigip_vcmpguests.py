@@ -31,7 +31,7 @@ def parse_f5_bigip_vcmpguests(string_table: Sequence[StringTable]) -> Section | 
     return {guest: status.lower() for guest, status in string_table[0]} or None
 
 
-def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:
+def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

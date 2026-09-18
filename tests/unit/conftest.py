@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import logging
@@ -24,20 +26,10 @@ from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
+from tests.testlib import fake_site
 from tests.unit.mocks_and_helpers import DummyLicensingHandler
 
-# TODO: Can we somehow push some of the registrations below to the subdirectories?
-# Needs to be executed before the import of those modules
-pytest.register_assert_rewrite(
-    "tests.testlib",
-    "tests.unit.cmk.legacy_checks.checktestlib",
-)
-
-
-from tests.testlib import fake_site  # noqa: E402
-
 logger = logging.getLogger(__name__)
-logging.getLogger("faker").setLevel(logging.ERROR)
 
 # This allows exceptions to be handled by IDEs (rather than just printing the results)
 # when pytest based tests are being run from inside the IDE
@@ -66,13 +58,13 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
         mp.setattr(
             cmk_version,
             "omd_version",
-            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",  # noqa: ARG005
         )
         cmk_version.edition.cache_clear()
         yield
 
 
-@pytest.fixture(name="fake_site", autouse=True)
+@pytest.fixture(name="fake_site", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_fake_site(
     cleanup_cmk: None,
     enable_debug_fixture: None,
@@ -145,7 +137,7 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     yield from fake_site.setup_fake_omd_site(monkeypatch)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_after_test() -> Generator[None]:
     yield from fake_site.cleanup_omd_root_after_test()
 
@@ -157,14 +149,14 @@ def site(request: pytest.FixtureRequest) -> None:
     pass
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def clear_caches_per_module() -> Generator[None]:
     """Ensures that module-scope fixtures are executed with clean caches."""
     fake_site.clear_caches()
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def clear_caches_per_function() -> Generator[None]:
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     fake_site.clear_caches()
@@ -181,7 +173,7 @@ def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[A
     yield plugins
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_livestatus_connect() -> Iterator[None]:
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
@@ -237,17 +229,17 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
 def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: DummyLicensingHandler.make,
+        lambda omd_root: DummyLicensingHandler.make,  # noqa: ARG005
     )
 
 
 @pytest.fixture(name="suppress_license_expiry_header")
 def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_expiry", lambda x, y: None)
+    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_expiry", lambda x, y: None)  # noqa: ARG005
 
 
 @pytest.fixture(name="suppress_license_banner")
 def fixture_suppress_license_banner(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_banner", lambda x, y: None)
+    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_banner", lambda x, y: None)  # noqa: ARG005

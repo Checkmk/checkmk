@@ -312,7 +312,7 @@ check_plugin_siemens_plc_info = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_cpu_state(section: StringTable) -> DiscoveryResult:
+def discover_siemens_plc_cpu_state(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

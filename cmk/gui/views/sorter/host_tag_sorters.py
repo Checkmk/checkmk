@@ -38,9 +38,9 @@ def _cmp_host_tag(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
     tag_group: TagGroup,
 ) -> int:
     host_tag_1 = _get_tag_group_value(r1, "host", tag_group)

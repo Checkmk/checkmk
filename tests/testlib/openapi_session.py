@@ -72,7 +72,7 @@ class RestSessionException(Exception):
 
 class UnexpectedResponse(RestSessionException):
     @classmethod
-    def from_response(cls, response: requests.Response) -> "UnexpectedResponse":
+    def from_response(cls, response: requests.Response) -> UnexpectedResponse:
         if 300 <= response.status_code < 400:
             text = f"Redirect to {response.headers['Location']}"
         else:
@@ -150,9 +150,11 @@ class CMKOpenApiSession(requests.Session):
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
         self.host_groups = HostGroupsAPI(self)
+        self.service_groups = ServiceGroupsAPI(self)
         self.host_tag_groups = HostTagGroupsAPI(self)
         self.service_discovery = ServiceDiscoveryAPI(self)
         self.services = ServicesAPI(self)
+        self.inventory = InventoryAPI(self)
         self.agents = AgentsAPI(self)
         self.rules = RulesAPI(self)
         self.rulesets = RulesetsAPI(self)
@@ -164,12 +166,13 @@ class CMKOpenApiSession(requests.Session):
         self.ldap_connection = LDAPConnectionAPI(self)
         self.passwords = PasswordsAPI(self)
         self.license = LicenseAPI(self)
+        self.downtimes = DowntimesAPI(self)
         self.otel_collector = OtelCollectorAPI(self)
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
         self.relays = RelayAPI(self)
         self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
-        self.metric_backend = MetricBackendAPI(self)
+        self.data_backend = DataBackendAPI(self)
         self.graph = GraphAPI(self)
         self.custom_graph = CustomGraphAPI(self)
         self.dashboard = DashboardAPI(self)
@@ -328,11 +331,25 @@ class CMKOpenApiSession(requests.Session):
                 raise TimeoutError(msg)
 
             logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
-            response = self.request(
-                method=http_method_for_redirection,
-                url=redirect_url,
-                allow_redirects=False,
-            )
+            try:
+                response = self.request(
+                    method=http_method_for_redirection,
+                    url=redirect_url,
+                    allow_redirects=False,
+                )
+            except requests.exceptions.ConnectionError as exc:
+                # The site's web server may briefly drop connections right after a restart
+                # (e.g. while still warming up). Treat that like any other "not done yet"
+                # response instead of failing the whole operation on a single hiccup.
+                logger.warning(
+                    "Connection error while polling for %s (attempt %d): %s; retrying...",
+                    operation,
+                    attempt,
+                    exc,
+                )
+                time.sleep(0.5)
+                continue
+
             if response.status_code == 204 and not response.content:
                 logger.info(
                     "Wait for completion finished after %0.2fs / %s attempts for %s",
@@ -415,7 +432,7 @@ class ChangesAPI(BaseAPI):
             try:
                 path_parts = urllib.parse.urlparse(response.headers["Location"]).path.split("/")
                 return path_parts[path_parts.index("activation_run") + 1]
-            except (ValueError, IndexError):
+            except ValueError, IndexError:
                 raise ValueError(f"Failed to parse activation id from URL: {url}")
 
         response = self.session.post(
@@ -449,7 +466,8 @@ class ChangesAPI(BaseAPI):
     def get_pending(self) -> list[dict[str, Any]]:
         """Returns a list of all changes currently pending."""
         response = self.session.get("/domain-types/activation_run/collections/pending_changes")
-        assert response.status_code == 200
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
@@ -482,7 +500,7 @@ class ChangesAPI(BaseAPI):
                     raise Redirect(start_result.redirect_url)
         finally:
             if activation_id:
-                activation_status = self.get_activation_status(activation_id)
+                activation_status = self._get_activation_status_with_retry(activation_id)
                 if "status_per_site" in activation_status["extensions"] and (
                     not_succeeded_sites := [
                         status
@@ -510,23 +528,19 @@ class ChangesAPI(BaseAPI):
         # Mypy issue: https://github.com/python/mypy/issues/8766
         pending_changes_after = self.get_pending()  # type: ignore[unreachable]
         if strict:
-            assert not pending_changes_after, (
-                f"There are pending changes after activation: {pending_changes_after}"
-            )
+            if pending_changes_after:
+                raise AssertionError(
+                    f"There are pending changes after activation: {pending_changes_after}"
+                )
         else:
             pending_changes_intersection_ids = {
                 _.get("id") for _ in pending_changes_after
             }.intersection(pending_changes_ids_before)
-            assert not pending_changes_intersection_ids, (
-                f"There are pending changes that were not activated: "
-                f"{
-                    (
-                        _
-                        for _ in pending_changes_after
-                        if _.get('id') in pending_changes_intersection_ids
-                    )
-                }"
-            )
+            if pending_changes_intersection_ids:
+                raise AssertionError(
+                    "There are pending changes that were not activated: "
+                    f"{[_ for _ in pending_changes_after if _.get('id') in pending_changes_intersection_ids]}"
+                )
 
         return True
 
@@ -537,6 +551,31 @@ class ChangesAPI(BaseAPI):
 
         json_data: dict[str, Any] = response.json()
         return json_data
+
+    def _get_activation_status_with_retry(
+        self, activation_id: str, attempts: int = 3, interval: float = 1.0
+    ) -> dict[str, Any]:
+        """Like `get_activation_status`, but tolerates a transient connection error.
+
+        Right after a site restart, a single request can still hit the web server while it is
+        not fully warmed up yet (e.g. a worker process still starting or being replaced). Retry
+        a few times instead of letting that single hiccup fail the whole activation.
+        """
+        for attempt in range(1, attempts + 1):
+            try:
+                return self.get_activation_status(activation_id)
+            except requests.exceptions.ConnectionError as exc:
+                if attempt == attempts:
+                    raise
+                logger.warning(
+                    "Connection error while fetching activation status (attempt %d/%d): %s;"
+                    " retrying...",
+                    attempt,
+                    attempts,
+                    exc,
+                )
+                time.sleep(interval)
+        raise AssertionError("unreachable")
 
 
 class UsersAPI(BaseAPI):
@@ -812,7 +851,12 @@ class HostsAPI(BaseAPI):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def bulk_delete(self, hostnames: list[str]) -> None:
+    def bulk_delete(self, hostnames: list[str], ignore_missing: bool = False) -> None:
+        if ignore_missing:
+            existing_hosts = set(self.get_all_names())
+            hostnames = [_ for _ in hostnames if _ in existing_hosts]
+            if not hostnames:
+                return
         response = self.session.post(
             "/domain-types/host_config/actions/bulk-delete/invoke",
             json={"entries": hostnames},
@@ -853,14 +897,12 @@ class HostsAPI(BaseAPI):
         )
         with self.session.wait_for_completion(timeout, "get", "rename_host"):
             self.rename(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
-            assert self.get(hostname_new) is not None, (
-                'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
-            )
+            if self.get(hostname_new) is None:
+                raise AssertionError(f'Failed to rename host "{hostname_old}" to "{hostname_new}"!')
 
         response = self.session.background_jobs.show("rename-hosts")
-        assert response["extensions"]["status"]["state"] == "finished", (
-            f"Rename job failed: {response}"
-        )
+        if response["extensions"]["status"]["state"] != "finished":
+            raise AssertionError(f"Rename job failed: {response}")
 
 
 class HostGroupsAPI(BaseAPI):
@@ -889,6 +931,27 @@ class HostGroupsAPI(BaseAPI):
 
     def delete(self, name: str) -> None:
         response = self.session.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class ServiceGroupsAPI(BaseAPI):
+    def create(self, name: str, alias: str) -> requests.Response:
+        body = {"name": name, "alias": alias}
+        # In the ultimatemt edition every config object belongs to a customer,
+        # so the field is mandatory here.
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
+        response = self.session.post(
+            "/domain-types/service_group_config/collections/all",
+            json=body,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/service_group_config/{name}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
@@ -1032,15 +1095,41 @@ class ServiceDiscoveryAPI(BaseAPI):
             self.run_discovery(hostname, mode)
 
         discovery_status = self.get_discovery_status(hostname)
-        assert discovery_status == "finished", (
-            f"Unexpected service discovery status: {discovery_status}"
-        )
+        if discovery_status != "finished":
+            raise AssertionError(f"Unexpected service discovery status: {discovery_status}")
 
     def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
         response = self.session.get(f"/objects/service_discovery/{hostname}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
+
+    def update_service_phase(
+        self,
+        hostname: str,
+        *,
+        check_type: str,
+        service_item: str | None,
+        target_phase: str,
+    ) -> None:
+        """Move one service of `hostname` into `target_phase`.
+
+        The body params are keyword-only on purpose: three of them are interchangeable strings to a
+        type checker, and transposing two yields a puzzling 400 rather than an error at the call
+        site. Note that an identifier naming no service on the host is answered `204` with nothing
+        written (SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md §10.19), so a caller that wants evidence of
+        a write has to look for the change itself rather than treat the status code as one.
+        """
+        response = self.session.put(
+            f"/objects/host/{hostname}/actions/update_discovery_phase/invoke",
+            json={
+                "check_type": check_type,
+                "service_item": service_item,
+                "target_phase": target_phase,
+            },
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
 
 class ServicesAPI(BaseAPI):
@@ -1066,6 +1155,19 @@ class ServicesAPI(BaseAPI):
                 if _.get("extensions", {}).get("has_been_checked") == int(not pending)
             ]
         return value
+
+
+class InventoryAPI(BaseAPI):
+    def get_trees(self, host_names: Sequence[str]) -> dict[str, dict[str, Any]]:
+        """Hosts without an inventory tree are left out."""
+        response = self.session.get(
+            "/domain-types/inventory/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            params={"host_names": list(host_names)},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {entry["host_name"]: entry["inventory_tree"] for entry in response.json()["value"]}
 
 
 class AgentsAPI(BaseAPI):
@@ -1407,7 +1509,7 @@ class BIAggregationAPI(BaseAPI):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MetricBackendDCDConnectionAttributeFilter:
+class TelemetryMetricsDCDConnectionAttributeFilter:
     key: str
     value: str
 
@@ -1458,7 +1560,7 @@ class DcdAPI(BaseAPI):
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
 
-    def create_metric_backend_connection(
+    def create_telemetry_metrics_connection(
         self,
         *,
         dcd_id: str,
@@ -1466,9 +1568,9 @@ class DcdAPI(BaseAPI):
         site: str | None = None,
         interval: int = 60,
         host_name_template: str,
-        resource_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
-        scope_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
-        data_point_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
+        resource_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        scope_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        data_point_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
         delete_hosts: bool = False,
         discover_on_creation: bool = True,
         validity_period: int = 60,
@@ -1476,7 +1578,7 @@ class DcdAPI(BaseAPI):
     ) -> None:
         """Create a DCD connection via REST API."""
         response = self.session.post(
-            "domain-types/dcd_metric_backend/collections/all",
+            "domain-types/dcd_telemetry_metrics/collections/all",
             api_version=APIVersion.INTERNAL,
             json={
                 "dcd_id": dcd_id,
@@ -1691,6 +1793,37 @@ class LDAPConnectionAPI(BaseAPI):
         resp = self.session.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
+
+
+class DowntimesAPI(BaseAPI):
+    def get_all(
+        self, host_name: str | None = None, service_description: str | None = None
+    ) -> list[dict[str, Any]]:
+        """List downtimes, optionally narrowed to one host or one of its services."""
+        params: dict[str, str] = {}
+        if host_name is not None:
+            params["host_name"] = host_name
+        if service_description is not None:
+            params["service_description"] = service_description
+        response = self.session.get("/domain-types/downtime/collections/all", params=params)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return list(response.json()["value"])
+
+    def delete_by_params(
+        self, host_name: str, service_descriptions: list[str] | None = None
+    ) -> None:
+        """Delete a host's own downtimes, or those of the named services on it.
+
+        Addressed by host and service rather than by id, so it also clears what an
+        interrupted earlier run left behind.
+        """
+        body: dict[str, Any] = {"delete_type": "params", "host_name": host_name}
+        if service_descriptions is not None:
+            body["service_descriptions"] = service_descriptions
+        response = self.session.post("/domain-types/downtime/actions/delete/invoke", json=body)
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
 
 class PasswordsAPI(BaseAPI):
@@ -2164,7 +2297,7 @@ class RelayRegistrationTokenAPI(BaseAPI):
         return str(response.json()["id"])  # Explicit type case to make mypy happy
 
 
-class MetricBackendAPI(BaseAPI):
+class DataBackendAPI(BaseAPI):
     # The endpoint switched from PUT to PATCH on master and was backported to
     # the 2.5.0 branch after 2.5.0p1 was tagged, so it first ships in 2.5.0p2.
     # Older sites (used by update tests via the `base_site` fixture) still
@@ -2179,7 +2312,7 @@ class MetricBackendAPI(BaseAPI):
             else self.session.put
         )
         response = method(
-            "domain-types/metric_backend/actions/update/invoke",
+            "domain-types/data_backend/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,
@@ -2197,6 +2330,17 @@ class MetricBackendAPI(BaseAPI):
 
     def enable(self, site_id: str) -> None:
         self._request(site_id, "enabled")
+
+    def names_with_types(self, value: str) -> dict[str, list[str]]:
+        """The metric names the backend offers for `value`, each with the types it carries."""
+        response = self._post_internal_action(
+            "domain-types/telemetry_metrics/actions/names_with_types/invoke",
+            {"value": value},
+        )
+        return {
+            str(choice["name"]): [str(metric_type) for metric_type in choice["types"]]
+            for choice in response["choices"]
+        }
 
 
 type Consolidation = Literal["min", "max", "avg"]
@@ -2297,16 +2441,15 @@ class CustomGraphAPI(BaseAPI):
     The data endpoint is also the only way to graph metric-backend (OTel) data.
     """
 
-    # Every field is mandatory in the API model, but no caller here varies them.
-    _DEFAULT_METADATA: Final[Mapping[str, Any]] = {
+    # Every field is mandatory in the API model; only the visibility is varied by a caller.
+    _DEFAULT_METADATA: Final[Mapping[str, object]] = {
         "description": "",
         "topic": "my_workplace",
         "sort_index": 99,
         "hidden": False,
         "is_show_more": False,
-        "public": {"type": "private"},
     }
-    _DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, Any]] = {
+    DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, object]] = {
         "unit": {"type": "first_entry_with_unit"},
         "explicit_vertical_range": {"type": "auto"},
         "omit_zero_metrics": False,
@@ -2319,7 +2462,7 @@ class CustomGraphAPI(BaseAPI):
         service_name: str,
         metric_name: str,
         color: str = "#28a2f3",
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """One RRD metric of a monitored service, as the graph's data source."""
         return {
             "type": "rrd_metric",
@@ -2339,16 +2482,21 @@ class CustomGraphAPI(BaseAPI):
         self,
         name: str,
         title: str,
-        data_sources: Sequence[Mapping[str, Any]] = (),
-    ) -> dict[str, Any]:
+        data_sources: Sequence[Mapping[str, object]] = (),
+        *,
+        public: bool = False,
+    ) -> dict[str, object]:
         return self._post_internal_action(
             "domain-types/custom_graph/collections/all",
             {
                 "name": name,
                 "title": title,
-                "metadata": self._DEFAULT_METADATA,
+                "metadata": {
+                    **self._DEFAULT_METADATA,
+                    "public": {"type": "all_users"} if public else {"type": "private"},
+                },
                 "content": {
-                    "graph_options": self._DEFAULT_GRAPH_OPTIONS,
+                    "graph_options": self.DEFAULT_GRAPH_OPTIONS,
                     "data_sources": data_sources,
                 },
             },
@@ -2365,8 +2513,8 @@ class CustomGraphAPI(BaseAPI):
 
     def fetch_data(
         self,
-        data_sources: Sequence[Mapping[str, Any]],
-        graph_options: Mapping[str, Any],
+        data_sources: Sequence[Mapping[str, object]],
+        graph_options: Mapping[str, object],
         requested_time_range: Mapping[str, int],
         consolidation_function: Consolidation,
     ) -> dict[str, Any]:
@@ -2418,7 +2566,7 @@ class DashboardAPI(BaseAPI):
 class AgentReceiverRelayAPI(ARBaseAPI):
     @property
     def base_url(self) -> str:
-        return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"
+        return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"  # noqa: SLF001
 
     def register(self, relay_id: str, alias: str, csr: str) -> RelayRegistrationResponse:
         body = RelayRegistrationRequest(relay_id=relay_id, alias=alias, csr=csr)

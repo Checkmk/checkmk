@@ -58,6 +58,12 @@ export const panelConfig = {
     initialState: false,
     help: 'Show the stale indicator icon.'
   },
+  flapping: {
+    type: 'boolean' as const,
+    title: 'flapping',
+    initialState: false,
+    help: 'Show the flapping indicator icon.'
+  },
   pending: {
     type: 'boolean' as const,
     title: 'pending',
@@ -202,6 +208,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
                 kind="service"
                 :state="serviceState"
                 :stale="propState.stale"
+                :flapping="propState.flapping"
                 :pending="propState.pending"
               />
               <StateCell
@@ -209,6 +216,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
                 column-id="cell"
                 :state="hostState"
                 :stale="propState.stale"
+                :flapping="propState.flapping"
                 :pending="propState.pending"
               />
             </template>

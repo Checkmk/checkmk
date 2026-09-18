@@ -37,7 +37,7 @@ def _check_files_and_sockets(params: Params, section: int) -> CheckResult:
     )
 
 
-def _discover_files_and_sockets(section: int) -> DiscoveryResult:
+def _discover_files_and_sockets(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

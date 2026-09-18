@@ -12,12 +12,11 @@ import shutil
 import signal
 import subprocess
 import traceback
-from collections.abc import Iterable, Mapping, Sequence
-from copy import deepcopy
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, NewType, override
+from typing import Any, Literal, NewType, override
 
 from pydantic import BaseModel
 
@@ -41,16 +40,19 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
-from cmk.gui.watolib import config_domain_name
+from cmk.gui.watolib import bakery, config_domain_name
+from cmk.gui.watolib.check_mk_automations import get_configuration, reload, restart
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
     DomainRequest,
+    finalize_specifically_set_settings,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.certs import cert_dir, CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore, SiteCA
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
@@ -87,9 +89,6 @@ class ConfigDomainCoreSettings:
 def _core_config_default_globals(
     config_var_names: Sequence[str], *, debug: bool
 ) -> Mapping[str, object]:
-    # Import cycle
-    from cmk.gui.watolib.check_mk_automations import get_configuration
-
     return get_configuration(config_var_names, debug=debug).result
 
 
@@ -123,8 +122,13 @@ class ConfigDomainCore(ABCConfigDomain):
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        # Import cycle
-        from cmk.gui.watolib.check_mk_automations import reload, restart
+        # Agents have to be baked from the new configuration, but before the core picks
+        # it up, matching the point at which cmk/base used to do this.
+        bakery.try_bake_agents_on_activation(
+            call_site="Activate Changes",
+            use_git=active_config.wato_use_git,
+            debug=active_config.debug,
+        )
 
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
             self._parse_settings(settings).hosts_to_update, debug=active_config.debug
@@ -244,55 +248,58 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     def config_dir(self) -> Path:
         return multisite_dir()
 
-    @staticmethod
-    def log_changes(
-        config_before: TrustedCertificateAuthorities | None,
-        config_after: TrustedCertificateAuthorities,
-    ) -> None:
-        if config_before is None:
-            current_certs = {}
-        else:
-            current_certs = {
-                (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
-                    HashAlgorithm.Sha256
-                ): cert
-                for value in config_before["trusted_cas"] or []
-            }
+    @override
+    @contextlib.contextmanager
+    def settings_change(
+        self,
+        sites: SiteConfigurations,
+        before: Mapping[SiteId, GlobalSettings],
+        after: Mapping[SiteId, GlobalSettings],
+    ) -> Iterator[None]:
+        yield
+        self._log_trust_changes(before, after)
 
-        new_certs = {
-            (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
-                HashAlgorithm.Sha256
-            ): cert
-            for value in config_after["trusted_cas"]
+    def _log_trust_changes(
+        self,
+        before: Mapping[SiteId, GlobalSettings],
+        after: Mapping[SiteId, GlobalSettings],
+    ) -> None:
+        added: dict[bytes, Certificate] = {}
+        removed: dict[bytes, Certificate] = {}
+        for site_id, settings in after.items():
+            cas_before = before[site_id]["trusted_certificate_authorities"]["trusted_cas"]
+            cas_after = settings["trusted_certificate_authorities"]["trusted_cas"]
+            if cas_before == cas_after:
+                continue
+            certs_before = self._certs_by_fingerprint(cas_before)
+            certs_after = self._certs_by_fingerprint(cas_after)
+            added |= {f: certs_after[f] for f in certs_after.keys() - certs_before.keys()}
+            removed |= {f: certs_before[f] for f in certs_before.keys() - certs_after.keys()}
+
+        for cert in added.values():
+            self._log_trust_change("certificate added", cert)
+        for cert in removed.values():
+            self._log_trust_change("certificate removed", cert)
+
+    @classmethod
+    def _certs_by_fingerprint(cls, trusted_cas: Sequence[str]) -> Mapping[bytes, Certificate]:
+        return {
+            cert.fingerprint(HashAlgorithm.Sha256): cert for cert in cls._load_certs(trusted_cas)
         }
 
-        added_certs = [
-            new_certs[fingerprint] for fingerprint in new_certs if fingerprint not in current_certs
-        ]
-        removed_certs = [
-            current_certs[fingerprint]
-            for fingerprint in current_certs
-            if fingerprint not in new_certs
-        ]
-
-        for cert in added_certs:
-            log_security_event(
-                CertManagementEvent(
-                    event="certificate added",
-                    component="trusted certificate authorities",
-                    actor=user.id,
-                    cert=cert,
-                )
+    @staticmethod
+    def _log_trust_change(
+        event: Literal["certificate added", "certificate removed"],
+        cert: Certificate,
+    ) -> None:
+        log_security_event(
+            CertManagementEvent(
+                event=event,
+                component="trusted certificate authorities",
+                actor=user.id,
+                cert=cert,
             )
-        for cert in removed_certs:
-            log_security_event(
-                CertManagementEvent(
-                    event="certificate removed",
-                    component="trusted certificate authorities",
-                    actor=user.id,
-                    cert=cert,
-                )
-            )
+        )
 
     @override
     def config_file(self, site_specific: bool) -> Path:
@@ -309,7 +316,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
-        current_config = settings.get("trusted_certificate_authorities", self.default_globals())
+        # default_globals() is keyed by config variable, so the fallback has to be
+        # the *value* of our one variable, not the whole mapping.
+        current_config = settings.get(
+            "trusted_certificate_authorities",
+            self.default_globals()["trusted_certificate_authorities"],
+        )
 
         # We need to activate this immediately to make syncs to distributed
         # setup remote sites possible right after changing the option
@@ -493,34 +505,6 @@ def pid_from_file(pid_file: Path) -> ProcessId | None:
         return None
 
 
-def finalize_specifically_set_settings(
-    global_settings: GlobalSettings, site_specific_settings: GlobalSettings
-) -> GlobalSettings:
-    return {**global_settings, **site_specific_settings}
-
-
-def finalize_all_settings(
-    default_globals: GlobalSettings,
-    global_settings: GlobalSettings,
-    site_specific_settings: GlobalSettings,
-) -> GlobalSettings:
-    return {
-        **default_globals,
-        **finalize_specifically_set_settings(global_settings, site_specific_settings),
-    }
-
-
-def finalize_all_settings_per_site(
-    default_globals: GlobalSettings,
-    global_settings: GlobalSettings,
-    site_specific_settings_per_site: Mapping[SiteId, GlobalSettings],
-) -> Mapping[SiteId, GlobalSettings]:
-    return {
-        site_id: finalize_all_settings(default_globals, global_settings, site_conf)
-        for site_id, site_conf in site_specific_settings_per_site.items()
-    }
-
-
 def _all_sites(omd_path: Path) -> Iterable[str]:
     basedir = omd_path / "sites"
     return sorted([p.name for p in basedir.iterdir() if p.is_dir()])
@@ -608,38 +592,26 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     @override
     def default_globals(self) -> GlobalSettings:
-        return self._from_omd_config(self._load_site_config())
+        settings = self._from_omd_config(self._load_site_config())
+        # site.conf holds the *current* omd config, not the factory default (it gets
+        # fully rewritten on every "omd config change"). This is a known bug coming from
+        # omd owning the active settings that can be changed via its CLI without
+        # exposing their defaults. This will be fixed in CMK-38451.
+        # MCP-related settings set here manually for a minimal and backportable fix.
+        settings["site_mcp_server"] = False
+        settings["site_mcp_trace_forward"] = False
+        return settings
 
     @override
-    def save(
+    @contextlib.contextmanager
+    def settings_change(
         self,
-        settings: GlobalSettings,
-        site_specific: bool = False,
-        custom_site_path: str | None = None,
-    ) -> None:
-        piggyback_hub_config_var_ident = "site_piggyback_hub"
-        # custom_site_path is used for snapshot creation for activate changes, we don't reliably
-        # know for which site the settings are being stored here, but they should already be
-        # validated at this point
-        if piggyback_hub_config_var_ident in settings and not custom_site_path:
-            site_specific_settings = {
-                site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in active_config.sites.items()
-            }
-            if site_specific:
-                global_settings = self.load()
-                site_specific_settings[omd_site()] = dict(settings)
-            else:
-                global_settings = settings
-
-            validate_piggyback_hub_config(
-                active_config.sites,
-                finalize_all_settings_per_site(
-                    self.get_all_default_globals(), global_settings, site_specific_settings
-                ),
-            )
-
-        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
+        sites: SiteConfigurations,
+        before: Mapping[SiteId, GlobalSettings],
+        after: Mapping[SiteId, GlobalSettings],
+    ) -> Iterator[None]:
+        validate_piggyback_hub_config(sites, after)
+        yield
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

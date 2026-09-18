@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import copy
@@ -338,8 +337,8 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
             _("No search"),
             Transform(
                 valuespec=cls.valuespec(),
-                to_valuespec=lambda x: "",
-                from_valuespec=lambda x: {"type": cls.kind()},
+                to_valuespec=lambda x: "",  # noqa: ARG005
+                from_valuespec=lambda x: {"type": cls.kind()},  # noqa: ARG005
             ),
         )
 
@@ -686,7 +685,7 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
     assert user.id is not None
     contact_groups = userdb.contactgroups_of_user(user.id)
     if contact_groups is None:
-        return True
+        return True  # type: ignore[unreachable]
 
     return any(group in bi_pack.contact_groups for group in contact_groups)
 

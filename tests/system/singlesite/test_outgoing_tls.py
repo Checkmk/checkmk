@@ -27,7 +27,6 @@ def site_tmp(site: Site) -> Iterator[str]:
     yield from site.system_temp_dir()
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8",
     reason="Calling 'su' with '--whitelist-environment' is not supported",
@@ -75,7 +74,8 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
 
 
 @pytest.mark.parametrize("tls_version", TLS_VERSIONS, ids=lambda v: v.name)
-def test_test_utils(site: Site, tmp_path: Path, tls_version: ssl.TLSVersion) -> None:
+@pytest.mark.usefixtures("site")
+def test_test_utils(tmp_path: Path, tls_version: ssl.TLSVersion) -> None:
     """make sure that our tls_connect indeed could connect to an old TLS version"""
     with tls_listening_socket(tmp_path, tls_version) as (port, ca_path):
         tls_connect("localhost", port, ca_path, tls_version)

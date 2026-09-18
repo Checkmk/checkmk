@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -19,17 +18,19 @@ from cmk.gui.sidebar._snapin._tactical_overview import (
     get_context_url_variables,
     group_by_state,
     TacticalOverviewSnapin,
+    total_url,
 )
 from cmk.gui.utils.output_funnel import output_funnel
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -107,7 +108,7 @@ def test_row_views_per_table(
     expected_total_view: str,
     expected_stale: str | None,
 ) -> None:
-    views = TacticalOverviewSnapin()._row_views(what)
+    views = TacticalOverviewSnapin()._row_views(what)  # noqa: SLF001
 
     assert dict(views.total)["view_name"] == expected_total_view
     if expected_stale is None:
@@ -130,18 +131,18 @@ def test_row_views_unhandled_is_narrower_than_handled(
 ) -> None:
     """ "Unhandled" must always add at least one filter on top of "Problems", otherwise the
     two columns of the overview would show the same number."""
-    views = TacticalOverviewSnapin()._row_views(what)
+    views = TacticalOverviewSnapin()._row_views(what)  # noqa: SLF001
 
     assert len(views.unhandled) > len(views.handled)
 
 
 def test_row_views_rejects_an_unknown_table() -> None:
     with pytest.raises(NotImplementedError):
-        TacticalOverviewSnapin()._row_views("junk")  # type: ignore[arg-type]
+        TacticalOverviewSnapin()._row_views("junk")  # type: ignore[arg-type]  # noqa: SLF001
 
 
 def test_host_stats_query_counts_four_columns() -> None:
-    query = TacticalOverviewSnapin()._get_host_stats_query(1.5, "Filter: host_name = heute\n")
+    query = TacticalOverviewSnapin()._get_host_stats_query(1.5, "Filter: host_name = heute\n")  # noqa: SLF001
 
     assert query.startswith("GET hosts\n")
     assert "Stats: host_staleness >= 1.5\n" in query
@@ -150,7 +151,7 @@ def test_host_stats_query_counts_four_columns() -> None:
 
 
 def test_service_stats_query_counts_four_columns() -> None:
-    query = TacticalOverviewSnapin()._get_service_stats_query(2.0, "")
+    query = TacticalOverviewSnapin()._get_service_stats_query(2.0, "")  # noqa: SLF001
 
     assert query.startswith("GET services\n")
     assert "Stats: service_staleness >= 2.0\n" in query
@@ -159,7 +160,7 @@ def test_service_stats_query_counts_four_columns() -> None:
 def test_event_stats_query_suppresses_a_missing_event_console() -> None:
     """A site without the Event Console must not be marked dead just because the overview
     asked for event statistics."""
-    query = TacticalOverviewSnapin()._get_event_stats_query("")
+    query = TacticalOverviewSnapin()._get_event_stats_query("")  # noqa: SLF001
 
     assert isinstance(query, livestatus.Query)
     assert livestatus.MKLivestatusTableNotFoundError in query.suppress_exceptions
@@ -170,14 +171,14 @@ def test_event_stats_query_without_the_permission_to_see_all_events(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: False)
-        query = TacticalOverviewSnapin()._get_event_stats_query("")
+        m.setattr(user, "may", lambda x: False)  # noqa: ARG005
+        query = TacticalOverviewSnapin()._get_event_stats_query("")  # noqa: SLF001
 
     assert "Filter: event_contact_groups != \n" in str(query)
 
 
 def test_event_stats_query_with_the_permission_to_see_all_events() -> None:
-    query = TacticalOverviewSnapin()._get_event_stats_query("")
+    query = TacticalOverviewSnapin()._get_event_stats_query("")  # noqa: SLF001
 
     assert "event_contact_groups" not in str(query)
 
@@ -186,7 +187,7 @@ def test_execute_stats_query_returns_the_summed_stats(monkeypatch: pytest.Monkey
     live = FakeLive([5, 2, 1, 0])
     monkeypatch.setattr(sites, "live", lambda: live)
 
-    assert TacticalOverviewSnapin()._execute_stats_query("GET hosts\n") == [5, 2, 1, 0]
+    assert TacticalOverviewSnapin()._execute_stats_query("GET hosts\n") == [5, 2, 1, 0]  # noqa: SLF001
     assert live.auth_domains == ["read", "read"]
 
 
@@ -196,7 +197,7 @@ def test_execute_stats_query_restores_the_auth_domain(monkeypatch: pytest.Monkey
     live = FakeLive([1, 2, 3])
     monkeypatch.setattr(sites, "live", lambda: live)
 
-    TacticalOverviewSnapin()._execute_stats_query("GET eventconsoleevents\n", auth_domain="ec")
+    TacticalOverviewSnapin()._execute_stats_query("GET eventconsoleevents\n", auth_domain="ec")  # noqa: SLF001
 
     assert live.auth_domains == ["ec", "read"]
     assert live.only_sites == [None]
@@ -206,7 +207,7 @@ def test_execute_stats_query_limits_to_the_given_sites(monkeypatch: pytest.Monke
     live = FakeLive([1])
     monkeypatch.setattr(sites, "live", lambda: live)
 
-    TacticalOverviewSnapin()._execute_stats_query("GET hosts\n", only_sites=[SiteId("heute")])
+    TacticalOverviewSnapin()._execute_stats_query("GET hosts\n", only_sites=[SiteId("heute")])  # noqa: SLF001
 
     assert live.only_sites == [[SiteId("heute")], None]
 
@@ -217,7 +218,7 @@ def test_execute_stats_query_falls_back_when_the_table_is_empty(
     live = FakeLive(livestatus.MKLivestatusNotFoundError("no such table"))
     monkeypatch.setattr(sites, "live", lambda: live)
 
-    assert TacticalOverviewSnapin()._execute_stats_query("GET x\n", deflt=[0, 0, 0]) == [0, 0, 0]
+    assert TacticalOverviewSnapin()._execute_stats_query("GET x\n", deflt=[0, 0, 0]) == [0, 0, 0]  # noqa: SLF001
 
 
 def test_execute_stats_query_without_a_fallback_returns_none(
@@ -226,7 +227,7 @@ def test_execute_stats_query_without_a_fallback_returns_none(
     live = FakeLive(livestatus.MKLivestatusNotFoundError("no such table"))
     monkeypatch.setattr(sites, "live", lambda: live)
 
-    assert TacticalOverviewSnapin()._execute_stats_query("GET x\n") is None
+    assert TacticalOverviewSnapin()._execute_stats_query("GET x\n") is None  # noqa: SLF001
 
 
 def _show_rows(
@@ -239,10 +240,10 @@ def _show_rows(
         m.setattr(
             TacticalOverviewSnapin,
             "_get_stats",
-            lambda self, what, context, threshold: stats[what],
+            lambda self, what, context, threshold: stats[what],  # noqa: ARG005
         )
         with output_funnel.plugged():
-            TacticalOverviewSnapin()._show_rows(1.5, mkeventd_enabled)
+            TacticalOverviewSnapin()._show_rows(1.5, mkeventd_enabled)  # noqa: SLF001
             return output_funnel.drain()
 
 
@@ -267,7 +268,43 @@ def test_show_rows_renders_a_column_per_table(monkeypatch: pytest.MonkeyPatch) -
     assert "Hosts" in rendered
     assert "Services" in rendered
     assert "Events" in rendered
-    assert "view.py?view_name=allhosts" in rendered
+    assert "monitor_all_hosts.py" in rendered
+    assert "view.py?view_name=allhosts" not in rendered
+
+
+def test_total_url_links_an_unfiltered_hosts_row_to_the_new_all_hosts_page() -> None:
+    url = total_url("hosts", {}, [], [("view_name", "allhosts")])
+
+    assert url == "monitor_all_hosts.py"
+
+
+def test_total_url_keeps_the_classic_view_for_a_filtered_hosts_row() -> None:
+    """A filtered "hosts" row (e.g. a custom sidebar element) must keep linking to the
+    classic view, because the new All hosts page does not understand the filter context."""
+    context = {"host": {"host": "heute"}}
+    url = total_url(
+        "hosts", context, get_context_url_variables(context), [("view_name", "allhosts")]
+    )
+
+    assert url == "view.py?host=heute&view_name=allhosts"
+
+
+def test_total_url_treats_an_empty_filter_value_as_unfiltered() -> None:
+    """A context that carries a filter variable with an empty value (e.g. a filter form
+    left blank) does not actually restrict anything - it must be treated the same as no
+    filter at all."""
+    context = {"host": {"host": ""}}
+    url = total_url(
+        "hosts", context, get_context_url_variables(context), [("view_name", "allhosts")]
+    )
+
+    assert url == "monitor_all_hosts.py"
+
+
+def test_total_url_keeps_the_classic_view_for_non_host_rows() -> None:
+    url = total_url("services", {}, [], [("view_name", "allservices")])
+
+    assert url == "view.py?view_name=allservices"
 
 
 def test_show_rows_hides_events_when_none_exist_and_the_ec_is_off(
@@ -336,9 +373,9 @@ def test_show_failed_notifications_is_silent_without_failures(
 ) -> None:
     with monkeypatch.context() as m:
         m.setattr(notifications, "acknowledged_time", lambda: 0)
-        m.setattr(notifications, "number_of_failed_notifications", lambda **k: 0)
+        m.setattr(notifications, "number_of_failed_notifications", lambda **k: 0)  # noqa: ARG005
         with output_funnel.plugged():
-            TacticalOverviewSnapin()._show_failed_notifications()
+            TacticalOverviewSnapin()._show_failed_notifications()  # noqa: SLF001
             assert output_funnel.drain() == ""
 
 
@@ -348,9 +385,9 @@ def test_show_failed_notifications_links_to_the_view_and_the_reset(
 ) -> None:
     with monkeypatch.context() as m:
         m.setattr(notifications, "acknowledged_time", lambda: 0)
-        m.setattr(notifications, "number_of_failed_notifications", lambda **k: 3)
+        m.setattr(notifications, "number_of_failed_notifications", lambda **k: 3)  # noqa: ARG005
         with output_funnel.plugged():
-            TacticalOverviewSnapin()._show_failed_notifications()
+            TacticalOverviewSnapin()._show_failed_notifications()  # noqa: SLF001
             rendered = output_funnel.drain()
 
     assert "3 failed notifications" in rendered
@@ -372,7 +409,7 @@ def test_show_site_status_is_silent_when_all_sites_are_up(monkeypatch: pytest.Mo
     with monkeypatch.context() as m:
         m.setattr(sites, "get_grouped_site_states", lambda: _grouped_states([], []))
         with output_funnel.plugged():
-            TacticalOverviewSnapin()._show_site_status()
+            TacticalOverviewSnapin()._show_site_status()  # noqa: SLF001
             assert output_funnel.drain() == ""
 
 
@@ -387,7 +424,7 @@ def test_show_site_status_distinguishes_disabled_from_broken(
             lambda: _grouped_states([SiteId("beta")], [SiteId("heute"), SiteId("old")]),
         )
         with output_funnel.plugged():
-            TacticalOverviewSnapin()._show_site_status()
+            TacticalOverviewSnapin()._show_site_status()  # noqa: SLF001
             rendered = output_funnel.drain()
 
     assert "1 site is disabled." in rendered
@@ -399,7 +436,7 @@ def test_show_site_status_distinguishes_disabled_from_broken(
 @pytest.mark.usefixtures("patch_theme")
 def test_status_box_links_to_the_site_setup_for_administrators() -> None:
     with output_funnel.plugged():
-        TacticalOverviewSnapin()._create_status_box([SiteId("heute")], "tacticalalert", "down")
+        TacticalOverviewSnapin()._create_status_box([SiteId("heute")], "tacticalalert", "down")  # noqa: SLF001
         rendered = output_funnel.drain()
 
     assert "wato.py?mode=sites" in rendered
@@ -412,7 +449,7 @@ def test_status_box_is_plain_text_without_the_setup_permission(
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x != "wato.sites")
         with output_funnel.plugged():
-            TacticalOverviewSnapin()._create_status_box([SiteId("heute")], "tacticalalert", "down")
+            TacticalOverviewSnapin()._create_status_box([SiteId("heute")], "tacticalalert", "down")  # noqa: SLF001
             rendered = output_funnel.drain()
 
     assert "wato.py" not in rendered

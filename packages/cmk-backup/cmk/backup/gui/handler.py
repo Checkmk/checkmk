@@ -10,8 +10,6 @@ This module implements generic functionality of the Checkmk backup
 system. It is used to configure the site and system backup.
 """
 
-from __future__ import annotations
-
 import abc
 import contextlib
 import errno
@@ -91,9 +89,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -128,8 +125,10 @@ from cmk.utils.keypair_store import Key, KeyId, KeypairMap
 from cmk.utils.paths import omd_root
 from cmk.utils.schedule import next_scheduled_time
 from cmk.web.utils.confirm_links import make_confirm_delete_link, make_confirm_link
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless
 
 DictionaryElements = Sequence[DictElement]
@@ -1141,10 +1140,6 @@ def show_job_details(job: MKBackupJob) -> None:
 
 
 class ModeBackupJobState(WatoMode[object]):
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._from_vars()
-
     @override
     def _from_vars(self) -> None:
         if (job_ident := request.var("job")) is None:
@@ -2399,7 +2394,7 @@ class ModeBackupRestore(WatoMode[object]):
             return self._start_encrypted_restore(backup_ident, key_digest)
         return self._start_unencrypted_restore(backup_ident)
 
-    def _complete_restore(self, backup_ident: str | None) -> None:
+    def _complete_restore(self, backup_ident: str | None) -> None:  # noqa: ARG002
         RestoreJob(self._target_ident, None).complete()
 
     def _start_encrypted_restore(self, backup_ident: str, key_digest: str) -> ActionResult:
@@ -2428,7 +2423,7 @@ class ModeBackupRestore(WatoMode[object]):
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except (PEMDecodingError, ValueError):
+                    except PEMDecodingError, ValueError:
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction(request)  # invalidate transid
@@ -2591,5 +2586,5 @@ class PageBackupRestoreState:
     def job(self) -> MKBackupJob:
         return self._job
 
-    def page(self, config: Config) -> None:
+    def page(self, config: Config) -> None:  # noqa: ARG002
         job_page(self.job, "restore")

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: T201  # It's OK for test/script helpers to print()
+
 
 import logging
 from collections.abc import Iterator
@@ -16,7 +16,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="test_cfg", scope="module", autouse=True)
+@pytest.fixture(name="test_cfg", scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
     site.openapi.hosts.create(
@@ -36,7 +36,6 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 def test_active_check_execution(site: Site) -> None:
@@ -98,7 +97,7 @@ def test_active_check_macros(site: Site) -> None:
         "$USER4$": site.root.as_posix(),
     }
 
-    def descr(var):
+    def descr(var: str) -> str:
         return "Macro %s" % var.strip("$")
 
     rule_ids = []

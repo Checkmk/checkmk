@@ -30,14 +30,14 @@ def parse_citrix_serverload(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_citrix_serverload(section: StringTable) -> DiscoveryResult:
+def discover_citrix_serverload(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
 def check_citrix_serverload(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     try:
         load = int(section[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return
 
     if load == 20000:

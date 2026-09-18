@@ -59,8 +59,5 @@ behavior, recording the rationale in the ticket.
 - Windows `.ps1` dialect: the corpus is shell syntax, the test runs on
   non-Windows only; the ps1 migration path is exercised by the
   `references/output-*.ps1` tests.
-- Passwords with `"` or `\` (invalid-YAML class, CMK-37598 /
-  `tests/test_migration_edge_cases.md`): not release blockers, add a
-  case once the migrator escapes them.
 - Every auth × SQLS × quirk combination: per the ticket, each dimension
   is exercised on its own.

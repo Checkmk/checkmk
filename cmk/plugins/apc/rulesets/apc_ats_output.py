@@ -11,12 +11,10 @@ from cmk.rulesets.v1.form_specs import (
     Float,
     InputHint,
     Integer,
-    SimpleLevels,
-)
-from cmk.rulesets.v1.form_specs._levels import LevelDirection
-from cmk.rulesets.v1.form_specs._migrations import (
+    LevelDirection,
     migrate_to_float_simple_levels,
     migrate_to_integer_simple_levels,
+    SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 

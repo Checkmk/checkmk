@@ -89,8 +89,8 @@ def translation_elements() -> tuple[
                                 maxgroups=9,
                                 size=30,
                                 allow_empty=False,
-                                mode=RegExp.prefix,
-                                case_sensitive=False,
+                                mode=RegExp.complete,
+                                case_sensitive=True,
                             ),
                             TextInput(
                                 title=_("Replacement"),
@@ -195,10 +195,10 @@ def translation_form_spec_elements() -> tuple[
                     elements=[
                         RegularExpression(
                             title=Title("Regular expression"),
-                            predefined_help_text=MatchingScope.PREFIX,
+                            predefined_help_text=MatchingScope.FULL,
                             help_text=make_help(
                                 Help("Must contain at least one subgroup <tt>(...)</tt>"),
-                                case_sensitive=False,
+                                case_sensitive=True,
                             ),
                             custom_validate=[not_empty()],
                         ),

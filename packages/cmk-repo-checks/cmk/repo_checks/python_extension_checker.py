@@ -104,13 +104,14 @@ IGNORE_EXECUTABLE_WRAPPERS = False
 
 # paths that are known to have python code without .py extension and should be ignored
 KNOWN_VIOLATIONS = [
-    r"non-free/packages/cmk-mknotifyd/mknotifyd$",
-    r"non-free/packages/otel-collector/bin/cmk-cleanup-otel-collector-files$",
-    r"cmk/plugins/checkmk/libexec/check_notify_count$",
-    r"non-free/packages/cmk-core-helpers/fetcher$",
-    r"bin/.*",
-    r"packages/.*/notifications/.*",
-    r"non-free/packages/.*/notifications/.*",
+    # External (third-party) Python scripts
+    r"omd/packages/Python/pip$",
+    r"omd/packages/nagios/merge-nagios-config$",
+    # Demo / example scripts, not part of production
+    r"doc/treasures/.*",
+    # Bazel BUILD files are Starlark, not Python — false positives on content
+    # detection. (BUILD.bazel needs no entry: ".bazel" is in IGNORE_SUFFIXES.)
+    r"(.*/)?BUILD$",
 ]
 
 PYTHON_SUFFIXES = [

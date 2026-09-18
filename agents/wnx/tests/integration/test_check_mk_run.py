@@ -63,7 +63,7 @@ def test_check_mk_base(
     default_yaml_config: YamlDict,
     data_dir: Path,
     only_from: list[str],
-    description: str,
+    description: str,  # noqa: ARG001
 ) -> None:
     output = obtain_agent_data(
         _make_config(default_yaml_config, only_from),

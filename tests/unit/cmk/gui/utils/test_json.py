@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import json
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.utils.json import CustomObjectJSONEncoder
+from cmk.web.utils.speaklater import LazyString
 
 
 def test_json_dumps_prevent_close_tag_attack_via_onclick_attribute() -> None:
@@ -42,7 +43,7 @@ def test_custom_object_json_encoder() -> None:
         def __init__(self) -> None:
             self._a = 1
 
-        def to_json(self):
+        def to_json(self) -> Mapping[str, object]:
             return self.__dict__
 
     assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'
@@ -62,3 +63,9 @@ def test_custom_object_json_encoder_non_callable() -> None:
 
     with pytest.raises(TypeError, match="not JSON serializable"):
         assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'
+
+
+def test_custom_object_json_encoder_lazy_string() -> None:
+    assert json.dumps(LazyString(lambda a: "xxx" + a, "yyy"), cls=CustomObjectJSONEncoder) == (
+        '"xxxyyy"'
+    )

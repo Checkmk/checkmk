@@ -25,11 +25,21 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'combinationMode',
       'showLegend',
       'showTimestamp',
+      'showPin',
+      'showTimeAxis',
+      'showValueAxis',
+      'showMargin',
+      'minValueAxisWidth',
       'fetchGraph'
     ],
     template: `<div
       data-testid="graph-figure"
+      :data-show-pin="showPin"
       :data-has-fetch-graph="fetchGraph !== undefined"
+      :data-show-time-axis="showTimeAxis"
+      :data-show-value-axis="showValueAxis"
+      :data-show-margin="showMargin"
+      :data-min-value-axis-width="minValueAxisWidth"
     >{{ internal }}</div>`
   }
 }))
@@ -134,6 +144,73 @@ describe('custom graph widget', () => {
   })
 })
 
+describe('graph render options', () => {
+  test('passes the configured axis visibility on to the figure', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_time_axis: false, show_vertical_axis: false }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-time-axis')).toBe('false')
+    expect(figure.getAttribute('data-show-value-axis')).toBe('false')
+  })
+
+  test('converts an absolute vertical axis width to pixels', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { vertical_axis_width: 30 }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBe('40')
+  })
+
+  test("leaves the renderer's own width for a fixed vertical axis", async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { vertical_axis_width: 'fixed' }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBeNull()
+  })
+
+  test('shows both axes when the widget stores no axis options', async () => {
+    renderWidget({
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-time-axis')).toBe('true')
+    expect(figure.getAttribute('data-show-value-axis')).toBe('true')
+  })
+
+  test('a stored margin option insets the figure', async () => {
+    const marginRequested = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_margin: true } }
+
+    renderWidget({ content: marginRequested })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-margin')).toBe('true')
+  })
+
+  test('a widget storing no margin option leaves the figure flush', async () => {
+    const marginUnset = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+
+    renderWidget({ content: marginUnset })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-margin')).toBe('false')
+  })
+})
+
 const CMK_TOKEN = '0:the-token'
 
 function renderInSharedDashboard(widgetGraphs: Record<string, SharedWidgetGraphs>) {
@@ -156,7 +233,8 @@ describe('graph widget on a shared dashboard', () => {
             internal: '{"graphs": []}',
             title: 'My graph',
             name: 'my_graph',
-            add_to_specification: null
+            add_to_specification: null,
+            y_axis: null
           }
         ],
         no_data_message: null
@@ -196,7 +274,8 @@ describe('graph widget on a shared dashboard', () => {
             internal: '{"graphs": []}',
             title: 'My graph',
             name: 'my_graph',
-            add_to_specification: null
+            add_to_specification: null,
+            y_axis: null
           }
         ],
         no_data_message: null
@@ -226,7 +305,7 @@ describe('createSharedGraphFetcher', () => {
     const fetched = await createSharedGraphFetcher('w1', CMK_TOKEN)(
       { internal: '{"graphs": []}' },
       {
-        requestedTimeRange: { start: 1_000, end: 2_000, step: 60 },
+        fetchWindow: { start: 1_000, end: 2_000, step: 60 },
         consolidationFunction: 'max',
         combinationMode: null
       }
@@ -245,5 +324,23 @@ describe('createSharedGraphFetcher', () => {
       })
     )
     expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
+  })
+})
+
+describe('the widget pin', () => {
+  const pinOf = async (): Promise<string | null> =>
+    (await screen.findByTestId('graph-figure')).getAttribute('data-show-pin')
+
+  test('is armed by default, matching the wizard default', async () => {
+    renderWidget()
+
+    expect(await pinOf()).toBe('true')
+  })
+
+  // A preview is a thumbnail, not something to interact with.
+  test('is never armed in the widget preview', async () => {
+    renderWidget({ isPreview: true })
+
+    expect(await pinOf()).toBe('false')
   })
 })

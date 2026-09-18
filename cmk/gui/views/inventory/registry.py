@@ -3,13 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from __future__ import annotations
-
-import abc
 from collections.abc import Callable, Sequence
-from typing import override, Protocol, TypedDict, TypeVar
+from typing import override, TypedDict
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.inventory.filters import (
@@ -25,31 +20,16 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
     FilterInvText,
 )
-from cmk.gui.type_defs import DynamicIconName
-from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDValue
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.speaklater import LazyString
 
-
-class _Comparable(Protocol):
-    # TODO This protocol can also be used in cmk.inventory.structured_data.py
-    @abc.abstractmethod
-    @override
-    def __eq__(self, other: object) -> bool: ...
-
-    @abc.abstractmethod
-    def __lt__(self, other: InvValue) -> bool: ...
-
-    @abc.abstractmethod
-    def __gt__(self, other: InvValue) -> bool: ...
-
-
-InvValue = TypeVar("InvValue", bound=_Comparable)
-SortFunction = Callable[[InvValue, InvValue], int]
+SortFunction = Callable[[SDValue, SDValue], int]
 
 
 class InventoryHintSpec(TypedDict, total=False):
-    title: str | LazyString
+    title: str | LazyString | Callable[[str], str]
     short: str | LazyString
     icon: DynamicIconName
     paint: str

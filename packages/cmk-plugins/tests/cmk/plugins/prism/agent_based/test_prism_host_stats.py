@@ -129,10 +129,10 @@ def test_discovery_prism_host_stats(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_prism_host_stats(  # type: ignore[misc]
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,
 ) -> None:
     assert (
         list(
@@ -162,11 +162,11 @@ def test_check_prism_host_stats(  # type: ignore[misc]
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_prism_host_stats_cpu(  # type: ignore[misc]
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
-    empty_value_store: None,
 ) -> None:
     assert (
         list(

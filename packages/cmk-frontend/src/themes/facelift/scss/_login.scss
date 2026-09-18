@@ -161,6 +161,7 @@ body.login {
   #_saml2_login_button,
   #_use_totp_code,
   #_use_backup_code,
+  #_authorize,
   input.mode_button {
     width: 100%;
     height: 29px;
@@ -289,6 +290,106 @@ body.login {
 
     input.mode_button {
       background-color: $ux-theme-6;
+    }
+  }
+
+  &.oauth_authorize {
+    text-align: left;
+
+    h1 {
+      margin-left: 0;
+      /* stylelint-disable-next-line declaration-property-value-no-unknown */
+      padding-top: $spacing-double;
+    }
+
+    p {
+      text-align: left;
+    }
+
+    .grant_context {
+      /* stylelint-disable-next-line declaration-property-value-no-unknown */
+      padding: $spacing;
+      /* stylelint-disable-next-line declaration-property-value-no-unknown */
+      margin: $spacing-double 0;
+      color: $font-color-dimmed;
+      text-align: left;
+      background-color: $bg-color;
+      border-radius: $theme-border-radius;
+    }
+
+    .permissions_title {
+      margin-top: $spacing-double;
+      font-size: $font-size-small;
+      font-weight: $font-weight-bold;
+      color: $font-color-dimmed;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: $letter-spacing-table;
+    }
+
+    .permissions {
+      /* stylelint-disable-next-line declaration-property-value-no-unknown */
+      margin: $spacing 0;
+
+      input[type='radio'] {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: color.adjust($new-success, $lightness: -5%);
+      }
+    }
+
+    .permission_row {
+      display: flex;
+      align-items: center;
+      /* stylelint-disable-next-line declaration-property-value-no-unknown */
+      gap: $spacing;
+      padding: $spacing;
+      margin-bottom: $spacing-half;
+      text-align: left;
+      cursor: pointer;
+      background-color: $bg-color;
+      border-radius: $theme-border-radius;
+
+      &:has(input[type='radio']:checked) {
+        box-shadow: inset 0 0 0 1px color.adjust($new-success, $lightness: -5%);
+      }
+
+      .code {
+        display: inline-block;
+        padding: 1px 6px;
+        font-family: $font-family-monospace;
+        color: color.adjust($new-success, $lightness: -5%);
+        background-color: $navbar-color;
+        border-radius: $theme-border-radius;
+      }
+
+      .desc {
+        margin-top: 2px;
+        color: $font-color-dimmed;
+      }
+    }
+
+    .actions {
+      display: flex;
+      /* stylelint-disable-next-line declaration-property-value-no-unknown */
+      gap: $spacing;
+      justify-content: flex-end;
+      margin-top: $spacing-double;
+
+      input.button {
+        height: 29px;
+        padding: 7px 16px;
+        margin: 0;
+      }
+
+      /* stylelint-disable-next-line selector-id-pattern */
+      #_authorize {
+        /* Needs an ID selector: its own width: 100% (see above) outranks
+           any class-based override, however many classes it has. */
+        width: auto;
+      }
     }
   }
 }

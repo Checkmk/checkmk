@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_symantec_av_progstate(section: StringTable) -> DiscoveryResult:
+def discover_symantec_av_progstate(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

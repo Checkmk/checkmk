@@ -4,11 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 """Display a table view"""
-
-from __future__ import annotations
 
 import contextlib
 import functools
@@ -399,7 +396,8 @@ def _show_view(
     if (
         browser_reload
         and display_options.enabled(display_options.R)
-        # A reload would re-mount the Vue apps and discard the global time picker state.
+        # A reload would re-mount the Vue apps and discard the time picker state; such a view
+        # refreshes through the picker's control instead (see GUIViewRenderer._render_time_picker).
         and not view.renders_engine_graphs
     ):
         html.browser_reload = browser_reload
@@ -518,7 +516,8 @@ def _get_needed_regular_columns(
     # Add columns requested by filters for post-livestatus filtering
     columns.update(
         chain.from_iterable(
-            filter.columns_for_filter_table(view.context) for filter in all_active_filters
+            filter.columns_for_filter_table(view.context)
+            for filter in all_active_filters  # noqa: A001
         )
     )
 
@@ -667,12 +666,12 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
         config: Config,
         req: Request,
     ) -> int:
-        if row1 is None and row2 is None:
-            return 0
+        if row1 is None and row2 is None:  # type: ignore[unreachable]
+            return 0  # type: ignore[unreachable]
         if row1 is None:
-            return -1
+            return -1  # type: ignore[unreachable]
         if row2 is None:
-            return 1
+            return 1  # type: ignore[unreachable]
         return compfunc(
             row1,
             row2,

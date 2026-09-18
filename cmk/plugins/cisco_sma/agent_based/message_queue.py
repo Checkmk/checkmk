@@ -119,7 +119,7 @@ def _check_message_queue(params: Params, section: Queue) -> CheckResult:
     )
 
 
-def _discover_message_queue(section: Queue) -> DiscoveryResult:
+def _discover_message_queue(section: Queue) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

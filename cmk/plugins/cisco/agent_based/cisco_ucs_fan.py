@@ -48,7 +48,7 @@ snmp_section_cisco_ucs_fan = SimpleSNMPSection(
 
 def discover_cisco_ucs_fan(
     section_cisco_ucs_fan: Mapping[str, FanModule] | None,
-    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_cisco_ucs_fan:
         return

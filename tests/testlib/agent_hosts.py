@@ -98,10 +98,12 @@ def _discover_services_of_piggybacked_hosts(
         if expected_pb_hosts:
             existing_pb_hosts = site.openapi.hosts.get_all_names(allow=expected_pb_hosts)
             missing_pb_hosts = [_ for _ in expected_pb_hosts if _ not in existing_pb_hosts]
-            assert existing_pb_hosts, f'No piggybacked hosts found for source host "{host_name}"'
-            assert not missing_pb_hosts, (
-                f'Piggybacked hosts missing from source host "{host_name}: {missing_pb_hosts}'
-            )
+            if not existing_pb_hosts:
+                raise AssertionError(f'No piggybacked hosts found for source host "{host_name}"')
+            if missing_pb_hosts:
+                raise AssertionError(
+                    f'Piggybacked hosts missing from source host "{host_name}": {missing_pb_hosts}'
+                )
             for _ in range(discovery_max_count):
                 for piggybacked_host_name in expected_pb_hosts + [host_name]:
                     site.reschedule_services(

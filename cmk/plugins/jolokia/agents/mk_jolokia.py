@@ -13,6 +13,7 @@ import json
 import os
 import re
 import socket
+import ssl
 import sys
 import urllib.parse
 
@@ -38,6 +39,14 @@ try:
 except ImportError:
     pass
 
+if sys.version_info >= (3, 12):  # noqa: UP036
+    from typing import override
+else:
+
+    def override(func):
+        return func
+
+
 try:
     import requests
     from requests.auth import HTTPDigestAuth
@@ -54,6 +63,31 @@ except ImportError:
         " Please install it on the monitored system.\n"
     )
     sys.exit(1)
+
+
+class TrustStoreAdapter(requests.adapters.HTTPAdapter):
+    """Trust the OS certificate store in addition to the CA bundle shipped with requests
+
+    By default requests trusts only its bundled CAs (certifi), so a certificate from a CA known
+    only to the operating system, e.g. imported into the Windows certificate store, is rejected.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # HTTPAdapter.__init__ calls init_poolmanager, so the context must exist beforehand.
+        self._ssl_context = ssl.create_default_context()  # loads the OS trust store
+        self._ssl_context.load_verify_locations(cafile=requests.utils.DEFAULT_CA_BUNDLE_PATH)
+        super().__init__(*args, **kwargs)
+
+    @override
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = self._ssl_context
+        return super().init_poolmanager(*args, **kwargs)
+
+    @override
+    def proxy_manager_for(self, proxy, **proxy_kwargs):
+        proxy_kwargs["ssl_context"] = self._ssl_context
+        return super().proxy_manager_for(proxy, **proxy_kwargs)
+
 
 VERBOSE = sys.argv.count("--verbose") + sys.argv.count("-v") + 2 * sys.argv.count("-vv")
 DEBUG = sys.argv.count("--debug")
@@ -263,12 +297,12 @@ DEFAULT_CONFIG_TUPLES = (
     (PASSWORD_OPTION, None, "Password to use for connecting."),
     ("mode", "digest", 'Authentication mode. Can be "basic", "digest" or "https".'),
     ("instance", None, "Name of the instance in the monitoring. Defaults to port."),
-    ("verify", None),
+    ("verify", None, ""),
     ("client_cert", None, "Path to client cert for https authentication."),
     ("client_key", None, "Client cert secret for https authentication."),
-    ("service_url", None),
-    ("service_user", None),
-    ("service_password", None),
+    ("service_url", None, ""),
+    ("service_user", None, ""),
+    ("service_password", None, ""),
     (
         "product",
         None,
@@ -277,11 +311,11 @@ DEFAULT_CONFIG_TUPLES = (
         % ", ".join(AVAILABLE_PRODUCTS),
     ),
     ("timeout", 1.0, "Connection/read timeout for requests."),
-    ("custom_vars", []),
+    ("custom_vars", [], ""),
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
-    ("instances", [{}]),
-)  # type: tuple[tuple[str | None | float | list[Any], ...], ...]
+    ("instances", [{}], ""),
+)  # type: tuple[tuple[str, str | int | float | list[object] | None, str], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -293,7 +327,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return {elem[0]: elem[1] for elem in DEFAULT_CONFIG_TUPLES}
+    return {key: default for key, default, _help in DEFAULT_CONFIG_TUPLES}
 
 
 def write_section(name, iterable):
@@ -408,7 +442,9 @@ class JolokiaInstance:
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         session.verify = self._config["verify"]
-        if session.verify is False:
+        if session.verify is True:
+            session.mount("https://", TrustStoreAdapter())
+        elif session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         session.headers["User-Agent"] = user_agent
 
@@ -585,7 +621,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
         if len(subinstance) > 1:
             instance_out = ",".join((inst.name,) + subinstance[:-1])
         elif inst_add is not None:
-            instance_out = ",".join((inst.name, inst_add))
+            instance_out = ",".join((inst.name, inst_add))  # noqa: FLY002  # flake8-flynt introduces f-strings (Python 3.6 feature)
         else:
             instance_out = inst.name
         instance_out = instance_out.replace(" ", "_")
@@ -624,7 +660,7 @@ def _process_queries(inst, queries):
     for mbean_path, title, itemspec in queries:
         try:
             yield from fetch_metric(inst, mbean_path, title, itemspec)
-        except (TimeoutError, OSError):
+        except (TimeoutError, OSError):  # fmt: skip
             raise SkipInstance
         except SkipMBean:
             continue
@@ -705,7 +741,7 @@ def generate_json(inst, mbeans):
             data = inst.get_post_data(mbean, "read", use_target=True)
             obj = inst.post(data)
             yield inst.name, mbean, json.dumps(obj["value"])
-        except (TimeoutError, OSError):
+        except (TimeoutError, OSError):  # fmt: skip
             raise SkipInstance
         except SkipMBean:
             pass

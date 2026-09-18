@@ -28,11 +28,11 @@ Section = int
 def parse_logins(string_table: StringTable) -> Section | None:
     try:
         return int(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 
-def discover_logins(section: Section) -> DiscoveryResult:
+def discover_logins(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

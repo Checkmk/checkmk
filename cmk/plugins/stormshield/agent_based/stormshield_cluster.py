@@ -35,7 +35,7 @@ sync_status_mapping = {
 }
 
 
-def discover_stormshield_cluster(section: StringTable) -> DiscoveryResult:
+def discover_stormshield_cluster(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

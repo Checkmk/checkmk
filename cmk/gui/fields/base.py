@@ -77,7 +77,7 @@ class BaseSchema(Schema):
 
     @post_load(pass_many=True)
     @post_dump(pass_many=True)
-    def remove_ordered_dict(self, data: object, **kwargs: object) -> object:  # type: ignore[misc]
+    def remove_ordered_dict(self, data: object, **kwargs: object) -> object:  # type: ignore[misc]  # noqa: ARG002
         def _remove_ordered_dict(obj: object) -> object:
             if self.cast_to_dict and isinstance(obj, collections.OrderedDict):
                 return dict(obj)
@@ -91,7 +91,7 @@ class BaseSchema(Schema):
         return _remove_ordered_dict(data)
 
     @pre_dump(pass_many=True)
-    def validate_dump_fields(self, data: object, **kwargs: object) -> object:  # type: ignore[misc]
+    def validate_dump_fields(self, data: object, **kwargs: object) -> object:  # type: ignore[misc]  # noqa: ARG002
         if not self.validate_on_dump:
             return data
 
@@ -187,7 +187,7 @@ class ValueTypedDictSchema(BaseSchema):
             target_field = self.fields.get(key, field)
 
             try:
-                target_field._validate(value)
+                target_field._validate(value)  # noqa: SLF001
             except ValidationError as exc:
                 raise ValidationError({key: exc.messages}) from exc
             try:
@@ -203,7 +203,7 @@ class ValueTypedDictSchema(BaseSchema):
         for key, value in data.items():
             target_field = self.fields.get(key, field)
             try:
-                target_field._validate(value)
+                target_field._validate(value)  # noqa: SLF001
             except ValidationError as exc:
                 raise ValidationError({key: exc.messages}) from exc
             result[key] = target_field.deserialize(value=value, data=data, attr=key)

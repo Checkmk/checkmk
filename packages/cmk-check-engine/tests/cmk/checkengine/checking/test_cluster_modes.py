@@ -5,9 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-# ruff: noqa: ARG001
-# ruff: noqa: ARG005
-
 import re
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
@@ -33,7 +30,7 @@ TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item
 
 class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)
+        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
 
     @override
     def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:
@@ -54,12 +51,12 @@ def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-
         name=CheckPluginName("name"),
         sections=kwargs.get("sections", []),
         service_name="service_name",
-        discovery_function=lambda *args, **kw: (),
+        discovery_function=lambda *args, **kw: (),  # noqa: ARG005
         discovery_default_parameters=None,
         discovery_ruleset_name=None,
         discovery_ruleset_type="all",
-        check_function=kwargs.get("check_function", lambda *args, **kw: object),
-        cluster_check_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
+        check_function=kwargs.get("check_function", lambda *args, **kw: object),  # noqa: ARG005
+        cluster_check_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),  # noqa: ARG005
         check_default_parameters=kwargs.get("check_default_parameters"),
         check_ruleset_name=kwargs.get("check_ruleset_name"),
         location=PluginLocation(module="module", name="name"),
@@ -131,7 +128,7 @@ def _get_cluster_check_function(
     )
 
 
-def _simple_check_notice(section: Any) -> FinalCheckResult:
+def _simple_check_notice(section: Any) -> FinalCheckResult:  # noqa: ARG001
     """just a simple way to create test check results"""
     yield Result(state=State.OK, notice="notice text moved to details")
     yield Result(

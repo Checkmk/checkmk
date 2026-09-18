@@ -62,7 +62,7 @@ def severity(name: str) -> tuple[int, int]:
     }.get(name, (2, 3))
 
 
-def discovery_prism_alerts(section: Section) -> DiscoveryResult:
+def discovery_prism_alerts(section: Section) -> DiscoveryResult:  # noqa: ARG001
     """We cannot guess items from alerts, since an empty list of alerts does not mean there are
     no items to monitor"""
     yield Service()

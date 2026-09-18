@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import {
   type Colors,
   type Shapes,
@@ -18,42 +18,42 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<Sizes>[],
+    options: listOptions<Sizes>({
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large'
+    }),
     initialState: 'medium' as const
   },
   color: {
     type: 'list' as const,
     title: 'Color',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Success', name: 'success' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Unknown', name: 'unknown' },
-      { title: 'Danger', name: 'danger' }
-    ] satisfies Options<Colors>[],
+    options: listOptions<Colors>({
+      default: 'Default',
+      success: 'Success',
+      warning: 'Warning',
+      unknown: 'Unknown',
+      danger: 'Danger'
+    }),
     initialState: 'default' as const
   },
   type: {
     type: 'list' as const,
     title: 'Type',
-    options: [
-      { title: 'Fill', name: 'fill' },
-      { title: 'Outline', name: 'outline' }
-    ] satisfies Options<Types>[],
+    options: listOptions<Types>({
+      fill: 'Fill',
+      outline: 'Outline'
+    }),
     initialState: 'fill' as const
   },
   shape: {
     type: 'list' as const,
     title: 'Shape',
     help: '"Default" stretches to contain its content (pill/elongated). "Circle" clips overflow to maintain a fixed circular shape — max-width equals height.',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Circle', name: 'circle' }
-    ] satisfies Options<Shapes>[],
+    options: listOptions<Shapes>({
+      default: 'Default',
+      circle: 'Circle'
+    }),
     initialState: 'default' as const
   }
 } satisfies PanelConfigFor<typeof CmkBadge>

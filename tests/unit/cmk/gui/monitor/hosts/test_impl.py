@@ -2,24 +2,30 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import re
+
 from collections.abc import Sequence
 
 import pytest
 
+from cmk.ccc.site import SiteId
+from cmk.gui.monitor.hosts._folder import MonitorFolders, SetupFolders
 from cmk.gui.monitor.hosts._impl import (
     _build_primary_sort,
     _build_query_filter,
-    _folder_pattern,
     _OPTIONAL_COLUMNS,
     _SORT_COLUMN_FIELDS,
+    LiveStatusHostRepository,
 )
 from cmk.gui.monitor.hosts._models import (
+    HostFilter,
     HostOptionalField,
     HostSort,
     HostSortColumn,
     HostSortDirection,
 )
+from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
+from cmk.livestatus_client.testing import expect_single_query
+from tests.testlib.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(
@@ -86,41 +92,41 @@ def test_every_sort_column_maps_to_a_field_or_is_always_read() -> None:
     assert set(_SORT_COLUMN_FIELDS) | always_read == set(HostSortColumn)
 
 
-@pytest.mark.parametrize(
-    "filename, query, expected",
-    [
-        pytest.param("/wato/network/switches/hosts.mk", "switch", True, id="folder name"),
-        pytest.param("/wato/network/hosts.mk", "network", True, id="folder right below the root"),
-        pytest.param("/wato/network/switches/hosts.mk", "network/sw", True, id="partial path"),
-        pytest.param("/wato/network/hosts.mk", "/network", True, id="path as the table shows it"),
-        pytest.param("/wato/network/hosts.mk", "NETWORK", True, id="different case"),
-        pytest.param("/wato/network/hosts.mk", "wato", False, id="the config path is not a folder"),
-        pytest.param("/wato/network/hosts.mk", "hosts", False, id="the file name is not a folder"),
-        pytest.param("/wato/network/hosts.mk", "mk", False, id="the file suffix is not a folder"),
-        pytest.param("/wato/hosts.mk", "wato", False, id="the root folder has no name to match"),
-        pytest.param(
-            "/omd/sites/heute/etc/nagios/conf.d/hosts.mk",
-            "nagios",
-            False,
-            id="a host not managed via Setup has no folder",
-        ),
-    ],
-)
-def test_folder_pattern_matches_only_the_folder_path(
-    filename: str, query: str, expected: bool
-) -> None:
-    assert bool(re.search(_folder_pattern(query), filename, re.IGNORECASE)) is expected
+_TITLES = {"web_dmz": "Web DMZ", "network": "Netzwerk"}
+
+
+def _folders() -> MonitorFolders:
+    """A `MonitorFolders` titling two folders, the way Setup's functions are wired in."""
+    folders = MonitorFolders()
+    folders.use_setup_source(
+        SetupFolders(title_of=_TITLES.get, all_titles=lambda: _TITLES),
+    )
+    return folders
+
+
+def _sites() -> MonitorSites:
+    return MonitorSites(
+        [
+            MonitorSite(id=SiteId("heute")),
+            MonitorSite(id=SiteId("remote_muc"), customer="Bäckerei (Müller) GmbH"),
+        ]
+    )
 
 
 def test_build_query_filter_without_a_query_matches_everything() -> None:
-    assert _build_query_filter("", frozenset(HostOptionalField)).render() == []
+    assert (
+        _build_query_filter("", frozenset(HostOptionalField), _folders(), _sites()).render() == []
+    )
 
 
 def test_build_query_filter_searches_the_name_of_a_table_without_optional_columns() -> None:
-    assert _build_query_filter("web", frozenset()).render() == [("Filter", "name ~~ web")]
+    assert _build_query_filter("web", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ web")
+    ]
 
 
 def test_build_query_filter_searches_every_shown_text_field() -> None:
+    """The folder is searched by its title, so the query reaches it as that folder's file."""
     assert _build_query_filter(
         "web",
         frozenset(
@@ -131,18 +137,231 @@ def test_build_query_filter_searches_every_shown_text_field() -> None:
                 HostOptionalField.LAST_CHECK,
             }
         ),
+        _folders(),
+        _sites(),
     ).render() == [
         ("Filter", "name ~~ web"),
         ("Filter", "alias ~~ web"),
         ("Filter", "address ~~ web"),
-        ("Filter", r"filename ~~ ^/wato.*web.*/hosts\.mk$"),
+        ("Filter", "filename = /wato/web_dmz/hosts.mk"),
         ("Or", "4"),
     ]
 
 
+def test_build_query_filter_leaves_out_the_folder_no_title_carries() -> None:
+    assert _build_query_filter(
+        "no such folder", frozenset({HostOptionalField.FOLDER}), _folders(), _sites()
+    ).render() == [("Filter", "name ~~ no such folder")]
+
+
+@pytest.mark.parametrize(
+    "field, expected",
+    [
+        pytest.param(
+            HostOptionalField.LABELS,
+            [
+                ("Filter", "label_names ~~ web"),
+                ("Filter", "label_values ~~ web"),
+                ("Or", "2"),
+            ],
+            id="labels match by name or by value",
+        ),
+        pytest.param(
+            HostOptionalField.TAGS,
+            [
+                ("Filter", "tag_names ~~ web"),
+                ("Filter", "tag_values ~~ web"),
+                ("Or", "2"),
+            ],
+            id="tags match by name or by value",
+        ),
+        pytest.param(
+            HostOptionalField.CONTACTS,
+            [("Filter", "contacts ~~ web")],
+            id="contacts",
+        ),
+        pytest.param(
+            HostOptionalField.CONTACT_GROUPS,
+            [("Filter", "contact_groups ~~ web")],
+            id="contact groups",
+        ),
+    ],
+)
+def test_build_query_filter_searches_a_shown_list_column(
+    field: HostOptionalField, expected: list[tuple[str, str]]
+) -> None:
+    assert _build_query_filter("web", frozenset({field}), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ web"),
+        *expected,
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_searches_the_site_of_every_host_it_monitors() -> None:
+    assert _build_query_filter("heute", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ heute"),
+        ("Filter", "labels = cmk/site heute"),
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_searches_the_site_of_a_table_not_showing_the_column() -> None:
+    assert _build_query_filter(
+        "heute", frozenset({HostOptionalField.ALIAS}), _folders(), _sites()
+    ).render() == [
+        ("Filter", "name ~~ heute"),
+        ("Filter", "alias ~~ heute"),
+        ("Filter", "labels = cmk/site heute"),
+        ("Or", "3"),
+    ]
+
+
+def test_build_query_filter_searches_the_site_ignoring_case() -> None:
+    assert _build_query_filter("REMOTE", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ REMOTE"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_leaves_out_the_site_no_id_carries() -> None:
+    assert _build_query_filter("no such site", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ no such site")
+    ]
+
+
+def test_build_query_filter_takes_a_regex_metacharacter_in_the_site_query_literally() -> None:
+    assert _build_query_filter("heute[", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ heute[")
+    ]
+
+
+def test_build_query_filter_searches_the_customer_of_every_host_its_sites_monitor() -> None:
+    assert _build_query_filter("Müller", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ Müller"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "2"),
+    ]
+
+
+def test_build_query_filter_leaves_out_the_site_of_a_customer_nothing_names() -> None:
+    assert _build_query_filter("Bäckerei Meier", frozenset(), _folders(), _sites()).render() == [
+        ("Filter", "name ~~ Bäckerei Meier")
+    ]
+
+
+def test_build_query_filter_takes_a_regex_metacharacter_in_the_customer_literally() -> None:
+    assert _build_query_filter(
+        "Bäckerei (Müller) GmbH", frozenset(), _folders(), _sites()
+    ).render() == [
+        ("Filter", "name ~~ Bäckerei (Müller) GmbH"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "2"),
+    ]
+
+
 def test_build_query_filter_leaves_out_a_hidden_field() -> None:
-    assert _build_query_filter("web", frozenset({HostOptionalField.ALIAS})).render() == [
+    assert _build_query_filter(
+        "web", frozenset({HostOptionalField.ALIAS}), _folders(), _sites()
+    ).render() == [
         ("Filter", "name ~~ web"),
         ("Filter", "alias ~~ web"),
         ("Or", "2"),
     ]
+
+
+def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
+    # Regression test: a "\r" embedded in a filter value must not turn into a Livestatus line
+    # break when the hand-assembled Stats query is joined with "\n" - only a real "\n" may do
+    # that. Livestatus itself treats "\r" as ordinary data, and so must this query.
+    filters = HostFilter("Filter: name ~~ evil\rmore")
+    with expect_single_query(
+        "GET hosts\nStats: state >= 0\nFilter: name ~~ evil\rmore",
+        match_type="strict",
+        tables={"hosts": []},
+    ) as live:
+        repo = LiveStatusHostRepository(connection=live)
+        repo.count_matched(query="", filters=filters, fields=frozenset())
+
+
+@pytest.mark.parametrize(
+    "staleness, threshold, expected_stale",
+    [
+        pytest.param(5.0, 3.5, True, id="staleness at or above the threshold is stale"),
+        pytest.param(2.0, 3.5, False, id="staleness below the threshold is not stale"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_derives_stale_from_the_staleness_threshold(
+    staleness: float, threshold: float, expected_stale: bool, set_config: SetConfig
+) -> None:
+    row = {
+        "name": "some-host",
+        "state": 0,
+        "has_been_checked": 1,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": staleness,
+    }
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        repo = LiveStatusHostRepository(connection=live)
+        with set_config(staleness_threshold=threshold):
+            hosts = repo.fetch(
+                limit=None,
+                query="",
+                sorters=[],
+                filters=HostFilter(""),
+                fields=frozenset(),
+            )
+
+    assert [host.stale for host in hosts] == [expected_stale]
+
+
+@pytest.mark.parametrize(
+    "active_checks_enabled, modified_attributes_list, expected",
+    [
+        pytest.param(0, ["active_checks_enabled"], True, id="a user switched them off"),
+        pytest.param(0, [], False, id="never on, so nobody switched them off"),
+        pytest.param(1, ["active_checks_enabled"], False, id="a user switched them back on"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
+    active_checks_enabled: int, modified_attributes_list: list[str], expected: bool
+) -> None:
+    row = {
+        "name": "some-host",
+        "state": 0,
+        "has_been_checked": 1,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": modified_attributes_list,
+        "active_checks_enabled": active_checks_enabled,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+    }
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [host.active_checks_disabled for host in hosts] == [expected]

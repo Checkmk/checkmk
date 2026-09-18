@@ -5,9 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for managing notification configuration"""
 
@@ -93,18 +91,10 @@ from cmk.gui.site_config import (
     site_is_local,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-    Users,
-)
+from cmk.gui.type_defs import ActionResult, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
@@ -213,9 +203,12 @@ from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 OPTIMIZE_NOTIFICATIONS_ENTRIES: dict[str, list[str]] = {
     _("Balance short-term spikes"): [
@@ -552,7 +545,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 if analyse:
                     table.cell(css=["buttons"])
                     idx = nr + start_nr
-                    if idx < len(analyse_rules):
+                    if idx < len(analyse_rules):  # type: ignore[possibly-undefined]
                         what, _anarule, reason = analyse_rules[idx]
                         if what == "match":
                             html.static_icon(
@@ -807,13 +800,13 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         else:
             mode = "notification_rule_quick_setup"
 
-        back_mode: HTTPVariables = []
+        back_mode: list[HTTPVariable] = []
         mode_from_vars = request.var("mode")
         if mode_from_vars:
             back_mode.append(("back_mode", mode_from_vars))
 
         def _delete_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", listmode),
                 ("user", userid),
                 ("_delete", nr),
@@ -828,7 +821,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             )
 
         def _drag_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", listmode),
                 ("analyse", anavar),
                 ("user", userid),
@@ -839,7 +832,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return make_action_link(request, httpvars + back_mode)
 
         def _edit_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", mode),
                 ("edit", nr),
                 ("user", userid),
@@ -849,7 +842,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return folder_preserving_link(request, httpvars + back_mode)
 
         def _clone_url() -> str:
-            httpvars: HTTPVariables = [
+            httpvars: list[HTTPVariable] = [
                 ("mode", mode),
                 ("clone", nr),
                 ("user", userid),
@@ -902,7 +895,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         menu = PageMenu(
@@ -1425,7 +1418,7 @@ def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
                 continue
             # Should not happen
             if rule is None:
-                continue
+                continue  # type: ignore[unreachable]
 
             rule_list.append(
                 Rule(
@@ -1877,7 +1870,7 @@ class ModeTestNotifications(ModeNotifications):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         menu = PageMenu(
@@ -2857,6 +2850,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 now=now,
                 pprint_value=config.wato_pprint_config,
                 call_users_saved_hook=True,
+                changed_users=[self._user_id()],
             )
             self._add_change(
                 action_name="notification-delete-user-rule",
@@ -2879,6 +2873,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 now=now,
                 pprint_value=config.wato_pprint_config,
                 call_users_saved_hook=True,
+                changed_users=[self._user_id()],
             )
 
             self._add_change(
@@ -2954,7 +2949,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         return PageMenu(
@@ -3038,7 +3033,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        search_vars: HTTPVariables = (
+        search_vars: list[HTTPVariable] = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
         )
         return PageMenu(
@@ -3852,6 +3847,7 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
             now=datetime.now(),
             pprint_value=active_config.wato_pprint_config,
             call_users_saved_hook=True,
+            changed_users=[self._user_id()],
         )
 
     @override
@@ -3956,6 +3952,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             now=datetime.now(),
             pprint_value=active_config.wato_pprint_config,
             call_users_saved_hook=True,
+            changed_users=[self._user_id()],
         )
 
     @override
@@ -4114,7 +4111,7 @@ class ABCNotificationParameterMode(WatoMode):
     def _back_mode(self) -> ActionResult:
         raise NotImplementedError
 
-    def _search_vars(self) -> HTTPVariables:
+    def _search_vars(self) -> list[HTTPVariable]:
         if search := request.get_str_input("search"):
             return [("search", search)]
         return []
@@ -4143,7 +4140,7 @@ class ABCNotificationParameterMode(WatoMode):
         action_name: str,
         text: str,
         pending_changes: PendingChanges,
-        site_configs: SiteConfigurations,
+        site_configs: SiteConfigurations,  # noqa: ARG002
     ) -> None:
         pending_changes.add(
             Change(
@@ -4538,7 +4535,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         listmode = "notification_parameters"
         mode = "edit_notification_parameter"
 
-        additional_vars: HTTPVariables = [
+        additional_vars: list[HTTPVariable] = [
             ("back_mode", "notification_parameters"),
             ("method", self._method()),
         ]

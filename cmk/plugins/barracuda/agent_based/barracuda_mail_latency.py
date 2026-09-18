@@ -25,7 +25,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.barracuda.lib import DETECT_BARRACUDA
 
 
-def discover_barracuda_mail_latency(section: StringTable) -> DiscoveryResult:
+def discover_barracuda_mail_latency(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

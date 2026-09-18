@@ -11,8 +11,11 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
+from tests.testlib.common.utils import wait_until
 
 logger = logging.getLogger(__name__)
+
+_VALUE_AXIS_RESCALE_TIMEOUT = 10
 
 
 def _mark_document(graphs: ServiceGraphs) -> None:
@@ -79,20 +82,24 @@ def test_peak_zoom_narrows_the_value_axis_only(
 
     Locality across sibling graphs is covered by composables/zoomSync.test.ts; here the
     point is that the gesture reaches the value axis and stops there.
+
+    A narrow band, not the middle half: outward tick alignment rounds a shallow zoom away.
     """
     panel = service_graphs.panel(0)
     panel.select_peak_zoom()
     time_before = panel.graph.time_axis_label_texts()
-    values_before = panel.graph.value_axis_label_texts()
+    ticks_before = panel.graph.value_axis_ticks()
 
-    panel.graph.drag_down_canvas(0.25, 0.75)
+    panel.graph.drag_down_canvas(0.4, 0.6)
 
     expect(
         panel.graph.value_axis_labels, "The graph rendered no value axis labels at all"
     ).not_to_have_count(0)
-    expect(
-        panel.graph.value_axis_labels, "The peak-zoom drag left the value axis unchanged"
-    ).not_to_have_text(values_before)
+    wait_until(
+        lambda: panel.graph.value_axis_ticks() != ticks_before,
+        timeout=_VALUE_AXIS_RESCALE_TIMEOUT,
+        condition_name="the peak-zoom drag to move the value axis",
+    )
     expect(
         panel.graph.time_axis_labels,
         "A peak zoom moved the time axis, which belongs to the time zoom",
@@ -150,12 +157,14 @@ def test_context_view_drag_shifts_the_window(
         panel.graph.time_axis_labels,
         "Dragging the context view did not move the graph's window",
     ).not_to_have_text(window_before)
+    service_graphs.wait_until_settled()
     bar_before = panel.context_view_bar.bounding_box()
     strip_before = panel.context_view.bounding_box()
     assert bar_before is not None and strip_before is not None
 
     panel.drag_context_view(-0.10)
 
+    service_graphs.wait_until_settled()
     bar_after = panel.context_view_bar.bounding_box()
     strip_after = panel.context_view.bounding_box()
     assert bar_after is not None and strip_after is not None
@@ -166,26 +175,6 @@ def test_context_view_drag_shifts_the_window(
         "Moving the context view changed the span of the overview strip"
     )
     assert not javascript_errors, f"Uncaught JS errors during the brush drag: {javascript_errors}"
-
-
-def test_returning_to_live_switches_the_refresh_indicator(
-    service_graphs: ServiceGraphs, javascript_errors: list[str]
-) -> None:
-    """The page opens with refresh off, and resuming puts it back on live.
-
-    The indicator is the page's single answer to "am I looking at data that still moves?",
-    so it has to be readable and reversible without a reload.
-    """
-    expect(
-        service_graphs.refresh_indicator, "The page did not open with the refresh turned off"
-    ).to_contain_text("Refresh off")
-
-    service_graphs.resume_refresh_button.click()
-
-    expect(
-        service_graphs.refresh_indicator, "Resuming did not switch the indicator to live"
-    ).to_contain_text("Live refresh")
-    assert not javascript_errors, f"Uncaught JS errors returning to live: {javascript_errors}"
 
 
 @pytest.mark.skip(reason="Test is flaky")

@@ -8,7 +8,7 @@ from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, TextInput
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
 
 
@@ -20,7 +20,7 @@ def _valuespec_agent_config_mk_scaleio() -> Alternative:
                 title=_("Deploy the Checkmk EMC ScaleIO plug-in"),
                 elements=[
                     ("user", TextInput(title=_("Username"))),
-                    ("password", MigrateToIndividualOrStoredPassword(title=_("Password"))),
+                    ("password", IndividualOrStoredPassword(title=_("Password"))),
                     ("interval", Age(title=_("Interval for collecting data"), default_value=60)),
                 ],
                 optional_keys=False,

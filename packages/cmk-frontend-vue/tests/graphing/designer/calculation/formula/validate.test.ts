@@ -26,7 +26,7 @@ test('accepts a valid RRD formula', () => {
   expect(check('A + B')).toEqual([])
 })
 
-test('accepts a valid metric-backend formula in the metric_backend domain', () => {
+test('accepts a valid OpenTelemetry metrics formula in the metric_backend domain', () => {
   expect(check('E + 1', 'metric_backend')).toEqual([])
 })
 

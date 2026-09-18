@@ -214,8 +214,8 @@ class SitesSteps(AnonymizeStep):
                 anon_interface.relative_to_anon_dir(omd_root / "etc/omd/distributed.mk"), is_remote
             )
 
-        sites_config_file._config_file_path = anon_interface.relative_to_anon_dir(
-            sites_config_file._config_file_path
+        sites_config_file._config_file_path = anon_interface.relative_to_anon_dir(  # noqa: SLF001
+            sites_config_file._config_file_path  # noqa: SLF001
         )
         sites_config_file.save(anon_sites_config, pprint_value=True)
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import typing
 from collections.abc import Mapping, Sequence
@@ -19,6 +17,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 from cmk.plugins.rittal.agent_based import (
     cmciii,
@@ -102,7 +101,7 @@ def test_sensor_id_temp_in_out() -> None:
     assert cmciii.sensor_id("temp_in_out", ["Air"], "Liquid_Cooling_Package") == "Air LCP"
 
 
-def _leakage_info(status, position):
+def _leakage_info(status: str, position: str) -> list[StringTable]:
     return [
         [["4", "CMCIII-LEAK", "CMCIII-LEAK", "2"]],
         [
@@ -156,7 +155,7 @@ def test_cmciii_leakage_sensors(status: str, position: str, expected: CheckResul
     )
 
 
-def _lcp_sensor():
+def _lcp_sensor() -> list[StringTable]:
     return [
         [["2", "LCP-I Flush 30kW", "Liquid Cooling Package", "2"]],
         [
@@ -286,7 +285,7 @@ def test_cmciii_lcp_check(item: str, expected: CheckResult) -> None:
     )
 
 
-def _phase_sensor():
+def _phase_sensor() -> list[StringTable]:
     return [
         [["1", "PDU-MET", "Master PDU", "2"]],
         [
@@ -465,6 +464,44 @@ def test_phase_sensors() -> None:
     ]
 
 
+def test_phase_item_uses_the_description_of_its_first_channel() -> None:
+    # A phase has no description of its own, only one per channel. The item uses
+    # the description of the channel the sensor index refers to (the voltage one
+    # at the indices 3, 6 and 9 of the cmcIIIMsgTable).
+    params = {"use_sensor_description": True}
+
+    section = cmciii.parse_cmciii(_phase_sensor())
+
+    assert list(cmciii_phase.discover_cmciii_phase(params, section)) == [
+        Service(item="1-3 L1 Voltage", parameters={"_item_key": "Master_PDU Phase 1"}),
+        Service(item="1-6 L2 Voltage", parameters={"_item_key": "Master_PDU Phase 2"}),
+        Service(item="1-9 L3 Voltage", parameters={"_item_key": "Master_PDU Phase 3"}),
+    ]
+
+
+def _sensor_without_description() -> list[StringTable]:
+    # A CMCIII-HUM module that publishes no DescName for its temperature
+    # channel, as seen on real devices.
+    return [
+        [["2", "CMCIII-HUM", "HUM RA-01-E", "2"]],
+        [
+            ["2.1", "UserDescription.DevLocation", "53", "", "0", "Temperature", "0"],
+            ["2.2", "Temperature.Value", "2", "degree C", "-100", "25.90 degree C", "2590"],
+            ["2.3", "Temperature.Status", "7", "", "0", "OK", "4"],
+        ],
+    ]  # fmt: off
+
+
+def test_item_falls_back_to_the_sensor_id_without_a_description() -> None:
+    params = {"use_sensor_description": True}
+
+    section = cmciii.parse_cmciii(_sensor_without_description())
+
+    assert list(cmciii_temp.discover_cmciii_temp(params, section)) == [
+        Service(item="Ambient HUM_RA-01-E", parameters={"_item_key": "Ambient HUM_RA-01-E"})
+    ]
+
+
 @pytest.mark.parametrize(
     "item, expected",
     [
@@ -492,7 +529,7 @@ def test_cmciii_phase_check(item: str, expected: CheckResult) -> None:
     )
 
 
-def _status_info(variable, status):
+def _status_info(variable: str, status: str) -> list[StringTable]:
     return [
         [["2", "CMCIII-DET-M", "DET-AC III Master", "2"]],
         [
@@ -556,7 +593,7 @@ def test_cmciii_status_sensors(variable: str, status: str, expected: CheckResult
     )
 
 
-def _access_info():
+def _access_info() -> list[StringTable]:
     return [
         [["3", "CMCIII-GRF", "Tuer GN-31-F", "2"]],
         [
@@ -593,7 +630,7 @@ def test_cmciii_access_check() -> None:
     ]
 
 
-def _generictest_cmciii():
+def _generictest_cmciii() -> list[StringTable]:
     return [
         [
             ["1", "CMCIII-PU", "CMC-PU", "2"],
@@ -1267,7 +1304,7 @@ def test_genericdataset_cmciii_check(
         assert list(plugin.check_function(item, params, section)) == expected
 
 
-def _generictest_cmciii_input_regression():
+def _generictest_cmciii_input_regression() -> list[StringTable]:
     return [
         [
             ["1", "CMCIII-PU", "CMCIII-PU", "2"],

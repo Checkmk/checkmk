@@ -186,7 +186,7 @@ class TestOAuthClientRegistrationPage:
 
     def test_returns_400_when_registration_limit_is_reached(self, flask_app: Flask) -> None:
         with get_client_store() as store:
-            store._connection.executemany(
+            store._connection.executemany(  # noqa: SLF001
                 """
                 INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
                 VALUES (?, '["https://client.example/callback"]', NULL, 0)

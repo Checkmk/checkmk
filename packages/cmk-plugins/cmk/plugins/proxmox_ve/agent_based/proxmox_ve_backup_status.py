@@ -89,7 +89,7 @@ def parse_proxmox_ve_vm_backup_status(
     return {"last_backup": result}
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

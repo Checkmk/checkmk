@@ -3,20 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-
 from cmk import trace
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.modes.modes import Mode
-
-OptionSpec = str
-Argument = str
-OptionName = str
-OptionFunction = Callable  # type: ignore[type-arg]
-ModeFunction = Callable  # type: ignore[type-arg]
-ConvertFunction = Callable  # type: ignore[type-arg]
-Options = list[tuple[OptionSpec, Argument]]
-Arguments = list[str]
+from cmk.base.modes.modes import (
+    Argument,
+    Arguments,
+    Mode,
+    Options,
+    parse_sub_options,
+)
+from cmk.cli.internal import GlobalOptions
 
 tracer = trace.get_tracer()
 
@@ -24,32 +20,28 @@ tracer = trace.get_tracer()
 def call(
     app: CheckmkBaseApp,
     mode: Mode,
-    arg: Argument | None,
+    global_options: GlobalOptions,
+    arg: Argument,
     all_opts: Options,
     all_args: Arguments,
     trace_context: trace.Context,
 ) -> int:
-    sub_options = mode.get_sub_options(all_opts)
+    sub_options = parse_sub_options(mode.sub_options, all_opts)
 
-    handler_args: list[object] = [app]
-    if mode.sub_options:
-        handler_args.append(sub_options)
-
-    if mode.argument and mode.argument_optional:
-        handler_args.append(all_args)
+    args: Arguments
+    if mode.argument and not mode.argument_optional:
+        args = [arg]
     elif mode.argument:
-        handler_args.append(arg)
-
-    handler = mode.handler_function
-    if handler is None:
-        raise TypeError
+        args = all_args
+    else:
+        args = ()
 
     with tracer.span(
         f"mode[{mode.name}]",
         attributes={
             "cmk.base.mode.name": mode.name,
-            "cmk.base.mode.args": repr(handler_args),
+            "cmk.base.mode.args": repr((global_options, sub_options, args)),
         },
         context=trace_context,
     ):
-        return handler(*handler_args)  # type: ignore[no-any-return]
+        return mode.handler_function(app, global_options, sub_options, args)

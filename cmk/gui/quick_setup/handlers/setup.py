@@ -279,7 +279,7 @@ class CompleteActionResult(BaseModel):
     background_job_exception: BackgroundJobException | None = None
 
     @classmethod
-    def load_from_job_result(cls, job_id: str) -> "CompleteActionResult":
+    def load_from_job_result(cls, job_id: str) -> CompleteActionResult:
         work_dir = Path(BackgroundJobDefines.base_dir) / job_id
         if not work_dir.exists():
             raise MKJobNotFoundException(None, _("Action result not found"))

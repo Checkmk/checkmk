@@ -4,8 +4,6 @@
 
 """Core data types for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -218,6 +216,11 @@ class InstallSpec:
     frontend_supervised: bool = False
     """True if Bazel build is skipped when --frontend is active (Vite HMR)."""
 
+    input_prefixes: tuple[str, ...] = ()
+    """Source prefixes (trailing ``/``) of packages built into this artifact
+    that no deployer covers on their own, e.g. ``packages/cmk-ui-library/``
+    for the cmk-frontend-vue dist.  Changes there deploy through this spec."""
+
 
 @dataclass(frozen=True)
 class ConfigFileEntry:
@@ -283,6 +286,7 @@ class Service(StrEnum):
     AGENT_RECEIVER = "agent-receiver"
     DCD = "dcd"
     MCP_SERVER = "mcp-server"
+    AI_CONTROL_PLANE = "ai-control-plane"
 
 
 @dataclass(frozen=True)

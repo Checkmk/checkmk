@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 """agent_jira
 
@@ -245,6 +244,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
+    # astrein: disable=logging-formatter
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 

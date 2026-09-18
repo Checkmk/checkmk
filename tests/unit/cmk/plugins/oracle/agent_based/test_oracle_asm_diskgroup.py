@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Mapping, Sequence
@@ -141,13 +140,12 @@ SECTION_WITH_FG_FLEX = asm.Section(
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch):
-    value_store_patched = {
+def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store_patched: dict[str, list[float]] = {
         "%s.delta" % ITEM: [2000000, 30000000],
         "%s.trend" % ITEM: [2000000 - 86400, 2000000, -51.16],
     }
     monkeypatch.setattr(asm, "get_value_store", lambda: value_store_patched)
-    yield value_store_patched
 
 
 @pytest.mark.parametrize(

@@ -122,6 +122,8 @@ const rows: HostEntry[] = [
   {
     name: 'web-server-01',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'Frontend web server (eu-west)',
     site_id: 'local',
@@ -136,6 +138,8 @@ const rows: HostEntry[] = [
   {
     name: 'db-primary-02',
     state: 'DOWN',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.27',
     alias: 'Primary database (eu-west)',
     site_id: 'local',
@@ -150,6 +154,8 @@ const rows: HostEntry[] = [
   {
     name: 'cache-node-03',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.51',
     alias: 'Redis cache node',
     site_id: 'local',
@@ -164,6 +170,8 @@ const rows: HostEntry[] = [
   {
     name: 'mail-relay-04',
     state: 'UNREACHABLE',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.88',
     alias: 'Outbound mail relay',
     site_id: 'local',

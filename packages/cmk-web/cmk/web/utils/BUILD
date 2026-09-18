@@ -8,6 +8,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-ccc:regex",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web:context",
         requirement("flask"),
     ],

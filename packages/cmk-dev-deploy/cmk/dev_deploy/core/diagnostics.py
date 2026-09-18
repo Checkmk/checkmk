@@ -14,8 +14,6 @@ Storage: ``$XDG_CACHE_HOME/cmk-dev-deploy/diagnostics/`` (defaults to
 deploy data so bundles survive ``--purge`` and ``--full`` operations.
 """
 
-from __future__ import annotations
-
 import contextlib
 import json
 import os
@@ -27,6 +25,7 @@ from datetime import datetime, UTC
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cmk.dev_deploy.core.bazel import bazel_command, deploy_output_base, use_shared_server
 from cmk.dev_deploy.core.timeouts import BAZEL_INFO_QUICK
 from cmk.dev_deploy.errors import DeployError
 
@@ -94,7 +93,7 @@ def capture_diagnostic_bundle(
     if json_errors:
         # stdout may be closed
         with contextlib.suppress(OSError):
-            print(json.dumps(bundle, indent=2, default=str))  # noqa: T201
+            print(json.dumps(bundle, indent=2, default=str))  # noqa: T201  # It's OK for test/script helpers to print()
 
     return crash_path
 
@@ -122,7 +121,7 @@ def _get_tool_version() -> str:
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         pass
     return "unknown"
 
@@ -146,7 +145,7 @@ def _collect_environment(repo_root: Path | None) -> dict[str, object]:
         )
         if result.returncode == 0:
             env["bazel_version"] = result.stdout.strip()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         env["bazel_version"] = "unavailable"
 
     # Git info
@@ -186,7 +185,7 @@ def _collect_environment(repo_root: Path | None) -> dict[str, object]:
                 env["git_dirty_count"] = len(
                     [line for line in dirty.stdout.strip().splitlines() if line]
                 )
-        except (subprocess.TimeoutExpired, OSError):
+        except subprocess.TimeoutExpired, OSError:
             pass
 
     return env
@@ -199,11 +198,13 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
         return state
 
     cwd = str(repo_root)
+    state["shared_server"] = use_shared_server()
+    state["deploy_output_base"] = str(deploy_output_base(repo_root))
 
-    # Get output_base
+    # Get output_base (as the deploy server itself reports it)
     try:
         result = subprocess.run(
-            ["bazel", "info", "output_base"],
+            bazel_command(["info", "output_base"], repo_root),
             capture_output=True,
             text=True,
             check=False,
@@ -214,13 +215,13 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
             ob = result.stdout.strip()
             state["output_base"] = ob
             state["output_base_exists"] = Path(ob).is_dir()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         state["output_base"] = "unavailable (bazel info timed out)"
 
     # Get execution root
     try:
         result = subprocess.run(
-            ["bazel", "info", "execution_root"],
+            bazel_command(["info", "execution_root"], repo_root),
             capture_output=True,
             text=True,
             check=False,
@@ -229,7 +230,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
         )
         if result.returncode == 0:
             state["execution_root_exists"] = Path(result.stdout.strip()).is_dir()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         pass
 
     # Check bazel-bin exists
@@ -238,7 +239,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
     # Bazel server PID + memory
     try:
         result = subprocess.run(
-            ["bazel", "info", "server_pid"],
+            bazel_command(["info", "server_pid"], repo_root),
             capture_output=True,
             text=True,
             check=False,
@@ -257,9 +258,9 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
                         if line.startswith("VmRSS:"):
                             state["server_memory_kb"] = int(line.split()[1])
                             break
-            except (OSError, ValueError, IndexError):
+            except OSError, ValueError, IndexError:
                 pass
-    except (subprocess.TimeoutExpired, OSError, ValueError):
+    except subprocess.TimeoutExpired, OSError, ValueError:
         pass
 
     return state
@@ -296,7 +297,7 @@ def _collect_manifest_state() -> dict[str, object]:
                 state["manifest_spec_count"] = {
                     k: len(v) for k, v in data.items() if isinstance(v, list)
                 }
-        except (OSError, json.JSONDecodeError):
+        except OSError, json.JSONDecodeError:
             pass
     return state
 
@@ -385,7 +386,7 @@ def _write_bundle(bundle: dict[str, object]) -> Path | None:
 
 def _print_write_warning() -> None:
     """Warn that the diagnostic bundle could not be saved."""
-    print(  # noqa: T201
+    print(  # noqa: T201  # It's OK for test/script helpers to print()
         f"WARNING: Could not save diagnostic bundle to {_diagnostics_dir()}",
         file=sys.stderr,
     )
@@ -394,10 +395,10 @@ def _print_write_warning() -> None:
 def _print_error_output(error: BaseException, crash_path: Path | None) -> None:
     """Print human-readable error output with recovery hints to stderr."""
     msg = str(error)
-    print(f"\nERROR: {msg}", file=sys.stderr)  # noqa: T201
+    print(f"\nERROR: {msg}", file=sys.stderr)  # noqa: T201  # It's OK for test/script helpers to print()
 
     if crash_path is not None:
-        print(  # noqa: T201
+        print(  # noqa: T201  # It's OK for test/script helpers to print()
             f"\n  Diagnostic bundle saved to:\n"
             f"    {crash_path}\n\n"
             f"  Share it with the tool maintainer:\n"

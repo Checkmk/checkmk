@@ -87,7 +87,7 @@ def check_hp_blade_blades(item: str, section: StringTable) -> CheckResult:
         # display the other gathered information.
         try:
             raw_state = int(line[2])
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             raw_state = 2
 
         state, state_readable = _STATUS_MAP[raw_state]

@@ -11,8 +11,6 @@ which can optionally be deployed within a cluster.
 Moreover, read access to the Kubernetes API endpoints monitored by Checkmk must be provided.
 """
 
-from __future__ import annotations
-
 import argparse
 import cProfile
 import enum
@@ -324,6 +322,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
+    # astrein: disable=logging-formatter
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 

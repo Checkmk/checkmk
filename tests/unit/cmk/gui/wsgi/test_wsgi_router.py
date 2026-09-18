@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
 
 import importlib.util
-import os
 import os.path
 import types
 from importlib._bootstrap_external import SourceFileLoader
@@ -40,7 +38,8 @@ def search_up(search_path: str, start_path: str) -> str:
         current_path = new_path
 
 
-def test_wsgi_app(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_wsgi_app() -> None:
     app_file = search_up(
         "packages/cmk-wsgi/cmk/gui/wsgi/applications/index.wsgi", os.path.dirname(__file__)
     )
@@ -48,7 +47,9 @@ def test_wsgi_app(request_context: None) -> None:
     wsgi_app = imported.Application
     env = create_environ()
 
-    def start_response(status, response_headers, exc_info=None):
+    def start_response(
+        status: str, response_headers: list[tuple[str, str]], exc_info: object | None = None
+    ) -> None:
         pass
 
     assert wsgi_app.wsgi.config_loader.mode == "default"

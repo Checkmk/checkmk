@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: systemd"
 has_support_component = true
 members_required = 0
+tier = 2
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 Plugin for systemd unit state.

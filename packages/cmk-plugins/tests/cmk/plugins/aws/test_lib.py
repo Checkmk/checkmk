@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
+from collections.abc import Mapping, Sequence
+from typing import TypedDict
 
 import pytest
 
@@ -720,6 +722,11 @@ def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None: 
     )
 
 
+class _ExtraKwargs(TypedDict, total=False):
+    extra_keys: Sequence[str] | None
+    convert_sum_stats_to_rate: bool
+
+
 @pytest.mark.parametrize(
     "expected_metric_names, section, extra_kwargs, expected_result",
     [
@@ -1041,9 +1048,12 @@ def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None: 
         ),
     ],
 )
-def test_extract_aws_metrics_by_labels(  # type: ignore[misc]
-    expected_metric_names, section, extra_kwargs, expected_result
-):
+def test_extract_aws_metrics_by_labels(
+    expected_metric_names: Sequence[str],
+    section: GenericAWSSection,
+    extra_kwargs: _ExtraKwargs,
+    expected_result: Mapping[str, dict[str, object]],
+) -> None:
     assert (
         extract_aws_metrics_by_labels(expected_metric_names, section, **extra_kwargs)
         == expected_result

@@ -7,15 +7,15 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import abc
 import os
 import pprint
-from collections.abc import Callable, Generator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal, override, TypedDict
+from typing import Any, Final, Literal, NewType, override, TypedDict
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
@@ -25,25 +25,30 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import (
-    GlobalSettings,
-    GraphTimerange,
-)
-from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.type_defs import GlobalSettings, GraphTimerange
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.speaklater import LazyString
 
 ConfigDomainName = str
+
+RemoveIn310 = NewType("RemoveIn310", ConfigDomainName)
+"""Marks a previous config domain ident still sent by 2.5 central sites.
+
+3.0 is the last version to accept it: delete this type once 3.1 has branched off."""
 
 CORE: Final[ConfigDomainName] = "check_mk"
 GUI: Final[ConfigDomainName] = "multisite"
 CA_CERTIFICATES: Final[ConfigDomainName] = "ca-certificates"
 SITE_CERTIFICATE: Final[ConfigDomainName] = "site-certificate"
 OMD: Final[ConfigDomainName] = "omd"
+EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
 
 
 def wato_fileheader() -> str:
@@ -80,16 +85,35 @@ class ABCConfigDomain(abc.ABC):
         activated regardless of the change type.
         Pass ``domains=[]`` to :meth:`PendingChanges.add` to have more granular
         control.
+
+    in_global_settings:
+        whether the global settings page lists this domain's configuration variables.
+        Domains with a settings page of their own set it to false; their variables
+        stay editable there and via the REST API.
+
+    global_settings_permission:
+        the permission needed to read or change this domain's configuration variables,
+        centrally as well as per site.
     """
 
     needs_sync = True
     needs_activation = True
     always_activate = False
     in_global_settings = True
+    global_settings_permission: PermissionName = "wato.global"
 
     @classmethod
     @abc.abstractmethod
     def ident(cls) -> ConfigDomainName: ...
+
+    @classmethod
+    def previous_idents(cls) -> Sequence[RemoveIn310]:
+        """Idents this domain has been registered under before.
+
+        Activation uses the idents on the wire, not just in the payload. This means idents are not
+        affected by `cmk-update-config`. We translate these old identifiers on the fly, since they
+        may still be sent by the central site."""
+        return ()
 
     @classmethod
     def enabled_domains(cls) -> Sequence[ABCConfigDomain]:
@@ -174,6 +198,21 @@ class ABCConfigDomain(abc.ABC):
     ) -> None:
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
 
+    @contextmanager
+    def settings_change(
+        self,
+        sites: SiteConfigurations,  # noqa: ARG002
+        before: Mapping[SiteId, GlobalSettings],  # noqa: ARG002
+        after: Mapping[SiteId, GlobalSettings],  # noqa: ARG002
+    ) -> Iterator[None]:
+        """Wrap the write of a settings change with the settings in effect for every site.
+
+        Before the yield nothing is written yet, and a domain can reject a combination it
+        cannot serve by raising MKUserError. After the yield the change is on disk, and a
+        domain reacts to it, for example by logging security events. Most domains do neither.
+        """
+        yield
+
     @abc.abstractmethod
     def default_globals(self) -> GlobalSettings:
         """Returns a dictionary that contains the default settings
@@ -194,7 +233,7 @@ class ABCConfigDomain(abc.ABC):
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
-    def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
+    def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:  # noqa: ARG003
         return DomainRequest(cls.ident())
 
     @classmethod
@@ -223,6 +262,13 @@ class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[ABCConfigDomain]):
     def plugin_name(self, instance: ABCConfigDomain) -> str:
         return instance.ident()
 
+    def renamed_ident(self, previous_ident: ConfigDomainName) -> ConfigDomainName | None:
+        """The current ident of the domain formerly registered under the given one."""
+        for domain in self.values():
+            if previous_ident in domain.previous_idents():
+                return domain.ident()
+        return None
+
 
 config_domain_registry = ConfigDomainRegistry()
 
@@ -249,11 +295,19 @@ def generate_hosts_to_update_settings(hostnames: Sequence[HostName]) -> Serializ
 
 class ConfigVariableGroup:
     def __init__(
-        self, *, title: LazyString, sort_index: int, warning: LazyString | None = None
+        self,
+        *,
+        title: LazyString,
+        sort_index: int,
+        warning: LazyString | None = None,
+        icon: IconNames = IconNames.configuration,
+        description: LazyString | None = None,
     ) -> None:
         self._title = title
         self._sort_index = sort_index
         self._warning = warning
+        self._icon = icon
+        self._description = description
 
     # TODO: The identity of a configuration variable group should be a pure
     # internal unique key and it should not be localized. The title of a
@@ -275,6 +329,12 @@ class ConfigVariableGroup:
     def warning(self) -> str | None:
         """Return a string if you want to show a warning at the top of this group"""
         return str(self._warning) if self._warning else None
+
+    def icon(self) -> IconNames:
+        return self._icon
+
+    def description(self) -> str:
+        return str(self._description) if self._description else ""
 
     def config_variables(self) -> list[ConfigVariable]:
         """Returns a list of configuration variable classes that belong to this group"""
@@ -307,28 +367,25 @@ class ConfigVariable:
         group: ConfigVariableGroup,
         primary_domain: type[ABCConfigDomain],
         ident: str,
-        valuespec: Callable[[GlobalSettingsContext], ValueSpec] | None = None,
-        form_spec: Callable[[GlobalSettingsContext], FormSpec] | None = None,
+        form_spec: Callable[[GlobalSettingsContext], FormSpec[Any]],
         need_restart: bool | None = None,
         need_apache_reload: bool = False,
         allow_reset: bool = True,
         in_global_settings: bool = True,
         hint: Callable[[], HTML] = HTML.empty,
+        hint_type: MsgType = "warning",
         domain_hint: HTML | None = None,
     ) -> None:
-        if (valuespec is None) == (form_spec is None):
-            raise ValueError("Exactly one of valuespec or form_spec must be provided")
-
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
         self._ident = ident
-        self._valuespec_func = valuespec
         self._form_spec_func = form_spec
         self._need_restart = need_restart
         self._need_apache_reload = need_apache_reload
         self._allow_reset = allow_reset
         self._in_global_settings = in_global_settings
         self._hint_func = hint
+        self._hint_type = hint_type
         self._domain_hint = domain_hint
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
@@ -340,30 +397,9 @@ class ConfigVariable:
         """Returns the internal identifier of this configuration variable"""
         return self._ident
 
-    def value_model(self, context: GlobalSettingsContext) -> ValueSpec | FormSpec[Any]:
-        """Returns the ValueSpec or FormSpec representing the value model of this
-        configuration variable. The ValueSpec will be removed over time.
-
-        Callers should branch on ``isinstance(model, FormSpec)`` to handle both
-        backends. This mirrors ``Rulespec.value_model``."""
-        if self._form_spec_func is not None:
-            return self._form_spec_func(context)
-        assert self._valuespec_func is not None  # guaranteed by __init__
-        return self._valuespec_func(context)
-
-    def valuespec(self, context: GlobalSettingsContext) -> ValueSpec:
-        """Returns the valuespec of this configuration variable.
-
-        Only valid for variables declared with ``valuespec=``. Variables declared
-        with ``form_spec=`` have no valuespec - call ``value_model()`` and branch
-        on ``isinstance(model, FormSpec)`` to handle both backends."""
-        if self._valuespec_func is None:
-            raise RuntimeError(
-                f"Config variable {self._ident!r} is declared with a form spec, not a "
-                f"valuespec. Call value_model() and handle the FormSpec case instead of "
-                f"valuespec()."
-            )
-        return self._valuespec_func(context)
+    def value_model(self, context: GlobalSettingsContext) -> FormSpec[Any]:
+        """Returns the FormSpec representing the value model of this configuration variable"""
+        return self._form_spec_func(context)
 
     def primary_domain(self) -> ABCConfigDomain:
         """Returns the config domain this configuration variable belongs to"""
@@ -400,6 +436,9 @@ class ConfigVariable:
     def hint(self) -> HTML:
         return self._hint_func()
 
+    def hint_type(self) -> MsgType:
+        return self._hint_type
+
     def domain_hint(self) -> HTML:
         return self._domain_hint or self.primary_domain().hint() or HTML.empty()
 
@@ -435,6 +474,34 @@ UNREGISTERED_SETTINGS = {
 def filter_unknown_settings(settings: GlobalSettings) -> GlobalSettings:
     known_settings = set(config_variable_registry) | UNREGISTERED_SETTINGS
     return {k: v for k, v in settings.items() if k in known_settings}
+
+
+def finalize_specifically_set_settings(
+    global_settings: GlobalSettings, site_specific_settings: GlobalSettings
+) -> GlobalSettings:
+    return {**global_settings, **site_specific_settings}
+
+
+def finalize_all_settings(
+    default_globals: GlobalSettings,
+    global_settings: GlobalSettings,
+    site_specific_settings: GlobalSettings,
+) -> GlobalSettings:
+    return {
+        **default_globals,
+        **finalize_specifically_set_settings(global_settings, site_specific_settings),
+    }
+
+
+def finalize_all_settings_per_site(
+    default_globals: GlobalSettings,
+    global_settings: GlobalSettings,
+    site_specific_settings_per_site: Mapping[SiteId, GlobalSettings],
+) -> Mapping[SiteId, GlobalSettings]:
+    return {
+        site_id: finalize_all_settings(default_globals, global_settings, site_conf)
+        for site_id, site_conf in site_specific_settings_per_site.items()
+    }
 
 
 def configvar_order() -> dict[str, int]:

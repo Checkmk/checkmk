@@ -68,11 +68,11 @@ agent_section_pure_storage_fa_arrays = AgentSection(
 )
 
 
-def discover_overall_capacity(section: Array) -> DiscoveryResult:
+def discover_overall_capacity(section: Array) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Overall")
 
 
-def check_overall_capacity(item: str, params: Mapping[str, Any], section: Array) -> CheckResult:
+def check_overall_capacity(item: str, params: Mapping[str, Any], section: Array) -> CheckResult:  # noqa: ARG001
     capacity_mb = section.capacity / 1024.0**2
     free_space = section.capacity - section.total_physical
 

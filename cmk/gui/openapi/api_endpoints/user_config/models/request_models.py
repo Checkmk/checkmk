@@ -354,7 +354,7 @@ class CreateTimePickerModel:
         description="The first day of the week in the calendar. 'browser_locale' derives it from "
         "the browser's language settings.",
         example="monday",
-        default="browser_locale",
+        default="monday",
     )
     default_time_range: _TimeRangeOption = api_field(
         description="The time range the picker preselects.",

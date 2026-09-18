@@ -49,7 +49,8 @@ def bulk_update_folders_v1(
             faulty_attempt = False
             for attribute in entry.remove_attributes:
                 try:
-                    # Mypy can not help here with the dynamic key access
+                    # FIXME: The typing here is a lie: One can't pretend to still have
+                    # HostAttributes in attributes after removing random keys from it.
                     attributes.pop(attribute)  # type: ignore[misc]
                 except KeyError:
                     faulty_attempt = True

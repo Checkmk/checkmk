@@ -4,8 +4,6 @@
 
 """Entry point for ``python3 -m cmk.dev_deploy``."""
 
-from __future__ import annotations
-
 import argparse
 import atexit
 import os
@@ -22,6 +20,7 @@ import contextlib
 
 from cmk.dev_deploy.cli import parse_args
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import request_shared_server
 from cmk.dev_deploy.deployers.bazel_builder import build_and_install
 from cmk.dev_deploy.deployers.config_deployer import deploy_config
 from cmk.dev_deploy.deployers.wheel_deployer import deploy_wheels, has_wheel_changes
@@ -781,7 +780,7 @@ def _guard_terminal_settings() -> None:
     try:
         fd = sys.stderr.fileno()
         saved = termios.tcgetattr(fd)
-    except (termios.error, OSError, ValueError):
+    except termios.error, OSError, ValueError:
         return
 
     def _restore() -> None:
@@ -793,9 +792,6 @@ def _guard_terminal_settings() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the cmk-dev-deploy CLI."""
-    if os.getuid() == 0:
-        output.error("cmk-dev-deploy must not be run as root.")
-        return 1
     # Everything created for the site (clone parent directories, wheel
     # installs, ...) must stay readable by the *site* user; a restrictive
     # personal umask (e.g. 027) would lock the site out of its own version
@@ -804,12 +800,23 @@ def main(argv: list[str] | None = None) -> int:
     _guard_terminal_settings()
     args = parse_args(argv)
     output.set_verbosity(args.verbose)
+    # Arguments are parsed first so --help works for anyone (the CI test
+    # runners execute the launcher smoke test as root); everything beyond
+    # parsing is refused for root.
+    if os.getuid() == 0:
+        output.error("cmk-dev-deploy must not be run as root.")
+        return 1
+    if args.shared_bazel_server:
+        request_shared_server()
 
     try:
         repo_root = find_repo_root()
     except RepoNotFoundError as e:
         output.error(str(e))
         return 1
+    # All entry points work relative to the repo root (the launcher already
+    # chdirs there; ``python -m cmk.dev_deploy`` from a subdirectory does not).
+    os.chdir(repo_root)
 
     # --print-setup / --remove-setup only need the site name; they exit
     # before any manifest, sudo, or site preparation work.

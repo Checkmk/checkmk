@@ -10,6 +10,7 @@ import type { Section } from './types'
 export interface Suggestion {
   name: string | null /* name is null for unselectable suggestions */
   title: TranslatedString
+  tooltip?: TranslatedString
 }
 
 export class ErrorResponse {

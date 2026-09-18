@@ -9,12 +9,17 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 class TestValueSpecFloat:
     def test_validate(self) -> None:
-        expect_validate_failure(vs.Float(), "asd")  # type: ignore[misc]
+        expect_validate_failure_untypeable(vs.Float(), "asd")
         expect_validate_failure(vs.Float(), 128)
         expect_validate_success(vs.Float(allow_int=True), 128)
         expect_validate_success(vs.Float(), 128.0)
@@ -38,7 +43,8 @@ class TestValueSpecFloat:
         assert vs.Float(default_value=lambda: 77).canonical_value() == 0
         assert vs.Float(default_value=lambda: 77, minvalue=10).canonical_value() == 10
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(integer="123"):
             assert vs.Float().from_html_vars("integer") == 123
 

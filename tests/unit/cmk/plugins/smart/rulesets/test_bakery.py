@@ -22,11 +22,6 @@ from cmk.plugins.smart.rulesets.bakery import migrate
             id="deploy_smart_legacy",
         ),
         pytest.param(
-            True,
-            {"deployment": ("sync", None), "use_legacy_plugin": True},
-            id="old_true_becomes_smart_legacy",
-        ),
-        pytest.param(
             None,
             {"deployment": ("do_not_deploy", None)},
             id="do_not_deploy",

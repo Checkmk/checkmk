@@ -281,6 +281,7 @@ def _write_csv(csv_sections: dict[str, list[CsvRow]], csv_file: IO[str]) -> None
 
 
 def _main() -> None:
+    # astrein: disable=logging-formatter
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
     args = _get_args()

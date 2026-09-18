@@ -122,7 +122,7 @@ type AllMyPlugins = MyTestPlugin | MyOtherPlugin
 
 
 class TestCollector:
-    def _importer(self, module_name: str, raise_errors: bool) -> ModuleType | None:
+    def _importer(self, module_name: str, raise_errors: bool) -> ModuleType | None:  # noqa: ARG002
         """Fake importable modules"""
         match module_name:
             case "nonexistant":

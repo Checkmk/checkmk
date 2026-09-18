@@ -16,7 +16,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 from cmk.ruleset_matcher.definition import RuleGroup
 
@@ -54,7 +54,7 @@ def _valuespec_agent_config_mk_sap_hana() -> Alternative:
                                                     title=_("Username"),
                                                     allow_empty=False,
                                                 ),
-                                                MigrateToIndividualOrStoredPassword(
+                                                IndividualOrStoredPassword(
                                                     title=_("Password"),
                                                     allow_empty=False,
                                                 ),
@@ -93,7 +93,7 @@ def _valuespec_agent_config_mk_sap_hana() -> Alternative:
                                                                 title=_("Username"),
                                                                 allow_empty=False,
                                                             ),
-                                                            MigrateToIndividualOrStoredPassword(
+                                                            IndividualOrStoredPassword(
                                                                 title=_("Password"),
                                                                 allow_empty=False,
                                                             ),
@@ -118,7 +118,7 @@ def _valuespec_agent_config_mk_sap_hana() -> Alternative:
                             title=_("Credentials for connect (ODBC interface)"),
                             elements=[
                                 TextInput(title=_("User"), allow_empty=False),
-                                MigrateToIndividualOrStoredPassword(
+                                IndividualOrStoredPassword(
                                     title=_("Password"),
                                     allow_empty=False,
                                 ),

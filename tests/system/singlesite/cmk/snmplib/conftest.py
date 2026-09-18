@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import asyncio
 import logging
 import os
 import shutil
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Coroutine, Iterator
 from functools import partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -93,13 +91,15 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
             logger.debug("Stopped snmpsimd.")
 
 
-def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -> ProcessDef:
+def _define_process(
+    index: int, auth: list[str], tmp_path: Path, snmp_data_dir: Path, as_user: None | str
+) -> ProcessDef:
     port = 1337 + index
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
 
-    command_prefix = []
+    command_prefix: list[str] = []
     if as_user:
         command_prefix = ["sudo", "-u", as_user]
         shutil.chown(proc_tmp_path, as_user, as_user)
@@ -133,7 +133,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
                 "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
                 "--agent-udpv6-endpoint=[::1]:%s" % port,
                 "--data-dir",
-                snmp_data_dir,
+                str(snmp_data_dir),
             ]
             + auth,
             close_fds=True,
@@ -146,7 +146,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
     )
 
 
-def _create_auth_list():
+def _create_auth_list() -> list[list[str]]:
     return [
         [
             "--v3-user=authOnlyUser",
@@ -282,7 +282,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
                 var_binds[0][1].prettyPrint()
                 == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
             )
-        except (AssertionError, IndexError):
+        except AssertionError, IndexError:
             return False
         return True
 
@@ -294,7 +294,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
 
 # To help with async APIs from pysnmp.
-def wait_sync(coro):
+def wait_sync[T](coro: Coroutine[object, object, T]) -> T:
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -325,7 +325,9 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
 
 @pytest.fixture(name="backend_type", params=SNMPBackendEnum)
 def backend_type_fixture(
-    site: Site, request: pytest.FixtureRequest, snmpsim: None
+    site: Site,
+    request: pytest.FixtureRequest,
+    snmpsim: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> SNMPBackendEnum:
     backend_type: SNMPBackendEnum = request.param
     if site.edition.is_community_edition() and backend_type is SNMPBackendEnum.INLINE:

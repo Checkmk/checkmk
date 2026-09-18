@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Callable, Collection
 from typing import Any, Literal, override
@@ -53,7 +52,7 @@ class TimePeriodName(fields.String):
         )
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: str) -> None:
         super()._validate(value)
 
         _exists = verify_timeperiod_name_exists(value)
@@ -101,7 +100,7 @@ class TimePeriodAlias(fields.String):
         )
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: str) -> None:
         super()._validate(value)
 
         # Empty String because validation works for non-timeperiod alias & time period name is
@@ -136,7 +135,7 @@ class TimeRange(BaseSchema):
     )
 
     @marshmallow.validates_schema
-    def validate_start_before_end(self, data, **_kwargs):  # type: ignore[misc]
+    def validate_start_before_end(self, data: Any, **_kwargs: Any) -> None:  # type: ignore[misc]
         self._validate_times(data)
         self._validate_time_order(data)
 

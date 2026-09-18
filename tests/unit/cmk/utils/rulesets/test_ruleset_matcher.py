@@ -172,14 +172,16 @@ def test_basic_get_host_values() -> None:
     )
 
     assert not list(
-        matcher.get_host_values_all(HostName("abc"), ruleset=ruleset, labels_of_host=lambda hn: {})
+        matcher.get_host_values_all(HostName("abc"), ruleset=ruleset, labels_of_host=lambda hn: {})  # noqa: ARG005
     )
     assert not list(
-        matcher.get_host_values_all(HostName("xyz"), ruleset=ruleset, labels_of_host=lambda hn: {})
+        matcher.get_host_values_all(HostName("xyz"), ruleset=ruleset, labels_of_host=lambda hn: {})  # noqa: ARG005
     )
     assert list(
         matcher.get_host_values_all(
-            HostName("host1"), ruleset=ruleset, labels_of_host=lambda hn: {}
+            HostName("host1"),
+            ruleset=ruleset,
+            labels_of_host=lambda hn: {},  # noqa: ARG005
         )
     ) == [
         "BLA",
@@ -187,7 +189,9 @@ def test_basic_get_host_values() -> None:
     ]
     assert list(
         matcher.get_host_values_all(
-            HostName("host2"), ruleset=ruleset, labels_of_host=lambda hn: {}
+            HostName("host2"),
+            ruleset=ruleset,
+            labels_of_host=lambda hn: {},  # noqa: ARG005
         )
     ) == ["BLUB"]
 
@@ -220,20 +224,22 @@ def test_basic_get_host_values_subfolders() -> None:
     )
 
     assert not list(
-        matcher.get_host_values_all(HostName("xyz"), ruleset=ruleset, labels_of_host=lambda hn: {})
+        matcher.get_host_values_all(HostName("xyz"), ruleset=ruleset, labels_of_host=lambda hn: {})  # noqa: ARG005
     )
     assert list(
-        matcher.get_host_values_all(HostName("lvl1"), ruleset=ruleset, labels_of_host=lambda hn: {})
+        matcher.get_host_values_all(HostName("lvl1"), ruleset=ruleset, labels_of_host=lambda hn: {})  # noqa: ARG005
     ) == ["LEVEL1"]
     assert list(
-        matcher.get_host_values_all(HostName("lvl2"), ruleset=ruleset, labels_of_host=lambda hn: {})
+        matcher.get_host_values_all(HostName("lvl2"), ruleset=ruleset, labels_of_host=lambda hn: {})  # noqa: ARG005
     ) == [
         "LEVEL1",
         "LEVEL2",
     ]
     assert not list(
         matcher.get_host_values_all(
-            HostName("lvl1a"), ruleset=ruleset, labels_of_host=lambda hn: {}
+            HostName("lvl1a"),
+            ruleset=ruleset,
+            labels_of_host=lambda hn: {},  # noqa: ARG005
         )
     )
 
@@ -301,20 +307,28 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
     )
 
     assert not matcher.get_host_values_merged(
-        HostName("abc"), ruleset=dict_ruleset, labels_of_host=lambda hn: {}
+        HostName("abc"),
+        ruleset=dict_ruleset,
+        labels_of_host=lambda hn: {},  # noqa: ARG005
     )
     assert not matcher.get_host_values_merged(
-        HostName("xyz"), ruleset=dict_ruleset, labels_of_host=lambda hn: {}
+        HostName("xyz"),
+        ruleset=dict_ruleset,
+        labels_of_host=lambda hn: {},  # noqa: ARG005
     )
     assert matcher.get_host_values_merged(
-        HostName("host1"), ruleset=dict_ruleset, labels_of_host=lambda hn: {}
+        HostName("host1"),
+        ruleset=dict_ruleset,
+        labels_of_host=lambda hn: {},  # noqa: ARG005
     ) == {
         "hu": "BLA",
         "ho": "BLA",
         "he": "BLUB",
     }
     assert matcher.get_host_values_merged(
-        HostName("host2"), ruleset=dict_ruleset, labels_of_host=lambda hn: {}
+        HostName("host2"),
+        ruleset=dict_ruleset,
+        labels_of_host=lambda hn: {},  # noqa: ARG005
     ) == {
         "hu": "BLUB",
         "ho": "BLA",
@@ -381,25 +395,33 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
 
     assert (
         matcher.get_host_bool_value(
-            HostName("abc"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
+            HostName("abc"),
+            ruleset=binary_ruleset,
+            labels_of_host=lambda x: {},  # noqa: ARG005
         )
         is False
     )
     assert (
         matcher.get_host_bool_value(
-            HostName("xyz"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
+            HostName("xyz"),
+            ruleset=binary_ruleset,
+            labels_of_host=lambda x: {},  # noqa: ARG005
         )
         is False
     )
     assert (
         matcher.get_host_bool_value(
-            HostName("host1"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
+            HostName("host1"),
+            ruleset=binary_ruleset,
+            labels_of_host=lambda x: {},  # noqa: ARG005
         )
         is True
     )
     assert (
         matcher.get_host_bool_value(
-            HostName("host2"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
+            HostName("host2"),
+            ruleset=binary_ruleset,
+            labels_of_host=lambda x: {},  # noqa: ARG005
         )
         is False
     )
@@ -518,7 +540,7 @@ def test_ruleset_matcher_get_host_values_tags(
     )
     assert (
         list(
-            matcher.get_host_values_all(hostname, ruleset=tag_ruleset, labels_of_host=lambda hn: {})
+            matcher.get_host_values_all(hostname, ruleset=tag_ruleset, labels_of_host=lambda hn: {})  # noqa: ARG005
         )
         == expected_result
     )
@@ -692,7 +714,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
 
     assert (
         list(
-            matcher._get_service_ruleset_values(
+            matcher._get_service_ruleset_values(  # noqa: SLF001
                 hostname,
                 service_description,
                 discovered_labels,
@@ -823,7 +845,7 @@ def test_ruleset_matcher_get_host_values_compute_labels_lazily() -> None:
         },
     ]
 
-    def labels_of_host(host_name: HostName) -> Mapping[str, str]:
+    def labels_of_host(host_name: HostName) -> Mapping[str, str]:  # noqa: ARG001
         raise RuntimeError
 
     # host labels don't matter for this host
@@ -864,10 +886,10 @@ def test_ruleset_matcher_get_host_values_changed_labels() -> None:
         },
     ]
 
-    def these_labels(host_name: HostName) -> Mapping[str, str]:
+    def these_labels(host_name: HostName) -> Mapping[str, str]:  # noqa: ARG001
         return {"label": "this"}
 
-    def those_labels(host_name: HostName) -> Mapping[str, str]:
+    def those_labels(host_name: HostName) -> Mapping[str, str]:  # noqa: ARG001
         return {"label": "that"}
 
     # so far, so good:
@@ -912,7 +934,7 @@ class TestSingleRulesetMatcher:
             SingleHostRulesetMatcher(
                 matcher=self._make_matcher(),
                 host_ruleset=self._ruleset(),
-                labels_of_host=lambda x: {},
+                labels_of_host=lambda x: {},  # noqa: ARG005
             )(HostName("testhost1"))
             == []
         )
@@ -921,7 +943,7 @@ class TestSingleRulesetMatcher:
         assert SingleHostRulesetMatcher(
             matcher=self._make_matcher(),
             host_ruleset=self._ruleset(),
-            labels_of_host=lambda x: {},
+            labels_of_host=lambda x: {},  # noqa: ARG005
         )(HostName("testhost2")) == ["lala", "lulu"]
 
 

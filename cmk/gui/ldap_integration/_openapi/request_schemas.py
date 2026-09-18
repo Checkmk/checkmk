@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from typing import Any, override
 
 from marshmallow import INCLUDE, post_load, pre_load, ValidationError
@@ -45,8 +44,9 @@ class LDAPCheckboxSelector(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):
-        return obj["state"]
+    def get_obj_type(self, obj: Any) -> str:
+        state: str = obj["state"]
+        return state
 
 
 class LDAPGeneralPropertiesRequest(BaseSchema):
@@ -670,7 +670,7 @@ class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_data_type(self, data):
+    def get_data_type(self, data: Mapping[str, str]) -> str:
         data_type = data.get(self.type_field)
         if data_type not in ("start_url", "disable_notifications"):
             return "all_others"
@@ -707,7 +707,7 @@ class LDAPRoleElementRequest(BaseSchema):
     )
 
     @post_load
-    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         if (
             data["search_in"] != "this_connection"
             and data["search_in"] not in get_ldap_connections()
@@ -759,7 +759,7 @@ class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
     )
 
     @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         return {k: v for k, v in data.items() if k in self.fields}
 
 
@@ -773,7 +773,7 @@ class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
 class LDAPSyncPluginsRequest(BaseSchema):
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     @pre_load
-    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         params = {key: value for key, value in data.items() if value is not None}
         if params:
             data["main_menu_icons"] = mutually_exclusive_fields(
@@ -1048,7 +1048,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
     )
 
     @post_load
-    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         group_base_dn = data["groups"]["group_base_dn"]
         for key, grouplist in data["sync_plugins"].get("groups_to_roles", {}).items():
             if key in {"state", "handle_nested"}:

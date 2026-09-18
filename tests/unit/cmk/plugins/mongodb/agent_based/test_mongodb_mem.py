@@ -71,7 +71,7 @@ def test_discover_mongodb_mem(
     ],
 )
 def test_check_mongodb_mem(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, object],
     string_table: StringTable,
     expected_results: Sequence[Result | Metric],

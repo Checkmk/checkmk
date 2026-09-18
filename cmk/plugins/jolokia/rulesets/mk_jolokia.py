@@ -104,6 +104,55 @@ def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
                 prefill=DefaultValue("http"),
             ),
         ),
+        "verify": DictElement(
+            required=False,
+            parameter_form=CascadingSingleChoice(
+                title=Title("Verification of the server certificate"),
+                help_text=Help(
+                    "Only relevant when connecting via HTTPS. By default, the certificate of the"
+                    " Jolokia server is verified against the certificate store of the monitored"
+                    " host (e.g. the Windows certificate store) and the CA bundle shipped with the"
+                    " Python requests library."
+                ),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="trust_store",
+                        title=Title("Use the certificate store of the monitored host"),
+                        parameter_form=FixedValue(
+                            value=None,
+                            title=Title(
+                                "The certificate is verified against the CAs trusted by the"
+                                " monitored host."
+                            ),
+                        ),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="ca_file",
+                        title=Title("Use a CA file on the monitored host"),
+                        parameter_form=String(
+                            title=Title("Path to the CA file"),
+                            help_text=Help(
+                                "Absolute path on the monitored host to a PEM file containing the"
+                                " CA certificate(s) to trust. Only these CAs are trusted."
+                            ),
+                            custom_validate=(validators.LengthInRange(min_value=1),),
+                        ),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="disabled",
+                        title=Title("Do not verify the server certificate"),
+                        parameter_form=FixedValue(
+                            value=None,
+                            title=Title(
+                                "The identity of the Jolokia server is not verified. This is"
+                                " insecure."
+                            ),
+                        ),
+                    ),
+                ],
+                prefill=DefaultValue("trust_store"),
+            ),
+        ),
         "server": DictElement(
             required=False,
             parameter_form=CascadingSingleChoice(
@@ -211,7 +260,6 @@ def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
             ),
         ),
         # TODO: These instance parameters used by mk_jolokia are all missing!!
-        # cert_path
         # client_cert
         # client_key
         # service_url

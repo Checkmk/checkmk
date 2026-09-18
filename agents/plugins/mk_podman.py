@@ -2,6 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP007  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+
 from __future__ import annotations
 
 import argparse
@@ -195,7 +199,7 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
 def get_socket_owner(socket_path: Path) -> Union[str, None]:
     try:
         return pwd.getpwuid(os.stat(socket_path).st_uid).pw_name
-    except (OSError, KeyError):
+    except (OSError, KeyError):  # fmt: skip
         return None
 
 
@@ -241,7 +245,7 @@ def find_podman_users_from_conmon() -> Sequence[Union[str, None]]:
                     if uid != 0:
                         pw_entry = pwd.getpwuid(uid)
                         users.add(pw_entry.pw_name)
-                except (ValueError, KeyError):
+                except (ValueError, KeyError):  # fmt: skip
                     # Skip if UID is invalid or user not found
                     continue
     except Exception as e:
@@ -371,18 +375,18 @@ class _LocalAdapter(HTTPAdapter):
     @override
     def get_connection(
         self,
-        url: Union[str, bytes],
-        proxies: object = None,
+        url: Union[str, bytes],  # noqa: ARG002
+        proxies: object = None,  # noqa: ARG002
     ) -> _LocalConnectionPool:
         return self._connection_pool
 
     @override
     def get_connection_with_tls_context(
         self,
-        request: object,
-        verify: object,
-        proxies: object = None,
-        cert: object = None,
+        request: object,  # noqa: ARG002
+        verify: object,  # noqa: ARG002
+        proxies: object = None,  # noqa: ARG002
+        cert: object = None,  # noqa: ARG002
     ) -> _LocalConnectionPool:
         return self._connection_pool
 
@@ -736,7 +740,7 @@ def extract_nodename_from_engine(engine_section: Union[JSONSection, Error]) -> U
     try:
         data = json.loads(engine_section.content)
         return str(data["host"]["hostname"])
-    except (json.JSONDecodeError, KeyError, TypeError):
+    except (json.JSONDecodeError, KeyError, TypeError):  # fmt: skip
         return None
 
 

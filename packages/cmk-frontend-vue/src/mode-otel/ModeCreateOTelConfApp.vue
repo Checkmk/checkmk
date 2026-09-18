@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { ModeCreateOtelConf } from 'cmk-shared-typing/typescript/mode_create_otel_conf'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkWizard, {
@@ -43,18 +44,7 @@ import {
   createOTelReceiverConfigAction
 } from './otel-configuration-steps/post_save_actions.ts'
 
-const props = defineProps<{
-  no_auth_allowed: boolean
-  endpoint_config_allowed: boolean
-  encryption_allowed: boolean
-  event_console_allowed: boolean
-  collector_activation_allowed: boolean
-  metric_backend_allowed: boolean
-  may_create_password: boolean
-  activate_changes_url: string
-  cloud_grpc_receiver_endpoint?: string | null
-  cloud_http_receiver_endpoint?: string | null
-}>()
+const props = defineProps<ModeCreateOtelConf>()
 
 const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
@@ -215,7 +205,7 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
     if (!props.collector_activation_allowed && action.key === 'enableCollector') {
       return false
     }
-    if (!props.metric_backend_allowed && action.key === 'enableMetricBackend') {
+    if (!props.data_backend_allowed && action.key === 'enableDataBackend') {
       return false
     }
     return true
@@ -425,8 +415,8 @@ async function onSaveClick(): Promise<void> {
           :http-auth="httpAuth"
           :grpc-event-console="grpcEventConsole"
           :http-event-console="httpEventConsole"
-          :cloud-grpc-endpoint="cloud_grpc_receiver_endpoint ?? null"
-          :cloud-http-endpoint="cloud_http_receiver_endpoint ?? null"
+          :grpc-endpoint-override="grpc_receiver_endpoint_override ?? null"
+          :http-endpoint-override="http_receiver_endpoint_override ?? null"
         />
       </template>
 

@@ -2,27 +2,24 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import assert_never, Literal, NamedTuple, Protocol
+from collections.abc import Callable
+from typing import assert_never
 
 from cmk.graphing_engine import (
-    AutoPrecision,
     ConsolidationFunction,
-    DecimalNotation,
-    EngineeringScientificNotation,
     EvaluatedCurve,
     EvaluatedGraph,
-    IECNotation,
     SeriesAttributes,
-    SINotation,
-    StandardScientificNotation,
-    StrictPrecision,
-    TimeNotation,
+    TimeSeries,
     Unit,
 )
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from .._engine_source import FetchDiagnostics
+from .._drawn_curves import DrawnCurve, serialize_drawn_curves
+from .._source import FetchDiagnostics
+from .._unit_format import apply_temperature_unit, unit_to_unit_format
 from .models import (
     ApiConsolidation,
     ApiHorizontalLine,
@@ -30,7 +27,8 @@ from .models import (
     ApiMetricAttribute,
     ApiMetricMetadata,
     ApiMetricRender,
-    ApiPrecision,
+    ApiRegionBounds,
+    ApiShadedRegion,
     ApiTimeRange,
     ApiUnitFormat,
     GraphFetchResponse,
@@ -52,59 +50,65 @@ def api_time_range_to_engine(time_range: ApiTimeRange) -> EngineTimeRange:
     return EngineTimeRange(start=time_range.start, end=time_range.end, step=time_range.step)
 
 
-class _ToMetric[MetricT](Protocol):
-    def __call__(
-        self, curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool
-    ) -> MetricT: ...
+def api_time_range_from_engine(time_range: EngineTimeRange) -> ApiTimeRange:
+    return ApiTimeRange(start=time_range.start, end=time_range.end, step=time_range.step)
 
 
-class SerializedCurves[MetricT](NamedTuple):
-    time_range: ApiTimeRange
-    metrics: list[MetricT]
+def _api_unit_and_conversion(
+    unit: Unit, temperature_unit: TemperatureUnit
+) -> tuple[ApiUnitFormat, Callable[[float], float]]:
+    """The unit to label the response with, and the converter its values must go through."""
+    unit_format, conversion = apply_temperature_unit(unit_to_unit_format(unit), temperature_unit)
+    return ApiUnitFormat.from_shared(unit_format), conversion
 
 
-def serialize_curves[MetricT](
-    evaluated: EvaluatedGraph,
-    to_metric: _ToMetric[MetricT],
-    *,
-    fallback_time_range: EngineTimeRange,
-) -> SerializedCurves[MetricT]:
-    metrics: list[MetricT] = []
-    data_time_range: EngineTimeRange | None = None
-
-    def add(curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool) -> None:
-        nonlocal data_time_range
-        if data_time_range is None:
-            data_time_range = curve.time_series.time_range
-        metrics.append(to_metric(curve, stack=stack, inverse=inverse, hidden=hidden))
-
-    for index, stack in enumerate(evaluated.stacks):
-        stack_id = f"stack-{index}"
-        # The reference (invisible baseline) is emitted first so it is the stacking floor by order.
-        if stack.reference is not None:
-            add(stack.reference, stack=stack_id, inverse=stack.inverse, hidden=True)
-        for member in stack.members:
-            add(member, stack=stack_id, inverse=stack.inverse, hidden=False)
-    for line in evaluated.lines:
-        add(line.curve, stack=None, inverse=line.inverse, hidden=False)
-
-    effective = fallback_time_range if data_time_range is None else data_time_range
-    return SerializedCurves(
-        ApiTimeRange(start=effective.start, end=effective.end, step=effective.step), metrics
-    )
-
-
-def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine]:
-    return [
-        ApiHorizontalLine(
-            name=rule.id,
-            title=rule.attributes.title,
-            value=-rule.value if rule.inverse else rule.value,
-            unit=unit_to_api_unit_format(rule.attributes.unit),
-            color=rule.attributes.color,
+def horizontal_lines_to_api(
+    evaluated: EvaluatedGraph, temperature_unit: TemperatureUnit
+) -> list[ApiHorizontalLine]:
+    lines: list[ApiHorizontalLine] = []
+    for rule in evaluated.rules:
+        unit, conversion = _api_unit_and_conversion(rule.attributes.unit, temperature_unit)
+        # Converted before mirroring: conversion belongs to the value, the sign to the drawing.
+        value = conversion(rule.value)
+        lines.append(
+            ApiHorizontalLine(
+                name=rule.id,
+                title=rule.attributes.title,
+                value=-value if rule.inverse else value,
+                unit=unit,
+                color=rule.attributes.color,
+            )
         )
-        for rule in evaluated.rules
-    ]
+    return lines
+
+
+def _converted_bound(
+    bound: TimeSeries | None, conversion: Callable[[float], float]
+) -> list[float | None] | None:
+    if bound is None:
+        return None
+    return [None if value is None else conversion(value) for value in bound.values]
+
+
+def shaded_regions_to_api(
+    evaluated: EvaluatedGraph, temperature_unit: TemperatureUnit
+) -> list[ApiShadedRegion]:
+    regions = []
+    for region in evaluated.regions:
+        # A region is drawn against the same axis as the curves, so it converts with them.
+        _unit, conversion = _api_unit_and_conversion(region.attributes.unit, temperature_unit)
+        regions.append(
+            ApiShadedRegion(
+                name=region.id,
+                title=region.attributes.title,
+                color=region.attributes.color,
+                data_points=ApiRegionBounds(
+                    lower=_converted_bound(region.lower, conversion),
+                    upper=_converted_bound(region.upper, conversion),
+                ),
+            )
+        )
+    return regions
 
 
 def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAttribute]:
@@ -118,18 +122,22 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
 
 
 def curve_to_api_metric(
-    curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool
+    drawn: DrawnCurve[EvaluatedCurve], temperature_unit: TemperatureUnit
 ) -> ApiMetric:
+    curve = drawn.curve
+    unit, conversion = _api_unit_and_conversion(curve.attributes.unit, temperature_unit)
     return ApiMetric(
         metadata=ApiMetricMetadata(
             name=curve.id,
             title=curve.attributes.title,
-            unit=unit_to_api_unit_format(curve.attributes.unit),
+            unit=unit,
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
         ),
-        render=ApiMetricRender(stack=stack, inverse=inverse, hidden=hidden),
-        data_points=list(curve.time_series.values),
+        render=ApiMetricRender(stack=drawn.stack, inverse=drawn.mirrored, hidden=drawn.hidden),
+        data_points=[
+            None if value is None else conversion(value) for value in curve.time_series.values
+        ],
     )
 
 
@@ -149,50 +157,20 @@ def evaluated_to_response(
     *,
     fallback_time_range: EngineTimeRange,
     diagnostics: FetchDiagnostics,
+    temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
-    time_range, metrics = serialize_curves(
-        evaluated, curve_to_api_metric, fallback_time_range=fallback_time_range
+    time_range, metrics = serialize_drawn_curves(
+        evaluated,
+        lambda drawn: curve_to_api_metric(drawn, temperature_unit),
+        fallback_time_range=fallback_time_range,
+        include_reference=True,
     )
     return GraphFetchResponse(
         title=evaluated.title,
-        time_range=time_range,
+        time_range=api_time_range_from_engine(time_range),
         metrics=metrics,
-        horizontal_lines=horizontal_lines_to_api(evaluated),
+        horizontal_lines=horizontal_lines_to_api(evaluated, temperature_unit),
+        shaded_regions=shaded_regions_to_api(evaluated, temperature_unit),
         warnings=diagnostics_to_warnings(diagnostics),
         errors=list(diagnostics.errors),
-    )
-
-
-def unit_to_api_unit_format(unit: Unit) -> ApiUnitFormat:
-    notation: Literal[
-        "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
-    ]
-    match unit.notation:
-        case DecimalNotation():
-            notation = "decimal"
-        case SINotation():
-            notation = "si"
-        case IECNotation():
-            notation = "iec"
-        case StandardScientificNotation():
-            notation = "standard_scientific"
-        case EngineeringScientificNotation():
-            notation = "engineering_scientific"
-        case TimeNotation():
-            notation = "time"
-        case _:
-            assert_never(unit.notation)
-
-    match unit.precision:
-        case AutoPrecision():
-            precision = ApiPrecision(type="auto", digits=unit.precision.digits)
-        case StrictPrecision():
-            precision = ApiPrecision(type="strict", digits=unit.precision.digits)
-        case _:
-            assert_never(unit.precision)
-
-    # TODO: The engine ``Unit`` has no convertibility concept, so default to convertible (matches
-    #  the shared unit-format default).
-    return ApiUnitFormat(
-        notation=notation, symbol=unit.notation.symbol, precision=precision, convertible=True
     )

@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Explain with AI"
 has_support_component = true
 members_required = 1
+tier = 1
 product_managers = ["annika.felgentraeger@checkmk.com"]
 description = """
 Explain with AI

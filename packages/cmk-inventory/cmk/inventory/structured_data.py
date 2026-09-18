@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 """
 This module handles tree structures for HW/SW Inventory system and
 structured monitoring data of Check_MK.
 """
-
-from __future__ import annotations
 
 import ast
 import contextlib
@@ -23,8 +19,9 @@ import shutil
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from enum import auto, Enum
 from pathlib import Path
-from typing import Literal, NewType, override, Self, TypedDict
+from typing import Literal, NewType, override, Self, TypedDict, TypeIs
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -157,12 +154,72 @@ class RetentionInterval:
         return cls(cached_at, cache_interval, retention_interval, "current")
 
     @property
+    def valid_until(self) -> int:
+        return self.cached_at + self.cache_interval
+
+    @property
     def keep_until(self) -> int:
-        return self.cached_at + self.cache_interval + self.retention_interval
+        return self.valid_until + self.retention_interval
 
 
 def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(SDNodeName(part) for part in raw_path.split(".") if part)
+
+
+class TreeSource(Enum):
+    node = auto()
+    table = auto()
+    attributes = auto()
+
+
+@dataclass(frozen=True)
+class InventoryPath:
+    path: SDPath
+    source: TreeSource
+    key: SDKey = SDKey("")
+
+    @property
+    def node_name(self) -> str:
+        return self.path[-1] if self.path else ""
+
+
+def _sanitize_path(path: Sequence[str]) -> SDPath:
+    # ":": Nested tables, see also lib/structured_data.py
+    return tuple(
+        SDNodeName(p) for part in path for p in (part.split(":") if ":" in part else [part]) if p
+    )
+
+
+def parse_internal_raw_path(raw: str) -> InventoryPath:
+    if not raw:
+        return InventoryPath(
+            path=(),
+            source=TreeSource.node,
+        )
+    if raw.endswith("."):
+        return InventoryPath(
+            path=_sanitize_path(raw[:-1].strip(".").split(".")),
+            source=TreeSource.node,
+        )
+    if raw.endswith(":"):
+        return InventoryPath(
+            path=_sanitize_path(raw[:-1].strip(".").split(".")),
+            source=TreeSource.table,
+        )
+    path = raw.strip(".").split(".")
+    sanitized_path = _sanitize_path(path[:-1])
+    if ":" in path[-2]:
+        source = TreeSource.table
+        # Forget the last '*' or an index like '17'
+        # because it's related to columns (not nodes)
+        sanitized_path = sanitized_path[:-1]
+    else:
+        source = TreeSource.attributes
+    return InventoryPath(
+        path=sanitized_path,
+        source=source,
+        key=SDKey(path[-1]),
+    )
 
 
 #   .--helper--------------------------------------------------------------.
@@ -198,7 +255,7 @@ class _DictKeys[T]:
 
 
 def _format_update_result_attrs(*, title: str, message: str) -> str:
-    return f"[Attributes] {title}: message"
+    return f"[Attributes] {title}: {message}"
 
 
 @dataclass(kw_only=True)
@@ -225,7 +282,6 @@ class _MutableAttributes:
         self,
         now: int,
         previous: ImmutableAttributes,
-        path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
@@ -284,7 +340,7 @@ class _MutableAttributes:
 
 
 def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:
-    return f"[Table] '{', '.join(map(str, ident))}': {title}: message"
+    return f"[Table] '{', '.join(map(str, ident))}': {title}: {message}"
 
 
 @dataclass(kw_only=True)
@@ -336,7 +392,6 @@ class _MutableTable:
         self,
         now: int,
         previous: ImmutableTable,
-        path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
     ) -> None:
@@ -514,9 +569,9 @@ class MutableTree:
         node = self.setdefault_node(choices.path)
         previous_node = previous_tree.get_tree(choices.path)
         for c in choices.pairs:
-            node.attributes.update(now, previous_node.attributes, choices.path, choices.interval, c)
+            node.attributes.update(now, previous_node.attributes, choices.interval, c)
         for c in choices.columns:
-            node.table.update(now, previous_node.table, choices.path, choices.interval, c)
+            node.table.update(now, previous_node.table, choices.interval, c)
 
     def setdefault_node(self, path: SDPath) -> MutableTree:
         if not path:
@@ -908,14 +963,77 @@ class SDRetentionFilterChoices:
         self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
 
 
+# Data for the HW/SW Inventory has a validity period (live data or persisted).
+# With the retention intervals configuration you can keep specific attributes or table columns
+# longer than their validity period.
+#
+# 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
+#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW Inventory
+#     entities'.
+#
+# 2.) Process collected cache infos - handle the following four cases:
+#
+#       previous node | inv node | retention intervals from
+#     -----------------------------------------------------------------------------------
+#       no            | no       | None
+#       no            | yes      | inv_node keys
+#       yes           | no       | previous_node keys
+#       yes           | yes      | previous_node keys + inv_node keys
+#
+#     - If there's no previous node then filtered keys + intervals of current node is stored
+#       (like a first run) and will be checked against the future node in the next run.
+#     - if there's a previous node then check if the data is recent enough and merge
+#       attributes/tables data from the previous node with the current one.
+#       'Recent enough' means: now <= cache_at + cache_interval + retention_interval
+#       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
+#             retention_interval: configured in the above ruleset
+
+
+def _parse_choice(
+    raw_choice: Literal["all"] | tuple[str, list[str]],
+) -> Sequence[SDKey] | Literal["all"]:
+    return [SDKey(k) for k in raw_choice[-1]] if isinstance(raw_choice, tuple) else raw_choice
+
+
+def make_retention_filter_choices(
+    *,
+    now: int,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
+    pairs_cache_info: Mapping[SDPath, tuple[int, int] | None],
+    columns_cache_info: Mapping[SDPath, tuple[int, int] | None],
+) -> Sequence[SDRetentionFilterChoices]:
+    def cache_info(
+        by_path: Mapping[SDPath, tuple[int, int] | None], path: SDPath
+    ) -> tuple[int, int]:
+        return (now, 0) if (ci := by_path.get(path)) is None else ci
+
+    choices_by_path: dict[SDPath, SDRetentionFilterChoices] = {}
+    for entry in raw_intervals_from_config:
+        path = parse_visible_raw_path(entry["visible_raw_path"])
+        choices = choices_by_path.setdefault(
+            path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
+        )
+        if attributes := entry.get("attributes"):
+            choices.add_pairs_choice(
+                choice=_parse_choice(attributes),
+                cache_info=cache_info(pairs_cache_info, path),
+            )
+        elif columns := entry.get("columns"):
+            choices.add_columns_choice(
+                choice=_parse_choice(columns),
+                cache_info=cache_info(columns_cache_info, path),
+            )
+    return list(choices_by_path.values())
+
+
 def _make_filter_func[CT: (SDKey, SDNodeName)](
     choice: Literal["nothing", "all"] | Sequence[CT],
 ) -> Callable[[CT], bool]:
     match choice:
         case "nothing":
-            return lambda k: False
+            return lambda _k: False
         case "all":
-            return lambda k: True
+            return lambda _k: True
         case _:
             return lambda k: k in choice
 
@@ -1036,6 +1154,29 @@ def _filter_tree(tree: ImmutableTree, filter_tree_: _FilterTree) -> ImmutableTre
             )
         },
     )
+
+
+def make_filter_choices_from_api_request_paths(
+    api_request_paths: Sequence[str],
+) -> Sequence[SDFilterChoice]:
+    def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
+        if inventory_path.key:
+            return SDFilterChoice(
+                path=inventory_path.path,
+                pairs=[inventory_path.key],
+                columns=[inventory_path.key],
+                nodes="nothing",
+            )
+        return SDFilterChoice(
+            path=inventory_path.path,
+            pairs="all",
+            columns="all",
+            nodes="all",
+        )
+
+    return [
+        _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
+    ]
 
 
 def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
@@ -1266,7 +1407,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
     )
 
 
-def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
+def compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
     nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
     compared_node_names = _DictKeys.compare(
@@ -1285,7 +1426,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         if (child_left := left.nodes_by_name[name]) == (child_right := right.nodes_by_name[name]):
             continue
 
-        if (node := _compare_trees(child_left, child_right)).get_stats():
+        if (node := compare_trees(child_left, child_right)).get_stats():
             nodes[name] = node
 
     for name in compared_node_names.only_right:
@@ -1367,14 +1508,22 @@ def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Im
     return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
 
 
+def _is_sd_value(value: object) -> TypeIs[SDValue]:
+    return value is None or isinstance(value, int | float | str | bool)
+
+
+def _parse_legacy_row(raw_row: Mapping[str, object]) -> Mapping[SDKey, SDValue]:
+    return {SDKey(key): value for key, value in raw_row.items() if _is_sd_value(value)}
+
+
 def _deserialize_legacy_tree(
     path: SDPath,
     raw_tree: Mapping[str, object],
-    raw_rows: Sequence[Mapping] | None = None,
+    raw_rows: Sequence[Mapping[SDKey, SDValue]] | None = None,
 ) -> ImmutableTree:
     raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[SDNodeName, list[dict]] = {}
-    raw_nodes: dict[SDNodeName, dict] = {}
+    raw_tables: dict[SDNodeName, list[Mapping[SDKey, SDValue]]] = {}
+    raw_nodes: dict[SDNodeName, dict[str, object]] = {}
 
     for key, value in raw_tree.items():
         if isinstance(value, dict):
@@ -1386,7 +1535,7 @@ def _deserialize_legacy_tree(
             if not value:
                 continue
 
-            if all(isinstance(v, int | float | str | bool) or v is None for v in value):
+            if all(_is_sd_value(v) for v in value):
                 if w := ", ".join(str(v) for v in value if v):
                     raw_pairs.setdefault(SDKey(key), w)
                 continue
@@ -1403,13 +1552,13 @@ def _deserialize_legacy_tree(
                 #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
                 #       ...
                 #   ]
-                raw_tables.setdefault(SDNodeName(key), value)
+                raw_tables.setdefault(SDNodeName(key), [_parse_legacy_row(r) for r in value])
                 continue
 
             for idx, entry in enumerate(value):
                 raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
 
-        elif isinstance(value, int | float | str | bool) or value is None:
+        elif _is_sd_value(value):
             raw_pairs.setdefault(SDKey(key), value)
 
         else:
@@ -1890,7 +2039,7 @@ class InventoryStore:
                 self.inv_paths.archive_host(host_name).iterdir(),
                 key=lambda fp: int(fp.with_suffix("").name),
             )
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError, ValueError:
             return ImmutableTree()
 
         return _load_tree_from_tree_path(
@@ -2108,7 +2257,7 @@ class HistoryStore:
                 entry = HistoryEntry.from_delta_tree(
                     previous_timestamp=path.previous.timestamp,
                     current_timestamp=path.current.timestamp,
-                    delta_tree=_compare_trees(
+                    delta_tree=compare_trees(
                         self._lookup_tree(path.current.tree_path),
                         self._lookup_tree(path.previous.tree_path),
                     ),

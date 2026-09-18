@@ -33,17 +33,8 @@ def migrate(value: object) -> Mapping[str, object]:
     }
 
 
-def migrate_instance(value: object) -> Mapping[str, object]:
-    if not isinstance(value, dict):
-        return value  # type: ignore[return-value]
-    if "instance_name" not in value:
-        return {**value, "instance_name": ""}
-    return value
-
-
 def _instance_settings() -> Dictionary:
     return Dictionary(
-        migrate=migrate_instance,
         elements={
             "instance_env_filepath": DictElement(
                 required=True,

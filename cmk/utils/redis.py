@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import threading
 from collections.abc import Callable, Iterator
@@ -45,7 +44,7 @@ def redis_server_reachable(client: Redis) -> bool:
     """
     try:
         client.ping()
-    except (RedisConnectionError, RedisTimeoutError):
+    except RedisConnectionError, RedisTimeoutError:
         return False
     return True
 

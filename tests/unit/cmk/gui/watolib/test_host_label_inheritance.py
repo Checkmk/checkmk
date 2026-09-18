@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.
 
 A child folder or host can override a label set by a parent folder back to
@@ -168,7 +170,7 @@ class _ClearingTestAttribute(ABCHostAttributeValueSpec):
         return {"test/relay": LABEL_CLEAR_VALUE, "test/relay_monitored": LABEL_CLEAR_VALUE}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     # Provide an application context and start from clean folder/host caches.
     tree = folder_tree()

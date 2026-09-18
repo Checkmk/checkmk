@@ -62,7 +62,7 @@ def parse_liebert_humidity_air(string_table: Sequence[StringTable]) -> Section[s
 
 def discover_liebert_humidity_air(
     section_liebert_humidity_air: Section[str] | None,
-    section_liebert_system: SystemSection | None,
+    section_liebert_system: SystemSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_liebert_humidity_air is None:
         return

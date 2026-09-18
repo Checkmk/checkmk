@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: T201  # It's OK for test/script helpers to print()
+
 
 import json as _json
 import logging
@@ -116,7 +117,6 @@ def test_host_table_host_equal_filter(site: Site) -> None:
     assert rows == results[site.core_name()]
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("default_cfg")
 def test_service_table(site: Site) -> None:
     rows = site.live.query(
@@ -194,19 +194,21 @@ def test_service_custom_variables(site: Site) -> None:
 @pytest.mark.usefixtures("default_cfg")
 class TestCrashReport:
     @pytest.fixture
-    def uuid(self):
+    def uuid(self) -> str:
         return str(_uuid.uuid4())
 
     @pytest.fixture
-    def component(self):
+    def component(self) -> str:
         return "cmp"
 
     @pytest.fixture
-    def crash_info(self, component, uuid):
+    def crash_info(self, component: str, uuid: str) -> dict[str, str]:
         return {"component": component, "id": uuid}
 
-    @pytest.fixture(autouse=True)
-    def crash_report(self, site, component, uuid, crash_info):
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+    def crash_report(
+        self, site: Site, component: str, uuid: str, crash_info: dict[str, str]
+    ) -> Iterator[None]:
         assert site.file_exists("var/check_mk/crashes")
         dir_path = f"var/check_mk/crashes/{component}/{uuid}/"
         site.makedirs(dir_path)

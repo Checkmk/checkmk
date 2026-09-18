@@ -51,7 +51,7 @@ def parse_graylog_jvm(string_table: StringTable) -> GraylogJvmSection | None:
             return None
 
 
-def discover_graylog_jvm(section: GraylogJvmSection) -> DiscoveryResult:
+def discover_graylog_jvm(section: GraylogJvmSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

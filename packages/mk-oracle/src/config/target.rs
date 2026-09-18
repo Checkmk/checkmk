@@ -98,6 +98,26 @@ impl TargetId {
         }
     }
 
+    /// Whether both targets name the same thing, ignoring case: an operator may
+    /// write `service_name: PROD` in one place and `prod` in another, and yaml
+    /// upper-cases only a sid and an instance_name.
+    ///
+    /// Compares every identifying field, `service_type` included, so it is as
+    /// strict as `PartialEq` apart from case.
+    pub fn eq_ignore_case(&self, other: &Self) -> bool {
+        match (self, other) {
+            (TargetId::Sid(a), TargetId::Sid(b)) => same_text(a, b),
+            (TargetId::Alias(a), TargetId::Alias(b)) => same_text(a, b),
+            (TargetId::Descriptor(a), TargetId::Descriptor(b)) => {
+                same_text(&a.service_name, &b.service_name)
+                    && same_name(a.service_type.as_ref(), b.service_type.as_ref())
+                    && same_name(a.instance_name.as_ref(), b.instance_name.as_ref())
+                    && same_name(a.sid.as_ref(), b.sid.as_ref())
+            }
+            _ => false,
+        }
+    }
+
     /// returns None if no target information is found in the yaml, otherwise returns a TargetId
     pub fn from_yaml(yaml: &Yaml) -> anyhow::Result<Option<Self>> {
         if yaml.is_badvalue() {
@@ -144,6 +164,21 @@ impl TargetId {
     fn get_string(name: &str, main: &Yaml, fallback: Option<&Yaml>) -> Option<String> {
         main.get_string(name)
             .or_else(|| fallback.and_then(|bk| bk.get_string(name)))
+    }
+}
+
+/// Whether two names are the same, ignoring case.
+fn same_text<A: ToString, B: ToString>(a: &A, b: &B) -> bool {
+    a.to_string().to_lowercase() == b.to_string().to_lowercase()
+}
+
+/// Whether two optional names are the same, ignoring case. Two absent names are
+/// the same; one absent and one set are not.
+fn same_name<A: ToString, B: ToString>(a: Option<&A>, b: Option<&B>) -> bool {
+    match (a, b) {
+        (Some(a), Some(b)) => same_text(a, b),
+        (None, None) => true,
+        _ => false,
     }
 }
 
@@ -244,6 +279,27 @@ mod tests {
     #[test]
     fn test_default() {
         assert!(TargetIdBuilder::default().build().is_none());
+    }
+
+    #[test]
+    fn test_eq_ignore_case_compares_every_field() {
+        let sid = |s: &str| TargetId::Sid(Sid::from(s));
+        assert!(sid("XE").eq_ignore_case(&sid("xe")));
+        assert!(!sid("XE").eq_ignore_case(&sid("XE2")));
+
+        let alias = |s: &str| TargetId::Alias(InstanceAlias::from(s.to_string()));
+        assert!(alias("My_Alias").eq_ignore_case(&alias("my_alias")));
+
+        // Variants never match across kinds, whatever the name.
+        assert!(!sid("XE").eq_ignore_case(&alias("xe")));
+
+        let descriptor = |service: &str, instance: Option<&str>| {
+            TargetId::Descriptor(create_descriptor(service, instance, None))
+        };
+        assert!(descriptor("SRV", Some("INST")).eq_ignore_case(&descriptor("srv", Some("inst"))));
+        // A field set on one side only is a different target.
+        assert!(!descriptor("srv", Some("inst")).eq_ignore_case(&descriptor("srv", None)));
+        assert!(!descriptor("a", None).eq_ignore_case(&descriptor("b", None)));
     }
 
     fn create_descriptor(

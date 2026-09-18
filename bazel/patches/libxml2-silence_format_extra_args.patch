@@ -1,0 +1,17 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+index e3bfa39..b8b6348 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -78,6 +78,12 @@ cc_library(
+         "include/libxml/*.h",
+         "*.h",
+     ]),
++    copts = [
++        # libxml2's error reporting helpers hand arguments to format strings
++        # which don't consume them, which some of our compilers flag.  Harmless
++        # and not fixable on our side.
++        "-Wno-format-extra-args",
++    ],
+     defines = select({
+         "@platforms//os:linux": UNIX_DEFINES + [
+             "HAVE_POLL_H",

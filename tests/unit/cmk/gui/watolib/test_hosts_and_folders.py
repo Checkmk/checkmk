@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 import datetime
 import os
@@ -18,7 +15,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from itertools import count
-from typing import cast
+from typing import cast, Literal
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -28,6 +25,7 @@ from pytest import MonkeyPatch
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis import TimeoutError as RedisTimeoutError
+from werkzeug.test import create_environ
 
 import cmk.ruleset_matcher.tags
 import cmk.utils.paths
@@ -38,7 +36,8 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.logged_in import LoggedInSuperUser
+from cmk.gui.http import Request
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
@@ -47,14 +46,17 @@ from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import (
+    all_folder_title_paths,
     EffectiveAttributes,
     Folder,
+    folder_title_path,
     FolderTree,
     make_folder_tree,
 )
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.redis import disable_redis
+from cmk.web.utils.urls import HTTPVariable
 
 # Cheap in-memory acting user with all permissions. Avoids the expensive
 # with_admin_login fixture (which creates a real user on disk) for tests that
@@ -86,7 +88,7 @@ def test_effective_attributes() -> None:
     assert first_attributes != attributes()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def tree() -> Iterator[FolderTree]:
     # Build the tree explicitly instead of using the request-global
     # folder_tree(), so no Flask request context is needed at all.
@@ -319,6 +321,18 @@ def test_create_nested_folders(tree: FolderTree) -> None:
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
 
 
+def test_url_does_not_mutate_the_passed_variables(tree: FolderTree) -> None:
+    """A debug request used to append its marker to the caller's list."""
+    add_vars: list[HTTPVariable] = [("mode", "edit_host")]
+
+    root = tree.root_folder()
+    request = Request(create_environ(query_string="debug=1"))
+    first = root.url(request, add_vars)
+
+    assert add_vars == [("mode", "edit_host")]
+    assert root.url(request, add_vars) == first
+
+
 def test_eq_operation(tree: FolderTree) -> None:
     with in_chdir("/"):
         root = tree.root_folder()
@@ -365,7 +379,7 @@ def test_mgmt_inherit_credentials_explicit_host_snmp(tree: FolderTree) -> None:
         acting_user=_SUPERUSER,
     )
 
-    data = folder._load_hosts_file()
+    data = folder._load_hosts_file()  # noqa: SLF001
     assert data is not None
     assert data["management_protocol"]["test-host"] == "snmp"
     assert data["management_snmp_credentials"]["test-host"] == "HOST"
@@ -402,7 +416,7 @@ def test_mgmt_inherit_credentials_explicit_host_ipmi(tree: FolderTree) -> None:
         acting_user=_SUPERUSER,
     )
 
-    data = folder._load_hosts_file()
+    data = folder._load_hosts_file()  # noqa: SLF001
     assert data is not None
     assert data["management_protocol"]["test-host"] == "ipmi"
     assert data["management_ipmi_credentials"]["test-host"] == {
@@ -433,7 +447,7 @@ def test_mgmt_inherit_credentials_snmp(tree: FolderTree) -> None:
         acting_user=_SUPERUSER,
     )
 
-    data = folder._load_hosts_file()
+    data = folder._load_hosts_file()  # noqa: SLF001
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "snmp"
     assert data["management_snmp_credentials"]["mgmt-host"] == "FOLDER"
@@ -464,7 +478,7 @@ def test_mgmt_inherit_credentials_ipmi(tree: FolderTree) -> None:
         acting_user=_SUPERUSER,
     )
 
-    data = folder._load_hosts_file()
+    data = folder._load_hosts_file()  # noqa: SLF001
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "ipmi"
     assert data["management_ipmi_credentials"]["mgmt-host"] == {
@@ -497,7 +511,7 @@ def test_mgmt_inherit_protocol_explicit_host_snmp(tree: FolderTree) -> None:
         acting_user=_SUPERUSER,
     )
 
-    data = folder._load_hosts_file()
+    data = folder._load_hosts_file()  # noqa: SLF001
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "snmp"
     assert data["management_snmp_credentials"]["mgmt-host"] == "HOST"
@@ -533,7 +547,7 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi(tree: FolderTree) -> None:
         acting_user=_SUPERUSER,
     )
 
-    data = folder._load_hosts_file()
+    data = folder._load_hosts_file()  # noqa: SLF001
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "ipmi"
     assert data["management_ipmi_credentials"]["mgmt-host"] == {
@@ -546,12 +560,16 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi(tree: FolderTree) -> None:
 
 @pytest.fixture(name="patch_may")
 def fixture_patch_may(mocker: MagicMock) -> None:
-    def prefixed_title(self_: hosts_and_folders.Folder, current_depth: int, pretty: bool) -> str:
+    def prefixed_title(self_: hosts_and_folders.Folder, current_depth: int, pretty: bool) -> str:  # noqa: ARG001
         return "_" * current_depth + self_.title()
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
 
-    def may(self_, _permission, _acting_user):
+    def may(
+        self_: hosts_and_folders.PermissionChecker,
+        _permission: Literal["read", "write"],
+        _acting_user: LoggedInUser,
+    ) -> bool:
         return getattr(self_, "_may_see", True)
 
     mocker.patch.object(hosts_and_folders.PermissionChecker, "may", may)
@@ -559,7 +577,7 @@ def fixture_patch_may(mocker: MagicMock) -> None:
 
 def only_root(tree: FolderTree) -> hosts_and_folders.Folder:
     root_folder = tree.root_folder()
-    root_folder._loaded_subfolders = {}
+    root_folder._loaded_subfolders = {}  # noqa: SLF001
     return root_folder
 
 
@@ -623,7 +641,7 @@ def three_levels_leaf_permissions(tree: FolderTree) -> hosts_and_folders.Folder:
     main = tree.root_folder()
 
     # Attribute only used for testing
-    main.permissions._may_see = False  # type: ignore[attr-defined]
+    main.permissions._may_see = False  # type: ignore[attr-defined]  # noqa: SLF001
 
     a = main.create_subfolder(
         "a",
@@ -633,7 +651,7 @@ def three_levels_leaf_permissions(tree: FolderTree) -> hosts_and_folders.Folder:
         pending_changes=_noop_pending_changes(),
         acting_user=_SUPERUSER,
     )
-    a.permissions._may_see = False  # type: ignore[attr-defined]
+    a.permissions._may_see = False  # type: ignore[attr-defined]  # noqa: SLF001
     c = a.create_subfolder(
         "c",
         title="C",
@@ -642,7 +660,7 @@ def three_levels_leaf_permissions(tree: FolderTree) -> hosts_and_folders.Folder:
         pending_changes=_noop_pending_changes(),
         acting_user=_SUPERUSER,
     )
-    c.permissions._may_see = False  # type: ignore[attr-defined]
+    c.permissions._may_see = False  # type: ignore[attr-defined]  # noqa: SLF001
     a.create_subfolder(
         "d",
         title="D",
@@ -660,7 +678,7 @@ def three_levels_leaf_permissions(tree: FolderTree) -> hosts_and_folders.Folder:
         pending_changes=_noop_pending_changes(),
         acting_user=_SUPERUSER,
     )
-    b.permissions._may_see = False  # type: ignore[attr-defined]
+    b.permissions._may_see = False  # type: ignore[attr-defined]  # noqa: SLF001
     e = b.create_subfolder(
         "e",
         title="E",
@@ -669,7 +687,7 @@ def three_levels_leaf_permissions(tree: FolderTree) -> hosts_and_folders.Folder:
         pending_changes=_noop_pending_changes(),
         acting_user=_SUPERUSER,
     )
-    e.permissions._may_see = False  # type: ignore[attr-defined]
+    e.permissions._may_see = False  # type: ignore[attr-defined]  # noqa: SLF001
     e.create_subfolder(
         "f",
         title="F",
@@ -732,6 +750,86 @@ def test_recursive_subfolder_choices_function_calls(mocker: MagicMock, tree: Fol
     assert spy.call_count == 7
 
 
+def _make_unreadable(tree: FolderTree, *paths: str) -> None:
+    """Mark folders unreadable, on the objects the tree itself hands out.
+
+    `three_levels_leaf_permissions` flags the folders it creates, but a lookup through the tree may
+    answer with freshly loaded ones, and the functions under test look up by path. So the flags go
+    on afterwards, where `patch_may` will read them.
+    """
+    for path in paths:
+        tree.folder(path).permissions._may_see = False  # type: ignore[attr-defined]  # noqa: SLF001
+
+
+# Only "a/d" and "b/e/f" stay readable, the shape `three_levels_leaf_permissions` builds.
+_UNREADABLE = ("", "a", "a/c", "b", "b/e")
+
+
+def test_folder_title_path_gives_the_titles_down_to_the_folder(tree: FolderTree) -> None:
+    three_levels(tree)
+
+    assert folder_title_path(tree, "", _SUPERUSER) == "Main"
+    assert folder_title_path(tree, "a", _SUPERUSER) == "A"
+    assert folder_title_path(tree, "b/e/f", _SUPERUSER) == "B / E / F"
+
+
+def test_folder_title_path_of_a_folder_this_setup_does_not_know(tree: FolderTree) -> None:
+    """A host of a remote site keeping a hierarchy of its own names a folder there is none of."""
+    three_levels(tree)
+
+    assert folder_title_path(tree, "nowhere", _SUPERUSER) is None
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_folder_title_paths_are_titled_whoever_may_read_them(tree: FolderTree) -> None:
+    """Read permissions are Setup's business until an installation asks for them to be ours."""
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    assert folder_title_path(tree, "a/c", _SUPERUSER) == "A / C"
+    assert set(all_folder_title_paths(tree, _SUPERUSER)) == {
+        "",
+        "a",
+        "a/c",
+        "a/d",
+        "b",
+        "b/e",
+        "b/e/f",
+    }
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_a_folder_no_one_may_read_is_not_titled_where_folders_are_hidden(tree: FolderTree) -> None:
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    with hide_folders_without_permission(tree, True):
+        assert folder_title_path(tree, "a/c", _SUPERUSER) is None
+        assert "a/c" not in all_folder_title_paths(tree, _SUPERUSER)
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_a_folder_is_titled_while_a_readable_one_sits_below_it(tree: FolderTree) -> None:
+    """The rule `_walk_tree` goes by, which Setup's own folder choices go by as well."""
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    with hide_folders_without_permission(tree, True):
+        # Neither is readable, and both are titled: "a/d" below the one, "b/e/f" below the other.
+        assert folder_title_path(tree, "a", _SUPERUSER) == "A"
+        assert folder_title_path(tree, "b/e", _SUPERUSER) == "B / E"
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_the_root_folder_is_titled_whatever_its_permissions_say(tree: FolderTree) -> None:
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    with hide_folders_without_permission(tree, True):
+        assert folder_title_path(tree, "", _SUPERUSER) == "Main"
+        assert all_folder_title_paths(tree, _SUPERUSER)[""] == "Main"
+
+
 def test_subfolder_creation(tree: FolderTree) -> None:
     folder = tree.root_folder()
     folder.create_subfolder(
@@ -745,7 +843,7 @@ def test_subfolder_creation(tree: FolderTree) -> None:
 
     # Upon instantiation, all the subfolders should be already known.
     folder = tree.root_folder()
-    assert len(folder._subfolders) == 1
+    assert len(folder._subfolders) == 1  # noqa: SLF001
 
 
 def test_match_item_generator_hosts() -> None:
@@ -778,7 +876,7 @@ def test_match_item_generator_hosts() -> None:
 class _TreeStructure:
     path: str
     attributes: HostAttributes
-    subfolders: list["_TreeStructure"]
+    subfolders: list[_TreeStructure]
     num_hosts: int = 0
 
 
@@ -798,14 +896,14 @@ def make_monkeyfree_folder(
         )
 
     # Small monkeys :(
-    new_folder._num_hosts = tree_structure.num_hosts
-    new_folder._path = tree_structure.path
+    new_folder._num_hosts = tree_structure.num_hosts  # noqa: SLF001
+    new_folder._path = tree_structure.path  # noqa: SLF001
 
     for subtree_structure in tree_structure.subfolders:
-        new_folder._subfolders[subtree_structure.path] = make_monkeyfree_folder(
+        new_folder._subfolders[subtree_structure.path] = make_monkeyfree_folder(  # noqa: SLF001
             tree, subtree_structure, new_folder
         )
-        new_folder._path = tree_structure.path
+        new_folder._path = tree_structure.path  # noqa: SLF001
 
     return new_folder
 
@@ -952,12 +1050,12 @@ def test_folder_permissions(
     with disable_redis():
         wato_folder = make_monkeyfree_folder(tree, structure)
         # dump_wato_folder_structure(wato_folder)
-        testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
+        testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]  # noqa: SLF001
         permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
         assert permitted_groups_cre_folder == testfolder_expected_groups
 
         all_folders = _convert_folder_tree_to_all_folders(wato_folder)
-        permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)
+        permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)  # noqa: SLF001
         assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
 
 
@@ -966,7 +1064,7 @@ def _convert_folder_tree_to_all_folders(
 ) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.Folder]:
     all_folders = {}
 
-    def parse_folder(folder):
+    def parse_folder(folder: hosts_and_folders.Folder) -> None:
         all_folders[folder.path()] = folder
         for subfolder in folder.subfolders():
             parse_folder(subfolder)
@@ -1119,7 +1217,7 @@ def _run_num_host_test(
             )
 
         # New mechanism
-        monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: user_test.contactgroups)
+        monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: user_test.contactgroups)  # noqa: ARG005
         with get_fake_setup_redis_client(
             tree,
             monkeypatch,
@@ -1132,7 +1230,7 @@ def _run_num_host_test(
 def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.Folder) -> list[list[str]]:
     redis_answer = []
     for folder in _convert_folder_tree_to_all_folders(wato_folder).values():
-        redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])
+        redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])  # noqa: SLF001
     return [redis_answer]
 
 
@@ -1142,20 +1240,20 @@ class MockRedisClient:
             def __init__(self, answers: list[list[list[str]]]) -> None:
                 self._answers = answers
 
-            def execute(self):
+            def execute(self) -> list[list[str]]:
                 return self._answers.pop(0)
 
-            def __getattr__(self, name):
-                return lambda *args, **kwargs: None
+            def __getattr__(self, name: str) -> object:
+                return lambda *args, **kwargs: None  # noqa: ARG005
 
         self._fake_pipeline = FakePipeline(answers)
         self._answers = answers
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         if name == "pipeline":
             return lambda: self._fake_pipeline
 
-        return lambda *args, **kwargs: lambda *args, **kwargs: None
+        return lambda *args, **kwargs: lambda *args, **kwargs: None  # noqa: ARG005
 
 
 @contextmanager
@@ -1167,10 +1265,10 @@ def get_fake_setup_redis_client(
 ) -> Iterator[MockRedisClient]:
     try:
         mock_redis_client = MockRedisClient(redis_answers)
-        monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
+        monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)  # noqa: ARG005, SLF001
         cache = hosts_and_folders.RedisFolderCache(tree, cast(Redis, mock_redis_client))
         monkeypatch.setattr(tree, "cache", cache)
-        redis_helper = cache._redis
+        redis_helper = cache._redis  # noqa: SLF001
         monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders])
         monkeypatch.setattr(
             redis_helper,
@@ -1196,16 +1294,16 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch, tree: FolderTree
         # Check if wato_folders class matches
         assert isinstance(wato_folders, hosts_and_folders.WATOFoldersOnDemand)
         # Check if item is None
-        assert wato_folders._raw_dict["sub1.1"] is None
+        assert wato_folders._raw_dict["sub1.1"] is None  # noqa: SLF001
         # Check if item is generated on access
         assert isinstance(wato_folders["sub1.1"], hosts_and_folders.Folder)
         # Check if item is now set in dict
-        assert isinstance(wato_folders._raw_dict["sub1.1"], hosts_and_folders.Folder)
+        assert isinstance(wato_folders._raw_dict["sub1.1"], hosts_and_folders.Folder)  # noqa: SLF001
 
         # Check if other folder is still None
-        assert wato_folders._raw_dict["sub1.2"] is None
+        assert wato_folders._raw_dict["sub1.2"] is None  # type: ignore[unreachable]  # noqa: SLF001
         # Check if parent(main) folder got instantiated as well
-        assert isinstance(wato_folders._raw_dict[""], hosts_and_folders.Folder)
+        assert isinstance(wato_folders._raw_dict[""], hosts_and_folders.Folder)  # noqa: SLF001
 
 
 class UnusableRedisClient:
@@ -1255,7 +1353,7 @@ def test_redis_folder_cache_degrades_when_redis_is_unusable(
     assert cache.all_folders() is None
     assert cache.folder_metadata("sub") is None
     assert cache.num_hosts_recursively("sub/", _SUPERUSER) is None
-    assert cache.choices_for_moving("sub", hosts_and_folders._MoveType.Folder, _SUPERUSER) is None
+    assert cache.choices_for_moving("sub", hosts_and_folders._MoveType.Folder, _SUPERUSER) is None  # noqa: SLF001
     assert cache.recursive_subfolders_for_path("sub/") is None
 
     # Updates are dropped. They only advance the last_update timestamp, so the
@@ -1264,7 +1362,7 @@ def test_redis_folder_cache_degrades_when_redis_is_unusable(
     cache.save_folder_info(subfolder)
 
     # The failed helper is not kept around, the next query reconnects
-    assert cache._helper is None
+    assert cache._helper is None  # noqa: SLF001
 
     assert set(tree.all_folders()) == {"", "sub"}
 
@@ -1492,7 +1590,7 @@ def test_folder_attributes_for_base_config_without_bake_attribute(tree: FolderTr
         attributes=HostAttributes({"cmk_agent_connection": "push-agent"}),
     )
 
-    assert folder._folder_attributes_for_base_config() == {}
+    assert folder._folder_attributes_for_base_config() == {}  # noqa: SLF001
 
 
 def test_folder_attributes_for_base_config_defaults_to_pull_mode(tree: FolderTree) -> None:
@@ -1503,7 +1601,7 @@ def test_folder_attributes_for_base_config_defaults_to_pull_mode(tree: FolderTre
         attributes=HostAttributes({"bake_agent_package": True}),
     )
 
-    attributes = folder._folder_attributes_for_base_config()[folder.path_for_rule_matching()]
+    attributes = folder._folder_attributes_for_base_config()[folder.path_for_rule_matching()]  # noqa: SLF001
     assert attributes["bake_agent_package"] is True
     # the attribute's default value may or may not be filled in, depending on
     # whether the edition under test registers the attribute
@@ -1526,7 +1624,7 @@ def test_folder_attributes_for_base_config_exports_inherited_agent_connection(
         attributes=HostAttributes({"bake_agent_package": True}),
     )
 
-    assert folder._folder_attributes_for_base_config() == {
+    assert folder._folder_attributes_for_base_config() == {  # noqa: SLF001
         folder.path_for_rule_matching(): {
             "bake_agent_package": True,
             "cmk_agent_connection": "push-agent",

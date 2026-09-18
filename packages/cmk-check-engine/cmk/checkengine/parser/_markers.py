@@ -26,7 +26,7 @@ class PiggybackMarker(NamedTuple):
         translation: TranslationOptions,
         *,
         encoding_fallback: str,
-    ) -> "PiggybackMarker":
+    ) -> PiggybackMarker:
         # ? ensure_str called on a bytes object with different possible encodings
         raw_host_name = translate(
             translation,
@@ -71,11 +71,11 @@ class SectionMarker(NamedTuple):
     separator: str | None
 
     @classmethod
-    def default(cls, name: SectionName) -> "SectionMarker":
+    def default(cls, name: SectionName) -> SectionMarker:
         return cls(name, None, "ascii", True, None, None)
 
     @classmethod
-    def from_header(cls, header: str) -> "SectionMarker":
+    def from_header(cls, header: str) -> SectionMarker:
         raw_section_name, *elems = header.split(":")
 
         # NOTE: We silenty ignore some syntactically invalid options below, but throw for others. Hmmm...

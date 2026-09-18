@@ -31,8 +31,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.messaging import get_cert_info
 from cmk.utils.paths import (
@@ -41,7 +39,10 @@ from cmk.utils.paths import (
     root_cert_file,
     site_cert_file,
 )
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 @dataclass
@@ -80,7 +81,7 @@ class CertificateView:
         }
 
     @classmethod
-    def load(cls, path: Path, purpose: str | None = None) -> "CertificateView":
+    def load(cls, path: Path, purpose: str | None = None) -> CertificateView:
         cert = Certificate.load_pem(CertificatePEM(path.read_bytes()))
         return cls(
             subject=cert.subject,

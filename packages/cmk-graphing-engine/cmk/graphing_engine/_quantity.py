@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
@@ -77,6 +76,14 @@ class QuantityProtocol(Protocol):
     ) -> CurveAttributes | None: ...
 
 
+@runtime_checkable
+class FanOutQuantity(Protocol):
+    """A quantity drawing one curve per matched series, unless aggregation_kind reduces them."""
+
+    @property
+    def aggregation_kind(self) -> object | None: ...
+
+
 # The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
 # QuantityProtocol.metrics() yields. A metric is a quantity that draws itself, identified by its
 # metric_name - that is what sets it apart from an expression node. It must be hashable: the
@@ -84,3 +91,16 @@ class QuantityProtocol(Protocol):
 class MetricProtocol(QuantityProtocol, Hashable, Protocol):
     @property
     def metric_name(self) -> MetricName: ...
+
+
+# What a drawable is bounded by: a plain number, or a quantity to be evaluated.
+type Bound = int | float | QuantityProtocol
+
+
+@dataclass(frozen=True, kw_only=True)
+class Curve:
+    """A quantity dressed for drawing: what to evaluate, and how to title, scale and colour it."""
+
+    quantity: QuantityProtocol
+    attributes: CurveAttributes
+    source_id: str | None = None

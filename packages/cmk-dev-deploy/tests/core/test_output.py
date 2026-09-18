@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.output: combined mode prefixing, timing display, and output buffering."""
 
-from __future__ import annotations
-
 import sys
 import threading
 from collections.abc import Iterator
@@ -22,7 +20,7 @@ from cmk.dev_deploy.types import StepResult
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _reset_output_config() -> Iterator[None]:
     """Reset all output configuration before and after each test."""
     from cmk.dev_deploy.core.output import reset

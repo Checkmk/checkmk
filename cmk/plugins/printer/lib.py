@@ -135,7 +135,7 @@ PRINTER_PAGES_TYPES = {
 }
 
 
-def discovery_printer_pages(section: Section) -> DiscoveryResult:
+def discovery_printer_pages(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

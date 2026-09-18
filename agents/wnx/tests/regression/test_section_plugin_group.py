@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -171,7 +170,7 @@ def plugin_dir_engine(request):
     return os.path.join(user_dir, request.param)
 
 
-@pytest.fixture(name="manage_plugins", params=["netstat_an.bat", "wmic_if.bat"], autouse=True)
+@pytest.fixture(name="manage_plugins", params=["netstat_an.bat", "wmic_if.bat"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files\\regression")
@@ -195,9 +194,8 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-def test_section_plugin_group(
-    request, testconfig, expected_output, actual_output, testfile
-) -> None:
+@pytest.mark.usefixtures("testconfig")
+def test_section_plugin_group(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":
         pytest.skip("This test is not conform with latest changes on Monitoring Site")

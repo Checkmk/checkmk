@@ -244,22 +244,26 @@ test('insertRef feeds the active editor', () => {
   expect(editor.transformation.selectedId.value).toBe('B')
 })
 
-test('disables dynamic rows in transformation mode and cycle rows while editing', () => {
+test('explains why a dynamic row blocks in transformation mode and why cycle rows block on edit', () => {
   const query = rrdQueryItem('C')
   const target = formulaItem('D', { ast: { op: 'ref', id: 'A' } })
   const dependent = formulaItem('F', { ast: { op: 'ref', id: 'D' } })
   const metric = rrdMetricItem('A')
   const { editor } = mountEditor([metric, query, target, dependent])
 
-  expect(editor.isItemDisabled(query)).toBe(false)
+  expect(editor.itemBlockReason(query)).toBeNull()
   editor.switchMode('transformation')
-  expect(editor.isItemDisabled(query)).toBe(true)
+  expect(editor.itemBlockReason(query)).toBe(
+    'A percentile needs one metric. This query selects several. Aggregate it in a calculation first.'
+  )
   editor.switchMode('operations')
 
   editor.startEdit(target)
-  expect(editor.isItemDisabled(target)).toBe(true) // the edited item itself
-  expect(editor.isItemDisabled(dependent)).toBe(true) // refers back to it
-  expect(editor.isItemDisabled(metric)).toBe(false)
+  expect(editor.itemBlockReason(target)).toBe('This calculation is currently being edited.')
+  expect(editor.itemBlockReason(dependent)).toBe(
+    'This calculation refers to the one being edited. A reference back would create a cycle.'
+  )
+  expect(editor.itemBlockReason(metric)).toBeNull()
 })
 
 test('shows an added alert with the id the store will assign, an updated alert on edit', () => {

@@ -4,22 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
 from pydantic import AfterValidator, PlainValidator, StringConstraints
 
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
 
-from .._folder import folder_contains_filters, TitledFolder
+from .._folder import folder_matching_filters
 from .._models import HostFilter, HostState, HostStateLabel
-from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
+from ._validators import (
+    validate_label_pairs,
+    validate_uniqueness,
+    validate_unix_timestamp,
+)
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
 # that this functionality is tied to the field names or the state choice enum. This information
@@ -69,10 +74,8 @@ class StringCondition:
     )
 
 
-# Only "contains" is offered: the value has to be matched against the folder the user sees,
-# which Livestatus does not store (see ``.._folder``). A substring can be relocated into the
-# stored config path, an arbitrary user regex cannot - its anchors and alternations would escape
-# the part of the path that holds the folder.
+# Only "contains" is offered: it is what the funnel in the Folder column produces, and the value
+# is matched against Setup's folder titles here rather than by Livestatus (see ``.._folder``).
 @api_model
 class FolderCondition:
     type: Literal["condition"] = api_field(
@@ -82,12 +85,12 @@ class FolderCondition:
     op: Literal["contains"] = api_field(description="Substring match operation", example="contains")
     value: str = api_field(
         description=(
-            "Substring to look for in the folder path as it is shown in the Folder column, or in "
-            "the folder title as it is shown in Setup - either name selects the folder's hosts. "
-            "The root folder's path is '/'; a host that isn't managed via Setup has no folder at "
-            "all, so a negated condition on '/' selects exactly those."
+            "Substring to look for in the folder title, as the Folder column shows it: the titles "
+            "down to the folder, e.g. 'Data center Munich / Rack 1', and 'Main' for the root "
+            "folder. A host whose folder Setup does not know - one not managed via Setup, or one "
+            "a remote site owns - has no title and is never selected."
         ),
-        example="/network",
+        example="Data center Munich",
         pattern=_NO_NEWLINES_REGEX,
     )
 
@@ -158,9 +161,19 @@ class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["acknowledged", "in_downtime"] = api_field(
-        description="Host boolean field to filter on", example="acknowledged"
-    )
+    field: Literal[
+        "acknowledged",
+        "in_downtime",
+        "notifications_enabled",
+        "has_comments",
+        "active_checks_disabled",
+        "passive_checks_disabled",
+        "in_notification_period",
+        "in_service_period",
+        "in_check_period",
+        "is_flapping",
+        "stale",
+    ] = api_field(description="Host boolean field to filter on", example="acknowledged")
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
     value: bool = api_field(description="Boolean value to compare against", example=False)
 
@@ -173,7 +186,7 @@ class LabelChoiceCondition:
     field: LabelField = api_field(description="Key/value host field to filter on", example="labels")
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
     value: Annotated[
-        list[str],
+        list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
         MinLen(1),
         AfterValidator(validate_uniqueness),
         AfterValidator(validate_label_pairs),
@@ -228,7 +241,7 @@ class AndNode:
     type: Literal["and"] = api_field(
         description="Logical AND: all children must match", example="and"
     )
-    children: Annotated[list["FilterNode"], MinLen(2)] = api_field(
+    children: Annotated[list[FilterNode], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
             StringCondition(type="condition", field="name", op="matches", value="heute"),
@@ -242,7 +255,7 @@ class OrNode:
     type: Literal["or"] = api_field(
         description="Logical OR: at least one child must match", example="or"
     )
-    children: Annotated[list["FilterNode"], MinLen(2)] = api_field(
+    children: Annotated[list[FilterNode], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
             StringCondition(type="condition", field="name", op="matches", value="heute"),
@@ -256,7 +269,7 @@ class NotNode:
     type: Literal["not"] = api_field(
         description="Logical NOT: the child must not match", example="not"
     )
-    child: "FilterNode" = api_field(description="Child filter node")
+    child: FilterNode = api_field(description="Child filter node")
 
 
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
@@ -345,19 +358,19 @@ def extract_site_scope(
     return residual, site_ids
 
 
-def _no_folders() -> Sequence[TitledFolder]:
-    return ()
+def _no_folders() -> Mapping[str, str]:
+    return {}
 
 
 def parse_as_livestatus_filter(
-    node: FilterNode, *, setup_folders: Callable[[], Sequence[TitledFolder]] = _no_folders
+    node: FilterNode, *, setup_folders: Callable[[], Mapping[str, str]] = _no_folders
 ) -> HostFilter:
     """Render the filter tree as Livestatus filter lines.
 
-    A folder condition may be matched against the title Setup shows for a folder, which Livestatus
-    does not know, so the Setup folders are passed in. They arrive as a callable because reading
-    them is not free: only a tree that actually carries a folder condition asks for them. Without
-    them, folder conditions match paths only.
+    A folder condition is matched against the titles Setup gives its folders, which Livestatus does
+    not know, so those are passed in. They arrive as a callable because reading them is not free:
+    only a tree that actually carries a folder condition asks for them. Without them no folder has
+    a title, and a folder condition selects nothing.
     """
     filters: list[str] = []
     _accumulate_filters(node, filters, setup_folders)
@@ -396,16 +409,30 @@ def _name_choice_filters(field: str, names: list[str]) -> list[str]:
     ]
 
 
+def _manually_disabled_filters(attribute: str, *, column: str | None = None) -> list[str]:
+    """Match objects whose ``attribute`` a user switched off, not ones that never had it on.
+
+    Mirrors the repository's own derivation: the setting being 0 is not enough, the attribute
+    also has to appear in the modified-attributes list. Pass ``column`` where the setting's own
+    column is named differently from the modified attribute.
+    """
+    return [
+        f"Filter: modified_attributes_list >= {attribute}",
+        f"Filter: {column or attribute} = 0",
+        "And: 2",
+    ]
+
+
 def _accumulate_filters(
-    node: FilterNode, filters: list[str], setup_folders: Callable[[], Sequence[TitledFolder]]
+    node: FilterNode, filters: list[str], setup_folders: Callable[[], Mapping[str, str]]
 ) -> None:
     match node:
         case StringCondition():
             filters.append(f"Filter: {node.field} {_STRING_OP_TO_LS[node.op]} {node.value}")
 
         case FolderCondition():
-            # A folder is not a Livestatus column; it is derived from the host's config file.
-            filters.extend(folder_contains_filters(node.value, folders=setup_folders()))
+            # A folder is not a Livestatus column; it is named by the host's config file.
+            filters.extend(folder_matching_filters(node.value, setup_folders()))
 
         case NumericCondition():
             filters.append(f"Filter: {node.field} {_NUMERIC_OP_TO_LS[node.op]} {node.value}")
@@ -420,16 +447,39 @@ def _accumulate_filters(
                     # downtime when scheduled_downtime_depth is greater than zero.
                     op = ">" if node.value else "="
                     filters.append(f"Filter: scheduled_downtime_depth {op} 0")
+                case "has_comments":
+                    # Livestatus has no comment count; the comment id list is filterable for
+                    # emptiness alone, which is exactly the question the icon answers.
+                    op = "!=" if node.value else "="
+                    filters.append(f"Filter: comments {op}")
+                case "active_checks_disabled":
+                    filters.extend(_manually_disabled_filters("active_checks_enabled"))
+                    if not node.value:
+                        filters.append("Negate:")
+                case "passive_checks_disabled":
+                    filters.extend(
+                        _manually_disabled_filters(
+                            "passive_checks_enabled", column="accept_passive_checks"
+                        )
+                    )
+                    if not node.value:
+                        filters.append("Negate:")
+                case "stale":
+                    # Livestatus has no boolean stale column; a host is stale when its
+                    # staleness exceeds the configured threshold.
+                    op = ">=" if node.value else "<"
+                    filters.append(f"Filter: staleness {op} {active_config.staleness_threshold}")
                 case _:
                     filters.append(f"Filter: {node.field} = {int(node.value)}")
 
         case StateChoiceCondition():
-            for value in node.value:
-                filters.append(f"Filter: {node.field} = {HostState[value]}")
+            clauses = [_state_choice_clause(node.field, value) for value in node.value]
+            for clause in clauses:
+                filters.extend(clause)
 
             match node.op:
-                case "one_of" if len(node.value) > 1:
-                    filters.append(f"Or: {len(node.value)}")
+                case "one_of" if len(clauses) > 1:
+                    filters.append(f"Or: {len(clauses)}")
 
         case LabelChoiceCondition():
             filters.extend(_label_choice_filters(node.field, node.value))
@@ -459,6 +509,19 @@ def _accumulate_filters(
         case NotNode():
             _accumulate_filters(node.child, filters, setup_folders)
             filters.append("Negate:")
+
+
+def _state_choice_clause(field: str, value: HostStateLabel) -> list[str]:
+    """A pending host's raw ``state`` column is meaningless (always 0, coinciding with UP), so
+    'PENDING' is matched on ``has_been_checked`` instead, and every other state excludes pending
+    hosts the same way rather than silently bucketing them in with a real state."""
+    if value == "PENDING":
+        return ["Filter: has_been_checked = 0"]
+    return [
+        f"Filter: {field} = {HostState[value]}",
+        "Filter: has_been_checked = 1",
+        "And: 2",
+    ]
 
 
 _NUMERIC_OP_TO_LS = {

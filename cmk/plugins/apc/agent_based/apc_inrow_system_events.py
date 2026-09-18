@@ -31,7 +31,7 @@ def parse_apc_inrow_system_events(string_table: StringTable) -> Section:
     return {"events": tuple(first_word for first_word, *_rest in string_table)}
 
 
-def discover_apc_inrow_system_events(section: Section) -> DiscoveryResult:
+def discover_apc_inrow_system_events(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

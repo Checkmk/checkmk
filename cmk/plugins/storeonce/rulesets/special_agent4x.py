@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
+    DefaultValue,
     DictElement,
     Dictionary,
     migrate_to_password,
@@ -17,7 +17,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.rulesets.v1.form_specs._base import DefaultValue
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -53,7 +52,7 @@ def parameter_form() -> Dictionary:
 
 
 def _migrate_cert(params: object) -> Mapping[str, object]:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case {"cert": cert_value, **rest}:
             return {
                 "ignore_tls": not cert_value,

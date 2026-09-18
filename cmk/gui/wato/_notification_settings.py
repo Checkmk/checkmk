@@ -43,7 +43,7 @@ ConfigVariableNotificationFallbackEmail = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_fallback_email",
-    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
         wrapped_form_spec=OptionalChoice(
             title=Title("Fallback email address for notifications"),
             help_text=Help(
@@ -78,7 +78,7 @@ ConfigVariableNotificationFallbackFormat = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_fallback_format",
-    form_spec=lambda context: fs.CascadingSingleChoice(
+    form_spec=lambda context: fs.CascadingSingleChoice(  # noqa: ARG005
         title=Title("Fallback notification email format"),
         elements=[
             fs.CascadingSingleChoiceElement(
@@ -100,7 +100,7 @@ ConfigVariableNotificationBacklog = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_backlog",
-    form_spec=lambda context: fs.Integer(
+    form_spec=lambda context: fs.Integer(  # noqa: ARG005
         title=Title("Store notifications for rule analysis"),
         help_text=Help(
             "If this option is set to a non-zero number, then Checkmk "
@@ -118,7 +118,7 @@ ConfigVariableNotificationBulkInterval = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_bulk_interval",
-    form_spec=lambda context: FSAge(
+    form_spec=lambda context: FSAge(  # noqa: ARG005
         title=Title("Interval for checking for ripe bulk notifications"),
         help_text=Help(
             "If you use rule based notifications with <i>Bulk notifications</i>, "
@@ -135,7 +135,7 @@ ConfigVariableNotificationPluginTimeout = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_plugin_timeout",
-    form_spec=lambda context: FSAge(
+    form_spec=lambda context: FSAge(  # noqa: ARG005
         title=Title("Notification plug-in timeout"),
         help_text=Help("After the configured time notification plug-ins are being interrupted."),
         custom_validate=[fs.validators.NumberInRange(min_value=1)],
@@ -174,7 +174,7 @@ ConfigVariableFailedNotificationHorizon = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="failed_notification_horizon",
-    form_spec=lambda context: FSAge(
+    form_spec=lambda context: FSAge(  # noqa: ARG005
         title=Title("Failed notification horizon"),
         help_text=Help(
             "The tactical overview snap-in is reporting about notifications that could not be sent "

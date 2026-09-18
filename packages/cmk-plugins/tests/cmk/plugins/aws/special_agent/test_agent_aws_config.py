@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import AWSConfig, NamingConvention
+from cmk.plugins.aws.special_agent.config import AWSConfig, NamingConvention
 
 
 @pytest.mark.parametrize(

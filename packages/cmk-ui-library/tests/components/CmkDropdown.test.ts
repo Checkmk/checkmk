@@ -8,7 +8,12 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 // Raw source: jsdom runs no layout and ignores `@supports`, so the anchor path is only checkable here.
 import cmkDropdownSource from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue?raw'
-import { ErrorResponse, Response, WarningResponse } from 'cmk-ui-library/components/CmkSuggestions'
+import {
+  ErrorResponse,
+  Response,
+  type Section,
+  WarningResponse
+} from 'cmk-ui-library/components/CmkSuggestions'
 import { defineComponent, nextTick, ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
@@ -218,6 +223,52 @@ test('dropdown resets label if option is reset', async () => {
 
   // Input hint is shown
   await screen.findByLabelText('Select an option')
+})
+
+test('a pick from sectioned suggestions reports the section it came from', async () => {
+  const sections: Section[] = [
+    { title: 'Resources', suggestions: [{ name: 'service', title: 'Service' }] },
+    { title: 'Data points', suggestions: [{ name: 'service', title: 'Service value' }] }
+  ]
+  const reported = ref<{ name: string | null; section: Section | undefined } | null>(null)
+  render(
+    defineComponent({
+      components: { CmkDropdown },
+      setup: () => ({
+        options: { type: 'fixed' as const, suggestions: sections },
+        onUpdate: (name: string | null, section?: Section) => (reported.value = { name, section })
+      }),
+      template: `
+        <CmkDropdown :options="options" label="some aria label" @update:model-value="onUpdate" />
+      `
+    })
+  )
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Service value' }))
+
+  expect(reported.value).toEqual({ name: 'service', section: sections[1] })
+})
+
+test('a floating dropdown reports a click on an option once', async () => {
+  const updates: Array<string | null> = []
+  render(
+    defineComponent({
+      components: { CmkDropdown },
+      setup: () => ({
+        options: { type: 'filtered' as const, suggestions: [{ name: 'a', title: 'A' }] },
+        onUpdate: (name: string | null) => updates.push(name)
+      }),
+      template: `
+        <CmkDropdown floating :options="options" label="some aria label" @update:model-value="onUpdate" />
+      `
+    })
+  )
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'A' }))
+
+  expect(updates).toEqual(['a'])
 })
 
 test('dropdown handles race condition when resetting value', async () => {
@@ -1146,8 +1197,13 @@ test('dropdown without a validation error is neither marked nor described', asyn
   expect(dropdown).toHaveAccessibleDescription('')
 })
 
-// Regression (CMK-38164): a refactor dropped this cap, letting the anchor-positioned list grow
-// unbounded and cover the search box. jsdom cannot exercise anchor positioning, so guard the source.
-test('the anchor-positioned suggestion list is capped to the viewport height', () => {
-  expect(cmkDropdownSource).toMatch(/max-block-size:\s*calc\(100dvh/)
+// Regression (CMK-38164): a dropped cap let the anchor-positioned list grow over the search box.
+// jsdom cannot exercise anchor positioning, so assert the source keeps the JS-driven height cap.
+test('the anchor-positioned suggestion list is capped in height', () => {
+  expect(cmkDropdownSource).toMatch(/max-block-size:\s*v-bind\(listMaxBlockSize\)/)
+})
+
+// Regression (CMK-38164): the same list ran past the viewport edge sideways; assert the width cap.
+test('the anchor-positioned suggestion list is capped in width', () => {
+  expect(cmkDropdownSource).toMatch(/max-inline-size:\s*v-bind\(listMaxInlineSize\)/)
 })

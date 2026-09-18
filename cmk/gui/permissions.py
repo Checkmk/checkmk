@@ -9,8 +9,9 @@ from dataclasses import dataclass
 from typing import override
 
 import cmk.ccc.plugin_registry
-from cmk.gui.type_defs import PermissionName, RoleName
-from cmk.gui.utils.speaklater import LazyString, LazyText
+from cmk.gui.type_defs import RoleName
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.speaklater import LazyString, LazyText
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -111,7 +112,7 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
 
     @override
     def registration_hook(self, instance: Permission) -> None:
-        instance._sort_index = self._index_counter
+        instance._sort_index = self._index_counter  # noqa: SLF001
         self._index_counter += 1
 
     def get_sorted_permissions(self, section: PermissionSection) -> list[Permission]:

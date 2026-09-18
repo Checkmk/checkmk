@@ -334,7 +334,7 @@ class SNMPPluginStoreItem(NamedTuple):
     inventory: bool
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStoreItem":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> SNMPPluginStoreItem:
         return cls(
             [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
             SNMPDetectSpec.from_json(serialized["detect_spec"]),
@@ -373,7 +373,7 @@ class SNMPPluginStore(Mapping[SNMPSectionName, SNMPPluginStoreItem]):
         return self._store.__len__()
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStore":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> SNMPPluginStore:
         return cls(
             {
                 SNMPSectionName(k): SNMPPluginStoreItem.deserialize(v)

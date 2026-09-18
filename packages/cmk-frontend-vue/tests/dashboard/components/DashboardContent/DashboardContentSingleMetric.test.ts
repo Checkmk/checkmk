@@ -25,7 +25,13 @@ function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSi
     value: '801.84',
     unit: 'GB',
     color: '#3CC2FF',
-    series: [10, 20, 15, 30],
+    series: [
+      { timestamp: 0, value: 10 },
+      { timestamp: 60, value: 20 },
+      { timestamp: 120, value: 15 },
+      { timestamp: 180, value: 30 }
+    ],
+    stale: false,
     url: 'view.py?view_name=service',
     ...overrides
   }

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 import tarfile
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -74,10 +72,10 @@ def _tar_names(dump: diagnostics.DiagnosticsDump) -> Sequence[str]:
 
 
 def _catalogue() -> Mapping[str, DiagnosticsPlugin]:
-    return diagnostics._load_plugin_catalogue(logger=diagnostics.ConsoleLogger())
+    return diagnostics._load_plugin_catalogue(logger=diagnostics.ConsoleLogger())  # noqa: SLF001
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def reset_collector_caches() -> None:
     # diagnostics.get_omd_config.cache_clear()
     diagnostics.verify_checkmk_server_host.cache_clear()
@@ -207,15 +205,23 @@ _CLI_CATALOGUE = {
 
 def test_resolve_cli_selection() -> None:
     # no options: only 'always' plugins run (empty explicit selection)
-    assert diagnostics._resolve_cli_selection(_CLI_CATALOGUE, {}).plugins == []
+    assert (
+        diagnostics._resolve_cli_selection(  # noqa: SLF001
+            _CLI_CATALOGUE,
+            diagnostics._cli_selection({}),  # noqa: SLF001
+        ).plugins
+        == []
+    )
 
-    selection = diagnostics._resolve_cli_selection(
+    selection = diagnostics._resolve_cli_selection(  # noqa: SLF001
         _CLI_CATALOGUE,
-        {
-            "all-topics": "low",
-            "plugins": "b_high",
-            "checkmk-server-host": "my_server",
-        },
+        diagnostics._cli_selection(  # noqa: SLF001
+            {
+                "all-topics": "low",
+                "plugins": "b_high",
+                "checkmk-server-host": "my_server",
+            }
+        ),
     )
     assert selection.checkmk_server_host == "my_server"
     assert "a_low" in selection.plugins  # low via --all-topics
@@ -226,13 +232,19 @@ def test_resolve_cli_selection() -> None:
 
 def test_resolve_cli_selection_rejects_unknown() -> None:
     with pytest.raises(Exception, match="Unknown plugin"):
-        diagnostics._resolve_cli_selection(_CLI_CATALOGUE, {"plugins": "nope"})
+        diagnostics._resolve_cli_selection(  # noqa: SLF001
+            _CLI_CATALOGUE,
+            diagnostics._cli_selection({"plugins": "nope"}),  # noqa: SLF001
+        )
     with pytest.raises(Exception, match="Invalid sensitivity"):
-        diagnostics._resolve_cli_selection(_CLI_CATALOGUE, {"all-topics": "extreme"})
+        diagnostics._resolve_cli_selection(  # noqa: SLF001
+            _CLI_CATALOGUE,
+            diagnostics._cli_selection({"all-topics": "extreme"}),  # noqa: SLF001
+        )
 
 
 def test_legacy_selection() -> None:
-    selected, host = diagnostics._legacy_selection(
+    selected, host = diagnostics._legacy_selection(  # noqa: SLF001
         {
             "local-files": True,
             "checkmk-crashes": True,
@@ -253,6 +265,12 @@ def test_legacy_selection() -> None:
     assert host == "my_server"
 
 
+def test_legacy_metric_backend_option_selects_data_backend_plugin() -> None:
+    parameters = diagnostics.deserialize_cl_parameters(["metric-backend"])
+    selected, _host = diagnostics._legacy_selection(parameters)  # noqa: SLF001
+    assert "data_backend_state" in selected
+
+
 @pytest.mark.parametrize(
     "cl_parameters, expected_parameters",
     [
@@ -263,13 +281,13 @@ def test_legacy_selection() -> None:
                 "local-files",
                 "omd-config",
                 "checkmk-crashes",
-                "metric-backend",
+                "data-backend",
             ],
             {
                 "local-files": True,
                 "omd-config": True,
                 "checkmk-crashes": True,
-                "metric-backend": True,
+                "data-backend": True,
             },
         ),
         # files
@@ -313,10 +331,10 @@ def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
     for nr in range(10):
         dump.dump_folder.joinpath("dummy-%s.tar.gz" % nr).touch()
 
-    dump._cleanup_dump_folder(tmp_path)
+    dump._cleanup_dump_folder(tmp_path)  # noqa: SLF001
 
     tarfiles = list(dump.dump_folder.iterdir())
-    assert len(tarfiles) == dump._keep_num_dumps
+    assert len(tarfiles) == dump._keep_num_dumps  # noqa: SLF001
     assert all(t.suffixes[-1] == ".gz" for t in tarfiles)
 
 
@@ -338,7 +356,7 @@ def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     (config_dir / "test.conf").write_text("testvar = testvalue")
 
     catalogue = _catalogue()
-    legacy_plugins = diagnostics._legacy_file_plugins(
+    legacy_plugins = diagnostics._legacy_file_plugins(  # noqa: SLF001
         {"checkmk-config-files": ["test/test.conf", "no/such/file.mk"]},
         catalogue=catalogue,
     )
@@ -353,7 +371,7 @@ def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
 def test_legacy_cee_file_options_absent_on_community() -> None:
     """Without the CEE plugins the core/licensing options are silently unavailable"""
     catalogue = _catalogue()
-    legacy_plugins = diagnostics._legacy_file_plugins(
+    legacy_plugins = diagnostics._legacy_file_plugins(  # noqa: SLF001
         {
             "checkmk-core-files": ["core/history"],
             "checkmk-licensing-files": ["licensing/history.json"],

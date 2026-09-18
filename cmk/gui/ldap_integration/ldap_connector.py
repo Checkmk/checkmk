@@ -7,9 +7,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot
@@ -34,7 +32,6 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
-from __future__ import annotations
 
 import contextlib
 import copy
@@ -42,7 +39,7 @@ import shutil
 import time
 import traceback
 from collections import Counter
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -112,6 +109,8 @@ from cmk.gui.userdb import (
 from cmk.gui.userdb._connector import (
     CheckCredentialsResult,
     ConnectorType,
+    LoadUsersFunction,
+    SaveUsersFunction,
     UserConnector,
     UserConnectorRegistry,
 )
@@ -208,7 +207,7 @@ def logged_in_user_id() -> UserId | None:
     is created which would cause a crash when trying to get the logged in user id."""
     try:
         return logged_in_user.id
-    except AttributeError:
+    except AttributeError, AssertionError:
         return None
 
 
@@ -382,7 +381,7 @@ def _load_copy_of_existing_user(
     # already owns it" branches above so that the existing ownership wins on
     # the rare overlap of bare-SAML + suffixed-LDAP-of-this-connector.
     if existing is not None and _is_saml_connector(existing.get("connector")):
-        ldap_user_connector._logger.info(
+        ldap_user_connector._logger.info(  # noqa: SLF001
             'TAKEOVER "%(user_id)s": connector %(old_connector)s -> %(new_connector)s',
             {
                 "user_id": bare,
@@ -679,7 +678,7 @@ def _sync_ldap_user(
         return existing_user_id
 
     if ldap_user_connector.create_users_only_on_login() and not login_attempt:
-        ldap_user_connector._logger.info(
+        ldap_user_connector._logger.info(  # noqa: SLF001
             '  SKIP SYNC "%(ldap_user_name)s" (Only create user of "%(connector_id)s" connector on login)',
             {
                 "ldap_user_name": fetched_ldap_user.ldap_user_name,
@@ -689,7 +688,7 @@ def _sync_ldap_user(
         return None
 
     if not login_attempt and not ldap_user_connector.is_authentication_connection():
-        ldap_user_connector._logger.info(
+        ldap_user_connector._logger.info(  # noqa: SLF001
             '  SKIP SYNC "%(ldap_user_name)s" (connector "%(connector_id)s" only syncs attributes; '
             "user creation is reserved for authentication_connections)",
             {
@@ -725,7 +724,7 @@ def _sync_ldap_user(
     )
     if not ldap_user_connector.has_suffix():
         cant_sync_msg += " A suffix should be added to this connector."
-    ldap_user_connector._logger.info(cant_sync_msg)
+    ldap_user_connector._logger.info(cant_sync_msg)  # noqa: SLF001
     return None
 
 
@@ -832,7 +831,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self._clear_nearest_dc_cache()
             msg = e.message["desc"] if hasattr(e, "message") and "desc" in e.message else "%s" % e
 
-            return None, f"{uri}: {msg}"
+            return None, f"{uri}: {msg}"  # type: ignore[possibly-undefined]
 
         except MKLDAPException as e:
             self._clear_nearest_dc_cache()
@@ -993,7 +992,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
             else:
                 self._bind("", ("password", ""), catch=False, conn=conn)  # anonymous bind
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
+        except INVALID_CREDENTIALS, INAPPROPRIATE_AUTH:
             raise MKLDAPException(
                 _(
                     "Unable to connect to LDAP server with the configured bind credentials. "
@@ -1016,7 +1015,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         try:
             conn.simple_bind_s(user_dn, password_store.extract(password_id))
             self._logger.info("  SUCCESS")
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
+        except INVALID_CREDENTIALS, INAPPROPRIATE_AUTH:
             raise
         except LDAPError as e:
             self._logger.info(
@@ -1228,7 +1227,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                         base, self._ldap_get_scope(scope), filt, columns
                     ):
                         if dn is None:
-                            continue  # skip unwanted answers
+                            continue  # type: ignore[unreachable]  # skip unwanted answers
                         new_obj = {}
                         for key, val in obj.items():
                             new_obj[key.lower()] = [v.decode("utf-8") for v in val]
@@ -1412,7 +1411,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         user_id = self._sanitize_user_id(raw_user_id)
         if user_id is None:
-            return None
+            return None  # type: ignore[unreachable]
 
         fetched_ldap_user = FetchedLDAPUser(
             dn=dn if no_escape else dn.replace("\\", "\\\\"),
@@ -1852,6 +1851,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         )
         self._complete_sync(
             sync_users_result=sync_user_result,
+            only_username=userid,
             users=users,
             user_connections=user_connections,
             save_users_func=save_users,
@@ -1963,18 +1963,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         add_to_changelog: bool,  # unused
         only_username: UserId | None,
         user_attributes: Sequence[tuple[str, UserAttribute]],
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
+        load_users_func: LoadUsersFunction,
+        save_users_func: SaveUsersFunction,
         default_user_profile: UserSpec,
     ) -> None:
         if not self.has_user_base_dn_configured():
@@ -2002,7 +1992,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         start_time = time.time()
 
         fetched_ldap_users = self.get_users(user_attributes)
-        users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
+        users: Users = load_users_func(lock=True)
 
         sync_users_result = SyncUsersResult(
             sync_start_time=start_time,
@@ -2027,6 +2017,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         self._complete_sync(
             sync_users_result=sync_users_result,
+            only_username=only_username,
             users=users,
             user_connections=active_config.user_connections,  # TODO user connections should be independent of active config
             save_users_func=save_users_func,
@@ -2038,25 +2029,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _complete_sync(
         self,
         sync_users_result: SyncUsersResult,
+        only_username: UserId | None,
         users: Users,
         user_connections: Sequence[UserConnectionConfig],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
+        save_users_func: SaveUsersFunction,
         user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> None:
         """Call hook, log changes, save changes, release locks"""
-        # The hooks can fail if a user is created on login via the REST-API and is then
-        # modified by the ldap sync process but the user has been updated correctly.
-        with contextlib.suppress(AttributeError):
+        try:
             hooks.call(
                 "ldap-sync-finished",
                 self._logger,
@@ -2067,6 +2047,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 active_config.wato_use_git,
                 active_config.debug,
             )
+        except AttributeError, AssertionError:
+            # This sync also runs while a user is being authenticated, i.e. before flask has
+            # opened the session. Hooks that need a user context cannot work that early,
+            # see logged_in_user_id(). The users are synced correctly at this point, so
+            # don't fail just log.
+            self._logger.debug("Skipped the ldap-sync-finished hook", exc_info=True)
 
         duration = time.time() - sync_users_result.sync_start_time
         self._logger.info(
@@ -2086,6 +2072,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 datetime.now(),
                 active_config.wato_pprint_config,
                 True,
+                changed_users=[only_username] if only_username else "all",
             )
         else:
             release_users_lock()
@@ -2327,7 +2314,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
         connection: LDAPUserConnector,
         params: dict[str, Any],
     ) -> list[str]:
-        return [params.get("attr", connection._ldap_attr(self.ident)).lower()]
+        return [params.get("attr", connection._ldap_attr(self.ident)).lower()]  # noqa: SLF001
 
     @override
     def sync_func(
@@ -2413,7 +2400,7 @@ def ldap_attr_of_connection(connection: LDAPUserConnector | None, attr: str) -> 
         # Handle "new connection" situation where there is no connection object existant yet.
         # The default type is "Active directory", so we use it here.
         return ldap_attr_map["ad"].get(attr, attr).lower()
-    return connection._ldap_attr(attr)
+    return connection._ldap_attr(attr)  # noqa: SLF001
 
 
 # Helper function for gathering the default LDAP filters of a connection.
@@ -2424,7 +2411,7 @@ def ldap_filter_of_connection(
         # Handle "new connection" situation where there is no connection object existent yet.
         # The default type is "Active directory", so we use it here.
         return ldap_filter_map["ad"].get(key, "(objectclass=*)")
-    return connection._ldap_filter(key, handle_config)
+    return connection._ldap_filter(key, handle_config)  # noqa: SLF001
 
 
 def _get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]]:
@@ -2449,7 +2436,7 @@ def _get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str
 def _get_group_member_cmp_val(
     connection: LDAPUserConnector, user_id: UserId, ldap_user: LDAPUserSpec
 ) -> str:
-    return user_id.lower() if connection._member_attr() == "memberuid" else ldap_user["dn"][0]
+    return user_id.lower() if connection._member_attr() == "memberuid" else ldap_user["dn"][0]  # noqa: SLF001
 
 
 def _get_groups_of_user(
@@ -2480,7 +2467,7 @@ def _get_groups_of_user(
         dn_groups: GroupMemberships = {}
         for conn in connections:
             dn_groups.update(
-                conn._get_group_memberships(dn_names, filt_attr="distinguishedname", nested=nested)
+                conn._get_group_memberships(dn_names, filt_attr="distinguishedname", nested=nested)  # noqa: SLF001
             )
         for dn, group in dn_groups.items():
             if user_cmp_val in group["members"]:
@@ -2489,7 +2476,7 @@ def _get_groups_of_user(
     if cn_names:
         cn_groups: GroupMemberships = {}
         for conn in connections:
-            cn_groups.update(conn._get_group_memberships(cn_names, nested=nested))
+            cn_groups.update(conn._get_group_memberships(cn_names, nested=nested))  # noqa: SLF001
         for group in cn_groups.values():
             if user_cmp_val in group["members"]:
                 assert isinstance(group["cn"], str)
@@ -2551,7 +2538,7 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
         connection: LDAPUserConnector,
         params: dict[str, Any],
     ) -> list[str]:
-        return [params.get("attr", connection._ldap_attr("mail")).lower()]
+        return [params.get("attr", connection._ldap_attr("mail")).lower()]  # noqa: SLF001
 
     @override
     def sync_func(
@@ -2565,7 +2552,7 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         mail = ""
-        mail_attr = sync_attribute.get("attr", connection._ldap_attr("mail")).lower()
+        mail_attr = sync_attribute.get("attr", connection._ldap_attr("mail")).lower()  # noqa: SLF001
         if ldap_user.get(mail_attr):
             mail = ldap_user[mail_attr][0].lower()
 
@@ -2624,7 +2611,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
         connection: LDAPUserConnector,
         params: dict[str, Any],
     ) -> list[str]:
-        return [params.get("attr", connection._ldap_attr("cn")).lower()]
+        return [params.get("attr", connection._ldap_attr("cn")).lower()]  # noqa: SLF001
 
     @override
     def sync_func(
@@ -2637,7 +2624,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
         _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
-        attr = sync_attribute.get("attr", connection._ldap_attr("cn")).lower()
+        attr = sync_attribute.get("attr", connection._ldap_attr("cn")).lower()  # noqa: SLF001
         return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
     @override
@@ -2706,10 +2693,10 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
         connection: LDAPUserConnector,
         params: dict[str, Any],
     ) -> list[str]:
-        attrs = [params.get("attr", connection._ldap_attr("pw_changed")).lower()]
+        attrs = [params.get("attr", connection._ldap_attr("pw_changed")).lower()]  # noqa: SLF001
 
         # Fetch user account flags to check locking
-        if connection._is_active_directory():
+        if connection._is_active_directory():  # noqa: SLF001
             attrs.append("useraccountcontrol")
         return attrs
 
@@ -2725,7 +2712,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
     ) -> dict:
         sync_attribute = cast(SyncAttribute, params)
         # Special handling for active directory: Is the user enabled / disabled?
-        if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):
+        if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):  # noqa: SLF001
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
             locked_in_ad = bool(int(ldap_user["useraccountcontrol"][0]) & 2)
             locked_in_cmk = user["locked"]
@@ -2736,7 +2723,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
                     "serial": user.get("serial", 0) + 1,
                 }
 
-        changed_attr = sync_attribute.get("attr", connection._ldap_attr("pw_changed")).lower()
+        changed_attr = sync_attribute.get("attr", connection._ldap_attr("pw_changed")).lower()  # noqa: SLF001
         if changed_attr not in ldap_user:
             raise MKLDAPException(
                 _(
@@ -2819,7 +2806,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
         connection: LDAPUserConnector,
         params: dict[str, Any],
     ) -> list[str]:
-        return [params.get("attr", connection._ldap_attr("mobile")).lower()]
+        return [params.get("attr", connection._ldap_attr("mobile")).lower()]  # noqa: SLF001
 
     @override
     def sync_func(
@@ -2832,7 +2819,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
         _user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
-        attr = sync_attribute.get("attr", connection._ldap_attr("mobile")).lower()
+        attr = sync_attribute.get("attr", connection._ldap_attr("mobile")).lower()  # noqa: SLF001
         return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
     @override
@@ -3188,12 +3175,12 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
                 continue
             assert isinstance(conn, LDAPUserConnector)
             if group_name["dn"]:
-                for dn, group in conn._get_group_memberships(
+                for dn, group in conn._get_group_memberships(  # noqa: SLF001
                     group_name["dn"], filt_attr="distinguishedname", nested=nested
                 ).items():
                     ldap_groups[dn.lower()] = group
             if group_name["cn"]:
-                for group in conn._get_group_memberships(group_name["cn"], nested=nested).values():
+                for group in conn._get_group_memberships(group_name["cn"], nested=nested).values():  # noqa: SLF001
                     assert isinstance(group["cn"], str)
                     ldap_groups[group["cn"].lower()] = group
 

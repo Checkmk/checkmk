@@ -26,11 +26,11 @@ from cmk.utils.security_event import log_security_event
 
 
 class TokenAuthenticatedPage:
-    def get(self, token: AuthToken, ctx: PageContext) -> PageResult:
+    def get(self, token: AuthToken, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement the page functionality"""
         raise MKMethodNotAllowed("Method not supported")
 
-    def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
+    def post(self, token: AuthToken, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Override this to implement the page functionality"""
         raise MKMethodNotAllowed("Method not supported")
 

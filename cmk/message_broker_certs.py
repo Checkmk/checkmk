@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cmk import messaging
+from cmk.ccc.log import CMKFormatter
 from cmk.utils.certs import MessagingTrustedCAs, SiteBrokerCA, SiteBrokerCertificate
 
 
@@ -53,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv
     logger = logging.getLogger("cmk-message-broker-certs")
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(CMKFormatter(message_only=True))
     logger.setLevel(logging.INFO)
 
     try:

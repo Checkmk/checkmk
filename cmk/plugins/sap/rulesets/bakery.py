@@ -102,6 +102,11 @@ def _instance_form() -> Dictionary:
                     title=Title("Prefix for piggyback host name"),
                 ),
             ),
+            "host_suffix": DictElement(
+                parameter_form=String(
+                    title=Title("Suffix for piggyback host name"),
+                ),
+            ),
         },
     )
 
@@ -163,6 +168,20 @@ def _valuespec_agent_config_mk_sap() -> Dictionary:
                         " SAP BI Monitors/BI Monitor/*/Oracle/Performance,"
                         " SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/*,"
                         " SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/CPU_Utilization."
+                    ),
+                    element_template=String(),
+                ),
+            ),
+            "exclude_paths": DictElement(
+                parameter_form=List(
+                    title=Title("CCMS paths to exclude from monitoring"),
+                    help_text=Help(
+                        "Paths excluded from monitoring even when matched by the paths above,"
+                        " using the same patterns. Path segments come from the 40 character SAP"
+                        " field MTNAMESHRT, so long names arrive truncated and patterns must match"
+                        " the truncated name. A pattern that matches the 'monitor set/monitor'"
+                        " path of a monitor excludes that monitor entirely; its tree is then not"
+                        " queried at all."
                     ),
                     element_template=String(),
                 ),

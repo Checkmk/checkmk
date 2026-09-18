@@ -97,7 +97,7 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         "to test the rules you defined here.</p>"
                         "<p>Note that to match a special regex character in your patterns, you need to use a "
                         "backslash to escape its special meaning. This is especially relevant for Windows file paths. "
-                        'For example, to match the Windows path "C:\\Users\\amdin\\Desktop", enter '
+                        'For example, to match the Windows path "C:\\Users\\admin\\Desktop", enter '
                         '"C:\\\\Users\\\\admin\\\\Desktop".</p>'
                         '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
                         "log entries but reclassify their states.</p>"

@@ -16,6 +16,7 @@ import { computed } from 'vue'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
+import { type HostMacros, substituteMacros } from '../lib/commandTemplate'
 import type { AgentSlideOutTabs } from '../lib/type_def'
 
 const props = defineProps<{
@@ -61,20 +62,15 @@ function registrationServer(): string {
   return `${host}:${props.agentReceiverPort}`
 }
 
+const macros = computed<HostMacros>(() => ({
+  hostName: props.hostName,
+  siteId: props.siteId,
+  downloadServer: props.siteServer || `${window.location.protocol}//${window.location.host}`,
+  registrationServer: registrationServer()
+}))
+
 function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
-  if (!cmd) {
-    return ''
-  }
-
-  cmd = cmd.replace(/{{HOSTNAME}}/g, props.hostName ?? '').replace(/{{SITE}}/g, props.siteId ?? '')
-  if (isRegistration) {
-    return cmd.replace(/{{SERVER}}/g, registrationServer())
-  }
-
-  return cmd.replace(
-    /{{SERVER}}/g,
-    props.siteServer || `${window.location.protocol}//${window.location.host}`
-  )
+  return substituteMacros(cmd, isRegistration ? 'registration' : 'download', macros.value)
 }
 
 const linuxUnbakedFallback = computed<UnbakedFallback | undefined>(() =>

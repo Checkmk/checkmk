@@ -35,13 +35,13 @@ class IconExtensions:
 
 @api_model
 class IconModel(DomainObjectModel):
-    domainType: Literal["icon"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["icon"] = api_field(description="The domain type of the object.")
     extensions: IconExtensions = api_field(description="All the metadata of this icon.")
 
 
 @api_model
 class IconCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["icon"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["icon"] = api_field(
         description="The domain type of the objects in the collection",
         example="icon",
     )

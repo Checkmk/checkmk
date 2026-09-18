@@ -178,7 +178,7 @@ def test_check_results(  # type: ignore[misc]
     }
 
     # Act
-    results = list(mcafee_webgateway._check_webgateway(now, value_store, params, section))
+    results = list(mcafee_webgateway._check_webgateway(now, value_store, params, section))  # noqa: SLF001
 
     # Assert
     assert results == expected_results

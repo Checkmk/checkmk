@@ -54,7 +54,7 @@ def discover_podman_container_uptime(
 def check_podman_container_uptime(
     params: Mapping[str, Any],
     section_podman_container_inspect: SectionPodmanContainerInspect | None,
-    section_uptime: uptime.Section | None,
+    section_uptime: uptime.Section | None,  # noqa: ARG001
 ) -> CheckResult:
     if not section_podman_container_inspect:
         return

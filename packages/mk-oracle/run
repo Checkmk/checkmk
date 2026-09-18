@@ -55,7 +55,7 @@ usage() {
     echo "  -C, --component-tests       run all component tests"
     echo "  -R, --remote-host           run tests on a remote host"
     echo "  -T VER, --docker-tests=VER"
-    echo "                              run component tests against Oracle Database in Docker (VER: 23, 19, 12, 11)"
+    echo "                              run component tests against Oracle Database in Docker (VER: 23, 12, 11)"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
     echo "  -j N, --jobs=N              allow N jobs at once, default is ${JOBS}"
@@ -239,7 +239,7 @@ run_check_format() {
 }
 
 setup_tests() {
-    path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
+    path_to_runtime="${PWD}/runtimes/plugins/libexec/mk-oracle-v2/oic"
     mkdir -p "${path_to_runtime}"
     INSTANTCLIENT_ARCHIVE="${PWD}/runtimes/downloads/instantclient_19_28.tar.gz"
     export INSTANTCLIENT_ARCHIVE
@@ -352,9 +352,9 @@ run_test_component_remote_host() {
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
-        mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle"
+        mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/libexec/mk-oracle-v2/oic"
         mkdir -p "${TEST_BINARY_REMOTE_PATH}/tests"
-        : >"${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle/libclntsh.so"
+        : >"${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/libexec/mk-oracle-v2/oic/libclntsh.so"
 EOF
     # copy Oracle DB plug-in test binaries and test data to the remote-host
     # shellcheck disable=SC2086
@@ -391,7 +391,6 @@ cleanup_docker_container() {
         23) service="oracle-free" ;;
         11) service="oracle-xe" ;;
         12 | 12c) service="oracle-12c" ;;
-        19 | 19c) service="oracle-19c" ;;
         *)
             echo "Warning: Unknown version '${version}' for cleanup"
             return 1
@@ -428,7 +427,6 @@ run_test_component_docker() {
         23) db_sid="FREE" db_service_name="FREE" ;;
         11) db_sid="XE" db_service_name="XE" ;;
         12 | 12c) db_sid="XE" db_service_name="xe.oracle.docker" ;;
-        19 | 19c) db_sid="ORCLCDB" db_service_name="ORCLCDB" ;;
         *)
             cleanup_docker_container "${ORACLE_DOCKER_VERSION}"
             failure "Unsupported Oracle version: ${ORACLE_DOCKER_VERSION}"

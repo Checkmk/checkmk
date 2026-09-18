@@ -5,21 +5,23 @@
 
 """The global time picker on the service detail page.
 
-E2E rather than Vitest for all three: one interaction has to reach every graph on a real page,
-the non-effect only shows across a real navigation, and the legacy time-range wrapper never
-appears in the Vue tree at all - it is emitted by `cmk/gui/graphing/_html_render.py` and by the
-legacy JS.
+E2E rather than Vitest throughout: one interaction has to reach every graph on a real page,
+the non-effect only shows across a real navigation, the preferred default range is stored
+server-side, and the picker is mounted by the page rather than by any single Vue component.
 """
 
 import logging
 import re
+from collections.abc import Iterator, Mapping
 from typing import Final
 
+import pytest
 from playwright.sync_api import expect
 
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import open_service_graphs
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.testlib.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,28 @@ def _mark_document(graphs: ServiceGraphs) -> None:
 
 def _document_survived(graphs: ServiceGraphs) -> bool:
     return bool(graphs.page.evaluate("window.__cmkGlobalTimePickerMarker === true"))
+
+
+@pytest.fixture(name="preferred_default_range")
+def fixture_preferred_default_range(test_site: Site) -> Iterator[None]:
+    """`OTHER_PRESET` as the "Global time picker default range" of `ADMIN_USER`, whom the
+    browser logs in as - not of the automation user the REST client acts as."""
+
+    def set_default_time_range(time_range: Mapping[str, str | int]) -> None:
+        user = test_site.openapi.users.get(ADMIN_USER)
+        assert user is not None, f"The site has no {ADMIN_USER} to set the preference on"
+        _user_spec, etag = user
+        test_site.openapi.users.edit(
+            ADMIN_USER,
+            {"interface_options": {"time_picker": {"default_time_range": time_range}}},
+            etag,
+        )
+
+    set_default_time_range({"option": "individual", "duration": 25 * 60 * 60})
+    try:
+        yield
+    finally:
+        set_default_time_range({"option": "default"})
 
 
 def test_one_preset_selection_moves_every_graph_on_the_page(
@@ -109,28 +133,40 @@ def test_selected_range_is_not_restored_after_navigating_away(
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
 
 
-def test_page_carries_only_the_global_picker_and_no_legacy_time_ranges(
+def test_page_carries_exactly_one_global_picker(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
-    """The legacy per-graph time controls are gone from this page.
-
-    Scoped to the service detail page on purpose: the host graph views and the custom-graph page
-    still render legacy graphs with `show_time_range_previews`, so a site-wide assertion would
-    fail on pages that are correctly still legacy.
-
-    `test_service_page_embeds_cmk_graph_without_legacy_markup`
-    (`tests/system/singlesite/cmk/gui/graphing/test_graph_component_embedding.py`) makes the same
-    negative claim, pairing it with the `<cmk-graph-group>` embedding rather than with the picker.
+    """One picker drives every graph on the page, so a second one would desynchronise them.
 
     Do: open the service detail page.
-    Assert: exactly one global picker, and no legacy time-range wrapper.
+    Assert: exactly one global picker.
     """
     expect(
         service_graphs.time_picker.root,
         "The page did not render exactly one global time picker",
     ).to_have_count(1)
+    assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
+
+
+@pytest.mark.usefixtures("preferred_default_range")
+def test_user_preference_preselects_its_own_range(
+    service_graphs: ServiceGraphs, javascript_errors: list[str]
+) -> None:
+    """The user's preferred default range is the one the picker opens on - the reported
+    defect is this state reached without anyone asking for it.
+
+    Do: set the preference, then open the service graphs page.
+    Assert: the preferred range is the highlighted chip and every graph draws that window.
+    """
     expect(
-        service_graphs.owner.main_area.locator("div.graph_with_timeranges"),
-        "The page still renders the legacy per-graph time range controls",
-    ).to_have_count(0)
+        service_graphs.time_picker.active_preset_chip,
+        "The picker opened on a range other than the user's preferred default",
+    ).to_have_text(OTHER_PRESET)
+
+    service_graphs.wait_until_settled()
+    for panel in service_graphs.all_panels():
+        expect(
+            panel.timestamp,
+            "A graph drew a narrower window than the range the picker preselected",
+        ).to_contain_text(_TWO_DATE_WINDOW)
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"

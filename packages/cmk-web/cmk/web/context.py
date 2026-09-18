@@ -32,6 +32,25 @@ class RequestProtocol(Protocol):
     @property
     def remote_ip(self) -> str | None: ...
 
+    def cookie(self, varname: str, default: str | None = None) -> str | None: ...
+
+    @property
+    def is_secure(self) -> bool: ...
+
+
+class ResponseProtocol(Protocol):
+    """Mirrors the parts of cmk.gui's Response the web package writes to."""
+
+    # Mirrors werkzeug's Response.set_cookie: the parameters we use are keyword-only
+    # here because their position differs in the implementation. In contrast to
+    # werkzeug, "path" has no default: its "/" would set the cookie outside of the
+    # site's URL prefix, so callers have to name the path explicitly.
+    def set_cookie(self, key: str, value: str = "", *, path: str, secure: bool = False) -> None: ...
+
+    def set_http_cookie(
+        self, key: str, value: str, *, secure: bool, max_age: int | None = None
+    ) -> None: ...
+
 
 class UserProtocol(Protocol):
     def may(self, pname: str) -> bool: ...

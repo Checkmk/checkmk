@@ -17,9 +17,9 @@
     "warning_color": { "type": "string" },
     "critical_color": { "type": "string" },
     "logged_in_user": { "type": "string" },
-    "metric_backend_available": { "type": "boolean" },
+    "telemetry_metrics_available": { "type": "boolean" },
     "create_services_available": { "type": "boolean" },
-    "metric_backend_default_title": { "type": "string" },
+    "telemetry_metrics_default_title": { "type": "string" },
     "title_macros": {
       "type": "array",
       "items": { "$ref": "#/$defs/title_macro_group" }
@@ -38,9 +38,9 @@
     "warning_color",
     "critical_color",
     "logged_in_user",
-    "metric_backend_available",
+    "telemetry_metrics_available",
     "create_services_available",
-    "metric_backend_default_title",
+    "telemetry_metrics_default_title",
     "title_macros",
     "initial_breadcrumb",
     "time_picker"

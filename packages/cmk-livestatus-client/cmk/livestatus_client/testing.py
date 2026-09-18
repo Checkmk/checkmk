@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """This module collects code which helps with testing Checkmk.
@@ -13,8 +12,6 @@ For code to be admitted to this module, it should itself be tested thoroughly, s
 have any friction during testing with these helpers themselves.
 
 """
-
-from __future__ import annotations
 
 import collections
 import datetime as dt
@@ -555,7 +552,7 @@ def pick_header(query: str, header_name: str, default: str | None = None) -> str
     Returns:
         The header value.
     """
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith(header_name):
             return line.split(": ", 1)[1]
 
@@ -585,7 +582,7 @@ def remove_headers(query: str, headers: list[str]) -> str:
 
     """
     result = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         header = line.split(": ", 1)[0]
         if header in headers:
             continue
@@ -855,8 +852,8 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     if match_type == "loose":
         # FIXME: Too loose, needs to be more strict.
         #   "GET hosts" also matches "GET hosts\nColumns: ..." which should not be possible.
-        string_lines = query.splitlines()
-        for line in expected.splitlines():
+        string_lines = query.split("\n")
+        for line in expected.split("\n"):
             if line not in string_lines:
                 result = False
                 break
@@ -947,7 +944,7 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
 
     """
     reducers = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Stats: "):
             reducers.append(make_reducer_func(line))
         elif line.startswith(("StatsAnd: ", "StatsOr: ", "StatsNegate: ")):
@@ -1074,7 +1071,7 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
 
     """
     filters = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Filter:"):
             filters.append(make_filter_func(line))
         elif line.startswith(("And:", "Or:")):
@@ -1329,7 +1326,7 @@ def _column_of_query(query: str) -> list[ColumnName] | None:
         >>> _column_of_query('GET hosts\\nFilter: name = foo')
 
     """
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Columns:"):
             return line[8:].split()  # len("Columns:") == 8
 
@@ -1357,7 +1354,7 @@ def _table_of_query(query: str) -> TableName | None:
         >>> _table_of_query("GET\\n")
 
     """
-    lines = query.splitlines()
+    lines = query.split("\n")
     if lines and lines[0].startswith("GET "):
         return lines[0].split(None, 1)[1]
 
@@ -1387,7 +1384,7 @@ def _unpack_headers(query: str) -> dict[str, str]:
 
     """
     unpacked = {}
-    for header in query.splitlines():
+    for header in query.split("\n"):
         if header.startswith("GET "):
             continue
         if ": " not in header:
@@ -1423,6 +1420,7 @@ def expect_single_query(
     query: str = "",
     match_type: MatchType = "loose",
     expect_status_query: bool = False,
+    tables: Mapping[TableName, ResultList] | None = None,
 ) -> Iterator[MultiSiteConnection]:
     """A simplified testing context manager.
 
@@ -1437,6 +1435,11 @@ def expect_single_query(
             If the query of the status table (which Checkmk does when calling cmk.gui.sites.live())
             should be expected. Defaults to False.
 
+        tables:
+            Row data to seed before the query runs, replacing the default table data (for the
+            first configured site only; other sites stay empty). Use this when a test needs to
+            assert on values computed from the response rather than just the query text.
+
     Returns:
         A context manager.
 
@@ -1447,6 +1450,8 @@ def expect_single_query(
 
     """
     with mock_livestatus_communication() as mock_live:
+        for table_name, table_data in (tables or {}).items():
+            mock_live.add_table(table_name, table_data)
         if query:
             mock_live.expect_query(query, match_type=match_type)
         with mock_live(expect_status_query):

@@ -5,8 +5,6 @@
 
 """Scope-derived narrowing of what an authenticated request may do."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import ClassVar, Final
@@ -19,12 +17,17 @@ from cmk.gui.scopes import normalize_scopes, ScopeId
 # PRELIMINARY LIST, extend as we go.
 READ_PERMISSIONS: Final[frozenset[str]] = frozenset(
     {
+        # Not a read capability but the prerequisite for any request at all.
+        "general.use",
+        # hosts/services/comments/downtimes/EC/folders
         "bi.see_all",
         "general.see_all",
-        "general.see_availability",
-        "general.use",  # Not a read capability but the prerequisite for any request at all.
         "mkeventd.seeall",
         "wato.see_all_folders",
+        # get_config_changes
+        "wato.auditlog",
+        # get_availability
+        "general.see_availability",
     }
 )
 
@@ -81,7 +84,7 @@ def request_authorization() -> Authorization:
     try:
         # flask types this as its own session class; `authorization` is on ours.
         authorization = flask.session.authorization  # type: ignore[attr-defined]
-    except (RuntimeError, AttributeError):
+    except RuntimeError, AttributeError:
         # Expected for background jobs, cron, CLI, ...
         return Authorization.UNRESTRICTED
     assert isinstance(authorization, Authorization)

@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Sequence
 
 import pytest
@@ -20,14 +21,16 @@ from cmk.gui.monitor.services._models import (
     ServiceSortDirection,
 )
 from cmk.livestatus_client.testing import expect_single_query
+from tests.testlib.gui.web_test_app import SetConfig
 
 # "foo-server-01" matches no row in the default hosts/services test-data, so queries against it
 # return an empty result. This lets us assert on the exact query text without also needing to
 # supply full row data for every column the query touches.
 _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
-    "description host_name state plugin_output acknowledged scheduled_downtime_depth "
-    "notifications_enabled is_flapping last_check last_state_change perf_data check_command"
+    "description host_name state has_been_checked plugin_output acknowledged "
+    "scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check "
+    "last_state_change perf_data check_command"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
@@ -143,7 +146,12 @@ def test_count_matched_query_shape() -> None:
         "Filter: description ~~ CPU\nFilter: plugin_output ~~ CPU\nOr: 2\nAnd: 2",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        assert repo.count_matched(_UNKNOWN_HOSTNAME, query="CPU", filters=ServiceFilter("")) == 0
+        assert (
+            repo.count_matched(
+                _UNKNOWN_HOSTNAME, query="CPU", filters=ServiceFilter(""), fields=frozenset()
+            )
+            == 0
+        )
 
 
 def test_count_matched_applies_filters() -> None:
@@ -153,7 +161,31 @@ def test_count_matched_applies_filters() -> None:
         "Filter: state = 1",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.count_matched(_UNKNOWN_HOSTNAME, query="", filters=ServiceFilter("Filter: state = 1"))
+        repo.count_matched(
+            _UNKNOWN_HOSTNAME,
+            query="",
+            filters=ServiceFilter("Filter: state = 1"),
+            fields=frozenset(),
+        )
+
+
+def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
+    # Regression test: a "\r" embedded in a filter value must not turn into a Livestatus line
+    # break when the hand-assembled Stats query is joined with "\n" - only a real "\n" may do
+    # that. Livestatus itself treats "\r" as ordinary data, and so must this query.
+    with expect_single_query(
+        f"GET services\nStats: state >= 0\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n"
+        "Filter: state = evil\rmore",
+        match_type="strict",
+    ) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        repo.count_matched(
+            _UNKNOWN_HOSTNAME,
+            query="",
+            filters=ServiceFilter("Filter: state = evil\rmore"),
+            fields=frozenset(),
+        )
 
 
 def test_host_exists_returns_false_for_unknown_host() -> None:
@@ -229,12 +261,205 @@ def test_every_optional_field_names_the_columns_it_needs() -> None:
 
 
 def test_build_query_filter_without_a_query_matches_everything() -> None:
-    assert _build_query_filter("").render() == []
+    assert _build_query_filter("", frozenset(ServiceOptionalField)).render() == []
 
 
 def test_build_query_filter_searches_the_name_and_the_summary() -> None:
-    assert _build_query_filter("CPU").render() == [
+    assert _build_query_filter("CPU", frozenset()).render() == [
         ("Filter", "description ~~ CPU"),
         ("Filter", "plugin_output ~~ CPU"),
         ("Or", "2"),
     ]
+
+
+@pytest.mark.parametrize(
+    "field, expected",
+    [
+        pytest.param(
+            ServiceOptionalField.LABELS,
+            [
+                ("Filter", "label_names ~~ CPU"),
+                ("Filter", "label_values ~~ CPU"),
+                ("Or", "2"),
+            ],
+            id="labels match by name or by value",
+        ),
+        pytest.param(
+            ServiceOptionalField.TAGS,
+            [
+                ("Filter", "tag_names ~~ CPU"),
+                ("Filter", "tag_values ~~ CPU"),
+                ("Or", "2"),
+            ],
+            id="tags match by name or by value",
+        ),
+        pytest.param(
+            ServiceOptionalField.CONTACTS,
+            [("Filter", "contacts ~~ CPU")],
+            id="contacts",
+        ),
+        pytest.param(
+            ServiceOptionalField.CONTACT_GROUPS,
+            [("Filter", "contact_groups ~~ CPU")],
+            id="contact groups",
+        ),
+    ],
+)
+def test_build_query_filter_searches_a_shown_list_column(
+    field: ServiceOptionalField, expected: list[tuple[str, str]]
+) -> None:
+    assert _build_query_filter("CPU", frozenset({field})).render() == [
+        ("Filter", "description ~~ CPU"),
+        ("Filter", "plugin_output ~~ CPU"),
+        *expected,
+        ("Or", "3"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "staleness, threshold, expected_stale",
+    [
+        pytest.param(5.0, 3.5, True, id="staleness at or above the threshold is stale"),
+        pytest.param(2.0, 3.5, False, id="staleness below the threshold is not stale"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_derives_stale_from_the_staleness_threshold(
+    staleness: float, threshold: float, expected_stale: bool, set_config: SetConfig
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "OK",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": staleness,
+        "last_check": 0,
+        "last_state_change": 0,
+        "perf_data": "",
+        "check_command": "check_cpu",
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        with set_config(staleness_threshold=threshold):
+            services = repo.fetch(
+                _UNKNOWN_HOSTNAME,
+                limit=None,
+                query="",
+                sorters=[],
+                filters=ServiceFilter(""),
+                fields=frozenset(),
+            )
+
+    assert [service.stale for service in services] == [expected_stale]
+
+
+@pytest.mark.parametrize(
+    "active_checks_enabled, modified_attributes_list, expected",
+    [
+        pytest.param(0, ["active_checks_enabled"], True, id="a user switched them off"),
+        pytest.param(0, [], False, id="never on, as for a passive service"),
+        pytest.param(1, ["active_checks_enabled"], False, id="a user switched them back on"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
+    active_checks_enabled: int, modified_attributes_list: list[str], expected: bool
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "OK",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": modified_attributes_list,
+        "active_checks_enabled": active_checks_enabled,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": 0,
+        "perf_data": "",
+        "check_command": "check_cpu",
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.active_checks_disabled for service in services] == [expected]
+
+
+@pytest.mark.parametrize(
+    "in_check_period, in_passive_check_period, expected",
+    [
+        pytest.param(1, 1, True, id="inside both periods"),
+        pytest.param(0, 1, False, id="outside the active check period"),
+        pytest.param(1, 0, False, id="outside the passive check period"),
+        pytest.param(0, 0, False, id="outside both periods"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
+    in_check_period: int, in_passive_check_period: int, expected: bool
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "OK",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": in_check_period,
+        "in_passive_check_period": in_passive_check_period,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": 0,
+        "perf_data": "",
+        "check_command": "check_cpu",
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.in_check_period for service in services] == [expected]

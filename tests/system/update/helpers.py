@@ -206,9 +206,9 @@ def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
 
 def check_errors_in_log_files(site: Site) -> None:
     """Assert that there are no unexpected errors in the site log-files"""
-    # Default pattern should be "^.*error.*$"
+    # The CMKFormatter includes the log level (e.g. "ERROR") in every line.
     # TODO: Remove "sigterm" from pattern after CMK-24766 is done
-    content_pattern = "^(?!.*(sigterm)).*error.*$"
+    content_pattern = r"^(?!.*(sigterm)).*(?-i:ERROR).*$"
 
     error_match_dict = parse_files(
         path_name=site.logs_dir,

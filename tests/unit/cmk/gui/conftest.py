@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-from __future__ import annotations
+# mypy: disable-error-code="explicit-any"
+
 
 import typing
 from collections.abc import Iterator
@@ -20,6 +19,7 @@ from werkzeug.test import create_environ
 
 import cmk.gui.watolib.password_store
 import cmk.utils.paths
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
@@ -61,7 +61,7 @@ def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def deactivate_redis(request: pytest.FixtureRequest) -> Iterator[None]:
     """Disable redis for all GUI unit tests by default
 
@@ -86,17 +86,17 @@ def allow_redis() -> None:
     """Opt-out of the deactivate_redis fixture (see there)"""
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
@@ -153,7 +153,7 @@ def fixture_remote_site() -> Iterator[None]:
             distr_wato_mk.write_bytes(previous)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: Edition) -> None:
     perform_load_plugins(test_edition)
 
@@ -210,7 +210,7 @@ def allow_background_jobs() -> None:
     return
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_unannotated_background_job_start(
     request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:
@@ -221,7 +221,7 @@ def fail_on_unannotated_background_job_start(
 def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
+        side_effect=lambda *args, **kw: None,  # noqa: ARG005
     )
 
 
@@ -284,9 +284,9 @@ def aut_user_auth_wsgi_app(
 
 @pytest.fixture()
 def with_host(
-    request_context,
-    with_admin_login,
-):
+    request_context: None,
+    with_admin_login: UserId,
+) -> Iterator[list[HostName]]:
     yield from create_test_hosts()
 
 

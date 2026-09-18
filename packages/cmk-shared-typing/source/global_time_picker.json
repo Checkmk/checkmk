@@ -12,16 +12,26 @@
     "first_day_of_week": {
       "anyOf": [{ "$ref": "#/$defs/first_day_of_week" }, { "type": "null" }]
     },
-    "default_refresh_time": { "type": ["number", "null"] }
+    "refresh": { "$ref": "#/$defs/global_time_picker_refresh" }
   },
   "required": [
     "custom_time_ranges",
     "default_time_range",
     "server_time_zone",
     "first_day_of_week",
-    "default_refresh_time"
+    "refresh"
   ],
   "$defs": {
+    "global_time_picker_refresh": {
+      "title": "GlobalTimePickerRefresh",
+      "type": "object",
+      "properties": {
+        "interval_seconds": { "type": ["number", "null"] },
+        "starts_live": { "type": "boolean" },
+        "reloads_page_content": { "type": "boolean" }
+      },
+      "required": ["interval_seconds", "starts_live", "reloads_page_content"]
+    },
     "first_day_of_week": {
       "title": "FirstDayOfWeek",
       "type": "string",

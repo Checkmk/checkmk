@@ -30,7 +30,7 @@ def parse_proxmox_ve_disk_usage(string_table: StringTable) -> Section:
     return {key: float(value) for key, value in json.loads(string_table[0][0]).items()}
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

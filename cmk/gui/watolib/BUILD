@@ -29,9 +29,7 @@ py_library(
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/search:index",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
-        "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
@@ -45,6 +43,21 @@ py_library(
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
         requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "wire_format",
+    srcs = [
+        "wire_format.py",
+    ],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-licensing",
     ],
 )
 
@@ -66,12 +79,12 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":wire_format",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/utils",
-        "//cmk/gui/utils:base",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:resulttype",
@@ -99,6 +112,7 @@ py_library(
         "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -202,6 +216,7 @@ py_library(
             "passwords.py",
             "tag_config_file.py",
             "timeperiods.py",
+            "wire_format.py",
         ],
     ),
     imports = ["../../.."],
@@ -223,6 +238,7 @@ py_library(
         ":registries",
         ":tag_config_file",
         ":timeperiods",
+        ":wire_format",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/fields",
@@ -258,6 +274,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:resulttype",
@@ -270,6 +287,7 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-messaging",
+        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-web/cmk/web/utils",
         requirement("cryptography"),
         requirement("flask"),

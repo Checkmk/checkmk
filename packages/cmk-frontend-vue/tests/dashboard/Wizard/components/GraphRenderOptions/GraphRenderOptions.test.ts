@@ -14,7 +14,6 @@ const requiredProps = {
   verticalAxis: true,
   verticalAxisWidthMode: 'fixed' as const,
   fixedVerticalAxisWidth: 8,
-  fontSize: 8,
   timestamp: false,
   roundMargin: false,
   graphLegend: false,

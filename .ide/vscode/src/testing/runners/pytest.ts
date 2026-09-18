@@ -8,7 +8,7 @@ import * as path from 'path'
 
 import type { DiscoveredTest, JUnitTestCase, RunOptions } from '../types'
 
-export const PY_TEST_RULE_REGEX = /\bpy_test\s*\(\s*[\s\S]*?name\s*=\s*"([^"]+)"/g
+export const PY_TEST_RULE_REGEX = /\b(?:py_cmk_test|py_test)\s*\(\s*[\s\S]*?name\s*=\s*"([^"]+)"/g
 
 export function discoverPyTestsForTarget(wsPath: string, target: string): DiscoveredTest[] {
   const without = target.replace(/^\/\//, '')

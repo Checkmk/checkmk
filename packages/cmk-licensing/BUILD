@@ -11,7 +11,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -27,14 +26,15 @@ py_library(
     imports = ["."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/packages/cmk-licensing-nonfree:__pkg__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
         "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
@@ -42,6 +42,7 @@ py_library(
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugin-apis:licensing",
         requirement("python-dateutil"),
     ],
 )
@@ -92,7 +93,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-licensing",
     strip_path_prefixes = ["packages/cmk-licensing"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

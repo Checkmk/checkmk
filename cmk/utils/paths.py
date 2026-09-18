@@ -85,7 +85,6 @@ diagnostics_dir = var_dir / "diagnostics"
 profiles_dir = var_dir / "profiles"
 site_config_dir = var_dir / "site_configs"
 visuals_cache_dir = tmp_dir / "visuals_cache"
-predictions_dir = var_dir / "prediction"
 user_messages_spool_dir = var_dir / "user_messages/spool"
 diskspace_config_dir = default_config_dir / "diskspace.d/wato/"
 

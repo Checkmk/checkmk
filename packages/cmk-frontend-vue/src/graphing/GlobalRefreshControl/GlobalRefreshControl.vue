@@ -12,15 +12,16 @@ import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
+import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { pad2 } from '../utils/timeFormat'
-import { useGlobalRefresh } from './useGlobalRefresh'
 
 const {
   refreshIntervalSeconds,
   refreshPaused,
   refreshTick,
   setRefreshIntervalSeconds,
-  setRefreshPaused
+  pauseRefresh,
+  resumeRefresh
 } = useGlobalRefresh()
 
 const lastRefreshAt = ref<Date | null>(null)
@@ -50,10 +51,10 @@ const intervalModel = computed<string | null>({
   get: () => String(refreshIntervalSeconds.value),
   set: (value) => {
     if (value === TURN_OFF) {
-      setRefreshPaused(true)
+      pauseRefresh()
     } else if (value !== null) {
+      // Only rendered while the refresh runs, so this only changes the rhythm; Resume goes live.
       setRefreshIntervalSeconds(Number(value))
-      setRefreshPaused(false)
     }
   }
 })
@@ -61,8 +62,9 @@ const intervalModel = computed<string | null>({
 const emit = defineEmits<{ resume: [] }>()
 
 function resume(): void {
+  // The range first: the refresh that follows draws whatever window this leaves behind.
   emit('resume')
-  setRefreshPaused(false)
+  resumeRefresh()
 }
 
 const lastRefreshLabel = computed(() => {

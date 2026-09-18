@@ -84,7 +84,7 @@ def parse_kernel(string_table: StringTable) -> Section:
     """
     try:
         timestamp: int | None = int(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         timestamp = None
 
     parsed: dict[str, list] = {}
@@ -92,13 +92,13 @@ def parse_kernel(string_table: StringTable) -> Section:
         if line[0] in KERNEL_COUNTER_NAMES:
             try:
                 parsed.setdefault(KERNEL_COUNTER_NAMES[line[0]], []).append((line[0], int(line[1])))
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 continue
 
         if line[0].startswith("cpu"):
             try:
                 parsed.setdefault("Cpu Utilization", []).append((line[0], line[1:]))
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 continue
     return timestamp, parsed
 
@@ -136,10 +136,10 @@ def check_kernel_util(params: Mapping[str, Any], section: Section) -> CheckResul
 
     # Look for entry matching "cpu" (this is the combined load of all cores)
     for cpu in section[1].get("Cpu Utilization", []):
-        if cpu[0] == "cpu":
-            total = CPUInfo(cpu[0], *cpu[1])  # type: ignore[misc]
-        elif cpu[0].startswith("cpu"):
-            cores.append(CPUInfo(cpu[0], *cpu[1]))  # type: ignore[misc]
+        if cpu[0] == "cpu" and isinstance(cpu[1], list):
+            total = CPUInfo(cpu[0], *cpu[1])
+        elif cpu[0].startswith("cpu") and isinstance(cpu[1], list):
+            cores.append(CPUInfo(cpu[0], *cpu[1]))
 
     if total is None:
         yield Result(

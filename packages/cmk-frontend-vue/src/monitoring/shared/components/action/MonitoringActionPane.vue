@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts" generic="Target">
-import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject, provide } from 'vue'
 
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -22,6 +22,9 @@ const props = withDefaults(
     targets: Target[]
     indent?: boolean | undefined
     showCount?: boolean | undefined
+    showClose?: boolean | undefined
+    /** Relates the selection to the loaded rows, e.g. "Selected services: 2 | Total services: 12". */
+    countsLabel?: ((selected: number, total: number) => TranslatedString) | undefined
   }>(),
   { showCount: true }
 )
@@ -30,8 +33,6 @@ const emit = defineEmits<{
   (event: 'feedback', result: ActionFeedback): void
   (event: 'cancel'): void
 }>()
-
-const { _tn } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, undefined)
 
@@ -43,15 +44,11 @@ provide(
 const action = computed(() => props.actions[props.actionId])
 const initialValues = computed(() => action.value?.defaultValues())
 
-const subtitle = computed(() => {
-  const selected = props.targets.length
-  return _tn(
-    'Selected host: %{selected} | Total hosts: %{total}',
-    'Selected hosts: %{selected} | Total hosts: %{total}',
-    selected,
-    { selected, total: monitoringService?.total.value ?? 0 }
-  )
-})
+// Only the page knows what it counts, so a pane without a label counts nothing rather
+// than guessing a noun.
+const subtitle = computed(() =>
+  props.countsLabel?.(props.targets.length, monitoringService?.total.value ?? 0)
+)
 
 async function onSubmit(values: unknown): Promise<void> {
   const current = action.value
@@ -74,6 +71,7 @@ async function onSubmit(values: unknown): Promise<void> {
     :form-props="action.formProps"
     :initial-values="initialValues"
     :indent="indent"
+    :show-close="showClose"
     @submit="onSubmit"
     @cancel="emit('cancel')"
   />

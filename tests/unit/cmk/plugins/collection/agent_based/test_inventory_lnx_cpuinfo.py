@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -185,7 +184,7 @@ power management:
 
 
 @pytest.fixture(scope="module", name="section_1")
-def _get_info_1():
+def _get_info_1() -> Section:
     return parse_lnx_cpuinfo([line.split(":") for line in OUTPUT_1.split("\n") if line.strip()])
 
 

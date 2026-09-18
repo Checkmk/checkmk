@@ -3,168 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
-from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Annotated, final, Literal, override
 
 from pydantic import (
     BaseModel,
     computed_field,
-    Field,
+    field_validator,
     PlainValidator,
     SerializeAsAny,
 )
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.color import Color
-from cmk.gui.i18n import _
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from ._from_api import GraphFromAPI, RegisteredMetric
-from ._graph_display_config import GraphRenderOptions
-from ._graph_metric_expressions import (
-    AugmentedTimeSeries,
-    GraphConsolidationFunction,
-    GraphMetricExpression,
-    line_type_mirror,
-    LineType,
-    parse_graph_metric_expression,
-)
-from ._metric_backend_registry import FetchTimeSeriesProtocol
-from ._rrd import HostGraphRow, ServiceGraphRow
-from ._translated_metrics import TranslatedMetric
-from ._unit import (
-    ConvertibleUnitSpecification,
-    NonConvertibleUnitSpecification,
-    UserSpecificUnit,
-)
+GraphConsolidationFunction = Literal["max", "min", "average"]
+
+AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 
 
 @dataclass(frozen=True)
 class GraphEnvironment:
-    """Bundles the server-side environment passed unchanged through every rendering path."""
-
-    registered_metrics: Mapping[str, RegisteredMetric]
-    registered_graphs: Mapping[str, GraphFromAPI]
     user_permissions: UserPermissions
-    temperature_unit: TemperatureUnit
-    backend_time_series_fetcher: FetchTimeSeriesProtocol | None
     debug: bool = False
-    show_graph_ids: bool = False
-
-
-@dataclass(frozen=True)
-class GraphMetricLimit:
-    graph_metric: GraphMetric
-    max_series_per_query: int
-    num_series_per_query: int
-
-    def reached(self) -> bool:
-        return self.max_series_per_query <= self.num_series_per_query
-
-
-@dataclass(frozen=True)
-class AugmentedTimeSeriesOfGraphMetric:
-    time_series: Sequence[AugmentedTimeSeries]
-    limit: GraphMetricLimit | None
-
-
-class HorizontalRule(BaseModel, frozen=True):
-    value: float
-    rendered_value: str
-    color: str
-    title: str
-
-
-def sort_horizontal_rules_in_decending_order(
-    horizontal_rules: Sequence[HorizontalRule],
-) -> Sequence[HorizontalRule]:
-    return sorted(horizontal_rules, key=lambda hr: hr.value, reverse=True)
-
-
-def compute_warn_crit_rules_from_translated_metric(
-    user_specific_unit: UserSpecificUnit,
-    translated_metric: TranslatedMetric,
-) -> Sequence[HorizontalRule]:
-    horizontal_rules = []
-    if (warn_value := translated_metric.scalar.warn) is not None and warn_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=warn_value,
-                rendered_value=user_specific_unit.formatter.render(warn_value),
-                color=Color.WARN.value,
-                title=_("Warning"),
-            )
-        )
-    if (crit_value := translated_metric.scalar.crit) is not None and crit_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=crit_value,
-                rendered_value=user_specific_unit.formatter.render(crit_value),
-                color=Color.CRIT.value,
-                title=_("Critical"),
-            )
-        )
-    if (
-        warn_lower_value := translated_metric.scalar.warn_lower
-    ) is not None and warn_lower_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=warn_lower_value,
-                rendered_value=user_specific_unit.formatter.render(warn_lower_value),
-                color=Color.WARN.value,
-                title=_("Warning (lower)"),
-            )
-        )
-    if (
-        crit_lower_value := translated_metric.scalar.crit_lower
-    ) is not None and crit_lower_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=crit_lower_value,
-                rendered_value=user_specific_unit.formatter.render(crit_lower_value),
-                color=Color.CRIT.value,
-                title=_("Critical (lower)"),
-            )
-        )
-    return sort_horizontal_rules_in_decending_order(horizontal_rules)
-
-
-class GraphMetric(BaseModel, frozen=True):
-    title: str
-    line_type: LineType
-    operation: Annotated[
-        SerializeAsAny[GraphMetricExpression], PlainValidator(parse_graph_metric_expression)
-    ]
-    unit: ConvertibleUnitSpecification
-    color: str
-
-    def mirror(self) -> GraphMetric:
-        return GraphMetric(
-            title=self.title,
-            line_type=line_type_mirror(self.line_type),
-            operation=self.operation,
-            unit=self.unit,
-            color=self.color,
-        )
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):
@@ -174,19 +38,6 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     @abstractmethod
     def graph_type_name() -> str: ...
 
-    @abstractmethod
-    def fetch_graph_rows(
-        self, env: GraphEnvironment
-    ) -> Sequence[HostGraphRow | ServiceGraphRow]: ...
-
-    @abstractmethod
-    def recipes(
-        self,
-        env: GraphEnvironment,
-        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
-        consolidation_function: GraphConsolidationFunction = "max",
-    ) -> Sequence[GraphRecipeWithOverrides]: ...
-
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461
     # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
@@ -195,9 +46,6 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     @final
     def graph_type(self) -> str:
         return self.graph_type_name()
-
-    def url(self) -> str:
-        return ""
 
     @classmethod
     def add_visual_type(cls) -> str | None:
@@ -221,59 +69,19 @@ def parse_graph_specification(graph_specification: object) -> GraphSpecification
             return graph_specification_registry[graph_type].model_validate(rest)
         case dict():
             raise ValueError("Missing 'graph_type' key in graph specification")
-    raise TypeError(graph_specification)
+        case _:
+            raise TypeError(graph_specification)
 
 
-class FixedVerticalRange(BaseModel, frozen=True):
-    type: Literal["fixed"] = "fixed"
-    min: float | None
-    max: float | None
+class GraphExportRequest(BaseModel, frozen=True):
+    specification: SerializeAsAny[GraphSpecification]
+    consolidation_function: GraphConsolidationFunction = "max"
+    time_start: int | None = None
+    time_end: int | None = None
 
-
-class MinimalVerticalRange(BaseModel, frozen=True):
-    type: Literal["minimal"] = "minimal"
-    min: float | None
-    max: float | None
-
-
-class GraphRanges(BaseModel, frozen=True):
-    time_range: tuple[int, int]
-    # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
-    # colon separated [step length]:[rrd point count]
-    step: int | str
-    vertical_range: tuple[float, float] | None = None
-
-
-class AdditionalGraphHTML(BaseModel, frozen=True):
-    title: str
-    html: str
-
-
-class GraphRecipe(BaseModel, frozen=True):
-    title: str
-    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification = Field(
-        discriminator="type"
-    )
-    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
-    horizontal_rules: Sequence[HorizontalRule]
-    omit_zero_metrics: bool
-    metrics: Sequence[GraphMetric]
-
-
-@dataclass(frozen=True)
-class GraphRecipeWithOverrides:
-    """Bundles a GraphRecipe with its per-recipe settings.
-
-    Keeps the core GraphRecipe (the serializable graph definition) separate
-    from per-recipe settings (specification, ranges, render_options,
-    additional_html) that mirror the sibling fields in GraphRenderState without
-    polluting the recipe itself.
-    """
-
-    recipe: GraphRecipe
-    specification: GraphSpecification
-    consolidation_function: GraphConsolidationFunction | None = None
-    ranges: GraphRanges | None = None
-    render_options: GraphRenderOptions = field(default_factory=GraphRenderOptions)
-    additional_html: AdditionalGraphHTML | None = None
-    mark_requested_end_time: bool = False
+    @field_validator("specification", mode="before")
+    @classmethod
+    def _parse_specification(cls, value: object) -> GraphSpecification:
+        if isinstance(value, GraphSpecification):
+            return value
+        return parse_graph_specification(value)

@@ -117,11 +117,11 @@ py_library(
         "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/base/core",
-        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-licensing",
     ],
 )
 
@@ -140,7 +140,6 @@ py_library(
         "//cmk/automations",
         "//cmk/base/automations",
         "//cmk/base/config",
-        "//cmk/base/modes:modes-registry",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
@@ -152,7 +151,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-events",
         "//packages/cmk-livestatus-client",
-        "//packages/cmk-profiling:backend",
+        "//packages/cmk-plugin-apis:cli",
     ],
 )
 
@@ -166,7 +165,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base-app",
         "//cmk/automations",
         "//cmk/base/automations",
         "//cmk/base/modes:modes-registry",
@@ -177,6 +175,7 @@ py_library(
         "//packages/cmk-ccc:tty",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:diagnostics",
     ],
 )
@@ -190,11 +189,10 @@ py_library(
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        ":base-app",
-        "//cmk/base/modes:modes-registry",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-plugin-apis:cli",
     ],
 )
 
@@ -226,6 +224,7 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
+        "//packages/cmk-licensing",
     ],
 )
 

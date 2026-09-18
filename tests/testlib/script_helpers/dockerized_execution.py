@@ -11,8 +11,6 @@ It handles the preparation of the Docker environment, executing specified test c
 the container, and collecting and storing the test results.
 """
 
-from __future__ import annotations
-
 import logging
 import os
 import re
@@ -30,7 +28,6 @@ from typing import Any, Literal, TypedDict, Unpack
 
 import docker
 import docker.errors
-import docker.models
 import docker.models.containers
 import docker.models.images
 import docker.types
@@ -96,7 +93,7 @@ def execute_tests_in_container(
         _reuse_persisted_virtual_environment(container, container_env, _TESTUSER)
 
         if interactive:
-            print(
+            print(  # noqa: T201  # It's OK for test/script helpers to print()
                 textwrap.dedent("""
                 Next steps: Start the test of your choice, for example:
 
@@ -478,13 +475,14 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
     )
     r.raise_for_status()
     hash_name = r.text.split()
-    assert len(hash_name) == 2, (
-        f"Received multiple entries in hash file for {package_name}: \n{r.text}"
-    )
+    if len(hash_name) != 2:
+        raise RuntimeError(f"Received multiple entries in hash file for {package_name}: \n{r.text}")
     _hash, package_name_from_hash_file = hash_name
-    assert package_name_from_hash_file == package_name, (
-        f"The hash file {hash_file_name}'s content ({package_name_from_hash_file}) does not match the expected package name ({package_name})"
-    )
+    if package_name_from_hash_file != package_name:
+        raise RuntimeError(
+            f"The hash file {hash_file_name}'s content ({package_name_from_hash_file}) does not "
+            f"match the expected package name ({package_name})"
+        )
     return _hash
 
 

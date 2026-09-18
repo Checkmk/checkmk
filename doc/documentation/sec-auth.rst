@@ -8,6 +8,7 @@ Checkmk implements a variety of authentication methods, both for internal use an
    :maxdepth: 1
 
    sec-auth-saml.rst
+   arch-comp-oauth.rst
 
 .. TODO: Document the following as well:
 

@@ -9,7 +9,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -61,7 +60,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-mkp-tool",
     strip_path_prefixes = ["packages/cmk-mkp-tool"],
-    # TODO: Duplicated from pyproject.toml
     version = "3.0.0",
     visibility = ["//visibility:public"],
     deps = [

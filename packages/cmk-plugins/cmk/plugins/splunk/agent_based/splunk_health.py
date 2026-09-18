@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 # <<<splunk_health>>>
 # Overall_state red
@@ -95,20 +94,20 @@ def parse_splunk_health(string_table: StringTable) -> HealthSection:
 
     for state_detail in string_table:
         try:
-            match state_detail:
+            match state_detail:  # type: ignore[exhaustive-match]
                 case (raw_name, health):
                     name = format_service_name(raw_name)
                     registry[name] = HealthItem(name=name, health=HealthStatus(health))
                 case (raw_name, feature_name, health):
                     name = format_service_name(raw_name)
                     registry[name].add_feature_health(feature_name, HealthStatus(health))
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             continue
 
     return list(registry.values())
 
 
-def discover_splunk_health(section: HealthSection) -> DiscoveryResult:
+def discover_splunk_health(section: HealthSection) -> DiscoveryResult:  # noqa: ARG001
     """Discovers splunk health services from parsed agent section."""
     yield Service()
 

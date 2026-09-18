@@ -7,7 +7,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -17,15 +16,18 @@ py_library(
         "cmk/graphing_engine/__init__.py",
         "cmk/graphing_engine/_api_plugins.py",
         "cmk/graphing_engine/_display.py",
-        "cmk/graphing_engine/_evaluate.py",
         "cmk/graphing_engine/_fetch.py",
         "cmk/graphing_engine/_fetched.py",
-        "cmk/graphing_engine/_from_api.py",
         "cmk/graphing_engine/_graph.py",
-        "cmk/graphing_engine/_matching.py",
+        "cmk/graphing_engine/_graph_evaluate.py",
+        "cmk/graphing_engine/_graph_from_api.py",
+        "cmk/graphing_engine/_graph_matching.py",
         "cmk/graphing_engine/_naming.py",
+        "cmk/graphing_engine/_operations.py",
+        "cmk/graphing_engine/_perfometer_evaluate.py",
         "cmk/graphing_engine/_quantities.py",
         "cmk/graphing_engine/_quantity.py",
+        "cmk/graphing_engine/_quantity_from_api.py",
         "cmk/graphing_engine/_timeseries.py",
         "cmk/graphing_engine/_title.py",
         "cmk/graphing_engine/_units.py",
@@ -55,7 +57,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-graphing-engine",
     strip_path_prefixes = ["packages/cmk-graphing-engine"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = _ALL + [

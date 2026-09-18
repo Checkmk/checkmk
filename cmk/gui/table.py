@@ -5,9 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import json
@@ -27,13 +25,13 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, requested_file_name
 
 
@@ -90,7 +88,7 @@ def table_element(
     omit_headers: bool = False,
     omit_update_header: bool = False,
     empty_text: str | None = None,
-    help: str | None = None,
+    help: str | None = None,  # noqa: A002
     css: str | None = None,
     isopen: bool = True,
     *,
@@ -121,8 +119,8 @@ def table_element(
         try:
             yield table
         finally:
-            table._finish_previous()
-            table._end()
+            table._finish_previous()  # noqa: SLF001
+            table._end()  # noqa: SLF001
 
 
 # .
@@ -158,7 +156,7 @@ class Table:
         omit_headers: bool = False,
         omit_update_header: bool = False,
         empty_text: str | None = None,
-        help: str | None = None,
+        help: str | None = None,  # noqa: A002
         css: str | None = None,
         isopen: bool = True,
         *,
@@ -547,7 +545,7 @@ class Table:
 
             if isinstance(row.css, list):
                 class_.extend([c for c in row.css if c is not None])  # type: ignore[redundant-expr]
-            elif row.css is not None:
+            elif row.css is not None:  # type: ignore[unreachable]
                 class_.append(row.css)
 
             html.open_tr(
@@ -568,7 +566,7 @@ class Table:
 
         html.close_table()
 
-    def _get_num_cols(self, rows: TableRows) -> int:
+    def _get_num_cols(self, rows: TableRows) -> int:  # noqa: ARG002
         if self.headers:
             return len(self.headers)
         if self.rows:
@@ -668,7 +666,7 @@ class Table:
                 header_title = header.title
 
             if not isinstance(header.css, list):
-                css_class: CSSSpec = [header.css]
+                css_class: CSSSpec = [header.css]  # type: ignore[unreachable]
             else:
                 css_class = header.css
 

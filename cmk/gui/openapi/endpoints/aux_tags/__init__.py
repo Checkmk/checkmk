@@ -83,7 +83,7 @@ def show_aux_tag(params: Mapping[str, Any]) -> Response:
     update_config_generation=False,
     permissions_required=PERMISSIONS,
 )
-def show_aux_tags(params: Mapping[str, Any]) -> Response:
+def show_aux_tags(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show Auxiliary Tags"""
     user.need_permission("wato.hosttags")
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -65,27 +64,28 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 
 class TestAutomationDiagHost:
     @pytest.fixture
-    def hostname(self):
+    def hostname(self) -> str:
         return "testhost"
 
     @pytest.fixture
-    def ipaddress(self):
+    def ipaddress(self) -> str:
         return "1.2.3.4"
 
     @pytest.fixture
-    def raw_data(self):
+    def raw_data(self) -> str:
         return "<<<check_mk>>>\nraw data"
 
     @pytest.fixture
-    def scenario(self, hostname, ipaddress, monkeypatch):
+    def scenario(
+        self, hostname: str, ipaddress: str, monkeypatch: pytest.MonkeyPatch
+    ) -> ConfigCache:
         ts = Scenario()
-        ts.add_host(hostname)
+        ts.add_host(HostName(hostname))
         ts.set_option("ipaddresses", {hostname: ipaddress})
         return ts.apply(monkeypatch).config_cache
 
-    def test_execute(
-        self, hostname: str, ipaddress: str, raw_data: str, scenario: ConfigCache
-    ) -> None:
+    @pytest.mark.usefixtures("scenario")
+    def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         configured_tags = {
             HostName("testhost"): {
@@ -106,7 +106,7 @@ class TestAutomationDiagHost:
         hosts_config = config.make_hosts_config(loaded_config)
         app = replace(
             make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),  # noqa: ARG005
         )
         assert check_mk.AutomationDiagHost().execute(
             app,
@@ -118,7 +118,6 @@ class TestAutomationDiagHost:
                 host_tags=config.make_host_tags(loaded_config, hosts_config),
                 config_cache=ConfigCache(
                     loaded_config,
-                    app.edition,
                     hosts_config,
                     config.make_host_tags(loaded_config, hosts_config),
                     autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -135,7 +134,7 @@ class TestAutomationDiagHost:
 MOCK_PLUGIN = ActiveCheckConfig(
     name="my_active_check",
     parameter_parser=lambda x: x,
-    commands_function=lambda params, host_config: (
+    commands_function=lambda params, host_config: (  # noqa: ARG005
         ActiveCheckCommand(
             service_description=f"Active check of {host_config.name}",
             command_arguments=("--arg1", "arument1", "--host_alias", f"{host_config.alias}"),
@@ -151,9 +150,9 @@ def _patch_plugin_loading(
     # Patch the module that holds the binding actually being read, not the
     # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
-        config._impl,
+        config._impl,  # noqa: SLF001
         "load_active_checks",
-        lambda *a, **kw: loaded_active_checks,
+        lambda *a, **kw: loaded_active_checks,  # noqa: ARG005
     )
 
 
@@ -217,7 +216,7 @@ class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
                 _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description=f"Active check of {host_config.name}",
                             command_arguments=(
@@ -253,21 +252,20 @@ def test_automation_active_check(  # type: ignore[misc]
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
-    monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)
-    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)  # noqa: ARG005
+    monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)  # noqa: ARG005
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
 
     app = make_app()
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
         config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
     )
-    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
 
     active_check = AutomationActiveCheckTestable()
     assert (
@@ -299,7 +297,7 @@ def test_automation_active_check(  # type: ignore[misc]
                 PluginLocation("some_module", "some_name"): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
-                    commands_function=lambda params, host_config: (
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
                         ActiveCheckCommand(
                             service_description=f"Active check of {host_config.name}",
                             command_arguments=(1, 2, 3),  # type: ignore[arg-type]  # wrong on purpose
@@ -333,8 +331,8 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
-    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)  # noqa: ARG005
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
 
     loaded_config = replace(
         EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
@@ -342,14 +340,13 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
     app = make_app()
     config_cache = config.ConfigCache(
         loaded_config,
-        app.edition,
         config.make_hosts_config(loaded_config),
         config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
     )
-    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
@@ -385,7 +382,7 @@ def test_execute_snmp_walk_uses_all_configured_contexts(contexts: list[str]) -> 
     backend_mock = MagicMock()
     backend_mock.walk.return_value = []
 
-    check_mk._execute_snmp_walk(snmp_config_mock, backend_mock)
+    check_mk._execute_snmp_walk(snmp_config_mock, backend_mock)  # noqa: SLF001
 
     walked_contexts = [c.kwargs["context"] for c in backend_mock.walk.call_args_list]
     assert walked_contexts == contexts * len(oids_to_walk())
@@ -400,11 +397,11 @@ def test_execute_snmp_walk_deduplicates_oids_across_contexts() -> None:
     )
     backend_mock = MagicMock()
     # Return the shared OID only when walking the first subtree, empty for others.
-    backend_mock.walk.side_effect = lambda oid, context: (
+    backend_mock.walk.side_effect = lambda oid, context: (  # noqa: ARG005
         [(shared_oid, b"value")] if oid == ".1.3.6.1.2.1" else []
     )
 
-    raw_data, _ = check_mk._execute_snmp_walk(snmp_config_mock, backend_mock)
+    raw_data, _ = check_mk._execute_snmp_walk(snmp_config_mock, backend_mock)  # noqa: SLF001
 
     assert raw_data.count(shared_oid.encode()) == 1
     assert b".1.3.6.1.2.1.1.0 value" in raw_data
@@ -450,7 +447,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Service B", "plugin_two", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         assert config_warnings.get_configuration(additional_warnings=()) == []
 
     def test_passive_passive_conflict_emits_warning(self) -> None:
@@ -458,15 +455,15 @@ class TestWarnServiceNameConflicts:
         preview = self._make_preview(
             [
                 self._make_entry("Check_MK Agent", "checkmk_agent", "unchanged"),
-                self._make_entry("Check_MK Agent", "custom_query_metric_backend", "new"),
+                self._make_entry("Check_MK Agent", "telemetry_metrics_custom_query", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
         assert "checkmk_agent" in warnings[0]
-        assert "custom_query_metric_backend" in warnings[0]
+        assert "telemetry_metrics_custom_query" in warnings[0]
 
     def test_vanished_monitored_conflict_emits_warning(self) -> None:
         """A vanished (but still monitored) service can conflict with a new service.
@@ -478,15 +475,15 @@ class TestWarnServiceNameConflicts:
         preview = self._make_preview(
             [
                 self._make_entry("Check_MK Agent", "checkmk_agent", "vanished"),
-                self._make_entry("Check_MK Agent", "custom_query_metric_backend", "new"),
+                self._make_entry("Check_MK Agent", "telemetry_metrics_custom_query", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]
         assert "checkmk_agent" in warnings[0]
-        assert "custom_query_metric_backend" in warnings[0]
+        assert "telemetry_metrics_custom_query" in warnings[0]
 
     def test_more_than_two_conflicts_emits_single_warning(self) -> None:
         config_warnings.initialize()
@@ -497,7 +494,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("My Service", "plugin_c", "new"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "My Service" in warnings[0]
@@ -513,7 +510,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Service A", "plugin_two", "unchanged"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         assert config_warnings.get_configuration(additional_warnings=()) == []
 
     def test_active_passive_conflict_emits_warning(self) -> None:
@@ -524,7 +521,7 @@ class TestWarnServiceNameConflicts:
                 self._make_entry("Check_MK Agent", "httpv2", "active"),
             ]
         )
-        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
         warnings = config_warnings.get_configuration(additional_warnings=())
         assert len(warnings) == 1
         assert "Check_MK Agent" in warnings[0]

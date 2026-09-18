@@ -348,7 +348,7 @@ class TestParseDrbdCount:
         ],
     )
     def test_parse_drbd_count(self, raw: str, expected: int) -> None:
-        assert drbd._parse_drbd_count(raw) == expected
+        assert drbd._parse_drbd_count(raw) == expected  # noqa: SLF001
 
 
 class TestDrbdV9:

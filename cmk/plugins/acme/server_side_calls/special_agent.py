@@ -14,7 +14,7 @@ from cmk.server_side_calls.v1 import (
 
 
 def _commands_function(
-    params: Mapping[str, object],
+    params: Mapping[str, object],  # noqa: ARG001
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     yield SpecialAgentCommand(command_arguments=[host_config.name])

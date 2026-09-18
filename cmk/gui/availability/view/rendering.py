@@ -67,14 +67,11 @@ from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import (
-    DynamicIconName,
     FilterHeader,
     FilterName,
-    IconNames,
     InfoName,
     Row,
     Rows,
-    StaticIcon,
     ViewName,
     ViewProcessTracking,
     ViewSpec,
@@ -88,6 +85,7 @@ from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri
 
 from .annotations import _handle_edit_annotations, handle_delete_annotations, show_annotations
@@ -113,7 +111,10 @@ def _handle_availability_option_reset() -> None:
 
 
 def _show_availability_options(
-    option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
+    option_type: str,
+    what: AVObjectType,  # noqa: ARG001
+    avoptions: AVOptions,
+    valuespecs: AVOptionValueSpecs,
 ) -> None:
     form_name = "avoptions_%s" % option_type
     with html.form_context(form_name):
@@ -493,7 +494,10 @@ def _render_avoptions_form(
 
 
 def _page_menu_entries_av_mode(
-    what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
+    what: AVObjectType,
+    av_mode: AVMode,
+    av_object: AVObjectSpec,
+    time_range: AVTimeRange,  # noqa: ARG001
 ) -> Iterator[PageMenuEntry]:
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(

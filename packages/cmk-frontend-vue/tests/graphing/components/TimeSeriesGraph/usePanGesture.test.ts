@@ -12,7 +12,8 @@ import type { TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
 import { usePanGesture } from '@/graphing/components/TimeSeriesGraph/usePanGesture'
 import { useZoomGesture } from '@/graphing/components/TimeSeriesGraph/useZoomGesture'
 
-const TIME_RANGE: TimeRange = { start: 1_000, end: 2_000, step: 60 }
+// Well inside the navigable axis, so no test below pans into a bound it did not mean to.
+const TIME_RANGE: TimeRange = { start: 1_700_000_000, end: 1_700_001_000, step: 60 }
 const SPAN_SECONDS = 1_000
 const PLOT_WIDTH = 200
 const PLOT_HEIGHT = 100

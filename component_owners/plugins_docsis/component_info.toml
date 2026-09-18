@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: DOCSIS"
 has_support_component = true
 members_required = 0
+tier = 4
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 Plugins for DOCSIS cable modems and CMTS equipment.

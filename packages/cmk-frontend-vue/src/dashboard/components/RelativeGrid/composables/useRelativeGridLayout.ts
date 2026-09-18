@@ -18,7 +18,8 @@ import {
   GROW,
   MAX,
   type Position,
-  SIZING_MODE
+  SIZING_MODE,
+  WIDGET_MIN_SIZE
 } from '../types.ts'
 import { calculateAbsoluteLayouts, convertAbsoluteToRelativePosition } from '../utils.ts'
 
@@ -40,6 +41,55 @@ export const legacySizeValue = (value: WidgetSizeValue): number => {
     return -1
   }
   throw new Error(`Unsupported size value: ${value}`)
+}
+
+/**
+ * Widgets whose rendered top edges are closer together than this belong to the same row band.
+ * Half the minimum widget height, so a widget can never span two bands on its own.
+ */
+export const READING_ORDER_BANDING_TOLERANCE_PX = (WIDGET_MIN_SIZE[1] * GRID_SIZE) / 2
+
+export function orderWidgetsByReadingOrder(
+  absoluteWidgetLayouts: Record<string, AbsoluteWidgetLayout>,
+  bandingTolerancePx: number
+): string[] {
+  const widgetsByTopEdge = Object.entries(absoluteWidgetLayouts)
+    .map(([widgetId, absoluteLayout]) => ({
+      widgetId,
+      top: absoluteLayout.layout.frame.position.top,
+      left: absoluteLayout.layout.frame.position.left
+    }))
+    .sort((first, second) => first.top - second.top || first.left - second.left)
+
+  const readingOrder: string[] = []
+  let band: typeof widgetsByTopEdge = []
+  let bandTop: number | null = null
+
+  const flushBand = () => {
+    band.sort(
+      (first, second) =>
+        first.left - second.left ||
+        first.top - second.top ||
+        first.widgetId.localeCompare(second.widgetId)
+    )
+    readingOrder.push(...band.map((widget) => widget.widgetId))
+    band = []
+  }
+
+  for (const widget of widgetsByTopEdge) {
+    if (bandTop === null || widget.top - bandTop >= bandingTolerancePx) {
+      if (bandTop !== null) {
+        flushBand()
+      }
+      bandTop = widget.top
+    }
+    band.push(widget)
+  }
+  if (bandTop !== null) {
+    flushBand()
+  }
+
+  return readingOrder
 }
 
 export function determineSizingMode(size: number): SIZING_MODE {
@@ -260,8 +310,19 @@ export function useRelativeGridLayout(
     bringToFront(widgetId)
   }
 
+  function getWidgetReadingOrder(): string[] | null {
+    if (dashboardState.dimensions.width <= 0 || dashboardState.dimensions.height <= 0) {
+      return null
+    }
+    return orderWidgetsByReadingOrder(
+      absoluteWidgetLayouts.value,
+      READING_ORDER_BANDING_TOLERANCE_PX
+    )
+  }
+
   return {
     dashboardState,
+    getWidgetReadingOrder,
     getAbsoluteLayout,
     getLayoutZIndex,
     getAnchorPosition,

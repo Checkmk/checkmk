@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import dataclasses
 from abc import abstractmethod
@@ -12,9 +11,8 @@ from typing import override, Self
 
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.check_utils import worst_service_state
-from cmk.utils.metrics import MetricTuple
 
-__all__ = ["ActiveCheckResult", "ServiceCheckResult", "state_markers"]
+__all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_markers"]
 
 
 # Symbolic representations of states in plug-in output
@@ -22,6 +20,18 @@ __all__ = ["ActiveCheckResult", "ServiceCheckResult", "state_markers"]
 state_markers = ("", "(!)", "(!!)", "(?)")
 
 ServiceState = int
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class MetricTuple:
+    name: str
+    value: float
+    warn: float | None
+    crit: float | None
+    min_: float | None
+    max_: float | None
+    warn_lower: float | None = None
+    crit_lower: float | None = None
 
 
 @dataclasses.dataclass(frozen=True)

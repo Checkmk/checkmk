@@ -1765,6 +1765,18 @@ class PagerDutyPluginCreate(BaseSchema):
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     http_proxy = HTTP_PROXY_CREATE
+    webhook_url = fields.String(
+        enum=[
+            "https://events.pagerduty.com/v2/enqueue",
+            "https://events.eu.pagerduty.com/v2/enqueue",
+        ],
+        load_default="https://events.pagerduty.com/v2/enqueue",
+        description=(
+            "PagerDuty Events API v2 endpoint to post incidents to. Pick the URL "
+            "matching the PagerDuty region (US or EU) your account belongs to."
+        ),
+        example="https://events.pagerduty.com/v2/enqueue",
+    )
 
 
 # PushOver ----------------------------------------------------------
@@ -2464,7 +2476,7 @@ class CustomPlugin(BaseSchema):
     )
 
     @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         return {k: v for k, v in data.items() if k in self.fields}
 
     @post_load(pass_original=True)

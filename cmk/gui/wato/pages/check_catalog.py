@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Display information about the Checkmk check plug-ins
 
@@ -13,8 +12,6 @@ The maxium depth of the catalog paths is 3. The top level is being rendered
 like the Setup main menu. The second and third level are being rendered like
 the global settings.
 """
-
-from __future__ import annotations
 
 import re
 from collections.abc import Collection, Mapping, Sequence
@@ -44,7 +41,6 @@ from cmk.gui.page_menu import (
     search_form,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import DynamicIconName, IconNames, PermissionName, StaticIcon
 from cmk.gui.valuespec import ID, ValueSpec
 from cmk.gui.wato.pages.rulesets import render_value_model_readonly
 from cmk.gui.watolib.check_mk_automations import get_check_information
@@ -56,6 +52,8 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import man_pages, paths
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ._tile_menu import TileMenuRenderer
@@ -197,7 +195,7 @@ class ModeCheckPluginSearch(WatoMode):
         collection: dict[str, list[CatalogEntry]] = {}
         handled_check_names: set[str] = set()
 
-        def entry_part_matches(entry: CatalogEntry, value: str) -> bool:
+        def entry_part_matches(entry: CatalogEntry, value: str) -> bool:  # noqa: ARG001
             return self._search is not None and self._search in value.lower()
 
         def get_matched_entry(entry: CatalogEntry) -> CatalogEntry | None:
@@ -322,8 +320,8 @@ class ModeCheckPluginTopic(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        if isinstance(self._manpages, list):
-            _render_manpage_list(
+        if isinstance(self._manpages, list):  # type: ignore[unreachable]
+            _render_manpage_list(  # type: ignore[unreachable]
                 self._titles,
                 self._manpages,
                 self._path[-1],
@@ -408,7 +406,7 @@ def _add_breadcrumb_topic_items(
 def _render_manpage_list(
     titles: Mapping[str, str],
     manpage_list: Sequence[CatalogEntry],
-    path_comp: str,
+    path_comp: str,  # noqa: ARG001
     heading: str,
     *,
     table_row_limit: int,
@@ -422,7 +420,7 @@ def _render_manpage_list(
     ) as table:
         for entry in sorted(manpage_list, key=lambda x: x["title"]):
             if not isinstance(entry, dict):
-                continue
+                continue  # type: ignore[unreachable]
             table.row()
             url = makeuri(
                 request,

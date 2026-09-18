@@ -10,7 +10,6 @@ py_library(
     name = "base",
     srcs = [
         "images.py",
-        "speaklater.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -27,8 +26,7 @@ py_library(
     name = "middle",
     srcs = [
         "dataclasses.py",
-        "doc_references.py",
-        "language_cookie.py",
+        "doc_reference_urls.py",
         "misc.py",
         "mobile.py",
         "output_funnel.py",
@@ -39,7 +37,6 @@ py_library(
         "timeout_manager.py",
         "transaction_manager.py",
         "user_errors.py",
-        "user_frontend_settings_cookie.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -54,11 +51,9 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//cmk/utils:paths",
-        "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
@@ -80,7 +75,7 @@ py_library(
         "rendering.py",
         "request_context.py",
         "sort.py",
-        "temperate_unit.py",
+        "temperature_unit.py",
         "time.py",
     ],
     imports = ["../../.."],
@@ -92,7 +87,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base",
         ":middle",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",

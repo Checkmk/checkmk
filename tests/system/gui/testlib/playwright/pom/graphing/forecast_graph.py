@@ -6,15 +6,12 @@
 """Page objects for the forecast graph surface (Pro+).
 
 Forecast graphs are pagetype visuals reached through the Customize menu. The surface
-renders the legacy graph unconditionally and the engine's ``cmk-graph-group`` only when
-the request carries ``vue-graphing-enabled``, so which one a caller means is an explicit
-choice: `ForecastGraph`'s ``engine`` flag and the accessors matching it.
+renders through the graph engine, mounting a ``cmk-graph-group``.
 """
 
 import logging
 import re
 from typing import override
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from playwright.sync_api import Locator, Page
 
@@ -25,20 +22,8 @@ from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
 
-# Nothing in the product emits this, so the engine is only reachable by adding it ourselves.
-_ENGINE_REQUEST_VAR = "vue-graphing-enabled"
-
 # Matches both variants `GraphGroup.vue` renders: over a panel, and standalone.
 _ERROR_NOTICE_SELECTOR = ".graphing-graph-notice--error"
-
-
-def _with_engine_enabled(url: str) -> str:
-    """Return `url` carrying the engine's request variable."""
-    parts = urlsplit(url)
-    # Blank values are kept: dropping them would rewrite the URL the listing linked to.
-    query = dict(parse_qsl(parts.query, keep_blank_values=True))
-    query[_ENGINE_REQUEST_VAR] = "1"
-    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 class ForecastGraphList(CmkPage):
@@ -69,16 +54,12 @@ class ForecastGraph(CmkPage):
     Args:
         page: the browser page to drive.
         name: the title the graph is listed under.
-        engine: reload with the engine enabled once reached.
         navigate_to_page: navigate on construction, as `CmkPage` does.
     """
 
-    def __init__(
-        self, page: Page, name: str, *, engine: bool = False, navigate_to_page: bool = True
-    ) -> None:
+    def __init__(self, page: Page, name: str, *, navigate_to_page: bool = True) -> None:
         self.name = name
         self.page_title = name
-        self._engine = engine
         super().__init__(page=page, navigate_to_page=navigate_to_page)
 
     @override
@@ -87,12 +68,6 @@ class ForecastGraph(CmkPage):
         forecast_graphs = ForecastGraphList(self.page)
         forecast_graphs.get_link(self.name).click()
         self.validate_page()
-        if self._engine:
-            # Through the listing first, so the graph is known to be there before the
-            # variable is added to the URL it linked to.
-            logger.info("Reload forecast graph '%s' with the engine enabled", self.name)
-            self.goto(_with_engine_enabled(self.page.url))
-            self.validate_page()
 
     @override
     def validate_page(self) -> None:
@@ -102,10 +77,6 @@ class ForecastGraph(CmkPage):
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
-
-    def graph_container(self) -> Locator:
-        """Return the container scoping the legacy forecast graph on this page."""
-        return GraphAccessor(self).container(GraphContainment.PAGE_DIRECT)
 
     @property
     def engine_graph_group(self) -> Locator:

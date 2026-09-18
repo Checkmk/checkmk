@@ -19,12 +19,16 @@ docker_image_from_alias = { alias_name ->
 }
 
 docker_reference_image = { ->
-    dir("${checkout_dir}") {
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            return docker.image(
-                cmd_output("VERBOSE=1 PULL_BASE_IMAGE=1 ${checkout_dir}/defines/dev-images/reference-image-id")
-            );
-        }
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name();
+
+    def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+
+    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+        def image = docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker");
+        image.pull();
+        return image;
     }
 }
 
@@ -191,7 +195,7 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
     if (kubernetes_inherit_from == "UNSET") {
         def run_args_str = "-v ${checkout_dir}:/checkmk";
         def image_name = "minimal-alpine-checkmk-ci-${args.get('safe_branch_name', 'BRANCH')}:latest";
-        def base_image = resolve_docker_image_alias("IMAGE_PYTHON_3_13");
+        def base_image = resolve_docker_image_alias("IMAGE_PYTHON_3_14");
         def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
         def docker_build_args = "--build-arg IMAGE_BASE=${base_image} -f ${dockerfile} .";
 

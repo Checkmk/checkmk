@@ -17,6 +17,7 @@ vi.mock('@/graphing/api/graphPin', () => ({
 // test gets a fresh module graph instead of sharing it.
 async function freshGlobalPin(): Promise<{
   globalPin: GlobalPin
+  otherGlobalPin: GlobalPin
   loadGraphPin: ReturnType<typeof vi.fn>
   saveGraphPin: ReturnType<typeof vi.fn>
 }> {
@@ -25,6 +26,8 @@ async function freshGlobalPin(): Promise<{
   const { useGlobalPin } = await import('@/graphing/composables/useGlobalPin')
   return {
     globalPin: useGlobalPin(),
+    // A second caller of the same module, standing in for another graph on the page.
+    otherGlobalPin: useGlobalPin(),
     loadGraphPin: vi.mocked(api.loadGraphPin),
     saveGraphPin: vi.mocked(api.saveGraphPin)
   }
@@ -103,4 +106,22 @@ test('the load result applies over an earlier local change', async () => {
   await nextTick()
 
   expect(globalPin.pinTime.value).toBe(1111)
+})
+
+// The pin is one per user, not one per graph, so a change in one has to reach all the others.
+test('a pin set through one graph is seen by every other graph on the page', async () => {
+  const { globalPin, otherGlobalPin } = await freshGlobalPin()
+
+  globalPin.setPin(4242)
+
+  expect(otherGlobalPin.pinTime.value).toBe(4242)
+})
+
+test('clearing the pin in one graph clears it in every other graph too', async () => {
+  const { globalPin, otherGlobalPin } = await freshGlobalPin()
+  globalPin.setPin(4242)
+
+  otherGlobalPin.clearPin()
+
+  expect(globalPin.pinTime.value).toBeNull()
 })

@@ -13,7 +13,6 @@ import {
   type Table
 } from '@tanstack/vue-table'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
-import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -23,7 +22,7 @@ import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
-import type { ColumnFilterValue } from './filter/types'
+import type { ColumnFilterValue, SortDirection } from './filter/types'
 
 const { _t } = usei18n()
 
@@ -45,8 +44,27 @@ function setFilterValue(
   column.setFilterValue(node)
 }
 
+function setSort(column: Column<T, unknown>, direction: SortDirection): void {
+  if (direction === false) {
+    column.clearSorting()
+    return
+  }
+  column.toggleSorting(direction === 'desc')
+}
+
 function columnLabel(column: Column<T, unknown>): string {
   return column.columnDef.header?.toString() ?? column.id
+}
+
+function filterButtonLabel(column: Column<T, unknown>, isActive: boolean): string {
+  const columnTitle = (
+    column.columnDef.meta?.headerTitle?.toString() ??
+    column.columnDef.header?.toString() ??
+    ''
+  ).trim()
+  return isActive
+    ? _t('Filter %{column} (active)', { column: columnTitle })
+    : _t('Filter %{column}', { column: columnTitle })
 }
 
 function helpLabel(column: Column<T, unknown>): string {
@@ -90,8 +108,6 @@ function isLastPinned(columnId: string): boolean {
 function isFirstPinnedRight(columnId: string): boolean {
   return columns?.value.get(columnId)?.isFirstPinnedRight ?? false
 }
-
-type SortDirection = false | 'asc' | 'desc'
 
 function ariaSortFor(direction: SortDirection): 'ascending' | 'descending' | 'none' {
   if (direction === 'asc') {
@@ -202,34 +218,19 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             :disabled="disabled"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
-            <div class="monitoring-table-header__sort-icon-wrapper">
-              <CmkMultitoneIcon
-                name="chevron-up"
-                class="monitoring-table-header__sort-icon"
-                :class="{
-                  'monitoring-table-header__sort-icon--active':
-                    header.column.getIsSorted() === 'asc'
-                }"
-                primary-color="font"
-                aria-hidden="true"
-                size="xsmall"
-              />
-              <CmkMultitoneIcon
-                name="chevron-down"
-                class="monitoring-table-header__sort-icon"
-                :class="{
-                  'monitoring-table-header__sort-icon--active':
-                    header.column.getIsSorted() === 'desc'
-                }"
-                primary-color="font"
-                aria-hidden="true"
-                size="xsmall"
-              />
-            </div>
-
             <span class="monitoring-table-header__label">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </span>
+
+            <CmkMultitoneIcon
+              v-if="header.column.getIsSorted() !== false"
+              name="dashlet-resize"
+              class="monitoring-table-header__sort-icon"
+              :rotate="header.column.getIsSorted() === 'asc' ? 180 : 0"
+              primary-color="font"
+              aria-hidden="true"
+              size="xsmall"
+            />
           </button>
           <span
             v-else-if="!header.isPlaceholder && header.column.columnDef.meta?.headerHelp"
@@ -263,33 +264,38 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             "
             :definition="header.column.columnDef.meta.filter"
             :label="columnLabel(header.column)"
+            anchor="th"
+            :heading="_t('Filter')"
+            :sortable="header.column.getCanSort()"
+            :sort="header.column.getIsSorted()"
             :model-value="filterValue(header.column)"
+            @update:sort="setSort(header.column, $event)"
             @update:model-value="setFilterValue(header.column, $event)"
           >
-            <template #trigger="{ toggle, isOpen, isActive }">
+            <template #trigger="{ toggle, isOpen, isActive, panelId }">
               <button
                 type="button"
                 class="monitoring-table-header__filter-button"
                 :class="{
-                  'monitoring-table-header__filter-button--active': isActive || isOpen
+                  'monitoring-table-header__filter-button--open': isOpen
                 }"
-                :title="
-                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
-                "
-                :aria-label="
-                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
-                "
-                aria-haspopup="true"
+                :title="filterButtonLabel(header.column, isActive)"
+                :aria-label="filterButtonLabel(header.column, isActive)"
                 :aria-expanded="isOpen"
+                :aria-controls="panelId"
                 @click="toggle"
               >
-                <CmkIconEmblem :emblem="isActive ? 'warning' : undefined">
-                  <CmkMultitoneIcon
-                    name="filter"
-                    :primary-color="{ custom: 'var(--success)' }"
-                    aria-hidden="true"
-                  />
-                </CmkIconEmblem>
+                <CmkMultitoneIcon
+                  name="more-actions"
+                  primary-color="font"
+                  aria-hidden="true"
+                  size="small"
+                />
+                <span
+                  v-if="isActive"
+                  class="monitoring-table-header__filter-dot"
+                  aria-hidden="true"
+                ></span>
               </button>
             </template>
           </FilterDropdown>
@@ -422,6 +428,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 }
 
 .monitoring-table-header__filter-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -433,7 +440,6 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   color: inherit;
   cursor: pointer;
   border-radius: 0;
-  opacity: 0.5;
 
   &:focus-visible {
     outline: 1px solid var(--success);
@@ -449,40 +455,24 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 
   &:not(:disabled):hover {
     background-color: var(--ux-theme-3);
-    opacity: 1;
   }
 }
 
-.monitoring-table-header__filter-button--active {
-  opacity: 1;
+.monitoring-table-header__filter-button--open {
+  background-color: var(--ux-theme-3);
 }
 
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
-.monitoring-table-header__filter-button :deep(.cmk-icon-emblem__emblem) {
-  width: 50%;
-  height: 50%;
-  right: -10%;
-  bottom: -10%;
-}
-
-.monitoring-table-header__sort-icon-wrapper {
-  flex-shrink: 0;
-  margin-right: var(--dimension-2);
+.monitoring-table-header__filter-dot {
+  position: absolute;
+  top: var(--dimension-3);
+  right: 0;
+  width: var(--dimension-3);
+  height: var(--dimension-3);
+  border-radius: 50%;
+  background: var(--success);
 }
 
 .monitoring-table-header__sort-icon {
-  opacity: 0.4;
-
-  &:first-child {
-    margin-top: calc(-1 * var(--dimension-2));
-  }
-
-  &:last-child {
-    margin-top: calc(-1 * var(--dimension-3));
-  }
-
-  &.monitoring-table-header__sort-icon--active {
-    opacity: 1;
-  }
+  flex-shrink: 0;
 }
 </style>

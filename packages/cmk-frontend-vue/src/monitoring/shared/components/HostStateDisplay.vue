@@ -4,17 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import StateTag, { type StateTagSize, type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { HostState } from '@/monitoring/shared/api/types'
 
-import StateTag, { type StateTagSize, type StateTone } from './StateTag.vue'
-
 const props = defineProps<{
   state: HostState
-  pending?: boolean | undefined
   stale?: boolean | undefined
   /** Two-letter labels, for a state column too tight to spell the state out. */
   abbreviated?: boolean | undefined
@@ -22,32 +20,39 @@ const props = defineProps<{
 
 const { _t } = usei18n()
 
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled host state: ${String(value)}`)
+}
+
 const stateLabel = computed<TranslatedString>(() => {
-  if (props.pending) {
-    return props.abbreviated ? _t('PD') : _t('PENDING')
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'UP':
       return _t('UP')
     case 'DOWN':
       return props.abbreviated ? _t('DO') : _t('DOWN')
     case 'UNREACHABLE':
-    default:
       return props.abbreviated ? _t('UN') : _t('UNREACH')
+    case 'PENDING':
+      return props.abbreviated ? _t('PD') : _t('PENDING')
+    default:
+      return assertNever(state)
   }
 })
 
 const stateTone = computed<StateTone>(() => {
-  if (props.pending) {
-    return 'pending'
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'UP':
       return 'ok'
     case 'DOWN':
       return 'critical'
-    default:
+    case 'UNREACHABLE':
       return 'unknown'
+    case 'PENDING':
+      return 'pending'
+    default:
+      return assertNever(state)
   }
 })
 

@@ -1,0 +1,14 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: Checkmk Enterprise License
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { registerFormComponents } from '@/form'
+
+import FormSpecTelemetryMetricsCustomQuery from './FormSpecTelemetryMetricsCustomQuery.vue'
+
+export function registerCustomQueryFormComponents(): void {
+  registerFormComponents({
+    telemetry_metrics_custom_query: FormSpecTelemetryMetricsCustomQuery
+  })
+}

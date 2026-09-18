@@ -87,7 +87,7 @@ _INSTALLED_DATE = 123
 def test_inventorize_win_wmi_software(
     monkeypatch: pytest.MonkeyPatch, string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
+    monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)  # noqa: ARG005
     assert (
         list(inventorize_win_wmi_software(parse_win_wmi_software(string_table))) == expected_result
     )

@@ -3,13 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
-from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
-from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
@@ -41,71 +36,7 @@ from cmk.inventory.structured_data import (
     SDFilterChoice,
     SDKey,
     SDNodeName,
-    SDPath,
 )
-
-
-class TreeSource(Enum):
-    node = auto()
-    table = auto()
-    attributes = auto()
-
-
-@dataclass(frozen=True)
-class InventoryPath:
-    path: SDPath
-    source: TreeSource
-    key: SDKey = SDKey("")
-
-    @property
-    def node_name(self) -> str:
-        return self.path[-1] if self.path else ""
-
-
-def _sanitize_path(path: Sequence[str]) -> SDPath:
-    # ":": Nested tables, see also lib/structured_data.py
-    return tuple(
-        SDNodeName(p) for part in path for p in (part.split(":") if ":" in part else [part]) if p
-    )
-
-
-def parse_internal_raw_path(raw: str) -> InventoryPath:
-    if not raw:
-        return InventoryPath(
-            path=(),
-            source=TreeSource.node,
-        )
-    if raw.endswith("."):
-        return InventoryPath(
-            path=_sanitize_path(raw[:-1].strip(".").split(".")),
-            source=TreeSource.node,
-        )
-    if raw.endswith(":"):
-        return InventoryPath(
-            path=_sanitize_path(raw[:-1].strip(".").split(".")),
-            source=TreeSource.table,
-        )
-    path = raw.strip(".").split(".")
-    sanitized_path = _sanitize_path(path[:-1])
-    if ":" in path[-2]:
-        source = TreeSource.table
-        # Forget the last '*' or an index like '17'
-        # because it's related to columns (not nodes)
-        sanitized_path = sanitized_path[:-1]
-    else:
-        source = TreeSource.attributes
-    return InventoryPath(
-        path=sanitized_path,
-        source=source,
-        key=SDKey(path[-1]),
-    )
-
-
-# TODO Cleanup variation:
-#   - parse_internal_raw_path parses NOT visible, internal tree paths used in displayhints/views
-#   - cmk.inventory.structured_data.py::parse_visible_raw_path
-#     parses visible, internal tree paths for contact groups etc.
-# => Should be unified one day.
 
 
 def _transform_attribute[T](
@@ -118,7 +49,7 @@ def _transform_attribute[T](
     return [f(y) for y in x[1]]  # choices
 
 
-def _make_filter_choices_from_permitted_paths(
+def make_filter_choices_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
 ) -> Sequence[SDFilterChoice]:
     return [
@@ -129,30 +60,7 @@ def _make_filter_choices_from_permitted_paths(
             nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
         )
         for entry in permitted_paths
-        if entry  # type: ignore[redundant-expr]
-    ]
-
-
-def make_filter_choices_from_api_request_paths(
-    api_request_paths: Sequence[str],
-) -> Sequence[SDFilterChoice]:
-    def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
-        if inventory_path.key:
-            return SDFilterChoice(
-                path=inventory_path.path,
-                pairs=[inventory_path.key],
-                columns=[inventory_path.key],
-                nodes="nothing",
-            )
-        return SDFilterChoice(
-            path=inventory_path.path,
-            pairs="all",
-            columns="all",
-            nodes="all",
-        )
-
-    return [
-        _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
+        if entry.get("visible_raw_path")
     ]
 
 
@@ -256,7 +164,7 @@ def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> Imm
 
     merged_tree = merge_trees(inventory_tree, status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return filter_tree(merged_tree, _make_filter_choices_from_permitted_paths(permitted_paths))
+        return filter_tree(merged_tree, make_filter_choices_from_permitted_paths(permitted_paths))
 
     return merged_tree
 
@@ -272,8 +180,8 @@ def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName)
     finally:
         sites.live().set_only_sites()
 
-    if result and result[0]:
-        return result[0][0]
+    if result and result[0] and isinstance(raw_status_data := result[0][0], bytes):
+        return raw_status_data
     return b""
 
 
@@ -297,7 +205,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
         hostname,
         history_paths_filter=lambda paths: [paths[-1]] if paths else [],
         delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
+            make_filter_choices_from_permitted_paths(permitted_paths)
             if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
             else None
         ),
@@ -338,7 +246,7 @@ def load_delta_tree(
         hostname,
         history_paths_filter=lambda paths: _search_timestamps(paths, timestamp),
         delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
+            make_filter_choices_from_permitted_paths(permitted_paths)
             if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
             else None
         ),
@@ -360,7 +268,7 @@ def get_history(
         hostname,
         history_paths_filter=lambda paths: paths,
         delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
+            make_filter_choices_from_permitted_paths(permitted_paths)
             if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
             else None
         ),

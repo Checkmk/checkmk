@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="unreachable"
 
 import time
 from collections.abc import Iterable, Sequence
@@ -34,7 +32,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import Choices, DynamicIconName, IconNames, Row, Rows, StaticIcon
+from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_community_upgrade_button
@@ -83,7 +81,9 @@ from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
+from cmk.web.utils.choices import Choices
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
@@ -182,9 +182,9 @@ PermissionActionReschedule = Permission(
 
 
 def command_reschedule_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
-    row: Row,
-    action_rows: Rows,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
+    row: Row,  # noqa: ARG001
+    action_rows: Rows,  # noqa: ARG001
 ) -> HTML:
     return (
         HTMLWriter.render_br()
@@ -193,7 +193,7 @@ def command_reschedule_confirm_dialog_additions(
     )
 
 
-def command_reschedule_render(what: str) -> None:
+def command_reschedule_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.write_text_permissive(_("Spread over") + " ")
     html.text_input(
@@ -218,7 +218,7 @@ def command_reschedule_render(what: str) -> None:
 def command_reschedule_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
     row_index: int,
     action_rows: Rows,
@@ -289,9 +289,9 @@ PermissionActionNotifications = Permission(
 
 
 def command_notifications_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
-    row: Row,
-    action_rows: Rows,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
+    row: Row,  # noqa: ARG001
+    action_rows: Rows,  # noqa: ARG001
 ) -> HTML:
     return (
         HTMLWriter.render_br()
@@ -310,7 +310,7 @@ def command_notifications_confirm_dialog_icon_class() -> Literal["question", "wa
     return "warning"
 
 
-def command_notifications_render(what: str) -> None:
+def command_notifications_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_enable_notifications", _("Enable"), cssclass="border_hot")
     html.button("_disable_notifications", _("Disable"), cssclass="border_hot")
@@ -321,9 +321,9 @@ def command_notifications_render(what: str) -> None:
 def command_notifications_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if not (
@@ -394,7 +394,7 @@ PermissionActionEnableChecks = Permission(
 )
 
 
-def command_toggle_active_checks_render(what: str) -> None:
+def command_toggle_active_checks_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_enable_checks", _("Enable"), cssclass="border_hot")
     html.button("_disable_checks", _("Disable"), cssclass="border_hot")
@@ -405,9 +405,9 @@ def command_toggle_active_checks_render(what: str) -> None:
 def command_toggle_active_checks_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if not ((enable := request.var("_enable_checks")) or request.var("_disable_checks")):
@@ -464,7 +464,7 @@ CommandToggleActiveChecks = Command(
 #   '----------------------------------------------------------------------'
 
 
-def command_toggle_passive_checks_render(what: str) -> None:
+def command_toggle_passive_checks_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_enable_passive_checks", _("Enable"), cssclass="border_hot")
     html.button("_disable_passive_checks", _("Disable"), cssclass="border_hot")
@@ -475,9 +475,9 @@ def command_toggle_passive_checks_render(what: str) -> None:
 def command_toggle_passive_checks_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if not (
@@ -549,7 +549,7 @@ PermissionActionClearModifiedAttributes = Permission(
 )
 
 
-def command_clear_modified_attributes_render(what: str) -> None:
+def command_clear_modified_attributes_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_clear_modattr", _("Reset attributes"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
@@ -557,9 +557,9 @@ def command_clear_modified_attributes_render(what: str) -> None:
 
 
 def command_clear_modified_attributes_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
-    row: Row,
-    action_rows: Rows,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
+    row: Row,  # noqa: ARG001
+    action_rows: Rows,  # noqa: ARG001
 ) -> HTML:
     return (
         HTMLWriter.render_br()
@@ -578,9 +578,9 @@ def command_clear_modified_attributes_confirm_dialog_additions(
 def command_clear_modified_attributes_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.var("_clear_modattr"):
@@ -735,9 +735,9 @@ def _get_states(what: str) -> list[tuple[int, str]]:
 def command_fake_check_result_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.var("_fake_check_result"):
@@ -816,7 +816,7 @@ PermissionActionCustomNotification = Permission(
 )
 
 
-def command_custom_notification_render(what: str) -> None:
+def command_custom_notification_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.text_input(
         varname="_cusnot_comment",
@@ -854,9 +854,9 @@ def command_custom_notification_render(what: str) -> None:
 def command_custom_notification_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.var("_customnotification"):
@@ -929,9 +929,9 @@ class CommandGroupAcknowledge(CommandGroup):
 
 
 def command_acknowledge_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
-    row: Row,
-    action_rows: Rows,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
+    row: Row,  # noqa: ARG001
+    action_rows: Rows,  # noqa: ARG001
 ) -> HTML:
     if request.var("_ack_expire"):
         date = request.get_str_input("_ack_expire_date")
@@ -946,7 +946,7 @@ def command_acknowledge_confirm_dialog_additions(
     )
     expire_time_li = html.render_li(
         _("On %(formatted_datetime_str)s (server time).")
-        % {"formatted_datetime_str": formatted_datetime_str}
+        % {"formatted_datetime_str": formatted_datetime_str}  # type: ignore[possibly-undefined]
         if request.var("_ack_expire")
         else _("No expiration date")
     )
@@ -968,7 +968,7 @@ def command_acknowledge_confirm_dialog_additions(
     )
 
 
-def command_acknowledge_render(what: str) -> None:
+def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
     submit_id = "_acknowledge"
     html.open_div(class_="group")
     html.text_input(
@@ -1103,7 +1103,7 @@ def command_acknowledge_action(
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.var("_acknowledge"):
@@ -1238,7 +1238,7 @@ def command_remove_acknowledgements_action(
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if not request.var("_remove_acknowledgments"):
@@ -1336,7 +1336,7 @@ PermissionActionAddComment = Permission(
 )
 
 
-def command_add_comment_render(what: str) -> None:
+def command_add_comment_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.text_input(
         varname="_comment",
@@ -1361,9 +1361,9 @@ def command_add_comment_render(what: str) -> None:
 def command_add_comment_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.var("_add_comment"):
@@ -1482,7 +1482,7 @@ class NoRecurringDowntimes:
     def number(self) -> int:
         return 0
 
-    def title_prefix(self, recurring_number: int) -> str:
+    def title_prefix(self, recurring_number: int) -> str:  # noqa: ARG002
         return _("Schedule an immediate downtime")
 
 
@@ -1538,7 +1538,7 @@ class CommandScheduleDowntimesForm:
         self._render_advanced_options(what)
         self._render_confirm_buttons(what)
 
-    def _render_adhoc_comment(self, what: str) -> None:
+    def _render_adhoc_comment(self, what: str) -> None:  # noqa: ARG002
         adhoc_duration = active_config.adhoc_downtime.get("duration")
         adhoc_comment = active_config.adhoc_downtime.get("comment", "")
         html.open_div(class_="group")
@@ -1786,7 +1786,7 @@ class CommandScheduleDowntimesForm:
         cmdtag: Literal["HOST", "SVC"],
         spec: str,
         row: Row,
-        row_index: int,
+        row_index: int,  # noqa: ARG002
         action_rows: Rows,
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
@@ -1833,7 +1833,7 @@ class CommandScheduleDowntimesForm:
     def confirm_dialog_additions(
         self,
         cmdtag: Literal["HOST", "SVC"],
-        row: Row,
+        row: Row,  # noqa: ARG002
         action_rows: Rows,
     ) -> HTML:
         start_at = self._custom_start_time()
@@ -2026,7 +2026,7 @@ class CommandScheduleDowntimesForm:
                 action_rows = host_action_rows
         else:
             specs = [spec]
-        return cmdtag, specs, action_rows
+        return cmdtag, specs, action_rows  # type: ignore[possibly-undefined]
 
     def _vs_down_from(self) -> AbsoluteDate:
         return AbsoluteDate(
@@ -2163,7 +2163,7 @@ def _find_all_leaves(
         return entries
 
     # place holders
-    return []
+    return []  # type: ignore[unreachable]
 
 
 def _local_time_if_representable(timestamp: float | None) -> time.struct_time | None:
@@ -2171,7 +2171,7 @@ def _local_time_if_representable(timestamp: float | None) -> time.struct_time | 
         return None
     try:
         return time.localtime(timestamp)
-    except (OverflowError, OSError, ValueError):
+    except OverflowError, OSError, ValueError:
         return None
 
 
@@ -2203,10 +2203,10 @@ def time_interval_end(
         return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst))
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
-    return None
+    return None  # type: ignore[unreachable]
 
 
-def command_remove_downtime_render(what: str) -> None:
+def command_remove_downtime_render(what: str) -> None:  # noqa: ARG001
     html.button("_remove_downtimes", _("Remove"))
 
 
@@ -2215,7 +2215,7 @@ def command_remove_downtime_action(
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.has_var("_remove_downtimes"):
@@ -2230,7 +2230,7 @@ def command_remove_downtime_action(
 def _rm_downtime_from_downtime_datasource(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: Row,
     action_rows: Rows,
 ) -> CommandActionResult:
@@ -2379,7 +2379,7 @@ def _acknowledgement_needs_removal(
 
 
 def command_remove_comments_confirm_dialog_additions(
-    cmdtag: Literal["HOST", "SVC"],
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
     row: Row,
     action_rows: Rows,
 ) -> HTML:
@@ -2388,7 +2388,7 @@ def command_remove_comments_confirm_dialog_additions(
     return HTML.without_escaping(_("Author: ")) + row["comment_author"]
 
 
-def command_remove_comments_render(what: str) -> None:
+def command_remove_comments_render(what: str) -> None:  # noqa: ARG001
     html.open_div(class_="group")
     html.button("_delete_comments", _("Delete"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
@@ -2400,7 +2400,7 @@ def command_remove_comments_action(
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
     row: Row,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if not request.has_var("_delete_comments"):

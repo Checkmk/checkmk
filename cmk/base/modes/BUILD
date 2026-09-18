@@ -2,19 +2,22 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
     name = "modes-registry",
-    srcs = ["modes.py"],
+    srcs = [
+        "arguments.py",
+        "modes.py",
+    ],
     imports = ["../../.."],
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
-        "//non-free/packages/cmk-bakery:__pkg__",
     ],
     deps = [
+        "//cmk/base:base-app",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
-        "//packages/cmk-trace",
     ],
 )
 
@@ -42,6 +45,7 @@ py_library(
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
+        "//cmk/utils:man_pages",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:cpu-tracking",
@@ -69,8 +73,10 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-inventory:inventory",
+        "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",
@@ -92,6 +98,7 @@ py_library(
         "//cmk/base:app",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-profiling:backend",

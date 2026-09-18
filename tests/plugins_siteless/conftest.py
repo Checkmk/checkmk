@@ -19,7 +19,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _cleanup_var_dir() -> Generator[None]:
     var_dir = Path(os.getcwd()) / "var"
     if var_dir.exists():

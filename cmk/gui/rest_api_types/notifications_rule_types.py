@@ -5,16 +5,12 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import cast, Literal, NotRequired, Required, TypedDict
+from typing import cast, Literal, NotRequired, Required, Self, TypedDict
 
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.events.notify_types import (
@@ -58,6 +54,7 @@ from cmk.events.notify_types import (
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PagerdutyPluginName,
+    PagerDutyWebhookURL,
     PluginOptions,
     ProxyUrl,
     PushoverPluginName,
@@ -1328,12 +1325,12 @@ class CheckboxURLPrefix:
             case None:
                 return CheckboxURLPrefixAPIValueType(state="disabled")
 
-            case ("automatic_http", None):
+            case ("automatic_http", None):  # type: ignore[unreachable]
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "http"},
                 )
-            case ("automatic_https", None):
+            case ("automatic_https", None):  # type: ignore[unreachable]
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "https"},
@@ -1889,7 +1886,7 @@ class ManagementType:
 
     def to_mk_file_format(self) -> MgmtTypeCaseType | MgmtTypeIncidentType | None:
         if self.mgmt_type is None:
-            return None
+            return None  # type: ignore[unreachable]
 
         if self.mgmt_type == "case":
             r_case = {
@@ -2169,7 +2166,7 @@ class BulkOutsideTimePeriod:
         return r
 
     @classmethod
-    def disabled(cls):
+    def disabled(cls) -> Self:
         return cls(
             state="disabled",
             subject_for_bulk_notifications=CheckboxWithStrValue(),
@@ -2961,6 +2958,7 @@ class API_PagerDutyData(TypedDict, total=False):
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
+    webhook_url: PagerDutyWebhookURL
 
 
 class API_PushOverData(TypedDict, total=False):

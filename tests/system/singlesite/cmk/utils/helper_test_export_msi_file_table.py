@@ -18,7 +18,7 @@ out_dir = tmp_dir / "idts"
 try:
     out_dir.mkdir()
     msi_engine.opt_verbose = False
-    msi_engine._export_msi_file_table(
+    msi_engine._export_msi_file_table(  # noqa: SLF001
         bin_dir,
         name=name,
         msi_in=Path(msi_in),

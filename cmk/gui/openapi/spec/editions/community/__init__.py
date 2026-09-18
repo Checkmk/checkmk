@@ -18,9 +18,7 @@ from cmk.gui.background_job.wato._job_ui import (
 )
 from cmk.gui.bi._openapi import register as bi_register
 from cmk.gui.bi.permissions import register_permissions as bi_register_permissions
-from cmk.gui.dashboard.api._registration import (
-    register_endpoints as dashboard_register_endpoints,
-)
+from cmk.gui.dashboard.api import register_endpoints as dashboard_register_endpoints
 from cmk.gui.data_source._openapi._registration import (
     register_endpoints as data_source_register_endpoints,
 )
@@ -62,9 +60,7 @@ from cmk.gui.pagetypes._openapi._registration import register as pagetypes_regis
 from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.sidebar._openapi.registration import register as sidebar_register
-from cmk.gui.user_message.api._registration import (
-    register_endpoints as user_message_register_endpoints,
-)
+from cmk.gui.user_message.api import register_endpoints as user_message_register_endpoints
 from cmk.gui.views._openapi._registration import (
     register_endpoints as views_register_endpoints,
 )
@@ -72,9 +68,7 @@ from cmk.gui.views.command.commands import (
     register_permissions as command_register_permissions,
 )
 from cmk.gui.visuals import declare_visual_permissions
-from cmk.gui.visuals.filter.api._registration import (
-    register as visuals_filter_register,
-)
+from cmk.gui.visuals.filter.api import register as visuals_filter_register
 from cmk.gui.visuals.info._openapi._registration import (
     register_endpoints as visuals_info_register_endpoints,
 )

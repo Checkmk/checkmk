@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 import re
 import time
@@ -13,7 +12,6 @@ from typing import cast
 
 import pytest
 import responses
-from pytest_mock import MockerFixture
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.mkeventd.wato
@@ -40,13 +38,13 @@ def fixture_mocked_responses() -> Iterable[responses.RequestsMock]:
         yield rsps
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     # During these tests we treat all sites a being online
     monkeypatch.setattr(
         activate_changes,
         "get_status_for_site",
-        lambda a, b: (
+        lambda a, b: (  # noqa: ARG005
             {
                 "state": "online",
                 "livestatus_version": "1.2.3",
@@ -61,7 +59,7 @@ def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> None:
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
@@ -69,7 +67,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(cmk.gui.mkeventd.wato, "_get_rule_stats_from_ec", dict)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_disable_cmk_update_config(monkeypatch: pytest.MonkeyPatch) -> None:
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
@@ -181,12 +179,11 @@ def test_generate_snapshot(
 
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "mocker")
 def test_synchronize_site(
     mocked_responses: responses.RequestsMock,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    mocker: MockerFixture,
     test_edition: Edition,
 ) -> None:
     mocked_responses.add(
@@ -225,12 +222,12 @@ def test_synchronize_site(
         body="True",
     )
 
-    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: test_edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: test_edition)  # noqa: ARG005
 
     file_filter_func = None
     site_id = SiteId("unit_remote_1")
     with get_activation_manager(monkeypatch, SiteId("unit_remote_1")) as activation_manager:
-        assert activation_manager._activation_id is not None
+        assert activation_manager._activation_id is not None  # noqa: SLF001
         with create_sync_snapshot(
             activation_manager,
             monkeypatch,
@@ -256,11 +253,11 @@ def _synchronize_site(
     file_filter_func: Callable[[str], bool] | None,
     automation_config: RemoteAutomationConfig,
 ) -> None:
-    assert activation_manager._activation_id is not None
-    site_activation_state = activate_changes._initialize_site_activation_state(
+    assert activation_manager._activation_id is not None  # noqa: SLF001
+    site_activation_state = activate_changes._initialize_site_activation_state(  # noqa: SLF001
         site_id,
         snapshot_settings.site_config,
-        activation_manager._activation_id,
+        activation_manager._activation_id,  # noqa: SLF001
         activation_manager.changes,
         time.time(),
         "GUI",

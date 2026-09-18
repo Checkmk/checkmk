@@ -54,21 +54,21 @@ def register(view_exporter_registry: ViewExporterRegistry) -> None:
 
 
 def _export_python_raw(
-    row_cells: Sequence[Cell],
-    group_cells: Sequence[Cell],
+    row_cells: Sequence[Cell],  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     rows: Rows,
-    view_name: str,
-    view_spec: ViewSpec,
+    view_name: str,  # noqa: ARG001
+    view_spec: ViewSpec,  # noqa: ARG001
 ) -> None:
     response.set_data(repr(rows))
 
 
 def _export_python(
     row_cells: Sequence[Cell],
-    group_cells: Sequence[Cell],
+    group_cells: Sequence[Cell],  # noqa: ARG001
     rows: Rows,
-    view_name: str,
-    view_spec: ViewSpec,
+    view_name: str,  # noqa: ARG001
+    view_spec: ViewSpec,  # noqa: ARG001
 ) -> None:
     resp = []
     resp.append("[\n")
@@ -94,10 +94,10 @@ def _export_python(
 
 def _get_json_body(
     row_cells: Sequence[Cell],
-    group_cells: Sequence[Cell],
+    group_cells: Sequence[Cell],  # noqa: ARG001
     rows: Rows,
-    view_name: str,
-    view_spec: ViewSpec,
+    view_name: str,  # noqa: ARG001
+    view_spec: ViewSpec,  # noqa: ARG001
 ) -> str:
     painted_rows: list[list] = []
 
@@ -181,8 +181,8 @@ def _export_csv(
     row_cells: Sequence[Cell],
     group_cells: Sequence[Cell],
     rows: Rows,
-    view_name: str,
-    view_spec: ViewSpec,
+    view_name: str,  # noqa: ARG001
+    view_spec: ViewSpec,  # noqa: ARG001
 ) -> None:
     csv_separator = request.get_str_input_mandatory("csv_separator", ";")
     cells = list(row_cells)

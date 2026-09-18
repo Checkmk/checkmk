@@ -13,10 +13,11 @@ apply, see generate_config_variable_tests."""
 
 # mypy: disable-error-code="explicit-any"
 
+import datetime
 import json
 import pprint
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -33,16 +34,22 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs import (
     DEFAULT_VALUE,
     get_visitor,
+    parse_and_validate_frontend_data,
     RawDiskData,
     RawFrontendData,
+    serialize_data_for_frontend,
+    validate_value_from_frontend,
     VisitorOptions,
 )
-from cmk.gui.form_specs._utils import (
-    migrate_form_spec_disk_value,
-    parse_and_validate_frontend_data,
-    validate_value_from_frontend,
+from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
+from cmk.gui.form_specs.unstable import (
+    ConditionChoices,
+    DatePicker,
+    Labels,
+    ListUniqueSelection,
+    OptionalChoice,
+    TimePicker,
 )
-from cmk.gui.form_specs.unstable import ListUniqueSelection, OptionalChoice
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FormSpecTuple
 from cmk.gui.form_specs.unstable.legacy_converter.transform import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -56,7 +63,13 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    ListOfStrings,
+    MultipleChoiceExtended,
+    SimplePassword,
+    SingleChoiceExtended,
+    UserSelection,
+)
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -77,11 +90,11 @@ def make_global_settings_context(edition: Edition) -> GlobalSettingsContext:
 
 
 def default_disk_value(config_variable: ConfigVariable, context: GlobalSettingsContext) -> object:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(value_model, VisitorOptions(migrate_values=True, mask_values=False))
-        return visitor.to_disk(DEFAULT_VALUE)
-    return value_model.default_value()
+    visitor = get_visitor(
+        config_variable.value_model(context),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    return visitor.to_disk(DEFAULT_VALUE)
 
 
 def round_trip_disk_value(
@@ -89,20 +102,19 @@ def round_trip_disk_value(
 ) -> object:
     """The load-and-save-again path of cmk-update-config, see
     _transform_global_config_value in cmk.update_config.plugins.actions.global_settings."""
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        return migrate_form_spec_disk_value(value_model, value)
-    return value_model.transform_value(value)
+    return migrate_form_spec_disk_value(config_variable.value_model(context), value)
 
 
 def gui_save_round_trip_disk_value[T](form_spec: FormSpec[T], value: object) -> object:
     """The unedited GUI save path: the stored value is rendered to the frontend
-    (serialize_data_for_frontend), reported as valid by the live validation
+    (serialize_data_for_frontend, handed to the vue component as asdict, see
+    render_form_spec), reported as valid by the live validation
     (validate_value_from_frontend) and submitted back unchanged as JSON
     (parse_and_validate_frontend_data), see cmk.gui.form_specs._utils."""
-    render_visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-    _vue_spec, frontend_value = render_visitor.to_vue(RawDiskData(value))
-    submitted = RawFrontendData(json.loads(json.dumps(frontend_value)))
+    rendered = serialize_data_for_frontend(
+        form_spec, field_id="test", do_validate=False, value=RawDiskData(value)
+    )
+    submitted = RawFrontendData(json.loads(json.dumps(asdict(rendered)))["data"])
     assert validate_value_from_frontend(form_spec, submitted) == []
     return parse_and_validate_frontend_data(form_spec, submitted)
 
@@ -135,23 +147,46 @@ def factory_default_disk_value(config_variable: ConfigVariable) -> object:
 
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
     "notification_spooling": "local",
+    "site_opentelemetry_collector_delta_to_cumulative_processor": {
+        "max_stale": 300.0,
+        "max_streams": 2**53 - 1,
+    },
+    "reporting_table_layout": {
+        "font_size": 8.0,
+        "show_headings": True,
+        "hrules": True,
+        "vrules": False,
+        "rule_width": 0.05,
+        "padding": (2.0, 1.0),
+        "spacing": (2.0, 0.0),
+        "row_shading": {
+            "enabled": True,
+            "odd": (247 / 255, 247 / 255, 247 / 255),
+            "even": (239 / 255, 239 / 255, 239 / 255),
+            "heading": (178 / 255, 178 / 255, 178 / 255),
+        },
+    },
 }
 """Factory defaults the GUI load path consciously rewrites: the disk world
 allows values the form cannot express, and the form spec's migrate maps them
-to the value with the same meaning."""
+to the value with the same meaning. The reporting_table_layout row shading
+colors are edited as 8-bit RGB integers, so loading snaps the hand-written
+factory floats (0.97, 0.94, 0.70) onto the nearest n/255 grid value below,
+exactly as the legacy Transform did on every edit. The delta-to-cumulative
+max_streams default is the int64 maximum, which exceeds what a JSON number
+can represent exactly, so loading clamps it to the largest JSON-safe
+integer."""
 
 
 def validate_disk_value(
     config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
 ) -> None:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(value_model, VisitorOptions(migrate_values=True, mask_values=False))
-        if errors := visitor.validate(RawDiskData(value)):
-            raise MKUserError(None, ", ".join(str(e.message) for e in errors))
-        return
-    value_model.validate_datatype(value, "")
-    value_model.validate_value(value, "")
+    visitor = get_visitor(
+        config_variable.value_model(context),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    if errors := visitor.validate(RawDiskData(value)):
+        raise MKUserError(None, ", ".join(str(e.message) for e in errors))
 
 
 @dataclass(frozen=True)
@@ -181,8 +216,7 @@ class CaseMigrates:
 class CaseDirty:
     """Valid stored data that the current value model fails to validate cleanly,
     while the round trip still keeps it unchanged. Expected to become a CasePass
-    once the variable is ported to FormSpec (or the test environment gap closes,
-    or the valuespec bug named in the case id is fixed)."""
+    once the test environment gap named in the case id closes."""
 
     id: str
     value: object
@@ -245,6 +279,19 @@ def resolve_case_value(
     return {**default, **value.overrides}
 
 
+# Self signed test CA, valid until 2126.
+CA_PEM = """-----BEGIN CERTIFICATE-----
+MIIBezCCASGgAwIBAgIUDIcyg85XfQmA4RzNHo/JfB+j5AowCgYIKoZIzj0EAwIw
+EjEQMA4GA1UEAwwHVGVzdCBDQTAgFw0yNjA4MTkwODI0MThaGA8yMTI2MDcyNjA4
+MjQxOFowEjEQMA4GA1UEAwwHVGVzdCBDQTBZMBMGByqGSM49AgEGCCqGSM49AwEH
+A0IABI4UJNAiwjKWK6rW3XnWnFdGTyBbDfIaZpXLqDrvEsx+pqhL0ShCE9FB1JjN
+R2FHJXvxUztuLzXEZab8JkABfB2jUzBRMB0GA1UdDgQWBBSyGh6qYtVZJjGg7GSz
+QVGa3DJkpjAfBgNVHSMEGDAWgBSyGh6qYtVZJjGg7GSzQVGa3DJkpjAPBgNVHRMB
+Af8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIFiWceF954tCCPqV2KEJ6LMNl+Zb
+W6UwWFko7ZZvNwLYAiEAyTjDYETA0XhtxzcXKyzGECbeZUHbZpYz2xJpZGuAzKw=
+-----END CERTIFICATE-----
+"""
+
 CHECKBOX_CASES: list[Case] = [
     CasePass("enabled", True),
     CasePass("disabled", False),
@@ -285,6 +332,12 @@ UNBOUNDED_AGE_CASES: list[Case] = [
     CaseFail("not-an-int", "30s"),
 ]
 
+UNBOUNDED_TIME_SPAN_CASES: list[Case] = [
+    CasePass("configured", 30.0),
+    CaseMigrates("legacy-int-seconds", 30, 30.0),
+    CaseFail("not-a-number", "30s"),
+]
+
 
 def choice_cases(configured: object, not_a_choice: object) -> list[Case]:
     return [
@@ -293,20 +346,18 @@ def choice_cases(configured: object, not_a_choice: object) -> list[Case]:
     ]
 
 
+def local_midnight(year: int, month: int, day: int) -> float:
+    """Date form fields serialize timestamps as local dates, so only local-midnight
+    timestamps survive a GUI save round trip regardless of the test environment's
+    timezone."""
+    return datetime.datetime(year, month, day).timestamp()
+
+
 CLOUD_EXCLUSIVE_VARIABLES = frozenset({"enable_ai_explanations"})
 
 
 SCALAR_VALUE_MODELS: frozenset[type] = frozenset(
     {
-        valuespec.Age,
-        valuespec.Checkbox,
-        valuespec.DropdownChoice,
-        valuespec.EmailAddress,
-        valuespec.Filesize,
-        valuespec.Float,
-        valuespec.Integer,
-        valuespec.TextInput,
-        valuespec.Url,
         form_specs.BooleanChoice,
         form_specs.DataSize,
         form_specs.Float,
@@ -334,8 +385,9 @@ def is_scalar_value_model(value_model: object) -> bool:
 
 @dataclass(frozen=True)
 class NoSaveableDefault:
-    """The revealed sub-form has no saveable default (e.g. an InputHint field):
-    the GUI forces the user to fill it in before saving."""
+    """The (sub-)form has no saveable default (e.g. an InputHint field or a
+    Password): the GUI forces the user to fill it in before saving. Usable as
+    a reveal pin and as a whole-variable DEFAULT_DISK_VALUES pin."""
 
 
 @dataclass(frozen=True)
@@ -378,7 +430,7 @@ def revealed_defaults_mismatches(
     }
 
 
-def collect_revealed_defaults(value_model: object) -> dict[str, object]:
+def collect_revealed_defaults(value_model: FormSpec[Any]) -> dict[str, object]:
     """The defaults the GUI reveals on interaction, keyed by reveal path.
 
     A reveal point is a sub-form whose default is not part of the stored value
@@ -390,15 +442,8 @@ def collect_revealed_defaults(value_model: object) -> dict[str, object]:
     alternative by its name, ``[choice N]`` for element N of a legacy
     Alternative (its elements have no names) and tuple elements by index."""
     revealed: dict[str, object] = {}
-    _walk_value_model(value_model, "", revealed)
+    _walk_form_spec(value_model, "", revealed)
     return revealed
-
-
-def _walk_value_model(model: object, path: str, revealed: dict[str, object]) -> None:
-    if isinstance(model, FormSpec):
-        _walk_form_spec(model, path, revealed)
-    else:
-        _walk_legacy_valuespec(model, path, revealed)
 
 
 def _join_key(path: str, key: str) -> str:
@@ -479,6 +524,7 @@ _FORM_SPEC_LEAVES = (
     form_specs.FixedValue,
     form_specs.Float,
     form_specs.Integer,
+    form_specs.MonitoredHost,
     form_specs.MultilineText,
     form_specs.MultipleChoice,
     form_specs.Password,
@@ -487,8 +533,14 @@ _FORM_SPEC_LEAVES = (
     form_specs.SingleChoice,
     form_specs.String,
     form_specs.TimeSpan,
+    ConditionChoices,
+    DatePicker,
+    Labels,
     MultipleChoiceExtended,
+    SimplePassword,
     SingleChoiceExtended,
+    TimePicker,
+    UserSelection,
 )
 
 
@@ -515,6 +567,10 @@ def _walk_form_spec(spec: FormSpec[Any], path: str, revealed: dict[str, object])
         revealed[f"{path}[add]"] = _form_spec_revealed_default(
             _list_unique_selection_template(spec)
         )
+    elif isinstance(spec, ListOfStrings):
+        template_path = f"{path}[add]"
+        revealed[template_path] = _form_spec_revealed_default(spec.string_spec)
+        _walk_form_spec(spec.string_spec, template_path, revealed)
     elif isinstance(spec, form_specs.CascadingSingleChoice):
         for choice_element in spec.elements:
             element_path = _join_key(path, choice_element.name)
@@ -541,21 +597,21 @@ def _legacy_revealed_default(vs: valuespec.ValueSpec[Any]) -> object:
 
 
 def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -> None:
-    """Delete this walker, _legacy_revealed_default and the LegacyValueSpec
-    handoff in _walk_form_spec once the last config variable is ported to
-    FormSpec (CMK-24409): only _walk_form_spec is needed then."""
+    """Only reached through LegacyValueSpec elements inside a FormSpec (e.g. the
+    IconSelector of user_icons_and_actions). Delete this walker and
+    _legacy_revealed_default once the last of those is ported."""
     if isinstance(vs, valuespec.Transform | valuespec.Foldable):
-        _walk_legacy_valuespec(vs._valuespec, path, revealed)
+        _walk_legacy_valuespec(vs._valuespec, path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.Dictionary):
-        for key, element_vs in vs._get_elements():
+        for key, element_vs in vs._get_elements():  # noqa: SLF001
             element_path = _join_key(path, key)
-            if vs._optional_keys and key not in vs._required_keys:
+            if vs._optional_keys and key not in vs._required_keys:  # noqa: SLF001
                 revealed[element_path] = _legacy_revealed_default(element_vs)
             _walk_legacy_valuespec(element_vs, element_path, revealed)
     elif isinstance(vs, valuespec.ListOf | valuespec.ListOfStrings):
         template_path = f"{path}[add]"
-        revealed[template_path] = _legacy_revealed_default(vs._valuespec)
-        _walk_legacy_valuespec(vs._valuespec, template_path, revealed)
+        revealed[template_path] = _legacy_revealed_default(vs._valuespec)  # noqa: SLF001
+        _walk_legacy_valuespec(vs._valuespec, template_path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.CascadingDropdown):
         for ident, _title, sub_vs in vs.choices():
             if sub_vs is None:
@@ -565,8 +621,8 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
             _walk_legacy_valuespec(sub_vs, element_path, revealed)
     elif isinstance(vs, valuespec.Optional):
         parameter_path = f"{path}[enable]"
-        revealed[parameter_path] = _legacy_revealed_default(vs._valuespec)
-        _walk_legacy_valuespec(vs._valuespec, parameter_path, revealed)
+        revealed[parameter_path] = _legacy_revealed_default(vs._valuespec)  # noqa: SLF001
+        _walk_legacy_valuespec(vs._valuespec, parameter_path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.Alternative):
         # An Alternative renders the alternative its own default value matches
         # with that value, and every other one with the alternative's own
@@ -576,9 +632,9 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
         matching_vs = (
             None
             if isinstance(alternative_default, NoSaveableDefault)
-            else vs._matching_alternative(alternative_default)
+            else vs._matching_alternative(alternative_default)  # noqa: SLF001
         )
-        for index, element_vs in enumerate(vs._elements):
+        for index, element_vs in enumerate(vs._elements):  # noqa: SLF001
             element_path = _join_key(path, f"[choice {index}]")
             revealed[element_path] = (
                 alternative_default
@@ -587,20 +643,24 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
             )
             _walk_legacy_valuespec(element_vs, element_path, revealed)
     elif isinstance(vs, valuespec.Tuple):
-        for index, element_vs in enumerate(vs._elements):
+        for index, element_vs in enumerate(vs._elements):  # noqa: SLF001
             _walk_legacy_valuespec(element_vs, _join_key(path, str(index)), revealed)
 
 
 REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "actions": {
         "[add]": {
-            "action": ("email", {"body": "", "subject": "", "to": ""}),
+            "action": NoSaveableDefault(),
             "disabled": False,
             "hidden": False,
-            "id": "",
-            "title": "",
+            "id": NoSaveableDefault(),
+            "title": NoSaveableDefault(),
         },
-        "[add].action.email": {"body": "", "subject": "", "to": ""},
+        "[add].action.email": {
+            "body": "",
+            "subject": NoSaveableDefault(),
+            "to": NoSaveableDefault(),
+        },
         "[add].action.script": {"script": ""},
     },
     "adhoc_downtime": {
@@ -610,28 +670,26 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": 30,
     },
     "agent_deployment_central": {
-        "automation_user": None,
-        "central_url": "",
+        "automation_user": NoSaveableDefault(),
+        "central_url": NoSaveableDefault(),
     },
     "agent_deployment_host_selection": {
         "match_exclude_hosts": [],
-        "match_exclude_hosts[add]": None,
+        "match_exclude_hosts[add]": NoSaveableDefault(),
         "match_folders": [],
         "match_folders[add]": "",
         "match_hostgroups": [],
-        "match_hostlabels": {},
+        "match_hostlabels": NoSaveableDefault(),
         "match_hosts": [],
-        "match_hosts[add]": None,
-        "match_hosttags": {},
+        "match_hosts[add]": NoSaveableDefault(),
+        "match_hosttags": NoSaveableDefault(),
         "match_site": [],
     },
     "agent_deployment_remote": {
         "certificates": [],
-        "certificates[add]": None,
-        "certificates[add].[choice 0]": None,
-        "certificates[add].[choice 1]": b"",
-        "certificates[add].[choice 2]": None,
-        "remote_url": "",
+        # An added row starts out empty, which is not a valid certificate.
+        "certificates[add]": NoSaveableDefault(),
+        "remote_url": NoSaveableDefault(),
     },
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
@@ -682,7 +740,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "diskspace_cleanup": {
         "cleanup_abandoned_host_files": 2592000,
         "max_file_age": 31536000,
-        "min_free_bytes": (0, 2592000),
+        "min_free_bytes": (NoSaveableDefault(), 2592000),
     },
     "graph_timeranges": {
         "[add]": {"duration": NoSaveableDefault(), "title": NoSaveableDefault()},
@@ -691,9 +749,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "case": None,
         "drop_domain": True,
         "mapping": [],
-        "mapping[add]": ("", ""),
+        "mapping[add]": (NoSaveableDefault(), NoSaveableDefault()),
         "regex": [],
-        "regex[add]": ("", ""),
+        "regex[add]": (NoSaveableDefault(), NoSaveableDefault()),
     },
     "http_proxies": {
         "[add]": {
@@ -711,12 +769,12 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": 720,
     },
     "inventory_cleanup": {
-        "default.[choice 0]": {
+        "default.alternative_defaults": {
             "file_age": 34560000,
             "number_of_history_entries": 100,
             "strategy": "and",
         },
-        "default.[choice 1]": None,
+        "default.alternative_no_defaults": None,
         "for_hosts[add]": {"parameters": ("file_age", 34560000), "regex_or_explicit": []},
         "for_hosts[add].parameters.combined": {
             "file_age": 34560000,
@@ -725,9 +783,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         },
         "for_hosts[add].parameters.file_age": 34560000,
         "for_hosts[add].parameters.number_of_history_entries": 100,
-        "for_hosts[add].regex_or_explicit[add]": "",
-        "for_hosts[add].regex_or_explicit[add].[choice 0]": "",
-        "for_hosts[add].regex_or_explicit[add].[choice 1]": "~",
+        "for_hosts[add].regex_or_explicit[add]": NoSaveableDefault(),
+        "for_hosts[add].regex_or_explicit[add].alternative_explicit": NoSaveableDefault(),
+        "for_hosts[add].regex_or_explicit[add].alternative_regex": NoSaveableDefault(),
     },
     "ldap_quarantine_period": {
         "[enable]": 2592000,
@@ -741,14 +799,14 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "hide_version": True,
         "login_message": NoSaveableDefault(),
     },
-    "metric_backend": {
+    "data_backend": {
         "disabled": None,
         "enabled": {
-            "https_port": 26900,
+            "https_port": 27909,
             "relative_memory_limit_percentage": 50.0,
-            "tls_port": 27907,
+            "tls_port": 25720,
         },
-        "enabled.http_port": 26409,
+        "enabled.http_port": 25962,
     },
     "mkeventd_notify_remotehost": {
         "[enable]": "",
@@ -764,10 +822,10 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "local_networks": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
             "retention_days": 30,
         },
-        "enabled.flow_source_endpoints[add]": ("connect", ""),
-        "enabled.flow_source_endpoints[add].connect": "",
-        "enabled.flow_source_endpoints[add].listen": 1,
-        "enabled.local_networks[add]": "",
+        "enabled.flow_source_endpoints[add]": NoSaveableDefault(),
+        "enabled.flow_source_endpoints[add].connect": NoSaveableDefault(),
+        "enabled.flow_source_endpoints[add].listen": NoSaveableDefault(),
+        "enabled.local_networks[add]": NoSaveableDefault(),
     },
     "notification_fallback_email": {
         "[enable]": NoSaveableDefault(),
@@ -847,8 +905,17 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         },
     },
     "ntop_connection": {
-        "admin_password.password": "",
-        "admin_password.store": NoSaveableDefault(),
+        "[enable]": {
+            "is_activated": True,
+            "is_host_filter_activated": True,
+            "hostaddress": "",
+            "port": 3000,
+            "protocol": "https",
+            "no-cert-check": True,
+            "admin_username": "",
+            "admin_password": NoSaveableDefault(),
+            "use_custom_attribute_as_ntop_username": False,
+        },
     },
     "password_policy": {
         "max_age": 31536000,
@@ -876,10 +943,14 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "remote_status": {
         "[enable]": (6558, False, None),
         "[enable].2[enable]": [],
-        "[enable].2[enable][add]": "",
+        "[enable].2[enable][add]": NoSaveableDefault(),
     },
     "replication": {
-        "[enable]": {"connect_timeout": 10, "interval": 10, "master": ("", 6558)},
+        "[enable]": {
+            "connect_timeout": 10,
+            "interval": 10,
+            "master": (NoSaveableDefault(), 6558),
+        },
         "[enable].disabled": True,
         "[enable].fallback": 60,
         "[enable].logging": True,
@@ -894,11 +965,46 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "reporting_graph_layout": {
         "vertical_axis_width.explicit": 40.0,
+        "vertical_axis_width.fixed": True,
+    },
+    "reporting_pagesize": {
+        "a3": True,
+        "a4": True,
+        "a5": True,
+        "custom": (210.0, 297.0),
+        "executive": True,
+        "folio": True,
+        "legal": True,
+        "letter": True,
+        "size_10x14": True,
+        "statement": True,
+        "tabloid": True,
     },
     "reporting_rangespec": {
         "age": 0,
         "date": UnstableDefault(),
         "time": UnstableDefault(),
+        "d0": True,
+        "d1": True,
+        "d7": True,
+        "d8": True,
+        "fwd0": True,
+        "fwd1": True,
+        "lwd0": True,
+        "lwd1": True,
+        "last_3600": True,
+        "last_14400": True,
+        "last_90000": True,
+        "last_691200": True,
+        "last_3024000": True,
+        "last_34560000": True,
+        "m0": True,
+        "m1": True,
+        "w0": True,
+        "w1": True,
+        "w2": True,
+        "y0": True,
+        "y1": True,
     },
     "service_view_grouping": {
         "[add]": {
@@ -925,18 +1031,18 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "per_source": 250,
             "port": 6557,
         },
-        "[enable].only_from[add]": "",
+        "[enable].only_from[add]": NoSaveableDefault(),
         "[enable].tls": True,
     },
     "site_mkeventd": {
         "[enable]": [],
     },
     "site_opentelemetry_collector_memory_limit": {
-        "limit.absolute": {"limit": 0, "spike_limit": 0},
+        "limit.absolute": {"limit": NoSaveableDefault(), "spike_limit": NoSaveableDefault()},
         "limit.relative": {"limit": 80, "spike_limit": 20},
     },
     "site_subject_alternative_names": {
-        "[add]": "",
+        "[add]": NoSaveableDefault(),
     },
     "site_trace_receive": {
         "[enable]": {"address": "[::1]", "port": 4317},
@@ -947,23 +1053,34 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "other_collector": {"url": NoSaveableDefault()},
     },
     "snmp_credentials": {
-        "[add]": {"credentials": "public", "description": ""},
-        "[add].credentials.[choice 0]": "public",
-        "[add].credentials.[choice 1]": ("noAuthNoPriv", ""),
-        "[add].credentials.[choice 2]": ("authNoPriv", "md5", "", ""),
-        "[add].credentials.[choice 3]": ("authPriv", "md5", "", "", "DES", ""),
+        "[add]": {"credentials": NoSaveableDefault(), "description": ""},
+        "[add].credentials.community": NoSaveableDefault(),
+        "[add].credentials.snmpv3_noAuthNoPriv": ("noAuthNoPriv", NoSaveableDefault()),
+        "[add].credentials.snmpv3_authNoPriv": (
+            "authNoPriv",
+            "md5",
+            NoSaveableDefault(),
+            NoSaveableDefault(),
+        ),
+        "[add].credentials.snmpv3_authPriv": (
+            "authPriv",
+            "md5",
+            NoSaveableDefault(),
+            NoSaveableDefault(),
+            "DES",
+            NoSaveableDefault(),
+        ),
         "[add].engine_ids": [],
-        "[add].engine_ids[add]": "",
+        "[add].engine_ids[add]": NoSaveableDefault(),
     },
     "translate_snmptraps": {
-        "True": {},
-        "True.add_description": True,
+        "no_translation": True,
+        "translate": {},
+        "translate.add_description": True,
     },
     "trusted_certificate_authorities": {
-        "trusted_cas[add]": None,
-        "trusted_cas[add].[choice 0]": None,
-        "trusted_cas[add].[choice 1]": b"",
-        "trusted_cas[add].[choice 2]": None,
+        # An added row starts out empty, which is not a valid certificate.
+        "trusted_cas[add]": NoSaveableDefault(),
     },
     "user_downtime_timeranges": {
         "[add]": {"end": 86400, "title": NoSaveableDefault()},
@@ -1131,7 +1248,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         },
     ),
     "login_screen": {},
-    "metric_backend": ("disabled", None),
+    "data_backend": ("disabled", None),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
     "network_flow": ("disabled", None),
@@ -1144,17 +1261,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "outgoing": [],
         "concurrency": [],
     },
-    "ntop_connection": {
-        "is_activated": True,
-        "is_host_filter_activated": True,
-        "hostaddress": "",
-        "port": 3000,
-        "protocol": "https",
-        "no-cert-check": True,
-        "admin_username": "",
-        "admin_password": ("password", ""),
-        "use_custom_attribute_as_ntop_username": False,
-    },
+    "ntop_connection": None,
     "password_policy": {},
     "product_usage_analytics": {
         "enabled": "enabled",
@@ -1205,11 +1312,11 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "site_livestatus_tcp": None,
     "site_mkeventd": None,
     "site_opentelemetry_collector_delta_to_cumulative_processor": {
-        "max_stale": 300,
-        "max_streams": 9223372036854775807,
+        "max_stale": 300.0,
+        "max_streams": 2**53 - 1,
     },
     "site_opentelemetry_collector_memory_limit": {
-        "check_interval": 1,
+        "check_interval": 1.0,
         "limit": ("relative", {"limit": 80, "spike_limit": 20}),
     },
     "site_subject_alternative_names": [],
@@ -1413,7 +1520,9 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "agent_deployment_remote": [
         CasePass("configured", {"remote_url": "https://remote.example.com/site/check_mk/"}),
+        CasePass("with-ca", {"certificates": [CA_PEM]}),
         CaseFail("unknown-key", {"bogus": 1}),
+        CaseFail("not-a-pem", {"certificates": ["not a pem"]}),
     ],
     "alert_handler_event_types": [
         CasePass("configured", ["checkresult", "statechange"]),
@@ -1681,6 +1790,8 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("missing-required-keys", {"by_host": {"limit": 500, "action": "stop"}}),
     ],
     "eventsocket_queue_len": MIN_ONE_INTEGER_CASES,
+    "exp_ai_assistant": CHECKBOX_CASES,
+    "exp_relay_active_checks": CHECKBOX_CASES,
     "exp_trial_mode_selection": CHECKBOX_CASES,
     "failed_notification_horizon": [
         CasePass("configured", 172800),
@@ -1709,7 +1820,7 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("unknown-case-conversion", {"case": "mixed"}),
         CaseFail("invalid-regex", {"regex": [("(unbalanced", "x")]}),
     ],
-    "housekeeping_interval": UNBOUNDED_AGE_CASES,
+    "housekeeping_interval": UNBOUNDED_TIME_SPAN_CASES,
     "http_proxies": [
         CasePass(
             "configured",
@@ -1899,7 +2010,7 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("below-minimum", 100),
         CaseFail("not-an-int", "5000"),
     ],
-    "metric_backend": [
+    "data_backend": [
         CasePass("disabled", ("disabled", None)),
         CasePass(
             "configured",
@@ -2062,6 +2173,7 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "notification_spooling": choice_cases("both", "everywhere"),
     "ntop_connection": [
+        CasePass("disabled", None),
         CasePass(
             "configured",
             {
@@ -2074,6 +2186,20 @@ CASES: Mapping[str, list[Case]] = {
                 "admin_username": "admin",
                 "admin_password": ("password", "hunter2"),
                 "use_custom_attribute_as_ntop_username": "ntop_alias",
+            },
+        ),
+        CasePass(
+            "configured-with-stored-password",
+            {
+                "is_activated": True,
+                "is_host_filter_activated": True,
+                "hostaddress": "ntop.example.com",
+                "port": 3000,
+                "protocol": "http",
+                "no-cert-check": True,
+                "admin_username": "admin",
+                "admin_password": ("store", "ntop_secret"),
+                "use_custom_attribute_as_ntop_username": False,
             },
         ),
         CaseFail("missing-required-keys", {}),
@@ -2217,7 +2343,10 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "reporting_rangespec": [
         CasePass("today", "d0"),
-        CasePass("date-range", ("date", (1753142400.0, 1753228800.0))),
+        CasePass(
+            "date-range", ("date", (local_midnight(2025, 7, 22), local_midnight(2025, 7, 23)))
+        ),
+        CaseFail("bools-are-not-timestamps", ("date", (True, False))),
         CaseFail("not-a-choice", "bogus-range"),
     ],
     "reporting_table_layout": [
@@ -2225,8 +2354,21 @@ CASES: Mapping[str, list[Case]] = {
             "configured",
             DefaultWithOverrides({"font_size": 10.0, "padding": (2.0, 0.5), "spacing": (4.0, 1.0)}),
         ),
-        CaseDirty("int-defaults-fail-float-validation", DefaultWithOverrides({}), MKUserError),
+        CasePass("int-defaults-accepted-since-form-spec-port", DefaultWithOverrides({})),
         CaseFail("unknown-key", DefaultWithOverrides({"bogus": 1})),
+        CaseFail(
+            "int-color-components-are-ambiguous",
+            DefaultWithOverrides(
+                {
+                    "row_shading": {
+                        "enabled": True,
+                        "odd": (247, 247, 247),
+                        "even": (240 / 255, 240 / 255, 240 / 255),
+                        "heading": (179 / 255, 179 / 255, 179 / 255),
+                    }
+                }
+            ),
+        ),
     ],
     "reporting_time_format": choice_cases("%H:%M", "%q"),
     "reporting_use": [
@@ -2242,7 +2384,7 @@ CASES: Mapping[str, list[Case]] = {
         CasePass("disabled", None),
         CaseFail("not-a-choice", "block"),
     ],
-    "retention_interval": UNBOUNDED_AGE_CASES,
+    "retention_interval": UNBOUNDED_TIME_SPAN_CASES,
     "rrdcached_tuning": [
         CasePass(
             "configured",
@@ -2331,31 +2473,46 @@ CASES: Mapping[str, list[Case]] = {
             },
         ),
     ],
+    "site_ai_control_plane": CHECKBOX_CASES,
     "site_mcp_server": CHECKBOX_CASES,
     "site_mcp_trace_forward": CHECKBOX_CASES,
     "site_mkeventd": [
         CasePass("disabled", None),
-        CasePass("configured", ["SYSLOG", "SNMPTRAP"]),
-        CaseFail("unknown-listener", ["BOGUS"]),
+        CasePass("configured", ["SNMPTRAP", "SYSLOG"]),
+        CaseMigrates("unsorted-is-sorted", ["SYSLOG", "SNMPTRAP"], ["SNMPTRAP", "SYSLOG"]),
+        CaseMigrates("unknown-listener-dropped", ["BOGUS"], []),
     ],
     "site_opentelemetry_collector": CHECKBOX_CASES,
     "site_opentelemetry_collector_delta_to_cumulative_processor": [
-        CasePass("configured", {"max_stale": 600, "max_streams": 1000}),
+        CasePass("configured", {"max_stale": 600.0, "max_streams": 1000}),
+        CaseMigrates(
+            "legacy-int-seconds",
+            {"max_stale": 600, "max_streams": 1000},
+            {"max_stale": 600.0, "max_streams": 1000},
+        ),
+        CaseMigrates(
+            "int64-max-streams-clamped-to-json-safe",
+            {"max_stale": 300, "max_streams": 9223372036854775807},
+            {"max_stale": 300.0, "max_streams": 2**53 - 1},
+        ),
         CaseFail("stale-below-minimum", {"max_stale": 0, "max_streams": 1000}),
         CaseFail("missing-required-keys", {}),
     ],
     "site_opentelemetry_collector_memory_limit": [
         CasePass(
             "absolute",
-            {"check_interval": 5, "limit": ("absolute", {"limit": 2048, "spike_limit": 512})},
+            {
+                "check_interval": 5.0,
+                "limit": ("absolute", {"limit": 2147483648, "spike_limit": 536870912}),
+            },
         ),
         CasePass(
             "relative",
-            {"check_interval": 1, "limit": ("relative", {"limit": 75.0, "spike_limit": 25.0})},
+            {"check_interval": 1.0, "limit": ("relative", {"limit": 75.0, "spike_limit": 25.0})},
         ),
         CaseFail(
             "spike-not-below-limit",
-            {"check_interval": 1, "limit": ("relative", {"limit": 20.0, "spike_limit": 20.0})},
+            {"check_interval": 1.0, "limit": ("relative", {"limit": 20.0, "spike_limit": 20.0})},
         ),
     ],
     "site_piggyback_hub": CHECKBOX_CASES,
@@ -2405,6 +2562,11 @@ CASES: Mapping[str, list[Case]] = {
             "invalid-credential-tuple-length",
             [{"description": "broken", "credentials": ("authPriv", "SHA-256")}],
         ),
+        CaseFail(
+            "unknown-credential-tuple-length-crashes-in-shared-snmp-credentials-generator",
+            [{"description": "broken", "credentials": ("authPriv", "SHA-256", "monitor")}],
+            MKGeneralException,
+        ),
     ],
     "snmp_walk_download_timeout": MIN_ONE_AGE_CASES,
     "socket_queue_len": MIN_ONE_INTEGER_CASES,
@@ -2414,14 +2576,14 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("below-minimum", 1024),
         CaseFail("not-an-int", "10MB"),
     ],
-    "sqlite_housekeeping_interval": UNBOUNDED_AGE_CASES,
+    "sqlite_housekeeping_interval": UNBOUNDED_TIME_SPAN_CASES,
     "staleness_threshold": MIN_ONE_FLOAT_CASES,
     "start_url": [
         CasePass("configured", "dashboard.py"),
         CaseFail("absolute-url", "http://evil.example.com/"),
         CaseFail("not-a-string", 123),
     ],
-    "statistics_interval": UNBOUNDED_AGE_CASES,
+    "statistics_interval": UNBOUNDED_TIME_SPAN_CASES,
     "table_row_limit": MIN_ONE_INTEGER_CASES,
     "tcp_connect_timeout": MIN_ONE_FLOAT_CASES,
     "translate_snmptraps": [
@@ -2432,6 +2594,7 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "trusted_certificate_authorities": [
         CasePass("configured", {"use_system_wide_cas": True, "trusted_cas": []}),
+        CasePass("with-ca", {"use_system_wide_cas": False, "trusted_cas": [CA_PEM]}),
         CaseFail("missing-required-keys", {"use_system_wide_cas": True}),
         CaseFail("not-a-pem", {"use_system_wide_cas": False, "trusted_cas": ["not a pem"]}),
     ],
@@ -2566,7 +2729,7 @@ class ConfigVariableSuite:
 
     EDITION: ClassVar[Edition] = edition_from_env()
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def fixture_shipped_locales(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # standard test environment only knows about en, we make all available:
         monkeypatch.setattr(cmk.utils.paths, "locale_dir", repo_path() / "locale")
@@ -2575,7 +2738,7 @@ class ConfigVariableSuite:
     def fixture_global_settings_context(self) -> GlobalSettingsContext:
         return make_global_settings_context(self.EDITION)
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def fixture_empty_password_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Rendering the Password form spec lists the password store entries the
         user may read, which requires a logged-in user this suite does not have."""
@@ -2615,8 +2778,6 @@ class ConfigVariableSuite:
         the first place (e.g. an empty list below the minimum length)."""
         for config_variable in config_variable_registry.values():
             value_model = config_variable.value_model(global_settings_context)
-            if not isinstance(value_model, FormSpec):
-                continue
             try:
                 value = default_disk_value(config_variable, global_settings_context)
             except MKGeneralException as e:
@@ -2648,9 +2809,6 @@ class ConfigVariableSuite:
         conscious rewrites pinned in FACTORY_DEFAULTS_NORMALIZED_BY_LOAD."""
         problems: dict[str, object] = {}
         for ident, config_variable in config_variable_registry.items():
-            value_model = config_variable.value_model(global_settings_context)
-            if not isinstance(value_model, FormSpec):
-                continue
             factory = factory_default_disk_value(config_variable)
             if isinstance(factory, NoFactoryDefault):
                 continue
@@ -2670,12 +2828,14 @@ class ConfigVariableSuite:
         as well: the FormSpec port of a config variable must not change it, and
         the DefaultWithOverrides cases silently shift their meaning when the
         default underneath them moves. Scalar variables need no pin, see
-        is_scalar_value_model.
-
-        Once every config variable is moved to FormSpec this restriction can be deleted."""
+        is_scalar_value_model."""
         pinned = DEFAULT_DISK_VALUES[ident]
         if isinstance(pinned, EditionDependentDefault):
             pinned = pinned.for_edition(self.EDITION)
+        if isinstance(pinned, NoSaveableDefault):
+            with pytest.raises(MKGeneralException):
+                default_disk_value(config_variable_registry[ident], global_settings_context)
+            return
         assert (
             default_disk_value(config_variable_registry[ident], global_settings_context) == pinned
         )
@@ -2756,9 +2916,10 @@ class ConfigVariableSuite:
             case CasePass():
                 validate_disk_value(config_variable, context, value)
                 assert round_trip_disk_value(config_variable, context, value) == value
-                value_model = config_variable.value_model(context)
-                if isinstance(value_model, FormSpec):
-                    assert gui_save_round_trip_disk_value(value_model, value) == value
+                assert (
+                    gui_save_round_trip_disk_value(config_variable.value_model(context), value)
+                    == value
+                )
             case CaseMigrates():
                 expected = resolve_case_value(config_variable, context, case.expected)
                 assert round_trip_disk_value(config_variable, context, value) == expected

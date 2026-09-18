@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: LXC Containers"
 has_support_component = true
 members_required = 0
+tier = 3
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 Plugins for LXC container statistics (cgroup v1 and v2).

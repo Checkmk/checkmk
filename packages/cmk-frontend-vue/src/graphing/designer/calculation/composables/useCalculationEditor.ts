@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type ComputedRef, type MaybeRefOrGetter, type Ref, computed, ref, toValue } from 'vue'
 
 import {
@@ -52,8 +54,8 @@ export interface CalculationEditor {
   formula: FormulaEditor
   transformation: TransformationEditor
   successAlert: ComputedRef<SuccessAlert | null>
-  /** Rows the building-blocks list must disable in the current mode/edit context. */
-  isItemDisabled: (item: GraphItem) => boolean
+  /** Why an item cannot be used in the current mode/edit context, or null when it can. */
+  itemBlockReason: (item: GraphItem) => TranslatedString | null
   /** Toggle handler: switching discards in-progress input and cancels an active edit. */
   switchMode: (mode: EditorMode) => void
   startEdit: (item: FormulaItem) => void
@@ -70,6 +72,7 @@ export function useCalculationEditor(
   nextId: MaybeRefOrGetter<ItemId>,
   nextColor: MaybeRefOrGetter<string>
 ): CalculationEditor {
+  const { _t } = usei18n()
   const mode = ref<EditorMode>('operations')
   const editingId = ref<ItemId | null>(null)
   const title = ref('')
@@ -151,29 +154,38 @@ export function useCalculationEditor(
     }
   }
 
-  const disabledIds = computed<Set<ItemId>>(() => {
+  const blockReasons = computed<Map<ItemId, TranslatedString>>(() => {
     const all = toValue(items)
-    const disabled = new Set<ItemId>()
+    const reasons = new Map<ItemId, TranslatedString>()
     if (mode.value === 'transformation') {
       for (const item of all) {
         if (isDynamic(item.type)) {
-          disabled.add(item.id)
+          reasons.set(
+            item.id,
+            _t(
+              'A percentile needs one metric. This query selects several. Aggregate it in a calculation first.'
+            )
+          )
         }
       }
     }
     const edited = editingId.value
     if (edited !== null) {
-      // The edited item itself and everything that (transitively) references it are off limits.
-      disabled.add(edited)
+      reasons.set(edited, _t('This calculation is currently being edited.'))
       for (const dependent of collectTransitiveDependents(all.filter(isFormula), edited)) {
-        disabled.add(dependent)
+        reasons.set(
+          dependent,
+          _t(
+            'This calculation refers to the one being edited. A reference back would create a cycle.'
+          )
+        )
       }
     }
-    return disabled
+    return reasons
   })
 
-  function isItemDisabled(item: GraphItem): boolean {
-    return disabledIds.value.has(item.id)
+  function itemBlockReason(item: GraphItem): TranslatedString | null {
+    return blockReasons.value.get(item.id) ?? null
   }
 
   function commit(): CalculationCommit {
@@ -226,7 +238,7 @@ export function useCalculationEditor(
     formula,
     transformation,
     successAlert: computed(() => alert.value),
-    isItemDisabled,
+    itemBlockReason,
     switchMode,
     startEdit,
     insertRef,

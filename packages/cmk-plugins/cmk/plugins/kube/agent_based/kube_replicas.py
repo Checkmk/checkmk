@@ -91,8 +91,8 @@ Replicas = DeploymentReplicas | StatefulSetReplicas | DaemonSetReplicas
 
 def discover_kube_replicas(
     section_kube_replicas: Replicas | None,
-    section_kube_update_strategy: UpdateStrategy | None,
-    section_kube_controller_spec: ControllerSpec | None,
+    section_kube_update_strategy: UpdateStrategy | None,  # noqa: ARG001
+    section_kube_controller_spec: ControllerSpec | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_kube_replicas is not None:
         yield Service()

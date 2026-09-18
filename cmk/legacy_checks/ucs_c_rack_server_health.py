@@ -45,7 +45,7 @@ def discover_ucs_c_rack_server_health(parsed):
         yield key, {}
 
 
-def check_ucs_c_rack_server_health(item, params, parsed):
+def check_ucs_c_rack_server_health(item, params, parsed):  # noqa: ARG001
     """
     Check function is called only in case parsed is a dict and item exists as key in parsed[item].
     All other potential bad case conditions are handled by @get_parsed_item_data.

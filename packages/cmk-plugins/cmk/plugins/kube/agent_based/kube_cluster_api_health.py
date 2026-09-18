@@ -20,7 +20,7 @@ def parse(string_table: StringTable) -> ClusterDetails:
     return ClusterDetails.model_validate_json(string_table[0][0])
 
 
-def discovery(section: ClusterDetails) -> DiscoveryResult:
+def discovery(section: ClusterDetails) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

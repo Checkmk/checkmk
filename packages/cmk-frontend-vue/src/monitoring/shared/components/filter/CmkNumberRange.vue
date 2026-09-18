@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, watch } from 'vue'
 
 export interface NumberRange {
@@ -62,10 +63,10 @@ const rangeErrors = computed<string[]>(() => {
   const { from: f, to: t } = model.value
   if (f !== undefined && t !== undefined) {
     if (isNaN(f) || isNaN(t)) {
-      return [_t('Only number values are allowed.')]
+      return [_t('Enter numbers only.')]
     }
     if (f > t) {
-      return [_t('The lower bound must not exceed the upper bound.')]
+      return [_t('Enter a lower bound that does not exceed the upper bound.')]
     }
   }
 
@@ -73,6 +74,8 @@ const rangeErrors = computed<string[]>(() => {
 })
 
 watch(rangeErrors, (errors) => emit('update:valid', errors.length === 0), { immediate: true })
+
+const validationId = useId()
 </script>
 
 <template>
@@ -83,7 +86,15 @@ watch(rangeErrors, (errors) => emit('update:valid', errors.length === 0), { imme
     <div class="monitoring-cmk-number-range__fields">
       <label class="monitoring-cmk-number-range__field">
         <span class="monitoring-cmk-number-range__label">{{ fromText }}</span>
-        <CmkInput v-model="from" type="number" :aria-label="fromText" :disabled="disabled" />
+        <CmkInput
+          v-model="from"
+          type="number"
+          :aria-label="fromText"
+          :disabled="disabled"
+          :external-errors="rangeErrors"
+          :described-by="validationId"
+          hide-validation-message
+        />
       </label>
       <label class="monitoring-cmk-number-range__field">
         <span class="monitoring-cmk-number-range__label">{{ toText }}</span>
@@ -93,10 +104,13 @@ watch(rangeErrors, (errors) => emit('update:valid', errors.length === 0), { imme
           :unit="unit"
           :aria-label="toText"
           :disabled="disabled"
+          :external-errors="rangeErrors"
+          :described-by="validationId"
+          hide-validation-message
         />
       </label>
     </div>
-    <CmkInlineValidation :validation="rangeErrors" />
+    <CmkInlineValidation :id="validationId" :validation="rangeErrors" />
   </div>
 </template>
 

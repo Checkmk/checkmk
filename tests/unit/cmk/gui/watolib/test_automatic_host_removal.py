@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -77,10 +79,8 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
     )
 
 
-def test_remove_hosts_no_rules_early_return(
-    activate_changes_mock: MagicMock,
-    patch_omd_site: None,
-) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_remove_hosts_no_rules_early_return(activate_changes_mock: MagicMock) -> None:
     automatic_host_removal.execute_host_removal_job(Config())
     activate_changes_mock.assert_not_called()
 
@@ -242,7 +242,10 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ts.apply(monkeypatch)
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
+        h: HostName,
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)

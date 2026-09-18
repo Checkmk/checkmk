@@ -10,10 +10,11 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
+import OtpInput from '@/otp-input/OtpInput.vue'
+
 import TwoFactorAuthBackupInput from './components/TwoFactorAuthBackupInput.vue'
 import TwoFactorAuthHeader from './components/TwoFactorAuthHeader.vue'
 import TwoFactorAuthLinks from './components/TwoFactorAuthLinks.vue'
-import TwoFactorAuthOtpInput from './components/TwoFactorAuthOtpInput.vue'
 import TwoFactorEnabledMethods from './components/TwoFactorEnabledMethods.vue'
 import type { AuthMode } from './twoFactorAuth'
 import { completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
@@ -46,7 +47,7 @@ const backupCode = ref('')
 const isSubmitting = ref(false)
 const message = ref<Message | null>(null)
 
-const otpInputRef = ref<InstanceType<typeof TwoFactorAuthOtpInput> | null>(null)
+const otpInputRef = ref<InstanceType<typeof OtpInput> | null>(null)
 const backupCodeInputRef = ref<InstanceType<typeof TwoFactorAuthBackupInput> | null>(null)
 
 const activeMethods = Object.entries(props.availableMethods)
@@ -231,8 +232,8 @@ async function clearAndRefocus() {
       @switch-mode="switchMode"
     />
 
-    <div v-if="currentMode === 'totp_credentials'">
-      <TwoFactorAuthOtpInput
+    <div v-if="currentMode === 'totp_credentials'" class="two-factor-auth-app__otp">
+      <OtpInput
         ref="otpInputRef"
         v-model="otpCode"
         :disabled="isSubmitting"
@@ -288,6 +289,12 @@ async function clearAndRefocus() {
   display: flex;
   flex-direction: column;
   color: var(--font-color);
+}
+
+/* Spacing the code input used to carry itself, before it moved into the library. */
+.two-factor-auth-app__otp {
+  padding-top: var(--dimension-5);
+  padding-bottom: var(--dimension-8);
 }
 
 .two-factor-auth-app__button {

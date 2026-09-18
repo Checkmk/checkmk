@@ -156,7 +156,7 @@ def parse_redfish(string_table: StringTable) -> RedfishAPIData:
     """parse one line of data to dictionary"""
     try:
         return json.loads(string_table[0][0])
-    except (IndexError, json.decoder.JSONDecodeError):
+    except IndexError, json.decoder.JSONDecodeError:
         return {}
 
 

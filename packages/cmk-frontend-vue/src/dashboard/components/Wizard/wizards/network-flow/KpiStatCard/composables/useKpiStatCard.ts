@@ -20,6 +20,7 @@ const CONTENT_TYPE = 'network_flow_kpi_stat_card'
 
 type Metric = NetworkFlowKpiStatCardContent['metric']
 type Accent = NetworkFlowKpiStatCardContent['accent']
+type SparkHeightMode = NetworkFlowKpiStatCardContent['spark_height_mode']
 
 // Mockup defaults: the byte volumes use the traffic report's card colors,
 // the activity counts the overview's.
@@ -39,6 +40,7 @@ export interface UseKpiStatCard extends UseWidgetHandler, UseWidgetVisualization
   metric: Ref<Metric>
   accent: Ref<Accent>
   showDelta: Ref<boolean>
+  sparkHeightMode: Ref<SparkHeightMode>
 }
 
 export function useKpiStatCard(currentSpec: WidgetSpec | null): UseKpiStatCard {
@@ -84,6 +86,7 @@ export function useKpiStatCard(currentSpec: WidgetSpec | null): UseKpiStatCard {
   const metric = ref<Metric>(initialMetric)
   const accent = ref<Accent>(currentContent?.accent ?? suggestedAccent[metric.value])
   const showDelta = ref<boolean>(currentContent?.show_delta ?? true)
+  const sparkHeightMode = ref<SparkHeightMode>(currentContent?.spark_height_mode ?? 'band')
 
   // Changing the metric resets the accent to the suggested one and, unless
   // the user has customized the title, updates it to the new metric's
@@ -104,7 +107,8 @@ export function useKpiStatCard(currentSpec: WidgetSpec | null): UseKpiStatCard {
       type: CONTENT_TYPE,
       metric: metric.value,
       accent: accent.value,
-      show_delta: showDelta.value
+      show_delta: showDelta.value,
+      spark_height_mode: sparkHeightMode.value
     }
   })
 
@@ -146,6 +150,7 @@ export function useKpiStatCard(currentSpec: WidgetSpec | null): UseKpiStatCard {
     metric,
     accent,
     showDelta,
+    sparkHeightMode,
 
     widgetProps,
     getSubmitProps: async () => widgetProps.value

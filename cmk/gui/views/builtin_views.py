@@ -17,7 +17,6 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
     ColumnSpec,
-    DynamicIconName,
     PainterParameters,
     SorterSpec,
     ViewName,
@@ -26,6 +25,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIconName
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 
@@ -94,7 +94,10 @@ builtin_views.update(
                 "Overall state of all hosts, with counts of services in the various states."
             ),
             "group_painters": [ColumnSpec(name="sitealias")],
-            "hidden": False,
+            # Superseded by the "All hosts" Vue page (monitor_all_hosts.py) in the menu.
+            # Kept reachable (not removed) for existing links, e.g. breadcrumbs, WATO
+            # folder/tag-tree drill-downs, and the "return to classic view" button.
+            "hidden": True,
             "hidebutton": False,
             "layout": "table",
             "mustsearch": False,
@@ -6188,7 +6191,9 @@ class BuiltinViewExtenderRegistry(Registry[BuiltinViewExtender]):
 
 
 def noop_builtin_view_extender(
-    views: Mapping[ViewName, ViewSpec], data_source_registry: DataSourceRegistry, config: Config
+    views: Mapping[ViewName, ViewSpec],
+    data_source_registry: DataSourceRegistry,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
 ) -> dict[ViewName, ViewSpec]:
     return {**views}
 

@@ -33,6 +33,7 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -197,6 +198,7 @@ def perform_rename_hosts(
         renamings_by_site,
         site_configs=site_configs,
         pending_changes=pending_changes,
+        use_git=use_git,
         debug=debug,
     )
 
@@ -384,6 +386,7 @@ def _rename_hosts_in_check_mk(
     *,
     site_configs: Mapping[SiteId, SiteConfiguration],
     pending_changes: PendingChanges,
+    use_git: bool,
     debug: bool,
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
@@ -412,6 +415,9 @@ def _rename_hosts_in_check_mk(
         ).action_counts
 
         _merge_action_counts(action_counts, new_counts)
+
+    bakery.try_bake_agents_on_activation(call_site="Host rename", use_git=use_git, debug=debug)
+
     return action_counts
 
 
@@ -426,20 +432,20 @@ def _rename_host_in_event_rules(
     actions = []
 
     users = userdb.load_users(lock=True)
-    some_user_changed = False
+    changed_users = []
     for user_ in users.values():
         if (unrules := user_.get("notification_rules")) and (
             num_changed := rename_in_event_rules(unrules, oldname, newname)
         ):
             actions += ["notify_user"] * num_changed
-            some_user_changed = True
+            changed_users.append(user_["user_id"])
 
     nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
         NotificationRuleConfigFile().save(nrules, pprint_value)
 
-    if some_user_changed:
+    if changed_users:
         userdb.save_users(
             users,
             get_user_attributes(custom_user_attributes),
@@ -447,6 +453,7 @@ def _rename_host_in_event_rules(
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=changed_users,
         )
 
     return actions

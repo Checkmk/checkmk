@@ -16,7 +16,7 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { type Domain, type FormulaDraft, type GraphItem, type ItemId, isFormula } from '../../types'
 import { type RefVisibility, useCalculationEditor } from '../composables/useCalculationEditor'
@@ -30,7 +30,9 @@ import TransformationEditor from './TransformationEditor.vue'
 
 const { _t } = usei18n()
 
-const { items, nextId, nextColor } = defineProps<{
+const { editing, items, nextId, nextColor } = defineProps<{
+  /** Calculation to load into the form; null starts a fresh form. */
+  editing: ItemId | null
   items: readonly GraphItem[]
   /** Id the next added item will get. */
   nextId: ItemId
@@ -58,7 +60,7 @@ const {
   formula,
   transformation,
   successAlert,
-  isItemDisabled,
+  itemBlockReason,
   switchMode,
   startEdit,
   insertRef,
@@ -111,9 +113,14 @@ const alert = computed<SectionAlert | null>(() => {
 })
 
 const formulaEditorRef = ref<InstanceType<typeof FormulaEditor> | null>(null)
+const transformationEditorRef = ref<InstanceType<typeof TransformationEditor> | null>(null)
 
 function focus(): void {
-  formulaEditorRef.value?.focus()
+  if (mode.value === 'operations') {
+    formulaEditorRef.value?.focus()
+  } else {
+    transformationEditorRef.value?.focus()
+  }
 }
 defineExpose({ focus })
 
@@ -156,6 +163,16 @@ function onEdit(id: ItemId): void {
     void nextTick(focus)
   }
 }
+
+watch(
+  () => editing,
+  (id) => {
+    if (id !== null) {
+      onEdit(id)
+    }
+  },
+  { immediate: true }
+)
 
 function itemActionLabel(id: ItemId): TranslatedString {
   return mode.value === 'operations'
@@ -202,6 +219,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
       />
       <TransformationEditor
         v-else
+        ref="transformationEditorRef"
         v-model:selected-id="selectedId"
         v-model:percentile="percentile"
         class="graphing-rrd-tab__editor"
@@ -242,7 +260,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
           :items="items"
           :domain="DOMAIN"
           :action-label="itemActionLabel"
-          :is-item-disabled="isItemDisabled"
+          :item-block-reason="itemBlockReason"
           :alert="alert"
           @insert-id="onInsertId"
           @edit="onEdit"

@@ -34,7 +34,8 @@ class BuiltinDashboardExtenderRegistry(Registry[BuiltinDashboardExtender]):
 
 
 def noop_builtin_dashboard_extender(
-    dashboards: Mapping[DashboardName, DashboardConfig], config: Config
+    dashboards: Mapping[DashboardName, DashboardConfig],
+    config: Config,  # noqa: ARG001
 ) -> dict[DashboardName, DashboardConfig]:
     return {**dashboards}
 

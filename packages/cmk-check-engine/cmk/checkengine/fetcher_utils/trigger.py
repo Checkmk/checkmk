@@ -62,7 +62,7 @@ class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]
             )
             return fetched
 
-        except (MKTimeout, TimeoutError):
+        except MKTimeout, TimeoutError:
             raise
         except FetcherError as exc:
             # Remove a stale cache file so a failed fetch does not leave outdated data

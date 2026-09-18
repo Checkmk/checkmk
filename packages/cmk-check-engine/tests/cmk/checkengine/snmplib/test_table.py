@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-# ruff: noqa: SLF001
-
 
 import dataclasses
 from collections.abc import Sequence
@@ -61,11 +56,11 @@ class SNMPTestBackend(SNMPBackend):
         return SNMPBackendEnum.CLASSIC
 
     @override
-    def get(self, /, oid, *, context):
+    def get(self, /, oid: str, *, context: SNMPContext) -> bytes | None:
         pass
 
     @override
-    def walk(self, /, oid, *, context, **kw):
+    def walk(self, /, oid: str, *, context: SNMPContext, **kw: object) -> list[tuple[str, bytes]]:
         return [(f"{oid}.{r}", b"C0FEFE") for r in (1, 2, 3)]
 
 
@@ -91,7 +86,9 @@ class SNMPTestBackend(SNMPBackend):
 def test_get_snmp_table(
     snmp_info: BackendSNMPTree, expected_values: list[Sequence[SNMPTable]]
 ) -> None:
-    def get_all_snmp_tables(info):
+    def get_all_snmp_tables(
+        info: BackendSNMPTree | list[BackendSNMPTree],
+    ) -> Sequence[SNMPTable] | list[Sequence[SNMPTable]]:
         backend = SNMPTestBackend(SNMPConfig)
         if not isinstance(info, list):
             return get_snmp_table(
@@ -131,7 +128,8 @@ def test_sanitize_snmp_encoding(
     expected: Sequence[Sequence[_snmp_table.SNMPDecodedValues]],
 ) -> None:
     assert [
-        _snmp_table._decode_column(c, v, partial(ensure_str, encoding=encoding)) for c, v in columns
+        _snmp_table._decode_column(c, v, partial(ensure_str, encoding=encoding))  # noqa: SLF001
+        for c, v in columns
     ] == expected
 
 

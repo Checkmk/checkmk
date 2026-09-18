@@ -9,9 +9,8 @@ The two tests here are the browser backstop for the whole concern: one proves th
 skeleton -> canvas transition wires up against a real fetch, the other that a refetch's
 skeletons hold the footprint they replace, a layout claim jsdom cannot make. Everything
 else - the fast load, the widgets' spinner and its containment, the error states and their
-retry - is component-level behaviour and is covered in the Vitest suites
-(`GraphGroup.test.ts`, `DashboardContentGraph.test.ts`), where the pending, 500 and 404
-responses can be driven exactly.
+retry - is component-level behaviour and is covered in the Vitest suite
+(`GraphGroup.test.ts`), where the pending, 500 and 404 responses can be driven exactly.
 
 The remaining surfaces need no browser test of their own: each renders the same
 `cmk-graph-group`, so the skeleton follows from `GraphGroup`.

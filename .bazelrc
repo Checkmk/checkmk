@@ -18,6 +18,14 @@ startup --host_jvm_args=-XX:ConcGCThreads=2
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
 common:linux --experimental_disk_cache_gc_max_size=100G
 
+# Share fetched external repos across workspaces instead of extracting a private copy into every
+# output base.  Bazel 8 ships this disabled (the flag defaults to the empty string); Bazel 9 enables
+# it by default, at which point this can go. Entries unused for --repo_contents_cache_gc_max_age
+# (default 14d) are collected, so external/ stops growing without bound. CI has ephemeral runners,
+# the content would be thrown away anyways.
+common:linux --repo_contents_cache=~/.cache/bazel/repo_contents_cache
+common:ci --repo_contents_cache=
+
 # WORKSPACE support is fully removed; everything is defined via Bzlmod (MODULE.bazel)
 common --noenable_workspace
 
@@ -30,6 +38,18 @@ common --incompatible_config_setting_private_default_visibility
 # See: https://blog.aspect.build/bazel-9-protobuf
 common --incompatible_enable_proto_toolchain_resolution
 common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
+
+# Stop Bazel from creating __init__.py files in the runfiles of py_binary/py_test.
+# This is a native Bazel flag, so it changes the runfiles of *every* rules_python
+# py_binary/py_test in the graph, ours and third-party alike, not just the ones
+# which warn.  (aspect_rules_py has no such generation, so its targets, which is
+# most of ours, are unaffected.)  We set it
+# because rules_python deprecates the implicit generation and warns for every
+# target still relying on it, including its own internal tools, which we can
+# configure neither per target nor via rules_python's per-module
+# explicit_init_py setting.  It will become the default upstream anyway.
+# See: https://github.com/bazel-contrib/rules_python/issues/2945
+common --incompatible_default_to_explicit_init_py
 
 # with rules_proto_grpc (5.0.1) we run into
 # >>> Error in resolve_tools: Pass an executable or tools argument to ctx.actions.run

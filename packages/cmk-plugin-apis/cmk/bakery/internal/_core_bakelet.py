@@ -9,6 +9,18 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any, Never, Protocol
 
+from cmk.bakery.v2_unstable import (
+    Plugin,
+    PluginConfig,
+    Scriptlet,
+    SystemBinary,
+    SystemConfig,
+    WindowsConfigEntry,
+    WindowsConfigItems,
+    WindowsGlobalConfigEntry,
+    WindowsSystemConfigEntry,
+)
+
 from ._artifacts import (
     AgentInternalFileContainer,
     CustomFileContainer,
@@ -31,7 +43,11 @@ class CoreFilesFunction(Protocol):
     def __call__(
         self, *, agconf: AgentConfig, conf: Any
     ) -> Iterator[
-        PluginContainer
+        Plugin
+        | SystemBinary
+        | PluginConfig
+        | SystemConfig
+        | PluginContainer
         | SystemBinaryContainer
         | PluginConfigContainer
         | SystemConfigContainer
@@ -46,13 +62,21 @@ class CoreFilesFunction(Protocol):
 class CoreScriptletsFunction(Protocol):
     def __call__(
         self, *, agconf: AgentConfig, conf: Any, aghash: AgentHash
-    ) -> Iterator[ScriptletHandle]: ...
+    ) -> Iterator[Scriptlet | ScriptletHandle]: ...
 
 
 class CoreYamlConfigFunction(Protocol):
     def __call__(
         self, *, agconf: AgentConfig, conf: Any, aghash: AgentHash
-    ) -> Iterator[YamlEntry | YamlItems | YamlPluginSettings]: ...
+    ) -> Iterator[
+        WindowsConfigEntry
+        | WindowsGlobalConfigEntry
+        | WindowsSystemConfigEntry
+        | WindowsConfigItems
+        | YamlEntry
+        | YamlItems
+        | YamlPluginSettings
+    ]: ...
 
 
 def _noop(*_a: object, **_kw: object) -> Iterator[Never]:
@@ -67,9 +91,15 @@ class CoreBakelet:
     ``core_bakelet_`` and they live under ``cmk/plugins/<family>/bakery/``.
 
     Unlike :class:`cmk.bakery.v2_unstable.BakeryPlugin`, the functions receive
-    keyword arguments dispatched by name (``agconf``, ``conf``, ``aghash``) and
-    yield the bakery artifact types directly. That signature is fixed, so a
-    bakelet which does not need all three suppresses ARG001 on the unused ones.
+    keyword arguments dispatched by name (``agconf``, ``conf``, ``aghash``).
+    That signature is fixed, so a bakelet which does not need all three
+    suppresses ARG001 on the unused ones.
+
+    The functions yield either the artifact types of :mod:`cmk.bakery.v2_unstable`
+    or the container types of this package. The bakery converts the former the
+    same way it converts the output of a ``BakeryPlugin``, supplying the agent
+    configuration and the module the bakelet was discovered in. Use the
+    container types only for what the versioned API cannot express.
 
     ``default_parameters`` are merged underneath the user-provided configuration
     for this bakelet (the user's values win). They are applied during config

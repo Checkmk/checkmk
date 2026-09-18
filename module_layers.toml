@@ -390,7 +390,7 @@ allows = [
 ]
 
 [components."cmk.bakery.internal"]
-allows = ["cmk.bakery.v1"]
+allows = ["cmk.bakery.v1", "cmk.bakery.v2_unstable"]
 
 [components."cmk.bakery.shared"]
 allows = ["@ccc", "@crypto", "@plugin_apis"]

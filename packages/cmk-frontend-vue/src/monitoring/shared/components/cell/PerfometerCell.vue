@@ -35,10 +35,8 @@ const emit = defineEmits<{
       <CmkPerfometer
         v-if="props.data"
         :class="{ 'monitoring-perfometer-cell--stale': stale }"
-        :value="props.data.value"
-        :value-range="[props.data.value_range.min, props.data.value_range.max]"
+        :bars="props.data.bars"
         :formatted="props.data.formatted"
-        :color="props.data.color"
       />
     </template>
   </BaseCell>

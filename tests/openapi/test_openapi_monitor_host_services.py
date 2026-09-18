@@ -918,10 +918,8 @@ class TestMonitorHostServices:
             )
 
         assert resp.json["services"][0]["perfometer"] == {
-            "value": 42.0,
-            "value_range": {"min": 0.0, "max": 100.0},
+            "bars": [[{"share": 42.0, "color": "#8c8c8c"}, {"share": 58.0, "color": None}]],
             "formatted": "42",
-            "color": "#8c8c8c",
         }
 
     def test_service_without_performance_data_has_no_perfometer(

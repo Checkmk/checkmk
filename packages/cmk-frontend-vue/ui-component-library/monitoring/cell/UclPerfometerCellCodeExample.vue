@@ -13,10 +13,13 @@ import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.v
       <tr>
         <PerfometerCell
           :data="{
-            value: 65,
-            value_range: { min: 0, max: 100 },
-            formatted: '65.0%',
-            color: '#13d389'
+            bars: [
+              [
+                { share: 65, color: '#13d389' },
+                { share: 35, color: null }
+              ]
+            ],
+            formatted: '65.0%'
           }"
         />
       </tr>

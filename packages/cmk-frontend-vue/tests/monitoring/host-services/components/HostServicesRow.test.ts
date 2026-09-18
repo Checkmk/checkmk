@@ -223,10 +223,13 @@ test('renders the perfometer of a service that has one', () => {
   mountRow(
     makeService({
       perfometer: {
-        value: 42,
-        value_range: { min: 0, max: 100 },
-        formatted: '42%',
-        color: '#ff0000'
+        bars: [
+          [
+            { share: 42, color: '#ff0000' },
+            { share: 58, color: null }
+          ]
+        ],
+        formatted: '42%'
       }
     })
   )
@@ -240,10 +243,13 @@ test('the perfometer asks for the graphs of its service', async () => {
   const openGraphs = vi.fn()
   const service = makeService({
     perfometer: {
-      value: 42,
-      value_range: { min: 0, max: 100 },
-      formatted: '42%',
-      color: '#ff0000'
+      bars: [
+        [
+          { share: 42, color: '#ff0000' },
+          { share: 58, color: null }
+        ]
+      ],
+      formatted: '42%'
     }
   })
   const { container } = mountRow(service, makeTableRow(), { onOpenGraphs: openGraphs })

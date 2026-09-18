@@ -9,41 +9,23 @@ import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 import codeExample from './UclPerfometerCellCodeExample.vue?raw'
 
 export const panelConfig = {
-  value: {
-    type: 'number' as const,
-    title: 'value',
-    initialState: 65,
-    help: 'Current metric value, positioned within value_range to derive the fill level.'
-  },
-  min: {
-    type: 'number' as const,
-    title: 'min',
-    initialState: 0,
-    help: 'Lower bound of the value range.'
-  },
-  max: {
-    type: 'number' as const,
-    title: 'max',
-    initialState: 100,
-    help: 'Upper bound of the value range.'
+  layout: {
+    type: 'list' as const,
+    title: 'layout',
+    options: [
+      { title: 'single bar', name: 'single' },
+      { title: 'segmented bar', name: 'segmented' },
+      { title: 'stacked', name: 'stacked' },
+      { title: 'bidirectional', name: 'bidirectional' }
+    ],
+    initialState: 'single',
+    help: 'Which Perf-O-Meter the graphing layer resolved to: one bar, two stacked bars, or one bar growing outwards from its centre.'
   },
   formatted: {
     type: 'string' as const,
     title: 'formatted',
     initialState: '65.0%',
-    help: 'Text overlaid on top of the bar (the formatted metric value).'
-  },
-  color: {
-    type: 'list' as const,
-    title: 'color',
-    options: [
-      { title: 'green', name: '#13d389' },
-      { title: 'yellow', name: '#ffd000' },
-      { title: 'red', name: '#ff5769' },
-      { title: 'blue', name: '#3cc2ff' }
-    ],
-    initialState: '#13d389',
-    help: 'Fill color of the bar.'
+    help: 'Text overlaid on top of the bars (the formatted metric values).'
   },
   stale: {
     type: 'boolean' as const,
@@ -56,6 +38,12 @@ export const panelConfig = {
     title: 'linked',
     initialState: false,
     help: 'Wrap the cell in a link to the service graph.'
+  },
+  button: {
+    type: 'boolean' as const,
+    title: 'button',
+    initialState: false,
+    help: 'Make the cell a button, the way the services listing opens the graphs of that service.'
   },
   minWidth: {
     type: 'number' as const,
@@ -109,16 +97,51 @@ const propState = ref(
   ) as InferPanelState<typeof panelConfig>
 )
 
+const BARS: Record<string, Perfometer['bars']> = {
+  single: [
+    [
+      { share: 65, color: '#13d389' },
+      { share: 35, color: null }
+    ]
+  ],
+  segmented: [
+    [
+      { share: 40, color: '#13d389' },
+      { share: 25, color: '#3cc2ff' },
+      { share: 35, color: null }
+    ]
+  ],
+  stacked: [
+    [
+      { share: 70, color: '#13d389' },
+      { share: 30, color: null }
+    ],
+    [
+      { share: 35, color: '#ffd000' },
+      { share: 65, color: null }
+    ]
+  ],
+  bidirectional: [
+    [
+      { share: 25, color: null },
+      { share: 25, color: '#3cc2ff' },
+      { share: 12.5, color: '#ff5769' },
+      { share: 37.5, color: null }
+    ]
+  ]
+}
+
 const data = computed<Perfometer>(() => ({
-  value: propState.value.value,
-  value_range: { min: propState.value.min, max: propState.value.max },
-  formatted: propState.value.formatted,
-  color: propState.value.color
+  bars: BARS[propState.value.layout] ?? [],
+  formatted: propState.value.formatted
 }))
 
 const linkedTo = computed<CellLink | undefined>(() =>
   propState.value.linked
-    ? { href: 'graph.py?host=web-server-01&service=CPU%20load', target: '_top' }
+    ? {
+        href: 'view.py?view_name=service_graphs&host=web-server-01&service=CPU+load',
+        target: '_top'
+      }
     : undefined
 )
 
@@ -163,6 +186,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
               :data="data"
               :stale="propState.stale"
               :linked-to="linkedTo"
+              :button="propState.button"
             />
           </template>
         </MonitoringTable>

@@ -48,6 +48,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
     folder_tree,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
@@ -109,7 +110,7 @@ class ModeDiagHost(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._host = folder_from_request(
             self._tree, request.var("folder"), self._hostname
         ).load_host(self._hostname)
@@ -255,7 +256,7 @@ class ModeDiagHost(WatoMode):
         html.open_table()
         html.open_tr()
         html.open_td()
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         agent_ports_ruleset = all_rulesets.get("agent_ports")
         tcp_connect_timeouts_ruleset = all_rulesets.get("tcp_connect_timeouts")
         snmp_timing_ruleset = all_rulesets.get("snmp_timing")

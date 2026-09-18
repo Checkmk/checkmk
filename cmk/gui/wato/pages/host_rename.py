@@ -68,6 +68,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_tree,
     FolderTree,
+    make_folder_tree,
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -474,7 +475,7 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self) -> None:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         folder = folder_from_request(self._tree, request.var("folder"), host_name)
         if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))

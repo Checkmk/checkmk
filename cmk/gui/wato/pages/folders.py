@@ -95,6 +95,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     host_action_menu_registry,
     make_action_link,
+    make_folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.main_menu import MenuItem
@@ -237,7 +238,7 @@ class ModeFolder(WatoMode):
             host_name = request.get_ascii_input("host")
         except MKUserError:
             host_name = None
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(ctx.config)
         self._folder = disk_or_search_folder_from_request(
             self._tree, request.var("folder"), host_name, acting_user=user, request=request
         )
@@ -1546,7 +1547,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def __init__(self, edition: Edition, ctx: PageContext, is_new: bool) -> None:
         super().__init__(edition, ctx)
         self._is_new = is_new
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(ctx.config)
         self._folder = self._init_folder()
 
     @abc.abstractmethod
@@ -1570,7 +1571,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         is_enabled = (
             self._is_new
             or not folder_from_request(
-                folder_tree(), request.var("folder"), request.get_ascii_input("host")
+                self._tree, request.var("folder"), request.get_ascii_input("host")
             ).locked()
         )
 

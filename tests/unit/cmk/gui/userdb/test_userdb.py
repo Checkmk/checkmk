@@ -247,6 +247,23 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
     assert userdb.user_locked(user_id, load_user(user_id))
 
 
+def test_on_failed_login_locking_disabled(user_id: UserId) -> None:
+    now = datetime.now()
+    user_attributes = get_user_attributes([])
+
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        [],
+        now=now,
+        lock_on_logon_failures=None,
+        log_logon_failures=True,
+        pprint_value=False,
+    )
+    assert _load_failed_logins(user_id) == 0
+    assert not userdb.user_locked(user_id, load_user(user_id))
+
+
 def test_on_logout_no_session(
     wsgi_app: WebTestAppForCMK, auth_request: http.Request, with_user: tuple[UserId, str]
 ) -> None:

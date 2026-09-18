@@ -3,18 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
 from typing import Final, Literal, override
 
 from pydantic import BaseModel
 
 from cmk.rulesets.internal.form_specs import (
+    DictionaryExtended,
     ListOfStrings,
     ListOfStringsLayout,
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -168,6 +170,30 @@ SECTIONS: Sequence[SectionOptions] = (
 # These sections report the instance state, which must never be cached or switched off:
 # stale data would hide an instance that has just gone down.
 SYNC_ONLY_SECTIONS: Final = ("instance", "asm_instance")
+
+BY_SECTION: Final = {section.section: section for section in SECTIONS}
+
+# The order the configurable sections are offered in. Every section that is
+# configurable at all needs an entry, which _sections asserts by lookup.
+SECTION_ORDER: Final[Sequence[str]] = (
+    "performance",
+    "iostats",
+    "processes",
+    "sessions",
+    "longactivesessions",
+    "locks",
+    "tablespaces",
+    "asm_diskgroup",
+    "recovery_area",
+    "undostat",
+    "rman",
+    "recovery_status",
+    "dataguard_stats",
+    "logswitches",
+    "jobs",
+    "resumable",
+    "systemparameter",
+)
 
 
 def _auth_roles() -> list[SingleChoiceElement]:
@@ -481,45 +507,35 @@ def _connection_options(*, include_tns_admin: bool) -> Dictionary:
     )
 
 
-def _section_options(section: SectionOptions) -> SingleChoice:
-    sync_only = section.section in SYNC_ONLY_SECTIONS
-    elements = [
-        SingleChoiceElement(
-            name="synchronous",
-            title=Title("Run synchronously"),
-        ),
-    ]
-    if not sync_only:
-        elements += [
-            SingleChoiceElement(
-                name="asynchronous",
-                title=Title("Run asynchronously and cached"),
-            ),
-            SingleChoiceElement(
-                name="disabled",
-                title=Title("Disable this section"),
-            ),
-        ]
-    return SingleChoice(
-        title=section.title,
-        help_text=section.help_text,
-        prefill=DefaultValue("synchronous" if sync_only else section.mode),
-        elements=elements,
-    )
+def _configurable_sections() -> Iterator[SectionOptions]:
+    for name in SECTION_ORDER:
+        yield BY_SECTION[name]
 
 
 def _sections() -> Dictionary:
-    return Dictionary(
+    return DictionaryExtended(
         title=Title("Sections - data to collect"),
         help_text=Help(
-            "Select which data (sections) should be collected from the Oracle database."
+            "Which data to collect, and how often. An unchecked section is not queried "
+            "at all. A section marked 'async' is collected by a separate agent plug-in "
+            "that runs at the cache age configured above, rather than on every agent "
+            "run. The instance status is not listed, because it is always collected on "
+            "every agent run: stale data would hide an instance that has just gone down."
         ),
+        default_checked=[
+            section.section for section in _configurable_sections() if section.mode != "disabled"
+        ],
         elements={
             section.section: DictElement(
-                parameter_form=_section_options(section),
-                required=True,
+                required=False,
+                parameter_form=BooleanChoice(
+                    title=section.title,
+                    help_text=section.help_text,
+                    label=Label("async"),
+                    prefill=DefaultValue(section.mode == "asynchronous"),
+                ),
             )
-            for section in SECTIONS
+            for section in _configurable_sections()
         },
     )
 
@@ -901,6 +917,20 @@ def _discovery_to_rev2(discovery: Mapping[str, object]) -> Mapping[str, object]:
     return {**discovery, "enabled": "enabled" if discovery.get("enabled") else "disabled"}
 
 
+def _sections_to_rev2(sections: Mapping[str, object]) -> Mapping[str, object]:
+    """Three modes per section become presence plus a flag.
+
+    A section that is not collected is simply absent, which is what the bakery
+    made of "disabled" anyway. The instance status is not configurable, so the
+    bakery names it rather than the rule.
+    """
+    return {
+        name: mode == "asynchronous"
+        for name, mode in sections.items()
+        if name not in SYNC_ONLY_SECTIONS and mode != "disabled"
+    }
+
+
 def _options_to_rev2(options: Mapping[str, object]) -> Mapping[str, object]:
     hoisted: dict[str, object] = {
         key: value for key, value in options.items() if key != "oracle_client_library"
@@ -925,6 +955,8 @@ def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
         lifted = {key: main[key] for key in _LIFTED_FROM_MAIN if key in main}
         if isinstance(discovery := lifted.get("discovery"), Mapping):
             lifted["discovery"] = _discovery_to_rev2(discovery)
+        if isinstance(sections := lifted.get("sections"), Mapping):
+            lifted["sections"] = _sections_to_rev2(sections)
         if "excluded_sections" in lifted:
             lifted["excluded_sections"] = _entries_to_rev2(lifted["excluded_sections"], "target_id")
         migrated.update(lifted)

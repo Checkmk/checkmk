@@ -30,7 +30,9 @@ StoredPassword = tuple[
     tuple[str, str],
 ]
 
-StoredSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
+# Present means collected, and the flag says whether it is cached. A section
+# that is not collected is absent.
+type StoredSectionOptions = Mapping[str, bool]
 type AuthType = Literal["standard", "wallet"]
 type UseHostClient = tuple[Literal["auto", "never", "always"], None] | tuple[Literal["custom"], str]
 

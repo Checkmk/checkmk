@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 import yaml
 from pydantic import BaseModel, ConfigDict
@@ -415,21 +415,24 @@ def _get_oracle_discovery(discovery: StoredDiscoveryConf | None) -> OracleDiscov
     )
 
 
+# Naming any section at all replaces the plug-in's own list rather than adding
+# to it (section.rs:453), so the sections that are not configurable have to be
+# named here.
+ALWAYS_COLLECTED: Final = ("instance", "asm_instance")
+
+
 def _get_oracle_sections(
     sections: StoredSectionOptions | None,
 ) -> Sequence[Mapping[str, OracleSection]] | None:
     if sections is None:
         return None
 
-    result: list[dict[str, OracleSection]] = []
-    for section_name, mode in sections.items():
-        match mode:
-            case "synchronous":
-                result.append({section_name: OracleSection(is_async=False)})
-            case "asynchronous":
-                result.append({section_name: OracleSection(is_async=True)})
-            case "disabled":
-                continue
+    result: list[dict[str, OracleSection]] = [
+        {name: OracleSection(is_async=False)} for name in ALWAYS_COLLECTED
+    ]
+    result.extend(
+        {section_name: OracleSection(is_async=cached)} for section_name, cached in sections.items()
+    )
     return result
 
 

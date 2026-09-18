@@ -20,13 +20,18 @@ from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
     _agent_config_mk_oracle,
     _migrate,
     _oracle_id,
+    SECTIONS,
+    SYNC_ONLY_SECTIONS,
     USE_HOST_CLIENT_PATH_RE,
 )
 from cmk.rulesets.internal.form_specs import (
+    DictionaryExtended,
     ListOfStrings,
 )
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
+    DictElement,
     Dictionary,
     FixedValue,
     FormSpec,
@@ -76,6 +81,7 @@ CURRENT_RULE: Mapping[str, object] = {
     ],
     **_SHARED,
     "discovery": {"enabled": "enabled", "include": ["ORCL"]},
+    "sections": {"tablespaces": True, "locks": False},
     "excluded_sections": [{"target_id": ("sid", "XE"), "sections": ["rman"]}],
 }
 
@@ -170,13 +176,19 @@ def _walk(form_spec: FormSpec[Any]) -> Iterator[FormSpec[Any]]:
             pass
 
 
-def test_every_fixed_value_renders_something() -> None:
+def test_every_checkbox_and_fixed_value_renders_something() -> None:
     # The rule summary renders a FixedValue as its label, falling back to its
-    # value, so a value of None without a label leaves the row empty.
+    # value, so a value of None without a label leaves the row empty. A
+    # BooleanChoice without a label renders a checkbox with nothing beside it.
     empty = [
         form_spec
         for form_spec in _walk(_agent_config_mk_oracle())
-        if isinstance(form_spec, FixedValue) and form_spec.value is None and form_spec.label is None
+        if (
+            isinstance(form_spec, FixedValue)
+            and form_spec.value is None
+            and form_spec.label is None
+        )
+        or (isinstance(form_spec, BooleanChoice) and form_spec.label is None)
     ]
     assert not empty
 
@@ -194,27 +206,36 @@ def test_the_string_lists_are_offered_as_one_line_each() -> None:
         assert isinstance(discovery.elements[key].parameter_form, ListOfStrings)
 
 
+def _section_elements() -> Mapping[str, DictElement[object]]:
+    sections = _agent_config_mk_oracle().elements["sections"].parameter_form
+    assert isinstance(sections, Dictionary)
+    return sections.elements
+
+
 @pytest.mark.parametrize("section", ["instance", "asm_instance"])
-def test_instance_sections_offer_synchronous_only(section: str) -> None:
+def test_the_sections_that_have_no_choice_are_not_offered(section: str) -> None:
+    assert section not in _section_elements()
+
+
+def test_every_configurable_section_is_offered() -> None:
+    offered = _section_elements()
+    assert {section.section for section in SECTIONS} - set(offered) == set(SYNC_ONLY_SECTIONS)
+
+
+def test_a_section_is_a_labelled_checkbox_that_is_on_by_default() -> None:
     sections = _agent_config_mk_oracle().elements["sections"].parameter_form
-    assert isinstance(sections, Dictionary)
-    modes = sections.elements[section].parameter_form
-    assert isinstance(modes, SingleChoice)
+    assert isinstance(sections, DictionaryExtended)
+    cached = sections.elements["tablespaces"].parameter_form
+    assert isinstance(cached, BooleanChoice)
+    assert cached.label is not None, "an unlabelled checkbox renders bare"
+    assert not sections.elements["tablespaces"].required, "unchecked means not collected"
+    assert "tablespaces" in (sections.default_checked or [])
 
-    assert [element.name for element in modes.elements] == ["synchronous"]
 
-
-def test_other_sections_offer_all_modes() -> None:
+def test_a_section_that_defaults_to_off_is_not_checked() -> None:
     sections = _agent_config_mk_oracle().elements["sections"].parameter_form
-    assert isinstance(sections, Dictionary)
-    modes = sections.elements["tablespaces"].parameter_form
-    assert isinstance(modes, SingleChoice)
-
-    assert [element.name for element in modes.elements] == [
-        "synchronous",
-        "asynchronous",
-        "disabled",
-    ]
+    assert isinstance(sections, DictionaryExtended)
+    assert "iostats" not in (sections.default_checked or [])
 
 
 @pytest.mark.parametrize(

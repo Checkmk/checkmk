@@ -196,21 +196,15 @@ def _convert_permissions(validate_permissions: Any) -> StoredValidatePermissions
             return None
 
 
-def _convert_sections(
-    sections: Mapping[str, Any], warnings: list[str]
-) -> dict[str, Literal["synchronous", "asynchronous", "disabled"]]:
+def _convert_sections(sections: Mapping[str, Any], warnings: list[str]) -> dict[str, bool]:
     """Rename ASM section keys, map sync/async settings, and warn on unsupported sections."""
-    literal_mapping: dict[str, Literal["synchronous", "asynchronous"]] = {
-        "sync": "synchronous",
-        "async": "asynchronous",
-    }
     sections_to_rename = {
         "asm:instance": "asm_instance",
         "asm:asm_diskgroup": "asm_diskgroup",
         "asm:processes": "processes",
     }
 
-    new_sections: dict[str, Literal["synchronous", "asynchronous", "disabled"]] = {}
+    new_sections: dict[str, bool] = {}
     for section, setting in sections.items():
         section = sections_to_rename.get(section, section)
 
@@ -225,9 +219,11 @@ def _convert_sections(
                 message = f"Could not map section '{section}'."
             warnings.append(message)
             continue
-        # None for the old plugin means disabled
-        # but any other wrong values can also mean that too
-        new_sections[section] = literal_mapping.get(setting, "disabled")
+        # None for the old plugin means disabled, and so does any other value
+        # that is neither "sync" nor "async". A section that is not collected is
+        # absent from the new shape.
+        if setting in ("sync", "async"):
+            new_sections[section] = setting == "async"
 
     return new_sections
 

@@ -45,7 +45,7 @@ def test_sections_supported_keys_are_mapped() -> None:
     new_rule = convert({"sections": {"instance": "sync"}})
 
     assert new_rule.warnings == ["No auth defined in legacy rule. Defaulting to Oracle wallet."]
-    assert dump(new_rule.rule)["sections"] == {"instance": "synchronous"}
+    assert dump(new_rule.rule)["sections"] == {"instance": False}
 
 
 def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
@@ -62,11 +62,13 @@ def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
             "instead of deferring to the plugin later."
         )
     ]
-    assert sections["locks"] == "synchronous"
-    assert sections["iostats"] == "disabled"
+    assert sections["locks"] is False
+    # The legacy default left iostats off, and a section that is not collected
+    # is absent rather than named.
+    assert "iostats" not in sections
     assert "ts_quotas" not in sections
-    assert sections["asm_instance"] == "synchronous"
-    assert sections["tablespaces"] == "asynchronous"
+    assert sections["asm_instance"] is False
+    assert sections["tablespaces"] is True
 
 
 def test_sections_unsupported_keys_are_skipped_with_warning() -> None:
@@ -80,27 +82,21 @@ def test_sections_unsupported_keys_are_skipped_with_warning() -> None:
 
 
 def test_sections_sync_becomes_synchronous() -> None:
-    assert dump(convert({"sections": {"instance": "sync"}}).rule)["sections"] == {
-        "instance": "synchronous"
-    }
+    assert dump(convert({"sections": {"instance": "sync"}}).rule)["sections"] == {"instance": False}
 
 
 def test_sections_async_becomes_asynchronous() -> None:
     assert dump(convert({"sections": {"tablespaces": "async"}}).rule)["sections"] == {
-        "tablespaces": "asynchronous"
+        "tablespaces": True
     }
 
 
 def test_sections_none_becomes_disabled() -> None:
-    assert dump(convert({"sections": {"iostats": None}}).rule)["sections"] == {
-        "iostats": "disabled"
-    }
+    assert dump(convert({"sections": {"iostats": None}}).rule)["sections"] == {}
 
 
 def test_sections_unsupported_value_becomes_disabled() -> None:
-    assert dump(convert({"sections": {"iostats": "bad"}}).rule)["sections"] == {
-        "iostats": "disabled"
-    }
+    assert dump(convert({"sections": {"iostats": "bad"}}).rule)["sections"] == {}
 
 
 def test_sections_asm_sections_are_renamed() -> None:
@@ -114,9 +110,9 @@ def test_sections_asm_sections_are_renamed() -> None:
         }
     )
     assert dump(new_rule.rule)["sections"] == {
-        "asm_instance": "synchronous",
-        "asm_diskgroup": "asynchronous",
-        "processes": "synchronous",
+        "asm_instance": False,
+        "asm_diskgroup": True,
+        "processes": False,
     }
 
 

@@ -118,7 +118,6 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-licensing",
-        requirement("time-machine"),
     ],
 )
 

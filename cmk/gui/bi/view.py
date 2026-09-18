@@ -8,7 +8,7 @@
 # mypy: disable-error-code="type-arg"
 
 import typing
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final, Literal
 
@@ -1021,6 +1021,49 @@ def changed_identifiers(
     }
 
 
+# The hint is rendered next to a node title, so a single value must not be able to
+# push the whole tree off screen.
+_MAX_DETAIL_VALUE_LENGTH: Final = 40
+
+
+def _describe_value(value: object) -> str:
+    text = str(value)
+    return (
+        text if len(text) <= _MAX_DETAIL_VALUE_LENGTH else f"{text[:_MAX_DETAIL_VALUE_LENGTH]}..."
+    )
+
+
+def changed_node_details(live_node: ABCBICompiledNode, frozen_node: ABCBICompiledNode) -> str:
+    """What a reconfigured node was changed to, e.g. "aggregation function: best -> worst"."""
+
+    def entries(frozen_value: object, live_value: object, path: str) -> Iterator[str]:
+        if isinstance(frozen_value, dict) and isinstance(live_value, dict):
+            for key in sorted(frozen_value.keys() | live_value.keys()):
+                if frozen_value.get(key) != live_value.get(key):
+                    # "type" names the variant, it adds nothing to the path itself.
+                    yield from entries(
+                        frozen_value.get(key),
+                        live_value.get(key),
+                        path if key == "type" else f"{path} {key}".strip(),
+                    )
+            return
+        if frozen_value is None or live_value is None:
+            yield f"{path}: {'added' if frozen_value is None else 'removed'}"
+            return
+        if isinstance(frozen_value, dict) or isinstance(live_value, dict):
+            # A sub-configuration was replaced wholesale, spelling it out is unbounded.
+            yield f"{path}: replaced"
+            return
+        yield f"{path}: {_describe_value(frozen_value)} \u2192 {_describe_value(live_value)}"
+
+    def named_attributes(node: ABCBICompiledNode) -> dict[str, object]:
+        # Only the top level names a node attribute; below that the keys are verbatim
+        # configuration names and must not be reworded.
+        return {key.replace("_", " "): value for key, value in node_signature(node).items()}
+
+    return ", ".join(entries(named_attributes(frozen_node), named_attributes(live_node), ""))
+
+
 def branches_differ(reference_branch: BICompiledRule, other_branch: BICompiledRule) -> bool:
     """Whether two branches differ in shape or configuration. Mutates neither."""
     reference_ids = {x.id: x.node_ref for x in reference_branch.get_identifiers((), set())}
@@ -1100,10 +1143,12 @@ def combine_branches(live_branch: BICompiledRule, frozen_branch: BICompiledRule)
     # function was changed after the aggregation had been frozen.
     for changed_id in changed_ids:
         extract_and_update_affected_parents_ids(changed_id)
-        live_ids[changed_id].set_frozen_marker(FrozenMarker("changed"))
+        live_ids[changed_id].set_frozen_marker(
+            FrozenMarker(
+                "changed", changed_node_details(live_ids[changed_id], frozen_ids[changed_id])
+            )
+        )
 
-    # Deliberately last: for an ancestor of a difference, "look inside" outranks
-    # whatever marker it carries in its own right.
     # A node that was reconfigured keeps saying so - "look inside" is only useful for
     # an ancestor that has nothing to report in its own right.
     for pid in affected_parent_ids:

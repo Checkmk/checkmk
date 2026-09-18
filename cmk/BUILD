@@ -194,6 +194,7 @@ build_test(
 
 package_wheel(
     name = "cmk_tar",
+    additional_files = ["//cmk/gui/job_scheduler:health_bin"],
     visibility = ["//visibility:public"],
     whl = "whl",
 )

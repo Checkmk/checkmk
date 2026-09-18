@@ -47,6 +47,7 @@ import {
 import { customServiceModelFor } from '../telemetryMetrics'
 import { type ItemId, isFormula, isSingleLine, parseLineType } from '../types'
 import type { RowIssue } from '../validation'
+import AutomaticColorCell from './AutomaticColorCell.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import RowEditor from './forms/RowEditor.vue'
 
@@ -360,7 +361,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
             :model-value="row.color"
             @update:model-value="store.patch(row.id, { color: $event })"
           />
-          <BaseCell v-else column-id="color" vertical-align="middle" />
+          <AutomaticColorCell v-else />
           <CollapsibleCell
             column-id="title"
             vertical-align="middle"

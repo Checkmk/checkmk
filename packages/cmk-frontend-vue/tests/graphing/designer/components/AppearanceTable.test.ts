@@ -272,6 +272,15 @@ test('per-row colour and visibility changes leave the other row untouched', asyn
   expect(store.items.value[1]).toMatchObject({ color: '#222222', visible: false })
 })
 
+test('a fanned-out row explains its automatic colors instead of offering a picker', () => {
+  renderTable([rrdQueryItem('B', { title: 'Fanned' })], new Map())
+
+  const row = rowOf('Fanned')
+
+  expect(row.querySelector('input[type=color]')).toBeNull()
+  within(row).getByRole('img', { name: /Colors are assigned automatically/ })
+})
+
 test('hovering a resolved series highlights that line alone', async () => {
   const { emitted } = renderTable(
     [rrdQueryItem('B', { title: 'Fanned' })],

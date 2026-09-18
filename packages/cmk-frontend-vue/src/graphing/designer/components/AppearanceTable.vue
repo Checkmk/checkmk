@@ -27,6 +27,7 @@ import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphIt
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
+import AutomaticColorCell from './AutomaticColorCell.vue'
 import StatsCells from './StatsCells.vue'
 
 const { store, metricsBySource, resolvedTitles } = defineProps<{
@@ -172,7 +173,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           :model-value="row.color"
           @update:model-value="store.patch(row.id, { color: $event })"
         />
-        <BaseCell v-else column-id="color" vertical-align="middle" />
+        <AutomaticColorCell v-else />
         <BaseCell v-if="isSingleLine(row)" column-id="title" vertical-align="middle" no-wrap>{{
           resolvedTitles.get(row.id) ?? row.title
         }}</BaseCell>

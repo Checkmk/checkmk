@@ -92,18 +92,18 @@ class TestBranchesDiffer:
 
 class TestCombineBranches:
     def test_identical_branches_are_equal(self) -> None:
-        frozen = _rule("Host heute")
+        live = _rule("Host heute")
 
-        assert combine_branches(frozen, _rule("Host heute")) is True
-        assert set(_markers(frozen).values()) == {None}
+        assert combine_branches(live, _rule("Host heute")) is True
+        assert set(_markers(live).values()) == {None}
 
     def test_changed_aggregation_function_is_reported(self) -> None:
         """SUP-30030: the tree shape is identical, only the function changed."""
-        frozen = _rule("Host heute", aggregation_function=BEST)
         live = _rule("Host heute", aggregation_function=WORST)
+        frozen = _rule("Host heute", aggregation_function=BEST)
 
-        assert combine_branches(frozen, live) is False
-        assert _markers(frozen)[((1, "Host heute"),)] == "changed"
+        assert combine_branches(live, frozen) is False
+        assert _markers(live)[((1, "Host heute"),)] == "changed"
 
     def test_changed_nested_rule_marks_its_ancestor(self) -> None:
         def branch(aggregation_function: ABCBIAggregationFunction) -> BICompiledRule:
@@ -112,36 +112,47 @@ class TestCombineBranches:
                 nodes=[_rule("Performance", aggregation_function=aggregation_function)],
             )
 
-        frozen = branch(BEST)
+        live = branch(WORST)
 
-        assert combine_branches(frozen, branch(WORST)) is False
-        markers = _markers(frozen)
+        assert combine_branches(live, branch(BEST)) is False
+        markers = _markers(live)
         assert markers[((1, "Host heute"),)] == "parent"
         assert markers[((1, "Host heute"), (1, "Performance"))] == "changed"
 
     def test_changed_rule_property_is_reported(self) -> None:
-        frozen = _rule("Host heute")
         live = _rule("Host heute")
-        live.properties.state_messages = {"2": "call the on-call"}
+        frozen = _rule("Host heute")
+        frozen.properties.state_messages = {"2": "call the on-call"}
 
-        assert combine_branches(frozen, live) is False
-        assert _markers(frozen)[((1, "Host heute"),)] == "changed"
+        assert combine_branches(live, frozen) is False
+        assert _markers(live)[((1, "Host heute"),)] == "changed"
 
     def test_changed_node_that_is_also_a_parent_keeps_its_own_change(self) -> None:
         """A reconfigured node must not be reduced to "something below me differs"."""
-        frozen = _rule("Host heute", aggregation_function=BEST, nodes=[_leaf("CPU")])
         live = _rule(
             "Host heute", aggregation_function=WORST, nodes=[_leaf("CPU"), _leaf("Memory")]
         )
+        frozen = _rule("Host heute", aggregation_function=BEST, nodes=[_leaf("CPU")])
 
-        assert combine_branches(frozen, live) is False
-        assert _markers(frozen)[((1, "Host heute"),)] == "changed"
+        assert combine_branches(live, frozen) is False
+        assert _markers(live)[((1, "Host heute"),)] == "changed"
 
-    def test_missing_node_is_still_reported(self) -> None:
-        frozen = _rule("Host heute", nodes=[_leaf("CPU"), _leaf("Memory")])
+    def test_node_added_since_freezing_is_reported(self) -> None:
+        live = _rule("Host heute", nodes=[_leaf("CPU"), _leaf("Memory")])
+        frozen = _rule("Host heute", nodes=[_leaf("CPU")])
+
+        assert combine_branches(live, frozen) is False
+        markers = _markers(live)
+        assert markers[((1, "Host heute"),)] == "parent"
+        assert markers[((1, "Host heute"), (1, "heute", "Memory"))] == "new"
+
+    def test_node_removed_since_freezing_is_grafted_in_and_reported(self) -> None:
         live = _rule("Host heute", nodes=[_leaf("CPU")])
+        frozen = _rule("Host heute", nodes=[_leaf("CPU"), _leaf("Memory")])
 
-        assert combine_branches(frozen, live) is False
-        markers = _markers(frozen)
+        assert combine_branches(live, frozen) is False
+        markers = _markers(live)
         assert markers[((1, "Host heute"),)] == "parent"
         assert markers[((1, "Host heute"), (1, "heute", "Memory"))] == "missing"
+        # Grafted into the rendered tree, so the deletion stays visible.
+        assert len(live.nodes) == 2

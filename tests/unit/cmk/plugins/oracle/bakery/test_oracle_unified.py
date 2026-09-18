@@ -215,7 +215,7 @@ oracle_config_full: BakedConfig = BakedConfig(
     ),
     cache_age=600,
     discovery=StoredDiscoveryConf(
-        enabled=True,
+        enabled="enabled",
         include=["prod*", "test*"],
         exclude=["old*"],
     ),
@@ -460,7 +460,7 @@ oracle_config_discovery_instances: BakedConfig = BakedConfig(
     ),
     cache_age=None,
     discovery=StoredDiscoveryConf(
-        enabled=True,
+        enabled="enabled",
         include=None,
         exclude=None,
     ),

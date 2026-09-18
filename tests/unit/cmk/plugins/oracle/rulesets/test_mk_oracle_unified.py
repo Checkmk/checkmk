@@ -75,6 +75,7 @@ CURRENT_RULE: Mapping[str, object] = {
         {"oracle_id": ("alias", "PROD")},
     ],
     **_SHARED,
+    "discovery": {"enabled": "enabled", "include": ["ORCL"]},
     "excluded_sections": [{"target_id": ("sid", "XE"), "sections": ["rman"]}],
 }
 
@@ -125,6 +126,12 @@ def test_an_empty_database_list_points_at_instance_discovery() -> None:
     instances = _agent_config_mk_oracle().elements["instances_rev2"].parameter_form
     assert isinstance(instances, List)
     assert "discovery" in instances.no_element_label.localize(str).lower()
+
+
+def test_discovery_is_offered_as_a_choice() -> None:
+    discovery = _agent_config_mk_oracle().elements["discovery"].parameter_form
+    assert isinstance(discovery, Dictionary)
+    assert isinstance(discovery.elements["enabled"].parameter_form, SingleChoice)
 
 
 def test_the_client_library_is_offered_flat() -> None:

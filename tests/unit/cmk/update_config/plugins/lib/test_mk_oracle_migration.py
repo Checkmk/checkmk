@@ -207,21 +207,21 @@ def test_discovery_not_mapped_when_nothing_defined() -> None:
 
 def test_discovery_include_mapped_when_sids_defined() -> None:
     assert dump(convert({"sids": ("only", ["a", "b"])}).rule)["discovery"] == {
-        "enabled": True,
+        "enabled": "enabled",
         "include": ["a", "b"],
     }
 
 
 def test_discovery_exclude_mapped_when_skip_defined() -> None:
     assert dump(convert({"sids": ("skip", ["a"])}).rule)["discovery"] == {
-        "enabled": True,
+        "enabled": "enabled",
         "exclude": ["a"],
     }
 
 
 def test_discovery_include_mapped_when_exclude_defined() -> None:
     assert dump(convert({"sids": ("exclude", ["a"])}).rule)["discovery"] == {
-        "enabled": True,
+        "enabled": "enabled",
         "exclude": ["a"],
     }
 

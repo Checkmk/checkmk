@@ -409,7 +409,7 @@ def _get_oracle_discovery(discovery: StoredDiscoveryConf | None) -> OracleDiscov
         return None
 
     return OracleDiscovery(
-        detect=discovery.enabled,
+        detect=discovery.enabled == "enabled",
         include=discovery.include or None,
         exclude=discovery.exclude or None,
     )

@@ -15,7 +15,6 @@ from cmk.rulesets.internal.form_specs import (
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
-    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -529,15 +528,25 @@ def _discovery() -> Dictionary:
     return Dictionary(
         title=Title("Instance discovery"),
         help_text=Help(
-            "When enabled, the plug-in will automatically discover local Oracle database instances. "
-            "This feature only works when the plug-in is installed on the same machine where the "
-            "Oracle database instances are running."
+            "Whether the plug-in looks for local Oracle database instances on its own. "
+            "It does so unless this is configured otherwise, and only when it runs on the "
+            "machine where the instances are running."
         ),
         elements={
             "enabled": DictElement(
-                parameter_form=BooleanChoice(
-                    title=Title("Enable service discovery"),
-                    prefill=DefaultValue(True),
+                parameter_form=SingleChoice(
+                    title=Title("Local instances"),
+                    prefill=DefaultValue("enabled"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="enabled",
+                            title=Title("Discover local instances"),
+                        ),
+                        SingleChoiceElement(
+                            name="disabled",
+                            title=Title("Monitor only the databases listed below"),
+                        ),
+                    ],
                 ),
                 required=True,
             ),
@@ -888,6 +897,10 @@ def _entries_to_rev2(entries: object, id_key: str) -> object:
     return converted
 
 
+def _discovery_to_rev2(discovery: Mapping[str, object]) -> Mapping[str, object]:
+    return {**discovery, "enabled": "enabled" if discovery.get("enabled") else "disabled"}
+
+
 def _options_to_rev2(options: Mapping[str, object]) -> Mapping[str, object]:
     hoisted: dict[str, object] = {
         key: value for key, value in options.items() if key != "oracle_client_library"
@@ -902,12 +915,16 @@ def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
     """Dissolve "main", and give the keys whose shape changed a new name.
 
     Every step keys off a name that only the old shape has, so running this on a
-    value that has already been through it changes nothing.
+    value that has already been through it changes nothing. The keys lifted out
+    of "main" are converted while they are lifted, for the same reason: at the
+    top level their names say nothing about which shape they hold.
     """
     migrated = {key: item for key, item in value.items() if key != "main"}
 
     if isinstance(main := value.get("main"), Mapping):
         lifted = {key: main[key] for key in _LIFTED_FROM_MAIN if key in main}
+        if isinstance(discovery := lifted.get("discovery"), Mapping):
+            lifted["discovery"] = _discovery_to_rev2(discovery)
         if "excluded_sections" in lifted:
             lifted["excluded_sections"] = _entries_to_rev2(lifted["excluded_sections"], "target_id")
         migrated.update(lifted)

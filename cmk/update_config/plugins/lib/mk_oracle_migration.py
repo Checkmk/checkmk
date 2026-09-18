@@ -239,9 +239,9 @@ def _convert_discovery(sids: tuple[str, Sequence[str]] | None) -> StoredDiscover
 
     how, names = sids
     if how == "only":
-        return StoredDiscoveryConf(enabled=True, include=list(names))
+        return StoredDiscoveryConf(enabled="enabled", include=list(names))
     if how in ("skip", "exclude"):
-        return StoredDiscoveryConf(enabled=True, exclude=list(names))
+        return StoredDiscoveryConf(enabled="enabled", exclude=list(names))
     return None
 
 

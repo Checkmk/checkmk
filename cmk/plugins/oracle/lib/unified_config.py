@@ -79,7 +79,7 @@ class StoredConnectionConf(BaseModel):
 
 
 class StoredDiscoveryConf(BaseModel):
-    enabled: bool
+    enabled: Literal["enabled", "disabled"]
     include: list[str] | None = None
     exclude: list[str] | None = None
 

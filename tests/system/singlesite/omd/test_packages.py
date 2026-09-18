@@ -205,6 +205,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_three_par"),
     SpecialAgent("agent_tinkerforge", usage_text="Usage"),
     SpecialAgent("agent_ucs_bladecenter"),
+    SpecialAgent("agent_veeam"),
     SpecialAgent("agent_vnx_quotas"),
     SpecialAgent("agent_vsphere"),
     SpecialAgent("agent_zerto"),

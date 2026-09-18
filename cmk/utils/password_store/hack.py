@@ -82,6 +82,7 @@ HACK_AGENTS = {
     "three_par": False,
     "tinkerforge": False,  # needs no secret
     "ucs_bladecenter": False,
+    "veeam": False,
     "vnx_quotas": False,
     "vsphere": False,
     "zerto": False,

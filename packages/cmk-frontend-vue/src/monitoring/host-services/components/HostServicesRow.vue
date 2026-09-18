@@ -37,6 +37,7 @@ const { _t } = usei18n()
 
 const emit = defineEmits<{
   (event: 'open', service: HostServiceEntry): void
+  (event: 'openGraphs', service: HostServiceEntry): void
   (event: 'command', payload: { id: string; target: string }): void
 }>()
 
@@ -121,7 +122,13 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
     :items="contactGroups"
     size="small"
   />
-  <PerfometerCell v-if="hasColumn('perfometer')" column-id="perfometer" :data="row.perfometer" />
+  <PerfometerCell
+    v-if="hasColumn('perfometer')"
+    column-id="perfometer"
+    :data="row.perfometer"
+    :button="row.perfometer !== undefined"
+    @click="emit('openGraphs', row)"
+  />
   <ActionsCell
     v-if="(actionMenuLoader || actionButtons.length > 0) && hasColumn('actions')"
     column-id="actions"

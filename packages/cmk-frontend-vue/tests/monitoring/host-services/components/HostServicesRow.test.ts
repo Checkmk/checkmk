@@ -236,6 +236,29 @@ test('renders the perfometer of a service that has one', () => {
   expect(perfometer).toHaveTextContent('42%')
 })
 
+test('the perfometer asks for the graphs of its service', async () => {
+  const openGraphs = vi.fn()
+  const service = makeService({
+    perfometer: {
+      value: 42,
+      value_range: { min: 0, max: 100 },
+      formatted: '42%',
+      color: '#ff0000'
+    }
+  })
+  const { container } = mountRow(service, makeTableRow(), { onOpenGraphs: openGraphs })
+
+  await userEvent.click(container.querySelector('td[data-column-id="perfometer"] button')!)
+
+  expect(openGraphs).toHaveBeenCalledWith(service)
+})
+
+test('a service without a perfometer leaves its cell unclickable', () => {
+  const { container } = mountRow(makeService())
+
+  expect(container.querySelector('td[data-column-id="perfometer"] button')).toBeNull()
+})
+
 test('leaves the perfometer cell empty for a service without performance data', () => {
   mountRow(makeService())
 

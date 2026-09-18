@@ -10,7 +10,9 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import ServiceSlideIn from '@/monitoring/host-services/components/ServiceSlideIn.vue'
+import ServiceSlideIn, {
+  SERVICE_GRAPHS_TAB_ID
+} from '@/monitoring/host-services/components/ServiceSlideIn.vue'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
@@ -397,6 +399,22 @@ describe('ServiceSlideIn', () => {
 
     expect(tabs).toEqual(['Overview', 'History', 'Service graphs'])
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('opens on the graphs, for a reader who came from the Perf-O-Meter', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        activeTabId: SERVICE_GRAPHS_TAB_ID
+      }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.getByRole('tab', { name: 'Service graphs' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
   })
 
   it('loads the history of that one service when its tab is activated', async () => {

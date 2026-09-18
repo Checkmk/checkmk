@@ -48,7 +48,7 @@ import { ServiceActionMenuApi } from './api/actionMenu'
 import { HostServicesApi } from './api/services'
 import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
-import ServiceSlideIn from './components/ServiceSlideIn.vue'
+import ServiceSlideIn, { SERVICE_GRAPHS_TAB_ID } from './components/ServiceSlideIn.vue'
 import { HostServicesService } from './services/HostServicesService'
 
 const { _t, _tn } = usei18n()
@@ -206,6 +206,11 @@ function openSlideIn(service: HostServiceEntry): void {
   slideInService.value = service
 }
 
+function openServiceGraphs(service: HostServiceEntry): void {
+  slideInTabId.value = SERVICE_GRAPHS_TAB_ID
+  openSlideIn(service)
+}
+
 function closeSlideIn(): void {
   if (slideInService.value !== null) {
     hostServicesService.endAutoPause()
@@ -315,6 +320,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :row-actions="rowActionButtons"
             :load-action-menu="loadActionMenu"
             @open="openSlideIn"
+            @open-graphs="openServiceGraphs"
             @command="onCommand"
           />
         </template>

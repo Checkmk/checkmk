@@ -13,14 +13,24 @@ export interface PerfometerCellProps {
   data?: Perfometer | undefined
   stale?: boolean | undefined
   linkedTo?: CellLink | undefined
+  button?: boolean | undefined
   columnId?: string | undefined
 }
 
 const props = defineProps<PerfometerCellProps>()
+
+const emit = defineEmits<{
+  (event: 'click', payload: MouseEvent): void
+}>()
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :linked-to="linkedTo">
+  <BaseCell
+    :column-id="columnId"
+    :linked-to="linkedTo"
+    :button="button"
+    @click="emit('click', $event)"
+  >
     <template #default>
       <CmkPerfometer
         v-if="props.data"

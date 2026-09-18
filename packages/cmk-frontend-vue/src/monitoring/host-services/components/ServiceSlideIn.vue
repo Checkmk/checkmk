@@ -3,6 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+export const SERVICE_GRAPHS_TAB_ID = 'service_graphs'
+</script>
+
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
@@ -182,7 +186,7 @@ const tabs = computed<SlideInTab[]>(() => {
       load: () => fetchEvents(props.host, service.name)
     },
     {
-      id: 'service_graphs',
+      id: SERVICE_GRAPHS_TAB_ID,
       title: _t('Service graphs'),
       component: markRaw(ServiceGraphsTab),
       skeleton: markRaw(ServiceGraphsSkeleton),

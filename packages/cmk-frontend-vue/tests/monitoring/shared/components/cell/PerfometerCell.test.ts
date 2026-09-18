@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { defineComponent, h } from 'vue'
 
@@ -10,7 +11,7 @@ import PerfometerCell, {
   type PerfometerCellProps
 } from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 
-function mountCell(props: PerfometerCellProps) {
+function mountCell(props: PerfometerCellProps & { onClick?: (event: MouseEvent) => void }) {
   return render(
     defineComponent({
       render() {
@@ -74,6 +75,24 @@ test('wraps the perfometer in a link when linkedTo is set', () => {
   const link = container.querySelector('a')
   expect(link).not.toBeNull()
   expect(link).toHaveAttribute('href', 'graph.py?host=web-1')
+})
+
+test('reports a click on the perfometer of a button cell', async () => {
+  const onClick = vi.fn()
+  const { container } = mountCell({
+    button: true,
+    onClick,
+    data: {
+      value: 10,
+      value_range: { min: 0, max: 100 },
+      formatted: '10%',
+      color: 'rgb(0, 128, 0)'
+    }
+  })
+
+  await userEvent.click(container.querySelector('button')!)
+
+  expect(onClick).toHaveBeenCalled()
 })
 
 test('the perfometer sits at the top of its row, as every other cell does', () => {

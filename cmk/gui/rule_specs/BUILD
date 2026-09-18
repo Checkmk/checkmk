@@ -6,7 +6,6 @@ py_library(
     srcs = ["types.py"],
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -20,7 +19,6 @@ py_library(
     srcs = ["loader.py"],
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],

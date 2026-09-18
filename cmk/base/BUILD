@@ -221,7 +221,6 @@ py_library(
     srcs = ["app.py"],
     imports = ["../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//cmk/cli/engine:__pkg__",

@@ -804,7 +804,6 @@ pkg_tar(
     visibility = ["//omd:__subpackages__"],
     deps = [
         "//active_checks:pkg_tar",
-        "//bin:pkg_tar",
         "//cmk:cmk_tar",
         "//packages/cmk-plugin-apis/doc:pkg_tar",
         "//locale",

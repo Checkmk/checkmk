@@ -80,7 +80,6 @@ py_library(
     data = [":py_typed"],
     imports = ["."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//packages:__subpackages__",

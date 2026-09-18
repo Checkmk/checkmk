@@ -17,7 +17,6 @@ py_library(
     ) + ["cmk/gui/wsgi/applications/index.wsgi"],
     imports = ["."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__pkg__",
         "//omd/packages/check_mk:__pkg__",

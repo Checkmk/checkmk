@@ -78,7 +78,6 @@ py_library(
     data = ["cmk/backup/py.typed"],
     imports = ["."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
     ],
     deps = [

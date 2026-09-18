@@ -1,11 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-exports_files(
-    ["cli.py"],
-    visibility = ["//bin:__pkg__"],
-)
-
 py_library(
     name = "product_usage",
     srcs = glob(

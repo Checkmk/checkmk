@@ -18,7 +18,6 @@ py_library(
     name = "paths",
     srcs = ["paths.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -32,7 +31,6 @@ py_library(
     name = "man_pages",
     srcs = ["man_pages.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -52,7 +50,6 @@ py_library(
     name = "encryption",
     srcs = ["encryption.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -74,7 +71,6 @@ py_library(
         "msi_patch.py",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -95,7 +91,6 @@ py_library(
         "redis.py",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -114,7 +109,6 @@ py_library(
     name = "unixsocket_http",
     srcs = ["unixsocket_http.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -136,7 +130,6 @@ py_library(
         "//cmk/utils/werks/announce/templates:j2_templates",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -176,7 +169,6 @@ py_library(
     # Don't introduce new dependencies over there!
     # The ones listed here are just the sad status quo
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__subpackages__",
         "//non-free/packages/cmk-bakery:__subpackages__",

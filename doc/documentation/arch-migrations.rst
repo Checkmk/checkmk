@@ -175,17 +175,6 @@ The target layout classifies every test by scope and groups system level tests b
 All system level suites now live under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``, ``tests/system/singlesite/``, the former ``tests/integration/``, and ``tests/system/multisite/``, the former ``tests/composition/``).
 What is still outstanding is the grouping *within* ``tests/system/``: ``singlesite``, ``multisite``, ``gui``, ``gui_crawl``, ``update`` and ``plugins`` are transitional, fixture-named buckets to be dissolved into feature directories.
 
-Centralized ``bin/BUILD`` to self-contained CLI entry points
-============================================================
-
-:Phase: in progress
-:Owner: Moritz Kiemer.
-:Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``
-:New: ``bin/`` in the repo does not exist. Each package declares its shipped own entry points via the ``entry_points`` argument to the ``py_wheel`` rule.
-:References: 35b24d32b5e4559a999e3dfba489e289477d94d5
-
-Next step here is migrate the remaining elements in ``bin/``.
-
 Monolith decomposition: dissolve global ``BaseConfig`` and ``ConfigCache``
 ==========================================================================
 

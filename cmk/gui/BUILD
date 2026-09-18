@@ -132,7 +132,6 @@ py_library(
     ],
     imports = ["../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
@@ -417,7 +416,6 @@ py_library(
     ],
     imports = ["../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-telemetry:__pkg__",
         "//packages/cmk-backup:__pkg__",
@@ -507,7 +505,6 @@ py_library(
     srcs = ["session_context.py"],
     imports = ["../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//omd/packages/check_mk:__pkg__",
@@ -533,7 +530,6 @@ py_library(
     ],
     imports = ["../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//omd/packages/check_mk:__pkg__",
@@ -706,7 +702,6 @@ py_library(
         "deballast-keep=//packages/cmk-maps:registration",  # loaded at runtime via _FEATURE_PLUGIN_MODULES in cmk.gui.main_modules
     ],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__pkg__",
         "//omd/packages/check_mk:__pkg__",

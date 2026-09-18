@@ -5,7 +5,6 @@ py_library(
     srcs = glob(["backend/**/*.py"]),
     imports = ["../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
         "//packages/cmk-check-engine:__subpackages__",
@@ -24,7 +23,6 @@ py_library(
     ),
     imports = ["../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
         "//tests/unit:__subpackages__",

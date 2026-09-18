@@ -312,25 +312,20 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
     )
 
 
-def _alias_entry() -> Dictionary:
-    return Dictionary(
-        title=Title("Alias Value"),
+def _alias_entry() -> String:
+    return String(
+        title=Title("Alias"),
         help_text=Help(
             "A TNS alias as defined in the <tt>tnsnames.ora</tt> file. "
             "Requires a properly configured <tt>tnsnames.ora</tt> file accessible "
             "via the TNS_ADMIN directory path."
         ),
-        elements={
-            "alias": DictElement(
-                required=True,
-                parameter_form=String(),
-            ),
-        },
+        custom_validate=(validators.LengthInRange(min_value=1),),
     )
 
 
-def _sid_entry() -> Dictionary:
-    return Dictionary(
+def _sid_entry() -> String:
+    return String(
         title=Title("SID"),
         help_text=Help(
             "The Oracle System Identifier (SID) that identifies "
@@ -340,12 +335,7 @@ def _sid_entry() -> Dictionary:
             "If both a service name and SID are specified, "
             "the service name takes precedence."
         ),
-        elements={
-            "sid": DictElement(
-                required=True,
-                parameter_form=String(),
-            ),
-        },
+        custom_validate=(validators.LengthInRange(min_value=1),),
     )
 
 
@@ -878,6 +868,33 @@ _LIFTED_FROM_MAIN: Final = (
 )
 
 
+def _oracle_id_to_rev2(oracle_id: object) -> object | None:
+    """Return the identification, or None if it names no database."""
+    match oracle_id:
+        case (("alias" | "sid") as kind, Mapping() as fields):
+            return (kind, name) if (name := fields.get(kind)) else None
+        case ("descriptor", Mapping() as fields):
+            named = ("service_name", "instance_name", "sid")
+            return oracle_id if any(fields.get(key) for key in named) else None
+        case _:
+            return oracle_id
+
+
+def _entries_to_rev2(entries: object, id_key: str) -> object:
+    if not isinstance(entries, list):
+        return entries
+    converted = []
+    for entry in entries:
+        if not isinstance(entry, Mapping) or id_key not in entry:
+            converted.append(entry)
+            continue
+        # The bakery dropped an entry that named no database, so a rule could
+        # carry one. It has no place in the new shape, where the name is required.
+        if (oracle_id := _oracle_id_to_rev2(entry[id_key])) is not None:
+            converted.append({**entry, id_key: oracle_id})
+    return converted
+
+
 def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
     """Dissolve "main", and give the keys whose shape changed a new name.
 
@@ -885,11 +902,18 @@ def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
     value that has already been through it changes nothing.
     """
     migrated = {key: item for key, item in value.items() if key != "main"}
+
     if isinstance(main := value.get("main"), Mapping):
-        migrated.update({key: main[key] for key in _LIFTED_FROM_MAIN if key in main})
+        lifted = {key: main[key] for key in _LIFTED_FROM_MAIN if key in main}
+        if "excluded_sections" in lifted:
+            lifted["excluded_sections"] = _entries_to_rev2(lifted["excluded_sections"], "target_id")
+        migrated.update(lifted)
+
     if "deploy" in migrated:
         deploy = migrated.pop("deploy")
         migrated["deploy_rev2"] = deploy[0] if isinstance(deploy, tuple) else deploy
+    if "instances" in migrated:
+        migrated["instances_rev2"] = _entries_to_rev2(migrated.pop("instances"), "oracle_id")
     return migrated
 
 
@@ -934,7 +958,7 @@ def _agent_config_mk_oracle() -> Dictionary:
                 parameter_form=_discovery(),
                 required=False,
             ),
-            "instances": DictElement(
+            "instances_rev2": DictElement(
                 parameter_form=_instances(),
                 required=True,
             ),

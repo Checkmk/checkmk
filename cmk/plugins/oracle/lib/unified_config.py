@@ -51,11 +51,22 @@ class StoredAuthConf[SecretT = StoredPassword](BaseModel):
     asm_auth: StoredAsmAuthConf[SecretT] | None = None
 
 
-class StoredOracleIdentificationConf(BaseModel):
+class StoredDescriptorConf(BaseModel):
+    # All three are optional, as they were before the revision. The form asks for
+    # a service name, but a rule migrated from the legacy ruleset may name an
+    # instance only.
     service_name: str | None = None
     instance_name: str | None = None
     sid: str | None = None
-    alias: str | None = None
+
+
+# An alias and a SID are a single string. A service name is three fields, so it
+# keeps a dictionary of its own.
+type StoredOracleId = (
+    tuple[Literal["alias"], str]
+    | tuple[Literal["sid"], str]
+    | tuple[Literal["descriptor"], StoredDescriptorConf]
+)
 
 
 class StoredConnectionConf(BaseModel):
@@ -95,12 +106,12 @@ class StoredAdditionalOptionsConf(BaseModel):
 
 
 class StoredExcludedSectionConf(BaseModel):
-    target_id: tuple[Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf]
+    target_id: StoredOracleId
     sections: list[str] | None = None
 
 
 class StoredInstanceConf[SecretT = StoredPassword](BaseModel):
-    oracle_id: tuple[Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf]
+    oracle_id: StoredOracleId
     auth: StoredAuthConf[SecretT] | None = None
     connection: StoredConnectionConf | None = None
     piggyback_host: str | None = None
@@ -115,7 +126,7 @@ class StoredConfig[SecretT = StoredPassword](BaseModel):
     discovery: StoredDiscoveryConf | None = None
     sections: StoredSectionOptions | None = None
     excluded_sections: list[StoredExcludedSectionConf] | None = None
-    instances: list[StoredInstanceConf[SecretT]] | None = None
+    instances_rev2: list[StoredInstanceConf[SecretT]] | None = None
     options: StoredAdditionalOptionsConf | None = None
 
     def get_active_cache_age(self) -> int:

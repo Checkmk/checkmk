@@ -19,6 +19,7 @@ from cmk.plugins.oracle.lib.unified_config import StoredConfig
 from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
     _agent_config_mk_oracle,
     _migrate,
+    _oracle_id,
     USE_HOST_CLIENT_PATH_RE,
 )
 from cmk.rulesets.internal.form_specs import (
@@ -32,6 +33,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     Password,
     SingleChoice,
+    String,
 )
 
 PASSWORD = ("cmk_postprocessed", "explicit_password", ("uuid", "secret"))
@@ -49,19 +51,28 @@ _SHARED: Mapping[str, object] = {
     "excluded_sections": [{"target_id": ("sid", {"sid": "XE"}), "sections": ["rman"]}],
 }
 
+_INSTANCES = [
+    {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
+    {"oracle_id": ("alias", {"alias": "PROD"})},
+]
+
 # What the form wrote before the revision.
 OLD_RULE: Mapping[str, object] = {
     "deploy": ("deploy", None),
     "options": {"ignore_db_name": False},
     "main": _SHARED,
-    "instances": [{"oracle_id": ("alias", {"alias": "PROD"})}],
+    "instances": _INSTANCES,
 }
 
 CURRENT_RULE: Mapping[str, object] = {
     "deploy_rev2": "deploy",
     "options": {"ignore_db_name": False},
-    "instances": [{"oracle_id": ("alias", {"alias": "PROD"})}],
+    "instances_rev2": [
+        {"oracle_id": ("descriptor", {"service_name": "orcl"}), "piggyback_host": "orcl.example"},
+        {"oracle_id": ("alias", "PROD")},
+    ],
     **_SHARED,
+    "excluded_sections": [{"target_id": ("sid", "XE"), "sections": ["rman"]}],
 }
 
 
@@ -92,6 +103,25 @@ def test_the_migrated_rule_is_what_the_form_stores() -> None:
 def test_the_current_rule_parses_as_the_stored_model() -> None:
     parsed = StoredConfig.model_validate(CURRENT_RULE)
     assert parsed.model_dump(mode="python", exclude_unset=True) == CURRENT_RULE
+
+
+def test_migrate_drops_an_entry_that_names_no_database() -> None:
+    # The bakery dropped these silently, so a rule can carry one.
+    old = {**OLD_RULE, "instances": [{"oracle_id": ("sid", {})}, *_INSTANCES]}
+    assert _migrate(old)["instances_rev2"] == CURRENT_RULE["instances_rev2"]
+
+
+def test_an_alias_or_sid_is_offered_as_the_string_it_is() -> None:
+    by_name = {choice.name: choice.parameter_form for choice in _oracle_id().elements}
+    assert isinstance(by_name["alias"], String)
+    assert isinstance(by_name["sid"], String)
+    assert isinstance(by_name["descriptor"], Dictionary), "three fields, so it stays a dictionary"
+
+
+def test_an_empty_database_list_points_at_instance_discovery() -> None:
+    instances = _agent_config_mk_oracle().elements["instances_rev2"].parameter_form
+    assert isinstance(instances, List)
+    assert "discovery" in instances.no_element_label.localize(str).lower()
 
 
 def test_deploy_is_offered_as_a_choice() -> None:
@@ -127,12 +157,6 @@ def test_every_fixed_value_renders_something() -> None:
         if isinstance(form_spec, FixedValue) and form_spec.value is None and form_spec.label is None
     ]
     assert not empty
-
-
-def test_an_empty_database_list_points_at_instance_discovery() -> None:
-    instances = _agent_config_mk_oracle().elements["instances"].parameter_form
-    assert isinstance(instances, List)
-    assert "discovery" in instances.no_element_label.localize(str).lower()
 
 
 def test_the_form_declares_max_connections_as_ignored() -> None:

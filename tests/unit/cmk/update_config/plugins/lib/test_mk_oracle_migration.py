@@ -22,7 +22,7 @@ def test_empty_body_auth_type_is_a_plain_str_not_an_enum_member() -> None:
 
 
 def test_empty_body_has_no_instances() -> None:
-    assert dump(convert({}).rule)["instances"] == []
+    assert dump(convert({}).rule)["instances_rev2"] == []
 
 
 def test_empty_body_has_warning() -> None:
@@ -131,7 +131,7 @@ def test_excluded_sections_are_mapped_correctly() -> None:
     )
     assert dump(new_rule.rule)["excluded_sections"] == [
         {
-            "target_id": ("sid", {"sid": "test_sid"}),
+            "target_id": ("sid", "test_sid"),
             "sections": ["performance", "tablespaces", "locks"],
         }
     ]
@@ -161,8 +161,8 @@ def test_unmappable_fields_ignored() -> None:
     )
     dumped = dump(new_rule.rule)
     assert dumped["deploy_rev2"] == "do_not_deploy"
-    assert dumped["instances"] == []
-    assert set(dumped) == {"deploy_rev2", "auth", "connection", "sections", "instances"}
+    assert dumped["instances_rev2"] == []
+    assert set(dumped) == {"deploy_rev2", "auth", "connection", "sections", "instances_rev2"}
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {}
 
@@ -301,7 +301,7 @@ def test_login_without_tnsalias_has_no_instance() -> None:
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {}
 
-    assert dumped["instances"] == []
+    assert dumped["instances_rev2"] == []
 
 
 def test_login_with_tnsalias_creates_no_instance() -> None:
@@ -311,7 +311,7 @@ def test_login_with_tnsalias_creates_no_instance() -> None:
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {}
 
-    assert dumped["instances"] == []
+    assert dumped["instances_rev2"] == []
 
 
 def test_login_with_tnsalias_warns_that_it_could_not_be_migrated() -> None:
@@ -335,12 +335,12 @@ def test_login_tnsalias_does_not_affect_main_auth_and_connection() -> None:
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {"host": "mydata.db", "port": 3635}
 
-    assert dumped["instances"] == []
+    assert dumped["instances_rev2"] == []
 
 
 def test_no_instance_created_when_no_login_exceptions() -> None:
     new_rule = convert({"login_exceptions": []})
-    assert dump(new_rule.rule)["instances"] == []
+    assert dump(new_rule.rule)["instances_rev2"] == []
 
 
 def test_instance_created_when_login_exceptions_present() -> None:
@@ -351,10 +351,10 @@ def test_instance_created_when_login_exceptions_present() -> None:
             ]
         }
     )
-    assert dump(new_rule.rule)["instances"] == [
+    assert dump(new_rule.rule)["instances_rev2"] == [
         {
             "auth": {"auth_type": ("wallet", None)},
-            "oracle_id": ("sid", {"sid": "SID1"}),
+            "oracle_id": ("sid", "SID1"),
             "connection": {"host": "mydata.db", "port": 3635},
         }
     ]
@@ -372,9 +372,9 @@ def test_sid_specific_credentials_are_not_promoted_to_the_default_login() -> Non
     dumped = dump(new_rule.rule)
 
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
-    assert [instance["oracle_id"] for instance in dumped["instances"]] == [
-        ("sid", {"sid": "proddb"}),
-        ("sid", {"sid": "testdb"}),
+    assert [instance["oracle_id"] for instance in dumped["instances_rev2"]] == [
+        ("sid", "proddb"),
+        ("sid", "testdb"),
     ]
     assert "No auth defined in legacy rule. Defaulting to Oracle wallet." in new_rule.warnings
 
@@ -393,9 +393,9 @@ def test_remote_instance_maps_connection_and_piggyback() -> None:
             ]
         }
     )
-    assert dump(new_rule.rule)["instances"] == [
+    assert dump(new_rule.rule)["instances_rev2"] == [
         {
-            "oracle_id": ("sid", {"sid": "ORCL"}),
+            "oracle_id": ("sid", "ORCL"),
             "connection": {"host": "remote-host", "port": 1521},
             "piggyback_host": "remote-monitoring-host",
         }
@@ -424,7 +424,7 @@ def test_remote_instance_auth_from_login_exception_via_sid() -> None:
             ],
         }
     )
-    assert dump(new_rule.rule)["instances"][0]["auth"] == {
+    assert dump(new_rule.rule)["instances_rev2"][0]["auth"] == {
         "auth_type": (
             "standard",
             {
@@ -459,7 +459,7 @@ def test_remote_instance_auth_from_login_exception_via_piggyhost() -> None:
             ],
         }
     )
-    assert dump(new_rule.rule)["instances"][0]["auth"] == {
+    assert dump(new_rule.rule)["instances_rev2"][0]["auth"] == {
         "auth_type": (
             "standard",
             {
@@ -490,7 +490,7 @@ def test_remote_instance_auth_from_login_exception_via_id() -> None:
             ],
         }
     )
-    assert dump(new_rules.rule)["instances"][0]["auth"] == {
+    assert dump(new_rules.rule)["instances_rev2"][0]["auth"] == {
         "auth_type": ("wallet", None),
         "role": "sysbackup",
     }
@@ -512,7 +512,7 @@ def test_converts_only_one_instance_when_remote_instance_references_login_except
             "login_exceptions": [("ORCL", {"auth": "wallet", "as": "sysdba"})],
         }
     )
-    assert len(dump(new_rule.rule)["instances"]) == 1
+    assert len(dump(new_rule.rule)["instances_rev2"]) == 1
 
 
 def test_converts_two_instances_when_remote_instance_cannot_reference_login_exception() -> None:
@@ -529,7 +529,7 @@ def test_converts_two_instances_when_remote_instance_cannot_reference_login_exce
             "login_exceptions": [("EPIC", {"auth": "wallet", "as": "sysdba"})],
         }
     )
-    assert len(dump(new_rule.rule)["instances"]) == 2
+    assert len(dump(new_rule.rule)["instances_rev2"]) == 2
     assert "Could not find login for ORCL remote instance." in new_rule.warnings
 
 
@@ -548,7 +548,7 @@ def test_main_asm_auth_mapped_when_login_asm_present_without_host_and_port() -> 
         "password": ("cmk_postprocessed", "explicit_password", ("", "asm_pass")),
         "role": "sysasm",
     }
-    assert dumped["instances"] == []
+    assert dumped["instances_rev2"] == []
 
 
 def test_fallback_instance_created_when_login_asm_has_host_and_port() -> None:
@@ -556,9 +556,9 @@ def test_fallback_instance_created_when_login_asm_has_host_and_port() -> None:
         {"login_asm": {"auth": "wallet", "as": "sysasm", "host": "asmhost", "port": 1521}}
     )
     dumped = dump(new_rule.rule)
-    assert dumped["instances"] == [
+    assert dumped["instances_rev2"] == [
         {
-            "oracle_id": ("sid", {"sid": "+ASM"}),
+            "oracle_id": ("sid", "+ASM"),
             "auth": {"auth_type": ("wallet", None), "role": "sysasm"},
             "connection": {"host": "asmhost", "port": 1521},
         }
@@ -578,9 +578,9 @@ def test_fallback_instance_created_when_login_asm_has_explicit_auth_and_host() -
         }
     )
     dumped = dump(new_rule.rule)
-    assert dumped["instances"] == [
+    assert dumped["instances_rev2"] == [
         {
-            "oracle_id": ("sid", {"sid": "+ASM"}),
+            "oracle_id": ("sid", "+ASM"),
             "auth": {
                 "auth_type": (
                     "standard",

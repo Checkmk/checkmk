@@ -21,7 +21,7 @@ from cmk.plugins.oracle.lib.unified_config import (
     StoredDiscoveryConf,
     StoredExcludedSectionConf,
     StoredInstanceConf,
-    StoredOracleIdentificationConf,
+    StoredOracleId,
     StoredOracleSafeEntries,
     StoredPassword,
 )
@@ -132,9 +132,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     if legacy_excluded_sections := legacy.get("excluded_sections"):
         excluded_sections = [
-            StoredExcludedSectionConf(
-                target_id=("sid", StoredOracleIdentificationConf(sid=sid)), sections=exclusions
-            )
+            StoredExcludedSectionConf(target_id=("sid", sid), sections=exclusions)
             for sid, exclusions in legacy_excluded_sections
             if exclusions
         ]
@@ -170,7 +168,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
             discovery=discovery,
             sections=sections,
             excluded_sections=excluded_sections,
-            instances=instances,
+            instances_rev2=instances,
             options=options,
         ),
         warnings=warnings,
@@ -286,14 +284,9 @@ def _convert_remote_instances(
             continue
 
         if tns_alias := remote.get("tnsalias"):
-            oracle_id: tuple[
-                Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf
-            ] = (
-                "alias",
-                StoredOracleIdentificationConf(alias=tns_alias),
-            )
+            oracle_id: StoredOracleId = ("alias", tns_alias)
         else:
-            oracle_id = ("sid", StoredOracleIdentificationConf(sid=remote["sid"]))
+            oracle_id = ("sid", remote["sid"])
 
         # The remote instance is valid at this point,
         # because the login is optional
@@ -338,14 +331,9 @@ def _convert_login_exceptions(
             continue
 
         if tns_alias := login.get("tnsalias"):
-            oracle_id: tuple[
-                Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf
-            ] = (
-                "alias",
-                StoredOracleIdentificationConf(alias=tns_alias),
-            )
+            oracle_id: StoredOracleId = ("alias", tns_alias)
         else:
-            oracle_id = ("sid", StoredOracleIdentificationConf(sid=sid))
+            oracle_id = ("sid", sid)
 
         instances.append(
             StoredInstanceConf(

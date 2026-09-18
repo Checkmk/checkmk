@@ -20,10 +20,10 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
 from cmk.plugins.oracle.lib.unified_config import (
     StoredAdditionalOptionsConf,
     StoredConnectionConf,
+    StoredDescriptorConf,
     StoredDiscoveryConf,
     StoredExcludedSectionConf,
     StoredOracleClientLibOptions,
-    StoredOracleIdentificationConf,
     StoredOracleSafeEntries,
 )
 
@@ -174,7 +174,7 @@ oracle_config_min: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_min = [
@@ -242,11 +242,11 @@ oracle_config_full: BakedConfig = BakedConfig(
         "rman": "disabled",
         "tablespaces": "disabled",
     },
-    instances=[
+    instances_rev2=[
         BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                StoredOracleIdentificationConf(
+                StoredDescriptorConf(
                     service_name="Service_Name_1",
                 ),
             ),
@@ -254,7 +254,7 @@ oracle_config_full: BakedConfig = BakedConfig(
         BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                StoredOracleIdentificationConf(
+                StoredDescriptorConf(
                     service_name="Service_Name_2",
                     instance_name="Instance_Name_2",
                 ),
@@ -276,9 +276,6 @@ oracle_config_full: BakedConfig = BakedConfig(
                 # per-instance tns_admin is reserved and dropped by the bakery (main-only)
                 tns_admin="/etc/oracle/tns2",
             ),
-        ),
-        BakedInstanceConf(
-            oracle_id=("sid", StoredOracleIdentificationConf()),
         ),
     ],
 )
@@ -371,7 +368,7 @@ oracle_config_section: BakedConfig = BakedConfig(
         "rman": "disabled",
         "tablespaces": "disabled",
     },
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_section = [
@@ -416,11 +413,11 @@ oracle_config_instance_sid: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=[
+    instances_rev2=[
         BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                StoredOracleIdentificationConf(
+                StoredDescriptorConf(
                     service_name="SIDONLY",
                 ),
             ),
@@ -470,11 +467,11 @@ oracle_config_discovery_instances: BakedConfig = BakedConfig(
         exclude=None,
     ),
     sections=None,
-    instances=[
+    instances_rev2=[
         BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                StoredOracleIdentificationConf(
+                StoredDescriptorConf(
                     instance_name="SID_A",
                 ),
             ),
@@ -482,7 +479,7 @@ oracle_config_discovery_instances: BakedConfig = BakedConfig(
         BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                StoredOracleIdentificationConf(
+                StoredDescriptorConf(
                     instance_name="SID_B",
                 ),
             ),
@@ -565,7 +562,7 @@ oracle_config_use_host_client_always: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_use_host_client_always = [
@@ -613,7 +610,7 @@ oracle_config_use_host_client_path: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_use_host_client_path = [
@@ -662,7 +659,7 @@ oracle_config_deploy_oracle_binaries: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_deploy_oracle_binaries = [
@@ -705,7 +702,7 @@ oracle_config_wallet_auth: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_wallet_auth = [
@@ -773,7 +770,7 @@ oracle_config_custom_metrics_cache_age: BakedConfig = BakedConfig(
     custom_metrics_cache_age=120,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_custom_metrics_cache_age = [
@@ -843,7 +840,7 @@ oracle_config_no_host: BakedConfig = BakedConfig(
     cache_age=None,
     discovery=None,
     sections=None,
-    instances=None,
+    instances_rev2=None,
 )
 
 expected_yaml_lines_no_host = [
@@ -895,7 +892,7 @@ def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
         connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
         cache_age=300,
         custom_metrics_cache_age=300,
-        instances=None,
+        instances_rev2=None,
     )
     result = _process(config)
     custom_metrics_sources = [
@@ -978,7 +975,7 @@ def _config_with_excluded_sections(
         ),
         connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
         excluded_sections=excluded_sections,
-        instances=None,
+        instances_rev2=None,
     )
 
 
@@ -994,7 +991,7 @@ def test_excluded_sections_emits_the_target_fields_and_the_sections() -> None:
     config = _config_with_excluded_sections(
         [
             StoredExcludedSectionConf(
-                target_id=(SID, StoredOracleIdentificationConf(sid="XE")),
+                target_id=(SID, "XE"),
                 sections=["jobs", "tablespaces"],
             )
         ]
@@ -1017,9 +1014,7 @@ def test_excluded_sections_emits_every_identifying_field_of_a_descriptor() -> No
             StoredExcludedSectionConf(
                 target_id=(
                     DESCRIPTOR,
-                    StoredOracleIdentificationConf(
-                        service_name="srv", instance_name="inst", sid="XE"
-                    ),
+                    StoredDescriptorConf(service_name="srv", instance_name="inst", sid="XE"),
                 ),
                 sections=["jobs"],
             )
@@ -1038,7 +1033,7 @@ def test_excluded_sections_emits_an_alias_target() -> None:
     config = _config_with_excluded_sections(
         [
             StoredExcludedSectionConf(
-                target_id=(ALIAS, StoredOracleIdentificationConf(alias="my_alias")),
+                target_id=(ALIAS, "my_alias"),
                 sections=["locks"],
             )
         ]
@@ -1050,12 +1045,8 @@ def test_excluded_sections_emits_an_alias_target() -> None:
 def test_excluded_sections_emits_one_entry_per_rule() -> None:
     config = _config_with_excluded_sections(
         [
-            StoredExcludedSectionConf(
-                target_id=(SID, StoredOracleIdentificationConf(sid="A")), sections=["jobs"]
-            ),
-            StoredExcludedSectionConf(
-                target_id=(SID, StoredOracleIdentificationConf(sid="B")), sections=["locks"]
-            ),
+            StoredExcludedSectionConf(target_id=(SID, "A"), sections=["jobs"]),
+            StoredExcludedSectionConf(target_id=(SID, "B"), sections=["locks"]),
         ]
     )
 
@@ -1074,25 +1065,9 @@ def test_excluded_sections_absent_when_no_rules(
     assert not any("excluded_sections" in line for line in lines)
 
 
-def test_excluded_sections_skips_a_rule_without_any_identifying_field() -> None:
-    # A target that names nothing can never be matched, so the rule is dropped.
-    # The key itself still appears, as an empty list.
-    config = _config_with_excluded_sections(
-        [
-            StoredExcludedSectionConf(
-                target_id=(SID, StoredOracleIdentificationConf()), sections=["jobs"]
-            )
-        ]
-    )
-
-    assert "    excluded_sections: []" in _yaml_lines(config)
-
-
 def test_excluded_sections_keeps_a_target_without_sections() -> None:
     # `sections` is optional in the ruleset, so the target survives with no list.
-    config = _config_with_excluded_sections(
-        [StoredExcludedSectionConf(target_id=(SID, StoredOracleIdentificationConf(sid="XE")))]
-    )
+    config = _config_with_excluded_sections([StoredExcludedSectionConf(target_id=(SID, "XE"))])
 
     lines = _yaml_lines(config)
 

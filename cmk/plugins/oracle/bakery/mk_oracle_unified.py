@@ -33,6 +33,7 @@ from cmk.plugins.oracle.lib.unified_config import (
     StoredDiscoveryConf,
     StoredExcludedSectionConf,
     StoredInstanceConf,
+    StoredOracleId,
     StoredOracleSafeEntries,
     StoredSectionOptions,
 )
@@ -299,7 +300,7 @@ def _get_oracle_dict(config: BakedConfig) -> OracleMain:
         options=_get_oracle_additional_options(config.options),
         discovery=_get_oracle_discovery(config.discovery),
         sections=_get_oracle_sections(config.sections),
-        instances=_get_oracle_instances(config.instances),
+        instances=_get_oracle_instances(config.instances_rev2),
         cache_age=config.get_active_cache_age(),
         custom_metrics_cache_age=config.get_active_custom_metrics_cache_age(),
         excluded_sections=_get_oracle_excluded_sections(config.excluded_sections),
@@ -436,27 +437,39 @@ def _get_oracle_sections(
     return result
 
 
+class _Identification(NamedTuple):
+    service_name: str | None = None
+    instance_name: str | None = None
+    sid: str | None = None
+    alias: str | None = None
+
+
+def _identification(oracle_id: StoredOracleId) -> _Identification:
+    match oracle_id:
+        case ("alias", alias):
+            return _Identification(alias=alias)
+        case ("sid", sid):
+            return _Identification(sid=sid)
+        case ("descriptor", descriptor):
+            return _Identification(
+                service_name=descriptor.service_name,
+                instance_name=descriptor.instance_name,
+                sid=descriptor.sid,
+            )
+
+
 def _get_oracle_instances(instances: list[BakedInstanceConf] | None) -> list[OracleInstance] | None:
     if instances is None:
         return None
 
     result: list[OracleInstance] = []
     for instance in instances:
-        (_name, oracle_id) = instance.oracle_id
-        if (
-            oracle_id.service_name is None
-            and oracle_id.instance_name is None
-            and oracle_id.sid is None
-            and oracle_id.alias is None
-            and instance.auth is None
-            and instance.connection is None
-        ):
-            continue
+        identification = _identification(instance.oracle_id)
         oracle_instance = OracleInstance(
-            service_name=oracle_id.service_name,
-            instance_name=oracle_id.instance_name,
-            sid=oracle_id.sid,
-            alias=oracle_id.alias,
+            service_name=identification.service_name,
+            instance_name=identification.instance_name,
+            sid=identification.sid,
+            alias=identification.alias,
             authentication=_get_oracle_authentication(instance.auth),
             connection=_get_oracle_connection(instance.connection, include_tns_admin=False),
             piggyback=OraclePiggyback(hostname=instance.piggyback_host)
@@ -475,19 +488,12 @@ def _get_oracle_excluded_sections(
 
     result: list[OracleExcludedSection] = []
     for rule in rules:
-        (_name, target_id) = rule.target_id
-        if (
-            target_id.service_name is None
-            and target_id.instance_name is None
-            and target_id.sid is None
-            and target_id.alias is None
-        ):
-            continue
+        identification = _identification(rule.target_id)
         excluded = OracleExcludedSection(
-            service_name=target_id.service_name,
-            instance_name=target_id.instance_name,
-            sid=target_id.sid,
-            alias=target_id.alias,
+            service_name=identification.service_name,
+            instance_name=identification.instance_name,
+            sid=identification.sid,
+            alias=identification.alias,
             sections=rule.sections,
         )
         result.append(excluded)

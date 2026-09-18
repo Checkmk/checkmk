@@ -16,6 +16,5 @@ sh_library(
     name = "bin_sh",
     srcs = [
         ".f12",
-        "apply_unsign_msi_patch.sh",
     ],
 )

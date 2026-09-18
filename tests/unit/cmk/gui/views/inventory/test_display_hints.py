@@ -596,6 +596,53 @@ def test_render_choice() -> None:
     )
 
 
+def _styled_choice_field() -> ChoiceFieldFromAPI[int]:
+    return ChoiceFieldFromAPI(
+        TitleFromAPI("A title"),
+        mapping={1: LabelFromAPI("One")},
+        style=lambda _: [LabelColorFromAPI.PINK, BackgroundColorFromAPI.BLUE],
+    )
+
+
+def test_render_choice_styles_a_mapped_value() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, 1) == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="#28a2f3",
+            color="#ec48b6",
+            prevent_line_break=False,
+        ),
+        "One",
+    )
+
+
+def test_render_choice_does_not_style_an_unmapped_value() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, 2) == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
+        "<2> (No such value)",
+    )
+
+
+def test_render_choice_does_not_style_a_value_of_another_type() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, "1") == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
+        "<1> (No such value)",
+    )
+
+
 def test_sort_text() -> None:
     text_field = TextFieldFromAPI(TitleFromAPI("A title"), sort_key=int)
     assert _decorate_sort_function(_SortFunctionText(text_field))("1", "2") == -1

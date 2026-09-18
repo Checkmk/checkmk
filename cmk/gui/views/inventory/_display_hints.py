@@ -12,7 +12,7 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
-from typing import assert_never, Literal, override
+from typing import assert_never, Literal, overload, override
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
@@ -330,6 +330,19 @@ class _PaintText:
         )
 
 
+type _Styles = Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI]
+
+
+@overload
+def _style_of(field: ChoiceFieldFromAPI[int], value: object) -> _Styles: ...
+@overload
+def _style_of(field: ChoiceFieldFromAPI[float], value: object) -> _Styles: ...
+@overload
+def _style_of(field: ChoiceFieldFromAPI[str], value: object) -> _Styles: ...
+def _style_of[T: (int, float, str)](field: ChoiceFieldFromAPI[T], value: object) -> _Styles:
+    return next((field.style(key) for key in field.mapping if key == value), ())
+
+
 def _label_of(field: _AnyChoiceField, value: object) -> LabelFromAPI | str | None:
     return next((label for key, label in field.mapping.items() if key == value), None)
 
@@ -347,8 +360,7 @@ class _PaintChoice:
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
-                # Which of the three value types this field fixes is not knowable here.
-                self._field.style(value),  # type: ignore[arg-type]
+                _style_of(self._field, value),
                 self.default_alignment,
                 prevent_line_break=False,
             ),

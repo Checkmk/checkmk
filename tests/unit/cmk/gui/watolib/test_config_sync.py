@@ -369,6 +369,8 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
+            "etc/check_mk/multisite.d/wato/ai_control_plane",
+            "etc/check_mk/multisite.d/wato/ai_control_plane/sitespecific.mk",
         ]
 
     if edition is not cmk_version.Edition.ULTIMATEMT:
@@ -413,6 +415,7 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d/wato/global.mk",
             "etc/check_mk/mkeventd.d/wato/global.mk",
             "etc/check_mk/otel_collector.d/wato/global.mk",
+            "etc/check_mk/multisite.d/wato/ai_control_plane/global.mk",
         ]
 
         if with_local:

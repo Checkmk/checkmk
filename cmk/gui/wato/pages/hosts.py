@@ -108,6 +108,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     FolderTree,
     Host,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
     validate_all_hosts,
 )
@@ -208,6 +209,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _init_host(self) -> Host: ...
 
     def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        self._tree = make_folder_tree(ctx.config)
         self._host = self._init_host()
         self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
         super().__init__(edition, ctx)
@@ -239,7 +241,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         except MKUserError:
             host_name = None
         if folder_from_request(
-            folder_tree(),
+            self._tree,
             request.var("folder"),
             host_name,
         ).locked_hosts():
@@ -368,7 +370,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def page(self, config: Config) -> None:
         # Show outcome of host validation. Do not validate new hosts
         errors = None
-        tree = folder_tree()
+        tree = self._tree
         if self._mode == "edit":
             errors = (
                 validate_all_hosts(tree, [self._host.name()]).get(self._host.name(), [])
@@ -620,7 +622,7 @@ class ModeEditHost(ABCHostMode):
     @override
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
-        folder = folder_from_request(folder_tree(), request.var("folder"), hostname)
+        folder = folder_from_request(self._tree, request.var("folder"), hostname)
         if not folder.has_host(hostname):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
         return folder.load_host(hostname)
@@ -664,7 +666,7 @@ class ModeEditHost(ABCHostMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        tree = folder_tree()
+        tree = self._tree
         folder = folder_from_request(
             tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         )
@@ -976,7 +978,7 @@ class CreateHostMode(ABCHostMode):
 
     @classmethod
     @abc.abstractmethod
-    def _init_new_host_object(cls) -> Host:
+    def _init_new_host_object(cls, tree: FolderTree) -> Host:
         raise NotImplementedError
 
     @classmethod
@@ -1003,10 +1005,10 @@ class CreateHostMode(ABCHostMode):
         self._clone_source: Host | None = None
         clone_source_name = request.get_ascii_input("clone")
         if not clone_source_name:
-            return self._init_new_host_object()
+            return self._init_new_host_object(self._tree)
 
         folder = folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input(self.VAR_HOST)
+            self._tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         )
         if not folder.has_host(HostName(clone_source_name)):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
@@ -1041,7 +1043,7 @@ class CreateHostMode(ABCHostMode):
         if not transactions.transaction_valid(request):
             return redirect(mode_url("folder"))
 
-        tree = folder_tree()
+        tree = self._tree
         attributes = collect_attributes(
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             self._host_type_name(),
@@ -1140,7 +1142,7 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     @override
-    def _init_new_host_object(cls) -> Host:
+    def _init_new_host_object(cls, tree: FolderTree) -> Host:
         try:
             host_name = strip_hostname_whitespace_chars(
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
@@ -1148,7 +1150,6 @@ class ModeCreateHost(CreateHostMode):
             host_name = HostName(host_name)
         except MKUserError, ValueError:
             host_name = HostName("")
-        tree = folder_tree()
         if prefill := request.get_ascii_input("prefill"):
             match prefill:  # type: ignore[exhaustive-match]
                 case "snmp":
@@ -1208,7 +1209,7 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     @override
-    def _init_new_host_object(cls) -> Host:
+    def _init_new_host_object(cls, tree: FolderTree) -> Host:
         try:
             host_name = strip_hostname_whitespace_chars(
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
@@ -1217,7 +1218,7 @@ class ModeCreateCluster(CreateHostMode):
         except MKUserError:
             host_name = HostName("")
         return Host(
-            folder=folder_from_request(folder_tree(), request.var("folder"), host_name),
+            folder=folder_from_request(tree, request.var("folder"), host_name),
             host_name=host_name,
             attributes={},
             cluster_nodes=[],

@@ -250,7 +250,7 @@ class OracleConfig(BaseModel):
 
 
 def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
-    if confm.deploy[0] == "do_not_deploy":
+    if confm.deploy_rev2 == "do_not_deploy":
         return
 
     config_lines = list(_get_oracle_yaml_lines(confm))
@@ -509,7 +509,7 @@ def _get_arm_warning_lines() -> list[str]:
 
 
 def get_oracle_plugin_scriplets(confm: BakedConfig) -> Iterable[Scriptlet]:
-    if confm.deploy[0] == "do_not_deploy":
+    if confm.deploy_rev2 == "do_not_deploy":
         return
 
     arm_warning_lines = _get_arm_warning_lines()

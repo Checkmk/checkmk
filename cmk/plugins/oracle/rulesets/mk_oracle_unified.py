@@ -879,14 +879,17 @@ _LIFTED_FROM_MAIN: Final = (
 
 
 def _to_rev2(value: Mapping[str, object]) -> Mapping[str, object]:
-    """Dissolve "main" into the top level.
+    """Dissolve "main", and give the keys whose shape changed a new name.
 
-    The step keys off a name that only the old shape has, so running it on a
+    Every step keys off a name that only the old shape has, so running this on a
     value that has already been through it changes nothing.
     """
     migrated = {key: item for key, item in value.items() if key != "main"}
     if isinstance(main := value.get("main"), Mapping):
         migrated.update({key: main[key] for key in _LIFTED_FROM_MAIN if key in main})
+    if "deploy" in migrated:
+        deploy = migrated.pop("deploy")
+        migrated["deploy_rev2"] = deploy[0] if isinstance(deploy, tuple) else deploy
     return migrated
 
 
@@ -909,27 +912,19 @@ def _agent_config_mk_oracle() -> Dictionary:
     return Dictionary(
         migrate=_migrate,
         elements={
-            "deploy": DictElement(
+            "deploy_rev2": DictElement(
                 required=True,
-                parameter_form=CascadingSingleChoice(
+                parameter_form=SingleChoice(
+                    title=Title("Deployment"),
                     prefill=DefaultValue("deploy"),
                     elements=[
-                        CascadingSingleChoiceElement(
+                        SingleChoiceElement(
                             name="deploy",
-                            title=Title("Deploy Oracle plug-in"),
-                            parameter_form=FixedValue(
-                                value=None,
-                                label=Label("(enabled)"),
-                            ),
+                            title=Title("Deploy the Oracle plug-in"),
                         ),
-                        CascadingSingleChoiceElement(
+                        SingleChoiceElement(
                             name="do_not_deploy",
-                            title=Title("Do not deploy Oracle plug-in"),
-                            parameter_form=FixedValue(
-                                title=Title("Do not deploy Oracle plug-in"),
-                                label=Label("(disabled)"),
-                                value=None,
-                            ),
+                            title=Title("Do not deploy the Oracle plug-in"),
                         ),
                     ],
                 ),

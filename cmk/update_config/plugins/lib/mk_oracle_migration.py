@@ -106,8 +106,8 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     warnings: list[str] = []
     instances: list[StoredInstanceConf] = []
 
-    deploy: tuple[Literal["deploy", "do_not_deploy"], None] = (
-        ("deploy", None) if legacy.get("activated") else ("do_not_deploy", None)
+    deploy: Literal["deploy", "do_not_deploy"] = (
+        "deploy" if legacy.get("activated") else "do_not_deploy"
     )
 
     cache_age = legacy.get("async_interval") or None
@@ -163,7 +163,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     return MigratedRule(
         rule=StoredConfig(
-            deploy=deploy,
+            deploy_rev2=deploy,
             auth=auth,
             connection=connection or StoredConnectionConf(),
             cache_age=cache_age,

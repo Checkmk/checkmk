@@ -154,7 +154,7 @@ def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plu
 
 # 1. Minimal config (already present)
 oracle_config_min: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -193,7 +193,7 @@ expected_yaml_lines_min = [
 
 # 2. Full config
 oracle_config_full: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
         max_connections=10,
         ignore_db_name=True,
@@ -330,7 +330,7 @@ expected_yaml_lines_full = [
 
 # 3. Main config with auth, connection and one section
 oracle_config_section: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -396,7 +396,7 @@ expected_yaml_lines_section = [
 
 # 4. Main config with auth, connection and instances with only one instance (only sid)
 oracle_config_instance_sid: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -446,7 +446,7 @@ expected_yaml_lines_instance_sid = [
 
 # 5. Main config with auth, connection, discovery and two instances (one only sid, one full)
 oracle_config_discovery_instances: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -539,7 +539,7 @@ expected_yaml_lines_discovery_instances = [
 
 # 6. Main config with auth, connection and additional option use_host_client set to 'always'
 oracle_config_use_host_client_always: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
         oracle_client_library=StoredOracleClientLibOptions(
             use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
@@ -587,7 +587,7 @@ expected_yaml_lines_use_host_client_always = [
 
 # 7. Main config with auth, connection and additional option use_host_client set to path
 oracle_config_use_host_client_path: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
         oracle_client_library=StoredOracleClientLibOptions(
             use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
@@ -636,7 +636,7 @@ expected_yaml_lines_use_host_client_path = [
 # 8. Main config with auth, connection and additional option deploy_lib
 # set to True to deploy oracle binaries
 oracle_config_deploy_oracle_binaries: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
         oracle_client_library=StoredOracleClientLibOptions(
             deploy_lib=True,
@@ -682,7 +682,7 @@ expected_yaml_lines_deploy_oracle_binaries = [
 
 # 9. Main config with wallet auth, connection
 oracle_config_wallet_auth: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     options=StoredAdditionalOptionsConf(
         oracle_client_library=StoredOracleClientLibOptions(
             deploy_lib=True,
@@ -752,7 +752,7 @@ def test_oracle_min(config: BakedConfig, expected: Sequence[str]) -> None:
 # --- custom_metrics_cache_age tests ---
 
 oracle_config_custom_metrics_cache_age: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -823,7 +823,7 @@ custom_metrics_files: list[Plugin] = [
 # which is the node name on a host running Grid Infrastructure and localhost
 # elsewhere, so the bakery must not decide it here.
 oracle_config_no_host: BakedConfig = BakedConfig(
-    deploy=(DEPLOY, None),
+    deploy_rev2=DEPLOY,
     auth=BakedAuthConf(
         auth_type=(
             "standard",
@@ -884,7 +884,7 @@ def test_custom_metrics_cache_age_in_yaml() -> None:
 
 def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
     config = BakedConfig(
-        deploy=(DEPLOY, None),
+        deploy_rev2=DEPLOY,
         auth=BakedAuthConf(
             auth_type=(
                 "standard",
@@ -917,7 +917,7 @@ def test_get_active_custom_metrics_cache_age(
     custom_metrics_cache_age: int | None, expected: int
 ) -> None:
     conf = BakedConfig(
-        deploy=(DEPLOY, None),
+        deploy_rev2=DEPLOY,
         auth=BakedAuthConf(
             auth_type=(
                 "standard",
@@ -968,7 +968,7 @@ def _config_with_excluded_sections(
     excluded_sections: list[StoredExcludedSectionConf] | None,
 ) -> BakedConfig:
     return BakedConfig(
-        deploy=(DEPLOY, None),
+        deploy_rev2=DEPLOY,
         auth=BakedAuthConf(
             auth_type=(
                 "standard",

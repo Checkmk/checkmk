@@ -107,7 +107,7 @@ class StoredInstanceConf[SecretT = StoredPassword](BaseModel):
 
 
 class StoredConfig[SecretT = StoredPassword](BaseModel):
-    deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
+    deploy_rev2: Literal["deploy", "do_not_deploy"]
     auth: StoredAuthConf[SecretT]
     connection: StoredConnectionConf
     cache_age: int | None = None

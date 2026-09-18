@@ -7,7 +7,7 @@ from cmk.update_config.plugins.lib.mk_oracle_migration import convert, dump
 
 
 def test_empty_body_is_not_deployed() -> None:
-    assert dump(convert({}).rule)["deploy"] == ("do_not_deploy", None)
+    assert dump(convert({}).rule)["deploy_rev2"] == "do_not_deploy"
 
 
 def test_empty_body_auth_is_wallet() -> None:
@@ -30,11 +30,11 @@ def test_empty_body_has_warning() -> None:
 
 
 def test_deploy_when_activated_true() -> None:
-    assert dump(convert({"activated": True}).rule)["deploy"] == ("deploy", None)
+    assert dump(convert({"activated": True}).rule)["deploy_rev2"] == "deploy"
 
 
 def test_do_not_deploy_when_activated_false() -> None:
-    assert dump(convert({"activated": False}).rule)["deploy"] == ("do_not_deploy", None)
+    assert dump(convert({"activated": False}).rule)["deploy_rev2"] == "do_not_deploy"
 
 
 def test_async_interval_cache_age() -> None:
@@ -160,9 +160,9 @@ def test_unmappable_fields_ignored() -> None:
         in new_rule.warnings
     )
     dumped = dump(new_rule.rule)
-    assert dumped["deploy"] == ("do_not_deploy", None)
+    assert dumped["deploy_rev2"] == "do_not_deploy"
     assert dumped["instances"] == []
-    assert set(dumped) == {"deploy", "auth", "connection", "sections", "instances"}
+    assert set(dumped) == {"deploy_rev2", "auth", "connection", "sections", "instances"}
     assert dumped["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["connection"] == {}
 

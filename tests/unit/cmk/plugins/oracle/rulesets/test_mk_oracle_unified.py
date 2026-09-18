@@ -58,7 +58,7 @@ OLD_RULE: Mapping[str, object] = {
 }
 
 CURRENT_RULE: Mapping[str, object] = {
-    "deploy": ("deploy", None),
+    "deploy_rev2": "deploy",
     "options": {"ignore_db_name": False},
     "instances": [{"oracle_id": ("alias", {"alias": "PROD"})}],
     **_SHARED,
@@ -92,6 +92,11 @@ def test_the_migrated_rule_is_what_the_form_stores() -> None:
 def test_the_current_rule_parses_as_the_stored_model() -> None:
     parsed = StoredConfig.model_validate(CURRENT_RULE)
     assert parsed.model_dump(mode="python", exclude_unset=True) == CURRENT_RULE
+
+
+def test_deploy_is_offered_as_a_choice() -> None:
+    deploy = _agent_config_mk_oracle().elements["deploy_rev2"].parameter_form
+    assert isinstance(deploy, SingleChoice)
 
 
 def test_the_form_shows_no_main_container() -> None:

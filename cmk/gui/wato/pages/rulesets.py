@@ -3763,12 +3763,12 @@ class ModeUnknownRulesets(WatoMode):
         )
 
     def _unknown_rulesets(
-        self, *, debug: bool
+        self, tree: FolderTree, *, debug: bool
     ) -> tuple[
         Sequence[Ruleset],
         Mapping[RulesetName, Sequence[tuple[FolderPath, RuleSpec[object]]]],
     ]:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(tree)
         rulesets = all_rulesets.get_rulesets()
 
         found_rule_sets: dict[RulesetName, Ruleset] = {}
@@ -3897,7 +3897,7 @@ class ModeUnknownRulesets(WatoMode):
     @override
     def page(self, config: Config) -> None:
         unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
-            debug=config.debug
+            make_folder_tree(config), debug=config.debug
         )
         with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
             html.hidden_field("mode", "unknown_rulesets", add_var=True)
@@ -3942,6 +3942,7 @@ class ModeUnknownRulesets(WatoMode):
 
     def _bulk_delete_selected_rules(
         self,
+        tree: FolderTree,
         selected_cp_rule_ids: Sequence[str],
         selected_rule_ids: Sequence[str],
         *,
@@ -3949,7 +3950,7 @@ class ModeUnknownRulesets(WatoMode):
         debug: bool,
         pending_changes: PendingChanges,
     ) -> ActionResult:
-        rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        rulesets = AllRulesets.load_all_rulesets(tree)
         do_reset = False
 
         by_folder: dict[Folder, list[tuple[Ruleset, Rule]]] = {}
@@ -3982,13 +3983,14 @@ class ModeUnknownRulesets(WatoMode):
 
     def _delete_selected_cp_rule(
         self,
+        tree: FolderTree,
         selected_ruleset_name: str,
         selected_rule_id: str,
         pprint_value: bool,
         debug: bool,
         pending_changes: PendingChanges,
     ) -> ActionResult:
-        rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        rulesets = AllRulesets.load_all_rulesets(tree)
         if not (ruleset := rulesets.get_rulesets().get(selected_ruleset_name)):
             return None
 
@@ -4008,13 +4010,14 @@ class ModeUnknownRulesets(WatoMode):
 
     def _delete_selected_rule(
         self,
+        tree: FolderTree,
         selected_ruleset_name: str,  # noqa: ARG002
         selected_rule_id: str,
         *,
         pprint_value: bool,
         debug: bool,
     ) -> ActionResult:
-        rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        rulesets = AllRulesets.load_all_rulesets(tree)
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
             for ruleset_name, rulespecs in rulespecs_by_name.items():
                 for rulespec in rulespecs:
@@ -4039,8 +4042,10 @@ class ModeUnknownRulesets(WatoMode):
             for vn, _vv in request.itervars(prefix="_c_unknown_rule")
         ]
         pending_changes = _pending_changes(config, omd_site(), user.id)
+        tree = make_folder_tree(config)
         if request.var("_bulk_delete_selected_unknown_rulesets") and (d_cp_rule_ids or d_rule_ids):
             return self._bulk_delete_selected_rules(
+                tree,
                 d_cp_rule_ids,
                 d_rule_ids,
                 pprint_value=config.wato_pprint_config,
@@ -4052,6 +4057,7 @@ class ModeUnknownRulesets(WatoMode):
             d_rule_id := request.var("_delete_cp_rule_id")
         ):
             return self._delete_selected_cp_rule(
+                tree,
                 d_ruleset_name,
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,
@@ -4063,6 +4069,7 @@ class ModeUnknownRulesets(WatoMode):
             d_rule_id := request.var("_delete_rule_id")
         ):
             return self._delete_selected_rule(
+                tree,
                 d_ruleset_name,
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,

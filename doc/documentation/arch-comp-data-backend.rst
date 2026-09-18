@@ -1,11 +1,11 @@
-==============
-Metric backend
-==============
+============
+Data backend
+============
 
 Introduction and goals
 ======================
 
-The metric backend, concretely ClickHouse, is a third-party component.
+The data backend, concretely ClickHouse, is a third-party component.
 Its purpose is to store and retrieve time series data (metrics).
 The goal is to offer application monitoring with Checkmk.
 
@@ -23,12 +23,12 @@ Once ingested, there are two main channels for monitoring:
 
 Note that Checkmk has another system for storing time series data, :doc:`RRDs <arch-comp-rrd-backend>`.
 RRDs are used to store metric data produced by check plugins.
-The metric backend works the other way round: We create services based on data stored in the metric backend.
-Also, the metric backend offers a much richer feature set, both in terms of storage and querying capabilities.
+The data backend works the other way round: We create services based on data stored in the data backend.
+Also, the data backend offers a much richer feature set, both in terms of storage and querying capabilities.
 One prominent example are attributes that uniquely identify a concrete time series.
-Finally, the data we store in the metric backend currently has a time-to-live of 14 days, compared to years for RRDs.
+Finally, the data we store in the data backend currently has a time-to-live of 14 days, compared to years for RRDs.
 In the cloud deployment, this value may be configured differently by the operator.
-In the future, we might move the data currently stored in the RRDs to the metric backend as well.
+In the future, we might move the data currently stored in the RRDs to the data backend as well.
 However, this requires further evaluation and there are no concrete plans yet.
 
 Components
@@ -37,10 +37,10 @@ Components
 .. toctree::
    :maxdepth: 1
 
-   arch-comp-metric-backend-internals.rst
-   arch-comp-metric-backend-table-layout.rst
-   arch-comp-metric-backend-instant-query.rst
-   arch-comp-metric-backend-range-query.rst
+   arch-comp-data-backend-internals.rst
+   arch-comp-telemetry-metrics-table-layout.rst
+   arch-comp-telemetry-metrics-instant-query.rst
+   arch-comp-telemetry-metrics-range-query.rst
 
 Architecture
 ============
@@ -63,8 +63,8 @@ We use the same queries in both cases.
 Cross-site queries are not supported at the moment.
 Each site can only access its own, local ClickHouse instance (on-premise) or the shared ClickHouse instance (cloud).
 
-See the topology diagram for an overview of how the metric backend fits into the :doc:`overall architecture <arch-index>` (on-premise).
-For a description of the internal software components, see :doc:`arch-comp-metric-backend-internals`.
+See the topology diagram for an overview of how the data backend fits into the :doc:`overall architecture <arch-index>` (on-premise).
+For a description of the internal software components, see :doc:`arch-comp-data-backend-internals`.
 
 Interfaces
 ----------

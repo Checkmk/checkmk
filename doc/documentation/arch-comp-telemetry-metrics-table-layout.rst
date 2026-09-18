@@ -1,11 +1,11 @@
-========================================
-Metric Backend — ClickHouse Table Layout
-========================================
+===========================================
+Telemetry metrics — ClickHouse Table Layout
+===========================================
 
-This document describes the ClickHouse table schema used by the metric backend,
+This document describes the ClickHouse table schema used by the telemetry metrics part of the data backend,
 the motivation behind key design decisions, and the materialized views that maintain
-derived data. For deployment and component overview, see :doc:`arch-comp-metric-backend`
-and :doc:`arch-comp-metric-backend-internals`.
+derived data. For deployment and component overview, see :doc:`arch-comp-data-backend`
+and :doc:`arch-comp-data-backend-internals`.
 
 Samples Tables
 ==============

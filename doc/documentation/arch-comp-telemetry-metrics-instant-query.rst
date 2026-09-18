@@ -1,6 +1,6 @@
-=====================================
-Metric Backend — Instant Query
-=====================================
+=================================
+Telemetry metrics — Instant Query
+=================================
 
 An instant query returns an aggregated value for each matching time series at a
 single point in time. It is similar to the Prometheus ``/query`` endpoint.

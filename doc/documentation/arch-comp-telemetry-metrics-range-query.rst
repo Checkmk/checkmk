@@ -1,6 +1,6 @@
-=====================================
-Metric Backend — Range Query
-=====================================
+===============================
+Telemetry metrics — Range Query
+===============================
 
 A range query evaluates an instant query repeatedly across a fixed time grid, returning
 an aggregated value at each grid point. It is similar to the Prometheus

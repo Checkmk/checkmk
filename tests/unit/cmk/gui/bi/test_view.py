@@ -11,7 +11,12 @@ from cmk.bi.rule_interface import BIRuleProperties
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.bi.view import _combine_branches, branches_differ, NodeIdentifier
+from cmk.gui.bi.view import (
+    _combine_branches,
+    branches_differ,
+    changed_node_details,
+    NodeIdentifier,
+)
 
 WORST = BIAggregationFunctionWorst({"type": "worst", "count": 1, "restrict_state": 2})
 BEST = BIAggregationFunctionBest({"type": "best", "count": 1, "restrict_state": 2})
@@ -124,16 +129,6 @@ class TestCombineBranches:
         assert _combine_branches(live, frozen) is False
         assert _markers(live)[((1, "Host heute"),)] == "changed"
 
-    def test_changed_node_that_is_also_a_parent_keeps_its_own_change(self) -> None:
-        """A reconfigured node must not be reduced to "something below me differs"."""
-        live = _rule(
-            "Host heute", aggregation_function=WORST, nodes=[_leaf("CPU"), _leaf("Memory")]
-        )
-        frozen = _rule("Host heute", aggregation_function=BEST, nodes=[_leaf("CPU")])
-
-        assert _combine_branches(live, frozen) is False
-        assert _markers(live)[((1, "Host heute"),)] == "changed"
-
     def test_node_added_since_freezing_is_reported(self) -> None:
         live = _rule("Host heute", nodes=[_leaf("CPU"), _leaf("Memory")])
         frozen = _rule("Host heute", nodes=[_leaf("CPU")])
@@ -153,3 +148,70 @@ class TestCombineBranches:
         assert markers[((1, "Host heute"), (1, "heute", "Memory"))] == "missing"
         # Grafted into the rendered tree, so the deletion stays visible.
         assert len(live.nodes) == 2
+
+
+class TestChangedNodeDetails:
+    def test_changed_aggregation_function(self) -> None:
+        assert (
+            changed_node_details(
+                _rule("Host heute", aggregation_function=WORST),
+                _rule("Host heute", aggregation_function=BEST),
+            )
+            == "aggregation function: best \u2192 worst"
+        )
+
+    def test_removed_value_is_reported_as_removed(self) -> None:
+        frozen = _rule("Host heute")
+        frozen.properties.state_messages = {"2": "call the on-call"}
+
+        # The nested key is a configuration name and stays verbatim.
+        assert changed_node_details(_rule("Host heute"), frozen) == (
+            "properties state_messages 2: removed"
+        )
+
+    def test_a_whole_subconfiguration_is_not_spelled_out(self) -> None:
+        live = _rule("Host heute")
+        live.node_visualization = {"style_config": {"padding": "x" * 500}, "type": "none"}
+
+        details = changed_node_details(live, _rule("Host heute"))
+
+        assert details == "node visualization style_config padding: added"
+
+    def test_a_long_value_is_capped(self) -> None:
+        live = _rule("Host heute")
+        frozen = _rule("Host heute")
+        live.properties.comment = "y" * 500
+        frozen.properties.comment = "z" * 500
+
+        details = changed_node_details(live, frozen)
+
+        assert details.startswith("properties comment: zzz")
+        assert "..." in details
+        assert len(details) < 120
+
+    def test_identical_nodes_have_no_details(self) -> None:
+        assert changed_node_details(_rule("Host heute"), _rule("Host heute")) == ""
+
+    def test_details_survive_when_the_node_is_also_a_parent(self) -> None:
+        """SUP-30030 review: the parent marker must not swallow the node's own change."""
+        live = _rule(
+            "Host heute", aggregation_function=WORST, nodes=[_leaf("CPU"), _leaf("Memory")]
+        )
+        frozen = _rule("Host heute", aggregation_function=BEST, nodes=[_leaf("CPU")])
+
+        assert _combine_branches(live, frozen) is False
+
+        marker = live.frozen_marker
+        assert marker is not None
+        assert marker.status == "changed"
+        assert marker.details == "aggregation function: best \u2192 worst"
+
+    def test_combine_branches_puts_the_details_on_the_marker(self) -> None:
+        live = _rule("Host heute", aggregation_function=WORST)
+
+        assert _combine_branches(live, _rule("Host heute", aggregation_function=BEST)) is False
+
+        marker = live.frozen_marker
+        assert marker is not None
+        assert marker.status == "changed"
+        assert marker.details == "aggregation function: best \u2192 worst"

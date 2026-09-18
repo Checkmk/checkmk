@@ -425,21 +425,30 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             icon_name = StaticIcon(IconNames.outof_serviceperiod)
             icon_title = _("This element is currently not in its service period.")
 
+        changed_title, changed_details = "", ""
         if frozen_marker := tree[2].get("frozen_marker"):
             if frozen_marker.status == "parent":
                 icon_name = StaticIcon(IconNames.warning)
                 icon_title = _("This node has nested aggregation differences.")
-            elif frozen_marker.status == "changed" and not frozen_marker_rendered:
-                # The root branch never passes through _show_child, so this is the only
-                # place its own marker can be shown.
-                icon_name = StaticIcon(IconNames.warning)
-                icon_title = _("This node is configured differently in the frozen aggregation")
+            elif frozen_marker.status == "changed":
+                changed_title = _("This node is configured differently in the frozen aggregation")
+                changed_details = frozen_marker.details or _("configuration changed")
+                if not frozen_marker_rendered:
+                    # The root branch never passes through _show_child, so this is the
+                    # only place its own marker can be shown.
+                    icon_name = StaticIcon(IconNames.warning)
+                    icon_title = changed_title
 
         if icon_name and icon_title:
             html.static_icon(icon_name, title=icon_title, css_classes=["icon", "bi"])
         try:
             yield
         finally:
+            if changed_title:
+                # Spelled out next to the label so the difference is readable without
+                # hovering; the tooltip repeats the full explanation.
+                html.write_text_permissive("&nbsp;")
+                html.i(f"({changed_details})", class_="frozen_hint", title=changed_title)
             if mousecode:
                 if str(effective_state["state"]) in tree[2].get("state_messages", {}):
                     html.b(HTML.without_escaping("&diams;"), class_="bullet")

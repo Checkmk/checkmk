@@ -285,9 +285,9 @@ def create_metrics_section_plugin(
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
-    Metric backend sections are agent sections from the check engine's point of
+    Telemetry metrics sections are agent sections from the check engine's point of
     view: their data arrives as agent output, the additional selectors only
-    matter to the metric backend fetcher.
+    matter to the telemetry metrics fetcher.
     """
     section_name = SectionName(section_spec.name)
 

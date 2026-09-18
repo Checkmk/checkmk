@@ -2488,7 +2488,7 @@ class AutocompleteAPI(BaseAPI):
 class CustomGraphAPI(BaseAPI):
     """Custom graphs: their lifecycle, plus the data endpoint.
 
-    The data endpoint is also the only way to graph metric-backend (OTel) data.
+    The data endpoint is also the only way to graph telemetry metrics (OTel) data.
     """
 
     # Every field is mandatory in the API model; only the visibility is varied by a caller.

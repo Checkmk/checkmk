@@ -44,5 +44,5 @@ class ChangeDirective[HostT: str](NamedTuple):
     all_host_orders: Sequence[HostOrder]
     # Per-host attributes that override (are merged on top of) the attributes of the matched
     # ``HostOrder``. Used by connectors that derive attributes from each host's own data, e.g.
-    # the metric backend connector storing the resolved host name template attributes.
+    # the telemetry metrics connector storing the resolved host name template attributes.
     host_attributes_overrides: Mapping[HostT, Mapping[str, object]] = {}

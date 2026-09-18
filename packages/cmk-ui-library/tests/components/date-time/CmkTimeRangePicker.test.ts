@@ -9,8 +9,10 @@ import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRange
 import type {
   DateTimePickerSettings,
   DateTimeRange,
-  RangeDraft
+  RangeDraft,
+  RangePreset
 } from 'cmk-ui-library/components/date-time/types'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref, shallowRef } from 'vue'
 
@@ -282,6 +284,59 @@ describe('CmkTimeRangePicker — ordering', () => {
     const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-zone-info__entry')!
     expect(zone.querySelector('.cmk-tag')).toHaveAttribute('aria-hidden', 'true')
     expect(within(zone).getByText('Europe, Berlin')).toHaveAttribute('aria-hidden', 'true')
+  })
+})
+
+describe('CmkTimeRangePicker — quick range presets', () => {
+  const THIS_WEEK: RangePreset = {
+    id: 'this-week',
+    label: untranslated('This week'),
+    getRange: () => ({ from: berlin(2026, 3, 9, 0, 0), to: berlin(2026, 3, 15, 23, 59) })
+  }
+
+  const renderWithPreset = () =>
+    renderPicker(
+      { from: berlin(2026, 3, 2, 8, 0), to: berlin(2026, 3, 3, 9, 0) },
+      {
+        presets: [THIS_WEEK]
+      }
+    )
+
+  const presetRadio = (view: PickerView) => view.getByRole('radio', { name: 'This week' })
+
+  test('picking a preset stages its range and Apply commits it', async () => {
+    const view = renderWithPreset()
+    await openFlyout(view)
+
+    await fireEvent.click(presetRadio(view))
+    await fireEvent.click(applyButton(view))
+
+    const committed = lastValue(view.updates)!
+    expect(committed.from.toString()).toBe(THIS_WEEK.getRange().from.toString())
+    expect(committed.to.toString()).toBe(THIS_WEEK.getRange().to.toString())
+  })
+
+  test('the applied preset is still selected when the flyout is reopened', async () => {
+    const view = renderWithPreset()
+    await openFlyout(view)
+    await fireEvent.click(presetRadio(view))
+    await fireEvent.click(applyButton(view))
+    await nextTick()
+
+    await openFlyout(view)
+
+    expect(presetRadio(view)).toBeChecked()
+  })
+
+  test('editing an endpoint by hand moves the selection to Custom', async () => {
+    const view = renderWithPreset()
+    await openFlyout(view)
+    await fireEvent.click(presetRadio(view))
+
+    await setDate(view, 'From', 2026, 3, 11)
+
+    expect(presetRadio(view)).not.toBeChecked()
+    expect(view.getByRole('radio', { name: 'Custom' })).toBeChecked()
   })
 })
 

@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, computed, nextTick, ref, watch } from 'vue'
+import { type Ref, computed, shallowRef } from 'vue'
 
 import { instantToParts, isRangeInverted, swapRangeEndpoints } from './dateTimeUtils'
-import type { RangeDraft, RangePreset } from './types'
+import type { DateTimePartsDraft, RangeDraft, RangePreset } from './types'
 
 /** Reserved id for the auto-appended manual-range entry; presets must not reuse it. */
 export const CUSTOM_PRESET_ID = 'custom'
@@ -21,52 +21,63 @@ export interface RangePresetsOptions {
 }
 
 export interface RangePresets {
-  /** Group v-model for the preset radios: reads the active id; on a user pick, applies the preset's
-   *  range or snaps to manual. */
+  /** Group v-model for the preset radios: reads the preset the staged range spells, and on a pick
+   *  applies that preset's range or pins the manual entry. */
   selectedPreset: Ref<string>
   CUSTOM_PRESET_ID: string
 }
 
+function endpointsEqual(left: DateTimePartsDraft, right: DateTimePartsDraft): boolean {
+  const sameDate =
+    left.date === null
+      ? right.date === null
+      : right.date !== null && left.date.compare(right.date) === 0
+  const sameTime =
+    left.time === null
+      ? right.time === null
+      : right.time !== null &&
+        left.time.hour === right.time.hour &&
+        left.time.minute === right.time.minute
+  return sameDate && sameTime
+}
+
 export function useRangePresets(options: RangePresetsOptions): RangePresets {
   const { presets, draft, timeZone } = options
-  const selectedPresetId = ref<string>(CUSTOM_PRESET_ID)
 
-  // Set while a preset-driven draft write is in flight, so the snap-to-custom watch below doesn't
-  // mistake the preset's own write for a manual edit.
-  let applyingPreset = false
+  const pinnedCustomDraft = shallowRef<RangeDraft | null>(null)
 
-  function selectPreset(preset: RangePreset): void {
+  function presetDraft(preset: RangePreset): RangeDraft {
     const { from, to } = preset.getRange()
-    applyingPreset = true
     const candidate: RangeDraft = {
       from: instantToParts(from, timeZone()),
       to: instantToParts(to, timeZone())
     }
-    // A committed range is always ordered; order it on selection rather than waiting for a blur.
-    draft.value = isRangeInverted(candidate) ? swapRangeEndpoints(candidate) : candidate
-    selectedPresetId.value = preset.id
-    void nextTick(() => {
-      applyingPreset = false
-    })
+    return isRangeInverted(candidate) ? swapRangeEndpoints(candidate) : candidate
   }
 
+  const matchingPresetId = computed<string>(() => {
+    const match = presets()?.find((preset) => {
+      const candidate = presetDraft(preset)
+      return (
+        endpointsEqual(candidate.from, draft.value.from) &&
+        endpointsEqual(candidate.to, draft.value.to)
+      )
+    })
+    return match?.id ?? CUSTOM_PRESET_ID
+  })
+
   const selectedPreset = computed<string>({
-    get: () => selectedPresetId.value,
+    get: () =>
+      pinnedCustomDraft.value === draft.value ? CUSTOM_PRESET_ID : matchingPresetId.value,
     set: (id) => {
       if (id === CUSTOM_PRESET_ID) {
-        selectedPresetId.value = CUSTOM_PRESET_ID
+        pinnedCustomDraft.value = draft.value
         return
       }
       const preset = presets()?.find((candidate) => candidate.id === id)
       if (preset) {
-        selectPreset(preset)
+        draft.value = presetDraft(preset)
       }
-    }
-  })
-
-  watch(draft, () => {
-    if (!applyingPreset) {
-      selectedPresetId.value = CUSTOM_PRESET_ID
     }
   })
 

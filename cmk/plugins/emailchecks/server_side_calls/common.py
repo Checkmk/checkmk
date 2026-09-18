@@ -4,11 +4,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import assert_never
 
 from cmk.server_side_calls.internal import OAuth2Connection
-from cmk.server_side_calls.v1 import HostConfig, replace_macros, Secret
+from cmk.server_side_calls.v1 import (
+    EnvProxy,
+    HostConfig,
+    NoProxy,
+    replace_macros,
+    Secret,
+    URLProxy,
+)
 
 from .options_models import BasicAuthParameters, FetchingParameters, Oauth2Parameters
+
+
+def proxy_to_args(proxy: URLProxy | EnvProxy | NoProxy, scope: str) -> Sequence[str]:
+    """Serialize the proxy of an OAuth2 connection for the check plug-ins."""
+    match proxy:
+        case URLProxy(url=url):
+            return [f"--{scope}-proxy={url}"]
+        case EnvProxy():
+            return [f"--{scope}-proxy=FROM_ENVIRONMENT"]
+        case NoProxy():
+            return [f"--{scope}-proxy=NO_PROXY"]
+        case other:
+            assert_never(other)
 
 
 def fetching_options_to_args(
@@ -51,6 +72,7 @@ def fetching_options_to_args(
                 "--fetch-tenant-id",
                 oauth2.tenant_id,
             ]
+            args += proxy_to_args(oauth2.proxy, "fetch")
         case tuple(("basic", BasicAuthParameters() as auth)):  # type: ignore[unreachable]
             args += [
                 "--fetch-username",

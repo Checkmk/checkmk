@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import assert_never, Literal
 
 from cmk.password_store.v1_unstable import dereference_secret
+
+type HTTPProxyConfig = MutableMapping[str, str]
 
 
 @dataclass(kw_only=True)
@@ -54,6 +56,7 @@ class TRXConfig:
     port: int
     tls: bool
     disable_cert_validation: bool
+    proxy: HTTPProxyConfig
 
 
 def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
@@ -180,6 +183,13 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         help="Password store reference for initial refresh token for GraphApi authentication",
     )
     parser.add_argument(
+        f"--{scope}-proxy",
+        required=False,
+        metavar="PROXY",
+        help="Proxy to use for GRAPHAPI. Either a proxy URL, 'NO_PROXY' to connect directly, or "
+        "'FROM_ENVIRONMENT' (default) to use the proxy settings of the process environment",
+    )
+    parser.add_argument(
         f"--{scope}-storage-id",
         required=False,
         help="Storage ID used for storing access to the GraphAPI. Only required of not using referenced tokens.",
@@ -232,6 +242,18 @@ def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
             return None
         case _:
             raise RuntimeError(f"Incomplete auth credentials for {raw['protocol']} protocol.")
+
+
+def _parse_proxy(raw: Mapping[str, object]) -> HTTPProxyConfig:
+    match raw.get("proxy"):
+        case None | "FROM_ENVIRONMENT":
+            return {}
+        case "NO_PROXY":
+            return {"http": "", "https": ""}
+        case str(url):
+            return {"http": url, "https": url}
+        case other:
+            raise ValueError(f"Invalid proxy setting: {other!r}")
 
 
 def _parse_secret(raw: Mapping[str, object], ident: str) -> str | None:
@@ -287,4 +309,5 @@ def parse_trx_arguments(args: argparse.Namespace, scope: Scope) -> TRXConfig:
         port=_parse_port(raw),
         tls=raw["tls"],
         disable_cert_validation=raw["disable_cert_validation"],
+        proxy=_parse_proxy(raw),
     )

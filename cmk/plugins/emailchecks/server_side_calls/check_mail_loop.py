@@ -16,7 +16,7 @@ from cmk.server_side_calls.v1 import (
     Secret,
 )
 
-from .common import fetching_options_to_args, timeout_to_args
+from .common import fetching_options_to_args, proxy_to_args, timeout_to_args
 from .options_models import (
     BasicAuthParameters,
     CommonParameters,
@@ -123,6 +123,7 @@ def check_mail_loop_arguments(
                 "--send-tenant-id",
                 oauth2.tenant_id,
             ]
+            args += proxy_to_args(oauth2.proxy, "send")
         case (protocol, _):
             raise NotImplementedError(f"Sending mails is not implemented for {protocol}")
         case _:

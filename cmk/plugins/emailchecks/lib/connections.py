@@ -33,6 +33,7 @@ from cmk.password_store.v1_unstable import (
 from cmk.password_store.v1_unstable._impl import _read_store_secret
 from cmk.plugins.emailchecks.lib.ac_args import (
     BasicAuth,
+    HTTPProxyConfig,
     MailboxAuth,
     OAuth2,
     OAuth2WithTokens,
@@ -305,12 +306,14 @@ class GraphApi(_Connection):
         authority_urls: AuthorityURLs,
         auth: OAuth2WithTokens,
         storage_id: str,
+        proxy: HTTPProxyConfig,
     ) -> None:
         self.authority_urls = authority_urls
         self._resource_url = authority_urls.resource
         self._login_url = authority_urls.login
         self.auth = auth
         self.storage_id = storage_id
+        self.proxy = proxy
         self._base_folder_uri = "me/messages"
         self._connect()
 
@@ -328,6 +331,7 @@ class GraphApi(_Connection):
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,
+            proxies=self.proxy,
         )
 
     @override
@@ -916,6 +920,7 @@ def _make_connection(config: TRXConfig, timeout: int) -> POP3 | IMAP | EWS | Gra
                     authority_urls=get_graph_authority_urls(config.authority),
                     auth=config.auth,
                     storage_id=config.auth.storage_id,
+                    proxy=config.proxy,
                 )
 
             case "SMTP":

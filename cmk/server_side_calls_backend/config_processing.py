@@ -214,7 +214,9 @@ def _processed_config_value(
                 str() as connection_id,
             )
         ):
-            return _replace_oauth2_connection(connection_id, oauth2_connections)
+            return _replace_oauth2_connection(
+                connection_id, oauth2_connections, global_proxies_with_lookup
+            )
 
         case tuple(("cmk_postprocessed", str() as special_type, value)):
             match special_type, value, is_internal:
@@ -277,8 +279,26 @@ def _replace_password(
     )
 
 
+def _replace_oauth2_proxy(
+    proxy: _ProxySpec,
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
+    usage_hint: str,
+) -> ReplacementResult[v1.EnvProxy | v1.NoProxy | v1.URLProxy]:
+    match proxy:
+        case ("cmk_postprocessed", "no_proxy", _):
+            return ReplacementResult(v1.NoProxy(), {}, {})
+        case ("cmk_postprocessed", "stored_proxy", str(proxy_name)):
+            return _replace_v1_stored_proxy(proxy_name, global_proxies_with_lookup, usage_hint)
+        case ("cmk_postprocessed", "explicit_proxy", str(url)):
+            return _replace_v1_explicit_proxy(url)
+        case _:
+            return ReplacementResult(v1.EnvProxy(), {}, {})
+
+
 def _replace_oauth2_connection(
-    connection_id: str, oauth2_connections: Mapping[str, OAuth2Connection]
+    connection_id: str,
+    oauth2_connections: Mapping[str, OAuth2Connection],
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
 ) -> ReplacementResult[internal.OAuth2Connection]:
     try:
         oauth2_connection = oauth2_connections[connection_id]
@@ -300,6 +320,11 @@ def _replace_oauth2_connection(
     _replaced_client_secret = _replace_password(oauth2_connection.client_secret[2][0], None, True)
     _replaced_access_token = _replace_password(oauth2_connection.access_token[2][0], None, True)
     _replaced_refresh_token = _replace_password(oauth2_connection.refresh_token[2][0], None, True)
+    _replaced_proxy = _replace_oauth2_proxy(
+        oauth2_connection.proxy,
+        global_proxies_with_lookup,
+        f'OAuth2 connection "{connection_id}"',
+    )
     return ReplacementResult(
         internal.OAuth2Connection(
             client_secret=_replaced_client_secret.value,
@@ -309,16 +334,19 @@ def _replace_oauth2_connection(
             tenant_id=oauth2_connection.tenant_id,
             authority=oauth2_connection.authority,
             connector_type=oauth2_connection.connector_type,
+            proxy=_replaced_proxy.value,
         ),
         {
             **_replaced_client_secret.found_secrets,
             **_replaced_access_token.found_secrets,
             **_replaced_refresh_token.found_secrets,
+            **_replaced_proxy.found_secrets,
         },
         {
             **_replaced_client_secret.surrogates,
             **_replaced_access_token.surrogates,
             **_replaced_refresh_token.surrogates,
+            **_replaced_proxy.surrogates,
         },
     )
 

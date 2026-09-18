@@ -8,7 +8,14 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.emailchecks.server_side_calls.check_mail import active_check_mail
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, Secret
+from cmk.server_side_calls.internal import OAuth2Connection
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    HostConfig,
+    IPv4Config,
+    Secret,
+    URLProxy,
+)
 
 HOST_CONFIG = HostConfig(name="myhost", ipv4_config=IPv4Config(address="0.0.0.1"))
 
@@ -199,6 +206,85 @@ HOST_CONFIG = HostConfig(name="myhost", ipv4_config=IPv4Config(address="0.0.0.1"
                 "--forward-method=udp,localhost,123",
             ),
             id="syslog forwarding",
+        ),
+        pytest.param(
+            {
+                "service_description": "Email",
+                "fetch": (
+                    "GRAPHAPI",
+                    {
+                        "connection": {},
+                        "auth": OAuth2Connection(
+                            client_secret=Secret(0),
+                            access_token=Secret(1),
+                            refresh_token=Secret(2),
+                            client_id="my_client",
+                            tenant_id="my_tenant",
+                            authority="global",
+                            connector_type="microsoft_entra_id",
+                            proxy=URLProxy(url="http://proxy.example:3128"),
+                        ),
+                    },
+                ),
+            },
+            (
+                "--fetch-protocol=GRAPHAPI",
+                "--fetch-server=graph.microsoft.com",
+                "--fetch-tls",
+                "--fetch-initial-access-token-reference",
+                Secret(1),
+                "--fetch-initial-refresh-token-reference",
+                Secret(2),
+                "--fetch-authority",
+                "global",
+                "--fetch-client-secret-reference",
+                Secret(0),
+                "--fetch-client-id",
+                "my_client",
+                "--fetch-tenant-id",
+                "my_tenant",
+                "--fetch-proxy=http://proxy.example:3128",
+            ),
+            id="graph api with explicit proxy",
+        ),
+        pytest.param(
+            {
+                "service_description": "Email",
+                "fetch": (
+                    "GRAPHAPI",
+                    {
+                        "connection": {},
+                        "auth": OAuth2Connection(
+                            client_secret=Secret(0),
+                            access_token=Secret(1),
+                            refresh_token=Secret(2),
+                            client_id="my_client",
+                            tenant_id="my_tenant",
+                            authority="global",
+                            connector_type="microsoft_entra_id",
+                        ),
+                    },
+                ),
+            },
+            (
+                "--fetch-protocol=GRAPHAPI",
+                "--fetch-server=graph.microsoft.com",
+                "--fetch-tls",
+                "--fetch-initial-access-token-reference",
+                Secret(1),
+                "--fetch-initial-refresh-token-reference",
+                Secret(2),
+                "--fetch-authority",
+                "global",
+                "--fetch-client-secret-reference",
+                Secret(0),
+                "--fetch-client-id",
+                "my_client",
+                "--fetch-tenant-id",
+                "my_tenant",
+                "--fetch-proxy=FROM_ENVIRONMENT",
+            ),
+            id="graph api without proxy: use the process environment",
         ),
     ],
 )

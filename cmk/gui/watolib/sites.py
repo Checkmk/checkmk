@@ -449,7 +449,7 @@ class SiteManagement:
                 "connections, or <i>Use all</i> to enable every configured "
                 "connection of the selected types — including ones added later. "
                 "<br>Authentication connections are responsible "
-                "of creating the user and the initial user setup.<br>SAML connection are only authorized "
+                "for creating the user and the initial user setup.<br>SAML connection are only authorized "
                 "to overwrite user attributes if no other Attribute Sync Connection is configured for that user."
             )
         else:
@@ -460,7 +460,7 @@ class SiteManagement:
                 "connections, or <i>Use all</i> to enable every configured "
                 "LDAP connection — including ones added later."
                 "<br>Authentication connections are responsible "
-                "of creating the user and the initial user setup."
+                "for creating the user and the initial user setup."
             )
 
         return TransformDataForLegacyFormatOrRecomposeFunction(

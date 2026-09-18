@@ -1199,10 +1199,9 @@ def command_freeze_aggregation_action(
         return None
 
     if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
-        if frozen_info := compiled_aggregation.frozen_info:
-            frozen_path = storage.FrozenAggregationStore(bi_fs.var).get_branch_path(
-                aggregation_id=frozen_info.based_on_aggregation_id,
-                branch_title=compiled_aggregation.id,
+        if compiled_aggregation.frozen_info is not None:
+            frozen_path = storage.FrozenAggregationStore(bi_fs.var).get_branch_path_of(
+                compiled_aggregation
             )
             return (
                 [str(frozen_path)],

@@ -20,7 +20,7 @@ from cmk.bi.storage import (
     generate_identifier,
     MetadataStore,
 )
-from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
+from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule, FrozenBIInfo
 from cmk.bi.type_defs import ComputationConfigDict
 
 
@@ -114,6 +114,35 @@ class TestFrozenAggregationStore:
     def test_delete_is_idempotent(self, frozen_store: FrozenAggregationStore) -> None:
         frozen_store.delete("heute")
         frozen_store.delete("heute")  # shouldn't raise
+
+    def test_get_branch_path_of_finds_the_saved_snapshot(
+        self, frozen_store: FrozenAggregationStore
+    ) -> None:
+        """The rewritten id must not be mistaken for the branch title.
+
+        A frozen branch is stored under its title but its aggregation id is
+        rewritten to `frozen_<id>_<title>`. Hashing that id instead of the title
+        yields a path that never exists.
+        """
+        branch = _build_branch("My Branch")
+        aggregation = _build_aggregation("myaggregation", branches=[branch])
+        aggregation.id = "frozen_myaggregation_My Branch"
+        frozen_store.save(aggregation, "myaggregation", "My Branch")
+
+        assert (frozen_agg := frozen_store.get("myaggregation", "My Branch"))
+        frozen_agg.frozen_info = FrozenBIInfo("myaggregation", "My Branch")
+
+        assert frozen_store.get_branch_path_of(frozen_agg).exists()
+        assert frozen_store.get_branch_path_of(frozen_agg) == frozen_store.get_branch_path(
+            "myaggregation", "My Branch"
+        )
+        assert not frozen_store.get_branch_path("myaggregation", frozen_agg.id).exists()
+
+    def test_get_branch_path_of_rejects_an_unfrozen_aggregation(
+        self, frozen_store: FrozenAggregationStore
+    ) -> None:
+        with pytest.raises(ValueError, match="not frozen"):
+            frozen_store.get_branch_path_of(_build_aggregation("myaggregation"))
 
 
 class TestMetadataStore:

@@ -54,6 +54,12 @@ class ServiceOverviewResponse:
         ),
         example="OK",
     )
+    is_flapping: bool = api_field(
+        description="Whether the service state is flapping", example=False
+    )
+    stale: bool = api_field(
+        description="Whether the service hasn't been checked recently enough", example=False
+    )
     modes: list[ServiceModeInfo] = api_field(
         description=(
             "Active service modes (e.g. scheduled downtime, acknowledgement, disabled "
@@ -157,6 +163,8 @@ class ServiceOverviewResponse:
             host_name=service.host_name,
             site_id=service.site_id,
             state=service.state_label,
+            is_flapping=service.is_flapping,
+            stale=service.stale,
             modes=build_service_modes(service),
             host_alias=service.host_alias,
             host_state=service.host_state_label,

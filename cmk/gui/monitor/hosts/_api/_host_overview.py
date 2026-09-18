@@ -129,6 +129,10 @@ class HostOverviewResponse:
         ),
         example="UP",
     )
+    is_flapping: bool = api_field(description="Whether the host state is flapping", example=False)
+    stale: bool = api_field(
+        description="Whether the host hasn't been checked recently enough", example=False
+    )
     address: str = api_field(description="Primary IP address", example="10.0.0.1")
     alias: str = api_field(description="Host alias", example="Web Server")
     site_id: str = api_field(description="Site ID", example="local")
@@ -213,6 +217,8 @@ class HostOverviewResponse:
         return cls(
             name=host.name,
             state=host.state_label,
+            is_flapping=host.is_flapping,
+            stale=host.stale,
             address=read(host.address, "address"),
             alias=read(host.alias, "alias"),
             site_id=host.site_id,

@@ -14,6 +14,8 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
     alias: 'web server 1',
     address: '10.0.0.1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     site_id: 'local',
     site_alias: 'Local site',
     folder: 'Netzwerk',

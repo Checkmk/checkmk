@@ -64,6 +64,8 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     host_name: HOST.name,
     site_id: HOST.site_id,
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     modes: [],
     host_alias: 'Web Server',
     host_state: 'UP',

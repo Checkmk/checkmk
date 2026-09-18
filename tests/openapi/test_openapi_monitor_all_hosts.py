@@ -1113,6 +1113,8 @@ class TestMonitorHostOverview:
             "alias": "Today",
             "address": "127.0.0.1",
             "state": "UP",
+            "is_flapping": False,
+            "stale": False,
             "site_id": "NO_SITE",
             "site_alias": "Local site NO_SITE",
             "service_counts": {

@@ -58,6 +58,7 @@ interface Props {
   relaySelectElement: HTMLSelectElement | null
   relayDefaultElement: HTMLDivElement | null
   defaultRelayIdHash: string
+  noRelayLabel: string
   cmkAgentConnectionModeDefaultElement: HTMLDivElement | null
   cmkAgentConnectionModeInputButtonElement: HTMLInputElement | null
   sites: Array<ModeHostSite>
@@ -83,7 +84,7 @@ function checkRelay(): boolean {
     (props.relayInputButtonElement.checked === true &&
       props.relaySelectElement.value !== props.defaultRelayIdHash) ||
     (props.relayInputButtonElement.checked === false &&
-      !props.relayDefaultElement.textContent?.includes('No relay'))
+      !props.relayDefaultElement.textContent?.includes(props.noRelayLabel))
   )
 }
 

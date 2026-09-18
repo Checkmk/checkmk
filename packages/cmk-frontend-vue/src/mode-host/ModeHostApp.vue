@@ -24,6 +24,7 @@ const props = defineProps<{
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
   default_relay_id_hash: string
+  no_relay_label: string
   server_per_site: Array<ModeHostServerPerSite>
   agent_connection_modes: Array<ModeHostAgentConnectionMode>
   agent_slideout: AgentSlideout
@@ -173,6 +174,7 @@ function getElementBySelector<T>(selector: string): T {
     :site-default-element="siteDefaultElement"
     :sites="sites"
     :default-relay-id-hash="default_relay_id_hash"
+    :no-relay-label="no_relay_label"
   ></PingHost>
   <AgentConnectionTest
     v-if="
@@ -211,6 +213,7 @@ function getElementBySelector<T>(selector: string): T {
     :relay-select-element="relaySelectElement"
     :relay-default-element="relayDefaultElement"
     :default-relay-id-hash="default_relay_id_hash"
+    :no-relay-label="no_relay_label"
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :cmk-agent-connection-mode-default-element="cmkConnectionModeDefaultElement"
     :cmk-agent-connection-mode-input-button-element="cmkConnectionModeInputButtonElement"

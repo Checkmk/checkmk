@@ -466,3 +466,37 @@ def fixture_bulk_create_hosts_remote_site(
         num_hosts = int(request.param)
         activate = False
     yield from _create_bulk_hosts(remote_site_wato_disabled, num_hosts, test_site, activate)
+
+
+@pytest.fixture(name="bypass_nslookup")
+def fixture_bypass_nslookup(test_site: Site) -> Iterator[None]:
+    """Fixture to bypass `nslookup` command in the checkmk site.
+
+    For any reason, `nslookup` does not work properly in CI, so this fixture creates a dummy
+    `nslookup` command that always return 0 (OK), so then checkmk will execute `ping` to validate
+    the hostname.
+    """
+    dummy_nslookup = test_site.path("local/bin/nslookup")
+
+    _input = "\n".join(  # noqa: FLY002
+        (
+            "#!/bin/bash",
+            "",
+            "sleep 1",
+            "",
+            "if [ $2 == 'localhost' ]",
+            "then",
+            "  exit 0",
+            "else",
+            "  exit 1",
+            "fi",
+            "",
+        )
+    )
+
+    run(["tee", str(dummy_nslookup)], input_=_input, sudo=True)
+    run(["chmod", "a+x", str(dummy_nslookup)], sudo=True)
+
+    yield
+
+    run(["rm", str(dummy_nslookup)], sudo=True)

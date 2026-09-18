@@ -17,6 +17,7 @@
       }
     },
     "default_relay_id_hash": { "type": "string" },
+    "no_relay_label": { "type": "string" },
     "agent_connection_modes": {
       "type": "array",
       "items": {
@@ -32,6 +33,7 @@
     "form_keys",
     "sites",
     "default_relay_id_hash",
+    "no_relay_label",
     "server_per_site",
     "i18n_ping_host",
     "agent_slideout",
@@ -46,16 +48,14 @@
         "error_host_not_dns_resolvable": { "type": "string" },
         "success_host_dns_resolvable": { "type": "string" },
         "error_ip_not_pingable": { "type": "string" },
-        "success_ip_pingable": { "type": "string" },
-        "no_relay_label": { "type": "string" }
+        "success_ip_pingable": { "type": "string" }
       },
       "required": [
         "loading",
         "error_host_not_dns_resolvable",
         "success_host_dns_resolvable",
         "error_ip_not_pingable",
-        "success_ip_pingable",
-        "no_relay_label"
+        "success_ip_pingable"
       ]
     },
     "mode_host_form_keys": {

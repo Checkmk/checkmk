@@ -258,6 +258,12 @@ class AddHost(CmkPage):
         return self.main_area.locator("div#attr_entry_tag_agent >> b")
 
     @property
+    def test_agent_connection_button(self) -> Locator:
+        return self.main_area.locator("button.agent-test-button").filter(
+            has_text="Test agent connection"
+        )
+
+    @property
     def snmp_checkbox(self) -> Locator:
         return self.main_area.locator().get_by_role("cell", name="SNMP").locator("label")
 

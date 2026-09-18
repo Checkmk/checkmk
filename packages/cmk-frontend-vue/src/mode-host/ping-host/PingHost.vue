@@ -31,6 +31,7 @@ const props = defineProps<{
   siteDefaultElement: HTMLDivElement | null
   sites: Array<ModeHostSite>
   defaultRelayIdHash: string
+  noRelayLabel: string
 }>()
 
 interface PingHostResponseError {
@@ -112,7 +113,7 @@ function checkRelay(): boolean {
     (props.relayInputButtonElement.checked === true &&
       props.relaySelectElement.value !== props.defaultRelayIdHash) ||
     (props.relayInputButtonElement.checked === false &&
-      !props.relayDefaultElement.textContent?.includes(props.i18n.no_relay_label))
+      !props.relayDefaultElement.textContent?.includes(props.noRelayLabel))
   )
 }
 const showPingHost = computed(() => {

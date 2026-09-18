@@ -240,6 +240,7 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
                             title=Title("Oracle wallet"),
                             parameter_form=FixedValue(
                                 value=None,
+                                label=Label("(credentials come from the Oracle wallet)"),
                                 help_text=Help(
                                     "Use Oracle Wallet for secure authentication to the Oracle database "
                                     "without storing passwords in plain text. "
@@ -625,7 +626,10 @@ def _permissions() -> CascadingSingleChoice:
             CascadingSingleChoiceElement(
                 name="disabled",
                 title=Title("Disable"),
-                parameter_form=FixedValue(value=None),
+                parameter_form=FixedValue(
+                    value=None,
+                    label=Label("(client file permissions are not checked)"),
+                ),
             ),
         ],
     )
@@ -657,17 +661,26 @@ def _oracle_client_library_options() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="auto",
                             title=Title("Auto-detect (default)"),
-                            parameter_form=FixedValue(value=None),
+                            parameter_form=FixedValue(
+                                value=None,
+                                label=Label("(host client first, then the agent-local client)"),
+                            ),
                         ),
                         CascadingSingleChoiceElement(
                             name="never",
                             title=Title("Never use host client (only agent-local client)"),
-                            parameter_form=FixedValue(value=None),
+                            parameter_form=FixedValue(
+                                value=None,
+                                label=Label("(agent-local client only)"),
+                            ),
                         ),
                         CascadingSingleChoiceElement(
                             name="always",
                             title=Title("Always use host client (ignore agent-local client)"),
-                            parameter_form=FixedValue(value=None),
+                            parameter_form=FixedValue(
+                                value=None,
+                                label=Label("(host client only)"),
+                            ),
                         ),
                         CascadingSingleChoiceElement(
                             name="custom",
@@ -704,7 +717,7 @@ def _options() -> Dictionary:
                     "If enabled, the instance name will be queried "
                     "from the database instead of the database name."
                 ),
-                label=Label("Ignore database name and use instance name instead"),
+                label=Label("Query the instance name from the database"),
                 value=False,
             ),
             required=False,
@@ -718,7 +731,7 @@ def _options() -> Dictionary:
     return Dictionary(
         title=Title("Additional options"),
         elements=elements,
-        ignored_elements=("max_queries",),
+        ignored_elements=_KEPT_BUT_NOT_OFFERED,
     )
 
 
@@ -840,6 +853,7 @@ def _excluded_sections() -> List[_NamedOption]:
 def _instances() -> List[_NamedOption]:
     return List(
         title=Title("Databases to monitor"),
+        no_element_label=Label("No databases configured explicitly; see 'Instance discovery'"),
         help_text=Help(
             "Define the Oracle databases you want to monitor. Each entry must include "
             "an Oracle database identifier (service name, instance name, SID, or TNS alias). "
@@ -872,6 +886,12 @@ def _instances() -> List[_NamedOption]:
     )
 
 
+# Never offered by the form, and no migration removes them. CMK-37226 dropped
+# max_connections from the form and CMK-37191 dropped max_queries, but a rule
+# written before that still carries them.
+_KEPT_BUT_NOT_OFFERED: Final = ("max_connections", "max_queries")
+
+
 def _agent_config_mk_oracle() -> Dictionary:
     return Dictionary(
         elements={
@@ -883,7 +903,10 @@ def _agent_config_mk_oracle() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="deploy",
                             title=Title("Deploy Oracle plug-in"),
-                            parameter_form=FixedValue(value=None),
+                            parameter_form=FixedValue(
+                                value=None,
+                                label=Label("(enabled)"),
+                            ),
                         ),
                         CascadingSingleChoiceElement(
                             name="do_not_deploy",

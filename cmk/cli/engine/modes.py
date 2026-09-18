@@ -385,7 +385,6 @@ def discover_modes() -> Sequence[Mode]:
         module_names_by_priority=[
             "cmk.base.modes.check_mk",
             "cmk.base.diagnostics",
-            "cmk.base.localize",
             "cmk.base.notify",
             "cmk.base.nonfree.alert_handling",
             "cmk.base.nonfree.dump_protobufs",

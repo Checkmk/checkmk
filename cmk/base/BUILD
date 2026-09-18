@@ -183,28 +183,11 @@ py_library(
 )
 
 py_library(
-    name = "localize",
-    srcs = ["localize.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
-    ],
-    deps = [
-        "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:tty",
-        "//packages/cmk-plugin-apis:cli",
-    ],
-)
-
-py_library(
     name = "community-app",
     srcs = ["community_app.py"],
     imports = ["../.."],
     tags = [
         "deballast-keep=//cmk/base:diagnostics",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base:localize",  # loaded at runtime via discover_modes()
         "deballast-keep=//cmk/base:notify",  # loaded at runtime via discover_modes()
         "deballast-keep=//cmk/base/automations:automations",  # loaded at runtime via discover_automations()
         "deballast-keep=//cmk/base/modes:modes",  # loaded at runtime via discover_modes()
@@ -217,7 +200,6 @@ py_library(
     deps = [
         ":base-app",
         ":diagnostics",
-        ":localize",
         ":notify",
         "//cmk/base/automations",
         "//cmk/base/core",
@@ -302,7 +284,6 @@ py_library(
         ":diagnostics",
         ":dump-host",
         ":events",
-        ":localize",
         ":notify",
         ":parent-scan",
         "//cmk/base/api",

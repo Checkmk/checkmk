@@ -216,9 +216,9 @@ def test_python_optimized_and_lto_enable(site: Site) -> None:
     "import_path,expected_source_file,expected_pyc_file",
     [
         pytest.param(
-            "cmk.base.localize",
-            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/localize.py",
-            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/__pycache__/localize.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            "cmk.base.base_app",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/base_app.py",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/__pycache__/base_app.cpython-{PYVER.major}{PYVER.minor}.pyc",
             id="pyc for imports from the big monolith cmk namespace",
             # only this param is unreachable in the medium chain, the other three
             # pass there. cmk.base.config is not byte-compiled in a package built

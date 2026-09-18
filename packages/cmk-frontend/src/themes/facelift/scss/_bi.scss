@@ -87,6 +87,11 @@ td.aggrtree .frozen_aggregation,
   }
 }
 
+i.frozen_hint {
+  font-size: $font-size-small;
+  opacity: 0.8;
+}
+
 b.bullet {
   margin: 0 5px;
   color: $font-color-dimmed;

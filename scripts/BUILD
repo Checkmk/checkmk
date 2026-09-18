@@ -29,6 +29,7 @@ sh_library(
     name = "scripts_sh",
     srcs = [
         "check-current-commit",
+        "cmk-generate-api-spec",
         "create_cognito_config_cloud.sh",
         "fake-artifacts",
         "find-python-files",

@@ -5,8 +5,6 @@
 # See doc/documentation/arch-migrations.rst
 #
 
-per-file check_mk=file:/component_owners/command_line_cmk/OWNERS_DEFINITION
-per-file check_mk=set noparent
 per-file cmk-monitor-mknotifyd=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file cmk-monitor-mknotifyd=set noparent
 per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_collector/OWNERS_DEFINITION

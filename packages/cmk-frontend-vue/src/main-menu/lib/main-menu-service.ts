@@ -231,6 +231,8 @@ export class MainMenuService extends ServiceBase {
         content: this.userMessageTrigger.value.count.toString(),
         color: 'danger'
       })
+    } else {
+      this.resetNavItemBadge('user')
     }
 
     this.userPopupMessages = res.popup_messages.map((msg) => {

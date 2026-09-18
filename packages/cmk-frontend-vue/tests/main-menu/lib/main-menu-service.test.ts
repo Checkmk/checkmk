@@ -131,3 +131,18 @@ describe('main menu service failing requests', () => {
     expect(service.getNavItemBadge('help')).toBeNull()
   })
 })
+
+describe('main menu service user badge', () => {
+  test('clears the user badge once the message count drops to zero', async () => {
+    api.getUserMessages.mockResolvedValue(userMessages(3))
+    const service = badgedService()
+    await vi.waitFor(() => {
+      expect(service.getNavItemBadge('user')).toMatchObject({ content: '3' })
+    })
+
+    api.getUserMessages.mockResolvedValue(userMessages(0))
+    await service.refreshUserMessages()
+
+    expect(service.getNavItemBadge('user')).toBeNull()
+  })
+})

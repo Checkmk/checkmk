@@ -65,6 +65,14 @@ export interface NumericFilter<F extends FilterField = FilterField> {
   field: F
   /** Optional unit suffix shown after the upper-bound field (e.g. "services"). */
   unit?: string
+  /**
+   * What the "At least one" preset matches, shown in place of the range inputs.
+   * A page says what its rows and values are ("hosts with at least one service
+   * in CRIT"); a generic wording stands in when it does not.
+   */
+  anyInfo?: string
+  /** What the "None" preset matches. Counterpart of {@link anyInfo}. */
+  noneInfo?: string
 }
 
 /**

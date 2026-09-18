@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="F extends FilterField">
-import { CmkRadioButton, CmkRadioGroup } from 'cmk-ui-library/components/user-input/CmkRadioButton'
+import CmkToggleButtonGroup, {
+  type ToggleButtonOption
+} from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { ColumnFilterNode, FilterField, NumericOp } from '@/monitoring/shared/api/types'
 
@@ -63,13 +65,26 @@ function initialSelection(): string {
   if (matchesOption(NONE_OPTION)) {
     return NONE_OPTION
   }
-  if (range.value.from !== undefined || range.value.to !== undefined) {
-    return RANGE_OPTION
-  }
-  return ''
+  return RANGE_OPTION
 }
 
 const selected = ref<string>(initialSelection())
+
+const options = computed<ToggleButtonOption[]>(() => [
+  { label: _t('Range'), value: RANGE_OPTION },
+  { label: _t('At least one'), value: ANY_OPTION },
+  { label: _t('None'), value: NONE_OPTION }
+])
+
+const presetInfo = computed<string>(() => {
+  if (selected.value === ANY_OPTION) {
+    return props.definition.anyInfo ?? _t('Shows rows with a value above 0.')
+  }
+  if (selected.value === NONE_OPTION) {
+    return props.definition.noneInfo ?? _t('Shows rows with a value of 0.')
+  }
+  return ''
+})
 
 function condition(op: NumericOp, value: number): ColumnFilterNode<F> {
   return {
@@ -101,35 +116,27 @@ watch(selected, (value) => {
   const preset = optionRanges[value]
   range.value = preset ? { ...preset } : { from: undefined, to: undefined }
   createFilterNode(range.value)
+  if (value !== RANGE_OPTION) {
+    emit('update:valid', true)
+  }
 })
 </script>
 
 <template>
   <div class="monitoring-filter-numeric">
-    <CmkRadioGroup
-      v-model="selected"
-      class="monitoring-filter-numeric__radio-group"
-      :label="_t('Value range')"
-    >
-      <div class="monitoring-filter-numeric__radio-row">
-        <CmkRadioButton :value="ANY_OPTION" :label="_t('Any (>0)')" />
-      </div>
-      <div class="monitoring-filter-numeric__radio-row">
-        <CmkRadioButton :value="NONE_OPTION" :label="_t('None (=0)')" />
-      </div>
-      <div class="monitoring-filter-numeric__radio-row">
-        <CmkRadioButton :value="RANGE_OPTION" :label="_t('Range')" />
-      </div>
-    </CmkRadioGroup>
+    <div class="monitoring-filter-numeric__options" role="group" :aria-label="_t('Value range')">
+      <CmkToggleButtonGroup v-model="selected" :options="options" size="small" spacing="none" />
+    </div>
 
     <CmkNumberRange
+      v-if="selected === RANGE_OPTION"
       v-model="range"
       class="monitoring-filter-numeric__number-range"
       :unit="definition.unit ?? ''"
-      :disabled="selected !== RANGE_OPTION"
       @update:model-value="createFilterNode"
       @update:valid="emit('update:valid', $event)"
     />
+    <p v-else-if="presetInfo" class="monitoring-filter-numeric__info">{{ presetInfo }}</p>
   </div>
 </template>
 
@@ -137,25 +144,23 @@ watch(selected, (value) => {
 .monitoring-filter-numeric {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-3);
+  gap: var(--dimension-5);
+  padding: var(--dimension-3) var(--dimension-5) var(--dimension-4) var(--dimension-5);
 }
 
-.monitoring-filter-numeric__radio-group {
-  gap: var(--dimension-2);
-}
-
-.monitoring-filter-numeric__radio-row {
+.monitoring-filter-numeric__options {
   display: flex;
-  align-items: center;
-  padding: var(--dimension-2);
-
-  &:hover,
-  &:focus-within {
-    background-color: var(--ux-theme-3);
-  }
+  flex-direction: column;
+  gap: var(--dimension-2);
+  padding: 0 var(--dimension-2);
 }
 
 .monitoring-filter-numeric__number-range {
-  margin-left: var(--dimension-8);
+  padding: 0 var(--dimension-2);
+}
+
+.monitoring-filter-numeric__info {
+  margin: 0;
+  padding: 0 var(--dimension-2);
 }
 </style>

@@ -162,7 +162,9 @@ const labelsFilter = computed<StringInputFilter>(() => ({
 
 const servicesFilter = computed<NumericFilter>(() => ({
   type: 'numeric',
-  field: 'num_services'
+  field: 'num_services',
+  anyInfo: 'Shows hosts with at least one service.',
+  noneInfo: 'Shows hosts with no services.'
 }))
 
 const lastCheckFilter = computed<DateTimeRangeFilter>(() => ({

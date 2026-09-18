@@ -19,8 +19,7 @@ export interface NumberRange {
 const {
   fromLabel,
   toLabel,
-  unit = '',
-  disabled = false
+  unit = ''
 } = defineProps<{
   /** Visible/aria label for the lower bound. Defaults to a translated "From". */
   fromLabel?: string
@@ -28,8 +27,6 @@ const {
   toLabel?: string
   /** Unit suffix shown after the upper-bound field (e.g. "ms", "services"). */
   unit?: string
-  /** Render both inputs read-only and dimmed (e.g. while a preset is active). */
-  disabled?: boolean
 }>()
 
 const model = defineModel<NumberRange>({ default: () => ({ from: undefined, to: undefined }) })
@@ -79,31 +76,26 @@ const validationId = useId()
 </script>
 
 <template>
-  <div
-    class="monitoring-cmk-number-range"
-    :class="{ 'monitoring-cmk-number-range--disabled': disabled }"
-  >
+  <div class="monitoring-cmk-number-range">
     <div class="monitoring-cmk-number-range__fields">
       <label class="monitoring-cmk-number-range__field">
-        <span class="monitoring-cmk-number-range__label">{{ fromText }}</span>
+        <span>{{ fromText }}</span>
         <CmkInput
           v-model="from"
           type="number"
           :aria-label="fromText"
-          :disabled="disabled"
           :external-errors="rangeErrors"
           :described-by="validationId"
           hide-validation-message
         />
       </label>
       <label class="monitoring-cmk-number-range__field">
-        <span class="monitoring-cmk-number-range__label">{{ toText }}</span>
+        <span>{{ toText }}</span>
         <CmkInput
           v-model="to"
           type="number"
           :unit="unit"
           :aria-label="toText"
-          :disabled="disabled"
           :external-errors="rangeErrors"
           :described-by="validationId"
           hide-validation-message
@@ -131,13 +123,5 @@ const validationId = useId()
   display: flex;
   align-items: center;
   gap: var(--dimension-2);
-}
-
-.monitoring-cmk-number-range__label {
-  color: var(--font-color-dimmed);
-}
-
-.monitoring-cmk-number-range--disabled {
-  opacity: 0.6;
 }
 </style>

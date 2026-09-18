@@ -29,5 +29,10 @@ npm.npm_translate_lock(
 use_repo(npm, "npm")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
-rules_ts_ext.deps()
+
+# Pin the compiler explicitly.  Without a version rules_ts hands us whatever its
+# TOOL_VERSIONS happens to end with, the lockfile does not record it, and a
+# ruleset bump silently moves the compiler CI type checks with.  Keep this in
+# sync with the "typescript" devDependency of the frontend packages.
+rules_ts_ext.deps(version = "6.0.3")
 use_repo(rules_ts_ext, "npm_typescript")

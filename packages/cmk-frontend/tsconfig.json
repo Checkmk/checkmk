@@ -15,6 +15,7 @@
     "module": "Preserve",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "allowJs": false,
     "paths": {
       "@/*": ["./src/js/*"]

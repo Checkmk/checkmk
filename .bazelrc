@@ -77,7 +77,10 @@ common --lockfile_mode=error
 # The Aspect rulesets pull in aspect_tools_telemetry, which POSTs a report about
 # our module graph, OS and CI environment to telemetry.aspect.build from a repo
 # rule.  Its one-time opt-out notice is suppressed as soon as MODULE.bazel.lock
-# records that somebody has seen it, so opt out explicitly instead.
+# records that somebody has seen it, so opt out explicitly instead.  Note that
+# our lockfile carries that notice_version fact, so upstream can no longer
+# re-prompt when it widens what it collects: this flag is the only gate, and it
+# only applies to invocations which actually read this file.
 common --repo_env=DO_NOT_TRACK=1
 
 # Required for tools using java such as plantuml

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, ListOf, Migrate, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput, Tuple
 
 
 def __elements() -> Tuple:
@@ -37,57 +36,27 @@ def __elements() -> Tuple:
     )
 
 
-def _parameter_valuespec() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        Dictionary(
-            elements=[
-                (
-                    "conditions",
-                    ListOf(
-                        valuespec=__elements(),
-                        title=_("Add node condition"),
-                        default_value=[
-                            ("Ready", 0, 2, 2),
-                            ("MemoryPressure", 2, 0, 2),
-                            ("DiskPressure", 2, 0, 2),
-                            ("PIDPressure", 2, 0, 2),
-                            ("NetworkUnavailable", 2, 0, 2),
-                        ],
-                        add_label=_("Add new node condition"),
-                    ),
+def _parameter_valuespec() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "conditions",
+                ListOf(
+                    valuespec=__elements(),
+                    title=_("Add node condition"),
+                    default_value=[
+                        ("Ready", 0, 2, 2),
+                        ("MemoryPressure", 2, 0, 2),
+                        ("DiskPressure", 2, 0, 2),
+                        ("PIDPressure", 2, 0, 2),
+                        ("NetworkUnavailable", 2, 0, 2),
+                    ],
+                    add_label=_("Add new node condition"),
                 ),
-            ],
-            required_keys="conditions",
-        ),
-        migrate=migrate,
+            ),
+        ],
+        required_keys="conditions",
     )
-
-
-def migrate(
-    value: dict[str, int] | dict[str, list[tuple[str, int, int, int]]],
-) -> dict[str, list[tuple[str, int, int, int]]]:
-    if "conditions" in value:
-        return value  # type: ignore[return-value]
-    old: dict[str, int] = value  # type: ignore[assignment]
-
-    def by_key(key: str, value: int) -> tuple[str, int, int, int]:
-        match key:  # type: ignore[exhaustive-match]
-            case "ready":
-                return ("Ready", 0, value, 2)
-            case "memorypressure":
-                return ("MemoryPressure", value, 0, 2)
-            case "diskpressure":
-                return ("DiskPressure", value, 0, 2)
-            case "pidpressure":
-                return ("PIDPressure", value, 0, 2)
-            case "networkunavailable":
-                return ("NetworkUnavailable", value, 0, 2)
-        assert False, f"Unknown key {key}, value: {value}"
-
-    conditions = [by_key(key, value) for key, value in old.items()]
-    if all(key != "Ready" for (key, _, _, _) in conditions):
-        conditions.append(("Ready", 0, 2, 2))
-    return {"conditions": conditions}
 
 
 rulespec_registry.register(

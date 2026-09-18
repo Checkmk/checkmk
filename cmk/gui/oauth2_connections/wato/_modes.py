@@ -75,6 +75,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     InputHint,
     Password,
+    Proxy,
     String,
     validators,
 )
@@ -323,6 +324,19 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                         ),
                         uuid4_validator(error_msg=Message("Client ID must be a valid UUID.")),
                     ],
+                ),
+                group=DictGroup(title=Title("IDs")),
+            ),
+            "proxy": DictElement(
+                required=False,
+                parameter_form=Proxy(
+                    title=Title("Proxy"),
+                    help_text=Help(
+                        "Proxy used to reach Microsoft, both for the authorization performed "
+                        "here and for the recurring API calls of the services using this "
+                        "connection. Without this option the proxy settings of the process "
+                        "environment are used."
+                    ),
                 ),
                 group=DictGroup(title=Title("IDs")),
             ),

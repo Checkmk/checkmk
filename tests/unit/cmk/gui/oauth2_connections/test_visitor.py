@@ -58,6 +58,39 @@ def test_oauth2_connection_setup_to_disk(
 
 
 @pytest.mark.usefixtures("request_context")
+def test_oauth2_connection_setup_to_disk_with_proxy(
+    monkeypatch: pytest.MonkeyPatch, with_user: tuple[UserId, str]
+) -> None:
+    monkeypatch.setattr(oauth2_modes, "get_configured_site_choices", list)
+    user_id = with_user[0]
+    with UserContext(user_id, UserPermissions({}, {}, {}, [])):
+        visitor = get_visitor(
+            OAuth2ConnectionSetup(connector_type="microsoft_entra_id"),
+            VisitorOptions(migrate_values=True, mask_values=False),
+        )
+        disk_data = visitor.to_disk(
+            RawFrontendData(
+                value={
+                    "ident": "my_ident",
+                    "title": "my_title",
+                    "authority": SingleChoiceVisitor.option_id("global"),
+                    "tenant_id": "my_tenant",
+                    "client_id": "my_client",
+                    "client_secret": ("explicit_password", "", "my_secret", False),
+                    "sites": ("all", None),
+                    "proxy": ("url", "http://proxy.example:3128"),
+                }
+            )
+        )
+        assert isinstance(disk_data, dict)
+        assert disk_data["proxy"] == (
+            "cmk_postprocessed",
+            "explicit_proxy",
+            "http://proxy.example:3128",
+        )
+
+
+@pytest.mark.usefixtures("request_context")
 def test_oauth2_connection_setup_to_vue(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     with UserContext(user_id, UserPermissions({}, {}, {}, [])):

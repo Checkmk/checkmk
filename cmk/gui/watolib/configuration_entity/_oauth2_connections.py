@@ -104,6 +104,7 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
         authority=disk_data["authority"],
         sites=disk_data["sites"],
         connector_type=connector_type,
+        proxy=disk_data.get("proxy"),
         pprint_value=pprint_value,
         pending_changes=pending_changes,
     )
@@ -163,6 +164,7 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
         authority=disk_data["authority"],
         sites=disk_data["sites"],
         connector_type=connector_type,
+        proxy=disk_data.get("proxy"),
         pprint_value=pprint_value,
         pending_changes=pending_changes,
     )

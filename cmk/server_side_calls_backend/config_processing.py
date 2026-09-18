@@ -22,6 +22,12 @@ type _PasswordSpec = tuple[
     Literal["cmk_postprocessed"], Literal["stored_password", "explicit_password"], tuple[str, str]
 ]
 
+type _ProxySpec = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
+]
+
 
 class BackendProxyAuth(BaseModel):
     user: str
@@ -84,6 +90,7 @@ class OAuth2Connection:
     authority: str
     sites: OAuth2Sites
     connector_type: OAuth2ConnectorType
+    proxy: _ProxySpec = ("cmk_postprocessed", "environment_proxy", "")
 
 
 def extract_all_adhoc_secrets(

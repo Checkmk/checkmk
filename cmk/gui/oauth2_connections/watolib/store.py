@@ -18,7 +18,12 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
-from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType, OAuth2Sites
+from cmk.utils.oauth2_connection import (
+    OAuth2Connection,
+    OAuth2ConnectorType,
+    OAuth2Proxy,
+    OAuth2Sites,
+)
 from cmk.utils.password_store import PasswordConfig
 
 
@@ -212,6 +217,7 @@ def update_reference(
     authority: str,
     sites: OAuth2Sites,
     connector_type: OAuth2ConnectorType,
+    proxy: OAuth2Proxy | None,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> tuple[str, OAuth2Connection]:
@@ -226,6 +232,8 @@ def update_reference(
         sites=sites,
         connector_type=connector_type,
     )
+    if proxy is not None:
+        details["proxy"] = proxy
 
     affected_sites: list[SiteId] | None = None
     match sites:
@@ -254,6 +262,7 @@ def save_new_reference_to_config_file(
     authority: str,
     sites: OAuth2Sites,
     connector_type: OAuth2ConnectorType,
+    proxy: OAuth2Proxy | None,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> tuple[str, OAuth2Connection]:
@@ -268,6 +277,8 @@ def save_new_reference_to_config_file(
         sites=sites,
         connector_type=connector_type,
     )
+    if proxy is not None:
+        details["proxy"] = proxy
 
     affected_sites: list[SiteId] | None = None
     match sites:

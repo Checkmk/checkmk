@@ -91,6 +91,19 @@ watch(
   }
 )
 
+// Same effect as reopening the panel (the `open` watcher above), but triggered by the
+// consuming page - e.g. once an action it ran may have changed what the open tabs show.
+watch(
+  () => props.reloadToken,
+  (token) => {
+    if (token === undefined) {
+      return
+    }
+    resetTabs()
+    void ensureLoaded(activeTab.value)
+  }
+)
+
 watch(activeTab, (id) => {
   emit('update:activeTabId', id)
   if (props.open) {

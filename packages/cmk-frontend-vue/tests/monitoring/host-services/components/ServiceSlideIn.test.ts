@@ -19,6 +19,7 @@ import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/ack
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
 
@@ -101,6 +102,7 @@ describe('ServiceSlideIn', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
@@ -201,6 +203,108 @@ describe('ServiceSlideIn', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(screen.queryByRole('link', { name: 'Problem acknowledged' })).not.toBeInTheDocument()
+  })
+
+  it('refreshes the header mode icons a moment after an action succeeds', async () => {
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+    vi.spyOn(client, 'GET')
+      .mockResolvedValueOnce({
+        data: makeOverview({ modes: [] }),
+        error: undefined,
+        response: new Response()
+      } as never)
+      .mockResolvedValue({
+        data: makeOverview({
+          modes: [
+            {
+              icon_name: 'downtime',
+              link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
+              title: 'In scheduled downtime'
+            }
+          ]
+        }),
+        error: undefined,
+        response: new Response()
+      } as never)
+
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(screen.queryByRole('link', { name: 'In scheduled downtime' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reschedule check' }))
+    // The core applies external commands like a scheduled downtime asynchronously, so the
+    // reload is delayed rather than immediate, giving it a moment to catch up.
+    await vi.advanceTimersByTimeAsync(0)
+    expect(client.GET).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+    expect(screen.getByRole('link', { name: 'In scheduled downtime' })).toBeInTheDocument()
+    // Exactly one more request than the initial load: the Overview tab's own reload (driven by
+    // reloadToken) already refreshes the header, so the direct call for the header must not
+    // repeat it.
+    expect(client.GET).toHaveBeenCalledTimes(2)
+  })
+
+  it('still refreshes the header when a tab other than Overview is shown', async () => {
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+    vi.spyOn(client, 'GET').mockImplementation(async (path) => {
+      if (path === '/monitor/hosts/{hostname}/events') {
+        return {
+          data: {
+            events: [],
+            meta: {
+              limit: 500,
+              truncated: false,
+              since: 0,
+              time_window_days: 8,
+              legacy_events_link: 'view.py?view_name=service_events'
+            }
+          },
+          error: undefined,
+          response: new Response()
+        } as never
+      }
+      return {
+        data: makeOverview({
+          modes: [
+            {
+              icon_name: 'downtime',
+              link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
+              title: 'In scheduled downtime'
+            }
+          ]
+        }),
+        error: undefined,
+        response: new Response()
+      } as never
+    })
+
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS,
+        activeTabId: 'history'
+      }
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(screen.queryByRole('link', { name: 'In scheduled downtime' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reschedule check' }))
+    await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+    expect(screen.getByRole('link', { name: 'In scheduled downtime' })).toBeInTheDocument()
   })
 
   it('offers the service details and parameters as icon buttons in the header', async () => {

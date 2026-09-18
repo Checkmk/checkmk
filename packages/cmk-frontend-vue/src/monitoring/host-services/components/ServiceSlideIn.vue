@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
+export const SERVICE_OVERVIEW_TAB_ID = 'overview'
 export const SERVICE_GRAPHS_TAB_ID = 'service_graphs'
 </script>
 
@@ -12,7 +13,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, markRaw, ref, watch } from 'vue'
+import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
@@ -27,6 +28,7 @@ import MonitoringActionPane from '@/monitoring/shared/components/action/Monitori
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 
 import ServiceAiExplainButton from './slide-in/ServiceAiExplainButton.vue'
@@ -34,7 +36,9 @@ import ServiceGraphsSkeleton from './slide-in/ServiceGraphsSkeleton.vue'
 import ServiceGraphsTab, { type ServiceGraphs } from './slide-in/ServiceGraphsTab.vue'
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
 import ServiceOverviewTab from './slide-in/ServiceOverviewTab.vue'
-import ServiceSlideInHeader from './slide-in/ServiceSlideInHeader.vue'
+import ServiceSlideInHeader, {
+  type ServiceHeaderSubject
+} from './slide-in/ServiceSlideInHeader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -84,6 +88,60 @@ const slideInActions = computed(() =>
 
 const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
 
+const displayService = computed<ServiceHeaderSubject | null>(() => {
+  if (!props.service) {
+    return null
+  }
+  const loaded = overview.value
+  if (!loaded) {
+    return props.service
+  }
+  return {
+    name: props.service.name,
+    state: loaded.state,
+    is_flapping: loaded.is_flapping,
+    stale: loaded.stale,
+    modes: loaded.modes
+  }
+})
+
+const reloadToken = ref(0)
+
+let reloadTimer: ReturnType<typeof setTimeout> | null = null
+
+onUnmounted(() => {
+  if (reloadTimer !== null) {
+    clearTimeout(reloadTimer)
+  }
+})
+
+function onActionPerformed(result: ActionFeedbackResult): void {
+  // The header sits outside the tabbed body, so it needs its own reload - unless the Overview
+  // tab is active (or none has been picked yet, which defaults to it), since reloadToken then
+  // reloads it via this same loadOverview() already.
+  if (result.variant === 'success' && props.service) {
+    if (reloadTimer !== null) {
+      clearTimeout(reloadTimer)
+    }
+    const description = props.service.name
+    // Scheduling a downtime or acknowledging a problem sends an external command to the core
+    // and returns before the core has necessarily applied it, so an immediate reload can still
+    // show the pre-action state. Delayed like the table's own post-action refresh, for the same
+    // reason.
+    reloadTimer = setTimeout(() => {
+      reloadTimer = null
+      if (props.service?.name !== description) {
+        return
+      }
+      reloadToken.value++
+      if (props.activeTabId !== undefined && props.activeTabId !== SERVICE_OVERVIEW_TAB_ID) {
+        loadOverview(description).catch(() => {})
+      }
+    }, ACTION_REFRESH_DELAY_MS)
+  }
+  emit('performed', result)
+}
+
 const {
   activeActionId,
   runningActionId,
@@ -96,7 +154,7 @@ const {
   () => props.actions,
   targets,
   () => props.service,
-  (result) => emit('performed', result)
+  onActionPerformed
 )
 
 watch(
@@ -171,7 +229,7 @@ const tabs = computed<SlideInTab[]>(() => {
   }
   return [
     {
-      id: 'overview',
+      id: SERVICE_OVERVIEW_TAB_ID,
       title: _t('Overview'),
       component: markRaw(ServiceOverviewTab),
       skeleton: markRaw(ServiceOverviewSkeleton),
@@ -198,13 +256,14 @@ const tabs = computed<SlideInTab[]>(() => {
 
 <template>
   <!--
-    Keyed on the service so picking another row while the panel is open remounts the tabs.
+    Keyed on the service, so picking another row while the panel is open remounts the tabs:
     CmkSlideInTabbed only drops its cached tab data when `open` flips, which never happens here.
   -->
   <CmkSlideInTabbed
     :key="service?.name ?? ''"
     :open="open"
     :tabs="tabs"
+    :reload-token="reloadToken"
     :override-active="activeActionId !== null"
     :active-tab-id="activeTabId"
     :header="{ title: _t('Service details'), closeButton: true }"
@@ -213,9 +272,8 @@ const tabs = computed<SlideInTab[]>(() => {
   >
     <template #above-tabs>
       <ServiceSlideInHeader
-        v-if="service"
-        :service="service"
-        :modes="overview?.modes ?? []"
+        v-if="displayService"
+        :service="displayService"
         :actions="inlineActions"
         :load-action-menu="actionMenuLoader"
       />

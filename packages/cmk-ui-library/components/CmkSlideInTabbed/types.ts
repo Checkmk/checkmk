@@ -75,4 +75,10 @@ export interface CmkSlideInTabbedProps {
    * while keeping the panel header.
    */
   overrideActive?: boolean | undefined
+  /**
+   * Bump this (e.g. a counter) to make every tab re-fetch its data next time it
+   * is shown - useful after an action changes something the open tabs
+   * displayed.
+   */
+  reloadToken?: number | undefined
 }

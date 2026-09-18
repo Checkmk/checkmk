@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostMode } from '@/monitoring/shared/api/types'
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 
@@ -37,6 +37,12 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_relations: 0,
     ...overrides
   }
+}
+
+const DOWNTIME: HostMode = {
+  icon_name: 'downtime',
+  link: 'view.py?view_name=downtimes_of_host&host=web-1',
+  title: 'In scheduled downtime'
 }
 
 const INLINE_ACTIONS: CellAction[] = [
@@ -76,20 +82,15 @@ test('links the host name to the given url', () => {
   )
 })
 
+test('shows the name and state without any modes', () => {
+  render(HostHeader, { props: { host: makeHost() } })
+
+  expect(screen.getByText('web-1')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'In scheduled downtime' })).not.toBeInTheDocument()
+})
+
 test('renders the mode icons ahead of the host name', () => {
-  render(HostHeader, {
-    props: {
-      host: makeHost({
-        modes: [
-          {
-            icon_name: 'downtime',
-            link: 'view.py?view_name=downtimes_of_host&host=web-1',
-            title: 'In scheduled downtime'
-          }
-        ]
-      })
-    }
-  })
+  render(HostHeader, { props: { host: makeHost({ modes: [DOWNTIME] }) } })
 
   const downtime = screen.getByRole('link', { name: 'In scheduled downtime' })
   expect(downtime).toHaveAttribute('href', 'view.py?view_name=downtimes_of_host&host=web-1')

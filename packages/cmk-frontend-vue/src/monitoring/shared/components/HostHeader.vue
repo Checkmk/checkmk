@@ -3,10 +3,19 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+import type { HostEntry } from '@/monitoring/shared/api/types'
+
+export type HostHeaderSubject = Pick<
+  HostEntry,
+  'name' | 'site_id' | 'state' | 'stale' | 'is_flapping' | 'modes'
+>
+</script>
+
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
+import type { HostRef } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
 import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
@@ -14,7 +23,7 @@ import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader
 
 const props = withDefaults(
   defineProps<{
-    host: HostEntry
+    host: HostHeaderSubject
     url?: string | undefined
     actions?: CellAction[]
     loadActionMenu?: (() => Promise<CellAction[]>) | undefined

@@ -87,7 +87,10 @@ def _get_affected_entities(bundle_group: str | None) -> set[Entity]:
             if DCDConnectionHook.domain_definition is not None:
                 entities.add("dcd")
             return entities
-        rule_group_type = RuleGroupType(group_prefix)
+        try:
+            rule_group_type = RuleGroupType(group_prefix)
+        except ValueError:
+            return ALL_ENTITIES
         bundle_domain = bundle_domains().get(rule_group_type, None)
     return {domain.entity for domain in bundle_domain} if bundle_domain else ALL_ENTITIES
 

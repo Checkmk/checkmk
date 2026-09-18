@@ -588,3 +588,61 @@ def test_create_and_delete_config_bundle_of_another_program(tree: FolderTree) ->
         pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     assert _len_rules() == before_create_rules_count, "Expected the created rule to be deleted"
+
+
+def test_create_and_delete_config_bundle_grouped_by_a_plain_ruleset(tree: FolderTree) -> None:
+    """A bundle may be grouped by a ruleset that carries no rule group prefix.
+
+    A custom service does exactly this: its group is the host ruleset its rule lives in, not a
+    "special_agents:" name.
+    """
+    ruleset_name = "host_contactgroups"
+    bundle_id, bundle = _make_bundle(group=ruleset_name, program_id=PROGRAM_ID_CUSTOM_SERVICE)
+    rules = [
+        CreateRule(
+            folder="",
+            ruleset=ruleset_name,
+            spec=RuleSpec[object](id="rule-1", value="VAL1", condition={}),
+        ),
+    ]
+
+    def _len_rules() -> int:
+        return len(
+            SingleRulesetRecursively.load_single_ruleset_recursively(tree, ruleset_name)
+            .get(ruleset_name)
+            .get_rules()
+        )
+
+    before_create_rules_count = _len_rules()
+    create_config_bundle(
+        tree,
+        bundle_id,
+        bundle,
+        CreateBundleEntities(rules=rules),
+        acting_user=LoggedInSuperUser(),
+        user_permissions=UserPermissions({}, {}, {}, []),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_pending_changes(UserId("cmkadmin")),
+    )
+
+    references = identify_single_bundle_references(
+        tree,
+        bundle_id,
+        bundle["group"],
+        acting_user=LoggedInSuperUser(),
+        program_id=PROGRAM_ID_CUSTOM_SERVICE,
+    )
+    assert references.rules is not None
+    assert len(references.rules) == 1
+
+    delete_config_bundle(
+        tree,
+        bundle_id,
+        acting_user=LoggedInSuperUser(),
+        user_permissions=UserPermissions({}, {}, {}, []),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_pending_changes(UserId("cmkadmin")),
+    )
+    assert _len_rules() == before_create_rules_count, "Expected the created rule to be deleted"

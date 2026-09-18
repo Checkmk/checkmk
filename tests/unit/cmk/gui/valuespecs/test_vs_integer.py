@@ -9,14 +9,19 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 # size is only relevant for html input element
 
 
 class TestValueSpecInteger:
     def test_validate(self) -> None:
-        expect_validate_failure(vs.Integer(), "asd")  # type: ignore[misc]
+        expect_validate_failure_untypeable(vs.Integer(), "asd")
         expect_validate_success(vs.Integer(), 128)
         expect_validate_success(vs.Integer(minvalue=10, maxvalue=300), 128)
         expect_validate_failure(vs.Integer(minvalue=10, maxvalue=300), 333)
@@ -38,7 +43,8 @@ class TestValueSpecInteger:
         assert vs.Integer(default_value=lambda: 77).canonical_value() == 0
         assert vs.Integer(default_value=lambda: 77, minvalue=10).canonical_value() == 10
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(integer="123"):
             assert vs.Integer().from_html_vars("integer") == 123
 

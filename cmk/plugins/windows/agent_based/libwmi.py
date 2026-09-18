@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import re
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
@@ -260,7 +259,7 @@ def parse_wmi_table(
             while not line[0].startswith("["):
                 current_table.add_row(line + ["OK"] * bool(missing_wmi_status))
                 line = next(info_iter)
-    except (StopIteration, ValueError):
+    except StopIteration, ValueError:
         # regular end of block
         pass
 
@@ -523,7 +522,7 @@ def check_wmi_raw_persec(
     if table is None:
         # This case may be when a check was discovered with a table which subsequently disappeared again.
         # We expect to get `None` in this case.
-        return
+        return  # type: ignore[unreachable]
 
     if row == "":
         row = 0

@@ -63,7 +63,7 @@ def parse_azure_agent_info(string_table: StringTable) -> AgentInfo:
     return info
 
 
-def discover_azure_agent_info(section: AgentInfo) -> DiscoveryResult:
+def discover_azure_agent_info(section: AgentInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

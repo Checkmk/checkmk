@@ -35,13 +35,14 @@ export function drawLine(
   xScale: ScaleTime<number, number>,
   yScale: ScaleLinear<number, number>,
   color: string,
-  interpolator: LineInterpolator = 'linear'
+  interpolator: LineInterpolator = 'linear',
+  lineWidth: number = 1.5
 ): void {
   if (buckets.length === 0) {
     return
   }
   ctx.strokeStyle = color
-  ctx.lineWidth = 1.5
+  ctx.lineWidth = lineWidth
 
   // Pass 1: connector polyline through bucket boundary points, segmented at gaps.
   const segments: Array<Array<[number, number]>> = []

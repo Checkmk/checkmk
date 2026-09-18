@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -34,7 +36,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.base import config, notify
-from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
@@ -88,7 +89,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 def _make_core_objects_config(config_cache: ConfigCache) -> config.CoreObjectsConfig:
     return config.CoreObjectsConfig(
-        config_cache._loaded_config,
+        config_cache._loaded_config,  # noqa: SLF001
         config_cache.ruleset_matcher,
         config_cache.label_manager,
     )
@@ -725,6 +726,47 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.STORED_WALK
 
 
+def test_default_snmp_backend_is_classic(monkeypatch: MonkeyPatch) -> None:
+    hostname = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(hostname)
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.CLASSIC
+
+
+def test_snmp_backend_hosts_selects_the_configured_backend(monkeypatch: MonkeyPatch) -> None:
+    # we return the configured backend in every edition -- creating it fails
+    # if this installation does not provide it.
+    hostname = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset(
+        "snmp_backend_hosts",
+        [
+            {
+                "id": "01",
+                "condition": {"host_name": [hostname]},
+                "value": "inline",
+            },
+        ],
+    )
+
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.INLINE
+
+
+def test_unknown_default_snmp_backend_is_rejected(monkeypatch: MonkeyPatch) -> None:
+    # we must not silently monitor with a backend the user did not configure
+    hostname = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("snmp_backend_default", "some rubbish")
+
+    config_cache = ts.apply(monkeypatch).config_cache
+    with pytest.raises(MKGeneralException, match="Bad SNMP backend configuration"):
+        config_cache.get_snmp_backend(hostname)
+
+
 def test_bulkwalk_hosts_ruleset_enables_use_bulkwalk(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
@@ -1158,7 +1200,7 @@ def test_host_config_inventory_parameters(
     plugin = InventoryPlugin(
         name=InventoryPluginName("lshb"),
         sections=(),
-        function=lambda *args, **kw: (),
+        function=lambda *args, **kw: (),  # noqa: ARG005
         ruleset_name=RuleSetName("if"),
         defaults={},
         location=PluginLocation("foo", "bar"),
@@ -1434,11 +1476,11 @@ def test_host_config_static_checks(
             name=name,
             sections=[],
             service_name="Test fake %s / %%s" % name,
-            discovery_function=lambda *args, **kw: (),
+            discovery_function=lambda *args, **kw: (),  # noqa: ARG005
             discovery_default_parameters=None,
             discovery_ruleset_name=None,
             discovery_ruleset_type="all",
-            check_function=lambda *args, **kw: (),
+            check_function=lambda *args, **kw: (),  # noqa: ARG005
             check_default_parameters=None,
             check_ruleset_name=None,
             cluster_check_function=None,
@@ -1468,7 +1510,10 @@ def test_host_config_static_checks(
     config_cache = loading_result.config_cache
 
     service_name_config = PassiveServiceNameConfig(
-        FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()), {}, {}, lambda hn: {}
+        FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
+        {},
+        {},
+        lambda hn: {},  # noqa: ARG005
     )
 
     assert (
@@ -1771,14 +1816,14 @@ def test_get_sorted_check_table_no_cmc(
     ts.add_host(host_name)
     config_cache = ts.apply(monkeypatch).config_cache
 
-    monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
+    monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)  # noqa: ARG005
     services = config_cache.configured_services(
         host_name,
         {},
-        config_cache.make_service_configurer({}, lambda *a: ""),
-        lambda *a: "",
-        enforced_services_table=lambda hn: {},
-        service_depends_on=lambda hn, descr: {
+        config_cache.make_service_configurer({}, lambda *a: ""),  # noqa: ARG005
+        lambda *a: "",  # noqa: ARG005
+        enforced_services_table=lambda hn: {},  # noqa: ARG005
+        service_depends_on=lambda hn, descr: {  # noqa: ARG005
             "description A": ["description C"],
             "description B": ["description D"],
             "description D": ["description A", "description F"],
@@ -1802,7 +1847,7 @@ def test_resolve_service_dependencies_cyclic(
     ts.add_host(host_name)
     config_cache = ts.apply(monkeypatch).config_cache
 
-    monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
+    monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)  # noqa: ARG005
 
     with pytest.raises(
         MKGeneralException,
@@ -1816,9 +1861,9 @@ def test_resolve_service_dependencies_cyclic(
         config_cache.configured_services(
             HostName("MyHost"),
             {},
-            config_cache.make_service_configurer({}, lambda *a: ""),
-            lambda *a: "",
-            enforced_services_table=lambda hn: {},
+            config_cache.make_service_configurer({}, lambda *a: ""),  # noqa: ARG005
+            lambda *a: "",  # noqa: ARG005
+            enforced_services_table=lambda hn: {},  # noqa: ARG005
             service_depends_on=lambda _hn, descr: {
                 "description A": ["description B"],
                 "description B": ["description D"],
@@ -1829,7 +1874,7 @@ def test_resolve_service_dependencies_cyclic(
 
 def test_service_depends_on_unknown_host() -> None:
     service_depends_on = config.ServiceDependsOn(
-        tag_list=lambda hn: (),
+        tag_list=lambda hn: (),  # noqa: ARG005
         service_dependencies=(),
     )
     assert not service_depends_on(HostName("test-host"), "svc")
@@ -1838,7 +1883,7 @@ def test_service_depends_on_unknown_host() -> None:
 def test_service_depends_on() -> None:
     test_host = HostName("test-host")
     service_depends_on = config.ServiceDependsOn(
-        tag_list=lambda hn: (),
+        tag_list=lambda hn: (),  # noqa: ARG005
         service_dependencies=[
             ("dep1", [], config.ALL_HOSTS, ["svc1"], {}),
             ("dep2-%s", [], config.ALL_HOSTS, ["svc1-(.*)"], {}),
@@ -2414,7 +2459,6 @@ def test_config_cache_max_cachefile_age_no_cluster() -> None:
     loaded_config = dataclasses.replace(EMPTY_CONFIG, all_hosts=(xyz_host,))
     config_cache = config.ConfigCache(
         loaded_config,
-        make_app().edition,
         config.make_hosts_config(loaded_config),
         config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -2438,7 +2482,6 @@ def test_config_cache_max_cachefile_age_cluster() -> None:
     loaded_config = dataclasses.replace(EMPTY_CONFIG, clusters={clu: []})
     config_cache = config.ConfigCache(
         loaded_config,
-        make_app().edition,
         config.make_hosts_config(loaded_config),
         config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -2616,9 +2659,8 @@ def test_host_config_add_discovery_check(
     assert config_cache.discovery_check_parameters(xyz_host).commandline_only is result
 
 
-def test_get_config_file_paths_with_confd(
-    folder_path_test_config: BaseConfig,
-) -> None:
+@pytest.mark.usefixtures("folder_path_test_config")
+def test_get_config_file_paths_with_confd() -> None:
     # NOTE: there are still some globals at play here, otherwise we would have to use
     # the folder_path_test_config somewhere.
     rel_paths = [
@@ -2641,7 +2683,6 @@ def test_get_config_file_paths_with_confd(
 def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
     config_cache = config.ConfigCache(
         folder_path_test_config,
-        make_app().edition,
         config.make_hosts_config(folder_path_test_config),
         config.make_host_tags(
             folder_path_test_config, config.make_hosts_config(folder_path_test_config)
@@ -2674,33 +2715,43 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
     assert "host_folder" not in folder_path_test_config.cmc_host_rrd_config[4]["condition"]
 
     assert ruleset_matcher.get_host_values_all(
-        HostName("main-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
+        HostName("main-host"),
+        folder_path_test_config.cmc_host_rrd_config,
+        lambda hn: {},  # noqa: ARG005
     ) == [
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl0-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl0-host"),
+        folder_path_test_config.cmc_host_rrd_config,
+        lambda hn: {},  # noqa: ARG005
     ) == [
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl1-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl1-host"),
+        folder_path_test_config.cmc_host_rrd_config,
+        lambda hn: {},  # noqa: ARG005
     ) == [
         "LVL1",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl1aaa-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl1aaa-host"),
+        folder_path_test_config.cmc_host_rrd_config,
+        lambda hn: {},  # noqa: ARG005
     ) == [
         "LVL1aaa",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl2-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl2-host"),
+        folder_path_test_config.cmc_host_rrd_config,
+        lambda hn: {},  # noqa: ARG005
     ) == [
         "LVL2",
         "LVL1",
@@ -2768,9 +2819,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load(
-        edition=make_app().edition,
-    ).loaded_config
+    yield config.load().loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -2815,7 +2864,7 @@ host_tags.update({
 
 def _add_rule_in_folder(folder_path: Path, value: str) -> None:
     with (folder_path / "rules.mk").open("w", encoding="utf-8") as f:
-        if value == "LVL0":
+        if value == "LVL0":  # noqa: SIM108
             condition = "{}"
         else:
             condition = "{'host_folder': '/%s/' % FOLDER_PATH}"
@@ -2845,7 +2894,8 @@ explicit_host_conf['{setting_name}'].update({values_})
         )
 
 
-def test_explicit_setting_loading(patch_omd_site: None) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_explicit_setting_loading() -> None:
     main_mk_file = cmk.utils.paths.main_config_file
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),
@@ -2860,9 +2910,7 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        loading_result = config.load(
-            edition=make_app().edition,
-        )
+        loading_result = config.load()
         explicit_host_conf = loading_result.loaded_config.explicit_host_conf
         assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"
@@ -2920,9 +2968,9 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     )
 
     monkeypatch.setattr(
-        agent_based_register._discover,
+        agent_based_register._discover,  # noqa: SLF001
         "discover_all_plugins",
-        lambda *a, **kw: DiscoveredPlugins(
+        lambda *a, **kw: DiscoveredPlugins(  # noqa: ARG005
             errors=(), plugins={PluginLocation(module="module", name="name"): new_style_plugin}
         ),
     )
@@ -2961,9 +3009,9 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     )
 
     monkeypatch.setattr(
-        agent_based_register._discover,
+        agent_based_register._discover,  # noqa: SLF001
         "discover_all_plugins",
-        lambda *a, **kw: DiscoveredPlugins(
+        lambda *a, **kw: DiscoveredPlugins(  # noqa: ARG005
             errors=(), plugins={PluginLocation(module="module", name="name"): new_style_section}
         ),
     )
@@ -3081,6 +3129,79 @@ def test_check_table_cluster_merging_enforced_and_discovered(
     )
 
 
+def _check_table_of(
+    loading_result: config.LoadingResult, host_name: HostName
+) -> config.HostCheckTable:
+    config_cache = loading_result.config_cache
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
+    return config_cache.check_table(
+        host_name,
+        {},
+        config_cache.make_service_configurer({}, service_name_config),
+        service_name_config,
+        EnforcedServicesTable(
+            BundledHostRulesetMatcher(
+                loading_result.loaded_config.static_checks,
+                config_cache.ruleset_matcher,
+                config_cache.label_manager.labels_of_host,
+            ),
+            service_name_config,
+            {},
+            config_cache.label_manager.labels_of_service,
+        ),
+    )
+
+
+def test_excluded_discovered_service_is_dropped_from_the_check_table(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario(excluded_service_ids=[ServiceID(CheckPluginName("check1"), "excluded")])
+    ts.add_host(HN := HostName("host"))
+    ts.set_autochecks(
+        HN,
+        [
+            AutocheckEntry(CheckPluginName("check1"), "excluded", {}, {}),
+            AutocheckEntry(CheckPluginName("check1"), "kept", {}, {}),
+        ],
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    assert set(_check_table_of(loading_result, HN)) == {
+        ServiceID(CheckPluginName("check1"), "kept")
+    }
+
+
+def test_excluded_enforced_service_is_dropped_from_the_check_table(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario(excluded_service_ids=[ServiceID(CheckPluginName("check1"), "excluded")])
+    ts.add_host(HN := HostName("host"))
+    ts.set_ruleset_bundle(
+        "static_checks",
+        {
+            "rule_name": [
+                {
+                    "id": "01",
+                    "condition": {},
+                    "value": ("check1", "excluded", {}),
+                },
+                {
+                    "id": "02",
+                    "condition": {},
+                    "value": ("check1", "kept", {}),
+                },
+            ]
+        },
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    assert set(_check_table_of(loading_result, HN)) == {
+        ServiceID(CheckPluginName("check1"), "kept")
+    }
+
+
 def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset_bundle(
@@ -3114,15 +3235,15 @@ def test_get_active_service_data_crash(
     # Patch the module that holds the binding actually being read, not the
     # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
-        config._impl,
+        config._impl,  # noqa: SLF001
         "load_active_checks",
-        lambda **kw: {
+        lambda **kw: {  # noqa: ARG005
             PluginLocation(
                 "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
             ): ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda p: p,
-                commands_function=lambda *a, **kw: 1 / 0,  # type: ignore[arg-type]
+                commands_function=lambda *a, **kw: 1 / 0,  # type: ignore[arg-type]  # noqa: ARG005
             )
         },
     )
@@ -3149,10 +3270,12 @@ def test_get_active_service_data_crash(
             IPStackConfig.IPv4,
             socket.AddressFamily.AF_INET,
             config_cache.get_host_attributes(
-                host_name, socket.AddressFamily.AF_INET, lambda *a, **kw: HostAddress("")
+                host_name,
+                socket.AddressFamily.AF_INET,
+                lambda *a, **kw: HostAddress(""),  # noqa: ARG005
             ),
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
-            lambda *a, **kw: HostAddress(""),
+            lambda *a, **kw: HostAddress(""),  # noqa: ARG005
             _SecretsConfig(path=Path(), secrets={}),
             for_relay=False,
         )
@@ -3232,8 +3355,8 @@ class TestLabelsConfig:
                 },
             ),
         )
-        assert config.service_labels(xyz_host, "CPU load", lambda h: {}) == {"label": "val1"}
-        assert config.service_labels(test_host, "CPU load", lambda h: {}) == {
+        assert config.service_labels(xyz_host, "CPU load", lambda h: {}) == {"label": "val1"}  # noqa: ARG005
+        assert config.service_labels(test_host, "CPU load", lambda h: {}) == {  # noqa: ARG005
             "label": "val2",
         }
 
@@ -3258,7 +3381,7 @@ def test_checking_config(
 
     config_getter = CheckingConfig(
         config_cache.ruleset_matcher,
-        lambda hn: {},
+        lambda hn: {},  # noqa: ARG005
         {
             "ps": [
                 {
@@ -3421,7 +3544,7 @@ def test_new_description_used_for_plugins_configured_via_use__new_descriptions_f
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
             {},
             adapted_sample_config,
-            lambda hn: {},
+            lambda hn: {},  # noqa: ARG005
         )
 
         actual_descr = service_name_config(
@@ -3457,7 +3580,7 @@ def test_correct_description_used_for_plugins_not_configured_via__use_new_descri
         FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
         {},
         {},
-        lambda hn: {},
+        lambda hn: {},  # noqa: ARG005
     )
 
     actual_descr = service_name_config(
@@ -3486,7 +3609,7 @@ def test_old_description_used(monkeypatch: MonkeyPatch) -> None:
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
             {},
             adapted_sample_config,
-            lambda hn: {},
+            lambda hn: {},  # noqa: ARG005
         )
 
         actual_descr = service_name_config(

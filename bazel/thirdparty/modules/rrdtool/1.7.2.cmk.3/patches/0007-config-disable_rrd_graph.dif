@@ -1,0 +1,22 @@
+Turn off the graph subsystem: we only need xport, and rrd_graph pulls in
+Cairo, Pango, gobject and libpng.  Together with
+0006-xport-without-graph.dif this drops those four dependencies while
+keeping rrdtool xport and rrdtool.xport() from the Python binding.
+
+Note that src/rrd_config.h is a *generated* file shipped inside the
+release tarball; if the tarball is ever refreshed, re-check this hunk.
+
+diff --git a/src/rrd_config.h b/src/rrd_config.h
+--- a/src/rrd_config.h
++++ b/src/rrd_config.h
+@@ -280,8 +280,8 @@
+ /* Define to 1 if you have the `readdir' function. */
+ #define HAVE_READDIR 1
+ 
+-/* is rrd_graph supported by this install */
+-#define HAVE_RRD_GRAPH /**/
++/* is rrd_graph supported by this install -- disabled, see
++   0006-xport-without-graph.dif */
+ 
+ /* is rrd_restore supported by this install */
+ #define HAVE_RRD_RESTORE /**/

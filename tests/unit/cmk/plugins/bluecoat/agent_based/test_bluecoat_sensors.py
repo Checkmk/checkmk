@@ -234,11 +234,8 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
-def test_check_bluecoat_sensors_temp(
-    item: str,
-    expected_result: CheckResult,
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_bluecoat_sensors_temp(item: str, expected_result: CheckResult) -> None:
     assert (
         list(
             check_bluecoat_sensors_temp(

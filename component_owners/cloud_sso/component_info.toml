@@ -1,0 +1,33 @@
+type = "Component"
+display_name = "Cloud Single Sign-On (SSO)"
+has_support_component = true
+members_required = 2
+tier = 2
+product_managers = ["pascal.poulle@checkmk.com"]
+description = """
+Single Sign-On for Checkmk Cloud: a tenant registers its corporate SAML identity
+provider once in the user admin panel, and from then on everyone whose email belongs
+to one of the tenant's verified domains is federated to that identity provider when
+logging in to the cloud platform. The identity provider is managed for the customer;
+nothing is configured inside a Checkmk site.
+
+Belongs here:
+- Setting up SSO for a tenant: SAML metadata (XML or URL), attribute mapping,
+  linking verified domains, enabling and disabling the configuration
+- Provisioning the SAML identity provider in the managed Cognito user pool, and the
+  signing and encryption certificates handed to the customer's identity provider
+- The federated login: recognising an email as an SSO email, the redirect to the
+  identity provider and back, and the Cognito sign-up and link triggers
+- Break-glass accounts and the invariants that keep a tenant from locking itself out
+- Domain management: adding a domain to a tenant, proving ownership of it through
+  the DNS challenge, and removing it again. Domains exist to gate SSO.
+
+Goes elsewhere:
+- SSO configured by a customer inside a Checkmk site (SAML connections, LDAP, local
+  users) -> User Management and Authentication. That is a self-managed connection on
+  a site and shares neither code nor configuration with this component.
+- Email and password login, sign-up, password reset, sessions and tokens on the cloud
+  platform -> Cloud User Management
+- Permissions and roles a user has once logged in -> Cloud User Management, or the
+  component owning the site-side feature
+"""

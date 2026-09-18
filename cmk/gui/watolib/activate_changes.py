@@ -6,13 +6,9 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Manage configuration activation of Checkmk"""
-
-from __future__ import annotations
 
 import ast
 import functools
@@ -51,7 +47,6 @@ from setproctitle import setthreadtitle
 import cmk.bi.filesystem
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.gui.watolib.automations
-import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
@@ -121,7 +116,9 @@ from cmk.gui.watolib.broker_certificates import (
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
     ConfigDomainName,
+    DomainRequest,
     DomainRequests,
     get_always_activate_domains,
     get_config_domain,
@@ -152,7 +149,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.licensing.export import LicenseUsageExtensions
 from cmk.licensing.handler import ActivationBlock
-from cmk.licensing.registry import get_licensing_user_effect, is_free
+from cmk.licensing.registry import get_license_state, get_licensing_user_effect
 from cmk.licensing.usage import save_extensions
 from cmk.livestatus_client import (
     BrokerConnections,
@@ -279,7 +276,7 @@ def get_free_message(format_html: bool = False) -> str:
     return "{}\n{}{}".format(subject, body, "https://checkmk.com/contact")
 
 
-def register(replication_path_registry_: ReplicationPathRegistry) -> None:
+def register(replication_path_registry_: ReplicationPathRegistry) -> None:  # noqa: ARG001
     for repl_path in [
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
@@ -595,7 +592,7 @@ def _lock_activation(site_activation_state: SiteActivationState) -> bool:
 def _unlock_activation(
     site_id: SiteId,
     activation_id: ActivationId,
-    source: ActivationSource,
+    source: ActivationSource,  # noqa: ARG001
 ) -> None:
     _update_replication_status(
         site_id,
@@ -636,7 +633,7 @@ def _calc_status_details(
             "time_started": render.time_of_day(time_started)
         }
     else:
-        value = _("Not started.")
+        value = _("Not started.")  # type: ignore[unreachable]
 
     if phase == PHASE_DONE:
         if time_ended is not None:
@@ -1327,7 +1324,7 @@ class ActivateChanges:
         """Returns the list of sites that have changes (including offline sites)"""
         return [s for s in sites.items() if self.changes_of_site(s[0])]
 
-    def site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
+    def site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:  # noqa: ARG002
         return site_is_local(site) or "secret" in site
 
     def site_is_online(self, status: str) -> bool:
@@ -1339,7 +1336,7 @@ class ActivateChanges:
 
     def _is_sync_needed_specific_changes(
         self,
-        site_id: SiteId,
+        site_id: SiteId,  # noqa: ARG002
         site_config: SiteConfiguration,
         changes_to_check: Sequence[ChangeSpec],
     ) -> bool:
@@ -2262,17 +2259,6 @@ class ActivateChangesManager:
                 use_git=use_git,
             )
 
-        # Baking will happen on core config generation
-        # Since we don't have access to the GUI there, we log the call here.
-        if load_configuration_settings().get("bake_agents_on_restart"):
-            log_audit(
-                action="bake-agents",
-                message="Bake agents (triggered by: Activate Changes)",
-                user_id=user.id,
-                use_git=use_git,
-                diff_text="Hosts: All hosts",
-            )
-
     def get_state(self) -> ActivationState:
         return {"sites": {site_id: self.get_site_state(site_id) for site_id in self._sites}}  #
 
@@ -2431,7 +2417,7 @@ class ActivationCleanupJob:
         return ids
 
 
-def execute_activation_cleanup_job(config: Config) -> None:
+def execute_activation_cleanup_job(config: Config) -> None:  # noqa: ARG001
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
@@ -2603,7 +2589,9 @@ def _prepare_for_activation_tasks(
 
             if activate_changes.is_sync_needed(site_id, snapshot_settings.site_config):
                 central_file_infos_per_site[site_id] = _get_site_central_file_infos(
-                    site_id, snapshot_settings, config_sync_file_infos_per_inode
+                    site_id,
+                    snapshot_settings,
+                    config_sync_file_infos_per_inode,  # type: ignore[possibly-undefined]
                 )
         except Exception as e:
             _handle_activation_changes_exception(
@@ -2686,7 +2674,9 @@ def _sync_and_activate(
         activate_changes.load(list(all_site_configs))
         activate_changes.load_changes_until(activation_id, site_snapshot_settings.keys())
 
-        if is_free(paths.omd_root) and _handle_distributed_sites_in_free(
+        if get_license_state(
+            paths.omd_root
+        ).blocks_distributed_setup_changes_free() and _handle_distributed_sites_in_free(
             site_snapshot_settings, time_started
         ):
             return
@@ -3097,14 +3087,21 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
 def execute_activate_changes(
     domain_requests: DomainRequests, is_remote_site: bool
 ) -> ConfigWarnings:
-    domain_names = [x.name for x in domain_requests]
+    # A site a major version behind still names a domain by its pre-rename ident.
+    local_requests = [
+        DomainRequest(
+            config_domain_registry.renamed_ident(request.name) or request.name, request.settings
+        )
+        for request in domain_requests
+    ]
+    domain_names = [x.name for x in local_requests]
 
     all_domain_requests = [
         domain.get_domain_request([])
         for domain in get_always_activate_domains()
         if domain.ident() not in domain_names
     ]
-    all_domain_requests.extend(domain_requests)
+    all_domain_requests.extend(local_requests)
     all_domain_requests.sort(key=lambda x: x.name)
 
     results: ConfigWarnings = {}

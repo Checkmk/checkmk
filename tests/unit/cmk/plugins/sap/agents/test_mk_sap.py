@@ -37,10 +37,10 @@ class FakeConnectionTree:
     def invoke(self):
         pass
 
-    def discover(self, what):
+    def discover(self, what):  # noqa: ARG002
         return self
 
-    def call(self, func_name, **kwargs):
+    def call(self, func_name, **kwargs):  # noqa: ARG002
         return self
 
     def create_function_call(self):
@@ -50,7 +50,8 @@ class FakeConnectionTree:
         return getattr(self, x)
 
 
-def test_empty_tree(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_empty_tree() -> None:
     fake_connection_tree = FakeConnectionTree({})
     result = mk_sap.mon_tree(
         fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
@@ -58,7 +59,8 @@ def test_empty_tree(monkeypatch):
     assert result == {}
 
 
-def test_simple_tree(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_simple_tree() -> None:
     fake_connection_tree = FakeConnectionTree(
         [
             {"MTNAMESHRT": "root", "ALPARINTRE": 0},
@@ -77,7 +79,8 @@ def test_simple_tree(monkeypatch):
     ]
 
 
-def test_recursion_simple(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_recursion_simple() -> None:
     fake_connection_tree = FakeConnectionTree(
         [
             # this element says it is it's own parent.
@@ -89,7 +92,8 @@ def test_recursion_simple(monkeypatch):
         mk_sap.mon_tree(fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
 
 
-def test_recursion(monkeypatch):
+@pytest.mark.usefixtures("monkeypatch")
+def test_recursion() -> None:
     fake_connection_tree = FakeConnectionTree(
         [
             # here the recursion is build over multiple elements:
@@ -102,6 +106,64 @@ def test_recursion(monkeypatch):
     with pytest.raises(mk_sap.SapError) as exception:
         mk_sap.mon_tree(fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
         assert "01" in str(exception.value)
+
+
+_CRITICAL_NUMBER_RANGES = (
+    "SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges"
+)
+_ALL_CLIENTS = _CRITICAL_NUMBER_RANGES + "/Critical Number Ranges All Clients"
+_EXCLUDE_CLIENT_000 = _ALL_CLIENTS + "/Client 000 Alert Messages for Number Ran*"
+
+
+@pytest.mark.parametrize(
+    "monitor, exclude, path, toplevel_match, expected",
+    [
+        pytest.param(
+            ["SAP CCMS Monitor Templates/Dialog Overview/*"],
+            [],
+            "SAP CCMS Monitor Templates/Other/Foo",
+            False,
+            False,
+            id="nothing matches",
+        ),
+        pytest.param(
+            [_CRITICAL_NUMBER_RANGES + "/*"],
+            [_EXCLUDE_CLIENT_000],
+            _ALL_CLIENTS + "/Client 000 Alert Messages for Number Ran",
+            False,
+            False,
+            id="exclude wins over a matching monitor rule (last segment truncated to 40 chars)",
+        ),
+        pytest.param(
+            [_CRITICAL_NUMBER_RANGES + "/*"],
+            [_EXCLUDE_CLIENT_000],
+            _ALL_CLIENTS + "/Client 100 Alert Messages for Number Ran",
+            False,
+            True,
+            id="a sibling not matching the exclude rule stays monitored",
+        ),
+        pytest.param(
+            [_CRITICAL_NUMBER_RANGES + "/*"],
+            [_EXCLUDE_CLIENT_000],
+            "SAP CCMS Technical Expert Monitors/All Monitoring Contexts",
+            True,
+            True,
+            id="subtree exclude is not shortened, so toplevel matching keeps the monitor",
+        ),
+        pytest.param(
+            ["*"],
+            ["SAP CCMS Monitor Templates/Dialog Overview*"],
+            "SAP CCMS Monitor Templates/Dialog Overview",
+            True,
+            False,
+            id="exclude matching the toplevel path skips the whole monitor",
+        ),
+    ],
+)
+def test_to_be_monitored(monkeypatch, monitor, exclude, path, toplevel_match, expected):  # type: ignore[misc]
+    monkeypatch.setattr(mk_sap, "monitor_paths", monitor)
+    monkeypatch.setattr(mk_sap, "exclude_paths", exclude)
+    assert mk_sap.to_be_monitored(path, toplevel_match) is expected
 
 
 STATES = {
@@ -151,3 +213,41 @@ def test_state_file_corrupt(monkeypatch, tmp_path, content):  # type: ignore[mis
     state_file.write_text(content)
     monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))
     assert mk_sap.load_state_file() == {}
+
+
+def test_host_prefix_applied_to_sap_and_logwatch(capsys):
+    mk_sap.write_piggyback_data(
+        host_prefix="S4H_",
+        sap_data={"SB1": ["ctx\t0\t  0\tpath\t-\t-\tdetails"]},
+        logs={"SB1": {"mylog": ["line1"]}},
+    )
+    text = capsys.readouterr().out
+
+    # both the sap and the logwatch section land on the same prefixed host
+    assert text.count("<<<<S4H_SB1>>>>\n") == 2
+    assert "<<<<SB1>>>>\n" not in text
+    assert "<<<sap:sep(9)>>>\n" in text
+    assert "<<<logwatch>>>\n" in text
+
+
+def test_no_host_prefix_uses_bare_sid(capsys):
+    mk_sap.write_piggyback_data(
+        host_prefix="",
+        sap_data={"SB1": ["ctx\t0\t  0\tpath\t-\t-\tdetails"]},
+        logs={"SB1": {"mylog": ["line1"]}},
+    )
+    text = capsys.readouterr().out
+
+    assert text.count("<<<<SB1>>>>\n") == 2
+
+
+def test_host_prefix_and_suffix_wrap_the_sid(capsys):
+    mk_sap.write_piggyback_data(
+        host_prefix="ECC_",
+        host_suffix="_S4H",
+        sap_data={"SB1": ["ctx\t0\t  0\tpath\t-\t-\tdetails"]},
+        logs={"SB1": {"mylog": ["line1"]}},
+    )
+    text = capsys.readouterr().out
+
+    assert text.count("<<<<ECC_SB1_S4H>>>>\n") == 2

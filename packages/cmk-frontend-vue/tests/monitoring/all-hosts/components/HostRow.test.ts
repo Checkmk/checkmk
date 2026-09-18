@@ -15,9 +15,11 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'web server 1',
-    folder: '/network',
+    folder: 'Netzwerk / Rechenzentrum 1',
     site_id: 'local',
     num_services: 6,
     num_services_ok: 5,
@@ -63,7 +65,7 @@ test('renders alias, folder and formatted timestamps in their cells', () => {
   mountRow(host)
 
   expect(screen.getByTitle('web server 1')).toBeInTheDocument()
-  expect(screen.getByTitle('/network')).toBeInTheDocument()
+  expect(screen.getByTitle('Netzwerk / Rechenzentrum 1')).toBeInTheDocument()
   expect(screen.getByTitle(formatTimestamp(host.last_check!))).toBeInTheDocument()
   expect(screen.getByTitle(formatTimestamp(host.last_state_change!))).toBeInTheDocument()
 })
@@ -91,7 +93,7 @@ test('emits open with the host when the name cell button is clicked', async () =
 test('renders state badge with success color for state UP', () => {
   const { container } = mountRow(makeHost({ state: 'UP' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--ok')
+  const stateTag = container.querySelector('.cmk-state-tag--ok')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UP')
 })
@@ -99,7 +101,7 @@ test('renders state badge with success color for state UP', () => {
 test('renders state badge with danger color for state DOWN', () => {
   const { container } = mountRow(makeHost({ state: 'DOWN' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--critical')
+  const stateTag = container.querySelector('.cmk-state-tag--critical')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('DOWN')
 })
@@ -107,9 +109,35 @@ test('renders state badge with danger color for state DOWN', () => {
 test('renders state badge with unknown color for state UNREACHABLE', () => {
   const { container } = mountRow(makeHost({ state: 'UNREACHABLE' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--unknown')
+  const stateTag = container.querySelector('.cmk-state-tag--unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
+})
+
+test('renders the state badge as pending for a host that has never been checked', () => {
+  mountRow(makeHost({ state: 'PENDING' }))
+
+  expect(screen.getByText('PENDING')).toBeInTheDocument()
+  expect(screen.queryByText('DOWN')).not.toBeInTheDocument()
+})
+
+test('renders the flapping icon next to the state badge for a flapping host', () => {
+  mountRow(makeHost({ is_flapping: true }))
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+})
+
+test('renders the stale icon next to the state badge for a stale host', () => {
+  mountRow(makeHost({ stale: true }))
+
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
+})
+
+test('renders neither icon for a host that is not flapping nor stale', () => {
+  mountRow(makeHost())
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
 })
 
 test('renders one cell per service state with its count', () => {
@@ -126,8 +154,8 @@ test('renders one cell per service state with its count', () => {
 
   const tds = Array.from(container.querySelectorAll('td'))
   // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
-  // pending, last_check, last_state_change, labels, tags, contacts, contact_groups
-  expect(tds).toHaveLength(20)
+  // pending, last_check, last_state_change, labels, tags, contacts, contact_groups, customer
+  expect(tds).toHaveLength(21)
   expect(tds[8]).toHaveTextContent('15')
   expect(tds[9]).toHaveTextContent('1')
   expect(tds[10]).toHaveTextContent('2')
@@ -164,7 +192,7 @@ test('links every service count to the services of that host', () => {
     })
   )
 
-  for (const link of serviceCountLinks(container).slice(0, 5)) {
+  for (const link of serviceCountLinks(container)) {
     expect(link).toHaveAttribute('target', '_top')
     expect(link!.getAttribute('href')).toContain('monitor_host_services.py?host=web-1&site=local')
   }
@@ -182,19 +210,13 @@ test('narrows each service count link to the state that column counts', () => {
     })
   )
 
-  const [total, ok, warn, crit, unknown] = serviceCountLinks(container)
+  const [total, ok, warn, crit, unknown, pending] = serviceCountLinks(container)
   expect(filterParam(total)).toBeNull()
   expect(filterParam(ok)).toBe(stateFilter('OK'))
   expect(filterParam(warn)).toBe(stateFilter('WARN'))
   expect(filterParam(crit)).toBe(stateFilter('CRIT'))
   expect(filterParam(unknown)).toBe(stateFilter('UNKNOWN'))
-})
-
-test('keeps the pending count on the legacy view, which alone knows that state', () => {
-  const { container } = mountRow(makeHost({ num_services_pending: 5 }))
-
-  const pending = serviceCountLinks(container)[5]
-  expect(pending).toHaveAttribute('href', 'view.py?host=web-1&view_name=host_pending')
+  expect(filterParam(pending)).toBe(stateFilter('PENDING'))
 })
 
 test('links no service count a host has none of', () => {
@@ -279,4 +301,11 @@ test('renders the contact groups of a host, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
+})
+
+test('renders the customer of a host', () => {
+  mountRow(makeHost({ customer: 'Customer A' }))
+
+  // Asserted through the title: the cell breaks long values with zero-width spaces.
+  expect(screen.getByTitle('Customer A')).toBeInTheDocument()
 })

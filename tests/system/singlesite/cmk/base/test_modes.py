@@ -96,7 +96,7 @@ Execute = Callable[[list[str]], CommandOutput]
 
 
 @pytest.fixture(name="execute")
-def execute_fixture(test_cfg: None, site: Site) -> Execute:
+def execute_fixture(test_cfg: None, site: Site) -> Execute:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     def _execute(command: list[str]) -> CommandOutput:
         p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=None)
         stdout, stderr = p.communicate()
@@ -506,10 +506,10 @@ def test_inventory_verbose(execute: Execute) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def test_check_discovery_host(execute: Execute) -> None:
+def test_check_discovery_unknown_host(execute: Execute) -> None:
     p = execute(["cmk", "--check-discovery", "xyz."])
-    assert p.returncode == 2, on_failure(p)
-    assert p.stdout.startswith("Failed to lookup IPv4 address")
+    assert p.returncode == 3, on_failure(p)
+    assert p.stdout.startswith("Unknown host: xyz.")
     assert p.stderr == ""
 
 
@@ -529,7 +529,16 @@ def test_check_discovery(execute: Execute) -> None:
 #   |                 \__,_|_|___/\___\___/ \_/ \___|_|                    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-# TODO
+
+
+def test_discover_unknown_host(execute: Execute) -> None:
+    p = execute(["cmk", "-I", "xyz."])
+    assert p.returncode == 3, on_failure(p)
+    assert p.stdout == ""
+    assert p.stderr == "[ERROR] Host name or tag specification 'xyz.' does not match any host.\n"
+
+
+# TODO: add tests for the discovery of known hosts
 
 # .
 #   .--check---------------------------------------------------------------.
@@ -542,7 +551,6 @@ def test_check_discovery(execute: Execute) -> None:
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.medium_test_chain
 def test_check(execute: Execute) -> None:
     opts: list[list[str]] = [["--check"], []]
     for opt in opts:

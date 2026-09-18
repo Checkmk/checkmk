@@ -89,7 +89,7 @@ agent_section_kube_cron_job_info_v1 = AgentSection(
 )
 
 
-def discovery_kube_cronjob_info(section: CronJobInfo) -> DiscoveryResult:
+def discovery_kube_cronjob_info(section: CronJobInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

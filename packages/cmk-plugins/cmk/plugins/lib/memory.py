@@ -27,7 +27,7 @@ class SectionMemUsed(TypedDict, total=False):
 class SectionMemTotal:
     memory_total: int
 
-    def get(self, key: Literal["MemTotal"]) -> int:
+    def get(self, key: Literal["MemTotal"]) -> int:  # noqa: ARG002
         # this is a compatibility layer with the mem and mem_used sections
         # which makes it a bit easier to work with this in the ps check
         # you should never call this method in another context!
@@ -185,7 +185,7 @@ def check_element(
     else:
         try:
             mode, (warn, crit) = levels
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # NOTE: The signature of levels parameter doesn't really seem to reflect the reality: We
             # get weird modes, warn/crit which is not a tuple, etc. At least the unit tests call us
             # like this, and "thanks" to the lost typing via pytest.mark.parametrize, this doesn't

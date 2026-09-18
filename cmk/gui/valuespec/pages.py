@@ -38,7 +38,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_popup_icon_selector", ajax_popup_icon_selector))
 
 
-def ajax_popup_icon_selector(ctx: PageContext) -> None:
+def ajax_popup_icon_selector(ctx: PageContext) -> None:  # noqa: ARG001
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")
     value = request.var("value")
@@ -114,6 +114,18 @@ class AjaxFetchCA(AjaxPage):
                 class_="data",
             )
 
-            return {"summary": summary, "cert_pem": cert_pem}
+            return {
+                # "summary" is the pre-rendered table for the legacy valuespec, the FormSpec
+                # based UI renders "details" itself. Drop "summary" with the valuespec.
+                "summary": summary,
+                "details": {
+                    "issued_to": cert.issued_to,
+                    "issued_by": cert.issued_by,
+                    "valid_from": cert.valid_from,
+                    "valid_till": cert.valid_till,
+                    "digest_sha256": cert.digest_sha256,
+                },
+                "cert_pem": cert_pem,
+            }
 
         raise MKUserError(None, _("Found no CA"))

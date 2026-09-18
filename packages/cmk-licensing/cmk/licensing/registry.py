@@ -47,22 +47,6 @@ def _make_licensing_handler(omd_root: Path) -> LicensingHandler:
     return _get_licensing_handler_factory(omd_root)()
 
 
-def is_free(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.FREE
-
-
-def is_trial(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.TRIAL
-
-
-def is_licensed(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.LICENSED
-
-
-def is_unlicensed(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.UNLICENSED
-
-
 def get_license_message(omd_root: Path) -> str:
     return _make_licensing_handler(omd_root).message
 
@@ -73,7 +57,7 @@ def get_license_state(omd_root: Path) -> LicenseState:
 
 def get_remaining_trial_time_rounded(omd_root: Path) -> RemainingTrialTime:
     handler = _make_licensing_handler(omd_root)
-    if handler.state is LicenseState.TRIAL:
+    if handler.state.has_remaining_trial_time():
         return handler.remaining_trial_time_rounded
     raise LicenseStateError(
         "Remaining trial time requested for non trial license state: %s" % str(handler.state)

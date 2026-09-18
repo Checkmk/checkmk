@@ -7,18 +7,23 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, render, Result, State
+from cmk.agent_based.v2 import (
+    check_levels,
+    FixedLevelsT,
+    LevelsT,
+    Metric,
+    NoLevelsT,
+    render,
+    Result,
+    State,
+)
 from cmk.agent_based.v2._check_levels import (
     _check_levels,
     _check_predictive_levels,
     _default_rendering,
     _summarize_predictions,
-    check_levels,
     CheckLevelsResult,
     Direction,
-    FixedLevelsT,
-    LevelsT,
-    NoLevelsT,
     Type,
 )
 

@@ -83,9 +83,8 @@ def test_discover_fallback_naming_without_location() -> None:
         ("System Board Inlet", 17.0),
     ],
 )
-def test_check_dell_poweredge_temp_normal(
-    item: str, expected_temp: float, empty_value_store: None
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_dell_poweredge_temp_normal(item: str, expected_temp: float) -> None:
     parsed = parse_dell_poweredge_temp(STRING_TABLE)
     result = list(check_dell_poweredge_temp(item, {}, parsed))
     temp_results = [r for r in result if isinstance(r, Result)]
@@ -106,21 +105,24 @@ def test_check_dell_poweredge_temp_nonexistent_item() -> None:
     assert len(result) == 0
 
 
-def test_check_dell_poweredge_temp_warning_state(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_dell_poweredge_temp_warning_state() -> None:
     table = [["1", "1", "2", "4", "800", "Hot Sensor", "700", "600", "200", "100"]]
     result = list(check_dell_poweredge_temp("Hot Sensor", {}, table))
     states = [r.state for r in result if isinstance(r, Result)]
     assert State.WARN in states
 
 
-def test_check_dell_poweredge_temp_critical_state(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_dell_poweredge_temp_critical_state() -> None:
     table = [["1", "1", "2", "5", "900", "Critical Sensor", "700", "600", "200", "100"]]
     result = list(check_dell_poweredge_temp("Critical Sensor", {}, table))
     states = [r.state for r in result if isinstance(r, Result)]
     assert State.CRIT in states
 
 
-def test_check_dell_poweredge_temp_no_thresholds(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_dell_poweredge_temp_no_thresholds() -> None:
     table = [["1", "1", "2", "3", "250", "No Threshold Sensor", "", "", "", ""]]
     result = list(check_dell_poweredge_temp("No Threshold Sensor", {}, table))
     results = [r for r in result if isinstance(r, Result)]

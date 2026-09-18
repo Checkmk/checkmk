@@ -40,7 +40,7 @@ from .models.response_models import ServiceAvailabilityCollection, ServiceAvaila
 
 
 def list_service_availability_v1(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     site_id: Annotated[
         SiteId,
         QueryParam(

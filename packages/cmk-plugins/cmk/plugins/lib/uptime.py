@@ -85,7 +85,7 @@ class UptimePair(NamedTuple):
     @property
     def max_uptime_sec(self) -> float:
         return max(
-            [value for value in [self.hr_sys_uptime_sec, self.sys_uptime_sec] if value is not None]
+            value for value in [self.hr_sys_uptime_sec, self.sys_uptime_sec] if value is not None
         )
 
     def __bool__(self) -> bool:

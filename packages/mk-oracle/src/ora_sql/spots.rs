@@ -16,13 +16,15 @@
 
 use crate::config::options::Options;
 use crate::config::ora_sql::CustomInstance;
-use crate::ora_sql::backend::{ClosedSpot, OpenedSpot};
+use crate::config::target::TargetId;
+use crate::ora_sql::backend::{sanitize_failure_message, ClosedSpot, OpenedSpot};
 use crate::ora_sql::pdbs::{resolve_pdb_patterns, Pdbs};
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
-use crate::types::{InstanceName, PdbName, SqlBindParam, SqlQuery};
+use crate::types::{InstanceName, PdbName, SectionName, SqlBindParam, SqlQuery};
 
 use anyhow::Result;
+use std::collections::HashSet;
 
 /// Controls how SQL result rows are rendered into agent output.
 ///
@@ -38,6 +40,9 @@ pub enum PostProcessing {
 /// header(s) that precede the rows and a flag controlling output formatting.
 #[derive(Debug, Clone)]
 pub struct QueryBlock {
+    /// Section name for the execution log, with the custom-metric item and the
+    /// PDB appended where they apply.
+    pub label: String,
     pub queries: Vec<SqlQuery>,
     pub title: String,
     pub post_processing: PostProcessing,
@@ -55,7 +60,8 @@ pub fn make_spot_work_results(
     spots: Vec<OpenedSpot>,
     sections: Vec<Section>,
     custom_instances: &[CustomInstance],
-    global_cache_age: u32,
+    excluded_sections: &[(TargetId, Vec<SectionName>)],
+    global_cache_age: Option<u32>,
     params: &[SqlBindParam],
     options: &Options,
 ) -> (Vec<OpenedSpotWorks>, Vec<SpotErrors>) {
@@ -74,6 +80,7 @@ pub fn make_spot_work_results(
                         &sections,
                         &opened,
                         custom_instances,
+                        excluded_sections,
                         global_cache_age,
                         options,
                     );
@@ -101,44 +108,76 @@ pub fn make_spot_work_results(
 /// "If a global and a per-instance query share the same item_name, the
 /// per-instance one wins.").
 fn merge_per_instance_sections(
-    global: &[Section],
+    global_sections: &[Section],
     spot: &OpenedSpot,
     custom_instances: &[CustomInstance],
-    global_cache_age: u32,
+    excluded_sections: &[(TargetId, Vec<SectionName>)],
+    global_cache_age: Option<u32>,
     options: &Options,
 ) -> Vec<Section> {
     let spot_target_id = spot.target().target_id();
-    let per_instance_runtime: Vec<Section> = custom_instances
+    let Some(instance) = custom_instances
         .iter()
         .find(|custom_instance| custom_instance.target_id() == spot_target_id)
-        .map(|custom_instance| {
-            custom_instance
-                .custom_metrics()
-                .iter()
-                .map(|cs| Section::new(cs, global_cache_age, options))
-                .collect()
-        })
-        .unwrap_or_default();
+    else {
+        // A spot without an `instances:` entry comes from the main endpoint, i.e.
+        // from the deprecated main-level `connection.sid`. Neither its custom
+        // metrics nor its `excluded_sections` are honoured: main-level targets
+        // are on the way out and get the global sections unchanged.
+        return global_sections.to_vec();
+    };
 
-    if per_instance_runtime.is_empty() {
-        return global.to_vec();
-    }
-    let overridden_items: std::collections::HashSet<&str> = per_instance_runtime
+    let custom_sections: Vec<Section> = instance
+        .custom_metrics()
         .iter()
-        .filter_map(|s| s.item_value().map(|v| v.as_str()))
+        .map(|cs| Section::new(cs, global_cache_age, options))
         .collect();
 
-    let mut merged: Vec<Section> = global
+    let mut merged = drop_overridden(global_sections, &item_names(&custom_sections));
+    merged.extend(custom_sections);
+    // Matched case-insensitively: yaml upper-cases a sid and an instance_name by
+    // itself, but keeps the case of a service_name or an alias.
+    if let Some(sections) = instance.target_id().and_then(|target_id| {
+        excluded_sections
+            .iter()
+            .find(|(target, _)| target.eq_ignore_case(target_id))
+            .map(|(_, sections)| sections)
+    }) {
+        merged.retain(|s| {
+            let excluded = sections.contains(s.name());
+            if excluded {
+                log::debug!(
+                    "Skip section {} excluded for {:?}",
+                    s.name(),
+                    instance.target_id()
+                );
+            }
+            !excluded
+        });
+    }
+    merged
+}
+
+/// Item names of the given sections. Only custom metrics can have an item name.
+fn item_names(sections: &[Section]) -> HashSet<&str> {
+    sections
+        .iter()
+        .filter_map(|s| s.item_value().map(|v| v.as_str()))
+        .collect()
+}
+
+/// Copy of `global_sections` without the custom metrics whose item name is in
+/// `overriding_items`. Predefined sections carry no item name and always stay.
+fn drop_overridden(global_sections: &[Section], overriding_items: &HashSet<&str>) -> Vec<Section> {
+    global_sections
         .iter()
         .filter(|s| {
             s.item_value()
-                .map(|v| !overridden_items.contains(v.as_str()))
+                .map(|v| !overriding_items.contains(v.as_str()))
                 .unwrap_or(true)
         })
         .cloned()
-        .collect();
-    merged.extend(per_instance_runtime);
-    merged
+        .collect()
 }
 
 fn _make_work_result_error(opened: OpenedSpot, e: &anyhow::Error) -> OpenedSpotWorkResults {
@@ -149,7 +188,7 @@ fn _make_work_result_error(opened: OpenedSpot, e: &anyhow::Error) -> OpenedSpotW
         Err(anyhow::anyhow!(
             "{}|FAILURE|WARNING: {} ",
             target.display_name(),
-            e.to_string().replace("OCI Error: ", "")
+            sanitize_failure_message(&e.to_string())
         )),
     )
 }
@@ -177,9 +216,10 @@ fn _make_work_result_ok(
                 .iter()
                 .filter_map(|section| {
                     if !service.is_suitable_affinity(section.affinity()) {
-                        log::info!(
-                            "Skip section with not suitable affinity: {:?} instance {}",
-                            section,
+                        log::debug!(
+                            "Skipping section {}: affinity {:?} does not match instance {}",
+                            section.name(),
+                            section.affinity(),
                             service
                         );
                         return None;
@@ -194,8 +234,10 @@ fn _make_work_result_ok(
                     } else {
                         PostProcessing::Standard
                     };
+                    let label = section.log_label();
                     if section.pdb_patterns().is_empty() {
                         vec![QueryBlock {
+                            label,
                             queries: q,
                             title: section.to_work_header_for(service),
                             post_processing: post,
@@ -205,6 +247,7 @@ fn _make_work_result_ok(
                         resolve_pdb_patterns(section.pdb_patterns(), pdbs, &service.to_string())
                             .into_iter()
                             .map(|pdb| QueryBlock {
+                                label: format!("{label} in PDB {pdb}"),
                                 queries: q.clone(),
                                 title: section.to_work_header_for_pdb(service, &pdb),
                                 post_processing: post,
@@ -224,7 +267,9 @@ fn _make_work_result_ok(
 mod tests {
     use super::*;
     use crate::config::ora_sql::Config;
+    use crate::config::section::SectionBuilder;
     use crate::ora_sql::backend::test_support::{open_spot, MiniOra};
+    use crate::types::ItemValue;
 
     const MERGE_YAML: &str = r#"
 oracle:
@@ -235,6 +280,8 @@ oracle:
       type: standard
     connection:
       hostname: localhost
+    discovery:
+      detect: no
     custom_metrics:
       - shared:
           sql: "select 'details:g-shared' from dual"
@@ -260,12 +307,12 @@ oracle:
             .sections()
             .iter()
             .filter(|s| s.is_custom_metric())
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect()
     }
 
     /// Sorted item names of the sections (custom metrics carry an item value).
-    fn item_names(sections: &[Section]) -> Vec<String> {
+    fn custom_item_names(sections: &[Section]) -> Vec<String> {
         let mut names: Vec<String> = sections
             .iter()
             .filter_map(|s| s.item_value().map(|v| v.as_str().to_string()))
@@ -283,11 +330,12 @@ oracle:
         // A spot whose target_id mirrors the configured ORCL2 instance.
         let spot = open_spot(MiniOra::single("ORCL2"), Some(&instances[0]));
 
-        let merged = merge_per_instance_sections(&global, &spot, &instances, 0, config.options());
+        let merged =
+            merge_per_instance_sections(&global, &spot, &instances, &[], Some(0), config.options());
 
         // global_only (kept) + shared (folded, not duplicated) + instance_only (added)
         assert_eq!(
-            item_names(&merged),
+            custom_item_names(&merged),
             vec!["global_only", "instance_only", "shared"]
         );
         // The surviving `shared` is the per-instance definition (it won the collision).
@@ -309,8 +357,203 @@ oracle:
         // No custom instance is passed, so nothing matches the spot's target.
         let spot = open_spot(MiniOra::single("ORCLX"), None);
 
-        let merged = merge_per_instance_sections(&global, &spot, &[], 0, config.options());
+        let merged =
+            merge_per_instance_sections(&global, &spot, &[], &[], Some(0), config.options());
 
-        assert_eq!(item_names(&merged), item_names(&global));
+        assert_eq!(custom_item_names(&merged), custom_item_names(&global));
+    }
+
+    /// Sorted names of the sections: item name for custom metrics, section name otherwise.
+    fn section_names(sections: &[Section]) -> Vec<String> {
+        let mut names: Vec<String> = sections
+            .iter()
+            .map(|s| {
+                s.item_value()
+                    .map(|v| v.as_str())
+                    .unwrap_or_else(|| s.name().as_str())
+                    .to_string()
+            })
+            .collect();
+        names.sort();
+        names
+    }
+
+    fn predefined(name: &str) -> Section {
+        Section::new(
+            &SectionBuilder::new(name).build(),
+            Some(0),
+            &Options::default(),
+        )
+    }
+
+    fn custom_metric(item: &str) -> Section {
+        Section::new(
+            &SectionBuilder::new(item)
+                .set_item_value(ItemValue::from(item.to_string()))
+                .build(),
+            Some(0),
+            &Options::default(),
+        )
+    }
+
+    #[test]
+    fn test_item_names_collects_custom_metrics_only() {
+        let sections = vec![predefined("sessions"), custom_metric("price")];
+        assert_eq!(item_names(&sections), HashSet::from(["price"]));
+    }
+
+    #[test]
+    fn test_drop_overridden_removes_named_metrics_only() {
+        let sections = vec![
+            predefined("sessions"),
+            custom_metric("price"),
+            custom_metric("keep"),
+        ];
+
+        let kept = drop_overridden(&sections, &HashSet::from(["price"]));
+
+        assert_eq!(section_names(&kept), vec!["keep", "sessions"]);
+    }
+
+    /// An exclusion naming a bare `service_name` must not hit an instance whose
+    /// `instance_name` happens to carry that name: the targets differ.
+    #[test]
+    fn test_excluded_sections_do_not_match_a_same_named_other_target() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections:
+      - target_id:
+          service_name: PROD
+        sections: [jobs]
+    instances:
+      - service_name: other_service
+        instance_name: PROD
+"#;
+        let config = config_from(YAML);
+        let global: Vec<Section> = config
+            .product()
+            .sections()
+            .iter()
+            .map(|s| Section::new(s, Some(0), config.options()))
+            .collect();
+        let instances = config.instances().clone();
+        let spot = open_spot(MiniOra::single("PROD"), Some(&instances[0]));
+
+        let merged = merge_per_instance_sections(
+            &global,
+            &spot,
+            &instances,
+            config.excluded_sections(),
+            Some(0),
+            config.options(),
+        );
+
+        assert_eq!(section_names(&merged), section_names(&global));
+    }
+
+    /// An exclusion is scoped to its target: another instance keeps everything.
+    #[test]
+    fn test_excluded_sections_leave_other_instances_alone() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections:
+      - target_id:
+          sid: A
+        sections: [jobs]
+    instances:
+      - sid: A
+      - sid: B
+"#;
+        let config = config_from(YAML);
+        let global: Vec<Section> = config
+            .product()
+            .sections()
+            .iter()
+            .map(|s| Section::new(s, Some(0), config.options()))
+            .collect();
+        let instances = config.instances().clone();
+        let merge = |instance| {
+            merge_per_instance_sections(
+                &global,
+                &open_spot(MiniOra::single("ANY"), Some(instance)),
+                &instances,
+                config.excluded_sections(),
+                Some(0),
+                config.options(),
+            )
+        };
+
+        assert!(!section_names(&merge(&instances[0])).contains(&"jobs".to_string()));
+        assert_eq!(section_names(&merge(&instances[1])), section_names(&global));
+    }
+
+    /// The whole key is matched case-insensitively: `X:Z:V` == `x:z:v`. Yaml
+    /// upper-cases a sid and an instance_name by itself, but leaves a
+    /// `service_name` and an `alias` as written, so the lookup folds case.
+    #[test]
+    fn test_excluded_sections_matched_by_target_id() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections:
+      - target_id:
+          service_name: Prod_Service
+          sid: Xe
+        sections: [jobs]
+    instances:
+      - service_name: prod_service
+        sid: xe
+"#;
+        let config = config_from(YAML);
+        let global: Vec<Section> = config
+            .product()
+            .sections()
+            .iter()
+            .map(|s| Section::new(s, Some(0), config.options()))
+            .collect();
+        let instances = config.instances().clone();
+        let spot = open_spot(MiniOra::single("XE"), Some(&instances[0]));
+
+        let merged = merge_per_instance_sections(
+            &global,
+            &spot,
+            &instances,
+            config.excluded_sections(),
+            Some(0),
+            config.options(),
+        );
+
+        let kept = section_names(&merged);
+        assert!(!kept.contains(&"jobs".to_string()), "{kept:?}");
+        assert_eq!(kept.len(), global.len() - 1, "{kept:?}");
+    }
+
+    #[test]
+    fn test_drop_overridden_without_names_keeps_everything() {
+        let sections = vec![predefined("sessions"), custom_metric("price")];
+
+        let kept = drop_overridden(&sections, &HashSet::new());
+
+        assert_eq!(section_names(&kept), section_names(&sections));
     }
 }

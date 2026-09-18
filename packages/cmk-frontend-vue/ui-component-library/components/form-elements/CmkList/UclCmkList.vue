@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkListCodeExample.vue?raw'
@@ -31,10 +31,10 @@ export const panelConfig = {
   orientation: {
     type: 'list' as const,
     title: 'Orientation',
-    options: [
-      { title: 'Vertical', name: 'vertical' },
-      { title: 'Horizontal', name: 'horizontal' }
-    ] satisfies Options<ListOrientation>[],
+    options: listOptions<ListOrientation>({
+      vertical: 'Vertical',
+      horizontal: 'Horizontal'
+    }),
     initialState: 'vertical' as const
   },
   showAdd: {

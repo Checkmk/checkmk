@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -11,7 +10,6 @@ from dataclasses import dataclass
 from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.speaklater import LazyString
 from cmk.shared_typing.main_menu import (
     NavBaseItem,
     NavItem,
@@ -19,6 +17,7 @@ from cmk.shared_typing.main_menu import (
     NavItemVueApp,
     NavLinkItem,
 )
+from cmk.web.utils.speaklater import LazyString
 
 
 @dataclass(frozen=True, kw_only=True)

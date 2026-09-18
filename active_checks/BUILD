@@ -14,6 +14,7 @@ cc_binary(
     features = [
         "static_libstdcpp",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["no-lint"],
 )
 

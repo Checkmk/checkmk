@@ -29,12 +29,12 @@ describe('endOfCurrentDaySeconds', () => {
 })
 
 describe('withinNavigableTime', () => {
-  const bound = 1000
+  const bounds = { earliestStart: 0, latestEnd: 1000 }
 
   test('slides a range that overshoots the bound back, keeping its span', () => {
     const pannedIntoTheFuture = { start: 900, end: 1200, step: 60 }
 
-    const bounded = withinNavigableTime(pannedIntoTheFuture, bound)
+    const bounded = withinNavigableTime(pannedIntoTheFuture, bounds)
 
     expect(bounded).toEqual({ start: 700, end: 1000, step: 60 })
   })
@@ -42,7 +42,7 @@ describe('withinNavigableTime', () => {
   test('leaves a range that ends before the bound untouched', () => {
     const range = { start: 400, end: 700, step: 60 }
 
-    const bounded = withinNavigableTime(range, bound)
+    const bounded = withinNavigableTime(range, bounds)
 
     expect(bounded).toEqual(range)
   })
@@ -50,7 +50,7 @@ describe('withinNavigableTime', () => {
   test('leaves a range ending exactly on the bound untouched', () => {
     const range = { start: 700, end: 1000, step: 60 }
 
-    const bounded = withinNavigableTime(range, bound)
+    const bounded = withinNavigableTime(range, bounds)
 
     expect(bounded).toEqual(range)
   })

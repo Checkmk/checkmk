@@ -9,6 +9,7 @@ import type {
   BinaryConditionChoicesItem,
   BinaryConditionChoicesValue,
   BooleanChoice,
+  CaCertificate,
   CascadingSingleChoice,
   CheckboxListChoice,
   Components,
@@ -28,7 +29,6 @@ import type {
   LegacyValuespec,
   List,
   ListOfStrings,
-  MetricBackendCustomQuery,
   MultilineText,
   MultipleChoiceElement,
   Oauth2ConnectionSetup,
@@ -37,6 +37,7 @@ import type {
   SingleChoice,
   SingleChoiceElement,
   StaticText,
+  TelemetryMetricsCustomQuery,
   TimeSpan,
   TimeSpecific,
   Tuple,
@@ -58,9 +59,30 @@ import {
   groupNestedValidations
 } from '@/form/private/validation'
 
-import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
-import { fromAttributeFilter } from '@/metric-backend/attributeFilterAdapter'
-import { lookbackLabel } from '@/metric-backend/consolidation/consolidation-label'
+import { attributeKindPrefix, pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
+import { fromAttributeFilter } from '@/telemetry-metrics/attributeFilterAdapter'
+import {
+  compactFunction,
+  lookbackLabel,
+  typeLabel
+} from '@/telemetry-metrics/consolidation/consolidation-label'
+import {
+  catalogFunctionName,
+  consolidationFunctionFromName
+} from '@/telemetry-metrics/consolidation/types'
+import type {
+  ConsolidationFunction,
+  ConsolidationParams
+} from '@/telemetry-metrics/consolidation/types'
+import { clauseSummary, thenStepSummary } from '@/telemetry-metrics/group-by/group-by-label'
+import type { GroupByModel } from '@/telemetry-metrics/group-by/types'
+import {
+  aggregatorToFloatGroupBy,
+  aggregatorToThenSteps,
+  fractionBelowGroupBy,
+  fractionBetweenGroupBy,
+  percentileGroupBy
+} from '@/telemetry-metrics/group-by/wire'
 
 import {
   type Operator,
@@ -134,6 +156,8 @@ function _renderForm(
     case 'multiline_text':
     case 'comment_text_area':
       return renderMultilineText(formSpec as MultilineText, value as string)
+    case 'ca_certificate':
+      return renderCaCertificate(formSpec as CaCertificate, value as string)
     case 'data_size':
       return renderDataSize(value as [string, string])
     case 'catalog':
@@ -159,9 +183,9 @@ function _renderForm(
       return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
     case 'file_upload':
       return renderFileUpload(formSpec as FileUpload, value as FileUploadData)
-    case 'metric_backend_custom_query':
-      return renderMetricBackendCustomQuery(value as MetricBackendCustomQuery)
-    case 'dcd_metric_backend_filter':
+    case 'telemetry_metrics_custom_query':
+      return renderTelemetryMetricsCustomQuery(value as TelemetryMetricsCustomQuery)
+    case 'dcd_telemetry_metrics_filter':
       return h('div', 'DCD Metric Backend Filter does not support readonly')
     case 'oauth2_connection_setup':
       return renderOAuth2ConnectionSetup(formSpec as Oauth2ConnectionSetup, value)
@@ -196,13 +220,55 @@ function renderOAuth2ConnectionSetup(formSpec: Oauth2ConnectionSetup, value: unk
   return renderForm(formSpec.form_spec, value)
 }
 
-function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode {
+function consolidationParams(
+  value: TelemetryMetricsCustomQuery,
+  fn: ConsolidationFunction
+): ConsolidationParams {
+  switch (fn.function) {
+    case 'histogram_quantile':
+      return { quantile: value.aggregation_histogram_percentile / 100 }
+    case 'histogram_fraction_below':
+      return { fractionBelowThreshold: value.aggregation_histogram_threshold_for_fraction_below }
+    case 'histogram_fraction_between':
+      return {
+        fractionLowerThreshold: value.aggregation_histogram_lower_threshold_for_fraction_between,
+        fractionUpperThreshold: value.aggregation_histogram_upper_threshold_for_fraction_between
+      }
+    default:
+      return {}
+  }
+}
+
+function preserveGroupByModel(value: TelemetryMetricsCustomQuery): GroupByModel | null {
+  switch (value.consolidation_function) {
+    case 'histogram_preserve_quantile':
+      return percentileGroupBy({
+        percentile: value.aggregation_histogram_percentile,
+        group_by: value.aggregation_histogram_group_by
+      })
+    case 'histogram_preserve_fraction_below':
+      return fractionBelowGroupBy({
+        threshold: value.aggregation_histogram_threshold_for_fraction_below,
+        group_by: value.aggregation_histogram_group_by
+      })
+    case 'histogram_preserve_fraction_between':
+      return fractionBetweenGroupBy({
+        lower_threshold: value.aggregation_histogram_lower_threshold_for_fraction_between,
+        upper_threshold: value.aggregation_histogram_upper_threshold_for_fraction_between,
+        group_by: value.aggregation_histogram_group_by
+      })
+    default:
+      return null
+  }
+}
+
+function renderTelemetryMetricsCustomQuery(value: TelemetryMetricsCustomQuery): VNode {
   const rows: VNode[] = []
+  const row = (label: string, text: string): VNode =>
+    h('tr', [h('td', { class: 'dict_title' }, [label]), h('td', [text])])
 
   if (value.metric_name) {
-    rows.push(
-      h('tr', [h('td', { class: 'dict_title' }, ['Metric:']), h('td', [value.metric_name])])
-    )
+    rows.push(row('Metric:', value.metric_name))
   }
 
   // OR-of-AND sentence like the editable pills; the custom-query editor only builds one AND group.
@@ -215,35 +281,53 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     )
     .join(` ${untranslated('OR')} `)
   if (attributeSentence) {
+    rows.push(row('Attributes:', attributeSentence))
+  }
+
+  const consolidationFunction = consolidationFunctionFromName(
+    catalogFunctionName(value.consolidation_function)
+  )
+  if (consolidationFunction) {
     rows.push(
-      h('tr', [h('td', { class: 'dict_title' }, ['Attributes:']), h('td', [attributeSentence])])
+      row(
+        'Consolidation:',
+        `[${typeLabel(consolidationFunction.type)}] ${compactFunction({
+          ...consolidationFunction,
+          params: consolidationParams(value, consolidationFunction),
+          lookbackSeconds: value.aggregation_lookback
+        })} · ${lookbackLabel(value.aggregation_lookback)}`
+      )
+    )
+  } else {
+    rows.push(row('Aggregation lookback:', lookbackLabel(value.aggregation_lookback)))
+    rows.push(row('Percentile (histograms):', `${value.aggregation_histogram_percentile} %`))
+  }
+
+  // One row covers both grouping flavours: a preserve function owns the leading clause and
+  // every aggregator stage is a then step; otherwise the aggregator's first stage is the clause.
+  const preserveGroupBy = preserveGroupByModel(value)
+  const groupBy = preserveGroupBy ?? aggregatorToFloatGroupBy(value.aggregator ?? undefined)
+  const thenSteps = aggregatorToThenSteps(value.aggregator ?? undefined, groupBy)
+  if (preserveGroupBy || value.aggregator) {
+    rows.push(
+      row('Group by:', [clauseSummary(groupBy), ...thenSteps.map(thenStepSummary)].join(', '))
+    )
+  } else if (value.aggregation_histogram_group_by.length > 0) {
+    rows.push(
+      row(
+        'Group by:',
+        value.aggregation_histogram_group_by
+          .map((key) => `${attributeKindPrefix(key.kind)}${key.key}`)
+          .join(', ')
+      )
     )
   }
 
-  rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
-      h('td', [lookbackLabel(value.aggregation_lookback)])
-    ])
-  )
-
-  rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Percentile (histograms):']),
-      h('td', [`${value.aggregation_histogram_percentile} %`])
-    ])
-  )
-
-  rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Service name template:']),
-      h('td', [value.service_name_template])
-    ])
-  )
+  rows.push(row('Service name template:', value.service_name_template))
 
   return h(
     'table',
-    { class: 'form-readonly__dictionary form-readonly__metric-backend-query' },
+    { class: 'form-readonly__dictionary form-readonly__telemetry-metrics-query' },
     rows
   )
 }
@@ -346,7 +430,7 @@ function renderMultipleChoice(
     textSpans.push(h('span', nameToTitle[entry]!))
   }
   if (value.length > maxEntries) {
-    const moreText = formSpec.i18n.and_x_more.replace('%s', `${value.length - maxEntries}`)
+    const moreText = formSpec.i18n.and_x_more.replace('%(count)s', `${value.length - maxEntries}`)
     textSpans.push(
       h('span', { class: 'form-readonly__multiple-choice__max-entries' }, ` ${moreText}`)
     )
@@ -358,10 +442,10 @@ function renderDataSize(value: [string, string]): VNode {
   return h('div', [h('span', value[0]), h('span', ' '), h('span', value[1])])
 }
 
-function renderMultilineText(formSpec: MultilineText, value: string): VNode {
+function renderTextLines(label: string | null, value: string, monospaced: boolean): VNode {
   const lines: VNode[] = []
-  if (formSpec.label) {
-    lines.push(h('span', formSpec.label))
+  if (label) {
+    lines.push(h('span', label))
     lines.push(h('br'))
   }
 
@@ -370,8 +454,17 @@ function renderMultilineText(formSpec: MultilineText, value: string): VNode {
     lines.push(h('br'))
   })
 
-  const style = formSpec.monospaced ? 'font-family: monospace, sans-serif' : ''
+  const style = monospaced ? 'font-family: monospace, sans-serif' : ''
   return h('div', { style: style }, lines)
+}
+
+function renderMultilineText(formSpec: MultilineText, value: string): VNode {
+  return renderTextLines(formSpec.label, value, formSpec.monospaced)
+}
+
+function renderCaCertificate(formSpec: CaCertificate, value: string): VNode {
+  // PEM text is always monospaced, the form spec has no flag to opt out of it.
+  return renderTextLines(formSpec.label, value, true)
 }
 
 function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
@@ -965,13 +1058,13 @@ table.form-readonly__table {
   display: inline-block;
 }
 
-.form-readonly__metric-backend-query {
+.form-readonly__telemetry-metrics-query {
   padding: var(--spacing);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
 }
 
-.form-readonly__list > li:not(:first-child) > .form-readonly__metric-backend-query {
+.form-readonly__list > li:not(:first-child) > .form-readonly__telemetry-metrics-query {
   margin-top: var(--spacing);
 }
 

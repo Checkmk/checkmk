@@ -11,14 +11,14 @@ from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
 
-import httpx
+import httpx2
 import pytest
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
-from cmk.relay_protocols.monitoring_data import MonitoringData
+from cmk.relay_protocols.monitoring_data import MonitoringData, PayloadType
 from cmk.testlib.agent_receiver.certs import relay_ca_common_name
 from cmk.testlib.agent_receiver.clients import (
     RelayClient,
@@ -157,8 +157,40 @@ def test_forward_monitoring_data_with_delay(
         assert_monitoring_data_payload(connection_data.data, payload)
 
 
+def test_forward_active_check_data_announces_it_as_an_active_check(
+    socket_path: str,
+    relay_id: str,
+    relay_config: RelayConfig,
+    test_client: TestClient,
+    site: SiteMock,
+) -> None:
+    """An active-check result must be announced to the core as such.
+
+    The core reads the payload type from the header and routes the payload
+    accordingly, so a result announced as a fetcher payload would be parsed as
+    agent output.
+    """
+    payload = b"000\n0000000f\ntesthost\tOK - all good"
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
+        monitoring_data = create_monitoring_data(
+            relay_config.serial, payload, payload_type=PayloadType.ACTIVE_CHECK
+        )
+        relay = RelayClient(test_client, site.site_name, relay_id)
+        relay.apply_config(relay_config)
+
+        response = relay.forward_monitoring_data(monitoring_data)
+
+        assert response.status_code == HTTPStatus.NO_CONTENT
+        connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
+        header = connection_data.data.split(b"\n", 1)[0].decode()
+        assert "payload_type:active_check;" in header, header
+
+
 def create_monitoring_data(
-    serial: Serial, payload: bytes, service: str = "Check_MK"
+    serial: Serial,
+    payload: bytes,
+    service: str = "Check_MK",
+    payload_type: PayloadType = PayloadType.FETCHER,
 ) -> MonitoringData:
     """Helper to create MonitoringData with consistent defaults."""
     return MonitoringData(
@@ -167,6 +199,7 @@ def create_monitoring_data(
         service=service,
         timestamp=int(time.time()),
         payload=base64.b64encode(payload),
+        payload_type=payload_type,
     )
 
 
@@ -334,7 +367,7 @@ def _post_raw_monitoring_data(
     serial: Serial,
     service: str,
     payload: bytes = b"monitoring payload",
-) -> httpx.Response:
+) -> httpx2.Response:
     """Post monitoring data as raw JSON, bypassing client-side Pydantic validation."""
     return raw_post(
         test_client,
@@ -381,10 +414,10 @@ def raw_post(
     json: object,
     identity_cn: str,
     issuer_cn: str,
-) -> httpx.Response:
+) -> httpx2.Response:
     """Escape hatch for tests that must send raw JSON (bypass Pydantic client-side validation).
     Sets INJECTED_UUID_HEADER and INJECTED_ISSUER_HEADER for you."""
-    return http.post(  # type: ignore[no-any-return]
+    return http.post(
         path,
         headers={INJECTED_UUID_HEADER: identity_cn, INJECTED_ISSUER_HEADER: issuer_cn},
         json=json,

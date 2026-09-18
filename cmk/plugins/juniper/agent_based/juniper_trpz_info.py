@@ -23,7 +23,7 @@ class Section(NamedTuple):
     version: str
 
 
-def discover_juniper_trpz_info(section: Section) -> DiscoveryResult:
+def discover_juniper_trpz_info(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

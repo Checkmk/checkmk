@@ -59,7 +59,7 @@ agent_section_esx_vsphere_snapshots_summary = AgentSection(
 )
 
 
-def discover_snapshots_summary(section: Section) -> DiscoveryResult:
+def discover_snapshots_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -138,7 +138,7 @@ check_plugin_esx_vsphere_vm_snapshots_summary = CheckPlugin(
 )
 
 
-def discover_snapshots(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
+def discover_snapshots(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

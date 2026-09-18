@@ -107,7 +107,9 @@ def discover_fortinet_controller_aps(
 
 
 def check_fortinet_controller_aps(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Mapping[str, Any]]
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    section: Mapping[str, Mapping[str, Any]],
 ) -> CheckResult:
     data = section.get(item)
     if data is None:

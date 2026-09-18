@@ -17,7 +17,7 @@ from typing import Literal, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString
 
 MonitorObjectType = Literal["host", "service"]
 

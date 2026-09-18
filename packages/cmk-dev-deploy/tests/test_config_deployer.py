@@ -4,8 +4,6 @@
 
 """Unit tests for the config deployer (_copy_dir, _install_files, deploy_config)."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 

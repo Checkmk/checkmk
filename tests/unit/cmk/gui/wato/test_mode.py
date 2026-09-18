@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection, Iterable
@@ -16,10 +15,11 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, PermissionName
 from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import _base, WatoMode
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName
+from cmk.web.utils.permission_verification import PermissionName
 
 module_registry = MainModuleRegistry()
 
@@ -83,18 +83,14 @@ class SomeMainModule(ABCMainModule):
         return False
 
 
-@pytest.fixture(name="main_module_registry", scope="function", autouse=True)
-def fixture_main_module_registry(monkeypatch):
+@pytest.fixture(name="main_module_registry", scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def fixture_main_module_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_base, "main_module_registry", module_registry)
 
 
 class TestWatoMode:
-    def test_breadcrumb_without_additions(
-        self,
-        request_context,
-        main_module_registry,
-        test_edition: Edition,
-    ):
+    @pytest.mark.usefixtures("request_context", "main_module_registry")
+    def test_breadcrumb_without_additions(self, test_edition: Edition) -> None:
         assert list(
             SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
         ) == [
@@ -106,13 +102,10 @@ class TestWatoMode:
             ),
         ]
 
+    @pytest.mark.usefixtures("request_context", "main_module_registry")
     def test_breadcrumb_with_additions(
-        self,
-        monkeypatch,
-        request_context,
-        main_module_registry,
-        test_edition: Edition,
-    ):
+        self, monkeypatch: pytest.MonkeyPatch, test_edition: Edition
+    ) -> None:
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:
             yield BreadcrumbItem(
                 title="In between 1",

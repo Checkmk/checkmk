@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A type for human-readable passwords with some convenience functions"""
 
-from __future__ import annotations
-
 import secrets
 import string
 from dataclasses import dataclass

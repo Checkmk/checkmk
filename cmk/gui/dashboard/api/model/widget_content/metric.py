@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from abc import ABC
 from typing import Annotated, assert_never, Literal, override, Self
@@ -19,6 +18,7 @@ from cmk.gui.dashboard.type_defs import (
     MetricTimeRange,
     MetricTimeRangeParameters,
     SingleGraphDashletConfig,
+    SingleMetricSparkHeightMode,
     StatusDisplayWithText,
     TopListColumnConfig,
     TopListDashletConfig,
@@ -322,6 +322,14 @@ class SingleMetricContent(_BaseMetricContent):
     show_display_range_limits: bool = api_field(
         description="Display axis labels for the selected/automatic data range.",
     )
+    spark_height_mode: SingleMetricSparkHeightMode | ApiOmitted = api_field(
+        description="Whether the sparkline runs the full height of the card, behind the "
+        "value, or as a band strictly below it.",
+        default_factory=ApiOmitted,
+    )
+    show_delta: bool = api_field(
+        description="Whether to show the change versus the average of the displayed window."
+    )
 
     @classmethod
     @override
@@ -337,6 +345,8 @@ class SingleMetricContent(_BaseMetricContent):
             status_display=_metric_status_display_from_internal(config["status_display"]),
             display_range=_metric_display_range_from_internal(config["display_range"]),
             show_display_range_limits=config["toggle_range_display"],
+            spark_height_mode=config.get("spark_height_mode", "full"),
+            show_delta=config.get("show_delta", True),
         )
 
     @override
@@ -348,6 +358,10 @@ class SingleMetricContent(_BaseMetricContent):
             status_display=_metric_status_display_to_internal(self.status_display),
             display_range=_metric_display_range_to_internal(self.metric, self.display_range),
             toggle_range_display=self.show_display_range_limits,
+            spark_height_mode=(
+                "full" if isinstance(self.spark_height_mode, ApiOmitted) else self.spark_height_mode
+            ),
+            show_delta=self.show_delta,
         )
 
 

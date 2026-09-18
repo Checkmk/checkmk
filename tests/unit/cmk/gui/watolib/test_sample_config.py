@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.sample_config import (
@@ -47,7 +48,8 @@ def test_get_sorted_generators() -> None:
     assert {g.ident() for g in sample_config_generator_registry.get_generators()} == set(expected)
 
 
-def test_init_wato_data_structures(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_init_wato_data_structures() -> None:
     init_wato_datastructures(folder_tree())
     assert Path(omd_root, "etc/check_mk/conf.d/wato/rules.mk").exists()
     assert Path(omd_root, "etc/check_mk/multisite.d/wato/tags.mk").exists()
@@ -55,6 +57,8 @@ def test_init_wato_data_structures(request_context: None) -> None:
     assert not Path(omd_root, "var/check_mk/web/automation").exists()
     assert Path(omd_root, "var/check_mk/web/agent_registration").exists()
     assert Path(omd_root, "var/check_mk/web/agent_registration/automation.secret").exists()
+    # the classic backend is the shipped default, no need to configure it
+    assert "snmp_backend_default" not in load_configuration_settings()
 
 
 @pytest.mark.usefixtures("request_context")

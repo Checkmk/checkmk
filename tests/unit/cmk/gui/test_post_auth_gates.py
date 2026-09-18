@@ -32,11 +32,12 @@ def _gate(
     return PostAuthGate(
         ident=ident,
         allowed_page_names=allowed_page_names,
-        redirect_url=lambda config: url,
+        redirect_url=lambda config: url,  # noqa: ARG005
     )
 
 
-def test_no_registered_gate_yields_no_redirect(registry: PostAuthGateRegistry) -> None:
+@pytest.mark.usefixtures("registry")
+def test_no_registered_gate_yields_no_redirect() -> None:
     assert post_auth_gate_redirect_url(Config(), "index") is None
 
 

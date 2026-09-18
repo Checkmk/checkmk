@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import logging
@@ -126,7 +128,8 @@ def _write_ec_rule(site: Site, rule: list | None) -> None:
 
 def _activate_ec_changes(site: Site) -> None:
     replication_changes_path = site.path(f"var/check_mk/wato/replication_changes_{site.id}.mk")
-    site.write_file(str(replication_changes_path), str(_get_replication_change()))
+    # ABCAppendStore entries are "\0"-terminated; without it the next append concatenates onto ours.
+    site.write_file(str(replication_changes_path), f"{_get_replication_change()}\0")
     site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
@@ -302,7 +305,6 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
     _activate_ec_changes(site)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:  # type: ignore[misc]
     """Generate a message via the events pipe matching an EC rule and assert an event is created"""
@@ -353,7 +355,8 @@ def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:  
 
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
-def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:  # type: ignore[misc]
+@pytest.mark.usefixtures("enable_receivers")
+def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:  # type: ignore[misc]
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
     event_message = _get_unique_event_message(f"some {match} status")
@@ -384,7 +387,8 @@ def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receiver
 
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
-def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:  # type: ignore[misc]
+@pytest.mark.usefixtures("enable_receivers")
+def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:  # type: ignore[misc]
     """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
     event_message = _get_unique_event_message("some other status")
@@ -407,8 +411,10 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
 
 @pytest.mark.skip(reason="CMK-33230")
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
+@pytest.mark.usefixtures("enable_receivers", "enable_snmp_trap_translation")
 def test_ec_global_settings(  # type: ignore[misc]
-    site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
+    site: Site,
+    setup_ec: Iterator,
 ) -> None:
     """Assert that global settings of the EC are applied to the EC
 
@@ -444,10 +450,10 @@ def test_ec_global_settings(  # type: ignore[misc]
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 @pytest.mark.parametrize("udp_enabled", [True, False], ids=["udp", "tcp"])
+@pytest.mark.usefixtures("enable_receivers")
 def test_ec_rule_match_syslog(  # type: ignore[misc]
     site: Site,
     setup_ec: Iterator,
-    enable_receivers: None,
     udp_enabled: bool,
 ) -> None:
     """Generate a message via Syslog matching an EC rule and assert an event is created"""
@@ -475,7 +481,8 @@ def test_ec_rule_match_syslog(  # type: ignore[misc]
 
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
-def test_ec_rule_no_eol(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:  # type: ignore[misc]
+@pytest.mark.usefixtures("enable_receivers")
+def test_ec_rule_no_eol(site: Site, setup_ec: Iterator) -> None:  # type: ignore[misc]
     """Generate a message via events pipe and Syslog with no end-of-line matching an EC rule.
 
     Assert:

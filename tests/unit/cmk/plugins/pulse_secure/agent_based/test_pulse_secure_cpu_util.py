@@ -32,7 +32,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_discover_pulse_secure_cpu(info: StringTable, expected_discoveries: Sequence[bool]) -> None:
     """Test discovery function for pulse_secure_cpu_util check."""
     parsed = parse_pulse_secure_cpu_util(info)
-    if parsed is not None:
+    if parsed is not None:  # noqa: SIM108
         result = list(discover_pulse_secure_cpu_util(parsed))
     else:
         result = []
@@ -50,12 +50,12 @@ def test_discover_pulse_secure_cpu(info: StringTable, expected_discoveries: Sequ
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_pulse_secure_cpu(
     params: Mapping[str, object],
     string_table: StringTable,
     expected_state: State,
     expected_summary_substring: str,
-    empty_value_store: None,
 ) -> None:
     """Test check function for pulse_secure_cpu_util check."""
     parsed = parse_pulse_secure_cpu_util(string_table)

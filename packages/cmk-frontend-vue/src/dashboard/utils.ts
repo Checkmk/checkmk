@@ -8,6 +8,7 @@ import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { copyToClipboard as copyToClipboardUtil } from 'cmk-ui-library/lib/utils'
 
+import { defaultResponsiveGridLayout } from '@/dashboard/components/ResponsiveGrid/composables/utils'
 import type {
   BadRequestBody,
   ContentRelativeGrid,
@@ -44,6 +45,7 @@ import type {
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
   NetworkFlowTrendChartContent,
+  ResponsiveGridWidgetLayouts,
   SingleMetricContent,
   TimelineContent,
   TopListContent,
@@ -201,6 +203,30 @@ export const dashboardAPI = {
           general_settings: generalSettings
         }
       })
+    )
+  },
+  cloneRelativeAsResponsiveGridDashboard: async (
+    referenceDashboardId: string,
+    referenceDashboardOwner: string,
+    dashboardId: string,
+    generalSettings: DashboardGeneralSettings,
+    widgetLayouts: Record<string, ResponsiveGridWidgetLayouts>
+  ): Promise<ResponsiveGridDashboardDomainObject> => {
+    return unwrap(
+      await client.POST(
+        '/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke',
+        {
+          ...CONTENT_TYPE_HEADER,
+          body: {
+            dashboard_id: dashboardId,
+            reference_dashboard_id: referenceDashboardId,
+            reference_dashboard_owner: referenceDashboardOwner,
+            general_settings: generalSettings,
+            layout: defaultResponsiveGridLayout(),
+            widget_layouts: widgetLayouts
+          }
+        }
+      )
     )
   },
   getDashboardConstants: async (): Promise<DashboardConstants> => {

@@ -17,7 +17,6 @@ from datetime import datetime
 from typing import override
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
@@ -325,6 +324,7 @@ class PageAutomation(AjaxPage):
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=[user_id],
         )
 
         return True

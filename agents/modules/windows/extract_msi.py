@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Extract a Windows MSI installer into a directory tree on Linux.
 
 A re-implementation of msitools' ``msiextract`` in pure Python.  Avoids
@@ -21,8 +22,6 @@ extract each cabinet, then rename the cab-internal entries (named after
 the MSI's File-table keys) to their final on-disk paths derived from the
 Component → Directory chain.
 """
-
-from __future__ import annotations
 
 import argparse
 import os
@@ -141,7 +140,7 @@ def _extract_msi(msiinfo: str, cabextract: str, msi: Path, out: Path) -> None:
     # MSIs only ship internal cabs.
     for cab in cabinets:
         if not cab.startswith("#"):
-            print(f"warning: external cabinet {cab!r} skipped in {msi.name}", file=sys.stderr)
+            print(f"warning: external cabinet {cab!r} skipped in {msi.name}", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
             continue
         stream_name = cab[1:]
         cab_bytes = _run(msiinfo, "extract", msi, stream_name)

@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP035  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -19,7 +22,7 @@ def test_missing_config_basic(removed: str) -> None:
     config = mk_jolokia.get_default_config_dict()
     config.pop(removed)
     with pytest.raises(ValueError):
-        mk_jolokia.JolokiaInstance._sanitize_config(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)  # noqa: SLF001
 
 
 def test_missing_config_auth() -> None:
@@ -34,31 +37,31 @@ def test_missing_config_auth() -> None:
     config["mode"] = "digest"
 
     with missing_keys("password, user"):
-        mk_jolokia.JolokiaInstance._sanitize_config(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)  # noqa: SLF001
     config["user"] = "TestUser"
     with missing_keys("password"):
-        mk_jolokia.JolokiaInstance._sanitize_config(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)  # noqa: SLF001
 
     config["mode"] = "https"
     with missing_keys("client_cert, client_key"):
-        mk_jolokia.JolokiaInstance._sanitize_config(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)  # noqa: SLF001
     config["client_cert"] = "path/to/MyClientCert"
     with missing_keys("client_key"):
-        mk_jolokia.JolokiaInstance._sanitize_config(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)  # noqa: SLF001
     config["client_key"] = "mysecretkey"
 
     config["service_user"] = "service user"
     config["service_url"] = "u://r/l"
     with missing_keys("service_password"):
-        mk_jolokia.JolokiaInstance._sanitize_config(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)  # noqa: SLF001
 
 
 def test_config_instance() -> None:
     config = mk_jolokia.get_default_config_dict()
-    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("instance") == "8080"
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("instance") == "8080"  # noqa: SLF001
     config["instance"] = "some spaces in string"
     assert (
-        mk_jolokia.JolokiaInstance._sanitize_config(config).get("instance")
+        mk_jolokia.JolokiaInstance._sanitize_config(config).get("instance")  # noqa: SLF001
         == "some_spaces_in_string"
     )
 
@@ -66,18 +69,18 @@ def test_config_instance() -> None:
 def test_config_timeout() -> None:
     config = mk_jolokia.get_default_config_dict()
     config["timeout"] = "23"
-    assert isinstance(mk_jolokia.JolokiaInstance._sanitize_config(config).get("timeout"), float)
+    assert isinstance(mk_jolokia.JolokiaInstance._sanitize_config(config).get("timeout"), float)  # noqa: SLF001
 
 
 def test_config_legacy_cert_path_to_verify() -> None:
     config = mk_jolokia.get_default_config_dict()
     config["verify"] = None
-    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True  # noqa: SLF001
     config["cert_path"] = "_default"
-    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True  # noqa: SLF001
     config["verify"] = None
     config["cert_path"] = "some/path/to/file"
-    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") == "some/path/to/file"
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") == "some/path/to/file"  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -97,7 +100,7 @@ def test_config_legacy_cert_path_to_verify() -> None:
 )
 def test_jolokia_instance_base_url(config: Mapping[str, object], base_url: str) -> None:
     joloi = mk_jolokia.JolokiaInstance(config, mk_jolokia.USER_AGENT)
-    assert joloi._get_base_url() == base_url
+    assert joloi._get_base_url() == base_url  # noqa: SLF001
 
 
 def test_jolokia_yield_configured_instances() -> None:
@@ -187,7 +190,7 @@ def test_parse_fetched_data_v2_0_2() -> None:
             "url": "http://192.168.0.221:8080/jolokia",
         },
     }
-    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)  # noqa: SLF001
     assert product == "tomcat"
     assert version == "10.1.16"
     assert agentversion == "2.0.2"
@@ -204,7 +207,7 @@ def test_parse_fetched_data_v1_2_0() -> None:
             "extraInfo": {"amxBooted": False},
         },
     }
-    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)  # noqa: SLF001
     assert product == "glassfish"
     assert version == "4.0"
     assert agentversion == "1.2.0"
@@ -223,7 +226,7 @@ def test_parse_fetched_data_v2_0_2_missing_server_product() -> None:
             "url": "http://192.168.0.221:8080/jolokia",
         },
     }
-    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)  # noqa: SLF001
     assert product == "unknown"
     assert version == "10.1.16"
     assert agentversion == "2.0.2"
@@ -242,7 +245,7 @@ def test_parse_fetched_data_v2_0_2_missing_server_version() -> None:
             "url": "http://192.168.0.221:8080/jolokia",
         },
     }
-    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)  # noqa: SLF001
     assert product == "tomcat"
     assert version == "unknown"
     assert agentversion == "2.0.2"

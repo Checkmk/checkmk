@@ -16,6 +16,8 @@ from cmk.gui import (
     crash_reporting,
     default_permissions,
     deprecations,
+    experimental_flags,
+    global_settings,
     help_menu,
     hooks,
     inventory,
@@ -25,9 +27,7 @@ from cmk.gui import (
     notifications,
     pagetypes,
     painter_options,
-    prediction,
     product_usage_analytics,
-    release_flags,
     rulespec,
     search_menu,
     user_message,
@@ -47,11 +47,13 @@ from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
+from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
-from cmk.gui.monitor.hosts._folder import monitor_folders
+from cmk.gui.monitor.hosts._folder import monitor_folders, SetupFolders
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
@@ -78,6 +80,7 @@ from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import UserConnectorRegistry
 from cmk.gui.userdb._user_attribute._registry import UserAttributeRegistry
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import CommandGroupRegistry, CommandRegistry
 from cmk.gui.views.icon import IconRegistry
@@ -109,7 +112,12 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicRegistry,
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderValidatorsRegistry
+from cmk.gui.watolib.hosts_and_folders import (
+    all_folder_title_paths,
+    folder_title_path,
+    folder_tree,
+    FolderValidatorsRegistry,
+)
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
@@ -243,8 +251,14 @@ def register(
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
     host_menus.use_legacy_source(LegacyHostMenus())
-    # The tree is request-scoped, so the factory is injected rather than one of its instances.
-    monitor_folders.use_setup_source(folder_tree)
+    # Setup answers about the folders of whoever is asking, so both the tree and the user are read
+    # per call - `user` is the request's, not this wiring's.
+    monitor_folders.use_setup_source(
+        SetupFolders(
+            title_of=lambda path: folder_title_path(folder_tree(), path, user),
+            all_titles=lambda: all_folder_title_paths(folder_tree(), user),
+        )
+    )
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
@@ -333,7 +347,6 @@ def register(
     message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)
-    prediction.register(page_registry)
     product_usage_analytics.register(
         page_registry,
         permission_registry,
@@ -342,7 +355,7 @@ def register(
         config_variable_group_registry,
         replication_path_registry,
     )
-    release_flags.register(
+    experimental_flags.register(
         config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
@@ -407,6 +420,7 @@ def register(
         agent_bakery_enabled,
     )
     welcome.register(page_registry, snapin_registry)
+    global_settings.register(page_registry)
     search_registration.register(
         page_registry,
         job_registry,
@@ -416,6 +430,7 @@ def register(
         mode_registry, page_registry, main_module_registry, permission_registry
     )
     _pre_21_plugin_api.register()
+    graphing_registration.register_prediction_page(page_registry, make_service_breadcrumb)
     register_graphing_openapi_endpoints(versioned_endpoint_registry, endpoint_family_registry)
 
 

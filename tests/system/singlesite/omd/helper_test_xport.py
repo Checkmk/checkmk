@@ -10,7 +10,7 @@ import rrdtool  # type: ignore[import-not-found]
 
 rrd_database, qstart, qend = ast.literal_eval(sys.stdin.read())
 
-print(
+print(  # noqa: T201  # It's OK for test/script helpers to print()
     rrdtool.xport(
         [
             f"DEF:fir={rrd_database}:one:AVERAGE",

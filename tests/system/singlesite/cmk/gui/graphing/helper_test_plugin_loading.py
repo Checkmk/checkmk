@@ -7,7 +7,7 @@ import sys
 
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing import metrics_from_api
 from cmk.utils import paths
 
 main_modules.register(edition(paths.omd_root))

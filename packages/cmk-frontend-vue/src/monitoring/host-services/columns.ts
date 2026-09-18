@@ -6,17 +6,24 @@
 import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import {
+  autocompleter,
+  labelAutocompleter,
+  tagAutocompleter
+} from '@/monitoring/shared/api/autocomplete'
 import type {
   HostServiceEntry,
   ServiceOptionalField,
   ServiceState
 } from '@/monitoring/shared/api/types'
 import type {
+  AutocompleteChoiceFilter,
   BooleanGroupFilter,
-  CheckboxListFilter,
+  CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 
 /**
  * Columns the user may hide that also map to API-optional fields.
@@ -38,26 +45,61 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
   return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
+export interface HostServicesColumnOptions {
+  /**
+   * Whether to offer the row-selection column. Only a user who may run a command on the
+   * selection gets it - without one, ticking a row would lead nowhere.
+   */
+  includeSelect: boolean
+}
+
 /**
  * The columns frozen to the edges of the table once it has to scroll
  * horizontally.
  */
-export function buildHostServicesColumnPinning(): ColumnPinningState {
-  return { left: ['select', 'state', 'modes', 'name'], right: ['actions'] }
+export function buildHostServicesColumnPinning({
+  includeSelect
+}: HostServicesColumnOptions): ColumnPinningState {
+  return {
+    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
+    right: ['actions']
+  }
 }
 
-export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
+/** Picks a column filter offers before it refuses more, per the views-table design. */
+const MAX_FILTER_CHOICES = 8
+
+type ServiceModeField =
+  | 'in_downtime'
+  | 'acknowledged'
+  | 'notifications_enabled'
+  | 'has_comments'
+  | 'active_checks_disabled'
+  | 'passive_checks_disabled'
+  | 'in_notification_period'
+  | 'in_service_period'
+  | 'in_check_period'
+  | 'check_crashed'
+
+export function useHostServicesColumns({
+  includeSelect
+}: HostServicesColumnOptions): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
-  const stateFilter: CheckboxListFilter<'state'> = {
-    type: 'checkbox-list',
+  const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
+    type: 'checkbox-list-with-flags',
     field: 'state',
     options: [
       { value: 'OK', title: _t('OK') },
       { value: 'WARN', title: _t('WARN') },
       { value: 'CRIT', title: _t('CRIT') },
-      { value: 'UNKNOWN', title: _t('UNKNOWN') }
-    ] satisfies { value: ServiceState; title: string }[]
+      { value: 'UNKNOWN', title: _t('UNKNOWN') },
+      { value: 'PENDING', title: _t('PENDING') }
+    ] satisfies { value: ServiceState; title: string }[],
+    flags: [
+      { field: 'is_flapping', title: _t('Flapping') },
+      { field: 'stale', title: _t('Stale') }
+    ]
   }
 
   const nameFilter: StringInputFilter<'name'> = {
@@ -80,28 +122,67 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     field: 'last_state_change'
   }
 
-  const modesFilter: BooleanGroupFilter<
-    'in_downtime' | 'acknowledged' | 'notifications_enabled' | 'is_flapping'
-  > = {
+  const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
+    type: 'autocomplete-choice',
+    field: 'labels',
+    suggest: labelAutocompleter('service'),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
+    type: 'autocomplete-choice',
+    field: 'tags',
+    suggest: tagAutocompleter(),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
+  const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
+    type: 'autocomplete-choice',
+    field: 'contact_groups',
+    suggest: autocompleter('allgroups', { group_type: 'contact' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const modesFilter: BooleanGroupFilter<ServiceModeField> = {
     type: 'boolean-group',
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
       { field: 'acknowledged', title: _t('Acknowledged') },
       { field: 'notifications_enabled', title: _t('Notifications enabled') },
-      { field: 'is_flapping', title: _t('Flapping') }
+      { field: 'has_comments', title: _t('Has comments') },
+      { field: 'active_checks_disabled', title: _t('Active checks disabled') },
+      { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
+      { field: 'in_notification_period', title: _t('In notification period') },
+      { field: 'in_service_period', title: _t('In service period') },
+      { field: 'in_check_period', title: _t('In check period') },
+      { field: 'check_crashed', title: _t('Check crashed') }
     ]
   }
 
   return [
-    {
-      id: 'select',
-      header: '',
-      enableSorting: false,
-      enableHiding: false,
-      minSize: 36,
-      maxSize: 36,
-      meta: { selectColumn: true, justify: 'center' }
-    },
+    ...(includeSelect
+      ? [
+          {
+            id: 'select',
+            header: '',
+            enableSorting: false,
+            enableHiding: false,
+            minSize: 36,
+            maxSize: 36,
+            meta: { selectColumn: true, justify: 'center' }
+          } satisfies ColumnDef<HostServiceEntry>
+        ]
+      : []),
     {
       accessorKey: 'state',
       header: _t('State'),
@@ -112,11 +193,9 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: 'modes',
+      accessorKey: MODE_COLUMN_ID,
       header: _t('Mode'),
       enableSorting: false,
-      minSize: 80,
-      maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
     },
     {
@@ -157,7 +236,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: labelsFilter }
     },
     {
       accessorKey: 'tags',
@@ -165,7 +244,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: tagsFilter }
     },
     {
       accessorKey: 'contacts',
@@ -173,7 +252,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactsFilter }
     },
     {
       accessorKey: 'contact_groups',
@@ -181,7 +260,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactGroupsFilter }
     },
     {
       accessorKey: 'perfometer',

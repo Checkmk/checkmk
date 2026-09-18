@@ -15,13 +15,61 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use derive_more::{Display, From, Into};
+use std::collections::HashSet;
+use std::fmt;
 use std::path::PathBuf;
+
+#[derive(Debug, Clone)]
+pub struct AliasInfo {
+    pub alias: InstanceAlias,
+    pub host_name: Option<HostName>,
+    pub port: Option<Port>,
+    pub sid: Option<Sid>,
+    pub service_name: Option<ServiceName>,
+}
 
 #[derive(Debug, Clone)]
 pub struct LocalInstance {
     pub name: InstanceName,
     pub home: PathBuf,
     pub base: Option<PathBuf>,
+}
+
+/// Whether a local instance is running, as far as the process list shows.
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum LocalInstanceState {
+    Run,
+    Stop,
+    /// The process list is unavailable, so the state is unknown - not stopped.
+    /// This is the normal case on Windows, where processes are not scanned.
+    NA,
+}
+
+impl fmt::Display for LocalInstanceState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // `pad` so a width in the caller's format string, e.g. `{:5}`, still
+        // aligns the column.
+        f.pad(match self {
+            LocalInstanceState::Run => "Run",
+            LocalInstanceState::Stop => "Stop",
+            LocalInstanceState::NA => "N/A",
+        })
+    }
+}
+
+impl LocalInstance {
+    /// The state of this instance according to `known_processes`, the SIDs found
+    /// in the process list. `None` means the list could not be obtained, which is
+    /// reported as unknown rather than as stopped.
+    pub fn state(&self, known_processes: Option<&HashSet<String>>) -> LocalInstanceState {
+        match known_processes {
+            Some(processes) if processes.contains(&self.name.to_string()) => {
+                LocalInstanceState::Run
+            }
+            Some(_) => LocalInstanceState::Stop,
+            None => LocalInstanceState::NA,
+        }
+    }
 }
 
 #[derive(PartialEq, PartialOrd, Debug, Clone, From, Into)]
@@ -312,6 +360,18 @@ pub enum SectionFilter {
     AsyncAll,
     AsyncBuiltinSections,
     AsyncCustomMetrics,
+}
+
+impl fmt::Display for SectionFilter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.pad(match self {
+            SectionFilter::All => "all",
+            SectionFilter::Sync => "synchronous",
+            SectionFilter::AsyncAll => "asynchronous",
+            SectionFilter::AsyncBuiltinSections => "asynchronous",
+            SectionFilter::AsyncCustomMetrics => "custom metrics",
+        })
+    }
 }
 
 impl From<&str> for SectionFilter {

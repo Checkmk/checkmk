@@ -8,8 +8,6 @@ Covers all resolution paths (system detection, cache verification, download),
 error conditions, and locked decisions from CONTEXT.md.
 """
 
-from __future__ import annotations
-
 import hashlib
 import subprocess
 from pathlib import Path

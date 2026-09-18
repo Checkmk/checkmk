@@ -1,6 +1,6 @@
 
 
-per-file v1.metrics.rst=file:/component_owners/performance_data_and_metrics/OWNERS_DEFINITION
+per-file v1.metrics.rst=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file v1.metrics.rst=set noparent
 
 # Please

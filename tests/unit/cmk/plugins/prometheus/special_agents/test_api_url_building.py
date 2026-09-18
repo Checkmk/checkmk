@@ -19,15 +19,18 @@ def _session_recording_requests(connection: str) -> tuple[ApiSession, list[str]]
     session = ApiSession(get_api_url(connection, "https"))
 
     def fake_request(
-        _method: str, url: str, params: object = None, verify: object = None
+        _method: str,
+        url: str,
+        params: object = None,  # noqa: ARG001
+        verify: object = None,  # noqa: ARG001
     ) -> requests.models.Response:
         requested_urls.append(url)
         response = requests.models.Response()
         response.status_code = 200
-        response._content = json.dumps({"data": {"version": "2.45.0"}}).encode()
+        response._content = json.dumps({"data": {"version": "2.45.0"}}).encode()  # noqa: SLF001
         return response
 
-    session._session.request = fake_request  # type: ignore[assignment]
+    session._session.request = fake_request  # type: ignore[assignment]  # noqa: SLF001
     return session, requested_urls
 
 
@@ -87,7 +90,7 @@ def test_prometheus_version_queries_full_api_path(connection: str, expected_url:
     session, requested_urls = _session_recording_requests(connection)
     server = PrometheusServer(PrometheusAPI(session))
 
-    version = server._prometheus_version()
+    version = server._prometheus_version()  # noqa: SLF001
 
     assert requested_urls == [expected_url]
     assert version == ["2.45.0"]

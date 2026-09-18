@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # Example output from agent:
 # <<<arcserve_backup>>>
@@ -106,12 +105,12 @@ def parse_arcserve_backup(string_table: StringTable) -> Section:
             files = int(line[2].replace(".", ""))
             unit = line[5].replace(")", "").lower()
             size = int(float(line[4].replace("(", "").replace(",", ".")) * unit_factor[unit])
-            backup["dirs"] = dirs
-            backup["files"] = files
-            backup["size"] = size
+            backup["dirs"] = dirs  # type: ignore[possibly-undefined]
+            backup["files"] = files  # type: ignore[possibly-undefined]
+            backup["size"] = size  # type: ignore[possibly-undefined]
         elif len(line) > 1 and line[0] == "Vorgang":
             result = " ".join(line[1:])
-            backup["result"] = result
+            backup["result"] = result  # type: ignore[possibly-undefined]
     return parsed
 
 

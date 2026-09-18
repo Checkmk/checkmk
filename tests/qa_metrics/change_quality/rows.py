@@ -5,8 +5,6 @@
 
 """Row dataclass and ``Table`` binding for ``cmk_change_tested``."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path

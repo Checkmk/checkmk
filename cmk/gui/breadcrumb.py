@@ -8,15 +8,13 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple, overload, override
 
 import cmk.gui.htmllib.html
-from cmk.gui.utils.speaklater import LazyString
 from cmk.shared_typing.main_menu import NavItem
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyString
 
 
 class BreadcrumbItem(NamedTuple):

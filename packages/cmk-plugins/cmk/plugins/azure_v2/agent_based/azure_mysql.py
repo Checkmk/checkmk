@@ -47,7 +47,9 @@ def discover_azure_mysql_memory(section: Resource) -> DiscoveryResult:
 
 
 def check_azure_mysql_memory(
-    item: str, params: Mapping[str, object], section: Resource
+    item: str,  # noqa: ARG001
+    params: Mapping[str, object],
+    section: Resource,
 ) -> CheckResult:
     yield from check_memory()("Memory", params, {"Memory": section})
 

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Literal, NamedTuple
 
 from git.objects.commit import Commit
+from git.objects.tree import Tree
 from git.repo import Repo
 
 from cmk.werks.tool import load_werk, parse_werk
@@ -21,6 +22,11 @@ from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 from .models import AllWerks, WebsiteWerkV2, WebsiteWerkV3
 
 logger = logging.getLogger(__name__)
+
+
+class FailReason:
+    def __init__(self, reason: str):
+        self.reason = reason
 
 
 class Config:
@@ -35,7 +41,20 @@ class Config:
     # only branches matching this regex will be considered for searching for
     # werk files.
     branch_regex: str
-    defines_make: str = "defines.make"
+    _defines_make: str = "defines.make"
+
+    def get_next_version(self, tree: Tree) -> str | FailReason:
+        # load the version that werks without version should have.
+        # this should return the version of the next release.
+        try:
+            defines_make = tree[self._defines_make]
+        except KeyError:
+            return FailReason(f"Can not find {self._defines_make} file in the git tree.")
+        if (
+            version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)
+        ) is not None:
+            return version
+        return FailReason(f"Could not read the version in {self._defines_make}.")
 
     def cleanup_branch_name(self, branch_name: str) -> str:
         # in previous releases of cmk there were branches called 1.2.7i3
@@ -76,24 +95,24 @@ def _get_branches(
     r: Repo, c: Config, branch_replacement: Mapping[str, str]
 ) -> Iterable[tuple[str, Commit]]:
     if branch_replacement:
-        for branch, ref in branch_replacement.items():
-            yield branch, r.commit(ref)
+        for branch, rev in branch_replacement.items():
+            yield branch, r.commit(rev)
         return
 
-    for ref in r.remote().refs:  # type: ignore[assignment]
-        if not ref.name.startswith("origin/"):  # type: ignore[attr-defined]
+    for ref in r.remote().refs:
+        if not ref.name.startswith("origin/"):
             logger.info(
                 "ignoring ref %(ref)s (only considering one from remote origin)", {"ref": ref}
             )
             continue
 
-        branch_name = ref.name.removeprefix("origin/")  # type: ignore[attr-defined]
+        branch_name = ref.name.removeprefix("origin/")
         if not re.match(c.branch_regex, branch_name):
             logger.info(
                 "ignoring branch %(branch)s (does not match regex)", {"branch": branch_name}
             )
             continue
-        yield branch_name, ref  # type: ignore[misc]
+        yield branch_name, ref.commit
 
 
 def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
@@ -106,24 +125,15 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
     for branch_name, ref in _get_branches(r, c, branches):
         tree = r.tree(ref)
 
-        try:
-            defines_make = tree[config.defines_make]
-        except KeyError:
+        version = config.get_next_version(tree)
+        if isinstance(version, FailReason):
             logger.warning(
-                "no %(defines_make)s file in branch %(branch)s",
-                {"branch": branch_name, "defines_make": config.defines_make},
+                "could not determine the next release version in branch %(branch)s. reason: %(reason)s",
+                {"branch": branch_name, "reason": version.reason},
             )
             continue
-        if (
-            version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)
-        ) is not None:
-            defines_make_version_by_branch[branch_name] = version
-        else:
-            logger.warning(
-                "getting version from defines.make failed in branch %(branch)s",
-                {"branch": branch_name},
-            )
-            continue
+
+        defines_make_version_by_branch[branch_name] = version
 
         try:
             werks = tree[".werks"]
@@ -164,7 +174,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
                     f"could not parse werk {werk_file.file_name} from "
                     f"branch {branch} of flavor {config.flavor}"
                 ) from e
-            if (werk_version := parsed.metadata["version"]) is None:
+            if (werk_version := parsed.metadata.get("version")) is None:
                 # if there is no version in the werk itself,
                 # we assume the werk will be released with the next release
                 werk_version = defines_make_version_by_branch[branch]
@@ -180,7 +190,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             raise RuntimeError(f"could not load werk {werk_id} from flavor {config.flavor}") from e
 
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
-        werk_dict.pop("version")
+        werk_dict.pop("version", None)
         website_werk: WebsiteWerkV2 | WebsiteWerkV3
         if werk_dict["__version__"] == "2":
             website_werk = WebsiteWerkV2(
@@ -197,5 +207,8 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
         else:
             raise RuntimeError
         all_werks_by_id[str(werk_id)] = website_werk
+
+    if not all_werks_by_id:
+        raise RuntimeError("Expected to collect at least one Werk, but it's completely empty.")
 
     sys.stdout.write(AllWerks.dump_json(all_werks_by_id, by_alias=True).decode("utf-8") + "\n")

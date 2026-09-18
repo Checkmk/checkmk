@@ -135,7 +135,10 @@ class EmailManager:
             msg = message_from_file(file)
             logger.info("Check that email fields have expected values")
             for field, expected_value in expected_fields.items():
-                assert msg.get(field) == expected_value, f"Field '{field}' has unexpected value"
+                if (actual := msg.get(field)) != expected_value:
+                    raise AssertionError(
+                        f"Field '{field}' is {actual!r}, expected {expected_value!r}"
+                    )
 
             logger.info("Check that email text content has expected value")
             for part in msg.walk():
@@ -148,7 +151,10 @@ class EmailManager:
                     text_dict = self.convert_text_into_dict(text)
                     for key, expected_value in expected_text_content.items():
                         actual_value = text_dict[key]
-                        assert expected_value == actual_value, f"Field '{key}' has unexpected value"
+                        if expected_value != actual_value:
+                            raise AssertionError(
+                                f"Field '{key}' is {actual_value!r}, expected {expected_value!r}"
+                            )
 
     def copy_html_content_into_file(self, file_path: Path) -> Path:
         """Copy the html content of the email into a file and return the file path."""

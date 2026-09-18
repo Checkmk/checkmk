@@ -147,7 +147,7 @@ def _get_volume_counters_key(volume: models.VolumeModel) -> str:
 def discover_netapp_ontap_volumes(
     params: Sequence[Mapping[str, Any]],
     section_netapp_ontap_volumes: VolumesSection | None,
-    section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
+    section_netapp_ontap_volumes_counters: VolumesCountersSection | None,  # noqa: ARG001
     section_netapp_ontap_vs_status: SvmSection | None,
 ) -> DiscoveryResult:
     if section_netapp_ontap_volumes and section_netapp_ontap_vs_status:
@@ -347,7 +347,7 @@ def check_netapp_ontap_volumes(
     params: Mapping[str, Any],
     section_netapp_ontap_volumes: VolumesSection | None,
     section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
-    section_netapp_ontap_vs_status: SvmSection | None,
+    section_netapp_ontap_vs_status: SvmSection | None,  # noqa: ARG001
 ) -> CheckResult:
     """
     The Netapp API is responding with no counters for some online volumes.

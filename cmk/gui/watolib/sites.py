@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import dataclasses
 import queue
 import re
 import time
 from collections.abc import Collection, Mapping, Sequence
-from multiprocessing import JoinableQueue, Process
+from multiprocessing import get_context, JoinableQueue
 from typing import Any, cast, NamedTuple, override, Protocol
 
 from flask import has_request_context
@@ -25,6 +23,7 @@ import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.user import UserId
@@ -73,10 +72,10 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     ValueSpec,
 )
+from cmk.gui.watolib import wire_format
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_remote_automation,
-    parse_license_state,
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -87,7 +86,11 @@ from cmk.gui.watolib.config_domains import (
 from cmk.gui.watolib.config_sync import (
     create_distributed_wato_files,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_site_global_settings_raw,
+    site_global_settings_change,
+)
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
@@ -244,6 +247,18 @@ def _user_attribute_sync_to_disk(value: object) -> object:
         return "all"
     assert choice == "list"
     return list(payload)
+
+
+def validate_new_site_id(site_id: str) -> None:
+    """Reject an ID that no OMD site can ever have."""
+    if not re.match(SITE_ID_PATTERN, site_id):
+        raise MKUserError(
+            "id",
+            _(
+                "The site id must begin with a letter or underscore, may contain only "
+                "letters, digits and underscores and must be 1 to 16 characters long."
+            ),
+        )
 
 
 class SiteManagement:
@@ -434,7 +449,7 @@ class SiteManagement:
                 "connections, or <i>Use all</i> to enable every configured "
                 "connection of the selected types — including ones added later. "
                 "<br>Authentication connections are responsible "
-                "of creating the user and the initial user setup.<br>SAML connection are only authorized "
+                "for creating the user and the initial user setup.<br>SAML connection are only authorized "
                 "to overwrite user attributes if no other Attribute Sync Connection is configured for that user."
             )
         else:
@@ -445,7 +460,7 @@ class SiteManagement:
                 "connections, or <i>Use all</i> to enable every configured "
                 "LDAP connection — including ones added later."
                 "<br>Authentication connections are responsible "
-                "of creating the user and the initial user setup."
+                "for creating the user and the initial user setup."
             )
 
         return TransformDataForLegacyFormatOrRecomposeFunction(
@@ -754,10 +769,8 @@ class SiteManagement:
         site_configuration: SiteConfiguration,
         all_sites: SiteConfigurations,
     ) -> None:
-        if not re.match("^[-a-z0-9A-Z_]+$", site_id):
-            raise MKUserError(
-                "id", _("The site id must consist only of letters, digit and the underscore.")
-            )
+        if site_id not in all_sites:
+            validate_new_site_id(site_id)
 
         if not site_configuration.get("alias"):
             raise MKUserError(
@@ -990,7 +1003,7 @@ class LivestatusViaTCP(_LegacyDictionary):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,
+        help: str | None = None,  # noqa: A002
         tcp_port: int = 6557,
     ) -> None:
         elements: list[tuple[str, ValueSpec]] = [
@@ -1137,6 +1150,42 @@ def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration
     return is_replication_enabled(site) or site_is_local(site)
 
 
+def load_site_globals(sites: SiteConfigurations, site_id: SiteId) -> dict[str, object]:
+    """The site's own overrides, as a copy that writers may mutate before saving."""
+    return dict(sites[site_id].get("globals", {}))
+
+
+def save_site_globals(
+    site_id: SiteId,
+    sites: SiteConfigurations,
+    site_globals: dict[str, object],
+    *,
+    tree: FolderTree,
+    pprint_value: bool,
+    liveproxyd_enabled: bool,
+    use_git: bool,
+    acting_user_id: UserId | None,
+) -> None:
+    """Writes the overrides with the config domains in the loop, see save_global_settings().
+
+    They go to the sites file and, for the local site, also to its own site-specific
+    config files, which are what the running site reads.
+    """
+    with site_global_settings_change(sites, site_id, site_globals):
+        sites[site_id]["globals"] = site_globals
+        site_management_registry["site_management"].save_sites(
+            tree,
+            sites,
+            activate=False,
+            pprint_value=pprint_value,
+            liveproxyd_enabled=liveproxyd_enabled,
+            use_git=use_git,
+            acting_user_id=acting_user_id,
+        )
+        if site_id == omd_site():
+            save_site_global_settings_raw(site_globals)
+
+
 def _clear_distributed_wato_file() -> None:
     p = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
     # We do not delete the file but empty it. That way
@@ -1201,12 +1250,19 @@ class ReplicationStatusFetcher:
         )
         results_by_site: dict[SiteId, ReplicationStatus] = {}
 
+        # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+        # "forkserver", see
+        # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+        # The concrete problem here is that the licensing handler registry is filled at runtime, so
+        # a non-forked child cannot determine the license state for the automation request headers.
+        ctx = get_context("fork")
+
         # Results are fetched simultaneously from the remote sites
-        result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
+        result_queue: JoinableQueue[ReplicationStatus] = ctx.JoinableQueue()
 
         processes = []
         for site_id, automation_config in sites:
-            process = Process(
+            process = ctx.Process(
                 target=self._fetch_for_site, args=(site_id, automation_config, result_queue, debug)
             )
             process.start()
@@ -1225,9 +1281,9 @@ class ReplicationStatusFetcher:
             except Exception as e:
                 logger.exception(
                     "error collecting replication results from site %(site_id)s",
-                    {"site_id": result.site_id},
+                    {"site_id": result.site_id},  # type: ignore[possibly-undefined]
                 )
-                html.show_error(f"{result.site_id}: {e}")
+                html.show_error(f"{result.site_id}: {e}")  # type: ignore[possibly-undefined]
 
         self._logger.debug("Got results")
         return results_by_site
@@ -1269,7 +1325,9 @@ class ReplicationStatusFetcher:
                 response=PingResult(
                     version=raw_result["version"],
                     edition=raw_result["edition"],
-                    license_state=parse_license_state(raw_result.get("license_state", "")),
+                    license_state=wire_format.license_state_from_ping_string(
+                        raw_result.get("license_state", "")
+                    ),
                     omd_status=raw_result["omd_status"],
                 ),
             )

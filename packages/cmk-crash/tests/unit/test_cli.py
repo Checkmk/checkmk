@@ -7,8 +7,6 @@
 Network calls are intercepted with `responses`; no real OMD site is needed.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from logging import getLogger
 from pathlib import Path
@@ -27,7 +25,7 @@ def _write_global_mk(path: Path, **settings: object) -> None:
     path.write_text("\n".join(f"{key} = {value!r}" for key, value in settings.items()))
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _fake_site(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
     monkeypatch.setenv("OMD_SITE", "mysite")

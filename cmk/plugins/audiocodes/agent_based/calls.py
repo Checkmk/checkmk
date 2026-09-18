@@ -83,7 +83,7 @@ snmp_section_audiocodes_alarms = SNMPSection(
 )
 
 
-def discover_audiocodes_calls(section: Calls) -> DiscoveryResult:
+def discover_audiocodes_calls(section: Calls) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

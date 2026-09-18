@@ -25,16 +25,34 @@ export function pxToTime(
   return domainStart + ((px - trackLeft) / trackWidth) * (domainEnd - domainStart)
 }
 
+export interface ResizeHandleRects {
+  leftX: number
+  rightX: number
+  width: number
+}
+
+export function resizeHandleRects(
+  windowLeftPx: number,
+  windowRightPx: number,
+  handleWidth: number
+): ResizeHandleRects {
+  return {
+    leftX: windowLeftPx - handleWidth,
+    rightX: windowRightPx,
+    width: handleWidth
+  }
+}
+
 export function hitTestMode(
   px: number,
   windowLeftPx: number,
   windowRightPx: number,
-  handlePx: number
+  resizeHandles: ResizeHandleRects
 ): BrushMode {
-  if (Math.abs(px - windowLeftPx) <= handlePx) {
+  if (px >= resizeHandles.leftX && px <= resizeHandles.leftX + resizeHandles.width) {
     return 'resize-l'
   }
-  if (Math.abs(px - windowRightPx) <= handlePx) {
+  if (px >= resizeHandles.rightX && px <= resizeHandles.rightX + resizeHandles.width) {
     return 'resize-r'
   }
   if (px > windowLeftPx && px < windowRightPx) {

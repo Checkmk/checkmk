@@ -10,6 +10,7 @@ import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { ref } from 'vue'
 
 import type { ItemId } from '../../types'
 
@@ -23,6 +24,13 @@ const { metricOptions, percentileOptions, errors } = defineProps<{
 
 const selectedId = defineModel<ItemId | null>('selectedId', { required: true })
 const percentile = defineModel<string | null>('percentile', { required: true })
+
+const metricRef = ref<InstanceType<typeof CmkDropdown> | null>(null)
+
+function focus(): void {
+  metricRef.value?.focus()
+}
+defineExpose({ focus })
 </script>
 
 <template>
@@ -42,12 +50,19 @@ const percentile = defineModel<string | null>('percentile', { required: true })
       />
     </div>
     <CmkDropdown
+      ref="metricRef"
       v-model="selectedId"
       class="graphing-transformation-editor__control--metric"
       width="fill"
       :options="metricOptions"
       :label="_t('Metric')"
       :input-hint="_t('Select one metric')"
+      :no-elements-text="_t('No metric available')"
+      :no-results-hint="
+        _t(
+          'A percentile needs one metric. Add a single metric, or aggregate a query in a calculation first.'
+        )
+      "
     />
     <CmkDropdown
       v-model="percentile"

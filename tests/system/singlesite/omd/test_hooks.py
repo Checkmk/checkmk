@@ -48,6 +48,7 @@ def test_hooks(site: Site) -> None:
 
     if not site.edition.is_community_edition():
         hooks += [
+            "AI_CONTROL_PLANE",
             "LIVEPROXYD",
             "MCP_SERVER",
             "MCP_TRACE_FORWARD",

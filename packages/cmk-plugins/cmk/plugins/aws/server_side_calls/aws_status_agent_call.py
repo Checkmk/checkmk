@@ -16,7 +16,7 @@ class AwsStatusParams(BaseModel):
 
 def aws_status_arguments(
     params: AwsStatusParams,
-    host_config: HostConfig,
+    host_config: HostConfig,  # noqa: ARG001
 ) -> Iterable[SpecialAgentCommand]:
     args = [region.replace("_", "-") for region in params.regions_to_monitor]
     yield SpecialAgentCommand(command_arguments=args)

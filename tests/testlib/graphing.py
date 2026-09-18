@@ -13,7 +13,7 @@ constant to find every skeleton blocked on the same dependency):
 
 - ``SKIP_PENDING_GRAPH_BACKEND`` - integration tests needing the ``<cmk-graph>`` embedding;
   enablable first.
-- ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests needing the engine to render on a surface.
+- ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests pending the accessibility behaviour they assert.
 
 `injected_ping_rrds` is the cheapest way to get one: a no-agent host has exactly one service
 with an RRD (PING), and the core holds its RRDs open, so it takes every host it needs in one go
@@ -47,7 +47,8 @@ from enum import StrEnum
 from typing import Final
 
 from cmk.graphing_engine import Graph
-from cmk.gui.graphing._engine_codec import community_graph_codec, ensure_type
+from cmk.gui.graphing import ensure_type
+from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.rrd import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from cmk.utils.misc import pnp_cleanup
 from tests.testlib.site import Site
@@ -59,7 +60,8 @@ SKIP_PENDING_GRAPH_BACKEND: Final = (
     "<cmk-graph> embedding); enable once the backend lands."
 )
 SKIP_PENDING_GRAPH_ENGINE: Final = (
-    "CMK-35973 skeleton: pending the new graph engine rendering on this surface."
+    "CMK-35973 skeleton: the engine now renders on every surface, so these are pending the "
+    "accessibility behaviour they assert rather than the engine itself."
 )
 
 # Default RRD geometry: one sample per minute over roughly a day.
@@ -87,6 +89,8 @@ _UPDATE_BATCH: Final = 1000
 # Each data source occupies its own band of values, so a series read back through a graph can
 # be attributed to the metric it came from.
 _BAND_WIDTH: Final = 100.0
+_BAND_CENTRE: Final = 50.0
+_BAND_AMPLITUDE: Final = 40.0
 # Samples per oscillation for the 'oscillating' shape. Below the smallest consolidating
 # archive's pdp_per_row (5 in the core's geometry), so every consolidated bucket spans a full
 # period and its MIN/AVERAGE/MAX come out far apart.
@@ -127,13 +131,22 @@ class InjectedRrd:
     count: int
     metric_names: Sequence[str]
 
+    def band_of(self, metric_name: str) -> tuple[float, float]:
+        """The closed interval this file's samples of `metric_name` stay within."""
+        offset = self.metric_names.index(metric_name) * _BAND_WIDTH
+        return offset + _BAND_CENTRE - _BAND_AMPLITUDE, offset + _BAND_CENTRE + _BAND_AMPLITUDE
+
 
 def _period(shape: GraphDataShape, count: int) -> int:
     return _OSCILLATION_PERIOD if shape is GraphDataShape.OSCILLATING else max(count, 1)
 
 
 def _value(index: int, period: int, ds_index: int) -> float:
-    return ds_index * _BAND_WIDTH + 50.0 + 40.0 * math.sin(2.0 * math.pi * index / period)
+    return (
+        ds_index * _BAND_WIDTH
+        + _BAND_CENTRE
+        + _BAND_AMPLITUDE * math.sin(2.0 * math.pi * index / period)
+    )
 
 
 def _is_gap(index: int, count: int, shape: GraphDataShape) -> bool:
@@ -269,7 +282,7 @@ def injected_ping_rrds(
         }
         start = int(time.time()) - _WINDOW_START_DAYS_AGO * _DAY
         count = _WINDOW_DAYS * _DAY // _DEFAULT_STEP_SECONDS
-        site.omd("stop")
+        site.stop()
         try:
             injected = {
                 host_name: InjectedPingRrd(
@@ -287,7 +300,7 @@ def injected_ping_rrds(
                 for host_name, shape in shapes.items()
             }
         finally:
-            site.omd("start")
+            site.start()
         yield injected
     finally:
         site.openapi.hosts.bulk_delete(host_names)
@@ -296,14 +309,16 @@ def injected_ping_rrds(
 
 def ping_graph_internal(site: Site, host_name: str) -> Mapping[str, object]:
     discovered = site.openapi.graph.discover_template_graphs(host_name, PING_SERVICE)
-    assert discovered["graphs"], (
-        f"No graph discovered for {host_name}/{PING_SERVICE}: {discovered['no_data_message']}"
-    )
+    if not discovered["graphs"]:
+        raise AssertionError(
+            f"No graph discovered for {host_name}/{PING_SERVICE}: {discovered['no_data_message']}"
+        )
     internal: Mapping[str, object] = json.loads(discovered["graphs"][0]["internal"])
     return internal
 
 
 def data_points_of_every_metric(response: Mapping[str, object]) -> Sequence[Sequence[float | None]]:
     metrics = response["metrics"]
-    assert isinstance(metrics, list) and metrics, f"No series in the graph data: {response}"
+    if not isinstance(metrics, list) or not metrics:
+        raise AssertionError(f"No series in the graph data: {response}")
     return [metric["data_points"] for metric in metrics]

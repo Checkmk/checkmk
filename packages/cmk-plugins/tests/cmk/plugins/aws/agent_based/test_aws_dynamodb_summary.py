@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.aws.agent_based.aws_dynamodb_summary import (
@@ -51,13 +50,13 @@ test_section = [
 ]
 
 
-def test_discover_aws_dynamodb_summary():
+def test_discover_aws_dynamodb_summary() -> None:
     discovered_services = list(discover_aws_dynamodb_summary(test_section))
     assert len(discovered_services) == 1
     assert isinstance(discovered_services[0], Service)
 
 
-def test_check_aws_dynamodb_summary():
+def test_check_aws_dynamodb_summary() -> None:
     check_results = list(check_aws_dynamodb_summary(test_section))
     aws_regions = dict(AWS_REGIONS)
 

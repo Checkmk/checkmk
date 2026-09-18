@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.spec.spec_generator._doc_pydantic import _extract_body_example
 
@@ -81,3 +83,42 @@ def test_extract_body_example_skips_nested_without_examples() -> None:
         nested: Inner = api_field(description="Nested model without examples.")
 
     assert _extract_body_example(Outer) is None
+
+
+def test_extract_body_example_substitutes_the_type_argument() -> None:
+    @api_model
+    class Inner:
+        value: str = api_field(description="", example="nested")
+
+    @api_model
+    class Generic[T, D]:
+        domainType: D = api_field(description="")
+        payload: T = api_field(description="")
+
+    assert _extract_body_example(Generic[Inner, Literal["thing"]]) == {
+        "payload": {"value": "nested"}
+    }
+
+
+def test_extract_body_example_prefers_the_generic_field_example() -> None:
+    @api_model
+    class Inner:
+        value: str = api_field(description="", example="nested")
+
+    @api_model
+    class Generic[T]:
+        payload: T = api_field(description="", example="explicit")
+
+    assert _extract_body_example(Generic[Inner]) == {"payload": "explicit"}
+
+
+def test_extract_body_example_generic_without_examples_returns_none() -> None:
+    @api_model
+    class Inner:
+        value: str = api_field(description="")
+
+    @api_model
+    class Generic[T]:
+        payload: T = api_field(description="")
+
+    assert _extract_body_example(Generic[Inner]) is None

@@ -424,7 +424,7 @@ _TAG_CONFIG: TagConfigSpec = {
 
 
 @pytest.fixture(name="tags")
-def fixture_tags(request_context: None) -> Iterator[None]:
+def fixture_tags(request_context: None) -> Iterator[None]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     original = active_config.tags
     active_config.tags = TagConfig.from_config(_TAG_CONFIG)
     try:

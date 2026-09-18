@@ -19,8 +19,6 @@ an explicit keyword argument on a small builder method:
 Both enums are required at every call site so handler intent stays visible.
 """
 
-from __future__ import annotations
-
 import enum
 import logging
 from collections.abc import Callable
@@ -111,9 +109,7 @@ class AutomationEnvironment:
         if plugins is None:
             plugins = load_plugins()
         if loading_result is None:
-            loading_result = load_config(
-                edition=app.edition,
-            )
+            loading_result = load_config()
         return cls(app=app, plugins=plugins, loading_result=loading_result)
 
     # --- Pass-through accessors (no caching — just re-expose what's already there).

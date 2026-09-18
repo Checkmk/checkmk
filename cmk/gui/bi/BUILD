@@ -97,7 +97,6 @@ py_library(
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/sidebar",
         "//cmk/gui/utils",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/views:components",

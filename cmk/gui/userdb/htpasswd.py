@@ -103,7 +103,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
 
         try:
             password_hashing.verify(password, pw_hash)
-        except (password_hashing.PasswordInvalidError, ValueError):
+        except password_hashing.PasswordInvalidError, ValueError:
             return False
         return user_id
 

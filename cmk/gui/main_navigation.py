@@ -75,7 +75,7 @@ class MainNavigation:
         ``main_modules`` from ``wsgi_import.py`` before any request, so
         this is a programming error in test / standalone-script setups.
         """
-        if html.output_format != "html" or html._header_sent:
+        if html.output_format != "html" or html._header_sent:  # noqa: SLF001
             return
         try:
             renderer = main_navigation_renderer_registry[_RENDERER_KEY]
@@ -88,7 +88,7 @@ class MainNavigation:
         renderer(title, MainNavigation.from_config(config=config))
 
     @staticmethod
-    def from_config(config: Config) -> "MainNavigation":
+    def from_config(config: Config) -> MainNavigation:
         """Build a :class:`MainNavigation` from the active :class:`Config`.
 
         ``kiosk`` defaults to ``is_kiosk_request(request)`` so callers don't have

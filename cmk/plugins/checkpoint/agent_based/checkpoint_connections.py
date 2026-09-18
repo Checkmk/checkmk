@@ -48,7 +48,7 @@ snmp_section_checkpoint_connections = SimpleSNMPSection(
 )
 
 
-def discover_checkpoint_connections(section: Section) -> DiscoveryResult:
+def discover_checkpoint_connections(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

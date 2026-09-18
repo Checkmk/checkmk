@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterator, Mapping
 from typing import Literal
@@ -54,7 +53,7 @@ def generate_sql_command(
         params.password,
     ]
 
-    match params.port:
+    match params.port:  # type: ignore[exhaustive-match]
         case "explicit", int(value):  # type: ignore[unreachable]
             args.append(f"--port={value}")
         case "macro", str(value):  # type: ignore[unreachable]

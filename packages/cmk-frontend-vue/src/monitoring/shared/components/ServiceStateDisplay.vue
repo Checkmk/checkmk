@@ -4,17 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import StateTag, { type StateTagSize, type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { ServiceState } from '@/monitoring/shared/api/types'
 
-import StateTag, { type StateTagSize, type StateTone } from './StateTag.vue'
-
 const props = defineProps<{
   state: ServiceState
-  pending?: boolean | undefined
   stale?: boolean | undefined
   /** Two-letter labels, for a state column too tight to spell the state out. */
   abbreviated?: boolean | undefined
@@ -26,11 +24,13 @@ const { _t } = usei18n()
 
 const short = computed<boolean>(() => props.abbreviated === true || props.inline === true)
 
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled service state: ${String(value)}`)
+}
+
 const stateLabel = computed<TranslatedString>(() => {
-  if (props.pending) {
-    return short.value ? _t('PD') : _t('PENDING')
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'OK':
       return _t('OK')
     case 'WARN':
@@ -38,24 +38,29 @@ const stateLabel = computed<TranslatedString>(() => {
     case 'CRIT':
       return short.value ? _t('CR') : _t('CRITICAL')
     case 'UNKNOWN':
-    default:
       return short.value ? _t('UN') : _t('UNKNOWN')
+    case 'PENDING':
+      return short.value ? _t('PD') : _t('PENDING')
+    default:
+      return assertNever(state)
   }
 })
 
 const stateTone = computed<StateTone>(() => {
-  if (props.pending) {
-    return 'pending'
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'OK':
       return 'ok'
     case 'WARN':
       return 'warning'
     case 'CRIT':
       return 'critical'
-    default:
+    case 'UNKNOWN':
       return 'unknown'
+    case 'PENDING':
+      return 'pending'
+    default:
+      return assertNever(state)
   }
 })
 

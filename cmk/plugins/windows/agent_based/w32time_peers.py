@@ -40,7 +40,8 @@
 # Reachability: 3
 
 
-from collections.abc import Iterable, Sequence
+import time
+from collections.abc import Iterable, MutableMapping, Sequence
 from dataclasses import dataclass
 from itertools import count
 from typing import Literal, NotRequired, Self, TypedDict
@@ -51,6 +52,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
     LevelsT,
     render,
     Result,
@@ -74,6 +76,8 @@ DEFAULT_DISCOVERY_PARAMS = DiscoveryParams(
 class Params(TypedDict):
     reachability_consecutive_failures: LevelsT[int]
     reachability_total_failures: LevelsT[int]
+    peer_never_synced_state: int
+    peer_never_synced_levels: LevelsT[float]
     stratum: LevelsT[int]
     universal: NotRequired[bool]
 
@@ -81,6 +85,8 @@ class Params(TypedDict):
 DEFAULT_PARAMS = Params(
     reachability_consecutive_failures=("no_levels", None),
     reachability_total_failures=("no_levels", None),
+    peer_never_synced_state=int(State.OK),
+    peer_never_synced_levels=("fixed", (10 * 60.0, 30 * 60.0)),  # 10 minutes, 30 minutes
     stratum=("fixed", (5, 5)),
 )
 
@@ -260,10 +266,7 @@ def discover_w32time_peers(
         return
 
     for peer, data in section.items():
-        # Really hoping "(null)" stays consistent across languages
-        # Also if a peer has no name, we want to discover it, to warn on it.
-        if data.last_successful_sync_time != "(null)" or data.peer == "":
-            yield Service(item=peer)
+        yield Service(item=peer)
 
 
 def discover_w32time_peers_summary(
@@ -276,7 +279,61 @@ def discover_w32time_peers_summary(
     yield Service()
 
 
-def _last_successful_sync_time(peer: QueryPeers, notice_only: bool = False) -> Iterable[Result]:
+def _never_synced_vs_key(peer_name: str) -> str:
+    return f"{peer_name}:last_successful_sync_time_null"
+
+
+def _last_successful_sync_time(
+    peer: QueryPeers,
+    state_if_null: State,
+    peer_never_synced_levels: LevelsT[float] | None,
+    now: float,
+    value_store: MutableMapping[str, object],
+    notice_only: bool = False,
+) -> Iterable[Result]:
+    """
+    The value of "Last Successful Sync Time" is internationalized and cannot
+    normally be parsed. However testing shows that when it is "(null)" that
+    string is consistent across languages.
+
+    When it is "(null)" it means that the peer has not synced yet. As far as we
+    are concerned, the state of the peer is genuinely unknown: for example,
+    w32time could have just started and the peer didn't sync yet.
+
+    It being "(null)" on its own is not necessarily cause for alarm (thus we let
+    the user select the default state in this condition). But it *staying* as
+    "(null)" for a long time could indicate a legitimate issue. So we also allow
+    the user to set levels for how long the peer can stay in "(null)" before we
+    alert.
+    """
+    vs_key = _never_synced_vs_key(peer.peer)
+    if peer.last_successful_sync_time == "(null)":
+        first_seen = value_store.setdefault(vs_key, now)
+        if not isinstance(first_seen, int | float):
+            # Nothing else writes this key, so this should not happen. Recover
+            # by restarting the grace period instead of crashing.
+            first_seen = now
+            value_store[vs_key] = first_seen
+        elapsed = now - first_seen
+        for result in check_levels(
+            value=elapsed,
+            render_func=render.timespan,
+            label="Peer has not synced yet, time in this state",
+            levels_upper=peer_never_synced_levels,
+            notice_only=notice_only,
+        ):
+            if not isinstance(result, Result):
+                continue  # mypy
+            state = state_if_null if result.state is State.OK else result.state
+            if notice_only:
+                yield Result(state=state, notice=result.details)
+            else:
+                yield Result(state=state, summary=result.details)
+        return
+
+    # Not "(null)" (anymore): clear any recorded first-seen timestamp.
+    value_store.pop(vs_key, None)
+
     text = f"Last successful sync time: {peer.last_successful_sync_time}"
     if notice_only:
         yield Result(state=State.OK, notice=text)
@@ -362,7 +419,13 @@ def _next_poll(peer: QueryPeers, notice_only: bool = False) -> Iterable[Result]:
     yield from (r for r in result if isinstance(r, Result))  # for mypy's sake
 
 
-def check_w32time_peers(item: str, params: Params, section: dict[str, QueryPeers]) -> CheckResult:
+def _check_w32time_peers(
+    item: str,
+    params: Params,
+    section: dict[str, QueryPeers],
+    now: float,
+    value_store: MutableMapping[str, object],
+) -> CheckResult:
     if item not in section:
         return
 
@@ -375,7 +438,14 @@ def check_w32time_peers(item: str, params: Params, section: dict[str, QueryPeers
         yield Result(state=State.WARN, summary="Peer with no name found!")
         return
 
-    yield from _last_successful_sync_time(peer)
+    yield from _last_successful_sync_time(
+        peer,
+        State(params["peer_never_synced_state"]),
+        params["peer_never_synced_levels"],
+        now,
+        value_store,
+    )
+
     yield from _reachability_total_failures(peer, params.get("reachability_total_failures"))
     yield from _reachability_consecutive_failures(
         peer, params.get("reachability_consecutive_failures")
@@ -385,9 +455,21 @@ def check_w32time_peers(item: str, params: Params, section: dict[str, QueryPeers
     yield from _next_poll(peer)
 
 
-def check_w32time_peers_summary(
+def check_w32time_peers(
+    item: str,
     params: Params,
     section: dict[str, QueryPeers],
+) -> CheckResult:
+    yield from _check_w32time_peers(
+        item, params, section, now=time.time(), value_store=get_value_store()
+    )
+
+
+def _check_w32time_peers_summary(
+    params: Params,
+    section: dict[str, QueryPeers],
+    now: float,
+    value_store: MutableMapping[str, object],
 ) -> CheckResult:
     """
     A singular summary check service which encapsulates all Windows Time Service
@@ -397,7 +479,7 @@ def check_w32time_peers_summary(
     are applied to all peers.
 
     The check can be configured to alert if ALL peers are non-OK (i.e. they go
-    WARN or CRIT), or to alert if ANY peer is non-OK.
+    WARN or CRIT or UNKN), or to alert if ANY peer is non-OK.
 
     In the code, we call the "ALL peers must be non-OK to alert" mode
     "universal" mode since (∀peer. peer is failed) vs "existential mode" where
@@ -405,6 +487,16 @@ def check_w32time_peers_summary(
     """
 
     peer_count = len(section)
+
+    # Drop never-synced timestamps of peers that no longer exist, so removed
+    # peers do not accumulate in the value store forever.
+    known_keys = {_never_synced_vs_key(peer.peer) for peer in section.values()}
+    for stale_key in [
+        key
+        for key in value_store
+        if key.endswith(":last_successful_sync_time_null") and key not in known_keys
+    ]:
+        value_store.pop(stale_key)
 
     def emit_possibly_suppressed(
         peername: str,
@@ -417,7 +509,7 @@ def check_w32time_peers_summary(
             # omitted; the preceding "\nPeer: {name}" line provides the grouping context.
             notice = f"{peername}: {result.details}"
             details = result.details
-            if result.state in (State.WARN, State.CRIT) and suppressing:
+            if result.state is not State.OK and suppressing:
                 details += " (alerts suppressed)"
 
             state = State.OK if suppressing else result.state
@@ -427,12 +519,17 @@ def check_w32time_peers_summary(
     reachability_total_failures_results: dict[str, list[Result]] = {}
     reachability_consecutive_failures_results: dict[str, list[Result]] = {}
     stratum_results: dict[str, list[Result]] = {}
+    never_synced_results: dict[str, list[Result]] = {}
 
     # So we can count how many peers have at least one non-ok result.
     non_ok_peers: set[str] = set()
     # We do not suppress alerts in this case, we need to know if we should hide
     # that message or not, so track missing-name peers.
     missing_name_peers = 0
+
+    # State for peers which have never synced and have not yet tripped the
+    # levels check (it must be in a "bad" state for a while before we alert).
+    never_synced_state = State(params["peer_never_synced_state"])
 
     # We need to calculate the results of these checks before we yield any
     # Results because this is the only way we know if we need to suppress alerts
@@ -456,6 +553,18 @@ def check_w32time_peers_summary(
             lambda peers, levels: _stratum(peers, levels, True),
             "stratum",
             stratum_results,
+        ),
+        (
+            lambda peer, levels: _last_successful_sync_time(
+                peer,
+                never_synced_state,
+                peer_never_synced_levels=levels,
+                now=now,
+                value_store=value_store,
+                notice_only=True,
+            ),
+            "peer_never_synced_levels",
+            never_synced_results,
         ),
     ]
     for name, peer in section.items():
@@ -509,7 +618,7 @@ def check_w32time_peers_summary(
             continue
 
         yield Result(state=State.OK, notice=f"\nPeer: {name}")
-        yield from _last_successful_sync_time(peer, notice_only=True)
+        yield from emit_possibly_suppressed(name, never_synced_results[name], suppressing)
         yield from emit_possibly_suppressed(
             name, reachability_total_failures_results[name], suppressing
         )
@@ -519,6 +628,18 @@ def check_w32time_peers_summary(
         yield from _last_sync_failure(peer, notice_only=True)
         yield from emit_possibly_suppressed(name, stratum_results[name], suppressing)
         yield from _next_poll(peer, notice_only=True)
+
+
+def check_w32time_peers_summary(
+    params: Params,
+    section: dict[str, QueryPeers],
+) -> CheckResult:
+    yield from _check_w32time_peers_summary(
+        params,
+        section,
+        now=time.time(),
+        value_store=get_value_store(),
+    )
 
 
 check_plugin_w32time_peers = CheckPlugin(

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed Setup."""
@@ -45,7 +44,7 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.search import index as search_index
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, ReadOnlySpec, StaticIcon
+from cmk.gui.type_defs import ActionResult, ReadOnlySpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -88,6 +87,8 @@ from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils import paths, render
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .sites import sort_sites
@@ -875,7 +876,7 @@ class ModeActivateChanges(WatoMode):
             html.write_text_permissive(_("Is not logged in.") + " ")
 
         if not last_state:
-            html.write_text_permissive(_("Has never been activated"))
+            html.write_text_permissive(_("Has never been activated"))  # type: ignore[unreachable]
         elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
             html.write_text_permissive(_("Activation needed"))
         else:
@@ -997,7 +998,7 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
         )
         return url, object_ref.ident
 
-    return None, object_ref.ident
+    return None, object_ref.ident  # type: ignore[unreachable]
 
 
 def _vs_activation(

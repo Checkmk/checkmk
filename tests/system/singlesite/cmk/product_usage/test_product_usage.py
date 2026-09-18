@@ -44,7 +44,7 @@ def default_cfg(site: Site) -> Generator[None]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_product_usage_data(site: Site) -> Iterator[None]:
     yield
     # Delete product usage directory if it exists
@@ -110,7 +110,7 @@ def run_product_usage_upload(site: Site, mock_url: str) -> None:
     assert result.wait() == 0, f"Product usage upload failed: {result.stderr}"
 
 
-def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:
+def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:  # noqa: ARG001
     """Validate that the product usage request contains required metadata and data."""
     data = json.loads(body)
     assert "metadata" in data, "Missing metadata in request"

@@ -18,7 +18,7 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
-from cmk.gui.oauth.store.token_store import get_token_store, UnknownClient
+from cmk.gui.oauth.token.token_store import get_token_store, UnknownClient
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.scopes import format_scopes, parse_scopes
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
@@ -50,7 +50,7 @@ def _error(error: _TokenError) -> None:
     """RFC 6749 section 5.2 error response: HTTP 400 with a JSON body."""
     response.status_code = http_client.BAD_REQUEST
     response.set_content_type("application/json")
-    response.set_data(OAuthTokenErrorResponse(error=error).model_dump_json(exclude_none=True))
+    response.set_data(OAuthTokenErrorResponse(error=error).model_dump_json())
 
 
 def _matches_challenge(code_verifier: str, code_challenge: str) -> bool:
@@ -86,7 +86,7 @@ class OAuthTokenPage(Page):
     here instead of on its first rejected write.
     Rejections follow the RFC 6749 section 5.2 error format. The returned
     access token is a real, store-backed token issued for the record's user
-    (see cmk.gui.oauth.store.token_store).
+    (see cmk.gui.oauth.token.token_store).
     """
 
     def __init__(self, enabled: Callable[[], bool]) -> None:

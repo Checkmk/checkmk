@@ -55,7 +55,7 @@ snmp_section_netscaler_tcp_conns = SimpleSNMPSection(
 )
 
 
-def discover(section: Section) -> DiscoveryResult:
+def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

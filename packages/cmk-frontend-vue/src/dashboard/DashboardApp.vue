@@ -48,7 +48,9 @@ import { useProvideDashboardConstants } from '@/dashboard/composables/useProvide
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import { useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
+import { buildResponsiveWidgetLayouts } from '@/dashboard/dashboardMigration.ts'
 import {
+  type ContentRelativeGrid,
   type ContentResponsiveGrid,
   type DashboardGeneralSettings,
   type DashboardKey,
@@ -60,6 +62,7 @@ import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { DashboardPageProperties } from '@/dashboard/types/page.ts'
 import type {
+  ResponsiveGridWidgetLayouts,
   WidgetContent,
   WidgetFilterContext,
   WidgetGeneralSettings,
@@ -67,6 +70,7 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
+import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
@@ -80,6 +84,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 const props = defineProps<DashboardPageProperties>()
 
 const dbAppRef = ref<HTMLElement | null>(null)
+const dashboardComponent = ref<InstanceType<typeof DashboardComponent> | null>(null)
 const isDashboardLoading = ref(false)
 const loadingError = ref<Error | null>(null)
 const isDashboardEditingMode = ref(props.mode === 'edit_layout' && !!props.dashboard)
@@ -273,8 +278,7 @@ const dashboardVisualTitle = useDashboardVisualTitle(
 )
 
 watch(dashboardVisualTitle, (newTitle) => {
-  // We only set the title for the current document. If we're inside the index page,
-  // the tabs title will be correctly updated via initialize_sidebar() periodically.
+  // We only set the title for the current document.
   document.title = newTitle
 })
 
@@ -459,6 +463,23 @@ const cloneDashboard = async (
   if (!key) {
     throw new Error('No active dashboard to clone from')
   }
+
+  // an anchored source needs a responsive placement per widget, which only the rendered grid can
+  // tell us; without it there is nothing to send, so the clone does not start
+  const sourceContent = dashboardsManager.activeDashboard.value!.model.content
+  let migratedWidgetLayouts: Record<string, ResponsiveGridWidgetLayouts> | null = null
+  if (sourceContent.layout.type === 'relative_grid' && layout === DashboardLayout.RESPONSIVE_GRID) {
+    const readingOrder = dashboardComponent.value?.getRelativeGridWidgetOrder() ?? null
+    if (readingOrder === null) {
+      return
+    }
+    migratedWidgetLayouts = buildResponsiveWidgetLayouts(
+      readingOrder,
+      sourceContent as ContentRelativeGrid,
+      dashboardsManager.constants.value!
+    )
+  }
+
   openDashboardCloneDialog.value = false
   isCloning.value = true
   loadingError.value = null
@@ -466,7 +487,16 @@ const cloneDashboard = async (
   let newKey: DashboardKey
   try {
     let newOwner
-    if (layout === DashboardLayout.RELATIVE_GRID) {
+    if (migratedWidgetLayouts !== null) {
+      const response = await dashboardAPI.cloneRelativeAsResponsiveGridDashboard(
+        key.name,
+        key.owner,
+        dashboardId,
+        generalSettings,
+        migratedWidgetLayouts
+      )
+      newOwner = response.extensions.owner
+    } else if (layout === DashboardLayout.RELATIVE_GRID) {
       const response = await dashboardAPI.cloneAsRelativeGridDashboard(
         key.name,
         key.owner,
@@ -585,6 +615,8 @@ const reviewFilters = () => {
   openDashboardShareDialog.value = false
   openDashboardFilterSettings.value = true
 }
+
+const { range } = useGlobalTimePickerRange(props.global_time_picker.default_time_range)
 </script>
 
 <template>
@@ -599,6 +631,7 @@ const reviewFilters = () => {
         />
         <DashboardMenuHeader
           v-model:is-edit-mode="isDashboardEditingMode"
+          v-model:range="range"
           :selected-dashboard="selectedDashboard"
           :is-dashboard-loading="
             isDashboardLoading ||
@@ -613,6 +646,7 @@ const reviewFilters = () => {
           :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
           :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
           :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+          :global-time-picker="global_time_picker"
           @open-runtime-filter="openRuntimeFilters"
           @open-filter-settings="openFilterSettings"
           @open-settings="openDashboardSettings = true"
@@ -737,6 +771,7 @@ const reviewFilters = () => {
           />
           <DashboardComponent
             v-else-if="dashboardsManager.isInitialized.value"
+            ref="dashboardComponent"
             :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
             v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
             :dashboard-key="dashboardsManager.activeDashboardKey.value!"

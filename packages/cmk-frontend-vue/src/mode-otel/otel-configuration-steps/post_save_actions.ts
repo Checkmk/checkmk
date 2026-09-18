@@ -112,9 +112,9 @@ async function isCollectorEnabled(siteId: string): Promise<boolean> {
  * Throws on network or server errors so the calling action can fail cleanly
  * before any mutation is made.
  */
-async function isMetricBackendEnabled(siteId: string): Promise<boolean> {
+async function isDataBackendEnabled(siteId: string): Promise<boolean> {
   const response = await fetchRestAPIDeprecated(
-    `api/internal/domain-types/metric_backend/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
+    `api/internal/domain-types/data_backend/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
     'GET'
   )
   await response.raiseForStatus()
@@ -167,7 +167,7 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
   try {
     const dcdId = `quick_setup_${ctx.configName}`
     const response = await fetchRestAPIDeprecated(
-      'api/internal/domain-types/dcd_metric_backend/collections/all',
+      'api/internal/domain-types/dcd_telemetry_metrics/collections/all',
       'POST',
       {
         title: ctx.configName,
@@ -187,9 +187,9 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
     return {
       ok: true,
       rollback: async () => {
-        // The dcd_metric_backend DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
+        // The dcd_telemetry_metrics DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
         await fetchRestAPIDeprecated(
-          `api/internal/objects/dcd_metric_backend/${encodeURIComponent(dcdId)}`,
+          `api/internal/objects/dcd_telemetry_metrics/${encodeURIComponent(dcdId)}`,
           'DELETE',
           undefined,
           IF_MATCH_ANY
@@ -289,14 +289,14 @@ export const enableCollectorAction: PostSaveAction = {
  * it if it was disabled before this save operation — preventing an unintended
  * side-effect on an already-enabled metric backend.
  */
-export const enableMetricBackendAction: PostSaveAction = {
-  key: 'enableMetricBackend',
+export const enableDataBackendAction: PostSaveAction = {
+  key: 'enableDataBackend',
   label: () => _t('Metric backend connection'),
   execute: async (ctx) => {
     try {
-      const wasEnabled = await isMetricBackendEnabled(ctx.siteId)
+      const wasEnabled = await isDataBackendEnabled(ctx.siteId)
       const response = await fetchRestAPIDeprecated(
-        'api/internal/domain-types/metric_backend/actions/update/invoke',
+        'api/internal/domain-types/data_backend/actions/update/invoke',
         'PATCH',
         {
           site_id: ctx.siteId,
@@ -311,7 +311,7 @@ export const enableMetricBackendAction: PostSaveAction = {
         ok: true,
         rollback: async () => {
           await fetchRestAPIDeprecated(
-            'api/internal/domain-types/metric_backend/actions/update/invoke',
+            'api/internal/domain-types/data_backend/actions/update/invoke',
             'PATCH',
             { site_id: ctx.siteId, config: { type: 'disabled' } }
           )
@@ -533,7 +533,7 @@ function buildReceiverBody(input: OTelReceiverConfigInput): Record<string, unkno
  * Hits the `otel_collector_config_receivers/collections/all` POST endpoint,
  * which is dispatched server-side to the ultimate or cloud handler based on
  * the active edition. If the POST fails the FinalizeConfiguration state
- * machine stops before the collector/metric-backend activation runs — that
+ * machine stops before the collector/data-backend activation runs — that
  * is required by the "cannot finish if config creation fails" criterion.
  */
 export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): PostSaveAction {
@@ -700,7 +700,7 @@ export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
  */
 export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
   enableCollectorAction,
-  enableMetricBackendAction,
+  enableDataBackendAction,
   createDCDConnectorAction
 ]
 
@@ -715,7 +715,7 @@ export function buildPrometheusFinalizeActions(
 ): readonly PostSaveAction[] {
   return [
     enableCollectorAction,
-    enableMetricBackendAction,
+    enableDataBackendAction,
     createPrometheusScrapeConfigAction(input),
     createDCDConnectorAction,
     createOTelBundleAction({ configName: input.id, siteId: input.siteId, passwordIds: [] })

@@ -58,6 +58,7 @@ py_console_script_binary(
     name = "djlint",
     data = ["//:pyproject.toml"],
     pkg = "@cmk_requirements//djlint:pkg",
+    tags = ["no-mypy"],
 )
 
 sh_expand_template(

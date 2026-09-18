@@ -4,8 +4,6 @@
 
 """Custom exception hierarchy for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 from typing import override
 
 

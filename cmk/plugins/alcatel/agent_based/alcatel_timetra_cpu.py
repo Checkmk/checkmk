@@ -33,7 +33,7 @@ def parse_alcatel_timetra_cpu(string_table: StringTable) -> Section | None:
     return Section(float(string_table[0][0])) if string_table else None
 
 
-def discover_alcatel_timetra_cpu(section: Section) -> DiscoveryResult:
+def discover_alcatel_timetra_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

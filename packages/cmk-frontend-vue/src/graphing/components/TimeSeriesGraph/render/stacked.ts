@@ -16,6 +16,7 @@ export interface StackedBand {
   gap: boolean
   startTime: number
   endTime: number
+  /** Where the band is drawn: the bucket's own anchor, which every layer of a stack agrees on. */
   anchorTime: number
 }
 
@@ -84,8 +85,10 @@ export function drawStackedBand(
   xScale: ScaleTime<number, number>,
   yScale: ScaleLinear<number, number>,
   color: string,
-  fillOpacity: number = 0.45
+  style: { fillOpacity?: number | undefined; strokeWidth?: number | undefined } = {}
 ): void {
+  const fillOpacity = style.fillOpacity ?? 0.45
+  const strokeWidth = style.strokeWidth ?? 1
   const bandAnchorX = (band: StackedBand): number => xScale(new Date(band.anchorTime * 1000))
 
   let runStart = 0
@@ -117,7 +120,7 @@ export function drawStackedBand(
     ctx.fillStyle = colorWithAlpha(color, fillOpacity)
     ctx.fill()
     ctx.strokeStyle = color
-    ctx.lineWidth = 1
+    ctx.lineWidth = strokeWidth
     ctx.stroke()
 
     runStart = runEnd

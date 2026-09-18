@@ -4,24 +4,49 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
+# Example output from agent:
+# <<<timesyncd>>>
+#        Server: 185.125.190.58 (ntp.ubuntu.com)
+# Poll interval: 34min 8s (min: 32s; max 34min 8s)
+#          Leap: normal
+#       Version: 4
+#       Stratum: 2
+#     Reference: 63DC0885
+#     Precision: 1us (-25)
+# Root distance: 2.937ms (max: 5s)
+#        Offset: +16.781ms
+#         Delay: 52.183ms
+#        Jitter: 52.340ms
+#  Packet count: 50
+#     Frequency: -2.764ppm
+# [[[1783588479]]]
+# <<<timesyncd_ntpmessage:sep(10)>>>
+# NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-25, RootDelay=5.264ms,
+#     RootDispersion=305us, Reference=63DC0885,
+#     OriginateTimestamp=Thu 2026-07-09 11:14:39 CEST, ReceiveTimestamp=Thu 2026-07-09 11:14:39 CEST,
+#     TransmitTimestamp=Thu 2026-07-09 11:14:39 CEST, DestinationTimestamp=Thu 2026-07-09 11:14:39 CEST,
+#     Ignored=no, PacketCount=50, Jitter=52.340ms }
+# Timezone=Europe/Berlin
+
 import re
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Any, NotRequired, TypedDict
+from typing import NotRequired, TypedDict
 
 from dateutil import parser as date_parser
 from dateutil import tz
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
     get_value_store,
+    NoLevelsT,
     render,
     Result,
     Service,
@@ -32,18 +57,20 @@ from cmk.plugins.lib.timesync import tolerance_check
 
 
 class CheckParams(TypedDict):
-    stratum_level: int
-    quality_levels: tuple[float, float]
-    alert_delay: tuple[int, int]
-    last_synchronized: NotRequired[tuple[int, int]]
-    last_ntp_message: tuple[int, int]
+    stratum_level: NoLevelsT | FixedLevelsT[int]
+    quality_levels: NoLevelsT | FixedLevelsT[float]
+    jitter_levels: NoLevelsT | FixedLevelsT[float]
+    alert_delay: NoLevelsT | FixedLevelsT[float]
+    last_synchronized: NotRequired[NoLevelsT | FixedLevelsT[float]]
+    last_ntp_message: NoLevelsT | FixedLevelsT[float]
 
 
 default_check_parameters = CheckParams(
-    stratum_level=10,
-    quality_levels=(200.0, 500.0),
-    alert_delay=(300, 3600),
-    last_ntp_message=(3600, 7200),
+    stratum_level=("fixed", (10, 16)),
+    quality_levels=("fixed", (0.2, 0.5)),
+    jitter_levels=("no_levels", None),
+    alert_delay=("fixed", (300.0, 3600.0)),
+    last_ntp_message=("fixed", (3600.0, 7200.0)),
 )
 
 
@@ -73,6 +100,7 @@ _UNITS_TO_SECONDS = {
 class Section(TypedDict, total=False):
     synctime: float
     server: str
+    server_name: str
     stratum: int
     offset: float
     jitter: float
@@ -84,7 +112,7 @@ class NTPMessageSection:
 
 
 def _strip_sign(time_string: str) -> tuple[str, int]:
-    match time_string[0]:
+    match time_string[0]:  # type: ignore[exhaustive-match]
         case "-":
             return time_string[1:], -1
         case "+":
@@ -133,7 +161,11 @@ def parse_timesyncd(string_table: StringTable) -> Section:
         key = line[0].replace(":", "").lower()
 
         if key == "server":
-            section["server"] = line[1].replace("(", "").replace(")", "")
+            # timedatectl prints "Server: <address> (<name>)". The address is
+            # "(null)" when it could not be resolved; the name may be absent.
+            section["server"] = line[1].strip("()")
+            if len(line) > 2:
+                section["server_name"] = " ".join(line[2:]).strip("()")
         if key == "stratum":
             section["stratum"] = int(line[1])
         if key == "offset":
@@ -174,47 +206,53 @@ def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection |
     )
 
 
-def _get_levels_seconds(params: Mapping[str, Any]) -> tuple[float, float]:
-    warn_milli, crit_milli = params["quality_levels"]
-    return warn_milli / 1000.0, crit_milli / 1000.0
+def _fixed_levels(levels: NoLevelsT | FixedLevelsT[float] | None) -> tuple[float, float] | None:
+    # tolerance_check (shared with the ntp check) still expects a bare (warn, crit) tuple.
+    match levels:
+        case ("fixed", (warn, crit)):
+            return warn, crit
+        case _:
+            return None
+
+
+def _render_server(address: str, name: str | None) -> str:
+    if name and name != address:
+        return f"{address} ({name})"
+    return address
 
 
 def discover_timesyncd(
     section_timesyncd: Section | None,
-    section_timesyncd_ntpmessage: NTPMessageSection | None,
+    section_timesyncd_ntpmessage: NTPMessageSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_timesyncd:
         yield Service()
 
 
 def check_timesyncd(
-    params: Mapping[str, Any],
+    params: CheckParams,
     section_timesyncd: Section | None,
     section_timesyncd_ntpmessage: NTPMessageSection | None,
 ) -> CheckResult:
     if section_timesyncd is None:
         return
 
-    levels = _get_levels_seconds(params)
-
     # Offset information
     offset = section_timesyncd.get("offset")
     if offset is not None:
-        yield from check_levels_v1(
+        yield from check_levels(
             value=abs(offset),
             metric_name="time_offset",
-            levels_upper=levels,
+            levels_upper=params["quality_levels"],
             render_func=render.timespan,
             label="Offset",
         )
 
     synctime = section_timesyncd.get("synctime")
-    levels_upper = (
-        params.get("alert_delay") if synctime is None else params.get("last_synchronized")
-    )
+    levels_upper = params["alert_delay"] if synctime is None else params.get("last_synchronized")
     yield from tolerance_check(
         sync_time=synctime,
-        levels_upper=levels_upper,
+        levels_upper=_fixed_levels(levels_upper),
         value_store=get_value_store(),
         metric_name="last_sync_time",
         label="Time since last sync",
@@ -224,11 +262,12 @@ def check_timesyncd(
     if section_timesyncd_ntpmessage is not None:
         yield from tolerance_check(
             sync_time=section_timesyncd_ntpmessage.receivetimestamp,
-            levels_upper=params.get("last_ntp_message"),
+            levels_upper=_fixed_levels(params["last_ntp_message"]),
             value_store=get_value_store(),
             metric_name="last_sync_receive_time",
             label="Time since last NTPMessage",
             value_store_key="last_sync_receive_time",
+            notice_only=True,
         )
 
     server = section_timesyncd.get("server")
@@ -237,19 +276,20 @@ def check_timesyncd(
         return
 
     if (stratum := section_timesyncd.get("stratum")) is not None:
-        yield from check_levels_v1(
+        yield from check_levels(
             value=stratum,
-            levels_upper=(stratum_level := params["stratum_level"] - 1, stratum_level),
+            levels_upper=params["stratum_level"],
+            render_func=lambda v: f"{v:.0f}",
             label="Stratum",
         )
 
     # Jitter Information append
     jitter = section_timesyncd.get("jitter")
     if jitter is not None:
-        yield from check_levels_v1(
+        yield from check_levels(
             value=jitter,
             metric_name="jitter",
-            levels_upper=levels,
+            levels_upper=params["jitter_levels"],
             render_func=render.timespan,
             label="Jitter",
         )
@@ -259,7 +299,10 @@ def check_timesyncd(
         yield Result(state=State.CRIT, summary="Found no time server")
         return
 
-    yield Result(state=State.OK, summary="Synchronized on %s" % server)
+    yield Result(
+        state=State.OK,
+        notice="Synchronized on %s" % _render_server(server, section_timesyncd.get("server_name")),
+    )
 
 
 agent_section_timesyncd = AgentSection(

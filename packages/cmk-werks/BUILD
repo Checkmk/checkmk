@@ -11,7 +11,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
     "package.json",
 ])
@@ -80,7 +79,8 @@ py_doc_test(
 
 py_cmk_test(
     name = "unit",
-    size = "small",
+    # the e2e tests each run the CLI in a subprocess, which does not fit into "small"
+    size = "medium",
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-werk-ids-server",
@@ -98,7 +98,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-werks",
     strip_path_prefixes = ["packages/cmk-werks"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -158,6 +157,7 @@ py_library(
     ],
     imports = ["."],
     deps = [
+        "//packages/cmk-ccc:log",
         requirement("flask"),
         requirement("gunicorn"),
         requirement("werkzeug"),

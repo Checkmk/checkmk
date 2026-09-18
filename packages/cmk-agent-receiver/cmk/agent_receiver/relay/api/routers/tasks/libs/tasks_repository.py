@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import dataclasses
 import uuid
@@ -27,11 +26,6 @@ class TaskStatus(StrEnum):
     FAILED = "FAILED"
 
 
-class TaskType(StrEnum):
-    RELAY_CONFIG = "RELAY_CONFIG"
-    FETCH_AD_HOC = "FETCH_AD_HOC"
-
-
 class ResultType(StrEnum):
     OK = "OK"
     ERROR = "ERROR"
@@ -49,7 +43,14 @@ class RelayConfigSpec:
     tar_data: bytes
 
 
-Spec = FetchSpec | RelayConfigSpec
+@dataclasses.dataclass(frozen=True, slots=True)
+class ActiveCheckSpec:
+    host: str
+    command: str
+    timeout: float
+
+
+Spec = FetchSpec | RelayConfigSpec | ActiveCheckSpec
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)

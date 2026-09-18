@@ -27,12 +27,12 @@ logging.getLogger("snap7").setLevel(logging.CRITICAL + 10)
 DATATYPES = {
     # type-name   size(bytes) parse-function
     # A size of None means the size is provided by configuration
-    "dint": (4, lambda data, offset, size, bit: _get_dint(data, offset)),
-    "real": (8, lambda data, offset, size, bit: snap7.util.get_real(data, offset)),
-    "bit": (1, lambda data, offset, size, bit: snap7.util.get_bool(data, offset, bit)),
+    "dint": (4, lambda data, offset, size, bit: _get_dint(data, offset)),  # noqa: ARG005
+    "real": (8, lambda data, offset, size, bit: snap7.util.get_real(data, offset)),  # noqa: ARG005
+    "bit": (1, lambda data, offset, size, bit: snap7.util.get_bool(data, offset, bit)),  # noqa: ARG005
     # str currently handles "zeichen" (character?) formated strings. For byte coded strings
     # we would have to use get_string(data, offset-1)) from snap7.utils
-    "str": (None, lambda data, offset, size, bit: data[offset : offset + size]),
+    "str": (None, lambda data, offset, size, bit: data[offset : offset + size]),  # noqa: ARG005
 }
 
 HOSTSPEC_HELP_TEXT = """HOSTSPECS:

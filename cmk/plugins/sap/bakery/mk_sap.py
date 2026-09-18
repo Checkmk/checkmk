@@ -22,6 +22,7 @@ class Instance(BaseModel):
     trace: str
     lang: str
     host_prefix: str | None = None
+    host_suffix: str | None = None
 
 
 class _Config(BaseModel):
@@ -33,6 +34,7 @@ class _Config(BaseModel):
         "SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/*",
         "SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/CPU_Utilization",
     )
+    exclude_paths: Sequence[str] = ()
 
 
 def get_mk_sap_files(conf: _Config) -> Iterator[Plugin | PluginConfig]:
@@ -64,12 +66,19 @@ def _get_mk_sap_config(config: _Config) -> Iterator[str]:
         }
         if instance.host_prefix is not None:
             c["host_prefix"] = instance.host_prefix
+        if instance.host_suffix is not None:
+            c["host_suffix"] = instance.host_suffix
         cfgs.append(c)
     yield from f"cfg = {pformat(cfgs)}".split("\n")
     yield ""
     yield ""
     yield "# CCMS paths to monitor"
     yield from f"monitor_paths += {pformat(list(config.paths), width=120)}".split("\n")
+    if config.exclude_paths:
+        yield ""
+        yield ""
+        yield "# CCMS paths to exclude from monitoring"
+        yield from f"exclude_paths += {pformat(list(config.exclude_paths), width=120)}".split("\n")
 
 
 bakery_plugin_mk_sap = BakeryPlugin(

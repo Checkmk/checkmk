@@ -39,9 +39,11 @@ export interface ZoomGestureOptions {
   // Shared with the pan gesture, so the owning component (the canvas-ref owner) supplies it.
   plotCoords: (ev: MouseEvent) => { x: number; y: number } | null
   onZoom: (payload: ZoomPayload) => void
-  // Fired instead of arming a drag when the view is already at the floor. Carries where the
+  // Fired when a gesture at the zoom floor turns out to have been a zoom. Carries where the
   // press happened, in plot-relative pixels.
   onZoomRefused?: (point: { x: number; y: number }) => void
+  // Fired when a press/release resolves to a click rather than a zoom.
+  onPlotClick?: (ev: MouseEvent) => void
 }
 
 export function useZoomGesture(options: ZoomGestureOptions) {
@@ -78,6 +80,23 @@ export function useZoomGesture(options: ZoomGestureOptions) {
       : null
   )
 
+  // Kept apart from `selection`: a press at the zoom floor arms no band but still has to
+  // resolve to a click on release.
+  let pressPoint: { x: number; y: number } | null = null
+  let cursorPoint: { x: number; y: number } | null = null
+
+  // Thresholding the clamped pixels keeps a drag whose visible part is sub-threshold a
+  // click, however far outside the plot the cursor travelled.
+  function isClick(press: { x: number; y: number }, release: { x: number; y: number }): boolean {
+    const [from, to, extent] =
+      options.zoomMode() === 'value'
+        ? [press.y, release.y, options.plotHeight.value]
+        : [press.x, release.x, options.plotWidth.value]
+    return (
+      Math.abs(clampPixelToPlot(to, extent) - clampPixelToPlot(from, extent)) < DRAG_THRESHOLD_PX
+    )
+  }
+
   function onPlotMouseDown(ev: MouseEvent): void {
     if (ev.button !== 0) {
       return
@@ -86,41 +105,53 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     if (!point) {
       return
     }
-    // Refused before the drag is armed, so no band is ever drawn at the floor.
-    if (atFloorForMode()) {
-      options.onZoomRefused?.(point)
-      return
+    pressPoint = point
+    cursorPoint = point
+    // Nothing is armed at the floor, so no band is ever drawn there. The refusal waits for the
+    // release, which is the first point a zoom can be told from a click.
+    if (!atFloorForMode()) {
+      selection.value = { x0: point.x, y0: point.y, x1: point.x, y1: point.y }
     }
-    selection.value = { x0: point.x, y0: point.y, x1: point.x, y1: point.y }
     window.addEventListener('mousemove', onPlotDragMove)
     window.addEventListener('mouseup', onPlotDragEnd)
   }
 
   function onPlotDragMove(ev: MouseEvent): void {
-    const current = selection.value
     const point = options.plotCoords(ev)
-    if (!current || !point) {
+    if (!point) {
       return
     }
-    selection.value = { ...current, x1: point.x, y1: point.y }
+    cursorPoint = point
+    if (selection.value) {
+      selection.value = { ...selection.value, x1: point.x, y1: point.y }
+    }
   }
 
-  function onPlotDragEnd(): void {
+  function onPlotDragEnd(ev: MouseEvent): void {
     window.removeEventListener('mousemove', onPlotDragMove)
     window.removeEventListener('mouseup', onPlotDragEnd)
     const drag = selection.value
+    const press = pressPoint
+    // A release needs no preceding move, so it is the event that ends the gesture; the tracked
+    // cursor only stands in when the plot has gone away.
+    const release = options.plotCoords(ev) ?? cursorPoint
     selection.value = null
-    if (!drag) {
+    pressPoint = null
+    cursorPoint = null
+    if (!press || !release) {
       return
     }
-    // Thresholding the clamped pixels keeps a drag whose visible part is sub-threshold a
-    // click, however far outside the plot the cursor travelled.
+    if (isClick(press, release)) {
+      options.onPlotClick?.(ev)
+      return
+    }
+    if (!drag) {
+      options.onZoomRefused?.(press)
+      return
+    }
     if (options.zoomMode() === 'value') {
       const fromY = clampPixelToPlot(drag.y0, options.plotHeight.value)
       const toY = clampPixelToPlot(drag.y1, options.plotHeight.value)
-      if (Math.abs(toY - fromY) < DRAG_THRESHOLD_PX) {
-        return
-      }
       const valueA = options.yScale.invert(fromY)
       const valueB = options.yScale.invert(toY)
       const [min, max] = clampSpan(
@@ -132,9 +163,6 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     }
     const fromX = clampPixelToPlot(Math.min(drag.x0, drag.x1), options.plotWidth.value)
     const toX = clampPixelToPlot(Math.max(drag.x0, drag.x1), options.plotWidth.value)
-    if (toX - fromX < DRAG_THRESHOLD_PX) {
-      return
-    }
     const range = options.timeRange()
     const timeA = (options.xScale.invert(fromX) as Date).getTime() / 1000
     const timeB = (options.xScale.invert(toX) as Date).getTime() / 1000

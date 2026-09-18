@@ -23,6 +23,7 @@ from cmk.rulesets.v1 import Help, Title
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames
 
 PRODUCT_USAGE_ANALYTICS_CONFIG_ID: Final[ConfigDomainName] = "product_usage_analytics"
 
@@ -38,6 +39,8 @@ PRODUCT_USAGE_ANALYTICS_CONFIG_FILE_RELATIVE: Final = (
 ConfigVariableGroupProductUsageAnalytics = ConfigVariableGroup(
     title=_l("Product usage analytics"),
     sort_index=100,
+    icon=IconNames.custom_graph,
+    description=_l("Configures consent and config for anonymized usage"),
 )
 
 
@@ -95,7 +98,7 @@ def make_product_usage_analytics_config_variable(
             }
         ),
         hint=hint,
-        form_spec=lambda context: fs.Dictionary(
+        form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
             title=Title("Product usage analytics"),
             elements={
                 "enabled": fs.DictElement(

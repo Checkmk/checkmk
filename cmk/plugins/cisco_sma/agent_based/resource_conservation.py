@@ -49,7 +49,7 @@ def _check_resource_conservation(section: ResourceConservation | None) -> CheckR
     yield Result(state=state, summary=summary)
 
 
-def _discover_resource_conservation(section: ResourceConservation | None) -> DiscoveryResult:
+def _discover_resource_conservation(section: ResourceConservation | None) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

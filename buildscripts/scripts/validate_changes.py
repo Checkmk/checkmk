@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201  # It's OK for scripts to print()
+
 # mypy: disable-error-code="type-arg"
 
 """What would Gerrit do?
@@ -425,7 +427,7 @@ async def run_locally(
 def main() -> None:
     """Generate and either process or write a static list of stages"""
     args = parse_args()
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         format="%(levelname)s %(name)s %(asctime)s: %(message)s",
         datefmt="%H:%M:%S",
         level=getattr(logging, {0: "WARNING", 1: "INFO", 2: "DEBUG"}.get(args.verbose, "WARNING")),

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -785,7 +784,7 @@ def test_inv_oracle_instance_multiline() -> None:
     ) == sort_inventory_result(expected_data)
 
 
-def test_discover_template_database_negative_uptime():
+def test_discover_template_database_negative_uptime() -> None:
     # SUP-21457
     instance_line = "OOOOOOOO|19.17.0.0.0|OPEN|ALLOWED|STARTED|111111|2222222222|ARCHIVELOG|PRIMARY|NO|OOOOOOOO|333333333333|TRUE|3|TTTT|4444444444|MOUNTED||5555555555|ENABLED|-1|6666|HHHHHHHH"
     string_table = [instance_line.split("|")]
@@ -794,7 +793,7 @@ def test_discover_template_database_negative_uptime():
     assert not items
 
 
-def test_login():
+def test_login() -> None:
     params: oracle_instance_check._Params = {
         "logins": 2,
         "noforcelogging": 2,

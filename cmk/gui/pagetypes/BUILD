@@ -23,7 +23,6 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/search:matchers",
         "//cmk/gui/search:permissions",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:groups_io",

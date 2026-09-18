@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from cmk.graphing_engine import (
     AutoPrecision,
@@ -18,7 +18,6 @@ from cmk.graphing_engine import (
     HostName,
     Line,
     MetricName,
-    MetricProtocol,
     PerformanceData,
     QuantityProtocol,
     RRDMetric,
@@ -27,6 +26,8 @@ from cmk.graphing_engine import (
     TimeSeries,
     Unit,
 )
+
+from ._fixtures import _FakeRRDFetchData
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
@@ -62,23 +63,6 @@ def _perf(value: float | None, **thresholds: float | None) -> PerformanceData:
 
 def _fetched(value: float | None, series: TimeSeries | None) -> Sequence[FetchedData]:
     return [FetchedData(performance_data=_perf(value), time_series=series)]
-
-
-class _FakeRRDFetchData:
-    # The source already delivers translated, per-metric FetchedData; the engine only orchestrates.
-    def __init__(
-        self, fetched: Mapping[MetricProtocol, Sequence[FetchedData]] | None = None
-    ) -> None:
-        self._fetched = fetched or {}
-
-    def __call__(
-        self,
-        metrics: Sequence[MetricProtocol],
-        *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
-        time_range: TimeRange,  # noqa: ARG002
-    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-        return {metric: self._fetched[metric] for metric in metrics if metric in self._fetched}
 
 
 def _update(

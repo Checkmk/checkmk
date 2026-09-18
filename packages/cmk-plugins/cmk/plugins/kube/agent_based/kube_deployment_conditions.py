@@ -45,7 +45,7 @@ agent_section_kube_deployment_conditions_v1 = AgentSection(
 )
 
 
-def discovery(section: DeploymentConditions) -> DiscoveryResult:
+def discovery(section: DeploymentConditions) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

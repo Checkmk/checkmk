@@ -98,7 +98,7 @@ agent_section_cmk_site_statistics = AgentSection(
 
 def discover_cmk_site_statistics(
     section_cmk_site_statistics: CMKSiteStatisticsSection | None,
-    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_status: LivestatusSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_cmk_site_statistics:
         yield from (Service(item=site_name) for site_name in section_cmk_site_statistics)

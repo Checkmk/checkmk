@@ -6,13 +6,15 @@
 # mypy: disable-error-code="type-arg"
 
 import socket
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple, override
+from typing import NamedTuple, Never, override
+from unittest.mock import Mock
 
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.ccc.resulttype as result
 import cmk.utils.paths
 from cmk.agent_based.v2 import (
     HostLabel as _APIHostLabel,
@@ -35,7 +37,7 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.ccc.exceptions import OnError
+from cmk.ccc.exceptions import MKIPAddressLookupError, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
@@ -51,13 +53,15 @@ from cmk.checkengine.discovery import (
     DiscoverySettings,
     DiscoveryValueSpecModel,
     find_plugins,
+    HostLabelPlugin,
     QualifiedDiscovery,
+    RediscoveryParameters,
 )
 from cmk.checkengine.discovery._autodiscovery import (
-    _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
     discovery_by_host,
+    get_post_discovery_autocheck_services,
     make_table,
     ServicesByTransition,
     ServicesTable,
@@ -67,12 +71,10 @@ from cmk.checkengine.discovery._entrypoints.active_check import (
     _check_host_labels,
     _check_service_lists,
 )
-from cmk.checkengine.discovery._utils.filters import (
-    RediscoveryParameters,
-    ServiceFilters,
-)
+from cmk.checkengine.discovery._entrypoints.commandline import _commandline_discovery_on_host
+from cmk.checkengine.discovery._utils.filters import ServiceFilters
 from cmk.checkengine.discovery.types import DiscoveredItem
-from cmk.checkengine.fetcher_abc import Mode
+from cmk.checkengine.fetcher_abc import FetcherFunction, Mode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
 from cmk.checkengine.fetchers.snmp import (
@@ -80,13 +82,14 @@ from cmk.checkengine.fetchers.snmp import (
     SNMPFetcherConfig,
 )
 from cmk.checkengine.filecache import FileCacheOptions
-from cmk.checkengine.helper_interface import HostKey, SourceType
+from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
     AutocheckEntry,
     CheckPluginName,
+    DiscoveryPlugin,
     FinalCheckResult,
     FinalDiscoveryResult,
     LegacyPluginLocation,
@@ -142,7 +145,7 @@ def _host_label_function_test_labels(section: Mapping[str, str]) -> HostLabelGen
         yield _APIHostLabel(name, value)
 
 
-def _no_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
+def _no_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:  # noqa: ARG001
     yield from ()
 
 
@@ -181,7 +184,7 @@ _TEST_LABELS_SECTION = AgentSectionPlugin(
 )
 
 
-def _check_function_unused(*args: object, **kw: object) -> FinalCheckResult:
+def _check_function_unused(*args: object, **kw: object) -> FinalCheckResult:  # noqa: ARG001
     yield from ()
 
 
@@ -822,12 +825,12 @@ def test__get_post_discovery_services(
 
     new_item_names = [
         entry.service.newer.item or ""
-        for entry in _get_post_discovery_autocheck_services(
+        for entry in get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,
             result,
-            get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+            get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
             settings=DiscoverySettings.from_vs(mode),
             keep_clustered_vanished_services=True,
         ).values()
@@ -869,12 +872,12 @@ def test__get_post_discovery_services_drops_ignored_from_autochecks() -> None:
     }
     result = DiscoveryReport()
 
-    post_discovery = _get_post_discovery_autocheck_services(
+    post_discovery = get_post_discovery_autocheck_services(
         HostName("hostname"),
         services_by_transition,
         ServiceFilters.accept_all(),
         result,
-        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
         settings=DiscoverySettings(
             update_host_labels=True,
             add_new_services=True,
@@ -1383,7 +1386,7 @@ def test__check_service_table(
         services_by_transition=grouped_services,
         params=parameters,
         service_filters=ServiceFilters.from_settings(rediscovery_parameters),
-        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
         discovery_mode=discovery_mode,
     )
 
@@ -1513,7 +1516,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                         }
                     ),
                     host_name=HostName("test_node"),
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     SectionName("agent_only"): _trivial("agent_only"),
@@ -1532,7 +1535,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                         }
                     ),
                     host_name=HostName("test_node"),
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     SectionName("shared"): _trivial("shared"),
@@ -1650,34 +1653,33 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     fetcher = CMKFetcher(
         config_cache,
         loading_result.host_tags,
-        get_relay_id=lambda hn: None,
-        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),
+        get_relay_id=lambda hn: None,  # noqa: ARG005
+        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),  # noqa: ARG005
         source_config=config_cache.make_source_config(
             config_cache.make_service_configurer({}, service_name_config),
-            ip_lookup=lambda *a: HostAddress(""),
+            ip_lookup=lambda *a: HostAddress(""),  # noqa: ARG005
             service_name_config=service_name_config,
-            enforced_services_table=lambda hn: {},
+            enforced_services_table=lambda hn: {},  # noqa: ARG005
             snmp_fetcher_config=SNMPFetcherConfig(
                 on_error=OnError.RAISE,
-                missing_sys_description=lambda host_name: False,
+                missing_sys_description=lambda host_name: False,  # noqa: ARG005
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 base_path=Path("/"),
                 relative_stored_walk_path=Path("dev/null"),
                 relative_walk_cache_path=Path("dev/null"),
                 relative_section_cache_path=Path("dev/null"),
-                caching_config=lambda host_name: {},
+                caching_config=lambda host_name: {},  # noqa: ARG005
             ),
         ),
         plugins=plugins,
         clusters=loading_result.hosts_config.clusters,
-        default_address_family=lambda *a: socket.AddressFamily.AF_INET,
+        default_address_family=lambda *a: socket.AddressFamily.AF_INET,  # noqa: ARG005
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,
-        ip_address_of=lambda *a: HostAddress(""),
-        ip_address_of_mandatory=lambda *a: HostAddress(""),
-        ip_address_of_mgmt=lambda *a: HostAddress(""),
+        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,  # noqa: ARG005
+        ip_address_of=lambda *a: HostAddress(""),  # noqa: ARG005
+        ip_address_of_mgmt=lambda *a: HostAddress(""),  # noqa: ARG005
         mode=Mode.DISCOVERY,
         simulation_mode=True,
         secrets_config_relay=AdHocSecrets(
@@ -1690,13 +1692,13 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    commandline_discovery(
+    succeeded = commandline_discovery(
         host_name=testhost,
         clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(_TEST_AGENT_SECTIONS),
-        section_error_handling=lambda *args, **kw: "error",
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
         host_label_plugins=HostLabelPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
             sections=_TEST_AGENT_SECTIONS,
@@ -1706,12 +1708,17 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             check_plugins=_TEST_CHECK_PLUGINS,
         ),
         run_plugin_names=EVERYTHING,
-        ignore_plugin=lambda *args, **kw: False,
+        autochecks_config=config.AutochecksConfigurer(
+            config_cache, _TEST_CHECK_PLUGINS, service_name_config
+        ),
+        enforced_services={},
         arg_only_new=False,
         on_error=OnError.RAISE,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
+
+    assert succeeded is True
 
     entries = AutochecksStore(testhost, cmk.utils.paths.autochecks_dir).read()
     found = {e.id(): e.service_labels for e in entries}
@@ -1719,6 +1726,340 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 
     store = DiscoveredHostLabelsStore(testhost, cmk.utils.paths.discovered_host_labels_dir)
     assert store.load() == _EXPECTED_HOST_LABELS
+
+
+class _FailingFetcher(FetcherFunction):
+    @override
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Never:
+        raise MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name} via DNS")
+
+
+@pytest.mark.usefixtures("disable_debug")
+def test_commandline_discovery_reports_failure(tmp_path: Path) -> None:
+    """A failed discovery is reported to the caller, not only printed.
+
+    ``cmk -I`` needs this to exit non-zero; it used to swallow every failure
+    and still exit 0.  Debug mode is off, as it is for a normal ``cmk -I``
+    run; with it on the exception is re-raised instead.
+    """
+    succeeded = commandline_discovery(
+        host_name=HostName("test-host"),
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [],  # noqa: ARG005
+        fetcher=_FailingFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        autochecks_config=Mock(spec=config.AutochecksConfigurer),
+        enforced_services={},
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=tmp_path / "autochecks",
+        discovered_host_labels_dir=tmp_path / "host_labels",
+    )
+
+    assert succeeded is False
+
+
+class _EmptyFetcher(FetcherFunction):
+    """Fetches nothing; the parser fake supplies the source result."""
+
+    @override
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[Never]:
+        return ()
+
+
+def test_commandline_discovery_reports_failed_source(tmp_path: Path) -> None:
+    """A data source that could not be contacted is reported as failure.
+
+    The discovery itself runs to the end -- the sources that did deliver data
+    are discovered as usual -- but the services of the failed source are
+    missing from the result, and the exit code is the only way ``cmk -I`` can
+    say so.
+    """
+    host_name = HostName("test-host")
+    failed: tuple[SourceInfo, result.Result[HostSections, Exception]] = (
+        SourceInfo(host_name, None, "agent", FetcherType.NONE, SourceType.HOST),
+        result.Error(MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name}")),
+    )
+    # The autochecks store and the host-labels store both use "<host>.mk" as the file
+    # name, so they must not share a directory.
+    (autochecks_dir := tmp_path / "autochecks").mkdir()
+
+    succeeded = commandline_discovery(
+        host_name=host_name,
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [failed],  # noqa: ARG005
+        fetcher=_EmptyFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        autochecks_config=Mock(spec=config.AutochecksConfigurer),
+        enforced_services={},
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=autochecks_dir,
+        discovered_host_labels_dir=tmp_path / "host_labels",
+    )
+
+    assert succeeded is False
+
+
+# ---------------------------------------------------------------------------
+# CMK-37187: the commandline entrypoint (`cmk -I` / `cmk -II`) must apply the
+# same semantic filters as the other three discovery entrypoints, i.e. it must
+# route through the shared transition-table layer.  The tests below pin the
+# three divergences described in the ticket:
+#   * disabled services (ignore_service) are dropped from the autochecks,
+#   * services shadowed by an enforced (static) check are dropped,
+#   * a stale autocheck of a now-disabled check plug-in is dropped, even for
+#     `cmk -I` (which previously kept it).
+# ---------------------------------------------------------------------------
+
+
+class _CommandlineAutochecksConfig:
+    """Configurable AutochecksConfig fake for the commandline entrypoint tests.
+
+    Service descriptions are ``"<plugin> <item>"`` so that ``ignore_service`` and
+    enforced-service collisions can be targeted precisely.
+    """
+
+    def __init__(
+        self,
+        *,
+        ignored_services: Container[str] = frozenset(),
+        ignored_plugins: Container[CheckPluginName] = frozenset(),
+    ) -> None:
+        self._ignored_services = ignored_services
+        self._ignored_plugins = ignored_plugins
+
+    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:  # noqa: ARG002
+        return plugin_name in self._ignored_plugins
+
+    def ignore_service(self, host_name: HostName, entry: AutocheckEntry) -> bool:
+        return self.service_description(host_name, entry) in self._ignored_services
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:  # noqa: ARG002
+        return host_name
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:  # noqa: ARG002
+        return f"{entry.check_plugin_name} {entry.item}"
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
+        return {}
+
+
+_OTHER_PLUGIN_NAME = CheckPluginName("other_plugin")
+
+
+def _test_discovery_plugin() -> DiscoveryPlugin:
+    """A discovery plug-in yielding one service per row of ``test_section``."""
+
+    def discover(
+        check_plugin_name: CheckPluginName, *, section: Mapping[str, str]
+    ) -> Iterable[AutocheckEntry]:
+        for item in section:
+            yield AutocheckEntry(check_plugin_name, item, {}, {})
+
+    return DiscoveryPlugin(
+        sections=[_TEST_PARSED_NAME],
+        function=discover,
+        parameters=lambda host_name: None,  # noqa: ARG005
+    )
+
+
+def _test_discovery_plugins() -> Mapping[CheckPluginName, DiscoveryPlugin]:
+    return {_TEST_PLUGIN_NAME: _test_discovery_plugin()}
+
+
+def _test_providers(host_name: HostName, rows: StringTable) -> Mapping[HostKey, Provider]:
+    return {
+        HostKey(hostname=host_name, source_type=SourceType.HOST): ParsedSectionsResolver(
+            SectionsParser(
+                host_sections=HostSections[AgentRawDataSection](
+                    sections={_TEST_SECTION_NAME: rows}
+                ),
+                host_name=host_name,
+                error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+            ),
+            section_plugins={_TEST_SECTION_NAME: _section_plugin(_TEST_SECTION)},
+        )
+    }
+
+
+def _autochecks_dir(tmp_path: Path) -> Path:
+    # The autochecks store and the host-labels store both use "<host>.mk" as the file name,
+    # so they must not share a directory.
+    (path := tmp_path / "autochecks").mkdir(exist_ok=True)
+    return path
+
+
+def _run_commandline_service_discovery(
+    host_name: HostName,
+    *,
+    providers: Mapping[HostKey, Provider],
+    autochecks_config: _CommandlineAutochecksConfig,
+    enforced_services: Container[ServiceID],
+    only_new: bool,
+    tmp_path: Path,
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin] | None = None,
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
+) -> set[ServiceID]:
+    (labels_dir := tmp_path / "host_labels").mkdir(exist_ok=True)
+    _commandline_discovery_on_host(
+        real_host_name=host_name,
+        host_label_plugins={_TEST_SECTION_NAME: HostLabelPlugin.trivial()},
+        clear_ruleset_matcher_caches=lambda: None,
+        providers=providers,
+        plugins=_test_discovery_plugins() if plugins is None else plugins,
+        run_plugin_names=run_plugin_names,
+        autochecks_config=autochecks_config,
+        enforced_services=enforced_services,
+        only_new=only_new,
+        load_labels=only_new,
+        only_host_labels=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=_autochecks_dir(tmp_path),
+        discovered_host_labels_dir=labels_dir,
+    )
+    return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()}
+
+
+@pytest.mark.parametrize("only_new", [True, False], ids=["cmk-I", "cmk-II"])
+def test_commandline_discovery_drops_disabled_services(only_new: bool, tmp_path: Path) -> None:
+    """A service matched by a 'Disabled services' rule must not land in the autochecks."""
+    host_name = HostName("test-host")
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"], ["item_b", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(
+            ignored_services={f"{_TEST_PLUGIN_NAME} item_b"}
+        ),
+        enforced_services={},
+        only_new=only_new,
+        tmp_path=tmp_path,
+    )
+    assert written == {ServiceID(_TEST_PLUGIN_NAME, "item_a")}
+
+
+@pytest.mark.parametrize("only_new", [True, False], ids=["cmk-I", "cmk-II"])
+def test_commandline_discovery_drops_enforced_shadowed_services(
+    only_new: bool, tmp_path: Path
+) -> None:
+    """A discovered service shadowed by an enforced (static) check must not be persisted."""
+    host_name = HostName("test-host")
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"], ["item_b", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={ServiceID(_TEST_PLUGIN_NAME, "item_b")},
+        only_new=only_new,
+        tmp_path=tmp_path,
+    )
+    assert written == {ServiceID(_TEST_PLUGIN_NAME, "item_a")}
+
+
+def test_commandline_discovery_i_drops_stale_disabled_check(tmp_path: Path) -> None:
+    """`cmk -I` must drop an existing autocheck whose check plug-in is now disabled.
+
+    This is the regression from CMK-37187: the commandline path used to keep the stale entry
+    because it excluded disabled plug-ins from the candidates instead of classifying their
+    services as "ignored".
+    """
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {})]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(ignored_plugins={_TEST_PLUGIN_NAME}),
+        enforced_services={},
+        only_new=True,
+        tmp_path=tmp_path,
+    )
+    assert written == set()
+
+
+def test_commandline_discovery_i_keeps_existing_and_adds_new(tmp_path: Path) -> None:
+    """`cmk -I` adds newly discovered services while keeping the existing ones."""
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {})]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"], ["item_b", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        only_new=True,
+        tmp_path=tmp_path,
+    )
+    assert written == {
+        ServiceID(_TEST_PLUGIN_NAME, "item_a"),
+        ServiceID(_TEST_PLUGIN_NAME, "item_b"),
+    }
+
+
+def test_commandline_discovery_ii_removes_vanished(tmp_path: Path) -> None:
+    """`cmk -II` drops services that are no longer discovered (tabula rasa)."""
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [
+            AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {}),
+            AutocheckEntry(_TEST_PLUGIN_NAME, "gone", {}, {}),
+        ]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        only_new=False,
+        tmp_path=tmp_path,
+    )
+    assert written == {ServiceID(_TEST_PLUGIN_NAME, "item_a")}
+
+
+def test_commandline_discovery_ii_leaves_unselected_plugins_alone(tmp_path: Path) -> None:
+    """`cmk -II --plugins X` must not touch services of plug-ins that were not selected.
+
+    Only the selected plug-in is rediscovered, so its vanished services are dropped, while
+    existing autochecks of the unselected plug-in are remembered and kept (they must not surface
+    as "vanished" and get removed).
+    """
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [
+            AutocheckEntry(_TEST_PLUGIN_NAME, "gone", {}, {}),
+            AutocheckEntry(_OTHER_PLUGIN_NAME, "keep", {}, {}),
+        ]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        only_new=False,
+        tmp_path=tmp_path,
+        plugins={
+            _TEST_PLUGIN_NAME: _test_discovery_plugin(),
+            _OTHER_PLUGIN_NAME: _test_discovery_plugin(),
+        },
+        run_plugin_names={_TEST_PLUGIN_NAME},
+    )
+    assert written == {
+        ServiceID(_TEST_PLUGIN_NAME, "item_a"),
+        ServiceID(_OTHER_PLUGIN_NAME, "keep"),
+    }
 
 
 class RealHostScenario(NamedTuple):
@@ -1760,7 +2101,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                         }
                     ),
                     host_name=hostname,
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -1823,7 +2164,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         }
                     ),
                     host_name=node1_hostname,
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -1841,7 +2182,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         }
                     ),
                     host_name=node2_hostname,
-                    error_handling=lambda *args, **kw: "error",
+                    error_handling=lambda *args, **kw: "error",  # noqa: ARG005
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2221,19 +2562,19 @@ def test__perform_host_label_discovery_on_cluster(
 
 
 class _AutochecksConfigDummy:
-    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:  # noqa: ARG002
         return False
 
-    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:  # noqa: ARG002
         return False
 
-    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:  # noqa: ARG002
         return host_name
 
-    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:  # noqa: ARG002
         return "desc"
 
-    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
 
 

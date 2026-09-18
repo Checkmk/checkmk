@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-from __future__ import annotations
 
 import copy
 import json
@@ -17,12 +16,12 @@ from typing import NamedTuple, override, TypedDict
 
 import cmk.gui.watolib.git
 from cmk.ccc.user import UserId
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyString
 
 from .pending_changes import ChangeEvent
 

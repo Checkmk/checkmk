@@ -14,6 +14,7 @@ logic.
 import dataclasses
 import datetime as dt
 import enum
+import re
 from collections.abc import Mapping
 from typing import assert_never, Literal, NewType, override, Self
 
@@ -22,9 +23,16 @@ from cmk.ruleset_matcher.labels import LabelSource
 type UnixTimestamp = int
 """An instant as whole seconds since the epoch (UTC)."""
 
-type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN"]
+type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN", "PENDING"]
 
-type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
+type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]
+
+
+# What cmk/base/errorhandling/_crash.py appends to the output of a check that raised, and the
+# crash dump id it puts beside it. Matching on the output is how the legacy views recognise a
+# crashed check too; Livestatus offers nothing better.
+CRASH_MARKER = "check failed - please submit a crash report!"
+_CRASH_ID_PATTERN = re.compile(r"\(Crash-ID: ([^)]+)\)")
 
 
 class ServiceState(enum.IntEnum):
@@ -32,12 +40,20 @@ class ServiceState(enum.IntEnum):
     WARN = 1
     CRIT = 2
     UNKNOWN = 3
+    # Not a real Livestatus state: assigned to a service that has never been checked, whose raw
+    # `state` column is meaningless (always 0). See ``LiveStatusHostServicesRepository`` for where
+    # this gets constructed instead of the real state.
+    PENDING = 4
 
 
 class HostState(enum.IntEnum):
     UP = 0
     DOWN = 1
     UNREACHABLE = 2
+    # Not a real Livestatus state: assigned to a host that has never been checked, whose raw
+    # `host_state` column is meaningless (always 0). See ``LiveStatusHostServicesRepository`` for
+    # where this gets constructed instead of the real state.
+    PENDING = 3
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,7 +75,14 @@ class Service:
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
+    num_comments: int
+    active_checks_disabled: bool
+    passive_checks_disabled: bool
+    in_notification_period: bool
+    in_service_period: bool
+    in_check_period: bool
     is_flapping: bool
+    stale: bool
     summary: str
     last_check: UnixTimestamp | None
     last_state_change: UnixTimestamp
@@ -69,6 +92,19 @@ class Service:
     tags: dict[str, str] | None
     contacts: list[str] | None
     contact_groups: list[str] | None
+
+    @property
+    def check_crashed(self) -> bool:
+        """Whether this service's check raised instead of producing a result."""
+        return self.state is ServiceState.UNKNOWN and CRASH_MARKER in self.summary
+
+    @property
+    def crash_id(self) -> str | None:
+        """The dump identifying this crash, absent when the check crashed too early to write one."""
+        if not self.check_crashed:
+            return None
+        match = _CRASH_ID_PATTERN.search(self.summary)
+        return match.group(1) if match else None
 
     @property
     def state_label(self) -> ServiceStateLabel:
@@ -81,6 +117,8 @@ class Service:
                 return "CRIT"
             case ServiceState.UNKNOWN:
                 return "UNKNOWN"
+            case ServiceState.PENDING:
+                return "PENDING"
             case _:
                 assert_never(self.state)
 
@@ -108,6 +146,8 @@ class ServiceOverview(Service):
                 return "DOWN"
             case HostState.UNREACHABLE:
                 return "UNREACHABLE"
+            case HostState.PENDING:
+                return "PENDING"
             case _:
                 assert_never(self.host_state)
 

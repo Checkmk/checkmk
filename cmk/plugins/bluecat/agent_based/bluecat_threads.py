@@ -27,7 +27,7 @@ def parse_bluecat_threads(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_bluecat_threads(section: StringTable) -> DiscoveryResult:
+def discover_bluecat_threads(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

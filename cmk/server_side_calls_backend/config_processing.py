@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar
+from typing import Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
@@ -138,12 +138,9 @@ def extract_all_adhoc_secrets(
     }
 
 
-_RuleSetType_co = TypeVar("_RuleSetType_co", covariant=True)
-
-
 @dataclass(frozen=True)
-class ReplacementResult(Generic[_RuleSetType_co]):  # noqa: UP046 # TODO: Fix variance story here...
-    value: _RuleSetType_co  # type: ignore[misc]
+class ReplacementResult[RuleSetType]:
+    value: RuleSetType
     found_secrets: Mapping[str, StoreSecret[str]]
     surrogates: Mapping[int, str]
 

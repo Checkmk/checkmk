@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 #########################################################################################
 #                                                                                       #
@@ -119,7 +118,7 @@ def parse_logwatch(string_table: StringTable) -> Section:
             continue
 
         if item_data is not None:
-            item_data["lines"].setdefault(batch, []).append(line)
+            item_data["lines"].setdefault(batch, []).append(line)  # type: ignore[possibly-undefined]
 
     return Section(errors=errors, logfiles=logfiles)
 

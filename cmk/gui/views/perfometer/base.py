@@ -6,19 +6,23 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
-    get_first_matching_perfometer,
+    drawn_segments,
+    DrawnSegment,
+    evaluated_perfometer,
     get_temperature_unit,
-    parse_perf_data,
+    perfometer_label,
+    perfometer_sort_value,
     PerfometerFromAPI,
-    RegisteredMetric,
-    translate_metrics,
+    registered_translations,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 from cmk.web.utils.html import HTML
 
 
@@ -26,93 +30,33 @@ class Perfometer:
     def __init__(
         self,
         row: Row,
-        registered_metrics: Mapping[str, RegisteredMetric],
+        registered_metrics: Mapping[str, metrics_v1.Metric],
         registered_perfometers: Mapping[str, PerfometerFromAPI],
     ) -> None:
-        self._row = row
-        self._registered_metrics = registered_metrics
-        self._registered_perfometers = registered_perfometers
         self._temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
-
-        if perf_data_string := row["service_perf_data"].strip():
-            self._perf_data, self._check_command = parse_perf_data(
-                perf_data_string, self._row["service_check_command"], debug=active_config.debug
-            )
-            self._translated_metrics = translate_metrics(
-                self._perf_data,
-                self._check_command,
-                self._registered_metrics,
-                temperature_unit=self._temperature_unit,
-            )
-        else:
-            self._perf_data = []
-            self._check_command = self._row["service_check_command"]
-            self._translated_metrics = {}
-
-    def render(self) -> tuple[str | None, HTML | None]:
-        """Renders the HTML code of a perfometer
-
-        It returns a 2-tuple of either the title to show and the HTML of
-        the perfometer or both elements set to None in case nothing shal
-        be shown.
-        """
-        if not self._perf_data:
-            return None, None
-
-        # Try new metrics module
-        title, h = self._render_metrics_perfometer()
-        if title is not None:
-            return title, h
-
-        return None, None
-
-    def _render_metrics_perfometer(self) -> tuple[str | None, HTML | None]:
-        if not (
-            renderer := get_first_matching_perfometer(
-                self._translated_metrics,
-                self._registered_metrics,
-                self._registered_perfometers,
-            )
-        ):
-            return None, None
-        return (
-            renderer.get_label(self._temperature_unit),
-            _render_metricometer(renderer.get_stack(self._temperature_unit)),
+        self._evaluated = evaluated_perfometer(
+            row["service_perf_data"],
+            row["service_check_command"],
+            host_name=row["host_name"],
+            service_name=row["service_description"],
+            registered_perfometers=registered_perfometers,
+            registered_metrics=registered_metrics,
+            registered_translations=registered_translations(),
+            debug=active_config.debug,
         )
 
-    def sort_value(self) -> tuple[int | None, float | None]:
-        """Calculates a value that is used for sorting perfometers
+    def render(self) -> tuple[str | None, HTML | None]:
+        if self._evaluated is None:
+            return None, None
+        return (
+            perfometer_label(self._evaluated, self._temperature_unit),
+            _render_metricometer(drawn_segments(self._evaluated)),
+        )
 
-        - First sort by the perfometer group / id
-        - Second by the sort value calculated based on the perfometer type and
-          the actual data
-        """
-        return self._get_metrics_sort_group(), self._get_metrics_sort_value()
-
-    def _get_metrics_sort_group(self) -> int | None:
-        if not (
-            renderer := get_first_matching_perfometer(
-                self._translated_metrics,
-                self._registered_metrics,
-                self._registered_perfometers,
-            )
-        ):
-            return None
-        # The perfometer definitions had no ID until implementation of this sorting. We need to
-        # care about this here. Since it is only for grouping perfometers of the same type, we
-        # can use the id() of the perfometer_definition here.
-        return id(renderer.perfometer)
-
-    def _get_metrics_sort_value(self) -> float | None:
-        if not (
-            renderer := get_first_matching_perfometer(
-                self._translated_metrics,
-                self._registered_metrics,
-                self._registered_perfometers,
-            )
-        ):
-            return None
-        return renderer.get_sort_value()
+    def sort_value(self) -> tuple[str, float]:
+        if self._evaluated is None:
+            return "", -float("inf")
+        return self._evaluated.name, perfometer_sort_value(self._evaluated)
 
 
 def render_perfometer(data: Sequence[tuple[float, str]]) -> HTML:
@@ -136,14 +80,23 @@ def _render_perfometer_td(perc: float, color: str) -> HTML:
     return HTMLWriter.render_td("", class_="inner", style=style)
 
 
-def _render_metricometer(stack: Sequence[Sequence[tuple[int | float, str]]]) -> HTML:
-    """Create HTML representation of Perf-O-Meter"""
-    if len(stack) not in (1, 2):
+def _render_row(segments: Sequence[DrawnSegment], background_color: str) -> HTML:
+    return render_perfometer(
+        [
+            (segment.share, background_color if segment.color is None else segment.color)
+            for segment in segments
+        ]
+    )
+
+
+def _render_metricometer(rows: Sequence[Sequence[DrawnSegment]]) -> HTML:
+    if len(rows) not in (1, 2):
         raise MKGeneralException(
             _("Invalid Perf-O-Meter definition %(stack)r: only one or two entries are allowed")
-            % {"stack": stack}
+            % {"stack": rows}
         )
-    h = HTML.empty().join(map(render_perfometer, stack))
-    if len(stack) == 2:
+    background_color = get_themed_perfometer_bg_color()
+    h = HTML.empty().join(_render_row(row, background_color) for row in rows)
+    if len(rows) == 2:
         h = HTMLWriter.render_div(h, class_="stacked")
     return h

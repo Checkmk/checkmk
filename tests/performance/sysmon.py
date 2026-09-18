@@ -14,6 +14,7 @@ import threading
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass
 from pathlib import Path
 from sys import argv
 from typing import IO
@@ -146,6 +147,38 @@ def get_process_info() -> perf_dict:
             data[f"{pid}.name_{proc['name']}.cpu_percent"] = proc["cpu_percent"]
             data[f"{pid}.name_{proc['name']}.memory_percent"] = proc["memory_percent"]
     return _named_section("process_info", data)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProcessGroupUsage:
+    """What one user's processes have consumed.
+
+    An OMD site runs everything as its own user, so asking for that user's processes is asking
+    for that site and nothing else. That is what makes this different from the machine-wide
+    figures above: on a box that is also running the test - and, when remote sites are faked,
+    running them inside the test - a machine-wide number cannot say what the site itself cost.
+    """
+
+    #: CPU seconds these processes have used since they started. A difference between two
+    #: samples is what a piece of work cost.
+    cpu_seconds: float
+    #: Resident memory held right now, summed. A level rather than a total, so two samples are
+    #: compared rather than subtracted.
+    rss_mib: float
+
+
+def get_process_group_usage(username: str) -> ProcessGroupUsage:
+    """CPU and resident memory of every process running as ``username``."""
+    cpu_seconds = 0.0
+    rss_bytes = 0
+    for process in psutil.process_iter(["pid", "username"]):
+        with suppress(psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            if process.info["username"] != username:
+                continue
+            times = process.cpu_times()
+            cpu_seconds += times.user + times.system
+            rss_bytes += process.memory_info().rss
+    return ProcessGroupUsage(cpu_seconds=cpu_seconds, rss_mib=rss_bytes / (1024.0**2))
 
 
 def get_system_uptime() -> str:

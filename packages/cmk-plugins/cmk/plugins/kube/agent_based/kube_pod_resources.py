@@ -28,8 +28,8 @@ from cmk.plugins.kube.schemata.section import AllocatablePods, PodResources, Pod
 
 
 def discovery_kube_pod_resources(
-    section_kube_pod_resources: PodResources | None,
-    section_kube_allocatable_pods: AllocatablePods | None,
+    section_kube_pod_resources: PodResources | None,  # noqa: ARG001
+    section_kube_allocatable_pods: AllocatablePods | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

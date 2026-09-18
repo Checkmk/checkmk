@@ -6,9 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import json
 import typing
@@ -142,13 +140,13 @@ class WebTestAppForCMK(FlaskClient):
                 url, headers=headers, follow_redirects=follow_redirects, **kw
             )
 
-        if status:
-            assert resp.status_code == status, (
-                f"Expected response code: {status}!\nResponse:\n{resp.text}"
+        if status and resp.status_code != status:
+            raise AssertionError(
+                f"Expected response code: {status}, got {resp.status_code}!\nResponse:\n{resp.text}"
             )
 
-        if not expect_errors:
-            assert (errors := resp.request.environ.get("wsgi.errors", [])), (
+        if not expect_errors and not (errors := resp.request.environ.get("wsgi.errors", [])):
+            raise AssertionError(
                 "Found `wsgi.errors` arising from the request!\n"
                 f"Status code:\n{resp.status_code}\n"
                 f"Response:\n{str(resp)}\n"
@@ -211,8 +209,8 @@ class WebTestAppForCMK(FlaskClient):
 
         if len(value) == 2:
             authtype, creds = value
-            if authtype == "Basic" and creds and isinstance(creds, tuple):
-                creds = ":".join(list(creds))
+            if authtype == "Basic" and creds and isinstance(creds, tuple):  # type: ignore[unreachable]
+                creds = ":".join(list(creds))  # type: ignore[unreachable]
                 creds = b64encode(_to_bytes(creds)).strip()
                 creds = creds.decode("latin1")
             elif authtype in ("Bearer", "JWT") and creds and isinstance(creds, str):
@@ -277,7 +275,8 @@ class CmkTestResponse(TestResponse):
 
     def assert_rest_api_crash(self) -> typing.Self:
         """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        assert self.status_code == 500
+        if self.status_code != 500:
+            raise AssertionError(f"Expected a crash report (500), got {self.status_code}")
         assert_and_delete_rest_crash_report(self.json["ext"]["id"])
         return self
 

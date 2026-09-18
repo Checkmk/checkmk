@@ -22,7 +22,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.regex import validate_regex
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString
 
 from .components import (
     Checkbox,
@@ -49,7 +49,6 @@ class FilterGroup(Enum):
     KUBERNETES = "kubernetes"
     SITE = "site"
     TOPOLOGY = "topology"
-    SERVICE_NAME = "service_name"
     SERVICE_CHECK_COMMAND = "service_check_command"
     SERVICE_CONTACT = "service_contact"
     SERVICE_IN = "service_in"
@@ -133,25 +132,25 @@ class Filter(abc.ABC):
         to provide the filter's API representation."""
         raise NotImplementedError
 
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:  # noqa: ARG002
         return ""
 
-    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:  # noqa: ARG002
         """Whether this filter needs to load host inventory data"""
         return False
 
-    def validate_value(self, value: FilterHTTPVariables) -> None:
+    def validate_value(self, value: FilterHTTPVariables) -> None:  # noqa: ARG002
         return
 
-    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:  # noqa: ARG002
         """Columns needed to perform post-Livestatus filtering"""
         return []
 
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:  # noqa: ARG002
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
-    def request_vars_from_row(self, row: Row) -> FilterHTTPVariables:
+    def request_vars_from_row(self, row: Row) -> FilterHTTPVariables:  # noqa: ARG002
         """return filter request variables built from the given row"""
         return {}
 
@@ -160,7 +159,7 @@ class Filter(abc.ABC):
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:  # noqa: ARG002
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 

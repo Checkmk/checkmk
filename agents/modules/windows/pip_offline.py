@@ -20,8 +20,6 @@ Usage::
     pip_offline.py <pip-wheel-or-find-links-dir> <pip args...>
 """
 
-from __future__ import annotations
-
 import runpy
 import sys
 from pathlib import Path

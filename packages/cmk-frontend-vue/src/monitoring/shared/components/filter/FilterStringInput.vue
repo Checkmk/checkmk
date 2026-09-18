@@ -7,10 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts" generic="F extends FilterField">
 import CmkChipAutocomplete from 'cmk-ui-library/components/CmkChipAutocomplete.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '../../api/types'
 import type { StringInputFilter } from './types'
+
+const { _t } = usei18n()
 
 const props = defineProps<{ definition: StringInputFilter<F> }>()
 
@@ -85,7 +88,10 @@ const selected = computed<string[]>({
     <CmkInput
       v-else
       v-model="value"
+      class="monitoring-filter-string-input__element"
       field-size="medium"
+      :placeholder="_t('Contains ...')"
+      :aria-label="_t('Value')"
       @update:model-value="createFilterNode($event)"
     />
   </div>
@@ -93,6 +99,11 @@ const selected = computed<string[]>({
 
 <style scoped>
 .monitoring-filter-string-input__container {
-  margin: 4px 2px;
+  margin: 0 var(--dimension-5) var(--dimension-4) var(--dimension-5);
+
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(.monitoring-filter-string-input__element) {
+    width: 100%;
+  }
 }
 </style>

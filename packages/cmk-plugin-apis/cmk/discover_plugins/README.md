@@ -124,12 +124,12 @@ cmk_addons/plugins/<family>/<group_value>/<file>.py
 #### Simplest ideal — `cmk/server_side_calls_backend/_loading.py`
 
 ```python
-def load_active_checks(*, raise_errors: bool) -> Mapping[
-    PluginLocation, internal.ActiveCheckConfig | v1.ActiveCheckConfig
-]:
+def load_active_checks(
+    *, raise_errors: bool
+) -> Mapping[PluginLocation, internal.ActiveCheckConfig | v1.ActiveCheckConfig]:
     entry_points = {
         internal.ActiveCheckConfig: internal.entry_point_prefixes()[internal.ActiveCheckConfig],
-        v1.ActiveCheckConfig:       v1.entry_point_prefixes()[v1.ActiveCheckConfig],
+        v1.ActiveCheckConfig: v1.entry_point_prefixes()[v1.ActiveCheckConfig],
     }
     return discover_all_plugins(
         PluginGroup.SERVER_SIDE_CALLS,
@@ -158,10 +158,14 @@ discovered_plugins = discover_all_plugins(
 )
 for location, plugin in discovered_plugins.plugins.items():
     match plugin:
-        case v2.AgentSection():    ...
-        case v2.SNMPSection():     ...
-        case v2.CheckPlugin():     ...
-        case v2.InventoryPlugin(): ...
+        case v2.AgentSection():
+            ...
+        case v2.SNMPSection():
+            ...
+        case v2.CheckPlugin():
+            ...
+        case v2.InventoryPlugin():
+            ...
 ```
 
 The downstream `registered_*` mappings here are built once from the

@@ -26,7 +26,7 @@ class Section:
     power: int
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Section":
+    def from_row(cls, row: Sequence[str]) -> Section:
         return cls(system=int(row[0]), power=int(row[1]))
 
 
@@ -54,7 +54,7 @@ snmp_section_synology_status = SimpleSNMPSection(
 )
 
 
-def discovery(section: Section) -> DiscoveryResult:
+def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import types
 from functools import lru_cache
-from typing import override
+from typing import overload, override, TypeAliasType
 
 from pydantic import ConfigDict, TypeAdapter
 
@@ -15,7 +16,11 @@ class _HashableArgs[T]:
 
     __slots__ = ("type", "config")
 
-    def __init__(self, type_: type[T], config: ConfigDict | None = None) -> None:
+    def __init__(
+        self,
+        type_: type[T] | TypeAliasType | types.UnionType,
+        config: ConfigDict | None = None,
+    ) -> None:
         self.type = type_
         self.config = config
 
@@ -39,9 +44,22 @@ def _get_type_adapter[T](args: _HashableArgs[T]) -> TypeAdapter[T]:  # type: ign
     return TypeAdapter(args.type, config=args.config)
 
 
+# TODO(PEP-747): replace the overloads with a single `TypeForm[T]` parameter once available
+@overload
 def get_cached_type_adapter[T](
     type_: type[T], *, config: ConfigDict | None = None
-) -> TypeAdapter[T]:
+) -> TypeAdapter[T]: ...
+
+
+@overload
+def get_cached_type_adapter(
+    type_: TypeAliasType | types.UnionType, *, config: ConfigDict | None = None
+) -> TypeAdapter[object]: ...
+
+
+def get_cached_type_adapter[T](
+    type_: type[T] | TypeAliasType | types.UnionType, *, config: ConfigDict | None = None
+) -> TypeAdapter[T] | TypeAdapter[object]:
     """Get a cached TypeAdapter for the given type."""
     # The REST API uses TypeAdapters in the following contexts:
     # * Validation of incoming request data (once for every request)

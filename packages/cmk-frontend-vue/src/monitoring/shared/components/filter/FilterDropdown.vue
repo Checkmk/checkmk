@@ -20,30 +20,44 @@ click-outside discard the draft, leaving the model at the state it had on open.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
-import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
+import useId from 'cmk-ui-library/lib/useId'
+import {
+  type CSSProperties,
+  type Component,
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  ref
+} from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { MONITORING_SERVICE } from '../MonitoringTableContext'
+import FilterAutocompleteChoice from './FilterAutocompleteChoice.vue'
 import FilterBooleanGroup from './FilterBooleanGroup.vue'
 import FilterCheckboxList from './FilterCheckboxList.vue'
+import FilterCheckboxListWithFlags from './FilterCheckboxListWithFlags.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
 import FilterDateTimeRange from './FilterDateTimeRange.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
 import FilterVisualFilter from './FilterVisualFilter.vue'
-import type { ColumnFilterDefinition, ColumnFilterValue } from './types'
+import type { ColumnFilterDefinition, ColumnFilterValue, SortDirection } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
+  'checkbox-list-with-flags': FilterCheckboxListWithFlags,
   'string-input': FilterStringInput,
   numeric: FilterNumeric,
   'date-time-range': FilterDateTimeRange,
   'boolean-group': FilterBooleanGroup,
+  'autocomplete-choice': FilterAutocompleteChoice,
   'column-visibility': FilterColumnVisibility,
   'visual-filter': FilterVisualFilter
 }
@@ -53,11 +67,23 @@ const props = defineProps<{
   /** Human-readable column name, used for the accessible popover label. */
   label: string
   clearLabel?: string
+  /** Title of the filter section, shown opposite the clear button. */
+  heading?: string
+  /**
+   * Selector of the ancestor the panel lines up with, resolved with `closest`.
+   * Unset, the panel lines up with the trigger itself.
+   */
+  anchor?: string
+  /** Offer the column's sort directions above the filter. */
+  sortable?: boolean
 }>()
 
 const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
 
+const sort = defineModel<SortDirection>('sort', { default: false })
+
 const { _t } = usei18n()
+const panelId = useId()
 
 const vClickOutside = useClickOutside()
 const shortcuts = getKeyShortcutServiceInstance()
@@ -67,7 +93,7 @@ const monitoringService = inject(MONITORING_SERVICE, null)
 
 const isOpen = ref(false)
 const flipUp = ref(false)
-const flipLeft = ref(false)
+const alignment = ref<CSSProperties>({})
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
 // Whether the press behind the current click started within the funnel.
@@ -95,6 +121,12 @@ const trigger = ref<HTMLElement | null>(null)
 provideFloatingTarget(() => panel.value ?? undefined)
 
 const isActive = computed(() => model.value !== undefined)
+
+const sortOptions = computed<{ direction: SortDirection; label: string }[]>(() => [
+  { direction: 'asc', label: _t('Sort ascending') },
+  { direction: 'desc', label: _t('Sort descending') },
+  { direction: false, label: _t('No sorting / default sorting') }
+])
 
 const filterComponent = computed(() => FILTER_COMPONENTS[props.definition.type])
 
@@ -185,20 +217,34 @@ function positionPanel(): void {
   const triggerRect = triggerEl.getBoundingClientRect()
   const spaceBelow = window.innerHeight - triggerRect.bottom
   flipUp.value = spaceBelow < panelEl.offsetHeight && triggerRect.top > spaceBelow
-  const clipLeft = clippingLeft(triggerEl)
-  flipLeft.value = triggerRect.right - clipLeft >= panelEl.offsetWidth
+
+  const anchorRect = anchorElement(triggerEl).getBoundingClientRect()
+  const clipping = clippingBounds(triggerEl)
+  const alignLeft = Math.max(anchorRect.left, clipping.left)
+  const alignRight = Math.min(anchorRect.right, clipping.right)
+  const overflowsRight = alignLeft + panelEl.offsetWidth > clipping.right
+  const fitsLeftwards = alignRight - clipping.left >= panelEl.offsetWidth
+  alignment.value =
+    overflowsRight && fitsLeftwards
+      ? { left: 'auto', right: `${triggerRect.right - alignRight}px` }
+      : { left: `${alignLeft - triggerRect.left}px`, right: 'auto' }
 }
 
-function clippingLeft(el: HTMLElement): number {
+function anchorElement(el: HTMLElement): HTMLElement {
+  return props.anchor === undefined ? el : (el.closest<HTMLElement>(props.anchor) ?? el)
+}
+
+function clippingBounds(el: HTMLElement): { left: number; right: number } {
   let node: HTMLElement | null = el.parentElement
   while (node) {
     const overflowX = getComputedStyle(node).overflowX
     if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
-      return node.getBoundingClientRect().left
+      const rect = node.getBoundingClientRect()
+      return { left: rect.left, right: rect.right }
     }
     node = node.parentElement
   }
-  return 0
+  return { left: 0, right: window.innerWidth }
 }
 
 // The focusable rows are whatever the mounted filter component renders (search
@@ -232,13 +278,17 @@ function moveFocus(delta: number): void {
   focusRow(current + delta)
 }
 
-// Filter types whose input owns the vertical arrow keys (e.g. a number field's
-// native increment/decrement). For these the dropdown must not hijack ArrowUp /
-// ArrowDown for row navigation; Tab still moves between rows.
+// Filter types whose input owns the vertical arrow keys. Numeric/date-time
+// fields use them for native increment/decrement; boolean-group and
+// checkbox-list-with-flags render a tri-state radio group, and reka-ui already
+// gives each one its own roving-tabindex Up/Down handling. For all of these
+// the dropdown must not hijack ArrowUp/ArrowDown for row navigation - Tab
+// still moves between rows, including into and out of a radio group.
 const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>([
   'numeric',
+  'date-time-range',
   'boolean-group',
-  'date-time-range'
+  'checkbox-list-with-flags'
 ])
 
 function registerShortcuts(): void {
@@ -286,32 +336,69 @@ onBeforeUnmount(() => {
 
 <template>
   <span ref="trigger" class="monitoring-filter-dropdown">
-    <slot name="trigger" :toggle="toggle" :is-open="isOpen" :is-active="isActive" />
+    <slot
+      name="trigger"
+      :toggle="toggle"
+      :is-open="isOpen"
+      :is-active="isActive"
+      :panel-id="panelId"
+    />
 
     <div
       v-if="isOpen"
+      :id="panelId"
       ref="panel"
       v-click-outside="onClickOutside"
       class="monitoring-filter-dropdown__panel"
-      :class="{
-        'monitoring-filter-dropdown__panel--up': flipUp,
-        'monitoring-filter-dropdown__panel--left': flipLeft
-      }"
+      :class="{ 'monitoring-filter-dropdown__panel--up': flipUp }"
+      :style="alignment"
       role="group"
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
-      <div class="monitoring-filter-dropdown__content">
-        <CmkButton
-          variant="text"
-          size="small"
-          class="monitoring-filter-dropdown__clear"
-          @click="clear"
+      <div v-if="sortable" class="monitoring-filter-dropdown__sort">
+        <button
+          v-for="option in sortOptions"
+          :key="String(option.direction)"
+          type="button"
+          class="monitoring-filter-dropdown__sort-option"
+          :aria-pressed="sort === option.direction"
+          @click="sort = option.direction"
         >
-          {{ props.clearLabel ?? _t('Clear') }}
-        </CmkButton>
+          <CmkMultitoneIcon
+            v-if="option.direction !== false"
+            name="dashlet-resize"
+            :rotate="option.direction === 'asc' ? 180 : 0"
+            primary-color="font"
+            aria-hidden="true"
+            size="xsmall"
+          />
+          <span
+            v-else
+            class="monitoring-filter-dropdown__sort-option-spacer"
+            aria-hidden="true"
+          ></span>
+          {{ option.label }}
+          <span
+            v-if="sort === option.direction"
+            class="monitoring-filter-dropdown__sort-marker"
+            aria-hidden="true"
+          ></span>
+        </button>
+      </div>
 
-        <hr class="monitoring-filter-dropdown__content-row-separator" />
+      <div class="monitoring-filter-dropdown__content">
+        <div class="monitoring-filter-dropdown__content-header">
+          <span v-if="heading" class="monitoring-filter-dropdown__heading">{{ heading }}</span>
+          <CmkButton
+            variant="text"
+            size="small"
+            class="monitoring-filter-dropdown__clear"
+            @click="clear"
+          >
+            {{ props.clearLabel ?? _t('Clear') }}
+          </CmkButton>
+        </div>
 
         <component
           :is="filterComponent"
@@ -346,30 +433,68 @@ onBeforeUnmount(() => {
   z-index: var(--z-index-dropdown-offset, 100);
   box-sizing: border-box;
   width: max-content;
-  min-width: 180px;
+  min-width: 330px;
   max-width: min(90vw, 32rem);
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-4);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
+  font-weight: var(--font-weight-default);
+}
+
+.monitoring-filter-dropdown__sort {
+  display: flex;
+  flex-direction: column;
+  padding: var(--dimension-3) 0;
+  border-bottom: 1px solid var(--ux-theme-4);
+}
+
+.monitoring-filter-dropdown__sort-option {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-5);
+  padding: var(--dimension-3) var(--dimension-5);
+  background: transparent;
+  border: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+  line-height: 20px;
+
+  &:hover {
+    background-color: var(--ux-theme-3);
+  }
+}
+
+.monitoring-filter-dropdown__sort-option-spacer {
+  width: 10px;
+}
+
+.monitoring-filter-dropdown__sort-marker {
+  width: var(--dimension-3);
+  height: var(--dimension-3);
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--success);
 }
 
 .monitoring-filter-dropdown__content {
-  width: calc(100% - 2 * var(--dimension-2));
-  margin: var(--dimension-2);
-}
-
-.monitoring-filter-dropdown__clear {
-  margin: var(--dimension-3);
-  float: right;
-}
-
-.monitoring-filter-dropdown__content-row-separator {
   width: 100%;
-  height: var(--dimension-1);
-  border: 0;
-  background-color: var(--ux-theme-4);
-  margin: var(--dimension-2) 0;
+}
+
+.monitoring-filter-dropdown__content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-5);
+}
+
+.monitoring-filter-dropdown__heading {
+  font-weight: var(--font-weight-bold);
 }
 
 .monitoring-filter-dropdown__panel--up {
@@ -379,18 +504,12 @@ onBeforeUnmount(() => {
   margin-bottom: var(--dimension-2);
 }
 
-.monitoring-filter-dropdown__panel--left {
-  left: auto;
-  right: 0;
-}
-
 .monitoring-filter-dropdown__footer {
   display: flex;
   gap: var(--dimension-4);
   justify-content: flex-end;
-  margin-top: var(--dimension-2);
-  padding: var(--dimension-4) var(--dimension-3);
-  border-top: 1px solid var(--ux-theme-4);
+  padding: var(--dimension-4) var(--dimension-5);
   align-items: center;
+  border-top: 1px solid var(--ux-theme-4);
 }
 </style>

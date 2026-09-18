@@ -37,8 +37,6 @@ binary is itself deployed later, the deployer replaces the symlink and
 applies ``setcap`` as today.
 """
 
-from __future__ import annotations
-
 import contextlib
 import os
 import re
@@ -347,7 +345,7 @@ def _capability_files(pristine: Path) -> list[Path]:
             check=False,
             timeout=GETCAP_SCAN,
         )
-    except (OSError, subprocess.TimeoutExpired):
+    except OSError, subprocess.TimeoutExpired:
         output.warn(
             "getcap not available -- capability binaries (e.g. ICMP helpers) "
             "lose their capabilities in the clone"

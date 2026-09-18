@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 from typing import Literal
@@ -29,7 +28,7 @@ from cmk.gui.valuespec import (
 def _migrate_licenses(
     params: dict | tuple[float, float] | tuple[int, int] | None | Literal[False],
 ) -> dict:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case dict():
             return params
         case int(), int():

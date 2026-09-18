@@ -8,31 +8,49 @@
 import datetime as dt
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from typing import cast
+from typing import cast, Literal
 from unittest.mock import MagicMock
 
 import pytest
 
 from cmk.ccc.user import UserId
-from cmk.graphing_engine import EvaluatedGraph, Graph
+from cmk.graphing_engine import (
+    AutoPrecision,
+    CurveAttributes,
+    DecimalNotation,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    Graph,
+    TimeRange,
+    TimeSeries,
+    Unit,
+)
+from cmk.gui.config import active_config
 from cmk.gui.dashboard.api import fetch_widget_graph_data as endpoint_module
 from cmk.gui.dashboard.api.fetch_widget_graph_data import (
     fetch_widget_graph_data_v1,
     WidgetGraphFetchRequest,
 )
-from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet, TemplateGraphDashlet
+from cmk.gui.dashboard.dashlet.dashlets.graph import TemplateGraphDashlet
 from cmk.gui.dashboard.token_util import InvalidWidgetError
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig
-from cmk.gui.graphing._engine_discovery import BuiltGraph, DiscoveredGraphs
-from cmk.gui.graphing._engine_dispatch import EvaluatedGraphs
-from cmk.gui.graphing._engine_source import FetchDiagnostics
+from cmk.gui.graphing import (
+    BuiltGraph,
+    DiscoveredGraphs,
+    EvaluatedGraphs,
+    FetchDiagnostics,
+    get_temperature_unit,
+)
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi.models import ApiTimeRange
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentDownloadToken, AuthToken, DashboardToken, TokenId
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.roles import UserPermissions
+from tests.testlib.gui.users import create_and_destroy_user
 
 _WIDGET_ID = "test_dashboard-0"
 
@@ -47,14 +65,14 @@ def _built() -> BuiltGraph:
     return BuiltGraph(graph=Graph(name="g", title="t", kind="template"), specification=None)
 
 
-def _dashboard_token(*, disabled: bool = False) -> AuthToken:
+def _dashboard_token(*, disabled: bool = False, issuer: UserId = UserId("cmkadmin")) -> AuthToken:
     return AuthToken(
-        issuer=UserId("cmkadmin"),
+        issuer=issuer,
         issued_at=dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
         valid_until=None,
         token_id=TokenId("the-token"),
         details=DashboardToken(
-            owner=UserId("cmkadmin"),
+            owner=issuer,
             dashboard_name="test_dashboard",
             disabled=disabled,
             synced_at=dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
@@ -72,23 +90,14 @@ def _agent_download_token() -> AuthToken:
     )
 
 
-def _api_context(token: AuthToken | None) -> ApiContext:
-    """The two configuration values the fetch needs; the rest is irrelevant here."""
+def _api_context(token: AuthToken | None, *, temperature_unit: str = "celsius") -> ApiContext:
+    """The configuration values the fetch needs; the rest is irrelevant here."""
     context = MagicMock(spec=ApiContext)
     context.token = token
     context.config.debug = False
+    context.config.default_temperature_unit = temperature_unit
     context.config.user_permissions.return_value = UserPermissions({}, {}, {}, [])
     return context
-
-
-@pytest.fixture(name="without_legacy_recipes", autouse=True)
-def fixture_without_legacy_recipes(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Constructing a graph widget computes its legacy recipes over livestatus.
-
-    The fetch does not use them, so they are stubbed out rather than mocked at the livestatus
-    level - these tests are about the engine graphs, not the legacy rendering path.
-    """
-    monkeypatch.setattr(ABCGraphDashlet, "_compute_graph_recipes", staticmethod(lambda *_args: []))
 
 
 def _graph_widget(widget_type: str = "pnpgraph", **extra: object) -> DashletConfig:
@@ -129,7 +138,12 @@ def _impersonating_but_unpermitted(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(endpoint_module, "impersonate_dashboard_token_issuer", _impersonate)
 
 
-def _impersonating(monkeypatch: pytest.MonkeyPatch, widgets: dict[str, DashletConfig]) -> None:
+def _impersonating(
+    monkeypatch: pytest.MonkeyPatch,
+    widgets: dict[str, DashletConfig],
+    *,
+    issuer: UserId = UserId("cmkadmin"),
+) -> None:
     """Stand in for the token issuer impersonation, which the token pages cover.
 
     The stub still enters a `UserContext`, so the tests can tell what the fetch runs as.
@@ -138,7 +152,7 @@ def _impersonating(monkeypatch: pytest.MonkeyPatch, widgets: dict[str, DashletCo
         DashboardConfig,
         {
             "name": "test_dashboard",
-            "owner": "cmkadmin",
+            "owner": issuer,
             "context": {},
             "widgets": widgets,
         },
@@ -153,6 +167,10 @@ def _impersonating(monkeypatch: pytest.MonkeyPatch, widgets: dict[str, DashletCo
         with UserContext(issuer, permissions):
             loaded = MagicMock()
             loaded.load_dashboard.return_value = board
+            # Resolved as the real issuer does, off whoever the UserContext makes current.
+            loaded.temperature_unit.side_effect = lambda default: get_temperature_unit(
+                user, default
+            )
             yield loaded
 
     monkeypatch.setattr(endpoint_module, "impersonate_dashboard_token_issuer", _impersonate)
@@ -163,6 +181,39 @@ def _discovering(monkeypatch: pytest.MonkeyPatch, graphs: Sequence[BuiltGraph]) 
         TemplateGraphDashlet,
         "discover_graphs",
         lambda _self, **_kwargs: DiscoveredGraphs(graphs=graphs, no_data_message=None),
+    )
+
+
+def _celsius_graph(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> EvaluatedGraphs:
+    """One 20 °C data point, so a Fahrenheit reader must get 68.0 and a "°F" symbol."""
+    unit = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
+    return EvaluatedGraphs(
+        graphs=[
+            EvaluatedGraph(
+                name="g",
+                title="t",
+                vertical_range=None,
+                stacks=[],
+                lines=[
+                    EvaluatedLine(
+                        curve=EvaluatedCurve(
+                            id="c",
+                            attributes=CurveAttributes(
+                                title="Temperature", unit=unit, color="#123456"
+                            ),
+                            value=20.0,
+                            time_series=TimeSeries(
+                                time_range=TimeRange(start=0, end=30, step=10),
+                                values=[20.0],
+                            ),
+                            source_id=None,
+                        ),
+                        inverse=False,
+                    )
+                ],
+            )
+        ],
+        diagnostics=FetchDiagnostics(),
     )
 
 
@@ -279,6 +330,60 @@ def test_fetch_evaluates_as_the_token_issuer(monkeypatch: pytest.MonkeyPatch) ->
     fetch_widget_graph_data_v1(_api_context(_dashboard_token()), _REQUEST)
 
     assert evaluated_as["user_id"] == UserId("cmkadmin")
+
+
+@pytest.mark.usefixtures("load_config", "request_context")
+def test_fetch_takes_the_temperature_unit_from_the_dashboard_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The impersonation itself is covered by the token-issuer test.
+
+    monkeypatch.setattr(fetch_graph_data_module, "evaluate_built_graphs", _celsius_graph)
+    _impersonating(monkeypatch, {_WIDGET_ID: _graph_widget()})
+    _discovering(monkeypatch, [_built()])
+
+    response = fetch_widget_graph_data_v1(
+        _api_context(_dashboard_token(), temperature_unit="fahrenheit"), _REQUEST
+    )
+
+    [metric] = response.metrics
+    assert metric.metadata.unit.symbol == "°F"
+    assert metric.data_points == [68.0]
+
+
+@pytest.mark.parametrize(
+    "owner_unit, site_default, expected_symbol, expected_points",
+    [
+        pytest.param("fahrenheit", "celsius", "°F", [68.0], id="owner F, site C"),
+        pytest.param("celsius", "fahrenheit", "°C", [20.0], id="owner C, site F"),
+    ],
+)
+@pytest.mark.usefixtures("load_config", "request_context")
+def test_fetch_takes_the_temperature_unit_from_the_owners_own_profile(
+    monkeypatch: pytest.MonkeyPatch,
+    owner_unit: Literal["celsius", "fahrenheit"],
+    site_default: str,
+    expected_symbol: str,
+    expected_points: list[float],
+) -> None:
+    # The site default stands in for what a visitor would get: the owner's profile has to win
+    # both ways round, or a shared dashboard would render in the reader's unit.
+    owner_attrs: UserSpec = {"temperature_unit": owner_unit}
+    with create_and_destroy_user(custom_attrs=owner_attrs, config=active_config) as (
+        owner,
+        _password,
+    ):
+        monkeypatch.setattr(fetch_graph_data_module, "evaluate_built_graphs", _celsius_graph)
+        _impersonating(monkeypatch, {_WIDGET_ID: _graph_widget()}, issuer=owner)
+        _discovering(monkeypatch, [_built()])
+
+        response = fetch_widget_graph_data_v1(
+            _api_context(_dashboard_token(issuer=owner), temperature_unit=site_default), _REQUEST
+        )
+
+    [metric] = response.metrics
+    assert metric.metadata.unit.symbol == expected_symbol
+    assert metric.data_points == expected_points
 
 
 @pytest.mark.usefixtures("load_config", "request_context")

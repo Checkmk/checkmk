@@ -15,13 +15,14 @@ from cmk.gui.search.quicksearch import (
     LivestatusQuicksearchConductor,
 )
 from cmk.gui.sidebar._snapin._quicksearch_manager import SnapinQuicksearchManager
-from cmk.gui.type_defs import HTTPVariables, SearchResult
+from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.urls import HTTPVariable
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 
-def _build_url(addvars: HTTPVariables) -> str:
+def _build_url(addvars: Sequence[HTTPVariable]) -> str:
     return "view.py?" + "&".join(f"{k}={v}" for k, v in addvars)
 
 
@@ -56,7 +57,7 @@ class _FakeConductor(ABCQuicksearchConductor):
         return False
 
     @override
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         return [("view_name", "searched")]
 
     @override
@@ -70,24 +71,24 @@ class _FakeConductor(ABCQuicksearchConductor):
 
 @pytest.mark.usefixtures("request_context")
 def test_find_search_object_expressions_without_a_filter() -> None:
-    assert SnapinQuicksearchManager._find_search_object_expressions("heute") == []
+    assert SnapinQuicksearchManager._find_search_object_expressions("heute") == []  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
 def test_find_search_object_expressions_at_the_start_of_the_query() -> None:
-    assert SnapinQuicksearchManager._find_search_object_expressions("h:heute") == [("h:", 0)]
+    assert SnapinQuicksearchManager._find_search_object_expressions("h:heute") == [("h:", 0)]  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
 def test_find_search_object_expressions_needs_a_word_boundary() -> None:
     """A colon inside a value must not be mistaken for a filter expression, otherwise
     searching for a service like ``Filesystem /h:`` would silently change the search."""
-    assert SnapinQuicksearchManager._find_search_object_expressions("myh:heute") == []
+    assert SnapinQuicksearchManager._find_search_object_expressions("myh:heute") == []  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
 def test_find_search_object_expressions_reports_every_filter_with_its_offset() -> None:
-    found = SnapinQuicksearchManager._find_search_object_expressions("h:heute s:CPU")
+    found = SnapinQuicksearchManager._find_search_object_expressions("h:heute s:CPU")  # noqa: SLF001
 
     assert found == [("h:", 0), (" s:", 7)]
 
@@ -96,8 +97,9 @@ def test_find_search_object_expressions_reports_every_filter_with_its_offset() -
 def test_used_filters_from_a_single_expression() -> None:
     query = "h:heute"
 
-    assert SnapinQuicksearchManager._get_used_filters_from_query(
-        query, SnapinQuicksearchManager._find_search_object_expressions(query)
+    assert SnapinQuicksearchManager._get_used_filters_from_query(  # noqa: SLF001
+        query,
+        SnapinQuicksearchManager._find_search_object_expressions(query),  # noqa: SLF001
     ) == {"h": ["heute"]}
 
 
@@ -105,17 +107,18 @@ def test_used_filters_from_a_single_expression() -> None:
 def test_used_filters_are_split_at_every_expression() -> None:
     query = "h:heute s:CPU"
 
-    assert SnapinQuicksearchManager._get_used_filters_from_query(
-        query, SnapinQuicksearchManager._find_search_object_expressions(query)
+    assert SnapinQuicksearchManager._get_used_filters_from_query(  # noqa: SLF001
+        query,
+        SnapinQuicksearchManager._find_search_object_expressions(query),  # noqa: SLF001
     ) == {"h": ["heute"], "s": ["CPU"]}
 
 
 @pytest.mark.usefixtures("request_context")
 def test_used_filters_collect_a_repeated_expression() -> None:
     query = "h:heute h:beta"
-    found = SnapinQuicksearchManager._find_search_object_expressions(query)
+    found = SnapinQuicksearchManager._find_search_object_expressions(query)  # noqa: SLF001
 
-    assert SnapinQuicksearchManager._get_used_filters_from_query(query, found) == {
+    assert SnapinQuicksearchManager._get_used_filters_from_query(query, found) == {  # noqa: SLF001
         "h": ["beta", "heute"]
     }
 
@@ -151,7 +154,7 @@ def test_determine_search_objects_without_a_search_order() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_make_conductor_picks_livestatus_for_a_livestatus_plugin() -> None:
-    conductor = _manager()._make_conductor(
+    conductor = _manager()._make_conductor(  # noqa: SLF001
         "h", {"h": ["heute"]}, FilterBehaviour.CONTINUE, USER_PERMISSIONS
     )
 
@@ -160,7 +163,7 @@ def test_make_conductor_picks_livestatus_for_a_livestatus_plugin() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_make_conductor_picks_the_basic_conductor_for_other_plugins() -> None:
-    conductor = _manager()._make_conductor(
+    conductor = _manager()._make_conductor(  # noqa: SLF001
         "menu", {"menu": ["hosts"]}, FilterBehaviour.CONTINUE, USER_PERMISSIONS
     )
 

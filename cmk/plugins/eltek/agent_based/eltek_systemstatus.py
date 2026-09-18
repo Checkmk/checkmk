@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.eltek.lib import DETECT_ELTEK
 
 
-def discover_eltek_systemstatus(section: StringTable) -> DiscoveryResult:
+def discover_eltek_systemstatus(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

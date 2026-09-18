@@ -1279,16 +1279,16 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         omd_root=Path(""),
         fetcher=TestFetcher(),
         parser=parser,
-        summarizer=lambda *args, **kwargs: [],
-        inventory_parameters=lambda *args, **kw: {},
+        summarizer=lambda *args, **kwargs: [],  # noqa: ARG005
+        inventory_parameters=lambda *args, **kw: {},  # noqa: ARG005
         section_plugins={
             SectionName("data"): SectionPlugin(
                 supersedes=set(),
-                parse_function=lambda *args, **kw: object,
+                parse_function=lambda *args, **kw: object,  # noqa: ARG005
                 parsed_section_name=ParsedSectionName("data"),
             )
         },
-        section_error_handling=lambda *args, **kw: "error",
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
@@ -1317,11 +1317,11 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         omd_root=Path(""),
         # no data!
         fetcher=TestFetcher(),
-        parser=lambda *args, **kwargs: [],
-        summarizer=lambda *args, **kwargs: [],
-        inventory_parameters=lambda *args, **kw: {},
+        parser=lambda *args, **kwargs: [],  # noqa: ARG005
+        summarizer=lambda *args, **kwargs: [],  # noqa: ARG005
+        inventory_parameters=lambda *args, **kw: {},  # noqa: ARG005
         section_plugins={},
-        section_error_handling=lambda *args, **kw: "error",
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),

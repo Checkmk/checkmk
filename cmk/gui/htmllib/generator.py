@@ -25,10 +25,11 @@
 #
 # - Unify CSS classes attribute to "class_"
 
-from __future__ import annotations
 
+import dataclasses
 import json
 import typing
+from collections.abc import Mapping
 from typing import Any, assert_never, Final, final
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -58,6 +59,48 @@ KnownTSFunction = typing.Literal[
     "lock_and_redirect",
     "confirm_on_form_leave",
 ]
+
+
+# See packages/cmk-frontend/src/js/modules/click_actions.ts:click_actions
+# The values of this Literal and the available keys in the TS dictionary MUST MATCH.
+KnownClickAction = typing.Literal[
+    "add_bookmark",
+    "switch_master_state",
+]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ClickAction:
+    """CSP-compatible replacement for inline ``onclick`` handlers
+
+    An enforcing Content Security Policy forbids inline event handlers like
+    ``onclick="..."``. Instead of attaching JavaScript directly to an element,
+    declare a named click action which is consumed by a delegated click
+    listener on the document (see /cmk-frontend/src/js/modules/click_actions.ts).
+
+    To add a new click action:
+
+    1. Add its name to ``KnownClickAction`` above.
+    2. Implement the action under the same name in the ``click_actions``
+       dictionary in packages/cmk-frontend/src/js/modules/click_actions.ts.
+    3. Pass a ``ClickAction`` to an HTML helper supporting it (e.g.
+       ``html.toggle_switch``) or render the attributes returned by
+       ``data_attributes`` on the clickable element yourself.
+
+    ``arguments`` must be a flat string-to-string mapping; it is serialized as
+    JSON and handed to the TypeScript function on each click.
+    """
+
+    action: KnownClickAction
+    arguments: Mapping[str, str] | None = None
+
+    def data_attributes(self) -> dict[str, str]:
+        attrs: dict[str, str] = {"data_cmk_on_click": self.action}
+        if self.arguments is not None:
+            attrs["data_cmk_on_click_arguments"] = _dump_standard_compliant_json(
+                dict(self.arguments)
+            )
+        return attrs
 
 
 def maybecall(entry: FinalJavaScript) -> str:
@@ -232,24 +275,27 @@ class HTMLWriter:
     def show_warning(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "warning"))
 
+    def show_info(self, msg: HTML | str) -> None:
+        self._write(self._render_message(msg, "info"))
+
     def render_message(
         self,
         msg: HTML | str,
-        flashed: bool = False,
+        flashed: bool = False,  # noqa: ARG002
     ) -> HTML:
         return self._render_message(msg, "message")
 
     def render_error(
         self,
         msg: HTML | str,
-        flashed: bool = False,
+        flashed: bool = False,  # noqa: ARG002
     ) -> HTML:
         return self._render_message(msg, "error")
 
     def render_warning(
         self,
         msg: HTML | str,
-        flashed: bool = False,
+        flashed: bool = False,  # noqa: ARG002
     ) -> HTML:
         return self._render_message(msg, "warning")
 

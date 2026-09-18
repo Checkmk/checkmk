@@ -37,7 +37,7 @@ class FolderExtensionsModel:
 
 @api_model
 class FolderModel(DomainObjectModel):
-    domainType: Literal["folder_config"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["folder_config"] = api_field(
         description="The domain type of the object.",
     )
     members: FolderMembersModel | ApiOmitted = api_field(

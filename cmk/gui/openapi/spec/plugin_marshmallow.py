@@ -7,10 +7,11 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import typing
+from typing import override, TypedDict
 
-from apispec.ext import marshmallow
-from apispec.ext.marshmallow import common, field_converter
+from apispec.ext.marshmallow import common, field_converter, MarshmallowPlugin
+from apispec.ext.marshmallow.openapi import OpenAPIConverter
+from apispec.ext.marshmallow.schema_resolver import SchemaResolver
 from marshmallow import fields, Schema
 from marshmallow_oneofschema import OneOfSchema
 
@@ -53,7 +54,7 @@ def type_and_format_of_field(field: fields.Field) -> tuple[str, str | None]:
     raise ValueError(f"No fitting spec found for field {field!r}.")
 
 
-class FieldProperties(typing.TypedDict, total=False):
+class FieldProperties(TypedDict, total=False):
     description: str
     format: str
     pattern: str
@@ -107,13 +108,14 @@ def field_properties(field: fields.Field) -> FieldProperties:
     return properties
 
 
-class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined,misc,unused-ignore]
+class CheckmkOpenAPIConverter(OpenAPIConverter):
     def ensure_title(self, schema, json_schema: dict) -> dict:
         if "title" not in json_schema and not isinstance(schema, OneOfSchema):
             # Don't set the title for oneOf, it would become the title for all options
             json_schema["title"] = self.schema_name_resolver(schema)
         return json_schema
 
+    @override
     def schema2jsonschema(self, schema):
         if is_value_typed_dict(schema):
             if isinstance(schema.ValueTypedDict.value_type, FieldWrapper):
@@ -127,7 +129,7 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
                 if schema_key not in self.refs:
                     component_name = self.schema_name_resolver(schema.ValueTypedDict.value_type)
                     self.spec.components.schema(component_name, schema=schema_instance)
-                properties = self.get_ref_dict(schema_instance)
+                properties = self.get_ref_dict(schema_instance)  # type: ignore[no-untyped-call]
             else:
                 raise RuntimeError(f"Unsupported value_type: {schema.ValueTypedDict.value_type}")
 
@@ -137,10 +139,11 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
             }
 
         else:
-            out = super().schema2jsonschema(schema)
+            out = super().schema2jsonschema(schema)  # type: ignore[no-untyped-call]
 
         return self.ensure_title(schema, out)
 
+    @override
     def nested2properties(self, field: fields.Field, ret: dict) -> dict:
         """Return a dictionary of properties from :class:`Nested <marshmallow.fields.Nested` fields.
 
@@ -159,16 +162,17 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
             A dict of the relevant OpenAPI subsection.
         """
         if isinstance(field, MultiNested):
-            schemas = [self.resolve_nested_schema(schema) for schema in field.metadata["anyOf"]]
+            schemas = [self.resolve_nested_schema(schema) for schema in field.metadata["anyOf"]]  # type: ignore[no-untyped-call]
             ret["anyOf"] = schemas
             return ret
 
         return super().nested2properties(field, ret)
 
 
-class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined,misc,unused-ignore]
+class CheckmkOpenAPIResolver(SchemaResolver):
+    @override
     def resolve_parameters(self, parameters: list[object]) -> list[object]:
-        parameters = super().resolve_parameters(parameters)
+        parameters = super().resolve_parameters(parameters)  # type: ignore[no-untyped-call]
 
         # wrap object parameters in content.application/json to keep them as str/json in swagger
         # see: https://swagger.io/docs/specification/describing-parameters/#schema-vs-content
@@ -184,6 +188,6 @@ class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-d
         return parameters
 
 
-class CheckmkMarshmallowPlugin(marshmallow.MarshmallowPlugin):
+class CheckmkMarshmallowPlugin(MarshmallowPlugin):
     Converter = CheckmkOpenAPIConverter  # type: ignore[mutable-override]
     Resolver = CheckmkOpenAPIResolver  # type: ignore[mutable-override]

@@ -22,7 +22,6 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
-from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.unit.gui.dashboard_api_test_helper import (
@@ -64,14 +63,16 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert result.url == expected_url
 
 
-def test_donut_content_defaults_the_legend_of_a_stored_widget() -> None:
-    """A donut stored before the legend became configurable keeps the table."""
+def test_donut_content_defaults_of_a_stored_widget() -> None:
+    """A donut stored before these options existed keeps the table and no comparison."""
     config: NetworkFlowDonutDashletConfig = {
         "type": "network_flow_donut",
         "dimension": "applications",
         "limit_to": 6,
     }
-    assert NetworkFlowDonutContent.from_internal(config).legend_mode == "table"
+    content = NetworkFlowDonutContent.from_internal(config)
+    assert content.legend_mode == "table"
+    assert content.show_delta is False
 
 
 @pytest.mark.parametrize(
@@ -171,7 +172,8 @@ def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRe
             )
 
 
-def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
+@pytest.mark.usefixtures("mock_livestatus")
+def test_show_dashboard(clients: ClientRegistry) -> None:
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
     # No queries are actually executed.
 

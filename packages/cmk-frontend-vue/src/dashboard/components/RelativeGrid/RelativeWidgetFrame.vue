@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -38,6 +39,7 @@ const emit = defineEmits<{
   (e: 'click:delete'): void
   (e: 'toggle:sizing', dimension: 'width' | 'height'): void
   (e: 'update:anchorPosition', position: ANCHOR_POSITION): void
+  (e: 'updateTimeRange', range: DateTimeRange): void
 }>()
 
 const containerStyle = computed(() => ({
@@ -88,7 +90,10 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   >
     <div :style="{ position: 'relative', height: '100%', width: '100%' }">
       <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">
-        <DashboardContent v-bind="contentProps" />
+        <DashboardContent
+          v-bind="contentProps"
+          @update-time-range="emit('updateTimeRange', $event)"
+        />
       </MissingFiltersMsg>
 
       <div

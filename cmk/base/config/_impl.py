@@ -5,11 +5,8 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import copy
@@ -27,7 +24,6 @@ from types import ModuleType
 from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, override
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
@@ -38,6 +34,7 @@ from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import (
+    make_metrics_identity_routing_config,
     make_tcp_fetcher_config,
     make_telemetry_custom_service_config,
 )
@@ -191,6 +188,7 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         self,
         *,
         services: Iterable[ConfiguredService],
+        ignored_services: Iterable[ConfiguredService] = (),
     ) -> None:
         valid, skipped = _split_services_by_name_validity(services)
         self._data = {s.id(): s for s in valid}
@@ -199,6 +197,15 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         # them here would make the checker compute results the core does not
         # know about, rendering all services of the host stale (CMK-33390).
         self.skipped_services: Final[Sequence[ConfiguredService]] = skipped
+        # Services excluded by the "Disabled services" / "Disabled checks"
+        # rulesets. They are not part of the table either, but unlike the
+        # skipped ones they are excluded on purpose, and the nagios config
+        # generation has to know about them (see `_get_disabled_service_ids`).
+        # An id that is in the table as well is not disabled: the two can
+        # disagree when a service is both discovered and enforced.
+        self.ignored_services: Final[Sequence[ConfiguredService]] = [
+            s for s in ignored_services if s.id() not in self._data
+        ]
 
     @override
     def __repr__(self) -> str:
@@ -263,7 +270,57 @@ def _aggregate_check_table_services(
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
-    skip_ignored: bool,
+    excluded_service_ids: Container[ServiceID],
+    filter_mode: FilterMode,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]],
+        Iterable[ConfiguredService],
+    ],
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+) -> tuple[Sequence[ConfiguredService], Sequence[ConfiguredService]]:
+    """Return this host's services, split into the monitored and the disabled ones.
+
+    Both are needed: the disabled ones are excluded from the monitoring
+    configuration, but the nagios config generation has to pass them on to the
+    precompiled host check, which cannot determine them itself.
+    """
+    sfilter = _ServiceFilter(
+        host_name,
+        config_cache=config_cache,
+        mode=filter_mode,
+        excluded_service_ids=excluded_service_ids,
+    )
+
+    monitored: list[ConfiguredService] = []
+    ignored: list[ConfiguredService] = []
+    for service in _iter_check_table_candidates(
+        host_name,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        service_name_config=service_name_config,
+        enforced_services_table=enforced_services_table,
+        filter_mode=filter_mode,
+        get_autochecks=get_autochecks,
+        configure_autochecks=configure_autochecks,
+        plugins=plugins,
+    ):
+        if not sfilter.keep(service):
+            continue
+        (ignored if sfilter.is_ignored(service) else monitored).append(service)
+
+    return monitored, ignored
+
+
+def _iter_check_table_candidates(
+    host_name: HostName,
+    *,
+    hosts_config: Hosts,
+    config_cache: ConfigCache,
+    service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
     filter_mode: FilterMode,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
@@ -272,13 +329,11 @@ def _aggregate_check_table_services(
     ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
-    sfilter = _ServiceFilter(
-        host_name,
-        config_cache=config_cache,
-        mode=filter_mode,
-        skip_ignored=skip_ignored,
-    )
+    """Yield every service that might belong to this host, unfiltered.
 
+    The order matters: enforced services come last, so that they win over a
+    discovered service with the same id when the table is built.
+    """
     is_cluster = host_name in hosts_config.clusters
 
     # process all entries that are specific to the host
@@ -286,28 +341,20 @@ def _aggregate_check_table_services(
     if not config_cache.is_ping_host(host_name):
         if is_cluster:
             # Add checks a cluster might receive from its nodes
-            yield from (
-                s
-                for s in _get_clustered_services(
-                    hosts_config,
-                    config_cache,
-                    service_name_config,
-                    host_name,
-                    get_autochecks,
-                    configure_autochecks,
-                    enforced_services_table,
-                    plugins,
-                )
-                if sfilter.keep(s)
+            yield from _get_clustered_services(
+                hosts_config,
+                config_cache,
+                service_name_config,
+                host_name,
+                get_autochecks,
+                configure_autochecks,
+                enforced_services_table,
+                plugins,
             )
         else:
-            yield from (
-                s
-                for s in configure_autochecks(host_name, get_autochecks(host_name))
-                if sfilter.keep(s)
-            )
+            yield from configure_autochecks(host_name, get_autochecks(host_name))
 
-    yield from (svc for _, svc in enforced_services_table(host_name).values() if sfilter.keep(svc))
+    yield from (svc for _, svc in enforced_services_table(host_name).values())
 
     # NOTE: as far as I can see, we only have two cases with the filter mode.
     # Either we compute services to check, or we compute services for fetching.
@@ -318,19 +365,15 @@ def _aggregate_check_table_services(
     # services than are attached to the host itself, so that we get the needed data
     # even if a failover occurred since the last discovery.
 
-    yield from (
-        s
-        for s in _get_services_from_cluster_nodes(
-            hosts_config,
-            config_cache,
-            service_name_config,
-            host_name,
-            get_autochecks,
-            configure_autochecks,
-            enforced_services_table,
-            plugins,
-        )
-        if sfilter.keep(s)
+    yield from _get_services_from_cluster_nodes(
+        hosts_config,
+        config_cache,
+        service_name_config,
+        host_name,
+        get_autochecks,
+        configure_autochecks,
+        enforced_services_table,
+        plugins,
     )
 
 
@@ -341,35 +384,40 @@ class _ServiceFilter:
         *,
         config_cache: ConfigCache,
         mode: FilterMode,
-        skip_ignored: bool,
+        excluded_service_ids: Container[ServiceID],
     ) -> None:
         """Filter services for a specific host
 
         FilterMode.NONE              -> default, returns only checks for this host
         FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
+
+        Services in `excluded_service_ids` are dropped unconditionally.
         """
         self._host_name = host_name
         self._config_cache = config_cache
         self._mode = mode
-        self._skip_ignored = skip_ignored
+        self._excluded_service_ids = excluded_service_ids
 
     def keep(self, service: ConfiguredService) -> bool:
-        if self._skip_ignored and (
-            self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
-            or self._config_cache.service_ignored(
-                self._host_name,
-                service.description,
-                service.labels,
-            )
-        ):
+        """Determine whether this service is this host's business at all."""
+        if service.id() in self._excluded_service_ids:
             return False
 
-        if self._mode is FilterMode.INCLUDE_CLUSTERED:
-            return True
-        if self._mode is FilterMode.NONE:
-            return self.is_mine(service)
+        match self._mode:
+            case FilterMode.INCLUDE_CLUSTERED:
+                return True
+            case FilterMode.NONE:
+                return self.is_mine(service)
 
-        return assert_never(self._mode)
+    def is_ignored(self, service: ConfiguredService) -> bool:
+        """Determine whether the user disabled this service."""
+        return self._config_cache.check_plugin_ignored(
+            self._host_name, service.check_plugin_name
+        ) or self._config_cache.service_ignored(
+            self._host_name,
+            service.description,
+            service.labels,
+        )
 
     def is_mine(self, service: ConfiguredService) -> bool:
         """Determine whether a service should be displayed on this host's service overview.
@@ -574,7 +622,6 @@ class LoadingResult:
 
 
 def load(
-    edition: cmk_version.Edition,
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> LoadingResult:
@@ -582,7 +629,6 @@ def load(
 
     loading_result = perform_post_config_loading_actions(
         raw_config,
-        edition=edition,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
@@ -611,37 +657,56 @@ def load(
 def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     loaded_context: Mapping[str, Any],
     *,
-    edition: cmk_version.Edition,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
+    excluded_service_ids: Container[ServiceID] = frozenset(),
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
-    # First cleanup things (needed for e.g. reloading the config)
-    cache_manager.clear_all()
-
-    loaded_config = BaseConfig(
-        **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
-    )
-
-    hosts_config = make_hosts_config(loaded_config)
-    host_tags = make_host_tags(loaded_config, hosts_config)
-
-    config_cache = ConfigCache(
-        loaded_config,
-        edition,
-        hosts_config,
-        host_tags,
+    return make_loading_result(
+        BaseConfig(
+            **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
+        ),
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
+        excluded_service_ids=excluded_service_ids,
     )
+
+
+def make_loading_result(
+    loaded_config: BaseConfig,
+    *,
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
+    builtin_host_labels_file: Path,
+    excluded_service_ids: Container[ServiceID] = frozenset(),
+) -> LoadingResult:
+    """Derive everything below the BaseConfig.
+
+    Callers whose BaseConfig is still valid but whose derived state went stale
+    (autodiscovery rewrites autochecks and discovered host labels) use this to get
+    a coherent new object graph, rather than resetting one in place.
+    """
+    # First cleanup things (needed for e.g. reloading the config)
+    cache_manager.clear_all()
+
+    hosts_config = make_hosts_config(loaded_config)
+    host_tags = make_host_tags(loaded_config, hosts_config)
 
     return LoadingResult(
         loaded_config=loaded_config,
         hosts_config=hosts_config,
         host_tags=host_tags,
-        config_cache=config_cache,
+        config_cache=ConfigCache(
+            loaded_config,
+            hosts_config,
+            host_tags,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+            excluded_service_ids=excluded_service_ids,
+        ),
     )
 
 
@@ -697,7 +762,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
     @override
-    def update(self, new_hosts):  # type: ignore[override]
+    def update(self, new_hosts: Mapping[str, object]) -> None:  # type: ignore[override]
         self._set_folder_paths(new_hosts)
         return super().update(new_hosts)
 
@@ -809,7 +874,7 @@ def parse_hostname_list(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     host_tags: HostTags,
-    args: list[str],
+    args: Sequence[str],
     with_clusters: bool = True,
     with_foreign_hosts: bool = False,
 ) -> Sequence[HostName]:
@@ -917,7 +982,7 @@ def _make_service_description_cb(
 
 
 # TODO: Make this use the generic "rulesets" functions
-# a) This function has never been configurable via WATO (see https://mathias-kettner.de/checkmk_service_dependencies.html)
+# a) This function has never been configurable via WATO
 # b) It only affects the Nagios core - CMC does not implement service dependencies
 # c) This function implements some specific regex replacing match+replace which makes it incompatible to
 #    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/
@@ -955,7 +1020,7 @@ class ServiceDependsOn:
                         try:
                             item = matchobject.groups()[-1]
                             deps.append(depname % item)
-                        except (IndexError, TypeError):
+                        except IndexError, TypeError:
                             deps.append(depname)
         return deps
 
@@ -1256,22 +1321,30 @@ class ConfigCache:
     def __init__(
         self,
         loaded_config: BaseConfig,
-        edition: cmk_version.Edition,
         hosts_config: Hosts,
         host_tags: HostTags,
         *,
         autochecks_dir: Path,
         discovered_host_labels_dir: Path,
         builtin_host_labels_file: Path,
+        excluded_service_ids: Container[ServiceID] = frozenset(),
     ) -> None:
+        """Hold the configuration and derive the check tables from it.
+
+        Services in `excluded_service_ids` are omitted from every check table.
+        This is how the precompiled nagios host checks are told which services
+        the config generation left out of the core configuration: they only load
+        the plug-ins needed for the services they are supposed to check, so they
+        cannot re-evaluate the "Disabled services" ruleset themselves (the
+        service name is not available without the plug-in).  Computing results
+        for services the core does not know about makes nagios log warnings
+        about check results it cannot assign (CMK-37190).
+        """
         super().__init__()
         self._loaded_config: Final = loaded_config
-        self.edition: Final = edition
-        self._autochecks_dir = autochecks_dir
-        self._discovered_host_labels_dir = discovered_host_labels_dir
-        self._builtin_host_labels_file = builtin_host_labels_file
         self._hosts_config = hosts_config
         self._host_tags = host_tags
+        self._excluded_service_ids: Final = excluded_service_ids
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1290,18 +1363,11 @@ class ConfigCache:
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
-        self.initialize()
-
-    def initialize(self) -> ConfigCache:
-        # other than directly above, this is only called between the autodiscovery and the
-        # subsequent activation. When moving things out of here, carefully consider if
-        # they care about changes that could result from that (like the check table)
-        self.invalidate_host_config()
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
         self._cache_section_name_of: dict[str, str] = {}
 
-        self._autochecks_memoizer = AutochecksMemoizer(self._autochecks_dir)
+        self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=self._host_tags.host_tags_maps,
@@ -1318,8 +1384,8 @@ class ConfigCache:
             ),
             self._hosts_config.clusters,
             self._loaded_config.host_labels,
-            builtin_host_labels_file=self._builtin_host_labels_file,
-            discovered_host_labels_dir=self._discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+            discovered_host_labels_dir=discovered_host_labels_dir,
         )
         self.clustering = make_clustering_config(
             self._loaded_config,
@@ -1360,12 +1426,6 @@ class ConfigCache:
         self.only_from = make_only_from_config(
             self._loaded_config, self.ruleset_matcher, self.label_manager
         )
-        return self
-
-    @property
-    def autochecks_memoizer(self) -> AutochecksMemoizer:
-        # can't be Final because it is set in self.initialize() :-(
-        return self._autochecks_memoizer
 
     def make_passive_service_name_config(
         self,
@@ -1416,6 +1476,7 @@ class ConfigCache:
         them to construct their own fetchers.
         """
         return SourceConfig(
+            labels_of_host=self.label_manager.labels_of_host,
             snmp_config=lambda host_name, host_ip_family, ip_address, source_type: (
                 self.make_snmp_config(
                     host_name,
@@ -1452,6 +1513,9 @@ class ConfigCache:
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             telemetry_custom_service=make_telemetry_custom_service_config(
+                self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
+            ),
+            metrics_identity_routing=make_metrics_identity_routing_config(
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",
@@ -1630,7 +1694,6 @@ class ConfigCache:
                         service_name_config,
                         enforced_services_table,
                         filter_mode=FilterMode.INCLUDE_CLUSTERED,
-                        skip_ignored=True,
                     ).needed_check_names()
                     if (p := agent_based_register.get_check_plugin(n, plugins.check_plugins))
                     is not None
@@ -1656,10 +1719,7 @@ class ConfigCache:
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
         self.__snmp_backend.clear()
-        # `inventory_config` is (re)built at the end of `initialize`, which calls
-        # this first; guard for that initial call where it does not exist yet.
-        if (inventory_config := getattr(self, "inventory_config", None)) is not None:
-            inventory_config.invalidate()
+        self.inventory_config.invalidate()
 
     def check_table(
         self,
@@ -1672,31 +1732,25 @@ class ConfigCache:
         ],
         *,
         filter_mode: FilterMode = FilterMode.NONE,
-        # This was last set to `False` when computing the precompiled host
-        # checks for nagios in Checkmk 2.4.
-        # Let's keep this code around in the 2.5 branch in case changing that
-        # was a mistake.
-        skip_ignored: Literal[True] = True,
     ) -> HostCheckTable:
         # we blissfully ignore the plugins parameter here
-        cache_key = (hostname, filter_mode, skip_ignored)
+        cache_key = (hostname, filter_mode)
         with contextlib.suppress(KeyError):
             return self._check_table_cache[cache_key]
 
-        host_check_table = HostCheckTable(
-            services=_aggregate_check_table_services(
-                hostname,
-                hosts_config=self._hosts_config,
-                config_cache=self,
-                service_name_config=service_name_config,
-                enforced_services_table=enforced_services_table,
-                skip_ignored=skip_ignored,
-                filter_mode=filter_mode,
-                get_autochecks=self.autochecks_memoizer.read,
-                configure_autochecks=service_configurer.configure_autochecks,
-                plugins=plugins,
-            )
+        monitored, ignored = _aggregate_check_table_services(
+            hostname,
+            hosts_config=self._hosts_config,
+            config_cache=self,
+            service_name_config=service_name_config,
+            enforced_services_table=enforced_services_table,
+            excluded_service_ids=self._excluded_service_ids,
+            filter_mode=filter_mode,
+            get_autochecks=self.autochecks_memoizer.read,
+            configure_autochecks=service_configurer.configure_autochecks,
+            plugins=plugins,
         )
+        host_check_table = HostCheckTable(services=monitored, ignored_services=ignored)
 
         self._check_table_cache[cache_key] = host_check_table
 
@@ -2127,7 +2181,8 @@ class ConfigCache:
         )
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = load_resource_cfg_macros(
-            cmk.utils.paths.nagios_resource_cfg, None if cmk.ccc.debug.enabled() else lambda x: None
+            cmk.utils.paths.nagios_resource_cfg,
+            None if cmk.ccc.debug.enabled() else lambda x: None,  # noqa: ARG005
         )
         macros = {**host_macros, **resource_macros}
         active_check_config = ActiveCheck(
@@ -2434,9 +2489,6 @@ class ConfigCache:
         # nothing configured for this host -> use default
         return self._loaded_config.snmp_default_community
 
-    def _is_inline_backend_supported(self) -> bool:
-        return "netsnmp" in sys.modules and self.edition is not cmk_version.Edition.COMMUNITY
-
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
         if result := self.__snmp_backend.get(host_name):
             return result
@@ -2451,26 +2503,24 @@ class ConfigCache:
         ):
             return SNMPBackendEnum.STORED_WALK
 
-        with_inline_snmp = self._is_inline_backend_supported()
-
         if host_backend_config := self.ruleset_matcher.get_host_values_all(
             host_name, self._loaded_config.snmp_backend_hosts, self.label_manager.labels_of_host
         ):
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
-            if with_inline_snmp and host_backend == "inline":
+            if host_backend == "inline":
                 return SNMPBackendEnum.INLINE
             if host_backend == "classic":
                 return SNMPBackendEnum.CLASSIC
             raise MKGeneralException(f"Bad Host SNMP Backend configuration: {host_backend}")
 
-        if with_inline_snmp and self._loaded_config.snmp_backend_default == "inline":
+        if self._loaded_config.snmp_backend_default == "inline":
             return SNMPBackendEnum.INLINE
         if self._loaded_config.snmp_backend_default == "classic":
             return SNMPBackendEnum.CLASSIC
-        # Note: in the above case we raise here.
-        # I am not sure if this different behavior is intentional.
-        return SNMPBackendEnum.CLASSIC
+        raise MKGeneralException(
+            f"Bad SNMP backend configuration: {self._loaded_config.snmp_backend_default}"
+        )
 
     def snmp_credentials_of_version(
         self, hostname: HostName, snmp_version: int
@@ -2764,7 +2814,7 @@ class ConfigCache:
                 if addr is not None:
                     node_ips_4.append(addr)
                 else:
-                    node_ips_4.append(ip_lookup.fallback_ip_for(family))
+                    node_ips_4.append(ip_lookup.fallback_ip_for(family))  # type: ignore[unreachable]
 
         node_ips_6 = []
         if IPStackConfig.IPv6 in ip_stack_config:
@@ -2778,7 +2828,7 @@ class ConfigCache:
                 if addr is not None:
                     node_ips_6.append(addr)
                 else:
-                    node_ips_6.append(ip_lookup.fallback_ip_for(family))
+                    node_ips_6.append(ip_lookup.fallback_ip_for(family))  # type: ignore[unreachable]
 
         node_ips = node_ips_6 if host_ip_family is socket.AF_INET6 else node_ips_4
 
@@ -3096,7 +3146,7 @@ class CoreObjectsConfig:
         self.ruleset_matcher = matcher
         self.label_manager = label_manager
         # extra_attributes_of_service needs the check interval; build it here from
-        # the same inputs ConfigCache.initialize() uses (no extra dependency).
+        # the same inputs ConfigCache uses (no extra dependency).
         self.check_interval = make_check_interval_config(loaded_config, matcher, label_manager)
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
@@ -3228,8 +3278,8 @@ class CoreObjectsConfig:
             self._loaded_config.service_contactgroups,
             self.label_manager.labels_of_host,
         ):
-            if isinstance(entry, list):
-                folder_cgrs.append(entry)
+            if isinstance(entry, list):  # type: ignore[unreachable]
+                folder_cgrs.append(entry)  # type: ignore[unreachable]
             else:
                 cgrs.add(entry)
 
@@ -3280,8 +3330,8 @@ class CoreObjectsConfig:
             for entry in self.ruleset_matcher.get_host_values_all(
                 host_name, self._loaded_config.host_contactgroups, self.label_manager.labels_of_host
             ):
-                if isinstance(entry, list):
-                    folder_cgrs.append(entry)
+                if isinstance(entry, list):  # type: ignore[unreachable]
+                    folder_cgrs.append(entry)  # type: ignore[unreachable]
                 else:
                     cgrs.append(entry)
 

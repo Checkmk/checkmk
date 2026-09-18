@@ -174,15 +174,15 @@ _ARUBA_SYS_OBJECT_IDS = [".1.3.6.1.4.1.47196.4.1.1.1.100", ".1.3.6.1.4.1.47196.4
 
 @pytest.mark.parametrize("sys_object_id", _ARUBA_SYS_OBJECT_IDS)
 def test_reports_cache_excluded_from_used_aruba(sys_object_id: str) -> None:
-    assert hr_mem._reports_cache_excluded_from_used([[sys_object_id]])
+    assert hr_mem._reports_cache_excluded_from_used([[sys_object_id]])  # noqa: SLF001
 
 
 def test_reports_cache_excluded_from_used_other_devices() -> None:
     # net-snmp / UCD device -> "used" includes the cache -> must not match.
-    assert not hr_mem._reports_cache_excluded_from_used([[".1.3.6.1.4.1.8072.3.2.10"]])
-    assert not hr_mem._reports_cache_excluded_from_used([])
-    assert not hr_mem._reports_cache_excluded_from_used([[]])
-    assert not hr_mem._reports_cache_excluded_from_used([[""]])
+    assert not hr_mem._reports_cache_excluded_from_used([[".1.3.6.1.4.1.8072.3.2.10"]])  # noqa: SLF001
+    assert not hr_mem._reports_cache_excluded_from_used([])  # noqa: SLF001
+    assert not hr_mem._reports_cache_excluded_from_used([[]])  # noqa: SLF001
+    assert not hr_mem._reports_cache_excluded_from_used([[""]])  # noqa: SLF001
 
 
 def test_parse_hr_mem_subtracts_cache_by_default() -> None:

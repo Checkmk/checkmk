@@ -38,7 +38,9 @@ class BrokerConnectionConfig(BaseSchema):
 
     @validates_schema
     def validate_connection(  # type: ignore[misc]
-        self, data: Mapping[str, Mapping[str, object]], **kwargs: object
+        self,
+        data: Mapping[str, Mapping[str, object]],
+        **kwargs: object,  # noqa: ARG002
     ) -> None:
         """The two connected sites should not be the same."""
         if data["connecter"]["site_id"] != data["connectee"]["site_id"]:

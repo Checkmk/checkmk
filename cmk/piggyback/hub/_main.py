@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import argparse
 import logging
@@ -17,6 +15,7 @@ from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from multiprocessing import Event as make_event
+from multiprocessing import set_start_method
 from multiprocessing.synchronize import Event
 from pathlib import Path
 
@@ -25,6 +24,7 @@ from cmk.ccc.hostaddress import HostNameValidationError
 from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
 from ._config import CONFIG_QUEUE, ConfigType, PiggybackHubConfig, save_config
+from ._paths import RELATIVE_CONFIG_PATH
 from ._payload import (
     PiggybackPayload,
     save_payload_on_message,
@@ -53,7 +53,7 @@ def handle_received_config(
         delivery_tag: DeliveryTag,
         received: PiggybackHubConfig,
     ) -> None:
-        logger.debug(
+        logger.info(
             "New configuration received (type: %(config_type)s)",
             {"config_type": received.type.name},
         )
@@ -63,6 +63,10 @@ def handle_received_config(
                 send_messages_oneshot(logger, omd_root, omd_site, received.locations)
             case ConfigType.PERSISTED:
                 save_config(omd_root, received)
+                logger.info(
+                    "Configuration saved (mtime_ns: %(mtime_ns)s)",
+                    {"mtime_ns": (omd_root / RELATIVE_CONFIG_PATH).stat().st_mtime_ns},
+                )
                 reload_config.set()
 
         channel.acknowledge(delivery_tag)
@@ -110,7 +114,10 @@ def _setup_logging(args: Arguments) -> logging.Logger:
         if args.foreground
         else WatchedFileHandler(Path(args.log_file))
     )
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s"))
+    handler.setFormatter(
+        # astrein: disable=logging-formatter
+        logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s")
+    )
     logger.addHandler(handler)
 
     logger.setLevel(args.log_level)
@@ -159,7 +166,8 @@ def run_piggyback_hub(
         return 0
 
     signal.signal(
-        signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM"))
+        signal.SIGTERM,
+        lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM")),  # noqa: ARG005
     )
 
     # All processes should run forever. Die if either finishes.
@@ -176,8 +184,15 @@ def main(
     argv: list[str],
     *,
     crash_report_callback: Callable[[], str] = lambda: "No crash report created",
-    invalid_hostname_callback: Callable[[HostNameValidationError], None] = lambda e: None,
+    invalid_hostname_callback: Callable[[HostNameValidationError], None] = lambda e: None,  # noqa: ARG005
 ) -> int:
+    # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+    # "forkserver", see
+    # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+    # The concrete problem here is that the local function _on_message within
+    # save_payload_on_message can't be pickled.
+    set_start_method("fork")
+
     args = _parse_arguments(argv)
     logger = _setup_logging(args)
     omd_root = Path(args.omd_root)

@@ -11,8 +11,13 @@ import { useTemplateRef } from 'vue'
 
 const { _t } = usei18n()
 
-defineProps<{
+const { inlineSearchIcon = false, showSubmitButton = true } = defineProps<{
   placeholder: string
+  /** Accessible name, where the placeholder is not the right one. */
+  ariaLabel?: string | undefined
+  /** Shows the magnifier inside the field rather than beside it. */
+  inlineSearchIcon?: boolean | undefined
+  showSubmitButton?: boolean
 }>()
 
 const query = defineModel<string>({ default: '' })
@@ -43,13 +48,21 @@ function clear(): void {
 <template>
   <div class="cmk-search-input">
     <div class="cmk-search-input__box">
+      <CmkMultitoneIcon
+        v-if="inlineSearchIcon"
+        class="cmk-search-input__icon"
+        name="search"
+        :primary-color="{ custom: 'var(--color-mist-grey-60)' }"
+        size="small"
+        aria-hidden="true"
+      />
       <input
         ref="input"
         v-model="query"
         type="search"
         role="searchbox"
         class="cmk-search-input__field"
-        :aria-label="placeholder"
+        :aria-label="ariaLabel ?? placeholder"
         :placeholder="placeholder"
         autocomplete="off"
         @keydown.enter="submit"
@@ -64,6 +77,7 @@ function clear(): void {
       />
     </div>
     <button
+      v-if="showSubmitButton"
       type="button"
       class="cmk-search-input__submit"
       :aria-label="_t('Search')"
@@ -92,10 +106,11 @@ function clear(): void {
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);
   border-radius: var(--border-radius);
+}
 
-  &:focus-within {
-    border-color: var(--success);
-  }
+.cmk-search-input__icon {
+  flex: 0 0 auto;
+  margin-right: var(--dimension-3);
 }
 
 .cmk-search-input__submit {
@@ -130,8 +145,8 @@ function clear(): void {
   background: transparent;
   border: 0;
 
-  &:focus {
-    outline: none;
+  &:focus-visible {
+    outline: revert;
   }
 
   &::-webkit-search-cancel-button {

@@ -33,7 +33,7 @@ def parse(string_table: StringTable) -> PodConditions:
     return PodConditions.model_validate_json(string_table[0][0])
 
 
-def discovery(section: PodConditions) -> DiscoveryResult:
+def discovery(section: PodConditions) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

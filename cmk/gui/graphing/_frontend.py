@@ -4,27 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterable, Sequence
-from dataclasses import asdict
-from typing import Final
+import traceback
+from collections.abc import Callable, Sequence
+from dataclasses import asdict, dataclass
 
 from tzlocal import get_localzone_name
 
-from cmk.graphing_engine import Graph
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.graphing_engine import (
+    Graph,
+)
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GraphTimerange
+from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
+    ExplicitRange,
     GraphHeader,
     GraphOptions,
     Interaction,
     Size,
+    UnitFormat,
     XAxis,
     YAxis,
 )
@@ -32,25 +38,29 @@ from cmk.shared_typing.global_time_picker import (
     CustomGraphTimeRange,
     FirstDayOfWeek,
     GlobalTimePickerProps,
+    GlobalTimePickerRefresh,
 )
 from cmk.web.utils.html import HTML
 
-from . import _engine_plugins as engine_plugins
-from ._engine_dispatch import serialize_graphs
-from ._engine_source import RRDFetchMetricNames
-from ._engine_template_graphs import build_template_graphs
+from . import _plugins as engine_plugins
+from ._built_graphs import BuiltGraph
+from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
-from ._graph_templates import TemplateGraphSpecification
-
-# A view carrying one of these is driven by the global time picker rather than the
-# pnp_timerange painter option, and must not auto-reload.
-ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset({"svc_pnpgraph", "service_graphs"})
+from ._graph_templates import build_template_graphs, TemplateGraphSpecification
+from ._source import RRDFetchMetricNames
+from ._unit_format import apply_temperature_unit, unit_from_curves
 
 
-def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:
-    """Whether any of the given painters renders through the graph engine."""
-    return any(ident in ENGINE_GRAPH_PAINTER_IDENTS for ident in painter_idents)
+def stored_time_range_seconds(
+    *, painter_parameters: PainterParameters | None, stored_by_the_view: bool
+) -> int | None:
+    """The "Set default time range" a view stores for a graph painter, `None` for none.
+    `Cell.painter_parameters` substitutes the valuespec default when the view stores none, and
+    that Dictionary carries the key for every view - hence `stored_by_the_view`."""
+    if not stored_by_the_view or painter_parameters is None:
+        return None
+    return painter_parameters.get("set_default_time_range")
 
 
 def resolve_default_time_range_seconds(
@@ -80,16 +90,18 @@ def default_time_range_seconds() -> int:
 
 
 def user_first_day_of_week() -> FirstDayOfWeek | None:
-    """The user's preferred start of week in the global time picker's calendar, None meaning the
-    browser locale decides."""
+    """The start of week the global time picker's calendar opens on, None leaving that to the
+    browser locale. No preference stored means Monday, not the locale."""
     match user.get_attribute("start_of_week"):
+        case "browser_locale":
+            return None
         case str() as value:
             try:
                 return FirstDayOfWeek(value)
             except ValueError:  # defensive: stale stored value
-                return None
+                return FirstDayOfWeek.monday
         case _:
-            return None
+            return FirstDayOfWeek.monday
 
 
 def user_default_refresh_time() -> int | None:
@@ -102,13 +114,23 @@ def user_default_refresh_time() -> int | None:
             return None
 
 
-_DEFAULT_INTERACTION = Interaction(
+DEFAULT_INTERACTION = Interaction(
     burger="enabled",
     zoom="enabled",
     panning="enabled",
     hover="enabled",
     brush="enabled",
     pin="enabled",
+)
+
+# Mobile has no room for the controls and no pointer to drive them with.
+STATIC_INTERACTION = Interaction(
+    burger="disabled",
+    zoom="disabled",
+    panning="disabled",
+    hover="disabled",
+    brush="disabled",
+    pin="disabled",
 )
 
 
@@ -121,18 +143,49 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
 
 
+def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:
+    """Derive the value axis unit from the graph's own curves.
+
+    Mirrors yAxis.ts:deriveYAxis - template, single-timeseries and combined graphs draw every
+    curve in one unit (enforced backend-side), so the axis unit is the unit of any curve. None
+    when the graph has no curves; the renderer then falls back to raw, unit-less ticks.
+    """
+    return unit_from_curves(
+        member.attributes.unit for stack in graph.stacks for member in stack.members
+    ) or unit_from_curves(line.curve.attributes.unit for line in graph.lines)
+
+
+def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis | None:
+    """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
+    unit = built.y_axis_unit if built.y_axis_unit is not None else derive_y_axis_unit(built.graph)
+    bounds = built.y_axis_bounds()
+    if unit is None and bounds is None:
+        return None
+    conversion: Callable[[float], float] = lambda value: value
+    if unit is not None:
+        unit, conversion = apply_temperature_unit(unit, temperature_unit)
+    return YAxis(
+        unit=unit,
+        explicit_range=(
+            None
+            if bounds is None
+            else ExplicitRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
+        ),
+    )
+
+
 def to_cmk_time_series_graph(
-    graph: Graph,
+    built: BuiltGraph,
     *,
     size: Size,
-    interaction: Interaction = _DEFAULT_INTERACTION,
+    interaction: Interaction = DEFAULT_INTERACTION,
     font_size_pt: float = 8.0,
     show_graph_time: bool = True,
     x_axis: XAxis | None = None,
-    y_axis: YAxis | None = None,
-    add_to_specification: GraphSpecification | None = None,
+    temperature_unit: TemperatureUnit,
 ) -> CmkTimeSeriesGraph:
-    """Translate an engine graph definition into the shared ``CmkTimeSeriesGraph``."""
+    """Translate a built graph into the shared ``CmkTimeSeriesGraph`` the Vue renderer takes."""
+    graph = built.graph
     internal = json.dumps(serialize_graphs([graph]))
     return CmkTimeSeriesGraph(
         size=size,
@@ -140,12 +193,25 @@ def to_cmk_time_series_graph(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
             x_axis=x_axis,
-            y_axis=y_axis,
+            y_axis=_shell_y_axis(built, temperature_unit),
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,
         internal=internal,
-        add_to=_add_to(add_to_specification, internal),
+        add_to=_add_to(built.specification, internal),
+    )
+
+
+def global_time_picker_refresh(
+    *,
+    interval_seconds: int | None = None,
+    starts_live: bool = False,
+    reloads_page_content: bool = False,
+) -> GlobalTimePickerRefresh:
+    return GlobalTimePickerRefresh(
+        interval_seconds=interval_seconds or user_default_refresh_time(),
+        starts_live=starts_live,
+        reloads_page_content=reloads_page_content,
     )
 
 
@@ -154,10 +220,8 @@ def global_time_picker_props(
     default_time_range_seconds: int,
     *,
     first_day_of_week: FirstDayOfWeek | None,
-    default_refresh_time: int | None,
+    refresh: GlobalTimePickerRefresh,
 ) -> GlobalTimePickerProps:
-    """Assemble the global time picker props from the configured graph time ranges and the user's
-    time picker preferences."""
     return GlobalTimePickerProps(
         custom_time_ranges=[
             CustomGraphTimeRange(title=timerange["title"], total_seconds=timerange["duration"])
@@ -166,38 +230,79 @@ def global_time_picker_props(
         default_time_range=default_time_range_seconds,
         server_time_zone=get_localzone_name(),
         first_day_of_week=first_day_of_week,
-        default_refresh_time=default_refresh_time,
+        refresh=refresh,
     )
 
 
 def render_global_time_picker(
     graph_timeranges: Sequence[GraphTimerange],
     default_time_range_seconds: int,
+    *,
+    refresh: GlobalTimePickerRefresh,
 ) -> None:
     """Render the global time picker frontend component."""
     props = global_time_picker_props(
         graph_timeranges,
         default_time_range_seconds,
         first_day_of_week=user_first_day_of_week(),
-        default_refresh_time=user_default_refresh_time(),
+        refresh=refresh,
     )
     html.vue_component("cmk-global-time-picker", data=asdict(props))
+
+
+def value_axis_width_px(
+    vertical_axis_width: VerticalAxisWidth,
+) -> float | None:
+    """None for "fixed": that choice reads "relative to the font size", and a page which offers
+    no font size has nothing to be relative to, so the renderer's own default width stands."""
+    if isinstance(vertical_axis_width, tuple):
+        return vertical_axis_width[1] * 96 / 72
+    return None
+
+
+@dataclass(frozen=True)
+class EngineDisplayOptions:
+    """What a graph group applies to every graph it renders.
+
+    The component takes these as one ``display`` prop, so a builder either omits it and gets
+    every default, or sends the whole object - a partial one would read as "hide" for the keys
+    it leaves out.
+    """
+
+    show_consolidation: bool = True
+    show_legend: bool = True
+    show_title: bool = True
+    show_vertical_axis: bool = True
+    show_time_axis: bool = True
+    vertical_axis_width: VerticalAxisWidth = "fixed"
+
+    def as_props(self) -> dict[str, object]:
+        props: dict[str, object] = {
+            "show_consolidation": self.show_consolidation,
+            "show_legend": self.show_legend,
+            "show_title": self.show_title,
+            "show_vertical_axis": self.show_vertical_axis,
+            "show_time_axis": self.show_time_axis,
+        }
+        # The renderer treats the width as a floor, not an absolute: it still grows to hold the
+        # widest label. Absent leaves its own default - see value_axis_width_px.
+        if (width := value_axis_width_px(self.vertical_axis_width)) is not None:
+            props["min_value_axis_width"] = width
+        return props
 
 
 def render_engine_graph_group(
     specification: TemplateGraphSpecification,
     *,
-    host_name: str,
-    service_name: str,
     size: Size,
     time_range: tuple[int, int],
     show_graph_time: bool,
     debug: bool,
-    show_consolidation: bool = True,
-    show_legend: bool = True,
-    interaction: Interaction = _DEFAULT_INTERACTION,
+    display: EngineDisplayOptions = EngineDisplayOptions(),
+    interaction: Interaction = DEFAULT_INTERACTION,
     multi_column: bool = False,
     full_width: bool = False,
+    temperature_unit: TemperatureUnit,
 ) -> HTML:
     """Render the graph-engine (Vue) 'cmk-graph-group' for a host/service's template graphs.
 
@@ -209,8 +314,8 @@ def render_engine_graph_group(
         registered_graphs=engine_plugins.registered_graphs(),
         registered_metrics=engine_plugins.registered_metrics(),
         fetch_metric_names=RRDFetchMetricNames(
-            host_name=EngineHostName(host_name),
-            service_name=EngineServiceName(service_name),
+            host_name=EngineHostName(str(specification.host_name)),
+            service_name=EngineServiceName(str(specification.service_description)),
             debug=debug,
             site_id=specification.site,
             registered_translations=engine_plugins.registered_translations(),
@@ -219,11 +324,11 @@ def render_engine_graph_group(
     vue_graphs = [
         asdict(
             to_cmk_time_series_graph(
-                built.graph,
+                built,
                 size=size,
                 interaction=interaction,
                 show_graph_time=show_graph_time,
-                add_to_specification=built.specification,
+                temperature_unit=temperature_unit,
             )
         )
         for built in engine_graphs
@@ -234,8 +339,7 @@ def render_engine_graph_group(
         "initial_time_range_end": time_range[1],
         "figure_height": int(size.height * HTML_SIZE_PER_EX),
         "graphs": vue_graphs,
-        "show_consolidation": show_consolidation,
-        "show_legend": show_legend,
+        "display": display.as_props(),
         # Only the hover preview flows its many graphs into columns; everywhere else stacks.
         "layout": "wrap" if multi_column else "column",
     }
@@ -244,3 +348,20 @@ def render_engine_graph_group(
     if not full_width:
         data["figure_width"] = int(size.width * HTML_SIZE_PER_EX)
     return HTMLWriter.render_vue_component("cmk-graph-group", data)
+
+
+def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: bool) -> HTML:
+    if isinstance(msg_or_exc, MKGeneralException) and not debug:
+        msg = "%s" % msg_or_exc
+
+    elif isinstance(msg_or_exc, Exception):
+        if debug:
+            raise msg_or_exc
+        msg = traceback.format_exc()
+    else:
+        msg = msg_or_exc
+
+    return HTMLWriter.render_div(
+        HTMLWriter.render_div(title, class_="title") + HTMLWriter.render_pre(msg),
+        class_=["graph", "brokengraph"],
+    )

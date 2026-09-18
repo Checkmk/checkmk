@@ -2,7 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.ccc.user import UserId
+
+import pytest
+
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs.unstable import (
     SingleChoiceEditable,
@@ -10,7 +12,8 @@ from cmk.gui.form_specs.unstable import (
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
-def test_single_choice_editable(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_single_choice_editable() -> None:
     spec = SingleChoiceEditable(
         entity_type=ConfigEntityType.notification_parameter,
         entity_type_specifier="mail",
@@ -22,7 +25,8 @@ def test_single_choice_editable(with_admin_login: UserId) -> None:
     assert visitor.to_vue(RawFrontendData("foo"))[1] == "foo"
 
 
-def test_single_choice_editable_none_complains_nicely(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_single_choice_editable_none_complains_nicely() -> None:
     spec = SingleChoiceEditable(
         entity_type=ConfigEntityType.notification_parameter,
         entity_type_specifier="mail",

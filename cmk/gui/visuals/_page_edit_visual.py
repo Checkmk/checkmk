@@ -35,7 +35,6 @@ from cmk.gui.pagetypes import (
 )
 from cmk.gui.type_defs import (
     FilterName,
-    HTTPVariables,
     InfoName,
     SingleInfos,
     VisualContext,
@@ -62,7 +61,7 @@ from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import file_name_and_query_vars_from_url, makeuri_contextless
+from cmk.web.utils.urls import file_name_and_query_vars_from_url, HTTPVariable, makeuri_contextless
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._filter_valuespecs import VisualFilterList
@@ -324,7 +323,7 @@ def page_edit_visual(
                     )
 
                 if request.var("save_and_view"):
-                    back_vars: HTTPVariables = []
+                    back_vars: list[HTTPVariable] = []
                     back_url_from_vars = request.var("back")
                     if back_url_from_vars:
                         _file_name, query_vars = file_name_and_query_vars_from_url(

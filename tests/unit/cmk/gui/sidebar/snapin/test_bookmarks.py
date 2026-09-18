@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator
 
 import pytest
@@ -20,9 +22,9 @@ from cmk.gui.sidebar._snapin._bookmarks import (
     Bookmarks,
     BookmarkSpec,
 )
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.icons import DynamicIconName
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -63,12 +65,13 @@ def _write_user_bookmark_lists(user_id: UserId, spec: dict[str, object]) -> None
     store.save_object_to_file(profile_dir / "user_bookmark_lists.mk", spec)
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -197,7 +200,7 @@ def test_topic_choices_are_sorted_and_deduplicated(with_user_login: UserId) -> N
         },
     )
 
-    assert BookmarkList._topic_choices(USER_PERMISSIONS) == [
+    assert BookmarkList._topic_choices(USER_PERMISSIONS) == [  # noqa: SLF001
         ("Apple", "Apple"),
         ("Mine", "Mine"),
         ("Zebra", "Zebra"),
@@ -238,7 +241,7 @@ def test_get_bookmarks_by_topic_merges_all_permitted_lists(with_user_login: User
 
     assert [
         (topic, [b["title"] for b in bookmarks])
-        for topic, bookmarks in Bookmarks()._get_bookmarks_by_topic(USER_PERMISSIONS)
+        for topic, bookmarks in Bookmarks()._get_bookmarks_by_topic(USER_PERMISSIONS)  # noqa: SLF001
     ] == [("Shared", ["A", "B"])]
 
 
@@ -270,7 +273,7 @@ def test_show_renders_a_foldable_topic_per_bookmark_topic(
     assert "Mine" in rendered
     assert "Other" in rendered
     assert "All hosts" in rendered
-    assert "cmk.sidebar.add_bookmark()" in rendered
+    assert 'data-cmk_on_click="add_bookmark"' in rendered
     assert "bookmark_lists.py" in rendered
 
 
@@ -309,19 +312,17 @@ def test_show_falls_back_to_the_bookmark_list_icon(
     assert "Without icon" in rendered
 
 
-def test_add_bookmark_creates_the_personal_list_on_demand(
-    with_user_login: UserId, load_config: Config
-) -> None:
-    Bookmarks()._add_bookmark("All hosts", "view.py?view_name=allhosts", USER_PERMISSIONS)
+@pytest.mark.usefixtures("load_config")
+def test_add_bookmark_creates_the_personal_list_on_demand(with_user_login: UserId) -> None:
+    Bookmarks()._add_bookmark("All hosts", "view.py?view_name=allhosts", USER_PERMISSIONS)  # noqa: SLF001
 
     instances = BookmarkList.load(USER_PERMISSIONS)
     stored = instances.instance((with_user_login, "my_bookmarks"))
     assert [b["title"] for b in stored.config.bookmarks] == ["All hosts"]
 
 
-def test_add_bookmark_appends_to_an_existing_personal_list(
-    with_user_login: UserId, load_config: Config
-) -> None:
+@pytest.mark.usefixtures("load_config")
+def test_add_bookmark_appends_to_an_existing_personal_list(with_user_login: UserId) -> None:
     _write_user_bookmark_lists(
         with_user_login,
         {
@@ -335,7 +336,7 @@ def test_add_bookmark_appends_to_an_existing_personal_list(
         },
     )
 
-    Bookmarks()._add_bookmark("Second", "b.py", USER_PERMISSIONS)
+    Bookmarks()._add_bookmark("Second", "b.py", USER_PERMISSIONS)  # noqa: SLF001
 
     stored = BookmarkList.load(USER_PERMISSIONS).instance((with_user_login, "my_bookmarks"))
     assert [b["title"] for b in stored.config.bookmarks] == ["First", "Second"]
@@ -395,4 +396,4 @@ def test_try_shorten_url(
     the bookmark happened to be created on."""
     monkeypatch.setattr("cmk.gui.sidebar._snapin._bookmarks.request", FakeRequest(referer=referer))
 
-    assert Bookmarks()._try_shorten_url(url) == expected
+    assert Bookmarks()._try_shorten_url(url) == expected  # noqa: SLF001

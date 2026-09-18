@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
 
 import typing
 from collections.abc import Iterator
@@ -19,7 +18,6 @@ from flask import Flask
 from pytest_mock import MockerFixture
 
 import cmk.gui.config as config_module
-import cmk.gui.watolib.password_store
 import cmk.utils.log
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
@@ -140,7 +138,7 @@ def set_config_context(**kwargs: Any) -> Iterator[None]:  # type: ignore[misc]
     """
 
     def _set_config(config: Config) -> None:
-        config._raw_config = {**config._raw_config, **kwargs}
+        config._raw_config = {**config._raw_config, **kwargs}  # noqa: SLF001
         for key, val in kwargs.items():
             if hasattr(config, key):
                 setattr(config, key, val)
@@ -173,7 +171,7 @@ def set_config_context(**kwargs: Any) -> Iterator[None]:  # type: ignore[misc]
         else:
             yield
     finally:
-        config_module._post_config_load_hooks.remove(_set_config)
+        config_module._post_config_load_hooks.remove(_set_config)  # noqa: SLF001
 
 
 def inline_background_jobs_patches(mocker: MockerFixture) -> None:
@@ -252,7 +250,7 @@ def create_test_hosts() -> Iterator[list[HostName]]:
     yield hostnames
     root_folder.delete_hosts(
         hostnames,
-        automation=lambda *args, **kwargs: DeleteHostsResult(),
+        automation=lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
         pprint_value=False,
         debug=False,
         pending_changes=_noop_pending_changes(),
@@ -260,7 +258,7 @@ def create_test_hosts() -> Iterator[list[HostName]]:
     )
 
 
-def _fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
+def _fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:  # noqa: ARG001
     if icon_name == "link":
         return "themes/facelift/images/icon_link.png"
     if icon_name == "info":

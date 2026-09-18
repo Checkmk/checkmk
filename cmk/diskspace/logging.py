@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import logging
 import sys
 
+from cmk.ccc.log import CMKFormatter
 from cmk.diskspace.config import Config
 from cmk.diskspace.free_space import fmt_bytes
 
@@ -25,9 +25,9 @@ def verbose(message: str) -> None:
 
 
 def setup_logging(is_verbose: bool) -> None:
-    logging.basicConfig(
-        format="%(message)s", stream=sys.stdout, level=logging.DEBUG if is_verbose else logging.INFO
-    )
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(CMKFormatter(message_only=True))
+    logging.basicConfig(handlers=[handler], level=logging.DEBUG if is_verbose else logging.INFO)
 
 
 def print_config(config: Config) -> None:

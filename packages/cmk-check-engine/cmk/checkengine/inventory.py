@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
-
-from __future__ import annotations
 
 import contextlib
 import itertools
@@ -23,7 +19,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, assert_never
+from typing import assert_never
 
 import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
@@ -40,13 +36,12 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,
+    make_retention_filter_choices,
     MutableTree,
-    parse_visible_raw_path,
     RawIntervalFromConfig,
     SDKey,
     SDNodeName,
     SDPath,
-    SDRetentionFilterChoices,
     SDValue,
 )
 
@@ -89,6 +84,10 @@ _SDPATH_CLUSTER_NODES = (
 )
 
 
+def _parse_monitoring_state(raw_state: object, default: int) -> int:
+    return int(raw_state) if isinstance(raw_state, int | float | str) else default
+
+
 @dataclass(frozen=True)
 class HWSWInventoryParameters:
     hw_changes: int
@@ -103,13 +102,13 @@ class HWSWInventoryParameters:
     status_data_inventory: bool
 
     @classmethod
-    def from_raw(cls, raw_parameters: Mapping[str, Any]) -> HWSWInventoryParameters:
+    def from_raw(cls, raw_parameters: Mapping[str, object]) -> HWSWInventoryParameters:
         return cls(
-            hw_changes=int(raw_parameters.get("hw-changes", 0)),
-            sw_changes=int(raw_parameters.get("sw-changes", 0)),
-            sw_missing=int(raw_parameters.get("sw-missing", 0)),
-            nw_changes=int(raw_parameters.get("nw-changes", 0)),
-            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
+            hw_changes=_parse_monitoring_state(raw_parameters.get("hw-changes"), 0),
+            sw_changes=_parse_monitoring_state(raw_parameters.get("sw-changes"), 0),
+            sw_missing=_parse_monitoring_state(raw_parameters.get("sw-missing"), 0),
+            nw_changes=_parse_monitoring_state(raw_parameters.get("nw-changes"), 0),
+            fail_status=_parse_monitoring_state(raw_parameters.get("inv-fail-status"), 1),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
 
@@ -236,7 +235,9 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
 
 
 def _no_data_or_files(
-    host_name: HostName, host_sections: Iterable[HostSections], omd_root: Path
+    host_name: HostName,
+    host_sections: Iterable[HostSections[Mapping[SectionName, Sequence[object]]]],
+    omd_root: Path,
 ) -> bool:
     inv_paths = InventoryPaths(omd_root)
     archive_host = inv_paths.archive_host(host_name)
@@ -473,31 +474,16 @@ def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -
             assert_never(other_type)
 
 
-# Data for the HW/SW Inventory has a validity period (live data or persisted).
-# With the retention intervals configuration you can keep specific attributes or table columns
-# longer than their validity period.
-#
-# 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
-#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW Inventory
-#     entities'.
-#
-# 2.) Process collected cache infos - handle the following four cases via AttributesUpdater,
-#     TableUpdater:
-#
-#       previous node | inv node | retention intervals from
-#     -----------------------------------------------------------------------------------
-#       no            | no       | None
-#       no            | yes      | inv_node keys
-#       yes           | no       | previous_node keys
-#       yes           | yes      | previous_node keys + inv_node keys
-#
-#     - If there's no previous node then filtered keys + intervals of current node is stored
-#       (like a first run) and will be checked against the future node in the next run.
-#     - if there's a previous node then check if the data is recent enough and merge
-#       attributes/tables data from the previous node with the current one.
-#       'Recent enough' means: now <= cache_at + cache_interval + retention_interval
-#       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
-#             retention_interval: configured in the above ruleset
+def _collect_cache_info(
+    items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
+    item_type: type[Attributes] | type[TableRow],
+) -> Mapping[SDPath, tuple[int, int] | None]:
+    return {
+        tuple(SDNodeName(p) for p in item.path): items_of_inventory_plugin.raw_cache_info
+        for items_of_inventory_plugin in items_of_inventory_plugins
+        for item in items_of_inventory_plugin.items
+        if isinstance(item, item_type)
+    }
 
 
 def _may_update(
@@ -511,44 +497,13 @@ def _may_update(
     if not raw_intervals_from_config:
         return
 
-    # TODO do we need class name?
-    cache_info_by_path_and_type = {
-        (tuple(item.path), item.__class__.__name__): items_of_inventory_plugin.raw_cache_info
-        for items_of_inventory_plugin in items_of_inventory_plugins
-        for item in items_of_inventory_plugin.items
-    }
-
-    choices_by_path: dict[SDPath, SDRetentionFilterChoices] = {}
-    for entry in raw_intervals_from_config:
-        path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
-        choices = choices_by_path.setdefault(
-            path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
-        )
-        if attributes := entry.get("attributes"):
-            choices.add_pairs_choice(
-                choice=(
-                    [SDKey(a) for a in attributes[-1]]
-                    if isinstance(attributes, tuple)
-                    else attributes
-                ),
-                cache_info=(
-                    (now, 0)
-                    if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
-                    else ci
-                ),
-            )
-        elif columns := entry.get("columns"):
-            choices.add_columns_choice(
-                choice=[SDKey(c) for c in columns[-1]] if isinstance(columns, tuple) else columns,
-                cache_info=(
-                    (now, 0)
-                    if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
-                    else ci
-                ),
-            )
-
-    for c in choices_by_path.values():
-        inventory_tree.update(now=now, previous_tree=previous_tree, choices=c)
+    for choices in make_retention_filter_choices(
+        now=now,
+        raw_intervals_from_config=raw_intervals_from_config,
+        pairs_cache_info=_collect_cache_info(items_of_inventory_plugins, Attributes),
+        columns_cache_info=_collect_cache_info(items_of_inventory_plugins, TableRow),
+    ):
+        inventory_tree.update(now=now, previous_tree=previous_tree, choices=choices)
 
 
 def _check_fetched_data_or_trees(

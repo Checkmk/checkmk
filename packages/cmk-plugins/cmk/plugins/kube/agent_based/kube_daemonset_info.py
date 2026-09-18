@@ -44,7 +44,7 @@ agent_section_kube_daemonset_info_v1 = AgentSection[DaemonSetInfo](
 )
 
 
-def discovery(section: DaemonSetInfo) -> DiscoveryResult:
+def discovery(section: DaemonSetInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

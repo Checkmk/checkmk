@@ -43,15 +43,6 @@ export const CONTENT_FIGURE_TYPES: string[] = [
 
 export type ContentFigureType = (typeof CONTENT_FIGURE_TYPES)[number]
 
-// Graph
-export const GRAPH_TYPES = [
-  'combined_graph',
-  'custom_graph',
-  'performance_graph',
-  'problem_graph',
-  'single_timeseries'
-]
-
 // Ntop
 export const NTOP_TYPES: string[] = ['ntop_alerts', 'ntop_flows', 'ntop_top_talkers']
 

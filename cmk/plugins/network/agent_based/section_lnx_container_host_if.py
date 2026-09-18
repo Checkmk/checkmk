@@ -140,7 +140,9 @@ def parse_lnx_container_host_if_pure(string_table: StringTable, timestamp: float
     return [_create_interface(_parse_raw_stats(i), timestamp) for i in string_table], {}
 
 
-def parse_lnx_container_host_if(string_table: StringTable) -> Section:
+def parse_lnx_container_host_if(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
     return parse_lnx_container_host_if_pure(string_table, time.time())
 
 

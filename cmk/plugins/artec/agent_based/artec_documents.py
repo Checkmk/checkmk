@@ -31,7 +31,7 @@ from cmk.agent_based.v2 import (
 # .1.3.6.1.4.1.31560.0.0.3.1.1.1.50 8861118                --> ARTEC-MIB::artecDocumentsValues.1.50
 
 
-def discover_artec_documents(section: StringTable) -> DiscoveryResult:
+def discover_artec_documents(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

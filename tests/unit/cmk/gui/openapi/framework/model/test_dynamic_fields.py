@@ -15,7 +15,7 @@ from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 _DT_2025 = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class _TestModel(WithDynamicFields):
     field: int
 
@@ -168,10 +168,10 @@ def test_json_schema_dynamic_field() -> None:
 
 
 def test_json_schema_dynamic_field_custom_type() -> None:
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class _CustomType(WithDynamicFields):
         field: int
-        dynamic_fields: dict[str, str] = dataclasses.field(  # type: ignore[mutable-override]
+        dynamic_fields: dict[str, str] = dataclasses.field(
             metadata={
                 "title": "custom_title",
                 "description": "custom_description",

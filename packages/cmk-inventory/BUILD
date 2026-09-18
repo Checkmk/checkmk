@@ -7,7 +7,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -15,6 +14,7 @@ py_library(
     name = "inventory",
     srcs = [
         "cmk/inventory/__init__.py",
+        "cmk/inventory/cleanup.py",
         "cmk/inventory/config.py",
         "cmk/inventory/paths.py",
         "cmk/inventory/structured_data.py",
@@ -68,7 +68,6 @@ py_wheel(
         "cmk-transform-inventory-trees = cmk.inventory.transformation.__main__:main",
     ]},
     strip_path_prefixes = ["packages/cmk-inventory"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

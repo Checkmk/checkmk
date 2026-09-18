@@ -12,6 +12,16 @@ bazel run :vite [-- <ARGS>]
 bazel run :vitest [-- <ARGS>]
 ```
 
+`VITEST_MAX_WORKERS` caps the vitest worker pool, which is otherwise sized
+from the CPUs the OS advertises. CI sets it to the CPU quota of its
+container; locally it is a way to keep a test run from taking the machine
+over, for example in the background:
+
+```sh
+VITEST_MAX_WORKERS=4 bazel run :vitest [-- <ARGS>]
+bazel test --test_env=VITEST_MAX_WORKERS=4 :unit-test
+```
+
 ## IDE Support
 
 It's non trivial to set up bazel in such a way that js tooling will have

@@ -24,6 +24,7 @@ defineOptions({
 const props = defineProps<{
   help: TranslatedString
   ariaLabel?: string | undefined
+  usePortal?: boolean | undefined
 }>()
 
 const open = ref(false)
@@ -86,6 +87,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         align="start"
         as-child
         avoid-collisions
+        :use-portal="props.usePortal"
         class="cmk-help-text__popup"
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"

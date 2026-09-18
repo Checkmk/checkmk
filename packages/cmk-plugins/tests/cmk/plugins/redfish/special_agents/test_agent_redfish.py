@@ -3,22 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
 
-# ruff: noqa: SLF001  # Private member accessed - tests exercise the emission helpers directly.
 """Streaming/resilience tests for the Redfish special agent: each section must
 reach stdout as soon as it's gathered, and one failing endpoint must not abort
 the rest of the run."""
 
 import io
+import json
 import sys
 import time
+from pathlib import Path
 from typing import Any
 from unittest import mock
 
 import pytest
 
 from cmk.plugins.redfish.special_agents import agent_redfish
+from cmk.server_side_programs.v1_unstable import Storage
 
 
 def _make_redfishobj(debug: bool = False) -> agent_redfish.RedfishData:
@@ -32,7 +36,7 @@ def _make_redfishobj(debug: bool = False) -> agent_redfish.RedfishData:
 
 def test_emit_section_writes_header_and_payload(capsys: pytest.CaptureFixture[str]) -> None:
     redfishobj = _make_redfishobj()
-    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])
+    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])  # noqa: SLF001
 
     out = capsys.readouterr().out
     assert "<<<redfish_memory:sep(0)>>>" in out
@@ -42,8 +46,8 @@ def test_emit_section_writes_header_and_payload(capsys: pytest.CaptureFixture[st
 
 def test_emit_section_is_idempotent(capsys: pytest.CaptureFixture[str]) -> None:
     redfishobj = _make_redfishobj()
-    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])
-    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])
+    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])  # noqa: SLF001
+    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])  # noqa: SLF001
 
     out = capsys.readouterr().out
     # Header appears exactly once even if the helper is called twice.
@@ -57,7 +61,7 @@ def test_emit_pending_writes_every_collected_section(capsys: pytest.CaptureFixtu
         "Processors": [{"Id": "CPU.1"}],
         "Drives": [{"Id": "Disk.0"}],
     }
-    agent_redfish._emit_pending(redfishobj)
+    agent_redfish._emit_pending(redfishobj)  # noqa: SLF001
 
     out = capsys.readouterr().out
     for header in (
@@ -72,7 +76,7 @@ def test_phase_swallows_exception_and_flushes(capsys: pytest.CaptureFixture[str]
     redfishobj = _make_redfishobj()
     redfishobj.section_data["Memory"] = [{"Id": "DIMM.A1"}]
 
-    with agent_redfish._phase(redfishobj, "systems"):
+    with agent_redfish._phase(redfishobj, "systems"):  # noqa: SLF001
         redfishobj.section_data["Processors"] = [{"Id": "CPU.1"}]
         raise RuntimeError("simulated mid-flow failure")
 
@@ -90,7 +94,7 @@ def test_phase_reraises_when_debug(capsys: pytest.CaptureFixture[str]) -> None:
 
     with (
         pytest.raises(RuntimeError, match="simulated"),
-        agent_redfish._phase(redfishobj, "systems"),
+        agent_redfish._phase(redfishobj, "systems"),  # noqa: SLF001
     ):
         raise RuntimeError("simulated mid-flow failure")
 
@@ -99,13 +103,15 @@ def test_phase_reraises_when_debug(capsys: pytest.CaptureFixture[str]) -> None:
     assert "<<<redfish_memory:sep(0)>>>" in out
 
 
-def test_fetch_sections_continues_when_one_section_raises(
-    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
+@pytest.mark.usefixtures("capsys")
+def test_fetch_sections_continues_when_one_section_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     redfishobj = _make_redfishobj()
 
     def fake_fetch_data(
-        _client: Any, url: str, _component: object, timeout: int | None = None
+        _client: Any,
+        url: str,
+        _component: object,
+        timeout: int | None = None,
     ) -> Any:
         if "Memory" in url:
             raise RuntimeError("Memory endpoint blew up")
@@ -141,7 +147,10 @@ def test_fetch_list_of_elements_continues_when_one_section_raises(
     redfishobj = _make_redfishobj()
 
     def fake_fetch_data(
-        _client: Any, url: str, _component: object, timeout: int | None = None
+        _client: Any,
+        url: str,
+        _component: object,
+        timeout: int | None = None,
     ) -> Any:
         if "drive" in url.lower():
             raise RuntimeError("Drive endpoint blew up")
@@ -198,7 +207,7 @@ def test_fetch_sections_reraises_when_debug(monkeypatch: pytest.MonkeyPatch) -> 
 
 def test_emit_section_handles_non_list_payload(capsys: pytest.CaptureFixture[str]) -> None:
     redfishobj = _make_redfishobj()
-    agent_redfish._emit_section(redfishobj, "FirmwareInventory", {"Current": {"Foo": "1.0"}})
+    agent_redfish._emit_section(redfishobj, "FirmwareInventory", {"Current": {"Foo": "1.0"}})  # noqa: SLF001
 
     out = capsys.readouterr().out
     assert "<<<redfish_firmwareinventory:sep(0)>>>" in out
@@ -212,7 +221,7 @@ def test_stdout_flushed_after_each_section(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(stream, "flush", flush)
     monkeypatch.setattr(sys, "stdout", stream)
 
-    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])
+    agent_redfish._emit_section(redfishobj, "Memory", [{"Id": "DIMM.A1"}])  # noqa: SLF001
 
     # Streaming depends on flushing, else a later abort could lose buffered data.
     assert flush.call_count >= 1
@@ -243,7 +252,7 @@ def test_fetch_systems_retries_then_aborts(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(time, "sleep", sleep)
 
     with pytest.raises(agent_redfish.CannotRecover):
-        agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+        agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")  # noqa: SLF001
 
     assert calls["fetch"] == 3  # initial attempt + 2 retries
     assert sleep.call_count == 2
@@ -269,7 +278,7 @@ def test_fetch_systems_succeeds_on_later_attempt(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(agent_redfish, "fetch_collection", lambda *_a, **_k: current["data"])
     monkeypatch.setattr(time, "sleep", sleep)
 
-    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")  # noqa: SLF001
 
     assert result == [{"Id": "System.Embedded.1"}]
     assert sleep.call_count == 2
@@ -283,7 +292,7 @@ def test_fetch_systems_zero_retries_aborts_immediately(monkeypatch: pytest.Monke
     monkeypatch.setattr(time, "sleep", sleep)
 
     with pytest.raises(agent_redfish.CannotRecover):
-        agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+        agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")  # noqa: SLF001
 
     assert sleep.call_count == 0
 
@@ -295,7 +304,7 @@ def test_fetch_systems_healthy_no_retry(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setattr(agent_redfish, "fetch_collection", lambda *_a, **_k: [{"Id": "S1"}])
     monkeypatch.setattr(time, "sleep", sleep)
 
-    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")  # noqa: SLF001
 
     assert result == [{"Id": "S1"}]
     assert sleep.call_count == 0
@@ -313,7 +322,45 @@ def test_fetch_systems_mixed_members_not_aborted(monkeypatch: pytest.MonkeyPatch
     )
     monkeypatch.setattr(time, "sleep", sleep)
 
-    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")  # noqa: SLF001
 
     assert any(isinstance(s, dict) and "Id" in s for s in result)
     assert sleep.call_count == 0
+
+
+def _cached_obj(
+    storage_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[Storage, agent_redfish.RedfishData]:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(storage_path))
+    redfishobj = _make_redfishobj()
+    redfishobj.sections = {"Memory"}
+    redfishobj.cache_per_section = {"Memory": 300}
+    return Storage(agent_redfish.AGENT, redfishobj.hostname), redfishobj
+
+
+@pytest.mark.parametrize("content", ["", '{"timestamp": 176'], ids=["empty", "half_written"])
+def test_load_section_data_tolerates_truncated_cache(
+    content: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    storage, redfishobj = _cached_obj(tmp_path, monkeypatch)
+    storage.write("Memory", content)
+
+    result = agent_redfish.load_section_data(storage, redfishobj)
+
+    assert "Memory" in result.sections
+    assert "Memory" not in result.section_data
+    assert storage.read("Memory", None) is None
+
+
+def test_load_section_data_uses_intact_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    storage, redfishobj = _cached_obj(tmp_path, monkeypatch)
+    storage.write(
+        "Memory", json.dumps({"timestamp": int(time.time()), "data": [{"Id": "DIMM.A1"}]})
+    )
+
+    result = agent_redfish.load_section_data(storage, redfishobj)
+
+    assert "Memory" not in result.sections
+    assert result.section_data["Memory"] == [{"Id": "DIMM.A1"}]

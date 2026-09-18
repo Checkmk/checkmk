@@ -83,7 +83,7 @@ def parse_tplink_poe(string_table: Sequence[StringTable]) -> Section:
                 poe_status=poe_status,
                 poe_status_detail=poe_status_detail,
             )
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             pass
     return poe_dict
 

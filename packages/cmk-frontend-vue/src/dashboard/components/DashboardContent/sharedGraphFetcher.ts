@@ -22,7 +22,7 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
         headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
         body: {
           widget_id: widgetId,
-          requested_time_range: params.requestedTimeRange,
+          requested_time_range: params.fetchWindow,
           consolidation_function: params.consolidationFunction
         }
       })
@@ -32,6 +32,7 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
       metrics: fetched.metrics,
       timeRange: fetched.time_range,
       horizontalLines: fetched.horizontal_lines,
+      shadedRegions: fetched.shaded_regions,
       errors: fetched.errors,
       warnings: fetched.warnings
     }

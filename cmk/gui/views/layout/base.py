@@ -61,13 +61,13 @@ class Layout(abc.ABC):
 
     def csv_export(
         self,
-        rows: Rows,
-        view: ViewSpec,
-        group_cells: Sequence[Cell],
-        cells: Sequence[Cell],
-        user_permissions: UserPermissions,
+        rows: Rows,  # noqa: ARG002
+        view: ViewSpec,  # noqa: ARG002
+        group_cells: Sequence[Cell],  # noqa: ARG002
+        cells: Sequence[Cell],  # noqa: ARG002
+        user_permissions: UserPermissions,  # noqa: ARG002
         *,
-        table_row_limit: int,
+        table_row_limit: int,  # noqa: ARG002
     ) -> None:
         """Render the given data using this layout for CSV"""
         return

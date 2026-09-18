@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import functools
 from wsgiref.types import WSGIApplication
@@ -47,20 +46,20 @@ def after_request(response: Response) -> Response:
 
 
 @rest_api.route("/<string:version>/<path:path>", methods=["GET", "PUT", "POST", "DELETE", "PATCH"])
-def endpoint(site: str, version: str, path: str) -> WSGIApplication:
+def endpoint(site: str, version: str, path: str) -> WSGIApplication:  # noqa: ARG001
     # TODO: Carve out parts from `CheckmkRESTAPI` and move them here, decorated by @rest_api.route
     return app_instance(debug=current_app.debug, testing=current_app.testing)
 
 
 @rest_api.route("/doc/", defaults={"file_name": "index.html"})
 @rest_api.route("/doc/<path:file_name>")
-def serve_redoc(site: str, file_name: str) -> Response:
+def serve_redoc(site: str, file_name: str) -> Response:  # noqa: ARG001
     return _serve_redoc_file(file_name, spec_url="../1.0/openapi-doc.yaml")
 
 
 @rest_api.route("/<string:version>/doc/", defaults={"file_name": "index.html"})
 @rest_api.route("/<string:version>/doc/<path:file_name>")
-def serve_versioned_redoc(site: str, version: str, file_name: str) -> Response:
+def serve_versioned_redoc(site: str, version: str, file_name: str) -> Response:  # noqa: ARG001
     return _serve_redoc_file(file_name, spec_url=f"../../{version}/openapi-doc.yaml")
 
 
@@ -78,7 +77,7 @@ def _get_receiver_port() -> int:
 
 
 @rest_api.route("/<string:version>/domain-types/internal/actions/discover-receiver/invoke")
-def discover_receiver(site: str, version: str) -> Response:
+def discover_receiver(site: str, version: str) -> Response:  # noqa: ARG001
     """Report the port of the agent receiver
 
     We report the agent receivers port on this unprotected URL.

@@ -26,6 +26,7 @@ from typing import Literal
 # with it.
 from cmk.base import config as base_config
 from cmk.ccc import debug, tty
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as cmk_edition
@@ -88,7 +89,9 @@ def main(
 
 
 def main_update_config(
-    edition: Edition, logger: logging.Logger, conflict: ConflictMode
+    edition: Edition,
+    logger: logging.Logger,
+    conflict: ConflictMode,  # noqa: ARG001
 ) -> Literal[0, 1]:
     _load_plugins(edition, logger)
 
@@ -173,7 +176,7 @@ def _setup_logging(verbose: int) -> logging.Logger:
     logger.setLevel(log.logger.level)
 
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(CMKFormatter(message_only=True))
     logging.getLogger().addHandler(handler)
 
     # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level
@@ -251,7 +254,7 @@ def _load_pre_plugins(edition: Edition) -> None:
 # TODO(sk): check_config can't raise exception(raise is an reaction on check, i.e. 2 in 1):
 # change name assert_config or ensure_valid_config for example
 # or change logic
-def check_config(edition: Edition, logger: logging.Logger, conflict_mode: ConflictMode) -> None:
+def check_config(edition: Edition, logger: logging.Logger, conflict_mode: ConflictMode) -> None:  # noqa: ARG001
     """Raise exception on failure"""
     pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(pre_update_actions)
@@ -259,7 +262,7 @@ def check_config(edition: Edition, logger: logging.Logger, conflict_mode: Confli
 
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
-        _initialize_base_environment(edition)
+        _initialize_base_environment()
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(
                 " %(yellow)s%(count)02d/%(total)02d%(normal)s %(title)s...",
@@ -276,7 +279,7 @@ def check_config(edition: Edition, logger: logging.Logger, conflict_mode: Confli
     logger.info("Done (%(green)ssuccess%(normal)s)\n", {"green": tty.green, "normal": tty.normal})
 
 
-def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
+def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:  # noqa: ARG001
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -288,7 +291,7 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
         _check_failed_gui_plugins(logger)
-        _initialize_base_environment(edition)
+        _initialize_base_environment()
 
         logger.info("Updating Checkmk configuration...")
 
@@ -353,10 +356,8 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
         )
 
 
-def _initialize_base_environment(edition: Edition) -> None:
-    base_config.load(
-        edition=edition,
-    )
+def _initialize_base_environment() -> None:
+    base_config.load()
 
 
 @contextmanager
@@ -376,7 +377,7 @@ class ForbiddenPendingChangeWriteError(RuntimeError):
 def _forbid_pending_change_writes() -> Iterator[None]:
     original_append = PendingChangesStore.append
 
-    def _raise(self: PendingChangesStore, site_id: SiteId, entry: ChangeSpec) -> None:
+    def _raise(self: PendingChangesStore, site_id: SiteId, entry: ChangeSpec) -> None:  # noqa: ARG001
         raise ForbiddenPendingChangeWriteError(
             "Update config actions must use a NoopPendingChangesStore to not record any change."
         )

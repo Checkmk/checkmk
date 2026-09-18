@@ -13,16 +13,12 @@ import cmk.ccc.store
 import cmk.gui.inventory
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.inventory._tree import (
-    _make_filter_choices_from_permitted_paths,
+from cmk.gui.inventory import (
     get_history,
-    InventoryPath,
     load_delta_tree,
     load_latest_delta_tree,
     load_tree,
-    make_filter_choices_from_api_request_paths,
-    parse_internal_raw_path,
-    TreeSource,
+    make_filter_choices_from_permitted_paths,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
 from cmk.inventory.structured_data import (
@@ -33,123 +29,6 @@ from cmk.inventory.structured_data import (
     SDKey,
     SDNodeName,
 )
-
-
-@pytest.mark.parametrize(
-    "raw_path, expected_path, expected_node_name",
-    [
-        (
-            "",
-            InventoryPath(
-                path=(),
-                source=TreeSource.node,
-            ),
-            "",
-        ),
-        (
-            ".",
-            InventoryPath(
-                path=(),
-                source=TreeSource.node,
-            ),
-            "",
-        ),
-        (
-            ".hardware.",
-            InventoryPath(
-                path=(SDNodeName("hardware"),),
-                source=TreeSource.node,
-            ),
-            "hardware",
-        ),
-        (
-            ".hardware.cpu.",
-            InventoryPath(
-                path=(SDNodeName("hardware"), SDNodeName("cpu")),
-                source=TreeSource.node,
-            ),
-            "cpu",
-        ),
-        (
-            ".hardware.cpu.model",
-            InventoryPath(
-                path=(SDNodeName("hardware"), SDNodeName("cpu")),
-                source=TreeSource.attributes,
-                key=SDKey("model"),
-            ),
-            "cpu",
-        ),
-        (
-            ".software.packages:",
-            InventoryPath(
-                path=(SDNodeName("software"), SDNodeName("packages")),
-                source=TreeSource.table,
-            ),
-            "packages",
-        ),
-        (
-            ".hardware.memory.arrays:*.",
-            InventoryPath(
-                (
-                    SDNodeName("hardware"),
-                    SDNodeName("memory"),
-                    SDNodeName("arrays"),
-                    SDNodeName("*"),
-                ),
-                source=TreeSource.node,
-            ),
-            "*",
-        ),
-        (
-            ".software.packages:17.name",
-            InventoryPath(
-                path=(SDNodeName("software"), SDNodeName("packages")),
-                source=TreeSource.table,
-                key=SDKey("name"),
-            ),
-            "packages",
-        ),
-        (
-            ".software.packages:*.name",
-            InventoryPath(
-                path=(SDNodeName("software"), SDNodeName("packages")),
-                source=TreeSource.table,
-                key=SDKey("name"),
-            ),
-            "packages",
-        ),
-        (
-            ".hardware.memory.arrays:*.devices:*.speed",
-            InventoryPath(
-                path=(
-                    SDNodeName("hardware"),
-                    SDNodeName("memory"),
-                    SDNodeName("arrays"),
-                    SDNodeName("*"),
-                    SDNodeName("devices"),
-                ),
-                source=TreeSource.table,
-                key=SDKey("speed"),
-            ),
-            "devices",
-        ),
-        (
-            ".path:*.to.node.key",
-            InventoryPath(
-                path=(SDNodeName("path"), SDNodeName("*"), SDNodeName("to"), SDNodeName("node")),
-                source=TreeSource.attributes,
-                key=SDKey("key"),
-            ),
-            "node",
-        ),
-    ],
-)
-def test_parse_tree_path(
-    raw_path: str, expected_path: InventoryPath, expected_node_name: str
-) -> None:
-    inventory_path = parse_internal_raw_path(raw_path)
-    assert inventory_path == expected_path
-    assert inventory_path.node_name == expected_node_name
 
 
 @pytest.mark.parametrize(
@@ -240,58 +119,10 @@ def test_parse_tree_path(
         ),
     ],
 )
-def test__make_filter_choices_from_permitted_paths(
+def test_make_filter_choices_from_permitted_paths(
     entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
-    assert _make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
-
-
-@pytest.mark.parametrize(
-    "entry, expected_filter_choice",
-    [
-        # Tuple format
-        (
-            ".path.to.node.",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-        ),
-        (
-            ".path.to.node:",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs="all",
-                columns="all",
-                nodes="all",
-            ),
-        ),
-        (
-            ".path.to.node:*.key",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=[SDKey("key")],
-                columns=[SDKey("key")],
-                nodes="nothing",
-            ),
-        ),
-        (
-            ".path.to.node.key",
-            SDFilterChoice(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=[SDKey("key")],
-                columns=[SDKey("key")],
-                nodes="nothing",
-            ),
-        ),
-    ],
-)
-def test__make_filter_choices_from_api_request_paths(
-    entry: str, expected_filter_choice: SDFilterChoice
-) -> None:
-    assert make_filter_choices_from_api_request_paths([entry])[0] == expected_filter_choice
+    assert make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
 
 
 @pytest.mark.parametrize(
@@ -319,18 +150,18 @@ def test__make_filter_choices_from_api_request_paths(
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_load_tree(
     monkeypatch: MonkeyPatch,
     host_name: HostName | None,
     raw_status_data_tree: bytes,
     expected_tree: ImmutableTree,
-    request_context: None,
 ) -> None:
     monkeypatch.setattr(
-        cmk.gui.inventory._tree,
+        cmk.gui.inventory._tree,  # noqa: SLF001
         "_load_tree_from_file",
         (
-            lambda *args, **kw: (
+            lambda *args, **kw: (  # noqa: ARG005
                 deserialize_tree({"loaded": "tree"})
                 if kw["tree_type"] == "status_data"
                 else ImmutableTree()
@@ -346,7 +177,8 @@ def test_load_tree(
     )
 
 
-def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history_empty(tmp_path: Path) -> None:
     history, corrupted_history_files = get_history(
         HistoryStore(tmp_path),
         HostName("inv-host"),
@@ -355,7 +187,8 @@ def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
     assert len(corrupted_history_files) == 0
 
 
-def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history_archive_but_no_inv_tree(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -371,7 +204,8 @@ def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: No
     assert len(corrupted_history_files) == 0
 
 
-def test_get_history(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -439,7 +273,8 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
         assert delta_cache_filename == expected_delta_cache_filename
 
 
-def test_get_history_corrupted_files(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_history_corrupted_files(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
     archive_dir = tmp_path / "var/check_mk/inventory_archive" / hostname
@@ -452,11 +287,8 @@ def test_get_history_corrupted_files(tmp_path: Path, request_context: None) -> N
 
 
 @pytest.mark.parametrize("search_timestamp", [0, 1, 2, 3])
-def test_load_delta_tree(
-    tmp_path: Path,
-    search_timestamp: int,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_delta_tree(tmp_path: Path, search_timestamp: int) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -492,7 +324,8 @@ def test_load_delta_tree(
     assert len(corrupted_history_files) == 0
 
 
-def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_delta_tree_no_such_timestamp(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -524,7 +357,8 @@ def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None
     assert str(e.value) == "Found no history entry at the time of '-1' for the host 'inv-host'"
 
 
-def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_latest_delta_tree(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
@@ -560,9 +394,8 @@ def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
     assert len(corrupted_history_files) == 0
 
 
-def test_load_latest_delta_tree_no_archive_and_inv_tree(
-    tmp_path: Path, request_context: None
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_load_latest_delta_tree_no_archive_and_inv_tree(tmp_path: Path) -> None:
     history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 

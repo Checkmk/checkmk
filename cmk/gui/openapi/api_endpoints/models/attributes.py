@@ -96,7 +96,7 @@ class HostContactGroupRequestModel:
     )
 
     @classmethod
-    def from_internal(cls, value: HostContactGroupSpec) -> "HostContactGroupRequestModel":
+    def from_internal(cls, value: HostContactGroupSpec) -> HostContactGroupRequestModel:
         return cls(
             groups=value["groups"],
             use=value.get("use", False),
@@ -130,7 +130,7 @@ class HostContactGroupResponseModel(HostContactGroupRequestModel):
 
     @classmethod
     @override
-    def from_internal(cls, value: HostContactGroupSpec) -> "HostContactGroupResponseModel":
+    def from_internal(cls, value: HostContactGroupSpec) -> HostContactGroupResponseModel:
         return cls(
             groups=value["groups"],
             use=value.get("use", False),
@@ -551,7 +551,7 @@ class TranslateNamesModel:
         return value
 
     @classmethod
-    def from_internal(cls, value: TranslationOptions) -> "TranslateNamesModel":
+    def from_internal(cls, value: TranslationOptions) -> TranslateNamesModel:
         return cls(
             case=TranslateNamesModel.case_from_internal(value.get("case")),
             drop_domain=value["drop_domain"] if "drop_domain" in value else ApiOmitted(),
@@ -629,7 +629,7 @@ class NetworkScanModel:
     )
 
     @classmethod
-    def from_internal(cls, value: NetworkScanSpec) -> "NetworkScanModel":
+    def from_internal(cls, value: NetworkScanSpec) -> NetworkScanModel:
         return cls(
             ip_ranges=[IPRangeConverter.from_internal(entry) for entry in value["ip_ranges"]],
             exclude_ranges=[
@@ -691,7 +691,7 @@ class IPMIParametersModel:  # TODO: this is dumb (or at least the IPMICredential
     password: str | ApiOmitted = api_field(description="IPMI password", default_factory=ApiOmitted)
 
     @classmethod
-    def from_internal(cls, value: IPMICredentials) -> "IPMIParametersModel":
+    def from_internal(cls, value: IPMICredentials) -> IPMIParametersModel:
         return cls(
             username=value.get("username", ApiOmitted()),
             password=ApiOmitted(),
@@ -730,7 +730,7 @@ class NetworkScanResultModel:
         return "succeeded" if value else "failed"
 
     @classmethod
-    def from_internal(cls, value: NetworkScanResult) -> "NetworkScanResultModel":
+    def from_internal(cls, value: NetworkScanResult) -> NetworkScanResultModel:
         end_time: dt.datetime | None | ApiOmitted
         if (end_time_internal := value.get("end")) is True:
             end_time = ApiOmitted()
@@ -812,7 +812,7 @@ class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
     # configured custom attributes and tag groups by `validate_custom_attributes_and_tag_groups`,
     # which is called from the input models only (the read-only view must keep rendering
     # attributes of since-deleted custom attributes).
-    dynamic_fields: dict[str, str | None] = api_field(  # type: ignore[mutable-override]
+    dynamic_fields: dict[str, str | None] = api_field(
         description=(
             "The property name must be\n\n"
             " * A custom host attribute\n"

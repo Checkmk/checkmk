@@ -3,7 +3,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary"
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//.ide/vscode:@vscode/vsce/package_json.bzl", vsce_bin = "bin")
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -37,6 +37,15 @@ vitest_bin.vitest_test(
         ["changelog/**"],
         allow_empty = True,
     ),
+)
+
+py_library(
+    name = "scripts_for_test",
+    testonly = True,
+    srcs = glob(["scripts/*.py"]),
+    data = ["ci_parity.md"],
+    imports = ["scripts"],
+    visibility = ["//.ide/vscode/tests/scripts:__pkg__"],
 )
 
 py_binary(

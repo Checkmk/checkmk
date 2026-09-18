@@ -96,5 +96,5 @@ def test_inventorize_win_video(
     string_table: StringTable,
     expected_result: InventoryResult,
 ) -> None:
-    monkeypatch.setattr(render, "date", lambda s: "2014-03-26")
+    monkeypatch.setattr(render, "date", lambda s: "2014-03-26")  # noqa: ARG005
     assert list(inventorize_win_video(parse_win_video(string_table))) == expected_result

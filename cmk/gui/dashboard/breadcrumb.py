@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import dataclasses
 
@@ -11,9 +10,9 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.http import request
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.type_defs import HTTPVariables, VisualContext
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.web.utils.urls import makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 from .type_defs import DashboardConfig
 
@@ -27,7 +26,7 @@ class EvaluatedBreadcrumbItem:
     id: str | None
 
     @classmethod
-    def from_breadcrumb_item(cls, item: BreadcrumbItem) -> "EvaluatedBreadcrumbItem":
+    def from_breadcrumb_item(cls, item: BreadcrumbItem) -> EvaluatedBreadcrumbItem:
         return cls(title=str(item.title), link=item.url, id=item.id)
 
 
@@ -99,7 +98,7 @@ def azure_dashboard_breadcrumb(
     subscription_name: str | None = context.get("azure_subscription_name", {}).get(
         "azure_subscription_name"
     )
-    add_vars: HTTPVariables = [
+    add_vars: list[HTTPVariable] = [
         ("site", context.get("site", {}).get("site")),
         ("azure_subscription", subscription_id),
         ("azure_subscription_name", subscription_name),
@@ -138,7 +137,7 @@ def azure_dashboard_breadcrumb(
 
 def kubernetes_dashboard_breadcrumb(
     name: str,
-    board: DashboardConfig,
+    board: DashboardConfig,  # noqa: ARG001
     title: str,
     breadcrumb: Breadcrumb,
     context: VisualContext,
@@ -188,7 +187,7 @@ def kubernetes_dashboard_breadcrumb(
     if not (cluster_name and cluster_host):
         breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
         return breadcrumb
-    add_vars: HTTPVariables = [
+    add_vars: list[HTTPVariable] = [
         ("site", context.get("site", {}).get("site")),
         (k8s_ids["cluster"], cluster_name),
         (k8s_ids["cluster-host"], cluster_host),
@@ -254,7 +253,7 @@ def kubernetes_dashboard_breadcrumb(
                 )
             )
             break
-    if not obj_name:
+    if not obj_name:  # type: ignore[possibly-undefined]
         breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
 
     return breadcrumb

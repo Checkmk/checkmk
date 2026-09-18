@@ -27,13 +27,12 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.type_defs import (
     AnnotatedUserId,
     DashboardEmbeddedViewSpec,
-    DynamicIcon,
-    DynamicIconName,
     FilterName,
     SingleInfos,
     VisualContext,
     VisualPublic,
 )
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 
 from .token import DashboardTokenModel
 from .type_defs import AnnotatedInfoName
@@ -425,7 +424,7 @@ class BaseDashboardResponse(_BaseDashboard):
     public_token: DashboardTokenModel | None = api_field(
         description="The public token for sharing the dashboard, if it exists."
     )
-    filter_context: DashboardFilterContextResponse = api_field(  # type: ignore[mutable-override]
+    filter_context: DashboardFilterContextResponse = api_field(
         description="Filter context for the dashboard."
     )
 

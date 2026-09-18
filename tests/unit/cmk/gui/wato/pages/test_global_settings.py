@@ -23,12 +23,9 @@ from cmk.gui.pages import PageContext
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.valuespec import Password as PasswordValuespec
-from cmk.gui.valuespec import TextInput
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
 from cmk.gui.wato.pages import global_settings
 from cmk.gui.wato.pages.global_settings import (
-    _global_settings_diff_text,
     DefaultModeEditGlobals,
     MatchItemGeneratorSettings,
 )
@@ -40,6 +37,7 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
+from cmk.gui.watolib.global_settings import global_settings_diff_text
 from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
@@ -47,14 +45,12 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     Integer,
     Password,
+    String,
 )
 
 
-def test_match_item_generator_settings(
-    monkeypatch: MonkeyPatch,
-    request_context: None,
-    test_edition: Edition,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_match_item_generator_settings(monkeypatch: MonkeyPatch, test_edition: Edition) -> None:
     group = ConfigVariableGroup(
         title=_l("xyz"),
         sort_index=10,
@@ -64,7 +60,7 @@ def test_match_item_generator_settings(
         group=group,
         primary_domain=ConfigDomainCore,
         ident="ident",
-        valuespec=lambda context: TextInput(title="title"),
+        form_spec=lambda context: String(title=Title("title")),  # noqa: ARG005
     )
 
     class SomeSettingsMode(DefaultModeEditGlobals):
@@ -97,10 +93,9 @@ def test_match_item_generator_settings(
     ]
 
 
+@pytest.mark.usefixtures("request_context")
 def test_match_item_generator_settings_looks_through_transform(
-    monkeypatch: MonkeyPatch,
-    request_context: None,
-    test_edition: Edition,
+    monkeypatch: MonkeyPatch, test_edition: Edition
 ) -> None:
     # TransformDataForLegacyFormatOrRecomposeFunction is a transparent wrapper without a
     # title of its own, so the title has to be taken from the wrapped form spec.
@@ -113,7 +108,7 @@ def test_match_item_generator_settings_looks_through_transform(
         group=group,
         primary_domain=ConfigDomainCore,
         ident="ident",
-        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
             wrapped_form_spec=Integer(title=Title("Wrapped title")),
             from_disk=lambda value: value,
             to_disk=lambda value: value,
@@ -150,7 +145,7 @@ def test_parse_submitted_value_keeps_cleartext_password_for_storage(
             group=ConfigVariableGroupUserInterface,
             primary_domain=ConfigDomainGUI,
             ident="test_secret",
-            form_spec=lambda context: Password(title=Title("Secret")),
+            form_spec=lambda context: Password(title=Title("Secret")),  # noqa: ARG005
         )
     )
     monkeypatch.setattr(global_settings, "config_variable_registry", registry)
@@ -159,7 +154,7 @@ def test_parse_submitted_value_keeps_cleartext_password_for_storage(
     # PasswordVisitor frontend model: (type, password_id, password, encrypted)
     request.set_var("_vue_global_settings", json.dumps(["explicit_password", "", "hunter2", False]))
 
-    submitted = global_settings.ModeEditGlobalSetting(
+    submitted = global_settings.ModeEditGlobalSetting(  # noqa: SLF001
         test_edition, PageContext(config=Config(), request=request)
     )._parse_submitted_value()
 
@@ -216,35 +211,12 @@ def test_table_row_limit_upgrade_keeps_stored_int(
     )
 
 
-def _valuespec_config_variable() -> ConfigVariable:
-    return ConfigVariable(
-        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
-        primary_domain=ConfigDomainCore,
-        ident="test_setting",
-        valuespec=lambda context: TextInput(),
-    )
-
-
 def _form_spec_config_variable() -> ConfigVariable:
     return ConfigVariable(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
-        form_spec=lambda context: Integer(),
-    )
-
-
-def test_diff_text_valuespec_value_changed(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert (
-        _global_settings_diff_text(
-            _valuespec_config_variable(),
-            global_settings_context,
-            {"test_setting": "before"},
-            {"test_setting": "after"},
-        )
-        == 'Value of "test_setting" changed from "before" to "after".'
+        form_spec=lambda context: Integer(),  # noqa: ARG005
     )
 
 
@@ -252,7 +224,7 @@ def test_diff_text_form_spec_value_changed(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _form_spec_config_variable(),
             global_settings_context,
             {"test_setting": 100},
@@ -266,7 +238,7 @@ def test_diff_text_first_override_reads_as_added(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _form_spec_config_variable(),
             global_settings_context,
             {},
@@ -280,7 +252,7 @@ def test_diff_text_reset_reads_as_removed(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _form_spec_config_variable(),
             global_settings_context,
             {"test_setting": 100},
@@ -290,26 +262,6 @@ def test_diff_text_reset_reads_as_removed(
     )
 
 
-def test_diff_text_valuespec_secret_is_redacted(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    config_variable = ConfigVariable(
-        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
-        primary_domain=ConfigDomainCore,
-        ident="test_setting",
-        valuespec=lambda context: PasswordValuespec(),
-    )
-    diff_text = _global_settings_diff_text(
-        config_variable,
-        global_settings_context,
-        {"test_setting": "old-secret"},
-        {"test_setting": "new-secret"},
-    )
-    assert diff_text == "Redacted secrets changed."
-    assert "old-secret" not in diff_text
-    assert "new-secret" not in diff_text
-
-
 def test_diff_text_form_spec_secret_is_redacted(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
@@ -317,9 +269,9 @@ def test_diff_text_form_spec_secret_is_redacted(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
-        form_spec=lambda context: SimplePassword(),
+        form_spec=lambda context: SimplePassword(),  # noqa: ARG005
     )
-    diff_text = _global_settings_diff_text(
+    diff_text = global_settings_diff_text(
         config_variable,
         global_settings_context,
         {"test_setting": "old-secret"},

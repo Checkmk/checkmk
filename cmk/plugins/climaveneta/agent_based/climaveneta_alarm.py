@@ -75,7 +75,7 @@ climaveneta_alarms = {
 }
 
 
-def discover_climaveneta_alarm(section: StringTable) -> DiscoveryResult:
+def discover_climaveneta_alarm(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

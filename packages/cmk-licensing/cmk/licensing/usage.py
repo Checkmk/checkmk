@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import json
 import logging
@@ -46,12 +45,14 @@ from cmk.licensing.helper import (
     load_instance_id,
     rot47,
 )
-from cmk.licensing.usage_counters import (
-    collect_license_usage_counters,
+from cmk.licensing.internal import (
     CounterCollectionContext,
-    discover_license_usage_counter_plugins,
     LICENSE_LABEL_EXCLUDE,
     LICENSE_LABEL_NAME,
+)
+from cmk.licensing.usage_counters import (
+    collect_license_usage_counters,
+    discover_license_usage_counter_plugins,
 )
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}

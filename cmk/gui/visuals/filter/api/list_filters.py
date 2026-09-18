@@ -45,15 +45,15 @@ class FilterExtensions:
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@dataclass(kw_only=True, slots=True, frozen=True)
 class FilterDomainObject(DomainObjectModel):
-    domainType: Literal["visual_filter"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["visual_filter"] = api_field(description="The domain type of the object.")
     extensions: FilterExtensions = api_field(description="All the data and metadata of this host.")
 
 
-@dataclass(kw_only=True, slots=True)
+@dataclass(kw_only=True, slots=True, frozen=True)
 class FilterCollection(DomainObjectCollectionModel):
-    domainType: Literal["visual_filter"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["visual_filter"] = api_field(
         description="The domain type of the objects in the collection",
         example="visual_filter",
     )

@@ -11,12 +11,13 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon, VisualLinkSpec
+from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 
 def _has_inventory(host_name: HostName) -> bool:
@@ -27,10 +28,10 @@ def _has_inventory(host_name: HostName) -> bool:
 def _render_inventory_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
+    _tags: Sequence[TagID],
+    _custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if (
         what == "host"
@@ -80,10 +81,10 @@ def _has_inventory_history(host_name: HostName) -> bool:
 def _render_inventory_history_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
+    _tags: Sequence[TagID],
+    _custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if (
         what == "host"

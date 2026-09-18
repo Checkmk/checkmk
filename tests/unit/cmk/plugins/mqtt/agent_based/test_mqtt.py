@@ -105,12 +105,12 @@ _SCENARIOS.append(
             "broker": Statistics(
                 version="mosquitto version 1.6.12",
                 uptime=1010229,
-                socket_connections_opened_rate=0,
-                subscriptions=0,
+                socket_connections_opened_rate=None,
+                subscriptions=None,
                 clients=Clients(
-                    connected=0,
-                    maximum=0,
-                    total=0,
+                    connected=None,
+                    maximum=None,
+                    total=None,
                 ),
                 messages=Messages(
                     counters=MessageCounters(
@@ -123,10 +123,10 @@ _SCENARIOS.append(
                         publish_bytes_received_total=49268835,
                         publish_bytes_sent_total=58698872,
                     ),
-                    connect_messages_received_rate=0,
-                    retained_messages_count=0,
+                    connect_messages_received_rate=None,
+                    retained_messages_count=None,
                     stored_messages_bytes=108258,
-                    stored_messages_count=0,
+                    stored_messages_count=None,
                 ),
             )
         },
@@ -223,35 +223,133 @@ _SCENARIOS.append(
 )
 
 _SCENARIOS.append(
+    _SCENARIO_MOSQUITTO_212_IDLE := SectionScenario(
+        id="MOSQUITTO_212_IDLE",
+        string_table=[
+            [
+                json.dumps(
+                    {
+                        "broker": {
+                            "$SYS/broker/bytes/received": "41256",
+                            "$SYS/broker/bytes/sent": "3402121",
+                            "$SYS/broker/clients/active": "0",
+                            "$SYS/broker/clients/connected": "0",
+                            "$SYS/broker/clients/disconnected": "0",
+                            "$SYS/broker/clients/expired": "0",
+                            "$SYS/broker/clients/inactive": "0",
+                            "$SYS/broker/clients/total": "0",
+                            "$SYS/broker/connections/socket/count": "19639",
+                            "$SYS/broker/heap/current": "836047",
+                            "$SYS/broker/heap/maximum": "855766",
+                            "$SYS/broker/load/bytes/received/15min": "48.66",
+                            "$SYS/broker/load/bytes/received/1min": "56.13",
+                            "$SYS/broker/load/bytes/received/5min": "53.62",
+                            "$SYS/broker/load/bytes/sent/15min": "4010.84",
+                            "$SYS/broker/load/bytes/sent/1min": "4625.51",
+                            "$SYS/broker/load/bytes/sent/5min": "4420.51",
+                            "$SYS/broker/load/connections/1min": "2.08",
+                            "$SYS/broker/load/messages/received/15min": "3.60",
+                            "$SYS/broker/load/messages/received/1min": "4.16",
+                            "$SYS/broker/load/messages/received/5min": "3.97",
+                            "$SYS/broker/load/messages/sent/15min": "102.72",
+                            "$SYS/broker/load/messages/sent/1min": "118.49",
+                            "$SYS/broker/load/messages/sent/5min": "113.21",
+                            "$SYS/broker/load/publish/dropped/15min": "0.00",
+                            "$SYS/broker/load/publish/dropped/1min": "0.00",
+                            "$SYS/broker/load/publish/dropped/5min": "0.00",
+                            "$SYS/broker/load/publish/received/15min": "0.00",
+                            "$SYS/broker/load/publish/received/1min": "0.00",
+                            "$SYS/broker/load/publish/received/5min": "0.00",
+                            "$SYS/broker/load/publish/sent/15min": "99.11",
+                            "$SYS/broker/load/publish/sent/1min": "114.33",
+                            "$SYS/broker/load/publish/sent/5min": "109.23",
+                            "$SYS/broker/load/sockets/15min": "13.80",
+                            "$SYS/broker/load/sockets/1min": "14.08",
+                            "$SYS/broker/load/sockets/5min": "13.99",
+                            "$SYS/broker/messages/received": "3056",
+                            "$SYS/broker/messages/sent": "87096",
+                            "$SYS/broker/messages/stored": "55",
+                            "$SYS/broker/packet/out/bytes": "0",
+                            "$SYS/broker/packet/out/count": "0",
+                            "$SYS/broker/publish/bytes/received": "0",
+                            "$SYS/broker/publish/bytes/sent": "364457",
+                            "$SYS/broker/publish/messages/dropped": "0",
+                            "$SYS/broker/publish/messages/received": "0",
+                            "$SYS/broker/publish/messages/sent": "84040",
+                            "$SYS/broker/retained messages/count": "55",
+                            "$SYS/broker/shared_subscriptions/count": "0",
+                            "$SYS/broker/store/messages/bytes": "242",
+                            "$SYS/broker/store/messages/count": "55",
+                            "$SYS/broker/subscriptions/count": "0",
+                            "$SYS/broker/uptime": "90561 seconds",
+                            "$SYS/broker/version": "mosquitto version 2.1.2",
+                        },
+                    }
+                )
+            ]
+        ],
+        parse_result={
+            "broker": Statistics(
+                version="mosquitto version 2.1.2",
+                uptime=90561,
+                socket_connections_opened_rate=14.08,
+                subscriptions=0,
+                clients=Clients(
+                    connected=0,
+                    maximum=None,
+                    total=0,
+                ),
+                messages=Messages(
+                    counters=MessageCounters(
+                        bytes_received_total=41256,
+                        bytes_sent_total=3402121,
+                        messages_received_total=3056,
+                        messages_sent_total=87096,
+                        publish_messages_received_total=0,
+                        publish_messages_sent_total=84040,
+                        publish_bytes_received_total=0,
+                        publish_bytes_sent_total=364457,
+                    ),
+                    connect_messages_received_rate=2.08,
+                    retained_messages_count=55,
+                    stored_messages_bytes=242,
+                    stored_messages_count=55,
+                ),
+            ),
+        },
+    )
+)
+
+_SCENARIOS.append(
     _SCENARIO_EMPTY := SectionScenario(
         id="EMPTY",
         string_table=[[json.dumps({"empty": {}})]],
         parse_result={
             "empty": Statistics(
                 version="",
-                uptime=0,
-                socket_connections_opened_rate=0,
-                subscriptions=0,
+                uptime=None,
+                socket_connections_opened_rate=None,
+                subscriptions=None,
                 clients=Clients(
-                    connected=0,
-                    maximum=0,
-                    total=0,
+                    connected=None,
+                    maximum=None,
+                    total=None,
                 ),
                 messages=Messages(
                     counters=MessageCounters(
-                        bytes_received_total=0,
-                        bytes_sent_total=0,
-                        messages_received_total=0,
-                        messages_sent_total=0,
-                        publish_messages_received_total=0,
-                        publish_messages_sent_total=0,
-                        publish_bytes_received_total=0,
-                        publish_bytes_sent_total=0,
+                        bytes_received_total=None,
+                        bytes_sent_total=None,
+                        messages_received_total=None,
+                        messages_sent_total=None,
+                        publish_messages_received_total=None,
+                        publish_messages_sent_total=None,
+                        publish_bytes_received_total=None,
+                        publish_bytes_sent_total=None,
                     ),
-                    connect_messages_received_rate=0,
-                    retained_messages_count=0,
-                    stored_messages_bytes=0,
-                    stored_messages_count=0,
+                    connect_messages_received_rate=None,
+                    retained_messages_count=None,
+                    stored_messages_bytes=None,
+                    stored_messages_count=None,
                 ),
             ),
         },
@@ -282,6 +380,15 @@ def test_parse_mqtt(scenario: SectionScenario) -> None:
                 ],
             ),
             id="broker_1.6.9",
+        ),
+        pytest.param(
+            DiscoveryScenario(
+                section=_SCENARIO_MOSQUITTO_212_IDLE.parse_result,
+                expected_result=[
+                    Service(item="broker"),
+                ],
+            ),
+            id="broker_2.1.2_idle",
         ),
         pytest.param(
             DiscoveryScenario(
@@ -420,6 +527,20 @@ def test_check_mqtt_uptime(check_scenario: CheckScenario, monkeypatch: pytest.Mo
                 ],
             ),
             id="broker_1.6.9",
+        ),
+        pytest.param(
+            CheckScenario(
+                item="broker",
+                section=_SCENARIO_MOSQUITTO_212_IDLE.parse_result,
+                value_store={},
+                expected_result=[
+                    Result(state=State.OK, summary="Subscriptions: 0"),
+                    Metric("subscriptions", 0.0),
+                    Result(state=State.OK, summary="Connections Opened Received: 0.23/s"),
+                    Metric("connections_opened_received_rate", 0.23466666666666666),
+                ],
+            ),
+            id="broker_2.1.2_idle",
         ),
         pytest.param(
             CheckScenario(
@@ -574,6 +695,49 @@ def test_discovery_mqtt_messages(discovery_scenario: DiscoveryScenario) -> None:
         ),
         pytest.param(
             CheckScenario(
+                item="broker",
+                section=_SCENARIO_MOSQUITTO_212_IDLE.parse_result,
+                value_store={
+                    "bytes_received_total": (581792340, 41256 - 600),
+                    "bytes_sent_total": (581792340, 3402121 - 6000),
+                    "messages_received_total": (581792340, 3056 - 60),
+                    "messages_sent_total": (581792340, 87096 - 600),
+                    "publish_bytes_received_total": (581792340, 0),
+                    "publish_bytes_sent_total": (581792340, 364457 - 1200),
+                    "publish_messages_received_total": (581792340, 0),
+                    "publish_messages_sent_total": (581792340, 84040 - 120),
+                },
+                expected_result=[
+                    Result(state=State.OK, summary="Retained messages: 55"),
+                    Metric("retained_messages", 55.0),
+                    Result(state=State.OK, summary="Stored messages: 55"),
+                    Metric("stored_messages", 55.0),
+                    Result(state=State.OK, summary="Stored message bytes: 242 B"),
+                    Metric("stored_messages_bytes", 242.0),
+                    Result(state=State.OK, summary="Connect Messages Received: 0.03/s"),
+                    Metric("connect_messages_received_rate", 0.034666666666666665),
+                    Result(state=State.OK, summary="Bytes Received: 10 B/s"),
+                    Metric("bytes_received_rate", 10.0),
+                    Result(state=State.OK, summary="Bytes Sent: 100 B/s"),
+                    Metric("bytes_sent_rate", 100.0),
+                    Result(state=State.OK, summary="Messages Received: 1.00/s"),
+                    Metric("messages_received_rate", 1.0),
+                    Result(state=State.OK, summary="Messages Sent: 10.00/s"),
+                    Metric("messages_sent_rate", 10.0),
+                    Result(state=State.OK, summary="Publish Bytes Received: 0 B/s"),
+                    Metric("publish_bytes_received_rate", 0.0),
+                    Result(state=State.OK, summary="Publish Bytes Sent: 20 B/s"),
+                    Metric("publish_bytes_sent_rate", 20.0),
+                    Result(state=State.OK, summary="Publish Messages Received: 0.00/s"),
+                    Metric("publish_messages_received_rate", 0.0),
+                    Result(state=State.OK, summary="Publish Messages Sent: 2.00/s"),
+                    Metric("publish_messages_sent_rate", 2.0),
+                ],
+            ),
+            id="broker_2.1.2_idle",
+        ),
+        pytest.param(
+            CheckScenario(
                 item="not_existing",
                 section=_SCENARIO_MOSQUITTO_1612.parse_result,
                 value_store={},
@@ -625,6 +789,15 @@ def test_check_mqtt_messages(
         ),
         pytest.param(
             DiscoveryScenario(
+                section=_SCENARIO_MOSQUITTO_212_IDLE.parse_result,
+                expected_result=[
+                    Service(item="broker"),
+                ],
+            ),
+            id="broker_2.1.2_idle",
+        ),
+        pytest.param(
+            DiscoveryScenario(
                 section=_SCENARIO_EMPTY.parse_result,
                 expected_result=[],
             ),
@@ -667,6 +840,20 @@ def test_discovery_mqtt_clients(discovery_scenario: DiscoveryScenario) -> None:
                 ],
             ),
             id="broker_1.6.9",
+        ),
+        pytest.param(
+            CheckScenario(
+                item="broker",
+                section=_SCENARIO_MOSQUITTO_212_IDLE.parse_result,
+                value_store={},
+                expected_result=[
+                    Result(state=State.OK, summary="Connected clients: 0"),
+                    Metric("clients_connected", 0.0),
+                    Result(state=State.OK, summary="Total connected: 0"),
+                    Metric("clients_total", 0.0),
+                ],
+            ),
+            id="broker_2.1.2_idle",
         ),
         pytest.param(
             CheckScenario(

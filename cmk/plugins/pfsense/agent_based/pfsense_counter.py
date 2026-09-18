@@ -57,7 +57,7 @@ def _parse_optional_raw_counter(raw_value: str | None) -> int | None:
     return int(raw_value) if raw_value is not None else None
 
 
-def discovery_pfsense_counter(section: PacketCounters) -> DiscoveryResult:
+def discovery_pfsense_counter(section: PacketCounters) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

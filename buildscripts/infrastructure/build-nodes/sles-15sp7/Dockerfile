@@ -64,7 +64,7 @@ RUN zypper ref -s \
     libxml2-devel \
     libxslt-devel \
     libxmlsec1-1 \
-    libzstd-dev \
+    libzstd-devel \
     netcat-openbsd \
     xmlsec1-devel \
     xmlsec1-openssl-devel \

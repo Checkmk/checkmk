@@ -183,7 +183,7 @@ SitesV2 = [
                 Metric("omd_inventory_size", 13208.0),
                 Metric("omd_local_size", 323595.0),
                 Metric("omd_log_size", 827498.0),
-                Metric("omd_metric_backend_size", 49475.0),
+                Metric("omd_data_backend_size", 49475.0),
                 Metric("omd_otel_collector_size", 1099.0),
                 Metric("omd_rrd_size", 152635621.0),
                 Metric("omd_tmp_size", 12288.0),

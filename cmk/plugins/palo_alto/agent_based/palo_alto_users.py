@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -58,14 +56,14 @@ snmp_section_palo_alto_users = SimpleSNMPSection(
 )
 
 
-def discover(section: Section) -> DiscoveryResult:
+def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
 def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
-    match levels:
+    match levels:  # type: ignore[exhaustive-match]
         case "ignore":
-            return None, None
+            return None, None  # type: ignore[unreachable]
         case ("abs_user", thresholds):
             return thresholds, None
         case ("perc_user", thresholds):

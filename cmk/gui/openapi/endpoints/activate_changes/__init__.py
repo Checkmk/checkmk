@@ -300,7 +300,7 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     permissions_required=PERMISSIONS,
     response_schema=ActivationRunCollection,
 )
-def list_activations(params: Mapping[str, Any]) -> Response:
+def list_activations(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all currently running activations"""
     user.need_permission("wato.activate")
 
@@ -322,7 +322,7 @@ def list_activations(params: Mapping[str, Any]) -> Response:
     permissions_required=PERMISSIONS,
     response_schema=PendingChangesCollection,
 )
-def list_pending_changes(params: Mapping[str, Any]) -> Response:
+def list_pending_changes(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all pending changes"""
     user.need_permission("wato.activate")
 

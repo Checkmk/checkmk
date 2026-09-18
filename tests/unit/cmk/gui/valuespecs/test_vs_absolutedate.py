@@ -12,7 +12,13 @@ import time_machine
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
-from .utils import expect_validate_failure, expect_validate_success, raise_exception, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    raise_exception,
+    request_var,
+)
 
 
 class TestAbsoluteDate:
@@ -22,7 +28,7 @@ class TestAbsoluteDate:
         expect_validate_success(vs.AbsoluteDate(), 1662989393)
         expect_validate_failure(vs.AbsoluteDate(), None)
         expect_validate_success(vs.AbsoluteDate(allow_empty=True), None)
-        expect_validate_failure(  # type: ignore[misc]
+        expect_validate_failure_untypeable(
             vs.AbsoluteDate(),
             "smth",
             match="The type of the timestamp must be int or float, but is",
@@ -43,7 +49,8 @@ class TestAbsoluteDate:
     def test_mask(self) -> None:
         assert vs.AbsoluteDate().mask(1631397600.0) == 1631397600.0
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("Etc/GMT-2"))):
             with request_var(a_year="2021", a_month="9", a_day="12"):
                 assert vs.AbsoluteDate().from_html_vars("a") == 1631397600.0

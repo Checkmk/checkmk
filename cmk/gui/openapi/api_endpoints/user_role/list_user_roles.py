@@ -30,7 +30,7 @@ from .endpoint_family import USER_ROLE_FAMILY
 
 @api_model
 class UserRoleCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["user_role"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["user_role"] = api_field(
         description="The domain type of the objects in the collection",
         example="host_config",
     )

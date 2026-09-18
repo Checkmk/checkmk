@@ -147,5 +147,5 @@ def test_ac_check_uniserv_check_job(
     expected_result: tuple[int, str],
 ) -> None:
     job, s, sid, street, street_nr, city, regex = args
-    monkeypatch.setattr(check_uniserv, "send_and_receive", lambda x, y: parsed)
+    monkeypatch.setattr(check_uniserv, "send_and_receive", lambda x, y: parsed)  # noqa: ARG005
     assert check_uniserv.check_job(job, s, sid, street, street_nr, city, regex) == expected_result

@@ -35,7 +35,7 @@ def parse_vms_cpu(string_table: StringTable) -> Section:
         parsed["num_cpus"] = int(string_table[0][0])
         for i, key in enumerate(("idle", "user", "wait_interrupt", "wait_npsync"), 1):
             parsed[key] = float(string_table[0][i]) / parsed["num_cpus"]
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return {}
 
     return parsed

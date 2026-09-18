@@ -6,6 +6,7 @@
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -20,8 +21,8 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._engine_template_graphs import discover_template_graphs
-from .._graph_templates import TemplateGraphSpecification
+from .._graph_templates import discover_template_graphs, TemplateGraphSpecification
+from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from .models import GraphsDiscoverResponse
 
@@ -51,6 +52,7 @@ class TemplateGraphsDiscoverRequest:
 
 
 def discover_template_graphs_v1(
+    api_context: ApiContext,
     body: TemplateGraphsDiscoverRequest,
 ) -> GraphsDiscoverResponse:
     """Discover the data-less template graph definitions of a service"""
@@ -77,7 +79,10 @@ def discover_template_graphs_v1(
             detail=f"Failed to discover graphs: {exc}",
         ) from exc
 
-    return GraphsDiscoverResponse.from_discovered(discovered)
+    return GraphsDiscoverResponse.from_discovered(
+        discovered,
+        get_temperature_unit(api_context.user, api_context.config.default_temperature_unit),
+    )
 
 
 ENDPOINT_DISCOVER_TEMPLATE_GRAPHS = VersionedEndpoint(

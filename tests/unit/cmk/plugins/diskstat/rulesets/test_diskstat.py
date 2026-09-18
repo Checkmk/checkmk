@@ -123,7 +123,7 @@ def test_diskstat_inventory_migration(value: Mapping[str, object], expected_outp
     ],
 )
 @pytest.mark.skip()
-def test_diskstat_inventory_migration_error(value: object, expected_output: object) -> None:
+def test_diskstat_inventory_migration_error(value: object, expected_output: object) -> None:  # noqa: ARG001
     with pytest.raises(TypeError):
         pass
         # migrate_diskstat_inventory(value)

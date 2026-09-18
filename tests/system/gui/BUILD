@@ -29,11 +29,15 @@ py_library(
         "//tests/testlib",
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",
+        "//tests/testlib/pytest_helpers",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//cmk/gui/nonfree/pro",
             "//non-free/tests/testlib/system:metric_backend",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
+            "//packages/cmk-wsgi",
+            "//tests/testlib:consolidation_wire",
         ],
         "//:gpl_repo": [],
     }),

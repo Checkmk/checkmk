@@ -31,7 +31,7 @@ class OIDBytes(_OIDSpecTuple):
 
     """
 
-    def __new__(cls, value: str) -> "OIDBytes":
+    def __new__(cls, value: str) -> OIDBytes:
         return super().__new__(cls, value, "binary", False)
 
     @override
@@ -51,7 +51,7 @@ class OIDCached(_OIDSpecTuple):
 
     """
 
-    def __new__(cls, value: str) -> "OIDCached":
+    def __new__(cls, value: str) -> OIDCached:
         return super().__new__(cls, value, "string", True)
 
     @override
@@ -68,7 +68,7 @@ class OIDEnd(_OIDSpecTuple):
     OID (the part that you not already know).
     """
 
-    def __new__(cls) -> "OIDEnd":
+    def __new__(cls) -> OIDEnd:
         return super().__new__(cls, 0, "string", False)
 
     @override

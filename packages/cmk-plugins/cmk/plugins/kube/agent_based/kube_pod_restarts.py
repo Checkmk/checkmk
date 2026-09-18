@@ -18,7 +18,7 @@ ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
 
 
-def discovery(section: PodContainers) -> DiscoveryResult:
+def discovery(section: PodContainers) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

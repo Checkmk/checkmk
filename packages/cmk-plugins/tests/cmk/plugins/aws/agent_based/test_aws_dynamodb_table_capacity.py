@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -50,7 +49,7 @@ test_params: Mapping[str, Mapping] = {
 }
 
 
-def test_aws_dynamodb_table_check_capacity_read_capacity():
+def test_aws_dynamodb_table_check_capacity_read_capacity() -> None:
     capacity_units_to_check = "ReadCapacityUnits"
     results = list(
         aws_dynamodb_table_check_capacity(
@@ -67,7 +66,7 @@ def test_aws_dynamodb_table_check_capacity_read_capacity():
     assert all(r.state == State.OK for r in result_list)
 
 
-def test_aws_dynamodb_table_check_capacity_write_capacity():
+def test_aws_dynamodb_table_check_capacity_write_capacity() -> None:
     capacity_units_to_check = "WriteCapacityUnits"
     results = list(
         aws_dynamodb_table_check_capacity(
@@ -84,7 +83,7 @@ def test_aws_dynamodb_table_check_capacity_write_capacity():
     assert all(r.state == State.OK for r in result_list)
 
 
-def test_aws_capacity_params_to_levels_missing_keys():
+def test_aws_capacity_params_to_levels_missing_keys() -> None:
     # Regression: missing keys caused KeyError; {} triggers KeyError 'levels_upper' (min/max path),
     # partial dict triggers KeyError 'levels_lower' (average path with default params)
     assert aws_capacity_params_to_levels({}) == (("no_levels", None), ("no_levels", None))
@@ -94,7 +93,7 @@ def test_aws_capacity_params_to_levels_missing_keys():
     )
 
 
-def test_aws_dynamodb_capacity_get_metric_name_and_unit():
+def test_aws_dynamodb_capacity_get_metric_name_and_unit() -> None:
     metric_name, unit = aws_dynamodb_capacity_get_metric_name_and_unit(
         "Sum_ConsumedReadCapacityUnits"
     )

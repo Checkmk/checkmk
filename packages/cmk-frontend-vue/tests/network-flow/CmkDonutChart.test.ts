@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render } from '@testing-library/vue'
+import { fireEvent, render, within } from '@testing-library/vue'
 import { nextTick } from 'vue'
 
 import CmkDonutChart from '@/network-flow/CmkDonutChart/CmkDonutChart.vue'
@@ -57,8 +57,15 @@ function slicePaths(container: Element): (string | null)[] {
   )
 }
 
+// Both legends are laid out at once and a container query picks one; jsdom
+// applies no CSS, so the queries are addressed to the table, which is the legend
+// these tests are about.
 function renderChart(slices: DonutSlice[] = SLICES) {
-  return render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
+  const result = render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
+  return {
+    ...result,
+    ...within(result.container.querySelector<HTMLElement>('.network-flow-donut-legend-table')!)
+  }
 }
 
 test('renders one arc segment and one legend entry per slice', () => {
@@ -86,6 +93,19 @@ test('keeps the previous period out of the legend until it is delivered', () => 
   expect(container.querySelectorAll('th')).toHaveLength(3)
 })
 
+test('heads the comparison with the label the caller supplies', () => {
+  const { container } = render(CmkDonutChart, {
+    props: {
+      slices: [{ ...SLICES[0]!, previousValue: 60 }, SLICES[1]!],
+      formatValue: (value: number) => `${value} B`,
+      previousLabel: 'Prev 4 h'
+    }
+  })
+
+  expect(container).toHaveTextContent('Prev 4 h')
+  expect(container).not.toHaveTextContent('Previous')
+})
+
 test('compares against the previous period once it is delivered', () => {
   const { container } = renderChart([
     { ...SLICES[0]!, previousValue: 60 },
@@ -93,9 +113,56 @@ test('compares against the previous period once it is delivered', () => {
   ])
 
   expect(container).toHaveTextContent('Previous')
-  // 90 against 60 grew by half; 60 against 90 lost a third.
-  expect(container).toHaveTextContent('+50.0%')
-  expect(container).toHaveTextContent('-33.3%')
+  // 90 against 60 grew by half; 60 against 90 lost a third. The sign is the
+  // arrow's to carry, so it is not in the text.
+  expect(container).toHaveTextContent('50.0%')
+  expect(container).toHaveTextContent('33.3%')
+})
+
+const COMPARED_SLICES: DonutSlice[] = [
+  { ...SLICES[0]!, previousValue: 60 },
+  { ...SLICES[1]!, previousValue: 90 }
+]
+
+test('offers the note explaining a dropped comparison whenever there is one to drop', () => {
+  // Whether it is on screen is the container query's business, not jsdom's.
+  const { queryByLabelText } = renderChart(COMPARED_SLICES)
+
+  expect(queryByLabelText('Why the comparison is not shown')).not.toBeNull()
+})
+
+test('says nothing about a comparison it was never given', () => {
+  const { queryByLabelText } = renderChart(SLICES)
+
+  expect(queryByLabelText('Why the comparison is not shown')).toBeNull()
+})
+
+test('points the change of every compared category the way it went', () => {
+  const { container } = renderChart([
+    { ...SLICES[0]!, previousValue: 60 },
+    { ...SLICES[1]!, previousValue: 90 }
+  ])
+
+  const arrows = [...container.querySelectorAll('.db-cmk-delta-arrow')]
+  expect(arrows).toHaveLength(2)
+  expect(arrows[0]).not.toHaveClass('db-cmk-delta-arrow--down')
+  expect(arrows[1]).toHaveClass('db-cmk-delta-arrow--down')
+})
+
+test('draws no arrow where the change has no direction to point in', () => {
+  // "new" has no ratio, an unchanged category has a ratio of zero, and the
+  // hidden one has nothing to compare at all.
+  const { container, getByLabelText } = renderChart([
+    { ...SLICES[0]!, previousValue: 0 },
+    { ...SLICES[1]!, previousValue: 60 }
+  ])
+
+  expect(container).toHaveTextContent('new')
+  expect(container.querySelectorAll('.db-cmk-delta-arrow')).toHaveLength(0)
+
+  fireEvent.click(getByLabelText('Hide Other in the chart'))
+
+  expect(container.querySelectorAll('.db-cmk-delta-arrow')).toHaveLength(0)
 })
 
 test('calls growth out of nothing new instead of dashing it out', () => {
@@ -112,7 +179,8 @@ test('drops the comparison of a hidden category without dropping the columns', a
   await advanceTween()
 
   expect(container).toHaveTextContent('Previous')
-  expect(container).not.toHaveTextContent('+50.0%')
+  expect(container).not.toHaveTextContent('50.0%')
+  expect(container.querySelectorAll('.db-cmk-delta-arrow')).toHaveLength(0)
 })
 
 test('marks the aggregated remainder as drillable', async () => {
@@ -122,6 +190,22 @@ test('marks the aggregated remainder as drillable', async () => {
   await fireEvent.click(getByLabelText('Show breakdown of Other'))
 
   expect(emitted('sliceActivate')).toEqual([['other']])
+})
+
+test('opens the breakdown from the name of the remainder, not just a chevron', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { getByText, emitted } = renderChart(slices)
+
+  await fireEvent.click(getByText('Other'))
+
+  expect(emitted('sliceActivate')).toEqual([['other']])
+})
+
+test('leaves a category with nothing behind it as plain text in the legend', () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { getByText } = renderChart(slices)
+
+  expect(getByText('TLS').closest('button')).toBeNull()
 })
 
 test('takes the breakdown away from a category the reader hid', async () => {
@@ -140,11 +224,47 @@ function renderCompactChart() {
   })
 }
 
+test('lays out both legends, so the widget can pick one by its own size', () => {
+  const { container } = renderChart()
+
+  expect(container.querySelector('.network-flow-donut-legend-table')).not.toBeNull()
+  expect(container.querySelector('.network-flow-donut-legend-compact')).not.toBeNull()
+})
+
 test('drops the table for a row of chips when the legend is compact', () => {
   const { container } = renderCompactChart()
 
   expect(container.querySelector('table')).toBeNull()
   expect(container.querySelectorAll('.network-flow-donut-legend-compact__chip')).toHaveLength(2)
+})
+
+test('opens the breakdown from the remainder chip as well', async () => {
+  const { getByLabelText, emitted } = render(CmkDonutChart, {
+    props: {
+      slices: [SLICES[0]!, { ...SLICES[1]!, isOther: true }],
+      formatValue: (value: number) => `${value} B`,
+      legendMode: 'compact'
+    }
+  })
+
+  await fireEvent.click(getByLabelText('Show breakdown of Other'))
+
+  expect(emitted('sliceActivate')).toEqual([['other']])
+})
+
+test('takes the breakdown chip away from a remainder the reader hid', async () => {
+  const { getByLabelText, queryByLabelText } = render(CmkDonutChart, {
+    props: {
+      slices: [SLICES[0]!, { ...SLICES[1]!, isOther: true }],
+      formatValue: (value: number) => `${value} B`,
+      legendMode: 'compact'
+    }
+  })
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  expect(queryByLabelText('Show breakdown of Other')).toBeNull()
 })
 
 test('hides and highlights from a chip just as from a table row', async () => {
@@ -276,6 +396,29 @@ test('hands the center over to the slice being pointed at', async () => {
   )
 })
 
+test('hands the center over as a new reading, so the two can fade across', async () => {
+  // jsdom has no CSS, so the fade itself is not observable here. What is: the
+  // reading is keyed on what it is about, which is what makes Vue build a
+  // second one alongside the first rather than rewrite the text in place.
+  const { container } = renderChart()
+
+  const before = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  await fireEvent.mouseEnter(container.querySelector('.network-flow-cmk-donut-chart__segment')!)
+
+  const after = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  expect(after).not.toBe(before)
+  expect(after).toHaveTextContent('TLS')
+})
+
+test('leaves the center reading alone when a refresh does not change what it is about', async () => {
+  const { container, rerender } = renderChart()
+
+  const before = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  await rerender({ slices: SLICES, formatValue: (value: number) => `${value} B` })
+
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-reading')).toBe(before)
+})
+
 test('raises the highlight from the legend as well as from the ring', async () => {
   const { container } = renderChart()
 
@@ -291,15 +434,48 @@ test('raises the highlight from the legend as well as from the ring', async () =
   )
 })
 
-test('activates a slice by click and by keyboard', async () => {
+test('activates the slice with a breakdown by click and by keyboard', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { container, emitted } = renderChart(slices)
+
+  const other = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  await fireEvent.click(other)
+  await fireEvent.keyDown(other, { key: 'Enter' })
+  await fireEvent.keyDown(other, { key: ' ' })
+
+  expect(emitted('sliceActivate')).toEqual([['other'], ['other'], ['other']])
+})
+
+test('focuses the arc it activates', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { container } = renderChart(slices)
+
+  const other = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  await fireEvent.click(other)
+
+  // Whatever the activation opens has to know where to hand the keyboard back.
+  expect(document.activeElement).toBe(other)
+})
+
+test('puts every slice in the tab order, not just the one with a breakdown', () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { container } = renderChart(slices)
+
+  for (const segment of container.querySelectorAll('.network-flow-cmk-donut-chart__segment')) {
+    expect(segment).toHaveAttribute('role', 'button')
+    expect(segment).toHaveAttribute('tabindex', '0')
+  }
+})
+
+test('reports the activation of a slice with nothing behind it too', async () => {
+  // What an activation opens is the caller's to decide; the ring only says
+  // which slice was picked.
   const { container, emitted } = renderChart()
 
   const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
-  await fireEvent.click(tls)
   await fireEvent.keyDown(tls, { key: 'Enter' })
-  await fireEvent.keyDown(tls, { key: ' ' })
 
-  expect(emitted('sliceActivate')).toEqual([['tls'], ['tls'], ['tls']])
+  expect(emitted('sliceActivate')).toEqual([['tls']])
 })
 
 test('recomputes the ring and the total when a category is hidden', async () => {
@@ -354,7 +530,10 @@ test('lets a leaving slice collapse before it is dropped', async () => {
 })
 
 test('keeps a collapsing slice out of reach while it is drawn', async () => {
-  const { container, getByLabelText, emitted } = renderChart()
+  const { container, getByLabelText, emitted } = renderChart([
+    SLICES[0]!,
+    { ...SLICES[1]!, isOther: true }
+  ])
 
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await nextTick()

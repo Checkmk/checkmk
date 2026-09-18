@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import signal
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from types import FrameType
 from typing import Final, IO, Literal
 
 from tests.testlib.common.utils2 import ServiceInfo
@@ -96,6 +96,33 @@ def set_omd_config_piggyback_hub(site: Site, value: Literal["on", "off"]) -> Ite
         yield
 
 
+@contextmanager
+def piggyback_hub_log_level(site: Site, level: str) -> Iterator[None]:
+    """Run the piggyback hub daemon at an explicit log level.
+
+    The init script starts the daemon without `--log-level`, so its default (NOTSET)
+    leaves the config receive/save messages invisible. Restart it by hand to make them
+    show up in var/log/piggyback-hub.log (CMK-35803).
+    """
+    site.omd("stop", "piggyback-hub")
+    site.run(
+        [
+            f"{site.root}/bin/cmk-piggyback-hub",
+            f"--log-level={level}",
+            f"{site.root}/tmp/run/piggyback-hub.pid",
+            f"{site.root}/var/log/piggyback-hub.log",
+            str(site.root),
+            site.id,
+        ],
+        check=True,
+    )
+    try:
+        yield
+    finally:
+        site.omd("stop", "piggyback-hub")
+        site.omd("start", "piggyback-hub")
+
+
 class PBTimeoutError(TimeoutError):
     pass
 
@@ -114,7 +141,7 @@ def _timeout(seconds: int, error_msg: str) -> Iterator[None]:
         PBTimeoutError: when `seconds` amount of time has passed.
     """
 
-    def _raise_timeout(signum, frame):
+    def _raise_timeout(signum: int, frame: FrameType | None) -> None:  # noqa: ARG001
         raise PBTimeoutError(error_msg)
 
     alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 """agent_tinkerforge
 
@@ -44,8 +43,6 @@ Checkmk special agent for monitoring Tinkerforge.
 # Support for individual bricklets has to be added in init_device_handlers.
 #  Currently the bricklets included in the Starter Kit: Server Room Monitoring are
 #  implemented
-
-from __future__ import annotations
 
 import os
 import sys
@@ -240,7 +237,7 @@ def init_device_handlers() -> dict[int, Callable[[IPConnection, Mapping[str, Any
         if dev_id is not None:
             device_handlers[dev_id] = handler
         else:
-            module = __import__("tinkerforge." + module_name)
+            module = __import__("tinkerforge." + module_name)  # type: ignore[unreachable]
             sub_module = module.__dict__[module_name]
             device_handlers[sub_module.__dict__[clazz].DEVICE_IDENTIFIER] = handler
 
@@ -252,12 +249,12 @@ def enumerate_callback(
     device_handlers: dict[int, Callable[[IPConnection, Mapping[str, Any], str], None]],
     settings: Mapping[str, Any],
     uid: str,
-    connected_uid: str,
-    position: str,
-    hardware_version: tuple[int, int, int],
-    firmware_version: tuple[int, int, int],
+    connected_uid: str,  # noqa: ARG001
+    position: str,  # noqa: ARG001
+    hardware_version: tuple[int, int, int],  # noqa: ARG001
+    firmware_version: tuple[int, int, int],  # noqa: ARG001
     device_identifier: int,
-    enumeration_type: int,
+    enumeration_type: int,  # noqa: ARG001
 ) -> None:
     if device_identifier == 237:
         global segment_display

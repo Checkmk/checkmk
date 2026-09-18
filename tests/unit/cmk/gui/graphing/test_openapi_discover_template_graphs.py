@@ -14,11 +14,11 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing import _engine_template_graphs as template_graphs_module
-from cmk.gui.graphing._engine_discovery import BuiltGraph
-from cmk.gui.graphing._engine_source import RRDFetchMetricNames
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing import _graph_templates as template_graphs_module
+from cmk.gui.graphing import BuiltGraph, RRDFetchMetricNames, TemplateGraphSpecification
 from cmk.livestatus_client import MKLivestatusSocketError
+from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -70,6 +70,37 @@ def test_discover_template_graphs_exposes_the_add_to_specification(
 
     [graph] = resp.json["graphs"]
     assert graph["add_to_specification"] == specification.model_dump()
+
+
+def test_discover_template_graphs_labels_the_axis_in_the_users_temperature_unit(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch, set_config: SetConfig
+) -> None:
+    # Without this the axis would contradict the Fahrenheit values the fetch serves.
+    celsius = UnitFormat(
+        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
+    )
+
+    def _build(
+        _specification: TemplateGraphSpecification, **_kwargs: object
+    ) -> Sequence[BuiltGraph]:
+        return [
+            BuiltGraph(
+                graph=Graph(name="temp", title="Temperature", kind="template"),
+                specification=None,
+                y_axis_unit=celsius,
+            )
+        ]
+
+    monkeypatch.setattr(template_graphs_module, "build_template_graphs", _build)
+
+    with set_config(default_temperature_unit="fahrenheit"):
+        resp = clients.Graph.discover_template_graphs(
+            hostname="my-host", service_description="Temperature"
+        )
+
+    [graph] = resp.json["graphs"]
+    assert graph["y_axis"]["unit"]["symbol"] == "°F"
+    assert graph["y_axis"]["unit"]["convertible"] is False
 
 
 def test_discover_template_graphs_omits_the_specification_when_there_is_none(

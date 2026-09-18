@@ -119,6 +119,27 @@ test('uses inputHint as dropdown placeholder', async () => {
   await screen.findByLabelText('Pick a parameter...')
 })
 
+test('dropdown opened while entities are still loading shows them once loaded', async () => {
+  let releaseListEntities: () => void = () => {}
+  const gate = new Promise<void>((resolve) => {
+    releaseListEntities = resolve
+  })
+  server.use(
+    http.get(
+      `${BASE}/domain-types/notification_parameter/collections/:entity_type_specifier`,
+      async () => {
+        await gate
+        return HttpResponse.json({ value: [{ id: 'entity-1', title: 'Entity One' }] })
+      }
+    )
+  )
+  renderComponent()
+  await fireEvent.click(screen.getByRole('combobox', { name: 'Select entity' }))
+  await screen.findByText('Loading…')
+  releaseListEntities()
+  await screen.findByRole('option', { name: 'Entity One' })
+})
+
 test('opens slide-in with readable new title when clicking create', async () => {
   renderComponent()
   await fireEvent.click(screen.getByRole('button', { name: /Create/ }))

@@ -350,7 +350,7 @@ oracle:
             .iter()
             .find(|s| s.is_custom_metric())
             .expect("custom metric must be parsed");
-        let runtime = section::Section::new(custom, 0, config.options());
+        let runtime = section::Section::new(custom, Some(0), config.options());
         let queries = runtime
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
             .expect("custom metric sql must yield queries");
@@ -373,6 +373,32 @@ oracle:
             .format("")
             .expect("patched column-name query must execute");
         assert_eq!(rows, vec!["X".to_string()], "dual.dummy always holds 'X'");
+    }
+
+    /// A cell the driver cannot render as a string fails the whole query. The
+    /// section then carries one FAILURE row with this message instead of data
+    /// rows holding an `Error: ...` cell.
+    #[test]
+    fn test_unconvertible_cell_fails_the_query() {
+        add_runtime_to_path();
+        let endpoint = reference_endpoint();
+        let config = make_mini_config(&endpoint);
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot.connect(None).unwrap();
+        let query = SqlQuery::new(
+            "select 'a', cursor(select 1 from dual) as nested from dual",
+            &Vec::new(),
+        );
+
+        let error = conn
+            .query_table(&query)
+            .format("|")
+            .expect_err("a REF CURSOR cell must fail the query");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid type conversion from REF CURSOR to string in column NESTED"
+        );
     }
 
     #[tokio::test(flavor = "multi_thread")]

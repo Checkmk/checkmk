@@ -47,6 +47,7 @@ agent_encryption: list[RuleSpec[str | None]] = []
 encryption_handling: list[RuleSpec[Mapping[str, str]]] = []
 agent_exclude_sections: list[RuleSpec[dict[str, str]]] = []
 telemetry_custom_service: list[RuleSpec[Mapping[str, object]]] = []
+metrics_identity_routing: list[RuleSpec[Mapping[str, object]]] = []
 # UDP ports used for SNMP
 snmp_ports: list[RuleSpec[int]] = []
 tcp_connect_timeout = 5.0
@@ -86,12 +87,13 @@ http_proxies: dict[str, HTTPProxySpec] = {}
 # SNMP communities and encoding
 
 # Global config for SNMP Backend
-snmp_backend_default: Literal["inline", "classic"] = "inline"
+# The inline backend is not shipped in all editions, so the default must be
+# the one backend that is always available. Editions shipping the inline
+# backend configure it explicitly (see the sample config).
+snmp_backend_default: Literal["inline", "classic"] = "classic"
 
 # Ruleset to enable specific SNMP Backend for each host.
 snmp_backend_hosts: list[RuleSpec[object]] = []
-# Deprecated: Replaced by snmp_backend_hosts
-non_inline_snmp_hosts: list[RuleSpec[object]] = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP
 snmp_limit_oid_range: Sequence[RuleSpec[object]] = []
@@ -326,7 +328,6 @@ service_tag_rules: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 # Rulesets for Agent Bakery
 agent_config: dict[str, list[RuleSpec[Any]]] = {}
 agent_bakery_logging: int | None = None
-bake_agents_on_restart = False
 apply_bake_revision = False
 folder_attributes: dict[str, FolderAttributesForBase] = {}
 

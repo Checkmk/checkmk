@@ -182,7 +182,7 @@ def _parse_version(raw_version: Sequence[Sequence[str]]) -> _Version | None:
     parts = version.split("-")[0].split(".")
     try:
         return _Version(int(parts[0]), int(parts[1]), int(parts[2]))
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 

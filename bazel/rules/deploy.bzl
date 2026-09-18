@@ -159,7 +159,7 @@ deploy_python_drift_test = rule(
 # NOTE: omd/BUILD is the source of truth for what constitutes an edition.
 # The lists below must stay in sync with it; //:deploy-python-drift-test
 # fails with a diff when they drift. One deliberate deviation: external
-# wheels (e.g. @rrdtool_native) are not deployed, as they are not built
+# wheels (e.g. @rrdtool) are not deployed, as they are not built
 # from this repo and thus cannot change during development.
 #
 # These lists could be replaced by collecting the product's wheels
@@ -220,6 +220,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-plugins:wheel-splunk",
     "//packages/cmk-plugins:wheel-stulz",
     "//packages/cmk-plugins:wheel-tplink",
+    "//packages/cmk-plugins:wheel-tsm",
     "//packages/cmk-plugins:wheel-ucs_bladecenter",
     "//packages/cmk-plugins:wheel-viprinet",
     "//packages/cmk-plugins:wheel-vsphere",
@@ -235,11 +236,14 @@ COMMUNITY_WHEELS = [
 
 PRO_WHEELS = COMMUNITY_WHEELS + [
     "//non-free/packages/cmc-protocols:wheel",
+    "//non-free/packages/cmk-ai-control-plane:wheel",
     "//non-free/packages/cmk-bakery:wheel",
     "//non-free/packages/cmk-core-helpers:wheel",
+    "//non-free/packages/cmk-data-backend:wheel",
     "//non-free/packages/cmk-dcd:wheel",
     "//non-free/packages/cmk-licensing-nonfree:wheel",
     "//non-free/packages/cmk-liveproxyd:wheel",
+    "//non-free/packages/cmk-mcp:wheel",
     "//non-free/packages/cmk-mknotifyd:wheel",
     "//non-free/packages/cmk-notification-plugins-nonfree:wheel",
     "//non-free/packages/cmk-plugins-nonfree:wheel-diagnostics",
@@ -251,8 +255,7 @@ CLOUD_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-agent-registration-extended:wheel",
     "//non-free/packages/cmk-cloud:wheel",
     "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
-    "//non-free/packages/cmk-mcp:wheel",
-    "//non-free/packages/cmk-metric-backend:wheel",
+    "//non-free/packages/cmk-data-backend:wheel-telemetry-metrics",
     "//non-free/packages/cmk-network-flow:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-otel-collector:wheel-auth-only",
@@ -266,8 +269,7 @@ CLOUD_WHEELS = PRO_WHEELS + [
 ULTIMATE_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-agent-registration-extended:wheel",
     "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
-    "//non-free/packages/cmk-mcp:wheel",
-    "//non-free/packages/cmk-metric-backend:wheel",
+    "//non-free/packages/cmk-data-backend:wheel-telemetry-metrics",
     "//non-free/packages/cmk-network-flow:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-plugins-nonfree:wheel-aws_extended",

@@ -102,7 +102,7 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
     permissions_required=permissions.Perm("general.agent_pairing"),
     response_schema=X509PEM,
 )
-def root_cert(param: Mapping[str, object]) -> Response:
+def root_cert(param: Mapping[str, object]) -> Response:  # noqa: ARG001
     """X.509 PEM-encoded root certificate"""
     if not _user_is_authorized():
         raise ProblemException(
@@ -162,7 +162,7 @@ def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[expl
         ],
     ),
 )
-def agent_controller_certificates_settings(param: object) -> Response:
+def agent_controller_certificates_settings(param: object) -> Response:  # noqa: ARG001
     """Show agent controller certificate settings"""
     if not (user.may("wato.seeall") or user.may("wato.global")):
         raise ProblemException(

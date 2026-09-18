@@ -6,9 +6,9 @@
 from typing import override
 
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.wato import MainModuleTopicExporter
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 
 def register(main_module_registry: MainModuleRegistry) -> None:

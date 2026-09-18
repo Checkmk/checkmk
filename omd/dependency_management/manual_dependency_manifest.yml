@@ -19,7 +19,7 @@ dependencies:
     license: MPL-2.0
     path: third_party/openhardwaremonitor/openhardwaremonitor-0.9.6.zip
 
-  - purl: pkg:generic/python@3.13.13
+  - purl: pkg:generic/python@3.14.7
     license: PSF-2.0
     comment: windows python
 
@@ -33,7 +33,7 @@ dependencies:
   - purl: pkg:pypi/cffi@1.15.0
     path: non-free/packages/cmk-update-agent/src/pip/cffi-1.15.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
-  - purl: pkg:pypi/cerifi@2024.8.30
+  - purl: pkg:pypi/certifi@2024.8.30
     license: MPL-2.0
     path: non-free/packages/cmk-update-agent/src/pip/certifi-2024.8.30-py3-none-any.whl
 
@@ -48,7 +48,7 @@ dependencies:
     license: MIT
     path: non-free/packages/cmk-update-agent/src/pip/setuptools-46.4.0-py3-none-any.whl
 
-  - purl: pkg:pypi/PySocks@1.7.1
+  - purl: pkg:pypi/pysocks@1.7.1
     license: BSD-3-Clause
     path: non-free/packages/cmk-update-agent/src/pip/PySocks-1.7.1-py3-none-any.whl
 
@@ -64,11 +64,11 @@ dependencies:
   - purl: pkg:pypi/urllib3@1.26.20
     path: non-free/packages/cmk-update-agent/src/pip/urllib3-1.26.20-py2.py3-none-any.whl
 
-  - purl: pkg:pypi/PyInstaller@3.6
+  - purl: pkg:pypi/pyinstaller@3.6
     license: GPL-2.0-or-later
     path: non-free/packages/cmk-update-agent/src/pip/PyInstaller-3.6.tar.gz
 
-  - purl: pkg:pypi/charset_normalizer@3.3.2
+  - purl: pkg:pypi/charset-normalizer@3.3.2
     path: non-free/packages/cmk-update-agent/src/pip/charset_normalizer-3.3.2-py3-none-any.whl
 
   - purl: pkg:generic/rrdtool@1.7.2

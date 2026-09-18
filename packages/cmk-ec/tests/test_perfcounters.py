@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: test the interface, not the private members
-# ruff: noqa: SLF001
 
 import logging
 
@@ -17,48 +16,48 @@ logger = logging.getLogger("cmk.mkeventd")
 
 def test_perfcounters_count() -> None:
     c = Perfcounters(logger)
-    assert c._counters["messages"] == 0
+    assert c._counters["messages"] == 0  # noqa: SLF001
     c.count("messages")
-    assert c._counters["messages"] == 1
+    assert c._counters["messages"] == 1  # noqa: SLF001
 
-    assert not [(k, v) for k, v in c._counters.items() if k != "messages" and v > 0]
+    assert not [(k, v) for k, v in c._counters.items() if k != "messages" and v > 0]  # noqa: SLF001
 
 
 def test_perfcounters_count_time() -> None:
     c = Perfcounters(logger)
-    assert "processing" not in c._times
+    assert "processing" not in c._times  # noqa: SLF001
     c.count_time("processing", 1.0)
-    assert c._times["processing"] == 1.0
+    assert c._times["processing"] == 1.0  # noqa: SLF001
     c.count_time("processing", 1.0)
-    assert c._times["processing"] == 1.0
+    assert c._times["processing"] == 1.0  # noqa: SLF001
     c.count_time("processing", 5.0)
-    assert c._times["processing"] == 1.04
+    assert c._times["processing"] == 1.04  # noqa: SLF001
 
 
 def test_perfcounters_do_statistics(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("time.time", lambda: 1.0)
 
     c = Perfcounters(logger)
-    assert "messages" not in c._rates
-    assert "messages" not in c._average_rates
+    assert "messages" not in c._rates  # noqa: SLF001
+    assert "messages" not in c._average_rates  # noqa: SLF001
 
     c.do_statistics()
-    assert "messages" not in c._rates
-    assert "messages" not in c._average_rates
+    assert "messages" not in c._rates  # noqa: SLF001
+    assert "messages" not in c._average_rates  # noqa: SLF001
 
     monkeypatch.setattr("time.time", lambda: 2.0)
 
     c.do_statistics()
-    assert c._rates["messages"] == 0.0
-    assert c._average_rates["messages"] == 0.0
+    assert c._rates["messages"] == 0.0  # noqa: SLF001
+    assert c._average_rates["messages"] == 0.0  # noqa: SLF001
 
     c.count("messages")
     monkeypatch.setattr("time.time", lambda: 3.0)
 
     c.do_statistics()
-    assert c._rates["messages"] == 1.0
+    assert c._rates["messages"] == 1.0  # noqa: SLF001
 
-    assert pytest.approx(c._average_rates["messages"]) == 0.09999999999999998
+    assert pytest.approx(c._average_rates["messages"]) == 0.09999999999999998  # noqa: SLF001
 
     c.count("messages")
     c.count("messages")
@@ -67,8 +66,8 @@ def test_perfcounters_do_statistics(monkeypatch: pytest.MonkeyPatch) -> None:
     c.count("messages")
     monkeypatch.setattr("time.time", lambda: 4.0)
     c.do_statistics()
-    assert c._rates["messages"] == 5.0
-    assert pytest.approx(c._average_rates["messages"]) == 0.5899999999999999
+    assert c._rates["messages"] == 5.0  # noqa: SLF001
+    assert pytest.approx(c._average_rates["messages"]) == 0.5899999999999999  # noqa: SLF001
 
 
 def test_perfcounters_columns_match_status_length() -> None:
@@ -118,20 +117,20 @@ def test_perfcounters_correct_status_values() -> None:
     for column_name, column_value in zip([n for n, _d in c.status_columns()], c.get_status()):
         if column_name.startswith("status_average_") and column_name.endswith("_time"):
             counter_name = column_name.split("_")[-2]
-            assert column_value == c._times.get(counter_name, 0.0)
+            assert column_value == c._times.get(counter_name, 0.0)  # noqa: SLF001
 
         elif column_name.startswith("status_average_") and column_name.endswith("_rate"):
             counter_name = column_name.split("_")[-2]
-            assert column_value == c._average_rates.get(counter_name, 0.0)
+            assert column_value == c._average_rates.get(counter_name, 0.0)  # noqa: SLF001
 
         elif column_name.startswith("status_") and column_name.endswith("_rate"):
             counter_name = column_name.split("_")[-2]
-            assert column_value == c._rates.get(counter_name, 0.0)
+            assert column_value == c._rates.get(counter_name, 0.0)  # noqa: SLF001
 
         elif column_name.startswith("status_"):
             counter_name = "_".join(column_name.split("_")[1:])
-            assert column_value == c._counters[counter_name], (
-                f"Invalid value {column_name!r}: {c._counters[counter_name]!r}"
+            assert column_value == c._counters[counter_name], (  # noqa: SLF001
+                f"Invalid value {column_name!r}: {c._counters[counter_name]!r}"  # noqa: SLF001
             )
 
         else:

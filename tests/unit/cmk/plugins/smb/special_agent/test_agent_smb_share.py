@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -52,7 +51,7 @@ class MockShare:
 class MockSMBConnection:
     def __init__(
         self,
-        *args: object,
+        *args: object,  # noqa: ARG002
         filesystem: Mapping[str, Mapping[str, list[SharedFile]]] | None = None,
         shares: Sequence[str] | None = None,
         is_direct_tcp: bool = False,
@@ -64,7 +63,7 @@ class MockSMBConnection:
         self.disallowed_paths = disallowed_paths if disallowed_paths else []
 
     @staticmethod
-    def connect(*args):
+    def connect(*args: object) -> bool:  # noqa: ARG004
         return True
 
     def listPath(self, shared_folder: str, path: str) -> list[SharedFile]:
@@ -85,7 +84,7 @@ class MockSMBConnection:
             return []
         return [MockShare(s) for s in self.shares]
 
-    def close(self):
+    def close(self) -> None:
         pass
 
 
@@ -799,7 +798,8 @@ def test_smb_share_agent_error(capsys: pytest.CaptureFixture) -> None:
     "cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.connect", return_value=False
 )
 def test_smb_share_agent_unsuccessful_connect(  # type: ignore[misc]
-    mock_connect: mock.Mock, capsys: pytest.CaptureFixture
+    mock_connect: mock.Mock,  # noqa: ARG001
+    capsys: pytest.CaptureFixture,
 ) -> None:
     args = parse_arguments(
         ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
@@ -815,8 +815,8 @@ def test_smb_share_agent_unsuccessful_connect(  # type: ignore[misc]
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.get_all_shared_files")
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.write_section")
 def test_smb_share_agent_operation_failure(  # type: ignore[misc]
-    mock_connect: mock.Mock,
-    mock_get_files: mock.Mock,
+    mock_connect: mock.Mock,  # noqa: ARG001
+    mock_get_files: mock.Mock,  # noqa: ARG001
     mock_write_section: mock.Mock,
     capsys: pytest.CaptureFixture,
 ) -> None:
@@ -833,7 +833,7 @@ def test_smb_share_agent_operation_failure(  # type: ignore[misc]
     "cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.connect", return_value=True
 )
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.close")
-def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:  # type: ignore[misc]
+def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:  # type: ignore[misc]  # noqa: ARG001
     with (
         pytest.raises(Exception, match="Exception during usage of smb connection"),
         connect("username", Secret("password"), "hostname", "127.0.0.1"),

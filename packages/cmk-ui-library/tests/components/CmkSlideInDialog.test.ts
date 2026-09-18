@@ -86,6 +86,21 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
   }
 )
 
+test('Slidein returns focus to the element that opened it when it closes', async () => {
+  render(createCmkSlideInDialogComp(false))
+
+  const button = screen.getByRole('button', { name: 'Open' })
+  button.focus()
+  await fireEvent.click(button)
+  await screen.findByRole('dialog')
+  expect(document.activeElement).not.toBe(button)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  await waitFor(() => expect(document.activeElement).toBe(button))
+})
+
 test('Slidein focuses scroll container on open for keyboard scroll support', async () => {
   render(createCmkSlideInDialogComp(false))
 

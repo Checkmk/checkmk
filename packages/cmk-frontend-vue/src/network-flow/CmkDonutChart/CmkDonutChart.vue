@@ -9,6 +9,7 @@ import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
+import { DASH, formatDelta, noDelta } from '../format'
 import DonutLegendCompact from './DonutLegendCompact.vue'
 import DonutLegendTable from './DonutLegendTable.vue'
 import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
@@ -35,6 +36,10 @@ const shadingId = `donut-shading-${useId()}`
 // The gradient spans the full outer radius, so the ring's inner edge sits at
 // this fraction of it.
 const RING_INNER_OFFSET = `${(INNER_RADIUS / OUTER_RADIUS) * 100}%`
+
+const hasComparison = computed(() =>
+  props.slices.some((slice) => slice.previousValue !== undefined)
+)
 
 // The ring, the total and every share are recomputed over what is left.
 const hidden = ref(new Set<string>())
@@ -94,12 +99,20 @@ const segments = computed<Segment[]>(() => {
   }))
 })
 
-// A collapsing slice is on its way out of the ring: activating it would open
-// the very category the reader just hid.
-function activate(segment: Segment): void {
-  if (!segment.leaving) {
-    emit('sliceActivate', segment.key)
+// Every slice reports its activation and the caller decides what, if anything,
+// opens: today only the remainder has a breakdown behind it. A collapsing slice
+// is the exception, being on its way out of the ring rather than in it.
+//
+// Focused first, because a click does not focus an SVG group everywhere, and
+// whatever this opens has to be able to hand the keyboard back.
+function activate(segment: Segment, target: EventTarget | null): void {
+  if (segment.leaving) {
+    return
   }
+  if (target instanceof SVGElement) {
+    target.focus()
+  }
+  emit('sliceActivate', segment.key)
 }
 
 function percent(value: number): number {
@@ -109,6 +122,9 @@ function percent(value: number): number {
 function percentText(value: number): string {
   return `${percent(value).toFixed(1)}%`
 }
+
+// The reading that belongs to no slice. Prefixed, so a slice key cannot be it.
+const TOTAL_CENTER_KEY = '__total__'
 
 // One piece of state for ring, legend and center, so the highlight can be
 // raised from either end.
@@ -131,12 +147,16 @@ const center = computed(() => {
   const slice = highlightedSlice.value
   if (slice) {
     return {
+      // What the reading is about, so a handover can be told from a refresh
+      // that leaves it saying the same thing.
+      key: slice.key,
       label: slice.label,
       value: props.formatValue(slice.value),
       share: _t('%{share} of shown', { share: percentText(slice.value) })
     }
   }
   return {
+    key: TOTAL_CENTER_KEY,
     label: props.centerLabel ?? _t('Volume'),
     value: props.formatValue(total.value),
     share:
@@ -149,25 +169,12 @@ const center = computed(() => {
   }
 })
 
-const DASH = '–'
-
-// Signed, because the sign is the first thing read off a change. Growth out of
-// nothing has no ratio, and it is the most interesting row in the table, so it
-// says so rather than falling back to the dash that means "nothing to compare".
-function deltaText(value: number, previous: number): string {
-  if (previous <= 0) {
-    return value > 0 ? _t('new') : DASH
-  }
-  const ratio = (value - previous) / previous
-  return `${ratio >= 0 ? '+' : '-'}${Math.abs(ratio * 100).toFixed(1)}%`
-}
-
 // The chart decides what the numbers are, down to what an absent one looks
 // like, so the legend is left with no fallbacks of its own.
 const legendRows = computed<DonutLegendRow[]>(() => {
   // Decided over the whole legend: a row without history in a legend that has
   // some still needs the two columns, filled with dashes.
-  const anyPrevious = props.slices.some((slice) => slice.previousValue !== undefined)
+  const anyPrevious = hasComparison.value
   return props.slices.map((slice) => {
     const isHidden = hidden.value.has(slice.key)
     const previous = slice.previousValue
@@ -181,7 +188,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
       isOther: slice.isOther ?? false,
       currentText: isHidden ? DASH : props.formatValue(slice.value),
       previousText: !anyPrevious ? null : comparable ? props.formatValue(previous) : DASH,
-      deltaText: !anyPrevious ? null : comparable ? deltaText(slice.value, previous) : DASH
+      delta: !anyPrevious ? null : comparable ? formatDelta(slice.value, previous) : noDelta()
     }
   })
 })
@@ -190,96 +197,112 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 <template>
   <div
     class="network-flow-cmk-donut-chart"
-    :class="{ 'network-flow-cmk-donut-chart--compact': props.legendMode === 'compact' }"
+    :class="{ 'network-flow-cmk-donut-chart--chips-only': props.legendMode === 'compact' }"
   >
-    <div class="network-flow-cmk-donut-chart__figure">
-      <svg
-        class="network-flow-cmk-donut-chart__svg"
-        :viewBox="`${-SIZE / 2} ${-SIZE / 2} ${SIZE} ${SIZE}`"
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <circle
-          v-if="!segments.length"
-          class="network-flow-cmk-donut-chart__empty-track"
-          :r="TRACK_RADIUS"
-          :stroke-width="TRACK_STROKE"
-          fill="none"
-        />
-        <defs>
-          <radialGradient
-            :id="shadingId"
-            gradientUnits="userSpaceOnUse"
-            cx="0"
-            cy="0"
-            :r="OUTER_RADIUS"
-          >
-            <stop
-              :offset="RING_INNER_OFFSET"
-              class="network-flow-cmk-donut-chart__shading-stop--inner"
-            />
-            <stop offset="100%" class="network-flow-cmk-donut-chart__shading-stop--outer" />
-          </radialGradient>
-        </defs>
-        <!-- Slice and shading share a group so that hovering, focusing and
-             dimming address them as one shape. -->
-        <!-- A leaving slice is out of reach: its share is measured against a
-             ring it is on its way out of. -->
-        <g
-          v-for="segment in segments"
-          :key="segment.key"
-          class="network-flow-cmk-donut-chart__segment"
-          :class="{
-            'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key),
-            'network-flow-cmk-donut-chart__segment--leaving': segment.leaving
-          }"
-          role="button"
-          :tabindex="segment.leaving ? -1 : 0"
-          :aria-hidden="segment.leaving ? 'true' : undefined"
-          :aria-label="segment.ariaLabel"
-          @mouseenter="highlight(segment.key)"
-          @mouseleave="highlight(null)"
-          @focus="highlight(segment.key)"
-          @blur="highlight(null)"
-          @click="activate(segment)"
-          @keydown.enter.prevent="activate(segment)"
-          @keydown.space.prevent="activate(segment)"
+    <!-- The layout is a child of the container rather than the container
+         itself: an element cannot be styled by a query against its own box. -->
+    <div class="network-flow-cmk-donut-chart__layout">
+      <div class="network-flow-cmk-donut-chart__figure">
+        <svg
+          class="network-flow-cmk-donut-chart__svg"
+          :viewBox="`${-SIZE / 2} ${-SIZE / 2} ${SIZE} ${SIZE}`"
+          preserveAspectRatio="xMidYMid meet"
         >
-          <path
-            class="network-flow-cmk-donut-chart__slice"
-            :d="segment.path"
-            :fill="segment.color"
-            :stroke-opacity="segment.dividerOpacity"
+          <circle
+            v-if="!segments.length"
+            class="network-flow-cmk-donut-chart__empty-track"
+            :r="TRACK_RADIUS"
+            :stroke-width="TRACK_STROKE"
+            fill="none"
           />
-          <!-- Its own layer, so the slice keeps its flat palette colour. -->
-          <path
-            class="network-flow-cmk-donut-chart__shading"
-            :d="segment.path"
-            :fill="`url(#${shadingId})`"
-          />
-        </g>
-      </svg>
-      <div v-if="segments.length" class="network-flow-cmk-donut-chart__center">
-        <span class="network-flow-cmk-donut-chart__center-label">{{ center.label }}</span>
-        <span class="network-flow-cmk-donut-chart__center-value">{{ center.value }}</span>
-        <span class="network-flow-cmk-donut-chart__center-share">{{ center.share }}</span>
+          <defs>
+            <radialGradient
+              :id="shadingId"
+              gradientUnits="userSpaceOnUse"
+              cx="0"
+              cy="0"
+              :r="OUTER_RADIUS"
+            >
+              <stop
+                :offset="RING_INNER_OFFSET"
+                class="network-flow-cmk-donut-chart__shading-stop--inner"
+              />
+              <stop offset="100%" class="network-flow-cmk-donut-chart__shading-stop--outer" />
+            </radialGradient>
+          </defs>
+          <!-- Slice and shading share a group so that hovering, focusing and
+               dimming address them as one shape. -->
+          <!-- A leaving slice is out of reach: its share is measured against a
+               ring it is on its way out of. -->
+          <g
+            v-for="segment in segments"
+            :key="segment.key"
+            class="network-flow-cmk-donut-chart__segment"
+            :class="{
+              'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key),
+              'network-flow-cmk-donut-chart__segment--leaving': segment.leaving
+            }"
+            role="button"
+            :tabindex="segment.leaving ? -1 : 0"
+            :aria-hidden="segment.leaving ? 'true' : undefined"
+            :aria-label="segment.ariaLabel"
+            @mouseenter="highlight(segment.key)"
+            @mouseleave="highlight(null)"
+            @focus="highlight(segment.key)"
+            @blur="highlight(null)"
+            @click="activate(segment, $event.currentTarget)"
+            @keydown.enter.prevent="activate(segment, $event.currentTarget)"
+            @keydown.space.prevent="activate(segment, $event.currentTarget)"
+          >
+            <path
+              class="network-flow-cmk-donut-chart__slice"
+              :d="segment.path"
+              :fill="segment.color"
+              :stroke-opacity="segment.dividerOpacity"
+            />
+            <!-- Its own layer, so the slice keeps its flat palette colour. -->
+            <path
+              class="network-flow-cmk-donut-chart__shading"
+              :d="segment.path"
+              :fill="`url(#${shadingId})`"
+            />
+          </g>
+        </svg>
+        <div v-if="segments.length" class="network-flow-cmk-donut-chart__center">
+          <!-- Both readings are on screen while one takes over from the other,
+               so they are stacked rather than played one after the next. -->
+          <Transition name="network-flow-cmk-donut-chart__center-reading">
+            <div :key="center.key" class="network-flow-cmk-donut-chart__center-reading">
+              <span class="network-flow-cmk-donut-chart__center-label">{{ center.label }}</span>
+              <span class="network-flow-cmk-donut-chart__center-value">{{ center.value }}</span>
+              <span class="network-flow-cmk-donut-chart__center-share">{{ center.share }}</span>
+            </div>
+          </Transition>
+        </div>
       </div>
-    </div>
 
-    <DonutLegendCompact
-      v-if="props.legendMode === 'compact'"
-      :rows="legendRows"
-      :highlighted="highlighted"
-      @toggle="toggleHidden"
-      @highlight="highlight"
-    />
-    <DonutLegendTable
-      v-else
-      :rows="legendRows"
-      :highlighted="highlighted"
-      @toggle="toggleHidden"
-      @highlight="highlight"
-      @drill="emit('sliceActivate', $event)"
-    />
+      <!-- Both legends are laid out; which one the box has the room for is
+           decided in CSS, one query below. The chips are the whole legend when
+           they are what was asked for, so the table is not built for nothing. -->
+      <DonutLegendTable
+        v-if="props.legendMode === 'table'"
+        class="network-flow-cmk-donut-chart__legend--table"
+        :rows="legendRows"
+        :previous-label="props.previousLabel"
+        :highlighted="highlighted"
+        @toggle="toggleHidden"
+        @highlight="highlight"
+        @drill="emit('sliceActivate', $event)"
+      />
+      <DonutLegendCompact
+        class="network-flow-cmk-donut-chart__legend--chips"
+        :rows="legendRows"
+        :highlighted="highlighted"
+        @toggle="toggleHidden"
+        @highlight="highlight"
+        @drill="emit('sliceActivate', $event)"
+      />
+    </div>
   </div>
 </template>
 
@@ -289,39 +312,105 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 <style scoped>
 .network-flow-cmk-donut-chart {
-  /* Capped at about a third of the width: past that it starves the legend. */
-  --nf-donut-figure-size: min(40cqw, 100cqh);
+  /* Past this the ring stops reading as a ring. */
+  --nf-donut-figure-min: 80px;
 
-  display: flex;
-  gap: clamp(8px, 3cqw, 24px);
-  align-items: center;
+  /* Not in cqw: this element is the container, so its own cq units would
+     resolve against whatever box lies outside it. */
+  --nf-donut-gap: 0.75em;
+
   width: 100%;
   height: 100%;
-  font-size: clamp(11px, 9cqh, 14px);
+
+  /* Height alone would leave a tall, narrow widget reading at its largest size
+     in the least room. */
+  font-size: clamp(11px, min(9cqh, 3.4cqw), 14px);
 
   /* Named, so the legend can ask about the widget rather than about whatever
      container happens to be nearest. */
   container: nf-donut / size;
 }
 
-/* Stacked, the ring is bounded by the height it leaves the chips, so the
-   width cap has nothing left to protect. */
-.network-flow-cmk-donut-chart--compact {
+/* Side by side, which is what a widget wider than it is tall has the room for. */
+.network-flow-cmk-donut-chart__layout {
+  --nf-donut-figure-size: min(40cqw, 100cqh);
+
+  display: flex;
+  gap: var(--nf-donut-gap);
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.network-flow-cmk-donut-chart__legend--chips {
+  display: none;
+}
+
+/* Upright, or too narrow to seat the ring beside a name worth reading: the ring
+   moves on top of the table, where the height it takes is height the widget had
+   nothing else to do with. Bounded by what it leaves the table below it, so it
+   no longer competes for a width the table has none to spare of. */
+@container nf-donut (aspect-ratio < 1.2) or (width < 26em) {
+  .network-flow-cmk-donut-chart__layout {
+    --nf-donut-figure-size: min(100cqw, 45cqh);
+
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* In a column the basis governs the height, and giving that up is what makes
+     the ring an ellipse. Qualified, so it outranks the figure's own rule
+     wherever that lands in the sheet. */
+  .network-flow-cmk-donut-chart__layout .network-flow-cmk-donut-chart__figure {
+    flex: 0 0 auto;
+  }
+}
+
+/* Past here a table is a header and one row: the names alone say more, and the
+   volume is one hover away in the middle of the ring. */
+@container nf-donut (width < 16em) or (height < 18em) {
+  .network-flow-cmk-donut-chart__layout {
+    --nf-donut-figure-size: min(100cqw, 62cqh);
+  }
+
+  .network-flow-cmk-donut-chart__legend--table {
+    display: none;
+  }
+
+  .network-flow-cmk-donut-chart__legend--chips {
+    display: block;
+  }
+}
+
+/* Shrinkable, and the legend below states the width its numbers need, so the
+   browser takes the difference out of the ring rather than out of the names.
+   The ratio keeps it round once flex has had its way with the width. */
+.network-flow-cmk-donut-chart__figure {
+  position: relative;
+  flex: 0 1 auto;
+  width: var(--nf-donut-figure-size);
+  min-width: var(--nf-donut-figure-min);
+  aspect-ratio: 1;
+
+  /* A container of its own, so what is written in the hole is measured against
+     the ring rather than against the widget. */
+  container-type: size;
+}
+
+/* Asked for outright, so it answers to no query. */
+.network-flow-cmk-donut-chart--chips-only .network-flow-cmk-donut-chart__layout {
   --nf-donut-figure-size: min(100cqw, 62cqh);
 
   flex-direction: column;
   justify-content: center;
 }
 
-.network-flow-cmk-donut-chart__figure {
-  position: relative;
+.network-flow-cmk-donut-chart--chips-only .network-flow-cmk-donut-chart__figure {
   flex: 0 0 auto;
-  width: var(--nf-donut-figure-size);
-  height: var(--nf-donut-figure-size);
+}
 
-  /* A container of its own, so what is written in the hole is measured against
-     the ring rather than against the widget. */
-  container-type: size;
+.network-flow-cmk-donut-chart--chips-only .network-flow-cmk-donut-chart__legend--chips {
+  display: block;
 }
 
 .network-flow-cmk-donut-chart__svg {
@@ -378,18 +467,44 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: center;
 
   /* The hole is 73% of the figure across; the text stops short of its edge
      rather than reaching into the ring. */
-  justify-content: center;
   width: 70%;
   margin: 0 auto;
   font-size: clamp(7px, 8cqw, 16px);
   text-align: center;
+}
+
+/* Filling its box rather than flowing in it, so the outgoing reading is out of
+   the layout and the incoming one does not start beneath it. */
+.network-flow-cmk-donut-chart__center-reading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.network-flow-cmk-donut-chart__center-reading-enter-active,
+.network-flow-cmk-donut-chart__center-reading-leave-active {
+  transition: opacity 180ms ease-out;
+}
+
+.network-flow-cmk-donut-chart__center-reading-enter-from,
+.network-flow-cmk-donut-chart__center-reading-leave-to {
+  opacity: 0;
+}
+
+/* Long enough for the transition to still be one, short enough to read as the
+   snap the reader asked for. */
+@media (prefers-reduced-motion: reduce) {
+  .network-flow-cmk-donut-chart__center-reading-enter-active,
+  .network-flow-cmk-donut-chart__center-reading-leave-active {
+    transition-duration: 1ms;
+  }
 }
 
 .network-flow-cmk-donut-chart__center-value {

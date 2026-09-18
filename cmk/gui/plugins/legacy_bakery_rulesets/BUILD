@@ -16,6 +16,7 @@ py_library(
         "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

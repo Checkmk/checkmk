@@ -17,6 +17,7 @@ import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
@@ -403,30 +404,27 @@ onUnmounted(() => {
             {{ p.duration_ms !== null ? formatMs(p.duration_ms) : '—' }}
           </td>
           <td class="profiling-profiles-list-app__col-actions">
-            <a
+            <CmkIconLink
+              name="view"
+              size="small"
               :href="p.flamegraph_url"
               :title="_t('View flamegraph')"
               :aria-label="_t('View flamegraph')"
-              class="profiling-profiles-list-app__icon-link"
-            >
-              <CmkIcon name="view" size="small" />
-            </a>
-            <a
+            />
+            <CmkIconLink
+              name="download"
+              size="small"
               :href="p.download_url"
               :title="_t('Download .profile')"
               :aria-label="_t('Download .profile')"
-              class="profiling-profiles-list-app__icon-link"
-            >
-              <CmkIcon name="download" size="small" />
-            </a>
-            <a
+            />
+            <CmkIconLink
+              name="delete"
+              size="small"
               :href="p.delete_url"
               :title="_t('Delete')"
               :aria-label="_t('Delete profile')"
-              class="profiling-profiles-list-app__icon-link"
-            >
-              <CmkIcon name="delete" size="small" />
-            </a>
+            />
           </td>
         </tr>
       </tbody>
@@ -664,25 +662,6 @@ onUnmounted(() => {
 }
 
 .profiling-profiles-list-app__sort-btn:focus-visible {
-  outline: var(--border-width-1) solid var(--color-dark-blue-50);
-  outline-offset: var(--spacing-half);
-}
-
-.profiling-profiles-list-app__icon-link {
-  display: inline-flex;
-  align-items: center;
-  margin: 0 var(--spacing-half);
-  text-decoration: none;
-  opacity: 0.6;
-  transition: opacity 0.15s;
-}
-
-.profiling-profiles-list-app__icon-link:hover,
-.profiling-profiles-list-app__icon-link:focus-visible {
-  opacity: 1;
-}
-
-.profiling-profiles-list-app__icon-link:focus-visible {
   outline: var(--border-width-1) solid var(--color-dark-blue-50);
   outline-offset: var(--spacing-half);
 }

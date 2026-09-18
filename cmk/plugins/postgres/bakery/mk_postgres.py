@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Iterable
 from pathlib import Path
@@ -54,7 +53,7 @@ def _get_mk_postgres_config(instances_settings: dict[str, Any], os: OS) -> Itera
     for instance in instances_settings["instances"]:
         yield "INSTANCE={env}{sep}{un}{sep}{pg}{sep}{name}".format(
             env=instance["instance_env_filepath"],
-            sep=sep,
+            sep=sep,  # type: ignore[possibly-undefined]
             un=instance["instance_username"],
             pg=instance["instance_pgpass_filepath"],
             name=instance["instance_name"],

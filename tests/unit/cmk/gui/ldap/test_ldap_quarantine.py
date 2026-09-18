@@ -31,7 +31,7 @@ def fixture_sync_result() -> SyncUsersResult:
     return SyncUsersResult(sync_start_time=time(), fetched_users={})
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _no_security_log(mocker: MockerFixture) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.log_security_event")
     mocker.patch(
@@ -43,16 +43,14 @@ def _synced_user(*, locked: bool = False) -> UserSpec:
     return UserSpec(connector=_CONNECTION_ID, locked=locked, roles=["user"])
 
 
+@pytest.mark.usefixtures("request_context")
 def test_vanished_user_is_quarantined(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     users = Users({UserId("bob"): _synced_user()})
 
     with set_config(ldap_quarantine_period=30 * 86400):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
 
     assert UserId("bob") in users, "quarantined user must not be deleted"
     assert users[UserId("bob")]["locked"] is True
@@ -60,48 +58,42 @@ def test_vanished_user_is_quarantined(
     assert any("Quarantined user bob" in change for change in sync_result.changes)
 
 
+@pytest.mark.usefixtures("request_context")
 def test_already_quarantined_user_is_left_untouched(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     user = _synced_user(locked=True)
     user["ldap_quarantine"] = QuarantineInfo(quarantined_on=123, connection_id=_CONNECTION_ID)
     users = Users({UserId("bob"): user})
 
     with set_config(ldap_quarantine_period=30 * 86400):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
 
     assert users[UserId("bob")]["ldap_quarantine"]["quarantined_on"] == 123
     assert sync_result.changes == []
 
 
+@pytest.mark.usefixtures("request_context")
 def test_vanished_user_is_deleted_when_quarantine_disabled(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     users = Users({UserId("bob"): _synced_user()})
 
     with set_config(ldap_quarantine_period=None):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
 
     assert UserId("bob") not in users, "immediate-deletion behavior must be preserved"
     assert any("Removed user bob" in change for change in sync_result.changes)
 
 
+@pytest.mark.usefixtures("request_context")
 def test_present_user_is_not_quarantined(
-    connector: LDAPUserConnector,
-    sync_result: SyncUsersResult,
-    request_context: None,
-    set_config: SetConfig,
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
     users = Users({UserId("bob"): _synced_user()})
 
     with set_config(ldap_quarantine_period=30 * 86400):
-        connector._quarantine_or_remove_users_no_longer_in_ldap(
+        connector._quarantine_or_remove_users_no_longer_in_ldap(  # noqa: SLF001
             users,
             {"bob": None},  # type: ignore[dict-item]
             sync_result,

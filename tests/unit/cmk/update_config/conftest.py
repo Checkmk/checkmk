@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
+from collections.abc import Callable, Iterator
+from pathlib import Path
 
 import pytest
 from flask import Flask
@@ -15,6 +18,7 @@ from cmk.gui import login
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib import git
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.redis import disable_redis
@@ -40,7 +44,7 @@ def flask_app(
     yield from create_flask_app()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
@@ -52,7 +56,7 @@ def load_config(request_context: None) -> Iterator[Config]:
     yield from perform_load_config()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: Edition) -> None:
     perform_load_plugins(test_edition)
 
@@ -100,3 +104,16 @@ def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 @pytest.fixture()
 def wsgi_app(flask_app: Flask) -> Iterator[WebTestAppForCMK]:
     yield from create_wsgi_app(flask_app)
+
+
+@pytest.fixture(name="init_setup_git_repo")
+def fixture_init_setup_git_repo() -> Callable[[Path], None]:
+    def init(config_dir: Path) -> None:
+        git._git_command(["init"], config_dir)  # noqa: SLF001
+        git._git_command(["config", "user.email", "check_mk"], config_dir)  # noqa: SLF001
+        git._git_command(["config", "user.name", "check_mk"], config_dir)  # noqa: SLF001
+        git._write_gitignore_files(config_dir)  # noqa: SLF001
+        git._git_add_files(config_dir)  # noqa: SLF001
+        git._git_command(["commit", "-m", "init"], config_dir)  # noqa: SLF001
+
+    return init

@@ -3,29 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from argparse import Namespace as Args
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Final, Protocol
 
 import pytest
 from dateutil.tz import tzutc
 
 from cmk.plugins.aws.special_agent.agent_aws import (
-    AWSConfig,
-    AWSRegionLimit,
-    AWSSectionResult,
-    AWSSectionResults,
     ElastiCache,
     ElastiCacheLimits,
     ElastiCacheSummary,
+)
+from cmk.plugins.aws.special_agent.config import (
+    AWSConfig,
     NamingConvention,
     OverallTags,
-    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
+)
+from cmk.plugins.aws.special_agent.sections.core import (
+    AWSRegionLimit,
+    AWSSectionResult,
+    AWSSectionResults,
+    ResultDistributor,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
@@ -311,7 +314,7 @@ class FakeElastiCacheClient:
 
 
 class TaggingPaginator:
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
         yield {
             "ResourceTagMappingList": [
                 {
@@ -330,7 +333,7 @@ class TaggingPaginator:
 
 
 class FakeTaggingClient:
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
         if operation_name == "get_resources":
             return TaggingPaginator()
         raise NotImplementedError

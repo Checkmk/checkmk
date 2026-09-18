@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 
 # TODO: test the interface, not the private members
-# ruff: noqa: SLF001
 
 from typing import Any
 
@@ -143,7 +142,7 @@ def test_cpu_util_time(
     value_store: dict[str, object] = {}
     # fill value store
     assert not list(
-        cpu_util._cpu_util_time(
+        cpu_util._cpu_util_time(  # noqa: SLF001
             this_time=first_timestamp,
             core="my_core",
             perc=usage,
@@ -155,7 +154,7 @@ def test_cpu_util_time(
     # produce result if threshold is exceeded
     assert (
         list(
-            cpu_util._cpu_util_time(
+            cpu_util._cpu_util_time(  # noqa: SLF001
                 this_time=second_timestamp,
                 core="my_core",
                 perc=usage,
@@ -177,7 +176,7 @@ def test_cpu_util_time_resets_on_time_source_anomaly() -> None:
     # `this_time` is *before* the stored timestamp -> anomaly, must not crash
     # and must not yield a (negative) duration.
     assert not list(
-        cpu_util._cpu_util_time(
+        cpu_util._cpu_util_time(  # noqa: SLF001
             this_time=500.0,
             core="my_core",
             perc=100,
@@ -190,7 +189,7 @@ def test_cpu_util_time_resets_on_time_source_anomaly() -> None:
 
     # tracking resumes normally from the reset point
     assert list(
-        cpu_util._cpu_util_time(
+        cpu_util._cpu_util_time(  # noqa: SLF001
             this_time=510.0,
             core="my_core",
             perc=100,
@@ -209,9 +208,9 @@ def test_cpu_util_time_resets_on_time_source_anomaly() -> None:
 def test__util_counter() -> None:
     cpu = cpu_util.CPUInfo("cpu-name", 100, 40, 60, 80, 50, 80, 30, 60, 20, 40)
 
-    assert cpu_util._util_counter(cpu, {}) == cpu
+    assert cpu_util._util_counter(cpu, {}) == cpu  # noqa: SLF001
 
-    assert cpu_util._util_counter(
+    assert cpu_util._util_counter(  # noqa: SLF001
         cpu,
         {
             "cpu.util.user": 20,

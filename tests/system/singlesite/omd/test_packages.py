@@ -182,7 +182,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_jira"),
     SpecialAgent("agent_jolokia"),
     SpecialAgent("agent_kube"),
-    SpecialAgent("agent_custom_query_metric_backend"),
+    SpecialAgent("agent_telemetry_metrics_custom_query"),
     SpecialAgent("agent_mobileiron"),
     SpecialAgent("agent_mqtt"),
     SpecialAgent("agent_netapp_ontap"),
@@ -195,7 +195,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_redfish"),
     SpecialAgent("agent_redfish_power"),
     SpecialAgent("agent_ruckus_spot"),
-    SpecialAgent("agent_rustik"),
+    SpecialAgent("agent_kube_v2"),
     SpecialAgent("agent_salesforce"),
     SpecialAgent("agent_siemens_plc"),
     SpecialAgent("agent_smb_share"),
@@ -215,7 +215,7 @@ _SKIPPED_SPECIAL_AGENTS = {
 }
 
 _ULTIMATE_AGENTS = {
-    "agent_custom_query_metric_backend",
+    "agent_telemetry_metrics_custom_query",
 }
 
 

@@ -23,6 +23,8 @@ const props = defineProps<ButtonProps>()
 const isDisabled = computed(
   () => props.disabled === true || props.disabled === 'true' || props.running === true
 )
+const blockReason = computed(() => (isDisabled.value ? props.disabledReason : undefined))
+const titleText = computed(() => blockReason.value ?? props.title ?? '')
 const isLink = computed(() => props.href !== undefined)
 
 const leftIcon = computed<ButtonIcon | undefined>(() =>
@@ -45,8 +47,11 @@ defineEmits(['click'])
       { 'cmk-button--with-icon': props.icon !== undefined, 'cmk-button--running': props.running }
     ]"
     :href="isDisabled ? undefined : props.href"
-    :target="props.target"
-    :title="title || ''"
+    :target="isDisabled ? undefined : props.target"
+    :role="isDisabled ? 'link' : undefined"
+    :tabindex="isDisabled ? 0 : undefined"
+    :aria-disabled="isDisabled"
+    :title="titleText"
     :aria-busy="props.running"
     @click="
       (e) => {
@@ -80,12 +85,15 @@ defineEmits(['click'])
       buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled }),
       { 'cmk-button--with-icon': props.icon !== undefined, 'cmk-button--running': props.running }
     ]"
-    :disabled="isDisabled"
+    :disabled="isDisabled && blockReason === undefined"
     :aria-disabled="isDisabled"
     :aria-busy="props.running"
-    :title="title || ''"
+    :title="titleText"
     @click.prevent="
       (e) => {
+        if (isDisabled) {
+          return
+        }
         $emit('click', e)
       }
     "

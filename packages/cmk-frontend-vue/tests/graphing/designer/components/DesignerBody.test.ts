@@ -4,31 +4,23 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, toZoned } from '@internationalized/date'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
-import type { ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
+import type { ApiDataSource, ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
 import type { RowIssue } from '@/graphing/designer/validation'
 
-import { metricBackendItem } from '../fixtures'
-
-vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
-  default: defineComponent({
-    name: 'CmkSlideIn',
-    props: { open: { type: Boolean, required: true } },
-    setup(props, { slots }) {
-      return () => (props.open ? h('div', { 'data-testid': 'slide-in' }, slots.default?.()) : null)
-    }
-  })
-}))
+import { filterDefinitions } from '../fixtures'
 
 const PAN_SECONDS = 1800
 const PAN_REFETCH_TIMEOUT_MS = 2000
@@ -40,12 +32,17 @@ const PAST_WINDOW: DateTimeRange = {
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'highlightedMetricName', 'panEnabled', 'view_time_range'],
+    props: ['metrics', 'highlightedMetricNames', 'panEnabled', 'view_time_range', 'options'],
     emits: ['pan'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
-      <span data-testid="highlighted">{{ highlightedMetricName ?? '' }}</span>
+      <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
+      <span data-testid="axis-unit">{{ options.y_axis?.unit?.symbol ?? '' }}</span>
+      <span data-testid="axis-range">{{ options.y_axis?.explicit_range?.max ?? '' }}</span>
+      <span data-testid="curve-units">{{
+        metrics.map((m) => m.metadata.unit.symbol).join(',')
+      }}</span>
       <button
         data-testid="pan-back"
         @click="$emit('pan', {
@@ -92,9 +89,48 @@ function rrdQuerySource(id: string): unknown {
     line_type: 'line',
     mirrored: false,
     visible: true,
-    context: { host: { host: 'my-host' } },
+    context: {
+      hostregex: { host_regex: 'my-host' },
+      serviceregex: { service_regex: 'CPU utilization' }
+    },
     metric_name: 'util',
     consolidation: 'avg'
+  }
+}
+
+function formulaSource(id: string, ast: unknown): unknown {
+  return {
+    type: 'rrd_formula',
+    id,
+    title: id,
+    line_type: 'line',
+    mirrored: false,
+    visible: true,
+    color: '#ec48b6',
+    ast
+  }
+}
+
+// A metric_backend source in the API's nested wire shape, not the designer's flat one.
+function telemetryMetricsSource(
+  id: string,
+  consolidationFunction: unknown = {
+    type: 'histogram',
+    function: 'histogram_quantile',
+    lookback_seconds: 300,
+    percentile: 95
+  }
+): unknown {
+  return {
+    type: 'metric_backend',
+    id,
+    title: id,
+    line_type: 'line',
+    mirrored: false,
+    visible: true,
+    metric_name: 'span.latency',
+    attribute_filter: { type: 'and', conjuncts: [] },
+    consolidation_function: consolidationFunction
   }
 }
 
@@ -198,9 +234,9 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     title: 'My graph',
     mode: 'edit' as 'view' | 'edit',
     thresholds: { warning: '#ffd000', critical: '#ff3232' },
-    metricBackendAvailable: false,
+    telemetryMetricsAvailable: false,
     createServicesAvailable: true,
-    metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
+    telemetryMetricsDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
     titleMacros: [],
     issuesByRow: new Map<ItemId, RowIssue[]>()
   }
@@ -212,10 +248,30 @@ function renderBody(
     displaySettings?: boolean
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
+    telemetryMetricsAvailable?: boolean
   } = {}
 ) {
   const { graph, ...rest } = overrides
-  return render(DesignerBody, { props: { ...bodyProps(graph), mode, ...rest } })
+  const props = { ...bodyProps(graph), mode, ...rest }
+  const events = {
+    'onUpdate:displaySettings': vi.fn(),
+    onUpdateGraphOptions: vi.fn()
+  }
+  const activeMode = ref(mode)
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...props, ...events, mode: activeMode.value })
+    }
+  })
+  return {
+    ...render(harness),
+    props,
+    events,
+    setMode: (next: 'view' | 'edit') => {
+      activeMode.value = next
+    }
+  }
 }
 
 test('hiding a metric in the detached view-mode legend removes it from the preview', async () => {
@@ -244,6 +300,34 @@ test('hovering a metric in the detached legend highlights it in the preview', as
   expect(screen.getByTestId('highlighted').textContent).toBe('')
 })
 
+test("the graph's own unit and range label the preview's axis", async () => {
+  const graph = graphObject()
+  graph.extensions.content.graph_options.unit = {
+    type: 'custom',
+    notation: { notation: 'si', symbol: 'W' },
+    precision: { type: 'strict', digits: 0 }
+  }
+  graph.extensions.content.graph_options.explicit_vertical_range = {
+    type: 'fixed',
+    lower: 0,
+    upper: 100
+  }
+  renderBody('view', { graph })
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  expect(screen.getByTestId('axis-unit')).toHaveTextContent('W')
+  expect(screen.getByTestId('axis-range')).toHaveTextContent('100')
+  expect(screen.getByTestId('curve-units').textContent).toBe(',')
+})
+
+test('an unconfigured axis is left to the drawn metrics', async () => {
+  renderBody('view')
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  expect(screen.getByTestId('axis-unit').textContent).toBe('')
+  expect(screen.getByTestId('axis-range').textContent).toBe('')
+})
+
 test('view mode renders the legend beneath the preview, not the config tabs', async () => {
   const { container } = renderBody('view')
 
@@ -255,8 +339,11 @@ test('view mode renders the legend beneath the preview, not the config tabs', as
 test('a source the rules reject is left out of the preview request', async () => {
   const postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue(fetchDataResponse())
-  const outOfRange = metricBackendItem('B', {
-    consolidation_function: { type: 'histogram_quantile', lookback_seconds: 300, percentile: 500 }
+  const outOfRange = telemetryMetricsSource('B', {
+    type: 'histogram',
+    function: 'histogram_quantile',
+    lookback_seconds: 300,
+    percentile: 500
   })
   renderBody('edit', { graph: graphObject([rrdSource('A'), outOfRange]) })
 
@@ -280,7 +367,7 @@ test('a blocked source marks the metrics tab, from whichever tab is open', async
   renderBody('edit', {
     issuesByRow: new Map([['A', [{ id: 'A', field: 'title', code: 'required' }]]])
   })
-  await fireEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
 
   const metrics = screen.getByRole('tab', { name: 'Metrics selection' })
 
@@ -321,8 +408,9 @@ test('a row keeps the name of the last fetch until the one its edit triggers lan
       group_titles: [{ source_id: 'Q', title: 'util - <HOST_NAME>/<SERVICE_DESCRIPTION>' }]
     }
   } as never)
-  const props = bodyProps(graphObject([rrdSource('A'), rrdQuerySource('Q')]))
-  render(DesignerBody, { props: { ...props, mode: 'edit' as const } })
+  const { props } = renderBody('edit', {
+    graph: graphObject([rrdSource('A'), rrdQuerySource('Q')])
+  })
 
   const metricsTab = await screen.findByRole('tabpanel')
   await waitFor(() =>
@@ -350,6 +438,66 @@ test('the metrics tab carries no marker while nothing blocks the save', async ()
   expect(metrics.querySelector('.cmk-icon')).toBeNull()
 })
 
+/**
+ * Queries against whichever config tab is open. The inactive panel keeps its
+ * `hidden` attribute, so role queries only ever see the open one.
+ */
+function configTab() {
+  const panel = () => screen.getByRole('tabpanel')
+  return {
+    panel,
+    toggles: () => within(panel()).getAllByRole('button', { name: 'Toggle details' }),
+    open: (name: string) => userEvent.click(screen.getByRole('tab', { name }))
+  }
+}
+
+test('a tab switch keeps one metrics row expanded and leaves its sibling alone', async () => {
+  renderBody('edit')
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+  const { toggles, open } = configTab()
+
+  await fireEvent.click(toggles()[0]!)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
+
+  await open('Graph appearance')
+  await open('Metrics selection')
+
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
+  expect(toggles()[1]!).toHaveAttribute('aria-expanded', 'false')
+})
+
+test("a tab switch keeps the metrics table's selection", async () => {
+  renderBody('edit')
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+  const { panel, open } = configTab()
+
+  const [selectA] = within(panel()).getAllByLabelText('Select row')
+  await fireEvent.click(selectA!)
+  expect(within(panel()).getByText('Selected rows: 1')).toBeInTheDocument()
+
+  await open('Graph appearance')
+  await open('Metrics selection')
+
+  expect(within(panel()).getByText('Selected rows: 1')).toBeInTheDocument()
+})
+
+test("a tab switch keeps the appearance table's own collapse state", async () => {
+  renderBody('edit', { graph: graphObject([rrdSource('A'), rrdQuerySource('B')]) })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+  const { toggles, open } = configTab()
+
+  // Only the rrd_query row fans out into lines, and it starts open: collapse it.
+  await open('Graph appearance')
+  expect(toggles()).toHaveLength(1)
+  await fireEvent.click(toggles()[0]!)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
+
+  await open('Metrics selection')
+  await open('Graph appearance')
+
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
+})
+
 describe('settings slide-out', () => {
   test('is closed by default', () => {
     renderBody('edit')
@@ -367,26 +515,26 @@ describe('settings slide-out', () => {
   })
 
   test('accepting a change closes the panel and hands the edited options up', async () => {
-    const { emitted } = renderBody('edit', { displaySettings: true })
+    const { events } = renderBody('edit', { displaySettings: true })
 
     await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
 
     // DesignerBody's onSettingsUpdate closes the panel via the displaySettings v-model.
-    expect(emitted()['update:displaySettings']).toEqual([[false]])
-    expect(emitted()['update-graph-options']).toEqual([
+    expect(events['onUpdate:displaySettings'].mock.calls).toEqual([[false]])
+    expect(events.onUpdateGraphOptions.mock.calls).toEqual([
       [expect.objectContaining({ omit_zero_metrics: true })]
     ])
   })
 
   test('cancelling discards the change instead of handing it up', async () => {
-    const { emitted } = renderBody('edit', { displaySettings: true })
+    const { events } = renderBody('edit', { displaySettings: true })
 
     await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(emitted()['update:displaySettings']).toEqual([[false]])
-    expect(emitted()['update-graph-options']).toBeUndefined()
+    expect(events['onUpdate:displaySettings'].mock.calls).toEqual([[false]])
+    expect(events.onUpdateGraphOptions).not.toHaveBeenCalled()
   })
 })
 
@@ -498,4 +646,162 @@ test('a pan in view mode moves the window but leaves the context view where it w
   })
   // Only the main window was asked for again: the strip stayed where it was.
   expect(postSpy.mock.calls).toHaveLength(3)
+})
+
+/** A fetch response in which `sourceId` fanned out into one series per entry of `titles`. */
+function fanOutResponse(sourceId: string, titles: string[]): unknown {
+  return {
+    data: {
+      time_range: { start: 0, end: 3600, step: 60 },
+      metrics: titles.map((title, index) => metric(sourceId, `metric-${index}`, title)),
+      group_titles: [],
+      horizontal_lines: [],
+      warnings: [],
+      errors: []
+    },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }
+}
+
+function drawnTitles(): string {
+  return screen.getByTestId('drawn').textContent!
+}
+
+function lastPostedSources(postSpy: ReturnType<typeof vi.spyOn>): ApiDataSource[] {
+  const calls = postSpy.mock.calls
+  const options = calls[calls.length - 1]![1] as {
+    body: { content: { data_sources: ApiDataSource[] } }
+  }
+  return options.body.content.data_sources
+}
+
+test('toggling visibility in the appearance table drops the metric from the preview and back', async () => {
+  renderBody('edit')
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  const chart = screen.getByTestId('time-series-graph')
+  await waitFor(() => expect(chart).toHaveTextContent('CPU'))
+
+  const [hideA] = within(screen.getByRole('tabpanel')).getAllByRole('button', {
+    name: 'Toggle visibility'
+  })
+  await fireEvent.click(hideA!)
+
+  await waitFor(() => expect(chart).not.toHaveTextContent('CPU'))
+  expect(chart).toHaveTextContent('Memory')
+
+  await fireEvent.click(hideA!)
+  await waitFor(() => expect(chart).toHaveTextContent('CPU'))
+})
+
+test.each([
+  { kind: 'an RRD query', source: () => rrdQuerySource('Q'), telemetryMetricsAvailable: false },
+  {
+    kind: 'a metrics backend query',
+    source: () => telemetryMetricsSource('Q'),
+    telemetryMetricsAvailable: true
+  }
+])(
+  'hiding the parent of $kind takes every nested line off the preview at once',
+  async ({ source, telemetryMetricsAvailable }) => {
+    vi.spyOn(client, 'POST').mockResolvedValue(
+      fanOutResponse('Q', ['host-1', 'host-2', 'host-3']) as never
+    )
+    renderBody('edit', {
+      graph: graphObject([source()]),
+      telemetryMetricsAvailable
+    })
+    await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+    await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))
+
+    // Nested lines carry no toggle of their own.
+    const panel = screen.getByRole('tabpanel')
+    const parentToggles = within(panel).getAllByRole('button', { name: 'Toggle visibility' })
+    expect(parentToggles).toHaveLength(1)
+
+    await fireEvent.click(parentToggles[0]!)
+
+    await waitFor(() => expect(drawnTitles()).toBe(''))
+  }
+)
+
+test('changing a line style sends the new representation with the next preview fetch', async () => {
+  const postSpy = vi.spyOn(client, 'POST').mockResolvedValue(fetchDataResponse() as never)
+  renderBody('edit', { graph: graphObject([rrdSource('A')]) })
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  expect(lastPostedSources(postSpy)[0]!.line_type).toBe('line')
+
+  for (const { label, lineType } of [
+    { label: 'Area', lineType: 'area' },
+    { label: 'Stack', lineType: 'stack' }
+  ]) {
+    await fireEvent.click(screen.getByRole('combobox', { name: 'Line style' }))
+    await fireEvent.click(await screen.findByRole('option', { name: label }))
+
+    await waitFor(() => expect(lastPostedSources(postSpy)[0]!.line_type).toBe(lineType), {
+      timeout: PAN_REFETCH_TIMEOUT_MS
+    })
+  }
+})
+
+test('a multi-selection query is one row to configure and one line per matching series', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(
+    fanOutResponse('Q', ['host-1', 'host-2', 'host-3']) as never
+  )
+  renderBody('edit', { graph: graphObject([rrdQuerySource('Q')]) })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  expect(within(screen.getByRole('tabpanel')).getAllByLabelText('Select row')).toHaveLength(1)
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Graph appearance' }))
+  await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))
+})
+
+test('hovering a source row in the metrics tab highlights the lines it resolved to', async () => {
+  renderBody('edit')
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  expect(screen.getByTestId('highlighted').textContent).toBe('')
+
+  const rowA = screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  await fireEvent.mouseEnter(rowA)
+  expect(screen.getByTestId('highlighted')).toHaveTextContent('metric-a')
+
+  await fireEvent.mouseLeave(rowA)
+  expect(screen.getByTestId('highlighted').textContent).toBe('')
+})
+
+test('switching mode drops a highlight the unmounted legend left behind', async () => {
+  const { setMode } = renderBody('view')
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  await fireEvent.mouseEnter(screen.getByText('CPU').closest('tr')!)
+  expect(screen.getByTestId('highlighted')).toHaveTextContent('metric-a')
+
+  setMode('edit')
+
+  await waitFor(() => expect(screen.getByTestId('highlighted').textContent).toBe(''))
+})
+
+test('the edit action on a calculation row opens the slideout on that calculation', async () => {
+  renderBody('edit', {
+    graph: graphObject([
+      rrdSource('A'),
+      rrdSource('B'),
+      formulaSource('C', {
+        op: 'difference',
+        operands: [
+          { op: 'ref', id: 'A' },
+          { op: 'ref', id: 'B' }
+        ]
+      })
+    ])
+  })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Edit calculation' }))
+
+  expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
 })

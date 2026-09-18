@@ -48,12 +48,9 @@ group Nightly 0. Master (nightly-trigger.jenkins)
             end
 
             group Linux Agent Updater Build
-            dc4 <-> dc4: ""./make-agent-updater""" (in BUILD Container)
-            alt Cache available?
-                dc4 <- artifacts: curl
-            else
-                dc4 <-> dc4:  Build cmk_update_agent.py binary with PyInstaller (in Container)
-            end
+            dc4 <-> dc4: ""bazel build //non-free/packages/cmk-update-agent:cmk-update-agent_bin""
+                dc4 <-> artifacts: crane pulls the prebuilt CentOS 6 toolchain image (built once, see the "cmk-update-agent" special image)
+                dc4 <-> dc4: PyInstaller builds cmk_update_agent.py from the extracted rootfs (no container)
             end
         end
         end

@@ -37,7 +37,7 @@ def test_create_defaults(clients: ClientRegistry) -> None:
     resp = clients.CustomHostAttr.create(name="minimal", title="Minimal")
     resp.assert_status_code(200)
     ext = resp.json["extensions"]
-    assert ext["topic"] == "Custom attributes"
+    assert ext["topic"] == "custom_attributes"
     assert ext["help"] == ""
     assert ext["show_in_table"] is False
     assert ext["add_custom_macro"] is False

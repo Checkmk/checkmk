@@ -29,7 +29,7 @@ from .utils import PERMISSIONS
 
 @api_model
 class SiteManagementCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["site_connection"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["site_connection"] = api_field(
         description="The domain type of the objects in the collection",
         example="site_connection",
     )

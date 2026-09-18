@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import subprocess
 
 import pytest
 
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer
+from cmk.checkengine.discovery import AutochecksSerializer
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
@@ -24,7 +23,7 @@ def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) ->
     test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_1.py"
 
-    def cleanup():
+    def cleanup() -> None:
         if site.file_exists("etc/check_mk/conf.d/test_check_1.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_1.mk")
 
@@ -107,7 +106,7 @@ def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> No
     test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_2.py"
 
-    def cleanup():
+    def cleanup() -> None:
         if site.file_exists("etc/check_mk/conf.d/test_check_2.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_2.mk")
 

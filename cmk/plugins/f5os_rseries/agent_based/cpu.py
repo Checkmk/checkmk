@@ -65,7 +65,7 @@ snmp_section_f5os_rseries_cpu = SimpleSNMPSection(
 )
 
 
-def discover_f5os_rseries_cpu(section: F5OSCPUSection) -> DiscoveryResult:
+def discover_f5os_rseries_cpu(section: F5OSCPUSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

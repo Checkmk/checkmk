@@ -103,7 +103,7 @@ def parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemor
     for memory_type, parsed_name in entries_mandatory.items():
         try:
             value_mandatory = float(vm_values[f"summary.quickStats.{memory_type}"][0]) * 1024**2
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             return None
 
         memory_values[parsed_name] = value_mandatory
@@ -113,7 +113,7 @@ def parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemor
             value_optional: float | None = (
                 float(vm_values[f"summary.quickStats.{memory_type}"][0]) * 1024**2
             )
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             value_optional = None
 
         memory_values[parsed_name] = value_optional
@@ -129,7 +129,7 @@ def parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | No
             cpus_count=int(vm_values["config.hardware.numCPU"][0]),
             cores_per_socket=int(vm_values["config.hardware.numCoresPerSocket"][0]),
         )
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         return None
 
 

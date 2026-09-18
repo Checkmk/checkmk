@@ -5,8 +5,7 @@
 
 
 from cmk.plugins.splunk.server_side_calls.special_agent import special_agent_splunk
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, SpecialAgentCommand
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 
 def test_special_agent_splunk_command_creation() -> None:

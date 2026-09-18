@@ -260,7 +260,7 @@ class BackgroundJob:
             may_delete=self.may_delete(),
         )
 
-    def acknowledge(self, user_id: UserId | None) -> None:
+    def acknowledge(self, user_id: UserId | None) -> None:  # noqa: ARG002
         self._jobstatus_store.update({"acknowledged_by": str(user.id) if user.id else None})
 
     def detail_url(self) -> str:

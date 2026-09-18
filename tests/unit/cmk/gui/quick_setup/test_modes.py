@@ -13,16 +13,15 @@ from cmk.gui.quick_setup._modes import ModeConfigurationBundle
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 
 
+@pytest.mark.usefixtures("request_context")
 def test_mode_configuration_bundle_action_crashes_when_bundle_missing(
-    request_context: None,
-    monkeypatch: pytest.MonkeyPatch,
-    test_edition: Edition,
+    monkeypatch: pytest.MonkeyPatch, test_edition: Edition
 ) -> None:
     # Reproduces the crash: if the bundle disappears between GET (form render) and
     # POST (save), _from_vars() sets self._existing_bundle=False and returns early
     # without setting self._bundle. action() then crashes accessing self._bundle.
     request.set_var("bundle_id", "azure_config_2")
-    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda self: {})
+    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda self: {})  # noqa: ARG005
 
     # __init__ calls _from_vars(), which finds the bundle missing and returns early
     # without setting self._bundle — exactly mirroring the crash scenario.

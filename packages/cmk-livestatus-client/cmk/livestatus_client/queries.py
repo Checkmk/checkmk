@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator, Sequence
@@ -233,7 +232,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
         self.extra_headers = [
-            line for h in extra_headers for line in str(h).splitlines() if line.strip()
+            line for h in extra_headers for line in str(h).split("\n") if line.strip()
         ]
         _tables = {column.table for column in columns}
         if len(_tables) != 1:
@@ -247,7 +246,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         # never be recognised by name, as the runtime arguments are part of it.
         return all(column.type != "blob" for column in self.columns)
 
-    def filter(self, filter_expr: QueryExpression) -> "Query":
+    def filter(self, filter_expr: QueryExpression) -> Query:
         """Apply additional filters to an existing query.
 
         This will return a new `Query` instance. The original one is left untouched."""
@@ -558,7 +557,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
     def from_string(
         cls,
         string_query: str,
-    ) -> "Query":
+    ) -> Query:
         """Constructs a Query instance from a string based LiveStatus-Query
 
         Args:

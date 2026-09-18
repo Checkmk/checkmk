@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import json
@@ -31,20 +29,9 @@ from cmk.gui.i18n import _, get_current_language
 from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import (
-    Choice,
-    ChoiceGroup,
-    ChoiceId,
-    ChoiceText,
-    DynamicIcon,
-    DynamicIconName,
-    GroupedChoices,
-    IconNames,
-    IconSizes,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ChoiceGroup, GroupedChoices
 from cmk.gui.utils.dataclasses import asdict_strip_none
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
@@ -52,10 +39,13 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
 from cmk.web.utils import escaping
+from cmk.web.utils.choices import Choice, ChoiceId, ChoiceText
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
 from cmk.web.utils.urls import requested_file_name
 
-from .generator import HTMLWriter
+from .generator import ClickAction, HTMLWriter
 from .tag_rendering import (
     HTMLContent,
     HTMLTagAttributes,
@@ -313,7 +303,7 @@ class HTMLGenerator(HTMLWriter):
 
         self._inject_vue_frontend(load_frontend_vue)
 
-        self.set_js_csrf_token()
+        self.set_csrf_token_meta()
 
         if self.browser_reload != 0.0:
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
@@ -367,13 +357,11 @@ class HTMLGenerator(HTMLWriter):
         )
         self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
-    def set_js_csrf_token(self) -> None:
+    def set_csrf_token_meta(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
         if not hasattr(session, "session_info"):
             return
-        self.javascript(
-            "var global_csrf_token = %s;" % (json.dumps(session.session_info.csrf_token))
-        )
+        self.meta(name="cmk-csrf-token", content=session.session_info.csrf_token)
 
     def _add_custom_style_sheet(self, custom_style_sheet: str | None) -> None:
         for css in HTMLGenerator._plugin_stylesheets():
@@ -479,7 +467,6 @@ class HTMLGenerator(HTMLWriter):
         if self.have_help:
             enable_page_menu_entry(self, "inline_help")
         self.write_final_javascript()
-        self.javascript("cmk.visibility_detection.initialize();")
         if self._main_navigation_open:
             self.close_div()  # #content_area
             self._main_navigation_open = False
@@ -774,7 +761,7 @@ class HTMLGenerator(HTMLWriter):
         css_classes = ["button", "buttonlink"]
         if class_:
             if not isinstance(class_, list):
-                css_classes.append(class_)
+                css_classes.append(class_)  # type: ignore[unreachable]
             else:
                 css_classes.extend(class_)
 
@@ -981,6 +968,7 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec | None = None,
         href: str = "javascript:void(0)",
         onclick: str | None = None,
+        click_action: ClickAction | None = None,
     ) -> None:
         class_ = [] if class_ is None else class_
         class_ += ["toggle_switch"]
@@ -990,6 +978,7 @@ class HTMLGenerator(HTMLWriter):
             title=help_txt,
             icon=StaticIcon(IconNames.toggle_on if enabled else IconNames.toggle_off),
             onclick=onclick,
+            click_action=click_action,
             class_=class_,
         )
 
@@ -1164,7 +1153,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(class_, list):
             css_classes.extend(class_)
         elif class_ is not None:
-            css_classes.append(class_)
+            css_classes.append(class_)  # type: ignore[unreachable]
 
         self.open_select(
             name=varname,
@@ -1342,7 +1331,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(class_, list):
             classes.extend(class_)
         elif class_ is not None:
-            classes.append(class_)
+            classes.append(class_)  # type: ignore[unreachable]
 
         if isinstance(icon, StaticIcon):
             return HTMLGenerator.render_static_icon(
@@ -1470,16 +1459,17 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec | None = None,
         # Temporary measure for not having to change all call-sites at once.
         # The first step was to only change call sites from painters.
-        theme: Theme = theme,
+        theme: Theme = theme,  # noqa: ARG004
         download: str | None = None,
+        click_action: ClickAction | None = None,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
         elif class_ is not None:
-            classes.append(class_)
+            classes.append(class_)  # type: ignore[unreachable]
 
-        href = url if not onclick else "javascript:void(0)"
+        href = url if not (onclick or click_action) else "javascript:void(0)"
         assert href is not None
 
         if isinstance(icon, StaticIcon):
@@ -1495,9 +1485,9 @@ class HTMLGenerator(HTMLWriter):
             class_=classes,
             style=style,
             target=target if target else "",
-            onfocus="if (this.blur) this.blur();",
             onclick=onclick,
             download=download,
+            **(click_action.data_attributes() if click_action else {}),
         )
 
     def icon_loading_button(
@@ -1538,6 +1528,7 @@ class HTMLGenerator(HTMLWriter):
         # The first step was to only change call sites from painters.
         theme: Theme = theme,
         download: str | None = None,
+        click_action: ClickAction | None = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
@@ -1552,6 +1543,7 @@ class HTMLGenerator(HTMLWriter):
                 class_,
                 theme=theme,
                 download=download,
+                click_action=click_action,
             )
         )
 
@@ -1574,7 +1566,6 @@ class HTMLGenerator(HTMLWriter):
             href="javascript:void(0)",
             id_="more_%s" % id_,
             class_=["more", "has_text" if with_text else ""],
-            onfocus="if (this.blur) this.blur();",
             onclick="cmk.utils.toggle_more(this, %s, %d);%s"
             % (json.dumps(id_), dom_levels_up, additional_js),
         )
@@ -1665,7 +1656,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(cssclass, list):
             classes.extend(cssclass)
         elif cssclass:
-            classes.append(cssclass)
+            classes.append(cssclass)  # type: ignore[unreachable]
 
         # TODO: Make method.content return HTML
         return HTMLWriter.render_div(

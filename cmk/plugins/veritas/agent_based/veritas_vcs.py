@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 import functools
 from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
@@ -153,7 +152,7 @@ def parse_veritas_vcs(string_table: StringTable) -> Section | None:
 
         elif line[0] == "ClusterName":
             cluster_name = line[1]
-            section.setdefault(cluster_name, []).append(Vcs(attr, value, None))
+            section.setdefault(cluster_name, []).append(Vcs(attr, value, None))  # type: ignore[possibly-undefined]
 
         elif line[0].startswith("#"):
             section = parsed.setdefault(line[0][1:].lower(), {})
@@ -162,11 +161,11 @@ def parse_veritas_vcs(string_table: StringTable) -> Section | None:
 
         elif len(line) > 2:
             item_name = line[0]
-            attr = line[attr_idx]
-            value = line[value_idx].replace("|", "")
+            attr = line[attr_idx]  # type: ignore[possibly-undefined]
+            value = line[value_idx].replace("|", "")  # type: ignore[possibly-undefined]
             if "UNKNOWN" in value:
                 value = "UNKNOWN"
-            section.setdefault(item_name, []).append(Vcs(attr, value, cluster_name))
+            section.setdefault(item_name, []).append(Vcs(attr, value, cluster_name))  # type: ignore[possibly-undefined]
 
     return parsed or None
 

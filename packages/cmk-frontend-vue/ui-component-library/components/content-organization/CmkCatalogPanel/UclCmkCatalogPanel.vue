@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkCatalogPanelCodeExample.vue?raw'
 
@@ -32,10 +32,10 @@ export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Padded', name: 'padded' }
-    ] satisfies Options<CatalogPanelVariant>[],
+    options: listOptions<CatalogPanelVariant>({
+      default: 'Default',
+      padded: 'Padded'
+    }),
     initialState: 'default' as CatalogPanelVariant
   },
   open: { type: 'boolean' as const, title: 'Open', initialState: true }

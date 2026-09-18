@@ -4,8 +4,6 @@
 
 """Site detection and validation for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 import os
 import pwd
 import subprocess
@@ -27,13 +25,7 @@ def _site_user_exists(site_name: str) -> bool:
 
 
 def find_repo_root() -> Path:
-    """Find the git repository root via BUILD_WORKSPACE_DIRECTORY or git."""
-    workspace_dir = os.environ.get("BUILD_WORKSPACE_DIRECTORY")
-    if workspace_dir:
-        root = Path(workspace_dir)
-        os.chdir(root)
-        return root
-
+    """Find the git repository root of the current working directory."""
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         capture_output=True,

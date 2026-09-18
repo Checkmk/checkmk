@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Final
 
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import renders_engine_graphs
+from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
@@ -27,6 +28,12 @@ from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
 from cmk.gui.visuals import get_missing_single_infos_group_aware
+
+# A view carrying one of these is driven by the global time picker rather than the
+# pnp_timerange painter option, and must not auto-reload.
+_ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset(
+    {"svc_pnpgraph", "service_graphs", "host_pnpgraph", "host_graphs"}
+)
 
 
 class View:
@@ -272,7 +279,8 @@ class View:
             if (
                 display_options.enabled(display_options.R)
                 and user.may("general.view_option_refresh")
-                # Such a view does not auto-reload, so a refresh interval is pointless.
+                # The global time picker's refresh control offers the interval on such a view; a
+                # second control for the same setting would only disagree with it.
                 and not self.renders_engine_graphs
             ):
                 options.add("refresh")
@@ -285,9 +293,27 @@ class View:
     @property
     def renders_engine_graphs(self) -> bool:
         """Whether any of this view's cells paints through the graph engine (Vue)."""
-        return renders_engine_graphs(
-            cell.painter_name() for cell in self.group_cells + self.row_cells
+        return any(
+            cell.painter_name() in _ENGINE_GRAPH_PAINTER_IDENTS
+            for cell in self.group_cells + self.row_cells
         )
+
+    @property
+    def engine_graph_time_range_seconds(self) -> int:
+        """The range the global time picker opens on. It publishes to every graph on the page,
+        so it starts where this view's graph painters render: the first painter configuring
+        "Set default time range" decides, else the user's or the site's default."""
+        for cell in self.group_cells + self.row_cells:
+            if cell.painter_name() not in _ENGINE_GRAPH_PAINTER_IDENTS:
+                continue
+            if (
+                duration := stored_time_range_seconds(
+                    painter_parameters=cell.painter_parameters(),
+                    stored_by_the_view=cell.has_painter_params(),
+                )
+            ) is not None:
+                return duration
+        return default_time_range_seconds()
 
     @property
     def missing_single_infos(self) -> set[FilterName]:

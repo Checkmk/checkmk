@@ -7,8 +7,6 @@
 
 """Discovery of HostLabels."""
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -152,7 +150,7 @@ def _discover_host_labels_for_source_type(
                         {"name": label.name, "value": label.value, "section_name": section_name},
                     )
                     host_labels[label.name] = _HostLabel(label.name, label.value, section_name)
-            except (KeyboardInterrupt, MKTimeout):
+            except KeyboardInterrupt, MKTimeout:
                 raise
             except Exception:
                 if on_error is OnError.RAISE:

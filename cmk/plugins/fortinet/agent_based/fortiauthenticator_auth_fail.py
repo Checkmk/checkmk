@@ -28,7 +28,7 @@ def parse_fortiauthenticator_auth_fail(string_table: Sequence[StringTable]) -> S
     return {"auth_fails": int(string_table[0][0][0])} if all(string_table) else None
 
 
-def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:
+def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:  # noqa: ARG001
     """
     >>> list(discover_fortiauthenticator_auth_fail({"auth_fails": 3}))
     [Service()]

@@ -69,7 +69,7 @@ def parse_eltek_battery(string_table: StringTable) -> Section | None:
 #   '----------------------------------------------------------------------'
 
 
-def discover_eltek_battery(section: Section) -> DiscoveryResult:
+def discover_eltek_battery(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 
@@ -112,11 +112,11 @@ check_plugin_eltek_battery = CheckPlugin(
 # suggested by customer
 
 
-def discover_eltek_battery_temp(section: Section) -> DiscoveryResult:
+def discover_eltek_battery_temp(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Battery")
 
 
-def check_eltek_battery_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+def check_eltek_battery_temp(item: str, params: TempParamType, section: Section) -> CheckResult:  # noqa: ARG001
     # For temp checks we need an item but we have only one
     yield from check_temperature(
         section.temp,

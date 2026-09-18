@@ -40,12 +40,17 @@ const tooltipSize = ref({ width: 0, height: 0 })
 // The measured size feeds the position of the same render pass: the post-flush
 // watcher runs before the browser paints, so the corrected position is never visible.
 watch(
-  () => props.hoverState,
+  [() => props.hoverState, tooltipElement],
   () => {
-    tooltipSize.value = {
-      width: tooltipElement.value?.offsetWidth ?? 0,
-      height: tooltipElement.value?.offsetHeight ?? 0
+    const tooltip = tooltipElement.value
+    if (!tooltip) {
+      tooltipSize.value = { width: 0, height: 0 }
+      return
     }
+    if (!tooltip.matches(':popover-open')) {
+      tooltip.showPopover()
+    }
+    tooltipSize.value = { width: tooltip.offsetWidth, height: tooltip.offsetHeight }
   },
   { flush: 'post' }
 )
@@ -80,6 +85,7 @@ const positionStyle = computed(() => {
       v-if="hoverState"
       ref="tooltip"
       class="graphing-graph-tooltip"
+      popover="manual"
       :style="positionStyle"
       aria-hidden="true"
     >
@@ -108,7 +114,9 @@ const positionStyle = computed(() => {
 <style scoped>
 .graphing-graph-tooltip {
   position: fixed;
-  z-index: var(--z-index-tooltip-offset);
+  inset: auto;
+  margin: 0;
+  overflow: visible;
   min-width: 280px;
   max-width: 420px;
   padding: var(--dimension-5);

@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from dataclasses import replace
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 import pytest
 
@@ -19,6 +18,8 @@ import cmk.utils.paths as cmk_paths
 from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
+from cmk.base.modes.call import call
+from cmk.base.modes.modes import make_mode, Options
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Fetcher, Mode
 from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
@@ -28,7 +29,9 @@ from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
+from cmk.cli.internal import GlobalOptions
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.trace import Context
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
@@ -47,15 +50,15 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 
 class TestModeDumpAgent:
     @pytest.fixture
-    def hostname(self):
-        return "testhost"
+    def hostname(self) -> HostName:
+        return HostName("testhost")
 
     @pytest.fixture
-    def ipaddress(self):
-        return "1.2.3.4"
+    def ipaddress(self) -> HostAddress:
+        return HostAddress("1.2.3.4")
 
     @pytest.fixture
-    def raw_data(self, hostname):
+    def raw_data(self, hostname: HostName) -> bytes:  # noqa: ARG002
         return b"<<<check_mk>>>\nraw data"
 
     @pytest.fixture
@@ -83,7 +86,7 @@ class TestModeDumpAgent:
         monkeypatch.setattr(
             config,
             config.load.__name__,
-            lambda *a, **kw: config.LoadingResult(
+            lambda *a, **kw: config.LoadingResult(  # noqa: ARG005
                 loaded_config=loaded_config,
                 hosts_config=config.make_hosts_config(loaded_config),
                 host_tags=config.make_host_tags(
@@ -91,7 +94,6 @@ class TestModeDumpAgent:
                 ),
                 config_cache=config.ConfigCache(
                     loaded_config,
-                    make_app().edition,
                     config.make_hosts_config(loaded_config),
                     config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
                     autochecks_dir=cmk_paths.autochecks_dir,
@@ -102,7 +104,9 @@ class TestModeDumpAgent:
         )
 
     @pytest.fixture
-    def scenario(self, hostname, ipaddress, monkeypatch):
+    def scenario(
+        self, hostname: HostName, ipaddress: HostAddress, monkeypatch: pytest.MonkeyPatch
+    ) -> Scenario:
         ts = Scenario()
         ts.add_host(hostname)
         ts.set_option("ipaddresses", {hostname: ipaddress})
@@ -116,22 +120,23 @@ class TestModeDumpAgent:
     ) -> None:
         app = replace(
             make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),  # noqa: ARG005
         )
-        check_mk.mode_dump_agent.handler_function(app, {}, hostname)  # type: ignore[misc]
+
+        call(
+            app,
+            make_mode(check_mk.cli_command_dump_agent),
+            GlobalOptions(),
+            hostname,
+            [],
+            [],
+            Context(),
+        )
+
         assert capsys.readouterr().out == raw_data.decode()
 
 
-class TestModeDumpAgentUseWalk:
-    """Test that the --usewalk CLI option causes make_backend to create a
-    StoredWalkSNMPBackend.
-
-    mode_dump_agent skips SNMP sources in its source loop (they are only used
-    by other modes), so make_backend is never invoked directly by the mode.
-    We capture the SNMPSource that make_sources creates and open its fetcher
-    manually to drive make_backend and assert the returned backend type.
-    """
-
+class TestModeDumpAgentSnmpBackend:
     @pytest.fixture
     def hostname(self) -> HostName:
         return HostName("snmphost")
@@ -162,7 +167,7 @@ class TestModeDumpAgentUseWalk:
         monkeypatch.setattr(
             config,
             config.load.__name__,
-            lambda *a, **kw: config.LoadingResult(
+            lambda *a, **kw: config.LoadingResult(  # noqa: ARG005
                 loaded_config=loaded_config,
                 hosts_config=config.make_hosts_config(loaded_config),
                 host_tags=config.make_host_tags(
@@ -170,7 +175,6 @@ class TestModeDumpAgentUseWalk:
                 ),
                 config_cache=config.ConfigCache(
                     loaded_config,
-                    make_app().edition,
                     config.make_hosts_config(loaded_config),
                     config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
                     autochecks_dir=cmk_paths.autochecks_dir,
@@ -196,22 +200,23 @@ class TestModeDumpAgentUseWalk:
     @pytest.mark.parametrize(
         ["options", "expected_backend_type"],
         [
-            pytest.param({}, ClassicSNMPBackend, id="default"),
-            pytest.param({"usewalk": True}, StoredWalkSNMPBackend, id="walk=True"),
-            pytest.param({"usewalk": False}, ClassicSNMPBackend, id="walk=False"),
+            pytest.param([], ClassicSNMPBackend, id="default"),
+            pytest.param(
+                [("--snmp-backend", "stored-walk")], StoredWalkSNMPBackend, id="stored-walk"
+            ),
         ],
     )
-    def test_usewalk_creates_expected_backend(  # type: ignore[misc]
+    def test_the_snmp_backend_option_selects_the_backend(
         self,
         hostname: HostName,
-        options: dict,
+        options: Options,
         expected_backend_type: type,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         # Spy on make_backend to capture the backend it returns
         captured_backends: list = []
 
-        def spy_make_backend(*args, **kwargs):
+        def spy_make_backend(*args: Any, **kwargs: Any) -> object:
             backend = make_backend(*args, **kwargs)
             captured_backends.append(backend)
             return backend
@@ -222,7 +227,7 @@ class TestModeDumpAgentUseWalk:
         captured_sources: list = []
         original_snmp_source_init = SNMPSource.__init__
 
-        def capturing_snmp_source_init(self, *args, **kwargs):
+        def capturing_snmp_source_init(self: SNMPSource, *args: Any, **kwargs: Any) -> None:
             original_snmp_source_init(self, *args, **kwargs)
             captured_sources.append(self)
 
@@ -230,9 +235,17 @@ class TestModeDumpAgentUseWalk:
 
         app = replace(
             make_app(),
-            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),  # noqa: ARG005
         )
-        check_mk.mode_dump_agent.handler_function(app, options, hostname)  # type: ignore[misc]
+        call(
+            app,
+            make_mode(check_mk.cli_command_dump_agent),
+            GlobalOptions(),
+            hostname,
+            options,
+            [],
+            Context(),
+        )
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

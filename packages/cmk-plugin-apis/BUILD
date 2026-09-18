@@ -10,7 +10,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 exports_files(
     [
         "dev-requirements.in",
-        "pyproject.toml",
         "requirements.in",
     ],
 )
@@ -206,6 +205,14 @@ py_library(
 )
 
 py_library(
+    name = "cli",
+    srcs = ["cmk/cli/internal/__init__.py"],
+    data = ["cmk/cli/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "dcd_connectors",
     srcs = [
         "cmk/dcd_connectors/__init__.py",
@@ -259,6 +266,14 @@ py_library(
 )
 
 py_library(
+    name = "licensing",
+    srcs = glob(["cmk/licensing/internal/**/*.py"]),
+    data = ["cmk/licensing/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "post_rename_site",
     srcs = [
         "cmk/post_rename_site/internal/__init__.py",
@@ -274,12 +289,14 @@ py_doc_test(
     srcs = [
         ":agent_based",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":rulesets",
@@ -303,6 +320,15 @@ py_cmk_test(
     srcs = glob(["tests/cmk/bakery/**/*.py"]),
     deps = [
         ":bakery",
+    ],
+)
+
+py_cmk_test(
+    name = "cli-test",
+    size = "small",
+    srcs = glob(["tests/cmk/cli/**/*.py"]),
+    deps = [
+        ":cli",
     ],
 )
 
@@ -401,22 +427,32 @@ py_cmk_test(
     ],
 )
 
+py_cmk_test(
+    name = "licensing-test",
+    size = "small",
+    srcs = glob(["tests/cmk/licensing/**/*.py"]),
+    deps = [
+        ":licensing",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-plugin-apis",
     strip_path_prefixes = ["packages/cmk-plugin-apis"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
         ":agent_based",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":py_typed",
@@ -436,12 +472,14 @@ filegroup(
     srcs = [
         "cmk/agent_based/py.typed",
         "cmk/bakery/py.typed",
+        "cmk/cli/py.typed",
         "cmk/dcd_connector_parameters/py.typed",
         "cmk/dcd_connectors/py.typed",
         "cmk/diagnostics/py.typed",
         "cmk/discover_plugins/py.typed",
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
+        "cmk/licensing/py.typed",
         "cmk/password_store/py.typed",
         "cmk/post_rename_site/py.typed",
         "cmk/rulesets/py.typed",
@@ -468,12 +506,14 @@ py_requirements_test(
     libs = [
         ":agent_based",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":rulesets",

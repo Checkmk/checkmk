@@ -13,19 +13,13 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIconName,
-    Rows,
-    SorterSpec,
-    ViewSpec,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, make_link_renderer
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
@@ -925,10 +919,10 @@ multisite_builtin_views.update(
 def render_mobile_table(
     rows: Rows,
     view: ViewSpec,
-    group_cells: Sequence[Cell],
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
     num_columns: int,
-    show_checkboxes: bool,
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -1006,11 +1000,11 @@ class LayoutMobileTable(Layout):
 
 def render_mobile_list(
     rows: Rows,
-    view: ViewSpec,
-    group_cells: Sequence[Cell],
+    view: ViewSpec,  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
     num_columns: int,
-    show_checkboxes: bool,
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -1094,11 +1088,11 @@ class LayoutMobileList(Layout):
 
 def render_mobile_dataset(
     rows: Rows,
-    view: ViewSpec,
-    group_cells: Sequence[Cell],
+    view: ViewSpec,  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
-    num_columns: int,
-    show_checkboxes: bool,
+    num_columns: int,  # noqa: ARG001
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):

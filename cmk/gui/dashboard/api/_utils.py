@@ -58,7 +58,11 @@ from .model.constants import (
     ResponsiveLayoutBreakpointConstraintsModel,
     WidgetConstraints,
 )
-from .model.dashboard import RelativeGridDashboardResponse
+from .model.dashboard import (
+    DashboardGeneralSettings,
+    DashboardIcon,
+    RelativeGridDashboardResponse,
+)
 from .model.response_model import RelativeGridDashboardDomainObject
 from .model.widget import (
     WidgetRelativeGridPosition,
@@ -275,6 +279,51 @@ def get_dashboard_for_read(owner: DashboardOwnerWithBuiltin, dashboard_id: str) 
             detail=f"The dashboard with ID '{dashboard_id}' does not exist{owner_msg} or you do not have permission to view it.",
         )
     return dashboard
+
+
+def clone_dashboard_config(
+    dashboard_to_clone: DashboardConfig,
+    owner: UserId,
+    dashboard_id: str,
+    general_settings: DashboardGeneralSettings | ApiOmitted,
+) -> DashboardConfig:
+    """Copy a dashboard for a new owner, optionally applying new general settings."""
+    if not isinstance(general_settings, ApiOmitted):
+        description = (
+            ""
+            if isinstance(general_settings.description, ApiOmitted)
+            else general_settings.description
+        )
+        cloned_dashboard: DashboardConfig = {
+            **dashboard_to_clone,
+            "owner": owner,
+            "name": dashboard_id,
+            "packaged": False,
+            "add_context_to_title": general_settings.title.include_context,
+            "title": general_settings.title.text,
+            "description": description,
+            "topic": general_settings.menu.topic,
+            "sort_index": general_settings.menu.sort_index,
+            "is_show_more": general_settings.menu.is_show_more,
+            "icon": DashboardIcon.to_internal(general_settings.menu.icon),
+            "hidden": general_settings.visibility.hide_in_monitor_menu,
+            "hidebutton": general_settings.visibility.hide_in_drop_down_menus,
+            "public": general_settings.visibility.share_to_internal(),
+            "main_menu_search_terms": general_settings.menu.search_terms,
+            "show_title": general_settings.title.render,
+        }
+    else:
+        cloned_dashboard = {
+            **dashboard_to_clone,
+            "owner": owner,
+            "name": dashboard_id,
+            "packaged": False,
+        }
+
+    if cloned_dashboard.get("public_token_id"):
+        cloned_dashboard["public_token_id"] = None  # Remove token reference in cloned dashboard
+
+    return cloned_dashboard
 
 
 def serialize_relative_grid_dashboard(

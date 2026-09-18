@@ -40,9 +40,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         required=False,
     )
 
-    opts_with_help: list[tuple[str, str | None | float, str]] = [
-        (key, default, help_[0])  # type: ignore[misc]
-        for key, default, *help_ in mk_jolokia.DEFAULT_CONFIG_TUPLES
+    opts_with_help: list[tuple[str, object, str]] = [
+        (key, default, help_)
+        for key, default, help_ in mk_jolokia.DEFAULT_CONFIG_TUPLES
         if help_ and key != mk_jolokia.PASSWORD_OPTION
     ]
 

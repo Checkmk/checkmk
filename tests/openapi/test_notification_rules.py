@@ -526,6 +526,9 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
+        # NOTE: mypy currently doesn't have the equivalent of TypeScript's keyof, so k's type is
+        # simply str. Consequently, we need a suppression below. With PEP 827 ("Type Manipulation")
+        # we should be able to remove that.
         config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
         yield config
 
@@ -1114,6 +1117,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
+        "webhook_url": "https://events.pagerduty.com/v2/enqueue",
     },
     {
         "plugin_name": "pagerduty",
@@ -1132,6 +1136,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
+        "webhook_url": "https://events.eu.pagerduty.com/v2/enqueue",
     },
     {
         "plugin_name": "pushover",
@@ -1918,7 +1923,7 @@ def test_create_notification_custom_plugin_invalid_list_config(  # type: ignore[
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
 
     config = notification_rule_request_example()
@@ -1942,7 +1947,7 @@ def test_create_notification_custom_plugin_valid_list_config(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
 
     plugin_params: APIPluginList = {
@@ -2075,7 +2080,7 @@ def test_create_notification_custom_plugin_valid_dict_config(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
 
     config = notification_rule_request_example()
@@ -2137,7 +2142,7 @@ def test_create_notification_custom_plugin_invalid_dict_config(  # type: ignore[
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
-        lambda what: [("my_cool_plugin", "info")],
+        lambda what: [("my_cool_plugin", "info")],  # noqa: ARG005
     )
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {

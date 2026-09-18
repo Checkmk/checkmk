@@ -13,7 +13,7 @@ import {
   type DateTimeRange
 } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import DynamicPresets from './private/DynamicPresets.vue'
 import TimeRangeChip from './private/TimeRangeChip.vue'
@@ -21,20 +21,28 @@ import { firstDayOfWeekAsWeekday } from './private/firstDayOfWeek.ts'
 import { useCustomPresets } from './private/useCustomPresets.ts'
 import { useStaticPresets } from './private/useStaticPresets.ts'
 
-const props = defineProps<{
-  customTimeRanges: GlobalTimePickerProps['custom_time_ranges']
-  serverTimeZone: GlobalTimePickerProps['server_time_zone']
-  firstDayOfWeek: GlobalTimePickerProps['first_day_of_week']
-}>()
+const props = withDefaults(
+  defineProps<{
+    customTimeRanges: GlobalTimePickerProps['custom_time_ranges']
+    serverTimeZone: GlobalTimePickerProps['server_time_zone']
+    firstDayOfWeek: GlobalTimePickerProps['first_day_of_week']
+    variant?: 'extended' | 'condensed'
+    disabled?: boolean
+  }>(),
+  { variant: 'extended', disabled: false }
+)
 
 const range = defineModel<DateTimeRange>({ required: true })
 
 const { _t } = usei18n()
 
 const firstDayOfWeek = computed(() => firstDayOfWeekAsWeekday(props.firstDayOfWeek))
-const pickerSettings = computed<DateTimePickerSettings | undefined>(() =>
-  firstDayOfWeek.value === undefined ? undefined : { firstDayOfWeek: firstDayOfWeek.value }
-)
+// Checkmk reads and writes 24-hour times. The start of week follows the user's preference; an
+// omitted one leaves it to the browser locale.
+const pickerSettings = computed<DateTimePickerSettings>(() => ({
+  hourCycle: 24,
+  ...(firstDayOfWeek.value === undefined ? {} : { firstDayOfWeek: firstDayOfWeek.value })
+}))
 
 const staticRangePresets = useStaticPresets(() => firstDayOfWeek.value)
 
@@ -43,43 +51,87 @@ const {
   activePresetId,
   applyPreset
 } = useCustomPresets(() => props.customTimeRanges, range)
+
+const isExtendedVariant = computed(() => props.variant === 'extended')
+
+const isFlyoutOpen = ref(false)
+
+watch(activePresetId, (value) => {
+  if (props.variant === 'condensed' && value === null) {
+    isFlyoutOpen.value = true
+  }
+})
 </script>
 
 <template>
-  <div class="graphing-global-time-picker">
+  <div
+    class="graphing-global-time-picker"
+    :class="{ 'graphing-global-time-picker--disabled': props.disabled }"
+  >
     <CmkTimeRangePicker
       v-model="range"
+      v-model:open="isFlyoutOpen"
       :presets="staticRangePresets"
       :server-time-zone="props.serverTimeZone"
       :settings="pickerSettings"
+      :disabled="props.disabled"
     >
-      <template #trigger="{ aria, triggerRef, fields, settings: triggerSettings }">
+      <template
+        #trigger="{
+          aria,
+          triggerRef,
+          fields,
+          settings: triggerSettings,
+          disabled: triggerDisabled
+        }"
+      >
         <button
           :ref="triggerRef"
           type="button"
           class="graphing-global-time-picker__trigger"
+          :disabled="triggerDisabled"
           v-bind="aria"
         >
           <CmkTimeRangeDisplay :from="fields.from" :to="fields.to" :settings="triggerSettings" />
           <div class="graphing-global-time-picker__trigger-chip" aria-hidden="true">
-            <TimeRangeChip as-div :selected="activePresetId === null">
-              <div class="graphing-global-time-picker__trigger-chip-content">
-                <CmkMultitoneIcon name="user-interface" primary-color="font" size="small" />
-                {{ _t('Custom time range') }}
+            <template v-if="isExtendedVariant">
+              <TimeRangeChip as-div :selected="activePresetId === null">
+                <div class="graphing-global-time-picker__trigger-chip-content">
+                  <CmkMultitoneIcon name="user-interface" primary-color="font" size="small" />
+                  {{ _t('Custom time range') }}
+                </div>
+              </TimeRangeChip>
+            </template>
+            <template v-else>
+              <div class="graphing-global-time-picker__trigger-icon-button">
+                <CmkMultitoneIcon
+                  name="user-interface"
+                  primary-color="font"
+                  size="small"
+                  :aria-label="_t('Custom time range')"
+                />
               </div>
-            </TimeRangeChip>
+            </template>
           </div>
         </button>
       </template>
     </CmkTimeRangePicker>
 
-    <div v-if="customPresets.length || $slots.aside" class="graphing-global-time-picker__band">
+    <div
+      v-if="customPresets.length || $slots.trailing || $slots.aside"
+      class="graphing-global-time-picker__band"
+    >
       <DynamicPresets
-        v-if="customPresets.length"
+        v-if="customPresets.length || $slots.trailing"
         :presets="customPresets"
         :active-preset-id="activePresetId"
-        @apply="applyPreset"
-      />
+        :include-custom-entry="!isExtendedVariant"
+        @apply="(preset) => !props.disabled && applyPreset(preset)"
+      >
+        <template v-if="$slots.trailing" #trailing>
+          <slot name="trailing" />
+        </template>
+      </DynamicPresets>
       <div v-if="$slots.aside" class="graphing-global-time-picker__aside">
         <slot name="aside" />
       </div>
@@ -117,6 +169,10 @@ const {
   outline: revert;
 }
 
+.graphing-global-time-picker__trigger:disabled {
+  cursor: not-allowed;
+}
+
 /* the trigger's From/To rows are 32px high, align to them */
 .graphing-global-time-picker__trigger-chip {
   display: flex;
@@ -130,6 +186,19 @@ const {
   gap: var(--dimension-3);
 }
 
+/* Visual echo of CmkButton's icon-only/optional variant, without a nested <button>. */
+.graphing-global-time-picker__trigger-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--dimension-7);
+  height: var(--dimension-7);
+  border: 1px solid var(--button-optional-border-color);
+  border-radius: var(--dimension-2);
+  background-color: var(--default-button-optional-color);
+  color: var(--button-optional-text-color);
+}
+
 .graphing-global-time-picker__band {
   flex: 1 1 auto;
   min-width: 0;
@@ -141,6 +210,12 @@ const {
 
   /* align with the trigger's bottom padding */
   margin-bottom: var(--dimension-7);
+}
+
+.graphing-global-time-picker--disabled .graphing-global-time-picker__band {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .graphing-global-time-picker__aside {

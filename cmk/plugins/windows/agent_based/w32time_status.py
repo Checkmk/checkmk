@@ -171,7 +171,7 @@ agent_section_w32time_status = AgentSection(
 )
 
 
-def discover_w32time_status(section: QueryStatus) -> DiscoveryResult:
+def discover_w32time_status(section: QueryStatus) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -47,8 +47,8 @@ Example::
 
 from collections.abc import Mapping
 
+from cmk.graphing.v1 import Title as Title
 from cmk.graphing.v1 import translations as translations
-from cmk.graphing.v1._localize import Title as Title
 
 from . import graphs as graphs
 from . import metrics as metrics

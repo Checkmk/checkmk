@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001
-
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -12,17 +10,18 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery import AutocheckServiceWithNodes, AutochecksStore
-from cmk.checkengine.discovery._autochecks import (
-    _consolidate_autochecks_of_real_hosts,
+from cmk.checkengine.discovery import (
+    AutocheckServiceWithNodes,
     AutochecksMemoizer,
     AutochecksSerializer,
+    AutochecksStore,
 )
+from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def autochecks_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", tmp_path)
 
@@ -90,10 +89,9 @@ class TestAutochecksStore:
         ),
     ],
 )
+@pytest.mark.usefixtures("monkeypatch")
 def test_memoizer_get_autochecks_of(
-    autochecks_content: str,
-    expected_result: Sequence[AutocheckEntry],
-    monkeypatch: pytest.MonkeyPatch,
+    autochecks_content: str, expected_result: Sequence[AutocheckEntry]
 ) -> None:
     with (cmk.utils.paths.autochecks_dir / "host.mk").open("w", encoding="utf-8") as f:
         f.write(autochecks_content)

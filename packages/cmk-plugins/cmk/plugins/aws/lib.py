@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -169,7 +168,7 @@ def check_aws_limits(
         if is_valid_aws_limits_perf_data(resource_key):
             yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)
 
-        if param_absolute_limit is not None:
+        if param_absolute_limit is not None:  # type: ignore[possibly-undefined]
             limit = param_absolute_limit
 
         if not limit:
@@ -286,7 +285,7 @@ def extract_metric_value(row_values: list, convert_sum_stats_to_rate: bool) -> A
         if convert_sum_stats_to_rate and time_period is not None:
             return value / time_period
         return value
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 
@@ -600,7 +599,7 @@ class LambdaInsightMetrics:
     max_init_duration_seconds: float | None = None
 
     @staticmethod
-    def from_metrics(query_stats: LambdaQueryStats) -> "LambdaInsightMetrics":
+    def from_metrics(query_stats: LambdaQueryStats) -> LambdaInsightMetrics:
         max_memory_used_bytes: float
         count_cold_starts: int
         count_invocations: int

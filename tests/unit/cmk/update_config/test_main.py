@@ -6,7 +6,6 @@
 
 import logging
 from collections.abc import Iterator
-from pathlib import Path
 from typing import override
 
 import pytest
@@ -21,7 +20,7 @@ from cmk.update_config import main, registry
 from cmk.update_config.lib import ExpiryVersion
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def ensure_logging_framework_not_altered() -> Iterator[None]:
     logger = logging.getLogger()
     before_handlers = list(logger.handlers)
@@ -30,7 +29,7 @@ def ensure_logging_framework_not_altered() -> Iterator[None]:
 
 
 def test_parse_arguments_defaults() -> None:
-    default_args = main._parse_arguments([])
+    default_args = main._parse_arguments([])  # noqa: SLF001
     assert not default_args.debug
     assert not default_args.verbose
 
@@ -40,18 +39,15 @@ def test_parse_arguments_defaults() -> None:
     [(v_level,) for v_level in range(4)],
 )
 def test_parse_arguments_verbose(v_level: int) -> None:
-    assert main._parse_arguments(["-v"] * v_level).verbose == v_level
+    assert main._parse_arguments(["-v"] * v_level).verbose == v_level  # noqa: SLF001
 
 
 def test_parse_arguments_debug() -> None:
-    assert main._parse_arguments(["--debug"]).debug is True
+    assert main._parse_arguments(["--debug"]).debug is True  # noqa: SLF001
 
 
-def test_main_calls_config_updater(
-    monkeypatch: pytest.MonkeyPatch,
-    mocker: MockerFixture,
-    tmp_path: Path,
-) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_main_calls_config_updater(monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
     packages_dir = cmk.utils.paths.var_dir / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
@@ -113,7 +109,7 @@ def test_config_updater_executes_plugins(
 
 
 def test_load_plugins(test_edition: Edition) -> None:
-    main._load_plugins(test_edition, logging.getLogger())
+    main._load_plugins(test_edition, logging.getLogger())  # noqa: SLF001
     assert registry.update_action_registry
 
 
@@ -160,7 +156,7 @@ def test_forbid_pending_change_writes_raises_on_accidental_write(
     )
     monkeypatch.setattr(main, "pre_update_action_registry", registry.PreUpdateActionRegistry())
     monkeypatch.setattr(main, "update_action_registry", reg)
-    monkeypatch.setattr(main, "_initialize_base_environment", lambda x: None)
+    monkeypatch.setattr(main, "_initialize_base_environment", lambda: None)
 
     # The leaky action defaults to continue_on_failure=True, so without a hard failure the write
     # would only be logged and swallowed. It must fail hard even without --debug.

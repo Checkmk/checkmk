@@ -84,3 +84,39 @@ test('CmkCheckbox renders updated validation', async () => {
 
   await screen.findByText('some new validation')
 })
+
+test('slotted content renders below the label without joining the accessible name', async () => {
+  render(CmkCheckbox, {
+    props: { label: 'Expire on' },
+    slots: { default: '<button type="button">pick a date</button>' }
+  })
+
+  // The name has to stay the label alone: consumers address checkboxes by it.
+  screen.getByRole('checkbox', { name: 'Expire on' })
+  screen.getByRole('button', { name: 'pick a date' })
+})
+
+test('clicking slotted content leaves the checkbox alone', async () => {
+  const { emitted } = render(CmkCheckbox, {
+    props: { label: 'Expire on', modelValue: false },
+    slots: { default: '<button type="button">pick a date</button>' }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'pick a date' }))
+
+  // A control inside the <label> would toggle the box; this one sits outside it.
+  expect(emitted('update:modelValue')).toBeUndefined()
+  expect(screen.getByRole('checkbox')).not.toBeChecked()
+})
+
+test('the label slot supplies the accessible name and still toggles on click', async () => {
+  const { emitted } = render(CmkCheckbox, {
+    props: { modelValue: false },
+    slots: { label: 'Notify affected users' }
+  })
+
+  await userEvent.click(screen.getByText('Notify affected users'))
+
+  expect(screen.getByRole('checkbox', { name: 'Notify affected users' })).toBeInTheDocument()
+  expect(emitted('update:modelValue')).toEqual([[true]])
+})

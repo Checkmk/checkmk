@@ -8,6 +8,8 @@ import { defineComponent, h } from 'vue'
 
 import type { EventIcon, HostMode, MonitoringIcon } from '@/monitoring/shared/api/types'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
+import { iconListWidth } from '@/monitoring/shared/components/iconList'
+import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 
 const DOWNTIME_MODE: HostMode = {
   icon_name: 'downtime',
@@ -26,11 +28,11 @@ const SERVICE_ALERT_EVENT: EventIcon = {
   title: 'Service alert'
 }
 
-function mountCell(icons: MonitoringIcon[]) {
+function mountCell(icons: MonitoringIcon[], maxPerRow?: number) {
   return render(
     defineComponent({
       render() {
-        return h('table', [h('tbody', [h('tr', [h(IconCell, { icons })])])])
+        return h('table', [h('tbody', [h('tr', [h(IconCell, { icons, maxPerRow })])])])
       }
     })
   )
@@ -65,4 +67,18 @@ test('renders nothing for an empty icon list', () => {
   mountCell([])
 
   expect(screen.queryByRole('link')).not.toBeInTheDocument()
+})
+
+test('keeps every mode visible, wrapping onto further rows instead of collapsing', () => {
+  const overflowing = Array.from({ length: MODE_ICONS_PER_ROW + 1 }, (_, index) => ({
+    icon_name: `mode-${index}`,
+    title: `Mode ${index}`
+  }))
+
+  const { container } = mountCell(overflowing, MODE_ICONS_PER_ROW)
+
+  expect(screen.getAllByRole('img')).toHaveLength(overflowing.length)
+  expect(container.querySelector('.monitoring-icon-list')).toHaveStyle({
+    maxWidth: `${iconListWidth(MODE_ICONS_PER_ROW)}px`
+  })
 })

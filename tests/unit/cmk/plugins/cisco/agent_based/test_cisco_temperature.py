@@ -907,7 +907,7 @@ def test_defect_sensor() -> None:
 
     assert list(ct.discover_cisco_temperature(section))
 
-    (defect_result,) = ct._check_cisco_temperature({}, "Chassis 1", {}, section)
+    (defect_result,) = ct._check_cisco_temperature({}, "Chassis 1", {}, section)  # noqa: SLF001
     assert isinstance(defect_result, Result)
     assert defect_result.state is not State.OK
 
@@ -1143,7 +1143,8 @@ def test_discovery_temp(section_temp: ct.Section) -> None:
     )
 
 
-def test_check_temp(section_temp: ct.Section, empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_temp(section_temp: ct.Section) -> None:
     assert list(
         ct.check_cisco_temperature(
             "Ethernet1/1 Lane 1 Transceiver Temperature Sensor", {}, section_temp
@@ -1172,11 +1173,9 @@ def test_check_temp(section_temp: ct.Section, empty_value_store: None) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_temp_not_ok_sensors(
-    item: str,
-    expected_result: CheckResult,
-    section_not_ok_sensors: ct.Section,
-    empty_value_store: None,
+    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
 ) -> None:
     assert list(ct.check_cisco_temperature(item, {}, section_not_ok_sensors)) == expected_result
 
@@ -1194,11 +1193,9 @@ def test_check_temp_not_ok_sensors(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_dom_not_ok_sensors(
-    item: str,
-    expected_result: CheckResult,
-    section_not_ok_sensors: ct.Section,
-    empty_value_store: None,
+    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
 ) -> None:
     assert list(ct.check_cisco_temperature_dom(item, {}, section_not_ok_sensors)) == expected_result
 
@@ -1230,5 +1227,5 @@ def test_ensure_invalid_data_is_ignored() -> None:
     parsed_section = ct.snmp_section_cisco_temperature.parse_function(TABLE_INVALID)
     assert parsed_section is not None
     value_store: dict = {}
-    _ = list(ct._check_cisco_temperature(value_store, "38487", {}, parsed_section))
+    _ = list(ct._check_cisco_temperature(value_store, "38487", {}, parsed_section))  # noqa: SLF001
     assert not value_store

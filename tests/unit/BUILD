@@ -20,6 +20,7 @@ py_library(
     deps = [
         "//cmk/base",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//tests/testlib:fake_site",
         requirement("pytest_metadata"),
@@ -83,12 +84,13 @@ py_cmk_test(
     deps = [
         ":conftest",
         "//cmk:cmkpasswd",
+        "//cmk/bi",
+        "//cmk/diskspace",
+        "//cmk/fields",
+        "//cmk/piggyback:hub",
         "//cmk/product_usage:product_usage_cli",
         "//cmk/special_agents",
-        "//packages/cmk-ccc:observer",
-        "//packages/cmk-check-engine:fetchers",
-        "//packages/cmk-plugin-apis:agent_based",
-        "//packages/cmk-plugins:lib",
+        "//packages/cmk-messaging",
         requirement("exchangelib"),
         requirement("fakeredis"),
         requirement("feedparser"),
@@ -105,6 +107,5 @@ py_cmk_test(
         requirement("time-machine"),
         requirement("vcrpy"),
         requirement("werkzeug"),
-        "//tests/testlib/unit",
     ],
 )

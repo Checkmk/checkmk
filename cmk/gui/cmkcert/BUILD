@@ -19,6 +19,7 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
         "//packages/cmk-crypto",
+        requirement("cryptography"),
         requirement("python-dateutil"),
     ],
 )

@@ -28,11 +28,11 @@ def savefloat(f: str) -> float:
     you can not know whether it is really 0.0 or something went wrong."""
     try:
         return float(f)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0.0
 
 
-def discover_dell_chassis_power(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_power(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

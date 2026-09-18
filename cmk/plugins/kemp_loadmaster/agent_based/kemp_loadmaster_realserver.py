@@ -68,7 +68,7 @@ snmp_section_kemp_loadmaster_realserver = SimpleSNMPSection(
 
 def discover_kemp_loadmaster_realserver(
     section_kemp_loadmaster_realserver: RSSection | None,
-    section_kemp_loadmaster_services: VSSection | None,
+    section_kemp_loadmaster_services: VSSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_kemp_loadmaster_realserver is None:
         return

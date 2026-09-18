@@ -40,7 +40,7 @@ def parse_ucs_c_rack_server_temp(string_table):
             )
             try:
                 parsed[cpu] = float(key_value_pairs[3][1])
-            except (ValueError, KeyError):
+            except ValueError, KeyError:
                 continue  # skip potentially invalid agent output
         elif "mem-" in key_value_pairs[0][1]:
             mem = (
@@ -54,7 +54,7 @@ def parse_ucs_c_rack_server_temp(string_table):
             )
             try:
                 parsed[mem] = float(key_value_pairs[3][1])
-            except (ValueError, KeyError):
+            except ValueError, KeyError:
                 continue  # skip potentially invalid agent output
         elif "board" in key_value_pairs[0][1]:
             mb = (
@@ -65,7 +65,7 @@ def parse_ucs_c_rack_server_temp(string_table):
             )
             try:
                 parsed[mb] = float(key_value_pairs[2][1])
-            except (ValueError, KeyError):
+            except ValueError, KeyError:
                 continue  # skip potentially invalid agent output
         else:
             continue  # skip potentially invalid agent output

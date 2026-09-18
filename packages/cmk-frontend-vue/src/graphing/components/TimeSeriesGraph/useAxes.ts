@@ -3,22 +3,23 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Label, NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { axisLeft } from 'd3-axis'
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import type { Selection } from 'd3-selection'
 import { select } from 'd3-selection'
-import type { Transition } from 'd3-transition'
 import 'd3-transition'
+import type { Transition } from 'd3-transition'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 
-import { alignedDomain, stepIncrements } from './axes/tickStepping'
+import { type ValueRangeMode, stepIncrements, valueDomain } from './axes/tickStepping'
 import type { TimeAxisTick } from './axes/timeAxis'
 
 // Minimum pixel gap between ticks when computing how many to display.
 const MIN_VALUE_TICK_SPACING_PX = 65
 
-// Minimum pixel gap per tick used when computing the domain step via alignedDomain.
+// Minimum pixel gap per tick used when computing the domain step via valueDomain.
 // Smaller than MIN_VALUE_TICK_SPACING_PX because domain computation requests more ticks
 // than are ultimately displayed.
 const VALUE_DOMAIN_ALIGNMENT_PX = 50
@@ -41,6 +42,102 @@ export const AXIS_CLASSES = {
 type GroupSelection = Selection<SVGGElement, null, SVGGElement, unknown>
 type GroupTransition = Transition<SVGGElement, null, SVGGElement, unknown>
 
+export interface AxisLabelVisibility {
+  showLabels: boolean
+}
+
+interface ValueLabel {
+  position: number
+  text: string
+}
+
+function asValueLabels(labels: Label[]): ValueLabel[] {
+  return labels.map((label) => ({ position: label.value, text: label.text }))
+}
+
+function reflectedAcrossZero(labels: Label[]): Label[] {
+  return labels
+    .filter((label) => label.value !== 0)
+    .map((label) => ({ value: -label.value, text: label.text }))
+}
+
+function computeMirroredValueLabels(
+  formatter: NotationFormatter,
+  domainMin: number,
+  domainMax: number,
+  targetCount: number
+): ValueLabel[] {
+  const straddlesZero = domainMin < 0 && domainMax > 0
+  const maxMagnitude = Math.max(Math.abs(domainMin), Math.abs(domainMax))
+  const minMagnitude = straddlesZero ? 0 : Math.min(Math.abs(domainMin), Math.abs(domainMax))
+  const labelCount = straddlesZero
+    ? Math.max(1, Math.round((targetCount * maxMagnitude) / (domainMax - domainMin)))
+    : targetCount
+  const magnitudes = formatter.renderYLabels(
+    { kind: 'positive', start: minMagnitude, end: maxMagnitude },
+    labelCount
+  )
+  return asValueLabels([...reflectedAcrossZero(magnitudes), ...magnitudes]).filter(
+    (label) => label.position >= domainMin && label.position <= domainMax
+  )
+}
+
+// Labels must land where the unit considers round, which d3's decimal-only ticks cannot do: an IEC
+// axis steps in powers of two, so a 2 * 10^6 byte step reads as "1.91 MiB" and contradicts the
+// legend. renderYLabels takes one sign at a time, hence the split below.
+function computeSignedValueLabels(
+  formatter: NotationFormatter,
+  domainMin: number,
+  domainMax: number,
+  targetCount: number
+): ValueLabel[] {
+  if (domainMin >= 0) {
+    return asValueLabels(
+      formatter.renderYLabels({ kind: 'positive', start: domainMin, end: domainMax }, targetCount)
+    )
+  }
+  if (domainMax <= 0) {
+    return asValueLabels(
+      formatter.renderYLabels({ kind: 'negative', start: domainMin, end: domainMax }, targetCount)
+    )
+  }
+  // Each side is sized by its share of the domain, and the negative half's zero is dropped
+  // because the positive half carries one.
+  const negativeShare = -domainMin / (domainMax - domainMin)
+  const negative = formatter.renderYLabels(
+    { kind: 'negative', start: domainMin, end: 0 },
+    Math.max(1, Math.round(targetCount * negativeShare))
+  )
+  const positive = formatter.renderYLabels(
+    { kind: 'positive', start: 0, end: domainMax },
+    Math.max(1, Math.round(targetCount * (1 - negativeShare)))
+  )
+  return [...asValueLabels(negative.slice(1)), ...asValueLabels(positive)]
+}
+
+function computeValueLabels(
+  formatter: NotationFormatter,
+  domainMin: number,
+  domainMax: number,
+  targetCount: number,
+  isMirroredGraph: boolean
+): ValueLabel[] {
+  if (targetCount <= 0) {
+    return []
+  }
+  return isMirroredGraph
+    ? computeMirroredValueLabels(formatter, domainMin, domainMax, targetCount)
+    : computeSignedValueLabels(formatter, domainMin, domainMax, targetCount)
+}
+
+/** Halve the gap between neighbouring labels, for the grid's unlabelled intermediate lines. */
+function withMidpoints(positions: number[]): number[] {
+  const ascending = [...positions].sort((first, second) => first - second)
+  return ascending.flatMap((position, index) =>
+    index === 0 ? [position] : [(ascending[index - 1]! + position) / 2, position]
+  )
+}
+
 export function useAxes(
   axisGroupRef: Ref<SVGGElement | null>,
   xScale: ScaleTime<number, number>,
@@ -48,7 +145,8 @@ export function useAxes(
   plotWidth: Ref<number>,
   plotHeight: Ref<number>,
   yStepping: Ref<'binary' | 'decimal'>,
-  yTickFormatter: Ref<(value: number) => string>
+  yFormatter: Ref<NotationFormatter | null>,
+  isMirroredGraph: Ref<boolean>
 ) {
   const yStep = ref<number>(1)
 
@@ -64,18 +162,42 @@ export function useAxes(
     )
   }
 
-  function prepareValueDomain(rawYMin: number, rawYMax: number): void {
+  function prepareValueDomain(
+    rawYMin: number,
+    rawYMax: number,
+    mode: ValueRangeMode = 'aligned'
+  ): void {
     const tickCount = Math.max(2, Math.ceil(plotHeight.value / VALUE_DOMAIN_ALIGNMENT_PX))
     const increments = stepIncrements(yStepping.value)
-    const [alignedMin, alignedMax, step] = alignedDomain([rawYMin, rawYMax], tickCount, increments)
+    const [alignedMin, alignedMax, step] = valueDomain(
+      [rawYMin, rawYMax],
+      tickCount,
+      increments,
+      mode
+    )
     yScale.domain([alignedMin, alignedMax])
     yScale.range([plotHeight.value, VALUE_AXIS_TOP_PADDING_PX])
     yStep.value = step
   }
 
+  function valueLabels(): ValueLabel[] {
+    const [domainMin, domainMax] = yScale.domain() as [number, number]
+    const tickCount = yTickCount()
+    const formatter = yFormatter.value
+    const unitLabels = formatter
+      ? computeValueLabels(formatter, domainMin, domainMax, tickCount, isMirroredGraph.value)
+      : []
+    if (unitLabels.length > 0) {
+      return unitLabels
+    }
+    return yScale.ticks(tickCount).map((value) => ({
+      position: value,
+      text: String(isMirroredGraph.value ? Math.abs(value) : value)
+    }))
+  }
+
   function valueTickLabels(): string[] {
-    const formatter = yTickFormatter.value
-    return yScale.ticks(yTickCount()).map((value) => formatter(value.valueOf()))
+    return valueLabels().map((label) => label.text)
   }
 
   function drawValueGrid(): void {
@@ -92,13 +214,13 @@ export function useAxes(
       .classed(AXIS_CLASSES.valueGrid, true)
     applyTransition(gridY).call(
       axisLeft(yScale)
-        .ticks(yTickCount() * 2)
+        .tickValues(withMidpoints(valueLabels().map((label) => label.position)))
         .tickSize(-plotWidth.value)
         .tickFormat(() => '')
     )
   }
 
-  function drawValueAxis(): void {
+  function drawValueAxis({ showLabels }: AxisLabelVisibility): void {
     if (!axisGroupRef.value) {
       return
     }
@@ -110,15 +232,16 @@ export function useAxes(
       .data([null])
       .join('g')
       .classed(AXIS_CLASSES.valueAxis, true)
-    const formatter = yTickFormatter.value
+    const labels = valueLabels()
+    const textByPosition = new Map(labels.map((label) => [label.position, label.text]))
     applyTransition(yAxis).call(
       axisLeft(yScale)
-        .ticks(yTickCount())
-        .tickFormat((value) => formatter(value.valueOf()))
+        .tickValues(labels.map((label) => label.position))
+        .tickFormat(showLabels ? (value) => textByPosition.get(value.valueOf()) ?? '' : () => '')
     )
   }
 
-  function drawTimeAxis(ticks: TimeAxisTick[]): void {
+  function drawTimeAxis(ticks: TimeAxisTick[], { showLabels }: AxisLabelVisibility): void {
     if (!axisGroupRef.value) {
       return
     }
@@ -162,7 +285,7 @@ export function useAxes(
       .classed(AXIS_CLASSES.timeLabels, true)
     timeLabelsGroup
       .selectAll<SVGTextElement, TimeAxisTick>('text')
-      .data(ticks.filter((tick) => tick.text !== null))
+      .data(showLabels ? ticks.filter((tick) => tick.text !== null) : [])
       .join('text')
       .attr('x', positionToX)
       .attr('y', height + TIME_LABEL_BASELINE_OFFSET_PX)

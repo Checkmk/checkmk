@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import json
 from collections.abc import Callable, Mapping, Sequence
@@ -65,7 +64,7 @@ class GCPResult:
     aggregation: GCPAggregation
 
     @classmethod
-    def deserialize(cls, data: str) -> "GCPResult":
+    def deserialize(cls, data: str) -> GCPResult:
         parsed = json.loads(data)
         return cls(
             _ts=parsed["ts"],
@@ -94,7 +93,7 @@ class GCPAsset:
     _asset: Mapping[str, Any]
 
     @classmethod
-    def deserialize(cls, data: str) -> "GCPAsset":
+    def deserialize(cls, data: str) -> GCPAsset:
         return cls(_asset=json.loads(data))
 
     @property
@@ -293,7 +292,7 @@ def generic_check(
         else:
             levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
-            yield from check_levels_predictive(
+            yield from check_levels_predictive(  # type: ignore[unreachable]
                 value,
                 metric_name=metric_name,
                 render_func=metric_spec.display.render_func,
@@ -378,7 +377,7 @@ def _cascading_dropdown_level_extractor(
     return None
 
 
-def _dummy_percentile_level_extractor(params: Mapping[str, Any], metric_name: str) -> None:
+def _dummy_percentile_level_extractor(params: Mapping[str, Any], metric_name: str) -> None:  # noqa: ARG001
     return None
 
 

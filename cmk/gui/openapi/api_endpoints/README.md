@@ -172,8 +172,7 @@ def handler(
     path_param: Annotated[str, PathParam(description="...", example="example")],
     query_param: Annotated[int, QueryParam(description="...", example="123")],
     header_param: Annotated[
-        str | ApiOmitted,
-        HeaderParam(description="...", example="...")
+        str | ApiOmitted, HeaderParam(description="...", example="...")
     ] = ApiOmitted(),
 ) -> None:
     return
@@ -330,10 +329,12 @@ from cmk.web.utils import permission_verification as permissions
 from cmk.gui.openapi.framework import EndpointPermissions
 
 permissions = EndpointPermissions(
-    required=permissions.AnyPerm([
-        permissions.Perm("wato.edit"),
-        permissions.Perm("wato.access"),
-    ]),
+    required=permissions.AnyPerm(
+        [
+            permissions.Perm("wato.edit"),
+            permissions.Perm("wato.access"),
+        ]
+    ),
     # Optional descriptions for documentation
     descriptions={"wato.supermode": "Override description"},
 )
@@ -416,7 +417,6 @@ def handler(body: MyModel) -> MyModel:
         id=internal_out["id"],
         name=internal_out.get("name", ApiOmitted()),
     )
-
 ```
 
 ### Validators
@@ -484,9 +484,7 @@ like a "flat" object. The only difference would be that the custom attributes
 don't show up in the schema.
 
 ```python
-from cmk.gui.openapi.framework.model import (
-    api_field, api_model, json_dump_without_omitted
-)
+from cmk.gui.openapi.framework.model import api_field, api_model, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 
 
@@ -518,6 +516,78 @@ class MyModel(WithDynamicFields):
     dynamic_fields: Mapping[str, Annotated[str, AfterValidator(...)]]
 ```
 
+### Generic models
+
+A generic model lets several endpoints share one envelope. Define the model with
+type parameters, then parameterize it where you use it.
+
+```python
+from typing import Literal
+from cmk.gui.openapi.framework.model import api_field, api_model
+
+
+@api_model
+class CollectionModel[T, D]:
+    domainType: D = api_field(description="The domain type of the objects.")
+    value: list[T] = api_field(description="The objects in the collection.")
+
+
+def handler() -> CollectionModel[HostModel, Literal["host"]]:
+    ...
+```
+
+Always parameterize a generic model fully. An unparameterized `CollectionModel`
+makes its fields accept any value, so the endpoint validation rejects it.
+
+#### Where generics are allowed
+
+Pydantic substitutes the type parameters in every field annotation, at any
+depth. All of the following work:
+
+- the request body and the response body
+- inside `TypedResponse[...]` and `ApiResponse[...]`
+- a field of another model, also within a `list`, a `dict` or a union
+- a field of a generic model that forwards its own type parameter, such as
+  `inner: Other[T]`
+- a type argument that is a union, such as
+  `CollectionModel[HostModel | ServiceModel, Literal["mixed"]]`
+- the error schemas of an `EndpointHandler`
+
+#### Where generics are not allowed
+
+A model must never inherit from a generic model. Pydantic does not apply the
+type arguments of a dataclass base. The inherited fields then accept any value,
+and their schema stays empty. The `@api_model` decorator rejects every form:
+
+```python
+class Sub(CollectionModel[HostModel, Literal["host"]]): ...  # rejected
+class Sub[T](CollectionModel[T, Literal["host"]]): ...       # rejected
+class Sub(CollectionModel): ...                              # rejected
+```
+
+If you must add fields, put them into the type argument, or give the generic
+model another type parameter. Pydantic substitutes both correctly.
+
+`WithDynamicFields` does not work on a generic model, because pydantic does not
+call the hook that collects the dynamic fields.
+
+#### Schema names
+
+Pydantic derives the schema name from the model and its type arguments, for
+example `CollectionModel_HostModel_Literal__host___`. To get a readable name,
+declare a type alias and use the alias in the handler:
+
+```python
+type HostCollection = CollectionModel[HostModel, Literal["host"]]
+
+
+def handler() -> HostCollection:
+    ...
+```
+
+The schema is then called `HostCollection`. Note that Python does not allow a
+type alias as a base class either.
+
 ## Marshmallow schema to API models
 
 This guide provides a reference for translating Marshmallow schemas to API model
@@ -533,6 +603,7 @@ from marshmallow import Schema, fields, validate
 
 class LinkSchema(Schema):
     """Schema for link resources."""
+
     href = fields.String(required=True)
     rel = fields.String(required=True)
 
@@ -541,49 +612,31 @@ class UserSchema(Schema):
     """Schema representing a user."""
 
     # Required field
-    id = fields.String(
-        required=True,
-        description="Unique identifier."
-    )
+    id = fields.String(required=True, description="Unique identifier.")
 
     # Required field with validation
     username = fields.String(
-        required=True,
-        validate=validate.Length(min=3, max=50),
-        description="User's login name."
+        required=True, validate=validate.Length(min=3, max=50), description="User's login name."
     )
 
     # Field with custom validation
     active_users = fields.List(
         fields.Username(),  # class validating if the username is valid
         required=True,
-        description="List of active users."
+        description="List of active users.",
     )
 
     # Optional field
-    display_name = fields.String(
-        required=False,
-        description="User's display name."
-    )
+    display_name = fields.String(required=False, description="User's display name.")
 
     # Nullable field
-    bio = fields.String(
-        allow_none=True,
-        description="User's biography."
-    )
+    bio = fields.String(allow_none=True, description="User's biography.")
 
     # Optional and nullable field
-    location = fields.String(
-        required=False,
-        allow_none=True,
-        description="User's location."
-    )
+    location = fields.String(required=False, allow_none=True, description="User's location.")
 
     # Field with custom JSON key name
-    email_address = fields.String(
-        data_key="emailAddress",
-        description="User's email."
-    )
+    email_address = fields.String(data_key="emailAddress", description="User's email.")
 
     # Field with enum
     status = fields.String(
@@ -593,37 +646,19 @@ class UserSchema(Schema):
     )
 
     # Constant field
-    type = fields.Constant(
-        "user",
-        description="Resource type."
-    )
+    type = fields.Constant("user", description="Resource type.")
 
     # Boolean field
-    is_verified = fields.Boolean(
-        description="Whether user is verified.",
-        load_default=False
-    )
+    is_verified = fields.Boolean(description="Whether user is verified.", load_default=False)
 
     # List field
-    roles = fields.List(
-        fields.String(),
-        required=True,
-        description="User roles."
-    )
+    roles = fields.List(fields.String(), required=True, description="User roles.")
 
     # Dict field
-    preferences = fields.Dict(
-        description="User preferences.",
-        allow_none=True
-    )
+    preferences = fields.Dict(description="User preferences.", allow_none=True)
 
     # Nested object field
-    links = fields.List(
-        fields.Nested(LinkSchema),
-        required=False,
-        description="Related links."
-    )
-
+    links = fields.List(fields.Nested(LinkSchema), required=False, description="Related links.")
 ```
 
 #### Equivalent API Model
@@ -646,6 +681,7 @@ def active_user_check(value: str) -> str:
 @api_model
 class LinkModel:
     """Model for link resources."""
+
     href: str
     rel: str
 
@@ -655,9 +691,7 @@ class UserModel:
     """Model representing a user."""
 
     # Required field
-    id: str = api_field(
-        description="Unique identifier."
-    )
+    id: str = api_field(description="Unique identifier.")
 
     # Required field with validation
     username: Annotated[str, Interval(ge=3, le=50)] = api_field(
@@ -665,14 +699,13 @@ class UserModel:
     )
 
     # Field with custom validation
-    active_users: list[
-        Annotated[str, AfterValidator(active_user_check)]
-    ] = api_field(description="List of active users.")
+    active_users: list[Annotated[str, AfterValidator(active_user_check)]] = api_field(
+        description="List of active users."
+    )
 
     # Optional field
     display_name: str | ApiOmitted = api_field(
-        description="User's display name.",
-        default_factory=ApiOmitted
+        description="User's display name.", default_factory=ApiOmitted
     )
 
     # Nullable field
@@ -682,35 +715,25 @@ class UserModel:
 
     # Optional and nullable field
     location: str | None | ApiOmitted = api_field(
-        description="User's location.",
-        default_factory=ApiOmitted
+        description="User's location.", default_factory=ApiOmitted
     )
 
     # Field with custom JSON key name
-    email_address: str = api_field(
-        description="User's email.",
-        serialization_alias="emailAddress"
-    )
+    email_address: str = api_field(description="User's email.", serialization_alias="emailAddress")
 
     # Field with default value
     status: Literal["active", "suspended", "inactive"] = api_field(
-        description="Account status.",
-        default="active"
+        description="Account status.", default="active"
     )
 
     # Constant field
     type: Literal["user"] = "user"
 
     # Boolean field
-    is_verified: bool = api_field(
-        description="Whether user is verified.",
-        default=False
-    )
+    is_verified: bool = api_field(description="Whether user is verified.", default=False)
 
     # List field
-    roles: list[str] = api_field(
-        description="User roles."
-    )
+    roles: list[str] = api_field(description="User roles.")
 
     # Dict field
     preferences: dict[str, Any] | None = api_field(

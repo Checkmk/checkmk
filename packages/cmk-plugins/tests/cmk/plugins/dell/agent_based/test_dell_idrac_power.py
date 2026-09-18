@@ -162,3 +162,60 @@ def test_check_dell_idrac_power_unit(  # type: ignore[misc]
     parsed = parse_dell_idrac_power(string_table)
     result = list(check_dell_idrac_power_unit(item, parsed))
     assert result == expected_results
+
+
+# Section of crash report 9aaa03be-7b12-11f1-ba68-bc2411416c01 (CMK-37257): the iDRAC answers
+# powerSupplyIndex for two power supplies and nothing for their status, type and name.
+_CRASH_SECTION: list[StringTable] = [
+    [["1", "1", "0"]],
+    [["1", "", "", ""], ["2", "", "", ""]],
+    [],
+]
+
+
+def test_power_supply_without_reported_status_is_still_discovered() -> None:
+    section = parse_dell_idrac_power(_CRASH_SECTION)
+
+    services = list(discover_dell_idrac_power_unit(section))
+
+    assert services == [Service(item="1"), Service(item="2")]
+
+
+def test_power_supply_without_reported_status_says_the_device_did_not_report_it() -> None:
+    section = parse_dell_idrac_power(_CRASH_SECTION)
+
+    results = list(check_dell_idrac_power_unit("1", section))
+
+    assert results == [Result(state=State.UNKNOWN, summary="Status: not reported by the device")]
+
+
+def test_power_unit_without_reported_redundancy_status_says_the_device_did_not_report_it() -> None:
+    section = parse_dell_idrac_power([[["1", "", "2"]], [], []])
+
+    results = list(check_dell_idrac_power("1", section))
+
+    assert results == [Result(state=State.UNKNOWN, summary="Status: not reported by the device")]
+
+
+def test_power_supply_reports_only_the_values_the_device_delivers() -> None:
+    section = parse_dell_idrac_power([_REDUNDANCY, [["1", "3", "", ""]], []])
+
+    results = list(check_dell_idrac_power_unit("1", section))
+
+    assert results == [Result(state=State.OK, summary="Status: OK")]
+
+
+def test_power_supply_without_reported_index_is_not_discovered() -> None:
+    section = parse_dell_idrac_power([_REDUNDANCY, [["", "3", "9", "PS1"]], []])
+
+    services = list(discover_dell_idrac_power_unit(section))
+
+    assert services == []
+
+
+def test_power_unit_without_reported_index_is_not_discovered() -> None:
+    section = parse_dell_idrac_power([[["", "1", "2"]], [], []])
+
+    services = list(discover_dell_idrac_power(section))
+
+    assert services == []

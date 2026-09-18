@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestDataValidationException
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
 from cmk.gui.watolib.rulesets import Ruleset
 
@@ -53,7 +53,7 @@ def move_rule_v1(
     tree = make_folder_tree(api_context.config)
     source_entry = get_rule_by_id(tree, rule_id)
 
-    if is_locked_by_quick_setup(source_entry.rule.locked_by):
+    if is_locked_by_config_bundle(source_entry.rule.locked_by):
         raise ProblemException(
             status=400,
             title="Rule is managed by Quick setup",
@@ -72,7 +72,7 @@ def move_rule_v1(
             dest_entry = get_rule_by_id(tree, body.rule_id, all_rulesets=all_rulesets)
             validate_rule_move(source_entry, dest_entry)
             if body.position == "before_specific_rule":
-                if is_locked_by_quick_setup(dest_entry.rule.locked_by):
+                if is_locked_by_config_bundle(dest_entry.rule.locked_by):
                     raise RestAPIRequestDataValidationException(
                         title="Invalid rule move.",
                         detail="Cannot move before a rule managed by Quick setup.",

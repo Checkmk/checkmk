@@ -192,7 +192,7 @@ check_plugin_solaris_services = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_solaris_services_summary(section: Section) -> DiscoveryResult:
+def discover_solaris_services_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

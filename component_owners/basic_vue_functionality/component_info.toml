@@ -3,6 +3,7 @@ display_name = "Basic Vue Functionality"
 previous_name = "Vue Framework"
 has_support_component = true
 members_required = 2
+tier = 1
 product_managers = ["cedric.archenoul@checkmk.com"]
 description = """
 The technical plumbing that makes Checkmk's modern (>= 2.5.0) user interface run,

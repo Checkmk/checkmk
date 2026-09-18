@@ -1308,17 +1308,17 @@ def test_compute_rates_single_disk_same_time_same_values() -> None:
     # same timestamp twice --> IgnoreResultsError twice
     store = dict[str, object]()
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(DISK, store)
+        diskstat._compute_rates_single_disk(DISK, store)  # noqa: SLF001
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(DISK, store)
+        diskstat._compute_rates_single_disk(DISK, store)  # noqa: SLF001
 
 
 def test_compute_rates_single_disk_diff_time_same_values() -> None:
     store = dict[str, object]()
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(DISK, store)
-    disk_w_rates = diskstat._compute_rates_single_disk(
+        diskstat._compute_rates_single_disk(DISK, store)  # noqa: SLF001
+    disk_w_rates = diskstat._compute_rates_single_disk(  # noqa: SLF001
         {
             **DISK,
             "timestamp": DISK["timestamp"] + 100,
@@ -1335,8 +1335,8 @@ def test_compute_rates_single_disk_diff_time_diff_values() -> None:
     # different timestamps --> IgnoreResults once
     store = dict[str, object]()
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(DISK_HALF, store)
-    disk_w_rates = diskstat._compute_rates_single_disk(DISK, store)
+        diskstat._compute_rates_single_disk(DISK_HALF, store)  # noqa: SLF001
+    disk_w_rates = diskstat._compute_rates_single_disk(DISK, store)  # noqa: SLF001
     assert set(disk_w_rates) == EXP_METRICS
     for k, v in disk_w_rates.items():
         if k == "queue_length":

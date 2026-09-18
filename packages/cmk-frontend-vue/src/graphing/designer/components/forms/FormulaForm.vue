@@ -13,9 +13,9 @@ import ItemIdChip from '../../calculation/components/ItemIdChip.vue'
 import { collectDirectRefs } from '../../calculation/formula'
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import { useItemDescription } from '../../composables/useItemDescription'
+import { useItemValidation } from '../../composables/useItemValidation'
 import type { DesignerItem } from '../../drafts'
 import { type FormulaItem, isSingleLine } from '../../types'
-import { isValid } from '../../validation'
 
 const { item, store, astErrors } = defineProps<{
   item: FormulaItem
@@ -24,6 +24,8 @@ const { item, store, astErrors } = defineProps<{
 }>()
 
 const { _t } = usei18n()
+
+const { isValid } = useItemValidation(store.items)
 const { describeItem } = useItemDescription()
 
 /** The sources the formula references directly, resolved to their table rows. */

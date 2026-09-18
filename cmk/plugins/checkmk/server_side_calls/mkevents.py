@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterator, Mapping
 
@@ -48,7 +47,7 @@ def generate_mkevents_command(
     if params.ignore_acknowledged:
         args.append("-a")
 
-    match params.show_last_log:
+    match params.show_last_log:  # type: ignore[exhaustive-match]
         case "summary":
             args.append("-l")
         case "details":

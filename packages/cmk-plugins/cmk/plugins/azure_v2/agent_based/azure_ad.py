@@ -50,7 +50,7 @@ def parse_azure_ad(string_table: StringTable) -> Section:
 def _str_to_seconds(value: str) -> int | None:
     try:
         return timegm(time.strptime(value, "%Y-%m-%dT%H:%M:%SZ"))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 

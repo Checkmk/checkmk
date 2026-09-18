@@ -3,13 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { AddTo, Interaction } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { AddTo, Interaction, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 
-import type { HorizontalLine, Metric, TimeRange } from './components/TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from './components/TimeSeriesGraph'
 import type { ConsolidationFn } from './components/consolidation'
 
-export type { HorizontalLine, Metric, TimeRange }
+export type { HorizontalLine, Metric, ShadedRegion, TimeRange }
 
 export interface TimeInterval {
   start: number // unix seconds
@@ -21,9 +21,35 @@ export interface TimeInterval {
 export type RequestedTimeRange = TimeInterval
 
 // Whether a committed range was translated (same span, shifted in time) or changed its
-// span. The brush coordination keeps the overview strip fixed under translation and
+// span. The brush snapshot keeps the overview strip fixed under translation and
 // re-derives it (multiplier × span) once the span changed.
 export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_span'
+
+// Who moved a fetch owner's requested time range: one of its own panels (by key), the page's
+// time picker, or a different graph group on the page. A panel reacts by source instead of
+// guessing whether a change was its own commit echoing back.
+export type PanelKey = number
+export type RangeChangeSource = 'time_picker' | 'other_group' | PanelKey
+export interface RangeChange {
+  version: number
+  source: RangeChangeSource
+}
+
+/**
+ * The bar's geometry is `window` projected through `drawnDomain`, so a window measured against a
+ * strip it was never derived from lands anywhere. Only `useBrushSnapshot` assembles one, and it
+ * writes both in a single assignment for that reason.
+ */
+export interface BrushSnapshot<TData> {
+  drawnDomain: TimeInterval
+  window: TimeInterval
+  data: TData
+}
+
+export interface BrushOverview {
+  metrics: Metric[]
+  dataTimeRange: TimeRange
+}
 
 // The graph a burger-menu action acts on: the add-to backends store the specification and replay
 // it, the export builds the request the legacy popup builds - out of the specification and the
@@ -50,6 +76,18 @@ export interface BurgerMenuGroup {
   actions: BurgerMenuAction[]
 }
 
+// What a graph group applies to every graph it renders. The backend omits `display`
+// entirely or sends the whole object, so a missing key is a bug, not "use the default".
+export interface GraphDisplayOptions {
+  show_consolidation: boolean
+  show_legend: boolean
+  show_title: boolean
+  show_vertical_axis: boolean
+  show_time_axis: boolean
+  // In CSS pixels; the one field the backend may omit, leaving the renderer's default.
+  min_value_axis_width?: number
+}
+
 // The presentational panel around the renderer with header, legend, and brush zones;
 // the hosting group owns the data fetch and range state.
 export interface GraphPanelProps {
@@ -59,12 +97,22 @@ export interface GraphPanelProps {
   // so that parent components can forward their own optional range prop directly.
   dataTimeRange?: TimeRange | undefined
   requestedTimeRange: RequestedTimeRange
-  timePickerRequests: number
+  // While true the panel draws the range its data covers, not the one requested.
+  awaitingData?: boolean | undefined
+  // Identifies this panel as the source of its own range commits.
+  panelKey: PanelKey
+  // The latest change to requestedTimeRange and who made it; absent until the first one.
+  rangeChange?: RangeChange | undefined
+  yAxis?: YAxis | null
   interaction: Interaction
   title?: string
   showTitle?: boolean
   showTimestamp?: boolean
+  showTimeAxis?: boolean
+  showValueAxis?: boolean
+  minValueAxisWidth?: number | undefined
   horizontalLines?: HorizontalLine[]
+  shadedRegions?: ShadedRegion[]
   // Outer figure dimensions (plot area + axis/label margins). The renderer derives
   // the plot (canvas) size by subtracting its margins.
   figureWidth: number
@@ -72,9 +120,9 @@ export interface GraphPanelProps {
   showConsolidation?: boolean
   showLegend?: boolean
   legendPosition?: 'bottom' | 'right'
-  overview?: { metrics: Metric[]; dataTimeRange: TimeRange; viewTimeRange: TimeRange } | undefined
+  brushSnapshot?: BrushSnapshot<BrushOverview> | undefined
   addTo?: AddTo | null | undefined
-  headerIsCompact?: boolean
+  isHoverGraph?: boolean
 }
 
 // `update:consolidationFn` is absent by necessity: `defineModel` already declares it in the panel.

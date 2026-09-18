@@ -294,7 +294,6 @@ def test_failed_login_counter_automation(with_automation_user: tuple[str, str], 
         assert _get_failed_logins(site, username) == 0
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 def test_local_secret_no_sessions(site: Site) -> None:
     """test authenticated request with the site internal secret
@@ -504,7 +503,7 @@ def test_rest_api_bearer_auth_denied_by_auth_config(  # type: ignore[misc]
             id="password_change_required_valid_user",
         ),
         pytest.param(
-            lambda *args: contextlib.nullcontext(),
+            lambda *args: contextlib.nullcontext(),  # noqa: ARG005
             ["require_two_factor_all_users = True", "auth_by_http_header = 'X-Remote-User'"],
             ADMIN_USER,
             id="2fa_setup_required_valid_user",
@@ -554,7 +553,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             id="password_change_required_invalid_user",
         ),
         pytest.param(
-            lambda *args: contextlib.nullcontext(),
+            lambda *args: contextlib.nullcontext(),  # noqa: ARG005
             ["require_two_factor_all_users = True", "auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Two-factor setup is required for user.",

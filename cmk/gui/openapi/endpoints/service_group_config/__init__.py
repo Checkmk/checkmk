@@ -158,7 +158,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     response_schema=ServiceGroupCollection,
     permissions_required=PERMISSIONS,
 )
-def list_groups(params: Mapping[str, Any]) -> Response:
+def list_groups(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all service groups"""
     user.need_permission("wato.groups")
     collection = build_group_list(load_service_group_information())

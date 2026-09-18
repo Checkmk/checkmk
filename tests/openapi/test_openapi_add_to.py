@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping
 
+import pytest
+
 from cmk.graphing_engine import (
     AutoPrecision,
     Curve,
@@ -18,8 +20,7 @@ from cmk.graphing_engine import (
     ServiceName,
     Unit,
 )
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from tests.testlib.rest_api_client import ClientRegistry
 
 _TEMPLATE_SPEC = {
@@ -91,9 +92,8 @@ _EMPTY_DASHBOARD = {
 }
 
 
-def test_add_to_visual_stores_the_graph_in_the_dashboard(
-    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-) -> None:
+@pytest.mark.usefixtures("mock_livestatus")
+def test_add_to_visual_stores_the_graph_in_the_dashboard(clients: ClientRegistry) -> None:
     # mock_livestatus is required because graph widgets want the connected site PIDs; no queries
     # are actually executed.
     clients.DashboardClient.create_relative_grid_dashboard(payload=_EMPTY_DASHBOARD)
@@ -164,10 +164,10 @@ def test_add_to_visual_rejects_an_unparseable_specification(clients: ClientRegis
 def test_add_to_visual_rejects_a_graph_kind_without_an_add_to_action(
     clients: ClientRegistry,
 ) -> None:
-    # An explicit graph carries its metrics inline and declares no add_visual_type, so there is
-    # nothing the backends could store and replay.
+    # A forecast graph is rendered from its own saved page and declares no add_visual_type, so there
+    # is nothing the backends could store and replay.
     resp = clients.Graph.add_to_visual(
-        specification={"graph_type": "explicit", "metrics": [], "specification": []},
+        specification={"graph_type": "forecast", "id": "my_forecast"},
         family="dashboards",
         target_id="my_dashboard",
         expect_ok=False,

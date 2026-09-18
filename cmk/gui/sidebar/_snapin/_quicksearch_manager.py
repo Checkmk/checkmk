@@ -20,8 +20,9 @@ from cmk.gui.search.quicksearch import (
     UrlBuilder,
     UsedFilters,
 )
-from cmk.gui.type_defs import HTTPVariables, SearchQuery, SearchResultsByTopic
+from cmk.gui.type_defs import SearchQuery, SearchResultsByTopic
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.urls import HTTPVariable
 
 
 class TooManyRowsError(MKException):
@@ -56,7 +57,7 @@ class SnapinQuicksearchManager:
             self.conduct_search(search_objects)
 
         # Generate a search page for the topmost search_object with results
-        url_params: HTTPVariables = []
+        url_params: list[HTTPVariable] = []
         for search_object in search_objects:
             if search_object.num_rows() > 0:
                 url_params.extend(search_object.get_search_url_params())

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
@@ -93,7 +92,7 @@ def _parse_configured_timeperiods(raw: object) -> TimeperiodSpecs:
 
 
 def _parse_daytimeframe(value: object) -> DayTimeFrame:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case (start, end):
             return (str(start), str(end))
     raise TypeError(f"Error parsing DayTimeFrame: {value!r}")

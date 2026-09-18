@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+
 const modelValue = defineModel({ type: Boolean, default: false })
 
 function toggle() {
@@ -26,7 +28,15 @@ function toggle() {
       @click="toggle"
       @keydown.space.prevent="toggle"
       @keydown.enter.prevent="toggle"
-    ></span>
+    >
+      <span class="cmk-switch__thumb">
+        <CmkMultitoneIcon
+          :name="modelValue ? 'checkmark' : 'cancel'"
+          :primary-color="{ custom: 'var(--color-white-100)' }"
+          size="xxsmall"
+        />
+      </span>
+    </span>
   </span>
 </template>
 
@@ -35,8 +45,8 @@ function toggle() {
 .cmk-switch {
   position: relative;
   display: inline-block;
-  width: 18px;
-  height: 10px;
+  width: 29px;
+  height: 16px;
 
   /* Hide default HTML checkbox */
   input {
@@ -51,21 +61,27 @@ function toggle() {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: var(--color-daylight-grey-60);
-  transition: background-color 0.4s;
-  border-radius: 5px; /* Rounded sliders */
+  box-sizing: border-box;
+  background-color: var(--switch-off-bg-color);
+  border: 1px solid var(--switch-off-border-color);
+  transition:
+    background-color 0.4s,
+    border-color 0.4s;
+  border-radius: 8px; /* Rounded sliders */
+}
 
-  &::before {
-    position: absolute;
-    content: '';
-    height: 8px;
-    width: 8px;
-    left: 1px;
-    bottom: 1px;
-    background-color: white;
-    transition: transform 0.4s;
-    border-radius: 50%; /* Rounded sliders */
-  }
+.cmk-switch__thumb {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 12px;
+  width: 12px;
+  left: 1px;
+  top: 1px;
+  background-color: var(--switch-thumb-color);
+  transition: transform 0.4s;
+  border-radius: 50%; /* Rounded sliders */
 }
 
 .cmk-switch__slider:focus-visible {
@@ -73,10 +89,11 @@ function toggle() {
 }
 
 input:checked + .cmk-switch__slider {
-  background-color: var(--color-corporate-green-50);
+  background-color: var(--switch-on-bg-color);
+  border-color: var(--switch-on-border-color);
 
-  &::before {
-    transform: translateX(8px);
+  .cmk-switch__thumb {
+    transform: translateX(13px);
   }
 }
 </style>

@@ -30,8 +30,8 @@ test.each<[ServiceState, string]>([
   expect(screen.getByText(label)).toBeInTheDocument()
 })
 
-test('renders the pending label regardless of the state', () => {
-  render(ServiceStateDisplay, { props: { state: 'CRIT', pending: true } })
+test('renders the pending label for the PENDING state', () => {
+  render(ServiceStateDisplay, { props: { state: 'PENDING' } })
 
   expect(screen.getByText('PENDING')).toBeInTheDocument()
   expect(screen.queryByText('CRITICAL')).not.toBeInTheDocument()

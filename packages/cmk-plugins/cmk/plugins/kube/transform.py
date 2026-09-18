@@ -7,8 +7,6 @@ This file contains helper functions to convert kubernetes specific
 data structures to version independent data structured defined in schemata.api
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping, Sequence
 from typing import cast, Literal
 

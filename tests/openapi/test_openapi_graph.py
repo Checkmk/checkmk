@@ -24,7 +24,7 @@ from cmk.graphing_engine import (
     Sum,
     Unit,
 )
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -125,11 +125,18 @@ def test_fetch_graph_data_comprehensive_graph(
         "notation": "decimal",
         "symbol": "X",
         "precision": {"type": "auto", "digits": 2},
-        "convertible": True,
+        # Already converted by the fetch, so the renderer must not convert it again.
+        "convertible": False,
     }
 
     def _metadata(name: str) -> dict[str, object]:
-        return {"name": name, "title": "m", "unit": unit, "color": "#FFFFFF"}
+        return {
+            "name": name,
+            "title": "m",
+            "unit": unit,
+            "color": "#FFFFFF",
+            "attributes": [],
+        }
 
     assert resp.json == {
         # The header reads the evaluated title, so the fetch is what carries it.
@@ -163,6 +170,7 @@ def test_fetch_graph_data_comprehensive_graph(
                 "color": "#FFFFFF",
             }
         ],
+        "shaded_regions": [],
         "warnings": [],
         "errors": [],
     }

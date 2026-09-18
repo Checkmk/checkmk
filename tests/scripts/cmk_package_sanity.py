@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201  # It's OK for scripts to print()
+
 """Package sanity check: install CMK package(s) on a clean OS in a Docker container.
 
 For each package a matching OS container is started (the target OS is derived from
@@ -28,7 +30,6 @@ from textwrap import dedent
 from typing import ClassVar, Literal, override
 
 import docker
-import docker.models
 import docker.models.containers
 import docker.models.images
 import requests
@@ -414,7 +415,7 @@ class CmkPackageSanity:
             codename = name.removesuffix(package_path.suffix).rsplit(".", 1)[-1].split("_")[0]
             return DebianContainer(
                 tag_name=codename,
-                os_version=DebianContainer._CODENAME_VERSIONS.get(codename, Decimal(0)),
+                os_version=DebianContainer._CODENAME_VERSIONS.get(codename, Decimal(0)),  # noqa: SLF001
                 verbose=verbose,
             )
         raise ValueError(f'Unsupported package "{package_path}"!')

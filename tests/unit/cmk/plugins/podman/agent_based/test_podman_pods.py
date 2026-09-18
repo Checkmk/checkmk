@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -26,11 +25,11 @@ _STRING_TABLE = [
 ]
 
 
-def test_discover_podman_pods():
+def test_discover_podman_pods() -> None:
     assert list(discover_podman_pods(parse_podman_pods(_STRING_TABLE))) == [Service()]
 
 
-def test_discover_podman_pods_empty_table():
+def test_discover_podman_pods_empty_table() -> None:
     assert list(discover_podman_pods(parse_podman_pods([[]]))) == [Service()]
 
 

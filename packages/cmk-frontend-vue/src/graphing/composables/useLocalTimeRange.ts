@@ -5,8 +5,8 @@
  */
 import { computed, ref } from 'vue'
 
-import type { RequestedTimeRange } from '../types'
-import type { RequestedTimeRangeState } from './useRequestedTimeRange'
+import type { PanelKey, RangeChange, RequestedTimeRange } from '../types'
+import { type RequestedTimeRangeState, nextRangeChange } from './useRequestedTimeRange'
 
 /**
  * The requested time range of a graph owner that answers to nobody but itself.
@@ -18,12 +18,14 @@ import type { RequestedTimeRangeState } from './useRequestedTimeRange'
  */
 export function useLocalTimeRange(initial: RequestedTimeRange): RequestedTimeRangeState {
   const request = ref<RequestedTimeRange>({ ...initial })
+  const rangeChange = ref<RangeChange | undefined>(undefined)
 
   return {
     requestedTimeRange: computed(() => request.value),
-    setRequestedTimeRange: (range: RequestedTimeRange) => {
+    setRequestedTimeRange: (range: RequestedTimeRange, source: PanelKey) => {
       request.value = { start: range.start, end: range.end }
+      rangeChange.value = nextRangeChange(rangeChange.value, source)
     },
-    timePickerRequests: computed(() => 0)
+    rangeChange: computed(() => rangeChange.value)
   }
 }

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
@@ -31,7 +29,7 @@ Section = Sequence[models.AlertModel]
 # }
 
 
-def format_alert(alert):
+def format_alert(alert: models.AlertModel) -> str:
     s = alert.name
     if alert.acknowledge:
         s += f", acknowledged by {alert.acknowledger}"
@@ -52,7 +50,7 @@ agent_section_netapp_ontap_status = AgentSection(
 )
 
 
-def discovery_netapp_ontap_status(section: Section) -> DiscoveryResult:
+def discovery_netapp_ontap_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

@@ -38,7 +38,7 @@ class BIRuleProperties(ABCWithSchema):
 
     @classmethod
     @override
-    def schema(cls) -> type["BIRulePropertiesSchema"]:
+    def schema(cls) -> type[BIRulePropertiesSchema]:
         return BIRulePropertiesSchema
 
     def serialize(self) -> dict[str, Any]:
@@ -99,7 +99,7 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError
 
     @abstractmethod
-    def clone(self, existing_rule_ids: Sequence[str]) -> "ABCBIRule":
+    def clone(self, existing_rule_ids: Sequence[str]) -> ABCBIRule:
         raise NotImplementedError
 
     @abstractmethod

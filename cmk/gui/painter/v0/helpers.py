@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
@@ -17,16 +17,16 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLTagAttributeValue
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ColumnName, HTTPVariables, Row
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.view_utils import CellSpec, get_host_list_links
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 
-def render_cache_info(what: str, row: Row) -> str:
+def render_cache_info(what: str, row: Row) -> str:  # noqa: ARG001
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]
     cache_age = time.time() - cached_at
@@ -127,11 +127,11 @@ class RenderLink:
         filename: str,
         *,
         html_text: str | None = None,
-        query_args: HTTPVariables | None = None,
+        query_args: Sequence[HTTPVariable] | None = None,
         mobile_filename: str | None = None,
     ) -> HTML:
         """Return a fully rendered <a href...>...</a> tag."""
-        _query_args: HTTPVariables = []
+        _query_args: list[HTTPVariable] = []
         if options := self.request.var("display_options"):
             _query_args.append(("display_options", options))
 

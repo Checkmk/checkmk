@@ -36,7 +36,6 @@ from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
-from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -55,7 +54,8 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.escaping import escape_to_html_permissive
-from cmk.web.utils.urls import makeactionuri, makeuri, urlencode_vars
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, urlencode_vars
 
 
 def show_annotations(
@@ -76,7 +76,7 @@ def show_annotations(
             table.cell("#", css=["narrow nowrap"])
             html.write_text_permissive(nr)
             table.cell("", css=["buttons"])
-            anno_vars: HTTPVariables = [
+            anno_vars: list[HTTPVariable] = [
                 ("anno_site", site_id),
                 ("anno_host", host),
                 ("anno_service", service or ""),
@@ -85,7 +85,7 @@ def show_annotations(
             ]
             edit_url = makeuri(request, anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), StaticIcon(IconNames.edit))
-            del_anno: HTTPVariables = [("_delete_annotation", "1")]
+            del_anno: list[HTTPVariable] = [("_delete_annotation", "1")]
             delete_url = make_confirm_delete_link(
                 i18n=_,
                 url=makeactionuri(request, transactions.get(), del_anno + anno_vars),
@@ -246,7 +246,7 @@ def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def _validate_reclassify_of_states(value: dict[str, object], varprefix: str) -> None:
+def _validate_reclassify_of_states(value: dict[str, object], varprefix: str) -> None:  # noqa: ARG001
     host_state = value.get("host_state")
     if host_state is not None and not value.get("host"):
         raise MKUserError(

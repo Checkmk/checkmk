@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useId } from 'vue'
 
 defineProps<{ variant: 'add' | 'remove' }>()
 
@@ -15,10 +16,29 @@ const { _t } = usei18n()
 const addPinLabel = _t('Add pin')
 const removePinLabel = _t('Remove pin')
 
-const MINUS_BAR =
-  'M9.62421 5.00757C10.1765 5.00757 10.624 5.45523 10.6241 6.00746C10.6238 6.55948 ' +
-  '10.1763 7.00735 9.62421 7.00735H2.39017C1.83808 7.00735 1.3906 6.55948 1.39028 6.00746' +
-  'C1.39034 5.45523 1.83792 5.00757 2.39017 5.00757L9.62421 5.00757Z'
+// The design's marker, verbatim; colours are left to the stylesheet so the state can set them.
+const BODY =
+  'M4.5 0a4.5 4.5 0 0 1 3.897 6.75L5.414 13.45c-.353.79-1.475.79-1.827 0L.604 6.75A4.5 ' +
+  '4.5 0 0 1 4.5 0m-.052 1.969a2.813 2.813 0 1 0 0 5.625 2.813 2.813 0 0 0 0-5.625'
+
+const SILHOUETTE =
+  'M4.5 0a4.5 4.5 0 0 1 3.897 6.75L5.414 13.45c-.353.79-1.475.79-1.827 0L.604 6.75A4.5 ' +
+  '4.5 0 0 1 4.5 0'
+
+// A stroke expanded into a fill, masked to the silhouette's inner half.
+const OUTLINE =
+  'M4.5 0v-1zM.604 6.75l.913-.407-.021-.048-.027-.046zm7.793 0-.913-.406zm0 ' +
+  '0-.866-.501zM4.5 0v1A3.5 3.5 0 0 1 8 4.5h2A5.5 5.5 0 0 0 4.5-1zM9 4.5H8c0 .638-.171 ' +
+  '1.234-.469 1.749l.866.5.865.501A5.5 5.5 0 0 0 10 4.5zm-.603 2.25-.913-.406L4.5 ' +
+  '13.042l.914.407.913.407 2.984-6.699zm-4.81 ' +
+  '6.699.913-.407-2.983-6.699-.913.407-.914.407 2.983 6.699zM.604 6.75l.865-.5A3.5 3.5 0 ' +
+  '0 1 1 4.5h-2c0 1.002.27 1.942.738 2.75zM0 4.5h1A3.5 3.5 0 0 1 4.5 1v-2A5.5 5.5 0 0 0-1 ' +
+  '4.5zm5.414 8.949-.914-.407-.913.407-.914.407c.704 1.581 2.95 1.582 3.654 0zM8.397 ' +
+  '6.75v1a1 1 0 0 1-.913-1.406zl.914.407a1 1 0 0 0-.914-1.407zm0 0-.866-.501a1 1 0 0 0 ' +
+  '.866 1.501zv-1a1 1 0 0 1 .865 1.5z'
+
+// Two handles can share a page, so each needs its own copy of the exported id.
+const maskId = `graphing-pin-mask-${useId()}`
 
 function onClick(): void {
   emit('action')
@@ -29,32 +49,23 @@ function onClick(): void {
   <button
     type="button"
     class="graphing-pin-handle"
+    :class="`graphing-pin-handle--${variant}`"
     :aria-label="variant === 'add' ? addPinLabel : removePinLabel"
     @click.stop="onClick"
     @mousedown.stop
   >
-    <svg class="graphing-pin-handle__svg" viewBox="0 0 20 20" aria-hidden="true">
-      <circle class="graphing-pin-handle__halo" cx="10" cy="10" r="12" />
-      <circle class="graphing-pin-handle__body" cx="10" cy="10" r="9.5" />
-      <g transform="translate(4 4)">
-        <circle class="graphing-pin-handle__disc" cx="6" cy="6" r="6" />
-        <path class="graphing-pin-handle__glyph" :d="MINUS_BAR" />
-        <path
-          v-if="variant === 'add'"
-          class="graphing-pin-handle__glyph"
-          :d="MINUS_BAR"
-          transform="rotate(90 6 6)"
-        />
-      </g>
+    <svg class="graphing-pin-handle__svg" viewBox="0 0 9 15" fill="none" aria-hidden="true">
+      <path class="graphing-pin-handle__body" :d="BODY" />
+      <mask :id="maskId" fill="#fff">
+        <path :d="SILHOUETTE" />
+      </mask>
+      <path class="graphing-pin-handle__outline" :d="OUTLINE" :mask="`url(#${maskId})`" />
     </svg>
   </button>
 </template>
 
 <style scoped>
 .graphing-pin-handle {
-  --graph-pin-disc: var(--color-corporate-green-50);
-  --graph-pin-glyph: var(--color-conference-grey-100);
-
   position: absolute;
   z-index: 3;
   margin: 0;
@@ -67,45 +78,39 @@ function onClick(): void {
 
 .graphing-pin-handle__svg {
   display: block;
-  width: 20px;
+  width: 9px;
   height: auto;
-  overflow: visible;
-}
-
-.graphing-pin-handle__halo {
-  fill: none;
-  stroke: var(--graph-pin-halo);
-  stroke-width: 4px;
-  opacity: 0;
-}
-
-.graphing-pin-handle:hover .graphing-pin-handle__halo {
-  opacity: 1;
 }
 
 .graphing-pin-handle__body {
-  fill: var(--graph-pin-body);
-  stroke: var(--graph-pin-outline);
-  stroke-width: 1;
+  fill: var(--graph-pin-color);
 }
 
-.graphing-pin-handle__disc {
-  fill: var(--graph-pin-disc);
+.graphing-pin-handle__outline {
+  fill: var(--graph-pin-color);
 }
 
-.graphing-pin-handle__glyph {
-  fill: var(--graph-pin-glyph);
+.graphing-pin-handle:hover .graphing-pin-handle__body {
+  fill: color-mix(in srgb, var(--color-white-100) 30%, var(--graph-pin-color));
 }
 
-body[data-theme='facelift'] .graphing-pin-handle {
-  --graph-pin-body: var(--color-white-100);
-  --graph-pin-outline: var(--color-conference-grey-100);
-  --graph-pin-halo: var(--color-conference-grey-10);
+body[data-theme='facelift'] {
+  .graphing-pin-handle--add {
+    --graph-pin-color: var(--color-conference-grey-70);
+  }
+
+  .graphing-pin-handle--remove {
+    --graph-pin-color: var(--color-corporate-green-70);
+  }
 }
 
-body[data-theme='modern-dark'] .graphing-pin-handle {
-  --graph-pin-body: var(--color-conference-grey-100);
-  --graph-pin-outline: var(--color-white-100);
-  --graph-pin-halo: var(--color-white-10);
+body[data-theme='modern-dark'] {
+  .graphing-pin-handle--add {
+    --graph-pin-color: var(--color-white-70);
+  }
+
+  .graphing-pin-handle--remove {
+    --graph-pin-color: var(--color-corporate-green-50);
+  }
 }
 </style>

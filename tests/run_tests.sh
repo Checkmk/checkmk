@@ -12,7 +12,7 @@ UVENV="$SCRIPTS/run-uvenv"
 EDITION="${EDITION:-pro}"
 MAX_CHARS=1500000
 
-AGENT_PLUGIN_PYTHON_VERSIONS="3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12"
+AGENT_PLUGIN_PYTHON_VERSIONS=$(grep -oP '^\s*AGENT_PLUGIN_PYTHON_VERSIONS\s*:=\s*\K.*' "${REPO_PATH}"/defines.make)
 
 # Re-evaluate TEST_FILTER as shell tokens so that shell-quoted expressions like
 # e.g. '-m "foo and bar"' split into proper arguments matching
@@ -57,7 +57,8 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-relay                       Run system tests for the relay (ultimate edition)
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
   test-system-otel                        Run system tests for otel (ultimate edition)
-  test-system-mcp                         Run system tests for the mcp-server (pro edition)
+  test-system-azure                       Run system tests for azure (ultimate edition)
+  test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
   test-system-update-community            Run update tests for community edition
@@ -102,6 +103,8 @@ MYPY / FORMAT / PACKAGING
   test-mypy-cmk                           Run mypy on cmk targets
   test-mypy-gpl                           Run mypy with GPL config
   test-packaging                          Run packaging tests
+  test-artifact-relay-image               Run relay image artifact tests
+  test-artifact-relay-image-docker        Run relay image artifact tests in docker
   test-github-actions                     Run format, lint, unit tests, and mypy (community edition)
 
 OTHER TESTS
@@ -243,7 +246,7 @@ test-performance-docker() {
 test-performance-all() {
     local rc=0
     bazel test --test_output=streamed //tests/performance:bazel_performance || rc=$?
-    $UVENV "$(realpath "$SCRIPT_DIR/performance/perftest_upload.sh")" || return "$?"
+    $UVENV "$(realpath "$SCRIPT_DIR/performance/reporting/perftest_upload.sh")" || return "$?"
     return "$rc"
 }
 
@@ -350,10 +353,22 @@ test-system-otel() {
         --session-timeout 1800
 }
 
-test-system-mcp() {
-    EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/pro/mcp/" \
+test-system-azure-ultimate() {
+    EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure/" \
         --session-timeout 1800
+}
+
+test-system-azure-ultimate() {
+    EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure_extended/" \
+        --session-timeout 1800
+}
+
+test-system-ai-features() {
+    EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/ai_features")" \
+        --session-timeout 3600
 }
 
 test-system-oauth() {
@@ -484,6 +499,8 @@ test-system-singlesite-k8s-docker() { _system-tests-docker test-system-singlesit
 test-system-singlesite-non-root-docker() { _system-tests-docker test-system-singlesite-non-root; }
 test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-system-otel-docker() { _system-tests-docker test-system-otel; }
+test-system-azure-docker() { _system-tests-docker test-system-azure; }
+test-system-ai-features-docker() { _system-tests-docker test-system-ai-features; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
@@ -551,7 +568,23 @@ test-py-extensions() {
 
 test-packaging() {
     export PATH="$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
-    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging"
+    # The relay image suite tests a different artifact (an OCI image, not a
+    # deb/rpm), needs a Docker daemon, and has its own target below.
+    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging" \
+        --ignore="$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image"
+}
+
+test-artifact-relay-image() {
+    _pytest -x "$(realpath "$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image")" \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
+}
+
+# Unlike the -docker variants that run a site in a container via
+# run-dockerized.py, this one only runs the test code itself in a build
+# container via run-in-docker.sh; the relay image under test is pulled there.
+test-artifact-relay-image-docker() {
+    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION -e RELAY_IMAGE_TAG" \
+        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-artifact-relay-image
 }
 
 # ---------------------------------------------------------------------------

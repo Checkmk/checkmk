@@ -19,16 +19,25 @@
 //! This is the only component test binary executed on hosts without
 //! access to a test database (e.g. the Solaris and AIX test machines).
 
+use mk_oracle::config::authentication::Authentication;
 use mk_oracle::config::connection::{setup_wallet_environment, Connection};
 use mk_oracle::config::grid::GridInfrastructure;
+use mk_oracle::config::ora_sql::CustomInstance;
+use mk_oracle::config::target::{TargetId, TargetIdBuilder};
 use mk_oracle::config::yaml::test_tools::create_yaml;
 use mk_oracle::config::OracleConfig;
+use mk_oracle::ora_sql::backend::ClosedSpot;
+use mk_oracle::ora_sql::instance::{
+    calc_custom_spots, filter_spots_by_oracle_home, local_tns_aliases, TNS_NAMES_FILE,
+};
 use mk_oracle::platform::get_local_instances;
 use mk_oracle::setup::{
     contains_oracle_client_lib, create_plugin, detect_factory_runtime, detect_host_runtime,
-    detect_runtime, CLIENT_LIB_NAME,
+    detect_runtime, Env, CLIENT_LIB_NAME, TNS_ADMIN_ENV_VAR,
 };
 use mk_oracle::types::{EnvVarName, UseHostClient};
+use mk_oracle::types::{InstanceAlias, InstanceName, LocalInstance};
+use std::collections::HashSet;
 
 /// An Oracle client is installed on this machine: an `ORACLE_HOME` or an
 /// oratab/registry entry whose home contains the Oracle client library.
@@ -71,7 +80,7 @@ fn test_contains_oracle_client_lib() {
 #[test]
 fn test_detect_factory_runtime_without_client_lib() {
     let lib_dir = tempfile::tempdir().unwrap();
-    let runtime = lib_dir.path().join("plugins/packages/mk-oracle");
+    let runtime = lib_dir.path().join("plugins/libexec/mk-oracle-v2/oic");
     std::fs::create_dir_all(&runtime).unwrap();
     // the directory exists but has no client library -> rejected
     assert!(detect_factory_runtime(lib_dir.path()).is_none());
@@ -93,12 +102,7 @@ fn base_dir() -> std::path::PathBuf {
 /// Directory inside the test fixture tree that contains the Oracle client
 /// library (populated by the run script / run.ps1).
 fn client_runtime_dir() -> std::path::PathBuf {
-    let dir = base_dir().join("runtimes/plugins/packages/mk-oracle");
-    if cfg!(windows) {
-        dir.join("runtime")
-    } else {
-        dir
-    }
+    base_dir().join("runtimes/plugins/libexec/mk-oracle-v2/oic")
 }
 
 #[test]
@@ -214,6 +218,21 @@ fn test_detect_runtime_without_runtime() {
     let wrong_path = correct_path + "something-missing";
     let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir, None);
     assert!(path.is_none());
+}
+
+#[test]
+fn test_detect_runtime_env_reports_a_missing_client() {
+    use mk_oracle::setup::{detect_runtime_env, RuntimeError};
+
+    // Windows counts only a path with a drive prefix as absolute, and a
+    // non-absolute use_host_client falls back to `auto`.
+    #[cfg(not(windows))]
+    let missing = "/no-such-dir/instantclient";
+    #[cfg(windows)]
+    let missing = r"C:\no-such-dir\instantclient";
+
+    let cfg = OracleConfig::load_str(&make_config_with_use_host(missing)).unwrap();
+    assert_eq!(detect_runtime_env(&cfg), Err(RuntimeError::NotFound));
 }
 
 fn make_config_with_use_host(use_host: &str) -> String {
@@ -430,9 +449,13 @@ fn test_find_current_instance_runtime() {
         std::env::set_var(temp_var, db_location.path());
     }
     assert!(find_env_var_lib_runtime(temp_var).is_none());
-    let lib_path = db_location.path().join("lib");
+    // A full Oracle home keeps the client library in `bin` on Windows and in
+    // `lib` on Unix, so the test has to create the one the function looks in.
+    let lib_path = db_location
+        .path()
+        .join(if cfg!(windows) { "bin" } else { "lib" });
     std::fs::create_dir_all(&lib_path).unwrap();
-    // a lib dir without a client library is rejected
+    // the directory without a client library is rejected
     assert!(find_env_var_lib_runtime(temp_var).is_none());
     let lib_file = if cfg!(windows) {
         "oci.dll"
@@ -873,7 +896,7 @@ mod custom_path_tests {
                     || s.name().as_str() == item_or_name
             })
             .expect("section not found in config");
-        Section::new(cfg, 0, config.options())
+        Section::new(cfg, Some(0), config.options())
     }
 
     /// First resolved query body for `section` at `version`, using `search_dirs`
@@ -1625,4 +1648,138 @@ oracle:
         ora_sql.conn().grid()
     )
     .is_none());
+}
+
+// --- target filtering: writes a tnsnames.ora, so a component test rather than
+// --- a unit test.
+
+/// One instance per target shape the filter distinguishes.
+fn instance_for_home(target: Option<TargetId>, wallet: bool) -> CustomInstance {
+    let auth = if wallet {
+        Authentication::from_yaml(&create_yaml(
+            "authentication:\n  username: u\n  password: p\n  type: wallet",
+        ))
+        .unwrap()
+        .unwrap()
+    } else {
+        Authentication::default()
+    };
+    CustomInstance::new(auth, Connection::default(), target, None, None)
+}
+
+fn sid_target(sid: &str) -> Option<TargetId> {
+    TargetIdBuilder::new().sid(Some(sid)).build()
+}
+
+fn alias_target(alias: &str) -> Option<TargetId> {
+    TargetIdBuilder::new()
+        .alias(Some(&InstanceAlias::from(alias.to_string())))
+        .build()
+}
+
+fn local_instance(name: &str, home: &str) -> LocalInstance {
+    LocalInstance {
+        name: InstanceName::from(name),
+        home: std::path::PathBuf::from(home),
+        base: None,
+    }
+}
+
+/// Names of the spots that survived, as the log reports them.
+fn surviving(spots: Vec<ClosedSpot>, env: &Env, known: &[LocalInstance]) -> Vec<String> {
+    let mut names: Vec<String> = filter_spots_by_oracle_home(spots, env, known)
+        .iter()
+        .map(|spot| spot.target().display_name())
+        .collect();
+    names.sort();
+    names
+}
+
+#[test]
+fn test_local_tns_aliases_reads_the_home_file() {
+    if std::env::var_os(TNS_ADMIN_ENV_VAR).is_some() {
+        return;
+    }
+    let home = tempfile::tempdir().expect("temp home");
+    let home = home.path();
+    let admin = home.join("network").join("admin");
+    std::fs::create_dir_all(&admin).expect("tns admin dir");
+    std::fs::write(
+        admin.join(TNS_NAMES_FILE),
+        "known = (ADDRESS = (HOST = h)(PORT = 1521))\n",
+    )
+    .expect("write tnsnames.ora");
+
+    let aliases = local_tns_aliases(&Env::with_oracle_home(home.to_str(), None));
+
+    let expected: HashSet<String> = ["KNOWN".to_string()].into_iter().collect();
+    assert_eq!(aliases, expected);
+}
+
+/// The three `LOCAL_ORACLE_HOME_TARGETS` states, against every target shape: a
+/// plain sid, a sid with wallet auth, an alias the local `tnsnames.ora` knows,
+/// and one it does not.
+#[test]
+fn test_filter_spots_by_oracle_home() {
+    let home = tempfile::tempdir().expect("temp home");
+    let home = home.path();
+    let tns_admin = home.join("network").join("admin");
+    std::fs::create_dir_all(&tns_admin).expect("tns admin dir");
+    std::fs::write(
+        tns_admin.join("tnsnames.ora"),
+        "known = (ADDRESS = (HOST = h)(PORT = 1521))\n",
+    )
+    .expect("write tnsnames.ora");
+
+    let spots = calc_custom_spots(&[
+        instance_for_home(sid_target("plain"), false),
+        instance_for_home(sid_target("walletsid"), true),
+        instance_for_home(alias_target("known"), false),
+        instance_for_home(alias_target("unknown"), false),
+    ]);
+    let known = [local_instance(
+        "walletsid",
+        home.to_str().expect("utf-8 temp dir"),
+    )];
+
+    let absent = surviving(
+        spots.clone(),
+        &Env::with_oracle_home(home.to_str(), None),
+        &[],
+    );
+    let global = surviving(
+        spots.clone(),
+        &Env::with_oracle_home(home.to_str(), Some(false)),
+        &[local_instance("walletsid", "/opt/oracle")],
+    );
+    let local = surviving(
+        spots.clone(),
+        &Env::with_oracle_home(home.to_str(), Some(true)),
+        &known,
+    );
+    let other_home = surviving(
+        spots.clone(),
+        &Env::with_oracle_home(Some("/opt/other"), Some(true)),
+        &known,
+    );
+    let no_home = surviving(
+        spots.clone(),
+        &Env::with_oracle_home(None, Some(true)),
+        &known,
+    );
+
+    assert_eq!(spots.len(), 4, "every target shape must yield a spot");
+    // Absent: nothing states how the targets are divided, so none is dropped.
+    assert_eq!(absent, vec!["KNOWN", "PLAIN", "UNKNOWN", "WALLETSID"]);
+    // `no`: an alias belongs to whichever tnsnames.ora resolves it - here none
+    // does, since no global TNS_ADMIN is set - and a local sid with wallet to
+    // the home holding that wallet. Only the sid no home owns stays.
+    assert_eq!(global, vec!["PLAIN"]);
+    // `yes`: only what this home resolves itself - its own sid with wallet, and
+    // the alias its own tnsnames.ora defines.
+    assert_eq!(local, vec!["KNOWN", "WALLETSID"]);
+    // `yes` for a home no local instance belongs to owns nothing, and `yes`
+    // without an ORACLE_HOME cannot own anything either.
+    assert!(other_home.is_empty());
+    assert!(no_home.is_empty());
 }

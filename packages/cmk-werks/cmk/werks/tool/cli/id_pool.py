@@ -17,7 +17,7 @@ from typing import Final, Protocol
 import requests
 
 from .in_out_elements import bail_out, TTY_NORMAL, TTY_RED
-from .stash import LegacyStash, Stash
+from .stash import Stash
 from .werk import WerkId
 
 # Use a single short timeout for every request so commands fail fast when the werk IDs
@@ -43,30 +43,11 @@ class Paths:
 
 
 def make_paths_object(home: Path) -> Paths:
-    paths = Paths(
+    return Paths(
         legacy_stash_file=home / ".cmk-werk-ids",
         stash_file=home / ".local/state/cmk-werks/reserved-ids",
         secret_file=home / ".config/cmk-werks/secret",
     )
-    _migrate_path_locations(home, paths)
-    return paths
-
-
-def _migrate_path_locations(home: Path, paths: Paths) -> None:
-    for old, new in (
-        (home / ".config/cmk-werk-ids-secret", paths.secret_file),
-        (home / ".local/state/cmk-werk-ids-reserved", paths.stash_file),
-    ):
-        if old.exists() and not new.exists():
-            new.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                old.rename(new)
-            except OSError as exc:
-                sys.stderr.write(
-                    f"Warning: could not migrate werk-ids file {old} to {new}: {exc}\n"
-                    f"Please move it manually; this automatic migration will be "
-                    f"removed at the start of September 2026.\n"
-                )
 
 
 def write_secret(secret_file: Path, secret: str) -> None:
@@ -79,22 +60,7 @@ def write_secret(secret_file: Path, secret: str) -> None:
         fp.write(secret)
 
 
-def load_legacy_stash_from_file(paths: Paths) -> LegacyStash:
-    if not paths.legacy_stash_file.exists():
-        return LegacyStash()
-
-    content = paths.legacy_stash_file.read_text(encoding="utf-8")
-    if not content:
-        return LegacyStash()
-
-    if content[0] == "[":
-        # we have a legacy file, from cmk project, we need to adapt it:
-        return LegacyStash.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
-
-    return LegacyStash.model_validate_json(content)
-
-
-def load_stash_from_file(paths: Paths) -> LegacyStash | Stash:
+def load_stash_from_file(paths: Paths) -> Stash:
     if paths.legacy_stash_file.exists() and paths.stash_file.exists():
         bail_out(
             f"{TTY_RED}Found both a legacy and a new werk IDs file:\n"
@@ -102,29 +68,23 @@ def load_stash_from_file(paths: Paths) -> LegacyStash | Stash:
             f"  {paths.stash_file}\n"
             f"Please run 'werk init' to merge them into a single file.{TTY_NORMAL}"
         )
-    if paths.secret_file.exists():
-        return (
-            Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
-            if paths.stash_file.exists()
-            else Stash()
+    if not paths.secret_file.exists():
+        bail_out(
+            f"Could not load werk IDs: No such files {paths.secret_file} and {paths.stash_file}"
         )
-    return load_legacy_stash_from_file(paths)
+    return (
+        Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+        if paths.stash_file.exists()
+        else Stash()
+    )
 
 
-def dump_stash_to_file(paths: Paths, stash: LegacyStash | Stash) -> None:
-    raw_stash = stash.model_dump_json(by_alias=True) + "\n"
-    match stash:
-        case LegacyStash():
-            target = paths.legacy_stash_file
-        case Stash():
-            target = paths.stash_file
-        case other:
-            raise TypeError(other)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(raw_stash, encoding="utf-8")
+def dump_stash_to_file(paths: Paths, stash: Stash) -> None:
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(stash.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
 
 
-def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
+def read_legacy_stash_file(paths: Paths) -> Sequence[int]:
     if not paths.legacy_stash_file.exists():
         return []
 
@@ -150,7 +110,7 @@ def migrate_werk_ids_file(paths: Paths) -> None:
         if paths.stash_file.exists()
         else Stash()
     )
-    stash.add_ids([WerkId(id_) for id_ in _read_legacy_stash_file(paths)])
+    stash.add_ids([WerkId(id_) for id_ in read_legacy_stash_file(paths)])
 
     dump_stash_to_file(paths, stash)
     paths.legacy_stash_file.unlink(missing_ok=True)
@@ -279,11 +239,8 @@ def _ensure_stash_file_writable(paths: Paths) -> None:
         )
 
 
-def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> LegacyStash | Stash:
+def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Stash:
     stash = load_stash_from_file(paths)
-
-    if isinstance(stash, LegacyStash):
-        return stash
 
     if not paths.secret_file.exists():
         bail_out(f"No such secret file {paths.secret_file}")
@@ -307,23 +264,3 @@ def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Legacy
         )
 
     return stash
-
-
-def pick_id_from_stash(stash: LegacyStash | Stash, project: str) -> WerkId:
-    match stash:
-        case LegacyStash():
-            return stash.pick_id(project=project)
-        case Stash():
-            return stash.pick_id()
-        case other:
-            raise TypeError(other)
-
-
-def add_id_to_stash(stash: LegacyStash | Stash, werk_id: WerkId, project: str) -> None:
-    match stash:
-        case LegacyStash():
-            stash.add_id(werk_id, project=project)
-        case Stash():
-            stash.add_ids([werk_id])
-        case other:
-            raise TypeError(other)

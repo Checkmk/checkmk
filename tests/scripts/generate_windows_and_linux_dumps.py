@@ -35,4 +35,4 @@ if __name__ == "__main__":
     with open(sys.argv[1]) as file:
         template = jinja2.Template(file.read())
 
-    print(template.render(timestamp=int(time.time())))
+    print(template.render(timestamp=int(time.time())))  # noqa: T201  # It's OK for scripts to print()

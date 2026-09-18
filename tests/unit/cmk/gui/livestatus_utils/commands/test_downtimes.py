@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime as dt
 from zoneinfo import ZoneInfo
@@ -17,7 +16,7 @@ from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="dates")
-def _dates():
+def _dates() -> tuple[dt.datetime, dt.datetime]:
     return (
         dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC")),
         dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC")),
@@ -254,38 +253,38 @@ def test_servicegroup_service_downtime_and_hosts(
 def test_del_host_downtime(mock_livestatus: MockLiveStatusConnection) -> None:
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         live.expect_query("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis")
-        downtimes._del_host_downtime(sites.live(), 1, None)
+        downtimes._del_host_downtime(sites.live(), 1, None)  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("request_context")
 def test_del_service_downtime(mock_livestatus: MockLiveStatusConnection) -> None:
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis")
-        downtimes._del_service_downtime(sites.live(), 1, None)
+        downtimes._del_service_downtime(sites.live(), 1, None)  # noqa: SLF001
 
 
 def test_recur_mode_fixed_no_duration() -> None:
-    assert downtimes._recur_mode("fixed", 0) == 1
+    assert downtimes._recur_mode("fixed", 0) == 1  # noqa: SLF001
 
 
 def test_recur_mode_fixed_with_duration() -> None:
-    assert downtimes._recur_mode("fixed", 30) == 0
+    assert downtimes._recur_mode("fixed", 30) == 0  # noqa: SLF001
 
 
 def test_recur_mode_second_week_no_duration() -> None:
-    assert downtimes._recur_mode("second_week", 0) == 9
+    assert downtimes._recur_mode("second_week", 0) == 9  # noqa: SLF001
 
 
 def test_deduplicate_list() -> None:
-    assert downtimes._deduplicate([1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1]) == [1, 2, 3, 4, 5, 6]
+    assert downtimes._deduplicate([1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1]) == [1, 2, 3, 4, 5, 6]  # noqa: SLF001
 
 
 def test_deduplicate_tuple() -> None:
-    assert downtimes._deduplicate((1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1)) == [1, 2, 3, 4, 5, 6]
+    assert downtimes._deduplicate((1, 1, 2, 1, 3, 4, 5, 1, 2, 3, 6, 1)) == [1, 2, 3, 4, 5, 6]  # noqa: SLF001
 
 
 def test_deduplicate_strings() -> None:
-    assert downtimes._deduplicate(["Hello", "Hello", "World", "World", "World", "!", "!", "!"]) == [
+    assert downtimes._deduplicate(["Hello", "Hello", "World", "World", "World", "!", "!", "!"]) == [  # noqa: SLF001
         "Hello",
         "World",
         "!",

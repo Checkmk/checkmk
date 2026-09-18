@@ -43,8 +43,8 @@ agent_section_kube_resource_quota_performance_cpu_v1 = AgentSection(
 
 
 def discovery_kube_resource_quota_cpu(
-    section_kube_resource_quota_performance_cpu: PerformanceUsage | None,
-    section_kube_resource_quota_cpu_resources: HardResourceRequirement | None,
+    section_kube_resource_quota_performance_cpu: PerformanceUsage | None,  # noqa: ARG001
+    section_kube_resource_quota_cpu_resources: HardResourceRequirement | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

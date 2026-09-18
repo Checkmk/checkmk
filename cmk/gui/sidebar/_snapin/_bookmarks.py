@@ -5,9 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable, Mapping
@@ -19,12 +17,12 @@ from cmk.gui import pagetypes
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -38,6 +36,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import is_allowed_url
 
 from ._base import SidebarSnapin
@@ -233,7 +232,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
             if instance.is_permitted(user_permissions):
                 for topic, _bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
-                        topic = instance.default_bookmark_topic()
+                        topic = instance.default_bookmark_topic()  # type: ignore[unreachable]
                     topics.add(topic)
         return [(t, t) for t in sorted(topics)]
 
@@ -330,7 +329,7 @@ class Bookmarks(SidebarSnapin):
         link(
             _("Add bookmark"),
             "javascript:void(0)",
-            onclick="cmk.sidebar.add_bookmark()",
+            click_action=ClickAction(action="add_bookmark"),
         )
         link(_("Edit"), "bookmark_lists.py")
         end_footnote_links()
@@ -344,7 +343,7 @@ class Bookmarks(SidebarSnapin):
             if instance.is_permitted(user_permissions):
                 for topic, bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
-                        topic = instance.default_bookmark_topic()
+                        topic = instance.default_bookmark_topic()  # type: ignore[unreachable]
                     bookmark_list = topics.setdefault(topic, [])
                     bookmark_list += bookmarks
         return sorted(topics.items())

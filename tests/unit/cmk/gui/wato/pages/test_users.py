@@ -47,10 +47,10 @@ def test_edit_user_keeps_the_stored_connector(test_edition: Edition) -> None:
     request.set_var("connector", "htpasswd")
 
     mode = ModeEditUser(test_edition, PageContext(config=Config(), request=request))
-    mode._user = UserSpec(connector="ldap_corp", alias="Directory User")
+    mode._user = UserSpec(connector="ldap_corp", alias="Directory User")  # noqa: SLF001
 
     user_attrs = UserSpec()
-    mode._get_identity_userattrs(user_attrs)
+    mode._get_identity_userattrs(user_attrs)  # noqa: SLF001
 
     assert user_attrs["connector"] == "ldap_corp", (
         "an edit must not reassign the owning connector -- doing so would "
@@ -112,7 +112,7 @@ def test_password_user_choose_secret_wo_secret(test_edition: Edition) -> None:
         is_automation_user=False,
         password=PasswordHash("$2y$12$foo"),
     )
-    mode._handle_auth_attributes(user_with_password_auth, PasswordPolicy(12, None, False, Path("")))
+    mode._handle_auth_attributes(user_with_password_auth, PasswordPolicy(12, None, False, Path("")))  # noqa: SLF001
     assert user_with_password_auth == {
         "is_automation_user": False,
         "store_automation_secret": False,
@@ -130,7 +130,7 @@ def test_password_user_choose_secret_w_secret(test_edition: Edition) -> None:
         password=PasswordHash("$2y$12$foo"),
         serial=42,
     )
-    mode._handle_auth_attributes(user_with_password_auth, PasswordPolicy(12, None, False, Path("")))
+    mode._handle_auth_attributes(user_with_password_auth, PasswordPolicy(12, None, False, Path("")))  # noqa: SLF001
     assert user_with_password_auth == {
         "automation_secret": "secret",
         "is_automation_user": True,
@@ -153,7 +153,7 @@ def test_automation_user_choose_secret_wo_secret(test_edition: Edition) -> None:
         serial=42,
         store_automation_secret=False,
     )
-    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None, False, Path("")))
+    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None, False, Path("")))  # noqa: SLF001
     assert user_with_secret_auth == {
         "is_automation_user": True,
         "last_pw_change": 23,
@@ -175,7 +175,7 @@ def test_automation_user_choose_password_wo_pw(test_edition: Edition) -> None:
         serial=42,
         store_automation_secret=False,
     )
-    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None, False, Path("")))
+    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None, False, Path("")))  # noqa: SLF001
     assert user_with_secret_auth == {
         "is_automation_user": False,
         "last_pw_change": 23,
@@ -188,7 +188,7 @@ def test_automation_user_choose_password_wo_pw(test_edition: Edition) -> None:
 def test_automation_user_choose_password_w_pw(test_edition: Edition) -> None:
     mode = ModeEditUser(test_edition, PageContext(config=Config(), request=request))
     request.set_var("authmethod", "password")
-    request.set_var("_password_" + mode._pw_suffix(), "longer_than_12")
+    request.set_var("_password_" + mode._pw_suffix(), "longer_than_12")  # noqa: SLF001
 
     user_with_secret_auth = UserSpec(
         is_automation_user=True,
@@ -197,7 +197,7 @@ def test_automation_user_choose_password_w_pw(test_edition: Edition) -> None:
         serial=42,
         store_automation_secret=False,
     )
-    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None, False, Path("")))
+    mode._handle_auth_attributes(user_with_secret_auth, PasswordPolicy(12, None, False, Path("")))  # noqa: SLF001
     assert user_with_secret_auth == {
         "is_automation_user": False,
         "last_pw_change": ANY,

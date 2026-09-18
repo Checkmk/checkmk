@@ -25,20 +25,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import (
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    StaticIcon,
-)
-from cmk.gui.utils.doc_references import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-    youtube_reference_url,
-    YouTubeReference,
-)
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
     LoadingTransition,
@@ -49,8 +36,22 @@ from cmk.gui.utils.selection_id import SelectionId
 from cmk.utils import paths
 from cmk.web.utils import escaping
 from cmk.web.utils.confirm_links import get_confirm_link_title
+from cmk.web.utils.doc_references import (
+    DocReference,
+    DocReferenceUtm,
+    youtube_reference_url,
+    YouTubeReference,
+)
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, requested_file_name, urlencode, urlencode_vars
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.urls import (
+    HTTPVariable,
+    is_allowed_url,
+    makeuri,
+    requested_file_name,
+    urlencode,
+    urlencode_vars,
+)
 
 
 @dataclass
@@ -206,7 +207,7 @@ def confirmed_form_submit_options(
     message: str | HTML | None = None,
     confirm_text: str | None = None,
     cancel_text: str | None = None,
-    icon: str | None = None,
+    icon: str | None = None,  # noqa: ARG001
     warning: bool = False,
 ) -> dict[str, str | dict[str, str]]:
     return {
@@ -326,6 +327,7 @@ class PageMenu:
     breadcrumb: Breadcrumb | None = None
     inpage_search: PageMenuSearch | None = None
     enable_suggestions: bool = True
+    show_up_link: bool = True
     hidden_vue_items: list[PageMenuVue] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -336,7 +338,12 @@ class PageMenu:
         self.dropdowns.append(make_help_dropdown())
 
         # Add the up-entry
-        if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
+        if (
+            self.show_up_link
+            and self.breadcrumb
+            and len(self.breadcrumb) > 1
+            and self.breadcrumb[-2].url
+        ):
             self.dropdowns.append(make_up_link(self.breadcrumb))
 
     def __getitem__(self, name: str) -> PageMenuDropdown:
@@ -439,7 +446,7 @@ def _make_filtered_url(request_: Request, *, exclude: tuple[str, ...] = ()) -> s
     raw query string). Keep the two in sync.
     """
     sensitive_markers = ("_password", "_passphrase", "_secret")
-    vars_: HTTPVariables = [
+    vars_: list[HTTPVariable] = [
         (v, val)
         for v, val in request_.itervars()
         if v[0] != "_" and v not in exclude and not any(marker in v for marker in sensitive_markers)
@@ -831,7 +838,7 @@ class SuggestedEntryRenderer:
             target=item.link.target,
         )
 
-    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             entry,
             url="javascript:void(0)",
@@ -894,7 +901,7 @@ class ShortcutRenderer:
             target=item.link.target,
         )
 
-    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             entry,
             url="javascript:void(0)",
@@ -969,7 +976,7 @@ class DropdownEntryRenderer:
 
         self._show_link(url=url, onclick=onclick, target=item.link.target, icon=icon, title=title)
 
-    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             url="javascript:void(0)",
             onclick="cmk.page_menu.toggle_popup(%s)" % json.dumps("popup_%s" % entry.name),
@@ -1026,9 +1033,10 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
         )
         if mode:
             html.hidden_field("mode", mode, add_var=True)
-        reset_url = request.get_ascii_input_mandatory(
-            "reset_url", makeuri(request, [], delvars=["filled_in", "search"])
-        )
+        default_reset_url = makeuri(request, [], delvars=["filled_in", "search"])
+        reset_url = request.get_ascii_input_mandatory("reset_url", default_reset_url)
+        if not is_allowed_url(reset_url):
+            reset_url = default_reset_url
         html.hidden_field("reset_url", reset_url, add_var=True)
         html.form_vars.append("submit")  # prevent hidden_fields() from re-emitting it
         html.hidden_fields()

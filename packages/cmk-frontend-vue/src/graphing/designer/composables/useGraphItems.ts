@@ -44,6 +44,21 @@ function nextId(items: readonly DesignerItem[]): ItemId {
   return idFromIndex(highest + 1)
 }
 
+/**
+ * Drops entries of rows that are gone, so a row reusing a freed id starts from the default.
+ *
+ * Returns `record` itself while every entry is still known, so assigning it back is a no-op.
+ */
+export function retainKnownRows<T>(
+  record: Record<string, T>,
+  items: readonly { id: ItemId }[]
+): Record<string, T> {
+  const known = new Set<string>(items.map((item) => item.id))
+  const entries = Object.entries(record)
+  const retained = entries.filter(([id]) => known.has(id))
+  return retained.length === entries.length ? record : Object.fromEntries(retained)
+}
+
 /** Picks the least-used palette color, preferring earlier entries on ties (unused counts as zero). */
 function nextColor(items: readonly DesignerItem[], palette: readonly string[]): string {
   if (palette.length === 0) {

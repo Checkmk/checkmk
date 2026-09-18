@@ -194,7 +194,7 @@ def _handle_single_job(job: dict[str, Any]) -> JenkinsJobInfo:
     # key healthReport can have an empty list value
     try:
         health_rp = job["healthReport"][0]["score"]
-    except (IndexError, KeyError, TypeError):
+    except IndexError, KeyError, TypeError:
         health_rp = None
 
     # key lastSuccessfulBuild can have None value: {'lastSuccessfulBuild':None}
@@ -213,7 +213,7 @@ def _handle_single_job(job: dict[str, Any]) -> JenkinsJobInfo:
         last_bn: int | None = int(job["lastBuild"]["number"])
         last_bd: float | None = float(job["lastBuild"]["duration"]) / 1000.0
         last_bt: int | None = int(int(job["lastBuild"]["timestamp"]) / 1000)
-    except (KeyError, TypeError, ValueError):
+    except KeyError, TypeError, ValueError:
         last_br = None
         last_bn = None
         last_bd = None

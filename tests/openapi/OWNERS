@@ -2,7 +2,7 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/rest_api_framework/OWNERS_DEFINITION
 
-per-file test_openapi_graph*.py=file:/component_owners/graphs/OWNERS_DEFINITION
+per-file test_openapi_graph*.py=file:/component_owners/graph_display/OWNERS_DEFINITION
 per-file test_openapi_graph*.py=set noparent
 
 # Please

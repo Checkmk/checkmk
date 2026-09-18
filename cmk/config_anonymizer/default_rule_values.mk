@@ -5209,11 +5209,11 @@ checkgroup_parameters['memory_utilization_multiitem'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
-checkgroup_parameters.setdefault('metric_backend_omd', [])
+checkgroup_parameters.setdefault('data_backend_telemetry_metrics_omd', [])
 
-checkgroup_parameters['metric_backend_omd'] = [
+checkgroup_parameters['data_backend_telemetry_metrics_omd'] = [
 {'id': '771ab72f-e651-4c1c-b0ae-9e408df4ae5a', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
-] + checkgroup_parameters['metric_backend_omd']
+] + checkgroup_parameters['data_backend_telemetry_metrics_omd']
 
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
@@ -8695,7 +8695,7 @@ service_tag_rules = [
 globals().setdefault('snmp_backend_hosts', [])
 
 snmp_backend_hosts = [
-{'id': '0e05eb2d-f293-4d3c-b47e-97de509bf417', 'value': 'inline', 'condition': {}, 'options': {'disabled': False}},
+{'id': '0e05eb2d-f293-4d3c-b47e-97de509bf417', 'value': 'classic', 'condition': {}, 'options': {'disabled': False}},
 ] + snmp_backend_hosts
 
 
@@ -15018,7 +15018,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('wmic_process', [])
 
 static_checks['wmic_process'] = [
-{'id': '3e5670da-2bfb-4baa-a147-9c3386fa18cc', 'value': ('wmic_process', 'example', ('example.exe', 0, 0, 0, 0, 0.0, 0.0)), 'condition': {}, 'options': {'disabled': False}},
+{'id': '3e5670da-2bfb-4baa-a147-9c3386fa18cc', 'value': ('wmic_process', 'example', {'name': 'example.exe', 'mem_levels': ('no_levels', None), 'page_levels': ('no_levels', None), 'cpu_levels': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['wmic_process']
 
 

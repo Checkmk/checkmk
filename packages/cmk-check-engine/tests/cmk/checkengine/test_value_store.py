@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from pathlib import Path
@@ -183,7 +182,7 @@ class TestValueStoreManager:
 
         with vsm.namespace(_SERVICE_OUTER):
             assert vsm.active_service_interface is not None
-            vsm.active_service_interface["key"] = "outer"
+            vsm.active_service_interface["key"] = "outer"  # type: ignore[unreachable]
 
             with vsm.namespace(_SERVICE_INNER):
                 assert vsm.active_service_interface is not None
@@ -192,7 +191,7 @@ class TestValueStoreManager:
 
             assert vsm.active_service_interface["key"] == "outer"
 
-        assert vsm.active_service_interface is None
+        assert vsm.active_service_interface is None  # type: ignore[unreachable]
 
         vsm.save()
 

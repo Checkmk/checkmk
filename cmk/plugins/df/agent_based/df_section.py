@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import json
 from collections.abc import Callable, Mapping, Sequence
@@ -140,7 +139,7 @@ def _parse_lsblk_v2_row(row: Sequence[str]) -> tuple[str, str | None]:
     >>> _parse_lsblk_v2_row(["/dev/sda","HPE", "\\x10"])
     ('/dev/sda', 'HPE \\x10')
     """
-    match row:
+    match row:  # type: ignore[exhaustive-match]
         case [name]:
             return name, None
         case [name, uuid]:

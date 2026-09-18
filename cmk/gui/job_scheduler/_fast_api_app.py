@@ -57,7 +57,7 @@ def get_application(
     FastAPIInstrumentor.instrument_app(app)
 
     @app.post("/start")
-    async def start(request: Request, payload: StartRequest) -> StartResponse:
+    async def start(request: Request, payload: StartRequest) -> StartResponse:  # noqa: ARG001
         if not (
             result := executor.start(
                 payload.type_id,
@@ -85,12 +85,12 @@ def get_application(
         return StartResponse(success=True, error_type="", error_message="")
 
     @app.post("/terminate")
-    async def terminate(request: Request, payload: TerminateRequest) -> None:
+    async def terminate(request: Request, payload: TerminateRequest) -> None:  # noqa: ARG001
         if (result := executor.terminate(payload.job_id)).is_error():
             raise result.error
 
     @app.post("/is_alive")
-    async def is_alive(request: Request, payload: IsAliveRequest) -> IsAliveResponse:
+    async def is_alive(request: Request, payload: IsAliveRequest) -> IsAliveResponse:  # noqa: ARG001
         result = executor.is_alive(payload.job_id)
         if result.is_error():
             raise result.error
@@ -116,7 +116,7 @@ def get_application(
         )
 
     @app.post("/reset_scheduling")
-    async def reset_scheduling(request: Request, payload: dict[str, str]) -> None:
+    async def reset_scheduling(request: Request, payload: dict[str, str]) -> None:  # noqa: ARG001
         reset_job_scheduling(payload["job_id"])
 
     return app

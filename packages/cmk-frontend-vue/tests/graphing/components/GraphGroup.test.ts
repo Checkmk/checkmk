@@ -12,11 +12,26 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { nextTick } from 'vue'
 
 import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
+import type { GraphDisplayOptions } from '@/graphing/types'
+
+// Hoisted so the panel stub below can bake the ranges its buttons report into its template.
+const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {
+  // Inside the navigable time axis, which starts in 2008: a range before it would hold the
+  // brush strip against its near end rather than centring it on the window.
+  const start = 1_700_000_000
+  const end = start + 1_000
+  return {
+    RANGE_START: start,
+    RANGE_END: end,
+    PAN_TARGET: { start: start + 500, end: end + 500 },
+    ZOOM_TARGET: { start: start + 100, end: start + 200 }
+  }
+})
 
 // Stub keeps the test independent of the panel's rendering; the buttons simulate local
 // time range interactions reported back to the group: "pan" keeps the span,
@@ -29,17 +44,40 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       'requestedTimeRange',
       'title',
       'figureWidth',
-      'consolidationFn'
+      'consolidationFn',
+      'brushSnapshot',
+      'yAxis',
+      'showTitle',
+      'showTimestamp',
+      'showValueAxis',
+      'showTimeAxis',
+      'minValueAxisWidth',
+      'shadedRegions'
     ],
     emits: ['update:requestedTimeRange', 'update:consolidationFn', 'inspect'],
-    template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
+    template: `<div
+      data-testid="graph-panel"
+      :data-figure-width="figureWidth"
+      :data-show-title="showTitle"
+      :data-show-timestamp="showTimestamp"
+      :data-show-value-axis="showValueAxis"
+      :data-show-time-axis="showTimeAxis"
+      :data-min-value-axis-width="minValueAxisWidth"
+    >
       <span>{{ title }}</span>
+      <span data-testid="brush-geometry">{{ brushSnapshot
+        ? brushSnapshot.drawnDomain.start + ',' + brushSnapshot.drawnDomain.end + '|' +
+          brushSnapshot.window.start + ',' + brushSnapshot.window.end
+        : 'none' }}</span>
+      <span data-testid="panel-y-axis-range">{{ yAxis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="panel-shaded-regions">{{ shadedRegions?.length ?? 'none' }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
-      <button @click="$emit('update:requestedTimeRange', { start: 1500, end: 2500 }, 'translated_timerange')">
+      <button @click="$emit('update:consolidationFn', 'avg')">consolidate by avg</button>
+      <button @click="$emit('update:requestedTimeRange', { start: ${PAN_TARGET.start}, end: ${PAN_TARGET.end} }, 'translated_timerange')">
         pan
       </button>
-      <button @click="$emit('update:requestedTimeRange', { start: 100, end: 200 }, 'changed_timerange_span')">
+      <button @click="$emit('update:requestedTimeRange', { start: ${ZOOM_TARGET.start}, end: ${ZOOM_TARGET.end} }, 'changed_timerange_span')">
         zoom
       </button>
       <button @click="$emit('inspect')">inspect</button>
@@ -93,8 +131,16 @@ const FETCHED = {
       data_points: [1, 2, 3]
     }
   ],
-  time_range: { start: 1_000, end: 2_000, step: 60 },
+  time_range: { start: RANGE_START, end: RANGE_END, step: 60 },
   horizontal_lines: [],
+  shaded_regions: [
+    {
+      name: 'region-0',
+      title: 'OK area',
+      color: '#15d1a0',
+      data_points: { lower: [1], upper: [2] }
+    }
+  ],
   warnings: [],
   errors: []
 }
@@ -196,7 +242,7 @@ beforeEach(() => {
 
 afterEach(() => {
   document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   vi.restoreAllMocks()
   vi.useRealTimers()
 })
@@ -212,12 +258,24 @@ const group = (): Element | null => document.querySelector('.graphing-graph-grou
 const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
 const notices = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-notice')
 
-function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')]) {
+const EVERYTHING_SHOWN: GraphDisplayOptions = {
+  show_consolidation: true,
+  show_legend: true,
+  show_title: true,
+  show_vertical_axis: true,
+  show_time_axis: true
+}
+
+function renderGroup(
+  graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')],
+  displayOptions: Partial<GraphDisplayOptions> | null = null
+) {
   return render(GraphGroup, {
     props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
-      graphs
+      initial_time_range_start: RANGE_START,
+      initial_time_range_end: RANGE_END,
+      graphs,
+      ...(displayOptions === null ? {} : { display: { ...EVERYTHING_SHOWN, ...displayOptions } })
     }
   })
 }
@@ -292,7 +350,7 @@ test('a fast refetch swaps straight to the new panels without a skeleton', async
   await vi.advanceTimersByTimeAsync(999)
 
   // The assertions below would hold just as well had the pan never fetched at all.
-  expect(drawnRanges()).toContainEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(drawnRanges()).toContainEqual({ ...PAN_TARGET, step: 60 })
   expect(skeletons()).toHaveLength(0)
   expect(panels()).toHaveLength(1)
   expect(group()).toHaveAttribute('aria-busy', 'false')
@@ -481,9 +539,9 @@ test('fetches the graph with the initial range and the overview with the multipl
   expect(JSON.parse(body.internal).graphs).toEqual([])
   expect(body.consolidation_function).toBe('max')
   const ranges = drawnRanges()
-  expect(ranges).toContainEqual({ start: 1_000, end: 2_000, step: 60 })
+  expect(ranges).toContainEqual({ start: RANGE_START, end: RANGE_END, step: 60 })
   // 1000s active span → 7× multiplier → 7000s overview domain centered on the range.
-  expect(ranges).toContainEqual({ start: -2_000, end: 5_000, step: 60 })
+  expect(ranges).toContainEqual({ start: RANGE_START - 3_000, end: RANGE_END + 3_000, step: 60 })
 })
 
 test('asks only the panel whose consolidation function was selected for data again', async () => {
@@ -504,6 +562,21 @@ test('asks only the panel whose consolidation function was selected for data aga
   expect(stated).toEqual(['min', 'max'])
 })
 
+test('holds two graphs at independent consolidation functions simultaneously', async () => {
+  const PANEL_TITLES = ['CPU utilization', 'Memory']
+  renderGroup(PANEL_TITLES.map(makeGraphDefinition))
+  const requestsOnLoad = PANEL_TITLES.length * REQUESTS_PER_PANEL
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad))
+
+  await fireEvent.click((await screen.findAllByText('consolidate by min'))[0]!) // graph A -> min
+  await fireEvent.click((await screen.findAllByText('consolidate by avg'))[1]!) // graph B -> avg
+
+  await waitFor(() => {
+    const stated = screen.getAllByTestId('panel-consolidation').map((node) => node.textContent)
+    expect(stated).toEqual(['min', 'avg'])
+  })
+})
+
 test('keeps a panel it did not refetch showing the data it already holds', async () => {
   const PANEL_TITLES = ['CPU utilization', 'Memory']
   renderGroup(PANEL_TITLES.map(makeGraphDefinition))
@@ -522,8 +595,8 @@ test('keeps a panel it did not refetch showing the data it already holds', async
 test('fetches graph and overview with the combination mode from props', async () => {
   render(GraphGroup, {
     props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
+      initial_time_range_start: RANGE_START,
+      initial_time_range_end: RANGE_END,
       graphs: [makeGraphDefinition('CPU utilization')],
       combination_mode: 'stacked' as const
     }
@@ -558,10 +631,10 @@ test('a same-span panel commit (move) refetches the graph but keeps the overview
 
   await fireEvent.click(await screen.findByText('pan'))
 
-  // Only the main graph refetches; the moved window {1500, 2500} sits well inside
-  // the overview domain {-2000, 5000}, so the overview must not be requested again.
+  // Only the main graph refetches; the moved window sits well inside the overview domain
+  // (one span either side of it), so the overview must not be requested again.
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(3))
-  expect(drawnRanges()[2]).toEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(drawnRanges()[2]).toEqual({ ...PAN_TARGET, step: 60 })
   expect(postSpy).toHaveBeenCalledTimes(3)
 })
 
@@ -573,14 +646,14 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
   const ranges = drawnRanges().slice(2)
-  expect(ranges).toContainEqual({ start: 100, end: 200, step: 60 })
+  expect(ranges).toContainEqual({ ...ZOOM_TARGET, step: 60 })
   // 100s span → 7× multiplier → 700s overview domain centered on the new range.
-  expect(ranges).toContainEqual({ start: -200, end: 500, step: 60 })
+  expect(ranges).toContainEqual({ start: RANGE_START - 200, end: RANGE_START + 500, step: 60 })
 })
 
 test('a panel reporting inspection pauses the live refresh', async () => {
-  resetGlobalRefresh()
-  useGlobalRefresh().setRefreshPaused(false)
+  resetGlobalTimeState()
+  useGlobalRefresh().resumeRefresh()
   renderGroup()
 
   await fireEvent.click(await screen.findByText('inspect'))
@@ -631,8 +704,8 @@ test('uses the supplied figure_width and never measures the page', async () => {
   const getElementById = vi.spyOn(document, 'getElementById')
   render(GraphGroup, {
     props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
+      initial_time_range_start: RANGE_START,
+      initial_time_range_end: RANGE_END,
       graphs: [makeGraphDefinition('CPU utilization')],
       figure_width: 640
     }
@@ -641,4 +714,124 @@ test('uses the supplied figure_width and never measures the page', async () => {
   const panel = await screen.findByTestId('graph-panel')
   expect(panel.getAttribute('data-figure-width')).toBe('640')
   expect(getElementById).not.toHaveBeenCalledWith(MAIN_PAGE_CONTENT_ID)
+})
+
+function brushBarFraction(): { left: number; width: number } | null {
+  const rendered = screen.getByTestId('brush-geometry').textContent!
+  if (rendered === 'none') {
+    return null
+  }
+  const [domain, window] = rendered.split('|').map((pair) => pair.split(',').map(Number))
+  const [domainStart, domainEnd] = domain as [number, number]
+  const [windowStart, windowEnd] = window as [number, number]
+  const span = domainEnd - domainStart
+  return { left: (windowStart - domainStart) / span, width: (windowEnd - windowStart) / span }
+}
+
+function servedAsRequested(): void {
+  postSpy.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (_path: string, init: any) => ({
+      data: { ...FETCHED, time_range: init.body.requested_time_range },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    })
+  )
+}
+
+// The strip used to be re-derived from the newly requested range at once while the bar still
+// followed the data on screen, so for the length of the fetch the bar was measured against a
+// strip it was never derived from, and sprang across the track when the data landed.
+describe('GraphGroup - the brush across a range switch', () => {
+  test('the bar holds its place while the new strip is still being fetched', async () => {
+    servedAsRequested()
+    renderGroup()
+    await waitFor(() => expect(brushBarFraction()).not.toBeNull())
+    const before = brushBarFraction()
+
+    // Both fetches hang, so what stays on screen is the frame the switch left behind.
+    postSpy.mockReturnValue(new Promise(() => {}))
+    useGlobalTimeRange().setActiveTimeRange(range(1, 2), 'time_picker')
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2 * REQUESTS_PER_PANEL))
+    await nextTick()
+
+    expect(brushBarFraction()).toEqual(before)
+  })
+
+  test('the bar covers the same share of the track once the new strip lands', async () => {
+    // A strip is a fixed multiple of its window, so a switch between two ranges the multiplier
+    // treats alike must leave the bar exactly where it was.
+    servedAsRequested()
+    renderGroup()
+    await waitFor(() => expect(brushBarFraction()).not.toBeNull())
+    const before = brushBarFraction()!
+
+    useGlobalTimeRange().setActiveTimeRange(range(1, 2), 'time_picker')
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2 * REQUESTS_PER_PANEL))
+    await waitFor(() => expect(brushBarFraction()!.width).toBeCloseTo(before.width, 6))
+
+    expect(brushBarFraction()!.left).toBeCloseTo(before.left, 6)
+  })
+})
+
+test('hands the fetched shaded regions to the panel that draws it', async () => {
+  renderGroup([makeGraphDefinition('CPU utilization')])
+  await screen.findAllByTestId('graph-panel')
+
+  expect(screen.getByTestId('panel-shaded-regions').textContent).toBe('1')
+})
+
+test("threads each definition's configured y-axis to its own panel", async () => {
+  const withRange = makeGraphDefinition('CPU utilization')
+  withRange.options.y_axis = { unit: UNIT, explicit_range: { min: 1, max: 5 } }
+  const withoutRange = makeGraphDefinition('Memory')
+
+  renderGroup([withRange, withoutRange])
+  await screen.findAllByTestId('graph-panel')
+
+  const ranges = Array.from(document.querySelectorAll('[data-testid="panel-y-axis-range"]'))
+  // The explicit range reaches the panel that carries it, and only that one.
+  expect(ranges.map((el) => el.textContent)).toEqual(['5', 'none'])
+})
+
+describe('display options', () => {
+  const attributesOf = (name: string): (string | null)[] =>
+    Array.from(panels(), (panel) => panel.getAttribute(name))
+
+  test('shows title, timestamp and both axes by default', async () => {
+    renderGroup()
+    await screen.findAllByTestId('graph-panel')
+
+    expect(attributesOf('data-show-title')).toEqual(['true'])
+    expect(attributesOf('data-show-timestamp')).toEqual(['true'])
+    expect(attributesOf('data-show-value-axis')).toEqual(['true'])
+    expect(attributesOf('data-show-time-axis')).toEqual(['true'])
+    expect(attributesOf('data-min-value-axis-width')).toEqual([null])
+  })
+
+  test('forwards the switched-off options to every panel', async () => {
+    renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')], {
+      show_title: false,
+      show_vertical_axis: false,
+      show_time_axis: false,
+      min_value_axis_width: 48
+    })
+    await screen.findAllByTestId('graph-panel')
+
+    expect(attributesOf('data-show-title')).toEqual(['false', 'false'])
+    expect(attributesOf('data-show-value-axis')).toEqual(['false', 'false'])
+    expect(attributesOf('data-show-time-axis')).toEqual(['false', 'false'])
+    expect(attributesOf('data-min-value-axis-width')).toEqual(['48', '48'])
+  })
+
+  test("takes each panel's timestamp from its own graph definition", async () => {
+    const withTimestamp = makeGraphDefinition('CPU utilization')
+    const withoutTimestamp = makeGraphDefinition('Memory')
+    withoutTimestamp.options.header.show_graph_time = false
+
+    renderGroup([withTimestamp, withoutTimestamp])
+    await screen.findAllByTestId('graph-panel')
+
+    expect(attributesOf('data-show-timestamp')).toEqual(['true', 'false'])
+  })
 })

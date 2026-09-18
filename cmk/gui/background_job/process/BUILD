@@ -18,6 +18,7 @@ py_library(
         "//cmk/gui/utils:middle",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",

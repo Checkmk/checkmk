@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -58,7 +57,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
@@ -94,7 +93,7 @@ from cmk.gui.watolib.check_mk_automations import (
     update_dns_cache,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
     collect_attributes,
@@ -137,6 +136,8 @@ from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
 from cmk.utils.paths import omd_root, uuid_lookup_dir
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from ._host_attributes import configure_attributes
@@ -550,7 +551,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _page_form_quick_setup_warning(self) -> None:
         if (
             (locked_by := self._host.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_config_bundle(locked_by)
             and request.get_ascii_input("mode") != "edit_configuration_bundle"
         ):
             quick_setup_locked_warning(locked_by, "host")
@@ -795,7 +796,7 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
         )
 
 
-def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:
+def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:  # noqa: ARG001
     """Overridden in some editions to extend the page menu"""
     yield from []
 
@@ -897,7 +898,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     yield from _host_page_menu_hook(host.name())
 
     if mode_name == "edit_host" and not host.locked():
-        locked_by_quick_setup = is_locked_by_quick_setup(host.locked_by())
+        locked_by_quick_setup = is_locked_by_config_bundle(host.locked_by())
         if user.may("wato.rename_hosts") and not locked_by_quick_setup:
             yield PageMenuEntry(
                 title=_("Rename"),
@@ -1020,7 +1021,7 @@ class CreateHostMode(ABCHostMode):
         )
 
         # remove the quick setup lock from the clone
-        if is_locked_by_quick_setup(host.locked_by()):
+        if is_locked_by_config_bundle(host.locked_by()):
             host.attributes.pop("locked_by", None)
             host.attributes.pop("locked_attributes", None)
 
@@ -1044,7 +1045,7 @@ class CreateHostMode(ABCHostMode):
                 request.get_ascii_input_mandatory(self.VAR_HOST)
             )
             hostname = HostName(hostname)
-        except (MKUserError, ValueError):
+        except MKUserError, ValueError:
             hostname = HostName("")
 
         Hostname().validate_value(request.get_ascii_input_mandatory(self.VAR_HOST), self.VAR_HOST)
@@ -1106,7 +1107,7 @@ class CreateHostMode(ABCHostMode):
         if (
             self._clone_source
             and (locked_by := self._clone_source.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_config_bundle(locked_by)
         ):
             quick_setup_duplication_warning(locked_by, "host")
 
@@ -1137,11 +1138,11 @@ class ModeCreateHost(CreateHostMode):
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
             host_name = HostName(host_name)
-        except (MKUserError, ValueError):
+        except MKUserError, ValueError:
             host_name = HostName("")
         tree = folder_tree()
         if prefill := request.get_ascii_input("prefill"):
-            match prefill:
+            match prefill:  # type: ignore[exhaustive-match]
                 case "snmp":
                     return Host(
                         folder=folder_from_request(tree, request.var("folder"), host_name),
@@ -1236,7 +1237,7 @@ class PageAjaxPingHost(AjaxPage):
         )
 
         if cmd == PingHostCmd.PING6 and ":" in ip_or_dns_name:
-            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):
+            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):  # noqa: SLF001
                 return {
                     "status_code": 99,
                     "message": "Not a valid IPv6 address.",

@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator
+
 import pytest
 
 from cmk.gui.form_specs.unstable.legacy_converter import (
@@ -9,6 +11,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     is_formspec_password,
     password_id_to_formspec,
 )
+from cmk.utils import password_store
 
 
 @pytest.mark.parametrize(
@@ -77,3 +80,23 @@ def test_load_then_save_roundtrips(password_id: object) -> None:
 def test_save_then_load_stored_roundtrips() -> None:
     formspec = ("cmk_postprocessed", "stored_password", ("id", ""))
     assert password_id_to_formspec(formspec_to_password_id(formspec)) == formspec
+
+
+@pytest.fixture(name="clean_password_store")
+def fixture_clean_password_store() -> Iterator[None]:
+    """Make sure the globally patched store file doesn't leak into other tests"""
+    yield
+    password_store.pending_secrets_path_site().unlink(missing_ok=True)
+
+
+@pytest.mark.usefixtures("clean_password_store")
+def test_extract_reads_the_converted_explicit_password() -> None:
+    formspec = ("cmk_postprocessed", "explicit_password", ("uuid", "s3cr3t"))
+    assert password_store.extract(formspec_to_password_id(formspec)) == "s3cr3t"
+
+
+@pytest.mark.usefixtures("clean_password_store")
+def test_extract_reads_the_converted_stored_password() -> None:
+    password_store.save({"my-id": "s3cr3t"}, password_store.pending_secrets_path_site())
+    formspec = ("cmk_postprocessed", "stored_password", ("my-id", ""))
+    assert password_store.extract(formspec_to_password_id(formspec)) == "s3cr3t"

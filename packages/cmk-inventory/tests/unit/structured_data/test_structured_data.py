@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
+import gzip
+import json
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
@@ -14,11 +14,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
-    _compare_trees,
-    _DeltaDict,
-    _deserialize_retention_interval,
-    _parse_from_unzipped,
-    _serialize_retention_interval,
+    compare_trees,
     deserialize_delta_tree,
     deserialize_tree,
     filter_delta_tree,
@@ -29,10 +25,12 @@ from cmk.inventory.structured_data import (
     ImmutableTree,
     InventoryStore,
     make_meta,
+    make_retention_filter_choices,
     merge_trees,
     MutableTree,
     parse_from_gzipped,
     parse_visible_raw_path,
+    RawIntervalFromConfig,
     RetentionInterval,
     SDDeltaValue,
     SDFilterChoice,
@@ -47,6 +45,94 @@ from cmk.inventory.structured_data import (
     serialize_delta_tree,
     serialize_tree,
 )
+
+_RETENTION_PATH = (SDNodeName("path"), SDNodeName("to"), SDNodeName("node"))
+
+
+def _retention_config() -> Sequence[RawIntervalFromConfig]:
+    return [
+        RawIntervalFromConfig(
+            interval=7,
+            visible_raw_path="path.to.node",
+            attributes=("choices", ["a1"]),
+        ),
+        RawIntervalFromConfig(
+            interval=7,
+            visible_raw_path="path.to.node",
+            columns="all",
+        ),
+    ]
+
+
+def _updated_tree(
+    *, now: int, pairs_cache_info: Mapping[SDPath, tuple[int, int] | None]
+) -> MutableTree:
+    tree = MutableTree()
+    tree.add(
+        path=_RETENTION_PATH,
+        pairs=[{SDKey("a1"): "value 1", SDKey("a2"): "value 2"}],
+        key_columns=[SDKey("c0")],
+        rows=[{SDKey("c0"): "row 0", SDKey("c1"): "value 1"}],
+    )
+    for choices in make_retention_filter_choices(
+        now=now,
+        raw_intervals_from_config=_retention_config(),
+        pairs_cache_info=pairs_cache_info,
+        columns_cache_info={},
+    ):
+        tree.update(now=now, previous_tree=ImmutableTree(), choices=choices)
+    return tree
+
+
+def _retained_pairs(
+    *, now: int, pairs_cache_info: Mapping[SDPath, tuple[int, int] | None]
+) -> Mapping[SDKey, RetentionInterval]:
+    return (
+        _updated_tree(now=now, pairs_cache_info=pairs_cache_info)
+        .get_tree(_RETENTION_PATH)
+        .attributes.retentions
+    )
+
+
+def test_retention_filter_keeps_the_columns_of_the_same_path() -> None:
+    assert _updated_tree(now=10, pairs_cache_info={}).get_tree(
+        _RETENTION_PATH
+    ).table.retentions == {
+        ("row 0",): {
+            SDKey("c0"): RetentionInterval(10, 0, 7, "current"),
+            SDKey("c1"): RetentionInterval(10, 0, 7, "current"),
+        }
+    }
+
+
+def test_retention_filter_keeps_only_the_configured_pairs() -> None:
+    assert set(_retained_pairs(now=10, pairs_cache_info={})) == {SDKey("a1")}
+
+
+def test_retention_filter_defaults_the_cache_info() -> None:
+    assert _retained_pairs(now=10, pairs_cache_info={}) == {
+        SDKey("a1"): RetentionInterval(10, 0, 7, "current")
+    }
+
+
+def test_retention_filter_uses_the_cache_info() -> None:
+    assert _retained_pairs(now=10, pairs_cache_info={_RETENTION_PATH: (2, 3)}) == {
+        SDKey("a1"): RetentionInterval(2, 3, 7, "current")
+    }
+
+
+def test_retention_filter_defaults_an_unset_cache_info() -> None:
+    assert _retained_pairs(now=10, pairs_cache_info={_RETENTION_PATH: None}) == {
+        SDKey("a1"): RetentionInterval(10, 0, 7, "current")
+    }
+
+
+def test_retention_interval_valid_until() -> None:
+    assert RetentionInterval(100, 20, 3, "current").valid_until == 120
+
+
+def test_retention_interval_keep_until() -> None:
+    assert RetentionInterval(100, 20, 3, "current").keep_until == 123
 
 
 @pytest.mark.parametrize(
@@ -81,21 +167,7 @@ def test_equality_with_non_empty_nodes(
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
-    return ImmutableTree(
-        path=tree.path,
-        attributes=ImmutableAttributes(
-            pairs=tree.attributes.pairs,
-            retentions=tree.attributes.retentions,
-        ),
-        table=ImmutableTable(
-            key_columns=tree.table.key_columns,
-            rows_by_ident=tree.table.rows_by_ident,
-            retentions=tree.table.retentions,
-        ),
-        nodes_by_name={
-            name: _make_immutable_tree(node) for name, node in tree.nodes_by_name.items()
-        },
-    )
+    return deserialize_tree(serialize_tree(tree))
 
 
 def _create_empty_mut_tree() -> MutableTree:
@@ -107,7 +179,23 @@ def _create_empty_mut_tree() -> MutableTree:
 
 
 def _create_empty_imm_tree() -> ImmutableTree:
-    return _make_immutable_tree(_create_empty_mut_tree())
+    return deserialize_tree(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {
+                "path-to-nta": {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "na": {"Attributes": {}, "Table": {}, "Nodes": {}},
+                        "nt": {"Attributes": {}, "Table": {}, "Nodes": {}},
+                        "ta": {"Attributes": {}, "Table": {}, "Nodes": {}},
+                    },
+                }
+            },
+        }
+    )
 
 
 def _create_filled_mut_tree() -> MutableTree:
@@ -138,6 +226,60 @@ def _create_filled_mut_tree() -> MutableTree:
 
 def _create_filled_imm_tree() -> ImmutableTree:
     return _make_immutable_tree(_create_filled_mut_tree())
+
+
+def _create_filled_delta_tree() -> ImmutableDeltaTree:
+    return deserialize_delta_tree(
+        SDRawDeltaTree(
+            Attributes={},
+            Nodes={
+                SDNodeName("path-to-nta"): SDRawDeltaTree(
+                    Attributes={},
+                    Nodes={
+                        SDNodeName("na"): SDRawDeltaTree(
+                            Attributes={
+                                "Pairs": {
+                                    SDKey("na0"): (None, "NA 0"),
+                                    SDKey("na1"): (None, "NA 1"),
+                                }
+                            },
+                            Nodes={},
+                            Table={},
+                        ),
+                        SDNodeName("nt"): SDRawDeltaTree(
+                            Attributes={},
+                            Nodes={},
+                            Table={
+                                "KeyColumns": [SDKey("nt0")],
+                                "Rows": [
+                                    {SDKey("nt0"): (None, "NT 00"), SDKey("nt1"): (None, "NT 01")},
+                                    {SDKey("nt0"): (None, "NT 10"), SDKey("nt1"): (None, "NT 11")},
+                                ],
+                            },
+                        ),
+                        SDNodeName("ta"): SDRawDeltaTree(
+                            Attributes={
+                                "Pairs": {
+                                    SDKey("ta0"): (None, "TA 0"),
+                                    SDKey("ta1"): (None, "TA 1"),
+                                }
+                            },
+                            Nodes={},
+                            Table={
+                                "KeyColumns": [SDKey("ta0")],
+                                "Rows": [
+                                    {SDKey("ta0"): (None, "TA 00"), SDKey("ta1"): (None, "TA 01")},
+                                    {SDKey("ta0"): (None, "TA 10"), SDKey("ta1"): (None, "TA 11")},
+                                ],
+                            },
+                        ),
+                    },
+                    Table={},
+                )
+            },
+            Table={},
+        )
+    )
 
 
 def test_serialize_empty_mut_tree() -> None:
@@ -249,7 +391,7 @@ def test_deserialize_filled_imm_tree() -> None:
 
 def test_serialize_empty_delta_tree() -> None:
     assert serialize_delta_tree(
-        _compare_trees(_create_empty_imm_tree(), _create_empty_imm_tree())
+        compare_trees(_create_empty_imm_tree(), _create_empty_imm_tree())
     ) == {
         "Attributes": {},
         "Table": {},
@@ -259,7 +401,7 @@ def test_serialize_empty_delta_tree() -> None:
 
 def test_serialize_filled_delta_tree() -> None:
     raw_tree = serialize_delta_tree(
-        _compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
+        compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
     )
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
@@ -448,7 +590,7 @@ def test_add_or_rows() -> None:
 
 def test_compare_tree_with_itself_1() -> None:
     empty_root = _create_empty_imm_tree()
-    delta_tree = _compare_trees(empty_root, empty_root)
+    delta_tree = compare_trees(empty_root, empty_root)
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -457,7 +599,7 @@ def test_compare_tree_with_itself_1() -> None:
 
 def test_compare_tree_with_itself_2() -> None:
     filled_root = _create_filled_imm_tree()
-    delta_tree = _compare_trees(filled_root, filled_root)
+    delta_tree = compare_trees(filled_root, filled_root)
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -465,7 +607,7 @@ def test_compare_tree_with_itself_2() -> None:
 
 
 def test_compare_tree_1() -> None:
-    delta_tree = _compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
+    delta_tree = compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -473,7 +615,7 @@ def test_compare_tree_1() -> None:
 
 
 def test_compare_tree_2() -> None:
-    delta_tree = _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree())
+    delta_tree = compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree())
     stats = delta_tree.get_stats()
     assert stats["new"] == 12
     assert stats["changed"] == 0
@@ -482,7 +624,7 @@ def test_compare_tree_2() -> None:
 
 def test_filter_delta_tree_nt() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
@@ -510,7 +652,7 @@ def test_filter_delta_tree_nt() -> None:
 
 def test_filter_delta_tree_na() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("na")),
@@ -533,7 +675,7 @@ def test_filter_delta_tree_na() -> None:
 
 def test_filter_delta_tree_ta() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
@@ -561,7 +703,7 @@ def test_filter_delta_tree_ta() -> None:
 
 def test_filter_delta_tree_nta_ta() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
@@ -645,7 +787,7 @@ def test_difference_pairs(
     current_tree = MutableTree()
     current_tree.add(path=(), pairs=[current_pairs])
 
-    stats = _compare_trees(
+    stats = compare_trees(
         _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
     ).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
@@ -711,7 +853,7 @@ def test_difference_rows(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=current_rows)
 
-    delta_tree = _compare_trees(
+    delta_tree = compare_trees(
         _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
     )
     if any(result):
@@ -744,7 +886,7 @@ def test_difference_rows_keys(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=[current_row])
 
-    delta_tree = _compare_trees(
+    delta_tree = compare_trees(
         _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
     )
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
@@ -1036,8 +1178,8 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
         ),
     ],
 )
-def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
-    assert _parse_from_unzipped(raw) == expected
+def test_parse_from_gzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
+    assert parse_from_gzipped(gzip.compress(json.dumps(raw).encode())) == expected
 
 
 @pytest.mark.parametrize(
@@ -1185,7 +1327,7 @@ def test_count_entries(tree_name: HostName, result: int) -> None:
 )
 def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
     tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
-    stats = _compare_trees(tree, tree).get_stats()
+    stats = compare_trees(tree, tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == (0, 0, 0)
 
 
@@ -1230,7 +1372,7 @@ def test_compare_real_trees(
     inv_store = _get_inventory_store()
     old_tree = inv_store.load_inventory_tree(host_name=tree_name_old)
     new_tree = inv_store.load_inventory_tree(host_name=tree_name_new)
-    stats = _compare_trees(new_tree, old_tree).get_stats()
+    stats = compare_trees(new_tree, old_tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
@@ -1547,7 +1689,7 @@ def test_filter_real_tree(
 )
 def test_filter_networking_tree(
     filters: Sequence[SDFilterChoice],
-    amount_if_entries: int,
+    amount_if_entries: int | None,
 ) -> None:
     filtered = filter_tree(
         _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
@@ -1706,6 +1848,46 @@ def test_legacy_tree() -> None:
     assert table_node.table.rows == [{"col": "value"}]
 
 
+def test_update_attributes_from_previous() -> None:
+    previous_tree = deserialize_tree(
+        {
+            "Attributes": {
+                "Pairs": {"a1": "A1: prev", "a2": "A2: only prev"},
+                "Retentions": {"a1": (1, 2, 3), "a2": (1, 2, 3)},
+            },
+            "Table": {},
+            "Nodes": {},
+        }
+    )
+    current_tree_ = MutableTree()
+    current_tree_.add(
+        path=(),
+        pairs=[{SDKey("a1"): "A1: cur", SDKey("a3"): "A3: only cur"}],
+    )
+    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices.add_pairs_choice(choice="all", cache_info=(4, 5))
+
+    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    assert current_tree_.get_update_results() == {
+        (): [
+            "[Attributes] Added pairs: a2",
+            "[Attributes] Keep until: a1 (15), a2 (6), a3 (15)",
+        ]
+    }
+
+    current_tree = _make_immutable_tree(current_tree_)
+    assert current_tree.attributes.pairs == {
+        "a1": "A1: cur",
+        "a2": "A2: only prev",
+        "a3": "A3: only cur",
+    }
+    assert current_tree.attributes.retentions == {
+        "a1": RetentionInterval(4, 5, 6, "current"),
+        "a2": RetentionInterval(1, 2, 3, "previous"),
+        "a3": RetentionInterval(4, 5, 6, "current"),
+    }
+
+
 def test_update_from_previous_1() -> None:
     previous_tree = deserialize_tree(
         {
@@ -1732,8 +1914,8 @@ def test_update_from_previous_1() -> None:
     current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
-            "[Table] 'KC': Added row: message",
-            "[Table] 'KC': Keep until: message",
+            "[Table] 'KC': Added row: c2, kc",
+            "[Table] 'KC': Keep until: c1 (15), c2 (6), c3 (15), kc (15)",
         ]
     }
 
@@ -1777,8 +1959,8 @@ def test_update_from_previous_2() -> None:
     current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
-            "[Table] 'KC': Added row: message",
-            "[Table] 'KC': Keep until: message",
+            "[Table] 'KC': Added row: c2, kc",
+            "[Table] 'KC': Keep until: c2 (6), c3 (15)",
         ],
     }
 
@@ -1807,7 +1989,13 @@ def test_deserialize_retention_interval(
     ),
     expected_retention_interval: RetentionInterval,
 ) -> None:
-    assert _deserialize_retention_interval(raw_retention_interval) == expected_retention_interval
+    assert deserialize_tree(
+        {
+            "Attributes": {"Retentions": {SDKey("key"): raw_retention_interval}},
+            "Table": {},
+            "Nodes": {},
+        }
+    ).attributes.retentions == {SDKey("key"): expected_retention_interval}
 
 
 @pytest.mark.parametrize(
@@ -1821,53 +2009,61 @@ def test_serialize_retention_interval(
     retention_interval: RetentionInterval,
     expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
 ) -> None:
-    assert _serialize_retention_interval(retention_interval) == expected_raw_retention_interval
+    assert serialize_tree(
+        ImmutableTree(attributes=ImmutableAttributes(retentions={SDKey("key"): retention_interval}))
+    )["Attributes"]["Retentions"] == {SDKey("key"): expected_raw_retention_interval}
 
 
-@pytest.mark.parametrize(
-    "keep_identical, result",
-    [
-        pytest.param(
-            False,
-            _DeltaDict(
-                result={
-                    SDKey("key2"): SDDeltaValue(old=None, new="val2"),
-                    SDKey("key3"): SDDeltaValue(old="val3", new=None),
-                    SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
-                },
-                has_changes=True,
-            ),
-            id="do-not-keep-identical",
+def test_compare_trees_pairs() -> None:
+    assert compare_trees(
+        deserialize_tree(
+            {
+                "Attributes": {"Pairs": {"key1": "val1", "key2": "val2", "key4": "val4-new"}},
+                "Table": {},
+                "Nodes": {},
+            }
         ),
-        pytest.param(
-            True,
-            _DeltaDict(
-                result={
-                    SDKey("key1"): SDDeltaValue(old="val1", new="val1"),
-                    SDKey("key2"): SDDeltaValue(old=None, new="val2"),
-                    SDKey("key3"): SDDeltaValue(old="val3", new=None),
-                    SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
-                },
-                has_changes=True,
-            ),
-            id="keep-identical",
+        deserialize_tree(
+            {
+                "Attributes": {"Pairs": {"key1": "val1", "key3": "val3", "key4": "val4-old"}},
+                "Table": {},
+                "Nodes": {},
+            }
         ),
-    ],
-)
-def test__delta_dict(keep_identical: bool, result: _DeltaDict) -> None:
-    assert (
-        _DeltaDict.compare(
-            left={
-                SDKey("key1"): "val1",
-                SDKey("key2"): "val2",
-                SDKey("key4"): "val4-new",
-            },
-            right={
-                SDKey("key1"): "val1",
-                SDKey("key3"): "val3",
-                SDKey("key4"): "val4-old",
-            },
-            keep_identical=keep_identical,
-        )
-        == result
-    )
+    ).attributes.pairs == {
+        SDKey("key2"): SDDeltaValue(old=None, new="val2"),
+        SDKey("key3"): SDDeltaValue(old="val3", new=None),
+        SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
+    }
+
+
+def test_compare_trees_rows() -> None:
+    assert compare_trees(
+        deserialize_tree(
+            {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["key1"],
+                    "Rows": [{"key1": "val1", "key2": "val2", "key4": "val4-new"}],
+                },
+                "Nodes": {},
+            }
+        ),
+        deserialize_tree(
+            {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["key1"],
+                    "Rows": [{"key1": "val1", "key3": "val3", "key4": "val4-old"}],
+                },
+                "Nodes": {},
+            }
+        ),
+    ).table.rows == [
+        {
+            SDKey("key1"): SDDeltaValue(old="val1", new="val1"),
+            SDKey("key2"): SDDeltaValue(old=None, new="val2"),
+            SDKey("key3"): SDDeltaValue(old="val3", new=None),
+            SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
+        }
+    ]

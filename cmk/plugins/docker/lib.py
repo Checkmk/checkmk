@@ -82,7 +82,8 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
                 raise ValueError(
                     "Expect exactly one element per line after @docker_version_info header"
                 )
-            yield json.loads(line[0])
+            if (parsed := json.loads(line[0])) is not None:
+                yield parsed
 
     return DockerParseMultilineResult(generator(), version)
 

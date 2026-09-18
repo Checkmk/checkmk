@@ -36,7 +36,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
-from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.rulesets.v1.form_specs import Dictionary, Password
@@ -89,7 +89,7 @@ def _validate_non_quick_setup_password(
 
             pw_from_store = load_passwords(user)[form_spec_value[2][0]]
             if ("locked_by" in pw_from_store) and (
-                is_locked_by_quick_setup(pw_from_store["locked_by"])
+                is_locked_by_config_bundle(pw_from_store["locked_by"])
             ):
                 general_errors.append(
                     f'Password with title "{pw_from_store["title"]}" is locked by a Quick '

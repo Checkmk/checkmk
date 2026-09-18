@@ -17,6 +17,7 @@ from ._impl import (
     new_notification_rule_id,
     register,
     SampleConfigGeneratorGroups,
+    SampleConfigGeneratorInlineSNMPBackend,
 )
 from ._registry import (
     sample_config_generator_registry,
@@ -28,6 +29,7 @@ __all__ = [
     "SampleConfigGenerator",
     "SampleConfigGeneratorABCGroups",
     "SampleConfigGeneratorGroups",
+    "SampleConfigGeneratorInlineSNMPBackend",
     "SampleConfigGeneratorRegistry",
     "sample_config_generator_registry",
     "CMK_INV_RULES",

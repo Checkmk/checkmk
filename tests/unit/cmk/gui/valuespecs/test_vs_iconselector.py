@@ -7,10 +7,15 @@ import re
 from unittest.mock import MagicMock, patch
 
 import cmk.gui.valuespec as vs
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.icons import DynamicIconName
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 # A few types below are plain lies...
 ICON: vs.IconSelectorModel = {"icon": DynamicIconName("crash"), "emblem": None}
@@ -37,7 +42,9 @@ class TestValueSpecFloat:
     def test_validate(self, _mock_icons: MagicMock, _mock_emblems: MagicMock) -> None:  # type: ignore[misc]
         # ## value may be a string, or a dictionary.
         # ## first test string...
-        expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")  # type: ignore[misc]
+        expect_validate_failure_untypeable(
+            vs.IconSelector(), "asd", match="The selected icon does not exist."
+        )
 
         # TODO: validate_value allows None, ...
         vs.IconSelector().validate_value(None, "")
@@ -114,7 +121,9 @@ class TestValueSpecFloat:
         return_value="some_random_icon_path.svg",
     )
     def test_render_input_complain_phase_keeps_stored_icon(  # type: ignore[misc]
-        self, _mock_icon_path: MagicMock, request_context: None
+        self,
+        _mock_icon_path: MagicMock,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         """In the complain phase the surrounding valuespecs render their default value
         (None) instead of the stored one, so the icon has to be recovered from the HTML
@@ -131,7 +140,9 @@ class TestValueSpecFloat:
         return_value="some_random_icon_path.svg",
     )
     def test_render_input_back_url_excludes_form_vars(  # type: ignore[misc]
-        self, _mock_icon_path: MagicMock, request_context: None
+        self,
+        _mock_icon_path: MagicMock,
+        request_context: None,  # noqa: ARG002
     ) -> None:
         """The back URL of the popup must not carry the form vars of the surrounding
         valuespec: with long lists the request line grows beyond the web server limit."""

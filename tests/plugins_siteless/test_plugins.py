@@ -20,7 +20,6 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.ccc.hostaddress import HostName, Hosts
-from cmk.ccc.version import edition
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.helper_interface import FetcherType, SourceInfo, SourceType
@@ -63,7 +62,7 @@ class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
     """Mock the AllValueStoresStore class to avoid writing to disk"""
 
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)
+        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
         self.update_count = 0
 
     @override
@@ -83,18 +82,21 @@ class _LogwatchConfigMocker:
         self.debug = False
 
     def logwatch_rules_all(
-        self, *, host_name: str, plugin: CheckPlugin, logfile: str
+        self,
+        *,
+        host_name: str,  # noqa: ARG002
+        plugin: CheckPlugin,  # noqa: ARG002
+        logfile: str,  # noqa: ARG002
     ) -> Sequence[ParameterLogwatchRules]:
         return ()
 
-    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:
+    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:  # noqa: ARG002
         return ()
 
 
 @pytest.mark.parametrize("agent_data_filename", get_agent_data_filenames())
-def test_checks_executor(
-    agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
-) -> None:
+@pytest.mark.usefixtures("setup_dirs")
+def test_checks_executor(agent_data_filename: str, request: pytest.FixtureRequest) -> None:
     _SKIP_LIST = [
         "agent-2.2.0p14-proxmox",
         "agent-2.4.0-proxmox",
@@ -120,7 +122,6 @@ def test_checks_executor(
     submitter = BasicSubmitter(HOSTNAME)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        edition(paths.omd_root),
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, hosts_config),
         autochecks_dir=paths.autochecks_dir,
@@ -167,6 +168,7 @@ def test_checks_executor(
             value_store_manager,
             clusters=(),
             rtc_package=None,
+            omd_root=Path(""),
         )
         assert check_plugins
 
@@ -180,10 +182,10 @@ def test_checks_executor(
             section_plugins=SectionPluginMapper(
                 {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
             ),
-            section_error_handling=lambda *a: "",
+            section_error_handling=lambda *a: "",  # noqa: ARG005
             check_plugins=check_plugins,
             inventory_plugins={},
-            inventory_parameters=lambda host, plugin: plugin.defaults,
+            inventory_parameters=lambda host, plugin: plugin.defaults,  # noqa: ARG005
             params=HWSWInventoryParameters.from_raw({}),
             services=discovered_services,
             run_plugin_names=EVERYTHING,

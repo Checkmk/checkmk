@@ -6,7 +6,11 @@
 import pytest
 
 from cmk.gui.config import active_config
-from cmk.gui.userdb.user_attributes import GraphDefaultTimeRangeUserAttribute
+from cmk.gui.userdb.user_attributes import (
+    GraphDefaultTimeRangeUserAttribute,
+    StartOfWeekUserAttribute,
+)
+from cmk.gui.valuespec import DropdownChoice
 
 
 @pytest.mark.usefixtures("load_config")
@@ -28,3 +32,16 @@ def test_graph_default_time_range_tolerates_a_removed_duration() -> None:
     GraphDefaultTimeRangeUserAttribute().valuespec().validate_value(
         removed_duration, "ua_graph_default_time_range"
     )
+
+
+def test_start_of_week_offers_monday_first() -> None:
+    # Two independent declarations that have to agree: the profile pre-selects choices()[0],
+    # while a garbled submit falls back to default_value().
+    valuespec = StartOfWeekUserAttribute().valuespec()
+    assert isinstance(valuespec, DropdownChoice)
+    assert valuespec.choices()[0][0] == "monday"
+    assert valuespec.default_value() == "monday"
+
+
+def test_start_of_week_tolerates_the_legacy_none() -> None:
+    StartOfWeekUserAttribute().valuespec().validate_value(None, "ua_start_of_week")

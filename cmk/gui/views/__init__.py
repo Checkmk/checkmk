@@ -5,23 +5,21 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping
 from typing import Any
 
 from cmk.gui import visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.graphing import TranslatedMetric
 from cmk.gui.i18n import _, _u
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.painter.v0 import painter_registry, register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, ViewSpec, VisualLinkSpec
-from cmk.gui.utils.speaklater import LazyText
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
+from cmk.web.utils.speaklater import LazyText
 
 from . import exporter, icon, inventory
 from .command import register_legacy_command
@@ -250,7 +248,6 @@ def _register_pre_21_plugin_api() -> None:
         {
             "Perfdata": Perfdata,
             "VisualLinkSpec": VisualLinkSpec,
-            "TranslatedMetrics": Mapping[str, TranslatedMetric],
             "get_labels": get_labels,
             "render_labels": render_labels,
             "render_tag_groups": render_tag_groups,

@@ -6,10 +6,9 @@
 import type { AjaxResponse } from 'cmk-ui-library/lib/ajax'
 import { Api } from 'cmk-ui-library/lib/api-client'
 
-import type { UnackIncompWerksResult, UserMessagesResult } from './type-defs'
+import { getCsrfToken } from '@/lib/csrf'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
+import type { UnackIncompWerksResult, UserMessagesResult } from './type-defs'
 
 export class MainMenuApiClient extends Api {
   public constructor() {
@@ -27,7 +26,7 @@ export class MainMenuApiClient extends Api {
 
   public async postToggleEntry(mode: string): Promise<void> {
     await this.post(mode, {
-      _csrf_token: encodeURIComponent(global_csrf_token)
+      _csrf_token: encodeURIComponent(getCsrfToken())
     })
   }
 

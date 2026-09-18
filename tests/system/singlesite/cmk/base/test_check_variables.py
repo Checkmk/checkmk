@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import subprocess
 
 import pytest
 
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer
+from cmk.checkengine.discovery import AutochecksSerializer
 from cmk.utils import paths
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.site import Site
@@ -29,7 +28,7 @@ def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) ->
 
     test_check_path = "local/share/check_mk/checks/test_check_3"
 
-    def cleanup():
+    def cleanup() -> None:
         if site.file_exists("etc/check_mk/conf.d/test_check_3.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_3.mk")
 

@@ -17,8 +17,6 @@ warning string when a mismatch is detected.  Neither function raises
 exceptions -- warnings must never block a deployment.
 """
 
-from __future__ import annotations
-
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -74,7 +72,7 @@ def check_branch_mismatch(build_commit: str | None, repo_root: Path) -> str | No
             timeout=_SUBPROCESS_TIMEOUT_SHORT,
             cwd=repo_root,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return None
 
     if current_branch.returncode != 0:
@@ -95,7 +93,7 @@ def check_branch_mismatch(build_commit: str | None, repo_root: Path) -> str | No
             timeout=_SUBPROCESS_TIMEOUT_SHORT,
             cwd=repo_root,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return None
 
     if ancestor_check.returncode == 0:
@@ -126,7 +124,7 @@ def _find_branch_for_commit(commit: str, repo_root: Path) -> str | None:
             timeout=_SUBPROCESS_TIMEOUT_LONG,
             cwd=repo_root,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return None
 
     if result.returncode != 0 or not result.stdout.strip():

@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 import {
   bucketAnchorTime,
+  consolidatedSampleTime,
   invertBucket,
   selectConsolidatedValue
 } from '@/graphing/components/TimeSeriesGraph/render/bucket'
@@ -80,6 +81,27 @@ describe('bucketAnchorTime', () => {
     const gapBucket = makeBucket({ gap: true })
 
     expect(Number.isNaN(bucketAnchorTime(gapBucket))).toBe(true)
+  })
+})
+
+describe('consolidatedSampleTime', () => {
+  test('min and max are reported at the time their sample was taken', () => {
+    const bucket = makeBucket({ minValueTime: 3, maxValueTime: 7 })
+
+    expect(consolidatedSampleTime(bucket, 'min')).toBe(3)
+    expect(consolidatedSampleTime(bucket, 'max')).toBe(7)
+  })
+
+  test('avg belongs to no sample and keeps the anchor', () => {
+    const bucket = makeBucket({ firstValueTime: 10, lastValueTime: 30 })
+
+    expect(consolidatedSampleTime(bucket, 'avg')).toBe(20)
+  })
+
+  test('is NaN for a gap bucket, which has no drawn point', () => {
+    const gapBucket = makeBucket({ gap: true })
+
+    expect(Number.isNaN(consolidatedSampleTime(gapBucket, 'max'))).toBe(true)
   })
 })
 

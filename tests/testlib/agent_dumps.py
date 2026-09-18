@@ -150,6 +150,9 @@ def copy_dumps(
 def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True) -> str:
     """Create dump rule and copy agent dumps from dumps_dir to site.
 
+    The rule is the datasource program 'cat "<site dumps dir>/$HOSTNAME$"', so each host is fed
+    the dump whose file name equals its host name. Name the hosts after the dump files.
+
     Returns the rule_id of the agent dump rule.
 
     Args:

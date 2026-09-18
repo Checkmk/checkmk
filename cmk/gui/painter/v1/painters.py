@@ -24,7 +24,7 @@ experimental_painter_registry.register(
         ident="alias",
         computer=get_single_str_column,
         formatters=Formatters[str](
-            html=lambda painter_data, painter_configuration, user: ("", painter_data),
+            html=lambda painter_data, painter_configuration, user: ("", painter_data),  # noqa: ARG005
         ),
         title=_l("Host alias"),
         short_title=_l("Alias"),
@@ -37,7 +37,9 @@ def _get_number_of_services_formatter(
     css_id: str,
 ) -> Callable[[int, PainterConfiguration, LoggedInUser], CellSpec]:
     def number_of_services(
-        painter_data: int, config: PainterConfiguration, user: LoggedInUser
+        painter_data: int,
+        config: PainterConfiguration,  # noqa: ARG001
+        user: LoggedInUser,  # noqa: ARG001
     ) -> CellSpec:
         if painter_data > 0:
             return f"count svcstate state{css_id}", str(painter_data)

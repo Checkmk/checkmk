@@ -13,8 +13,11 @@ from xml.dom import minidom
 # TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
 from xml.dom.minicompat import NodeList
 
+_ = NodeList  # only used in a type comment; make ruff happy
 
-def _get_text(node: NodeList[minidom.Element]) -> str:
+
+def _get_text(node):
+    # type: (NodeList[minidom.Element]) -> str
     first = node.item(0)
     if first is None:
         raise ValueError("Node has no item")

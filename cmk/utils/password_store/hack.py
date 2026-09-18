@@ -58,7 +58,7 @@ HACK_AGENTS = {
     "jira": False,
     "jolokia": False,
     "kube": False,
-    "custom_query_metric_backend": False,  # needs no secret
+    "telemetry_metrics_custom_query": False,  # needs no secret
     "mobileiron": False,
     "mqtt": False,
     "netapp_ontap": False,
@@ -72,7 +72,7 @@ HACK_AGENTS = {
     "redfish": False,
     "redfish_power": False,
     "ruckus_spot": False,
-    "rustik": False,
+    "kube_v2": False,
     "salesforce": False,  # needs no secret
     "siemens_plc": False,  # needs no secret
     "smb_share": False,

@@ -305,7 +305,7 @@ def test_notification_parameter_config_file_preserves_parameter_order(
     }
 
     target_path = tmp_path / "notification_parameter.mk"
-    NotificationParameterConfigFile()._save_to_path(target_path, parameters, pprint_value)
+    NotificationParameterConfigFile()._save_to_path(target_path, parameters, pprint_value)  # noqa: SLF001
 
     loaded: NotificationParameterSpecs = store.load_from_mk_file(
         target_path, key="notification_parameter", default={}, lock=False

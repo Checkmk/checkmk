@@ -11,7 +11,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 exports_files(
     [
         "dev-requirements.in",
-        "pyproject.toml",
         "requirements.in",
     ],
 )
@@ -31,7 +30,6 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
@@ -233,6 +231,7 @@ py_library(
 py_library(
     name = "lib",
     srcs = [
+        "cmk/checkengine/auto_queue.py",
         "cmk/checkengine/submitters.py",
         "cmk/checkengine/summarize.py",
         "cmk/checkengine/value_store.py",
@@ -373,6 +372,7 @@ py_cmk_test(
     name = "lib-tests",
     size = "small",
     srcs = [
+        "tests/cmk/checkengine/test_auto_queue.py",
         "tests/cmk/checkengine/test_submitters.py",
         "tests/cmk/checkengine/test_summarizers.py",
         "tests/cmk/checkengine/test_value_store.py",
@@ -451,7 +451,6 @@ py_wheel(
     name = "wheel_fetchers",
     distribution = "cmk-check-engine-fetchers",
     strip_path_prefixes = ["packages/cmk-check-engine"],
-    # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -468,7 +467,6 @@ py_wheel(
     name = "wheel_plugins",
     distribution = "cmk-check-engine-plugins",
     strip_path_prefixes = ["packages/cmk-check-engine"],
-    # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -482,7 +480,6 @@ py_wheel(
     name = "wheel_checkers",
     distribution = "cmk-check-engine-checkers",
     strip_path_prefixes = ["packages/cmk-check-engine"],
-    # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

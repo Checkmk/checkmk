@@ -18,6 +18,7 @@ import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
@@ -98,8 +99,19 @@ const lastStateChange = computed(() =>
     :model-value="tableRow.getIsSelected()"
     @update:model-value="toggleSelected"
   />
-  <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
-  <IconCell v-if="hasColumn('modes')" column-id="modes" :icons="row.modes ?? []" />
+  <StateCell
+    v-if="hasColumn('state')"
+    column-id="state"
+    :state="row.state"
+    :flapping="row.is_flapping"
+    :stale="row.stale"
+  />
+  <IconCell
+    v-if="hasColumn(MODE_COLUMN_ID)"
+    :column-id="MODE_COLUMN_ID"
+    :icons="row.modes ?? []"
+    :max-per-row="MODE_ICONS_PER_ROW"
+  />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"
@@ -115,66 +127,67 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services')"
     column-id="num_services"
     :value="row.num_services"
-    :highlight="
-      !row.num_services ? undefined : { color: 'default', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'default',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services
+    }"
     :linked-to="!row.num_services ? undefined : allServicesLink"
   />
   <NumberCell
     v-if="hasColumn('num_services_ok')"
     column-id="num_services_ok"
     :value="row.num_services_ok"
-    :highlight="
-      !row.num_services_ok ? undefined : { color: 'success', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'success',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_ok
+    }"
     :linked-to="!row.num_services_ok ? undefined : servicesInStateLink('OK')"
   />
   <NumberCell
     v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
-    :highlight="
-      !row.num_services_warn ? undefined : { color: 'warning', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'warning',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_warn
+    }"
     :linked-to="!row.num_services_warn ? undefined : servicesInStateLink('WARN')"
   />
   <NumberCell
     v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
-    :highlight="
-      !row.num_services_crit ? undefined : { color: 'danger', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'danger',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_crit
+    }"
     :linked-to="!row.num_services_crit ? undefined : servicesInStateLink('CRIT')"
   />
   <NumberCell
     v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
-    :highlight="
-      !row.num_services_unknown
-        ? undefined
-        : { color: 'unknown', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'unknown',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_unknown
+    }"
     :linked-to="!row.num_services_unknown ? undefined : servicesInStateLink('UNKNOWN')"
   />
   <NumberCell
     v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
-    :highlight="
-      !row.num_services_pending
-        ? undefined
-        : { color: 'pending', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
-    :linked-to="
-      !row.num_services_pending
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_pending`,
-            target: '_top'
-          }
-    "
+    :highlight="{
+      color: 'pending',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_pending
+    }"
+    :linked-to="!row.num_services_pending ? undefined : servicesInStateLink('PENDING')"
   />
 
   <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
@@ -192,6 +205,7 @@ const lastStateChange = computed(() =>
     :items="contactGroups"
     size="small"
   />
+  <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
 
   <ActionsCell
     v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"
@@ -202,3 +216,10 @@ const lastStateChange = computed(() =>
     @select="onActionSelect"
   />
 </template>
+
+<style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-base-cell {
+  color: var(--font-color-secondary);
+}
+</style>

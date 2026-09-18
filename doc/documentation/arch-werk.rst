@@ -130,14 +130,18 @@ something in their Checkmk installation if they use the feature that was
 modified with this Werk. In order to keep track of the to-dos, incompatible Werks
 need to be acknowledged.
 
-When updating to the next major version the user is warned when there are still
+Pre 2.5.0, when updating to the next major version the user is warned when there are still
 unacknowledged Werks from the previous version: Those can not be displayed in
 the updated Checkmk, as it only ships with Werks from the current major version.
-
 This is also why Checkmk 2.3.0 still needs code to read v1 Werks from the
 precompiled Werks file: The code warning about the unacknowledged Werks is
 execute from 2.3.0, but reads the Werks and unacknowledged Werks from a 2.2.0
 site.
+
+With 2.5.0 the unacknowledged Werks will be migrate to the updated site, see
+`Werk #15365`_
+
+.. _Werk #15365: https://checkmk.com/werk/15365
 
 
 Werk-tool
@@ -170,9 +174,3 @@ transformed to v2 files and then again parsed and loaded as Werk v2 files. This
 way there is no difference if the file is automatically translated to markdown
 and written to disk as markdown file, or loaded from v1 files and automatically
 translated. They are exactly the same.
-
-But this is only true when talking about Werks in 2.3 or higher. Werks in 2.2
-and below have two different render targets with slightly different behavior:
-The description may contain markdown formatting which is interpreted when
-displayed on the website, but not interpreted when displayed in the built in
-Werks viewer of Checkmk 2.2. and below.

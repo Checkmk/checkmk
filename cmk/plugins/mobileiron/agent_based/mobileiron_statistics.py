@@ -59,7 +59,7 @@ def check_mobileiron_sourcehost(params: Params, section: SourceHostSection) -> C
     )
 
 
-def discover_single(section: SourceHostSection) -> DiscoveryResult:
+def discover_single(section: SourceHostSection) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

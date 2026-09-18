@@ -8,6 +8,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
+import CmkDeltaArrow from '../CmkDeltaArrow.vue'
 import type {
   CmkRankedTableProps,
   RankedTableCell,
@@ -46,7 +47,16 @@ function cell(column: RankedTableColumn, row: RankedTableRow): RankedTableCell {
 }
 
 function isNumeric(column: RankedTableColumn): boolean {
-  return column.render === 'bytes' || column.render === 'count'
+  return column.render === 'bytes' || column.render === 'count' || column.render === 'delta'
+}
+
+/** Which way a delta cell's arrow points, or null for a change without one. */
+function deltaDirection(column: RankedTableColumn, row: RankedTableRow): 'up' | 'down' | null {
+  const value = Number(cell(column, row).value ?? 0)
+  if (!Number.isFinite(value) || value === 0) {
+    return null
+  }
+  return value > 0 ? 'up' : 'down'
 }
 
 function cellText(column: RankedTableColumn, row: RankedTableRow): string {
@@ -135,6 +145,13 @@ function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
           >
             {{ cellText(column, row) }}
           </CmkButton>
+          <span v-else-if="column.render === 'delta'" class="db-cmk-ranked-table__delta">
+            <CmkDeltaArrow
+              v-if="deltaDirection(column, row) !== null"
+              :direction="deltaDirection(column, row)!"
+            />
+            {{ cellText(column, row) }}
+          </span>
           <template v-else>{{ cellText(column, row) }}</template>
         </td>
       </tr>
@@ -214,6 +231,15 @@ function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
   display: block;
   height: 100%;
   border-radius: 99999px;
+}
+
+/* Right-aligned like the other numeric columns, with the arrow riding along
+   the end of the figure rather than sitting in a column of its own. */
+.db-cmk-ranked-table__delta {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .db-cmk-ranked-table__bar-value {

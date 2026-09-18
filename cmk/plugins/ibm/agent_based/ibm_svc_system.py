@@ -97,7 +97,7 @@ class System:
     email_contact_location: str | None
 
 
-def discover_ibm_svc_system(section: System) -> DiscoveryResult:
+def discover_ibm_svc_system(section: System) -> DiscoveryResult:  # noqa: ARG001
     yield Service()
 
 

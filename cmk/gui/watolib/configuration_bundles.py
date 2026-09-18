@@ -185,13 +185,14 @@ def identify_bundle_references(
     bundle_ids: set[BundleId],
     *,
     acting_user: LoggedInUser,
+    program_id: str,
     rulespecs_hint: set[str] | None = None,
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles.
 
     NOTE: This may not return all references, as individual entities may not be accessible by the
     current user. (Like passwords)"""
-    bundle_id_finder = _prepare_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
+    bundle_id_finder = _prepare_id_finder(program_id, bundle_ids)
     affected_entities = _get_affected_entities(bundle_group)
 
     bundle_rule_ids = (
@@ -251,11 +252,14 @@ def identify_single_bundle_references(
     bundle_group: str | None = None,
     *,
     acting_user: LoggedInUser,
+    program_id: str,
 ) -> BundleReferences:
     """Get references for a single bundle.
     If the bundle group is unknown, the bundle will be loaded first."""
     group = bundle_group or read_config_bundle(bundle_id)["group"]
-    references = identify_bundle_references(tree, group, {bundle_id}, acting_user=acting_user)
+    references = identify_bundle_references(
+        tree, group, {bundle_id}, acting_user=acting_user, program_id=program_id
+    )
     return references[bundle_id]
 
 
@@ -437,7 +441,11 @@ def delete_config_bundle(
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
     references = identify_bundle_references(
-        tree, bundle["group"], {bundle_id}, acting_user=acting_user
+        tree,
+        bundle["group"],
+        {bundle_id},
+        acting_user=acting_user,
+        program_id=bundle["program_id"],
     )[bundle_id]
     # First check permissions for all the needed deletions
     _user_may_delete_config_bundle_objects(

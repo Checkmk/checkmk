@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Iterator
 
 import pytest
@@ -41,18 +42,19 @@ def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
             yield user_id
 
 
-def test_page_denied_without_legacy_view_permission(user_without_permissions: UserId) -> None:
+@pytest.mark.usefixtures("user_without_permissions")
+def test_page_denied_without_legacy_view_permission() -> None:
     page = MonitorAllHostsPage(MonitorCommands(monitor_command_registry), DowntimeRecurrences())
 
     with pytest.raises(MKAuthException):
         page.page(PageContext(config=Config(), request=request))
 
 
-def test_availability_dropdown_hidden_without_permission(
-    user_without_permissions: UserId,
-) -> None:
+@pytest.mark.usefixtures("user_without_permissions")
+def test_availability_dropdown_hidden_without_permission() -> None:
     assert _availability_dropdowns() == []
 
 
-def test_availability_dropdown_shown_with_permission(with_user_login: UserId) -> None:
+@pytest.mark.usefixtures("with_user_login")
+def test_availability_dropdown_shown_with_permission() -> None:
     assert [dropdown.name for dropdown in _availability_dropdowns()] == ["availability"]

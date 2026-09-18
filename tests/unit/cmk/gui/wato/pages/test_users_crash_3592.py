@@ -21,6 +21,6 @@ def test_show_user_list_without_locked_field(test_edition: Edition) -> None:
         UserId("u1"): UserSpec(alias="User one"),
     }
 
-    mode._show_user_list(
+    mode._show_user_list(  # noqa: SLF001
         users, custom_user_attributes=[], user_online_maxage=2592000, table_row_limit=100
     )

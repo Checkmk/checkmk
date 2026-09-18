@@ -48,5 +48,9 @@ export function useGraphView(getBaseline: () => TimeRange) {
     }
   }
 
-  return { timeRange, valueRange, inspectionActive, handleIntent }
+  // The overlay without the baseline under it, for the brush bar: that follows the user's
+  // selection rather than the range the curves are drawn against.
+  const transientTimeRange = computed(() => inspectionTimeRange.value)
+
+  return { timeRange, valueRange, transientTimeRange, inspectionActive, handleIntent }
 }

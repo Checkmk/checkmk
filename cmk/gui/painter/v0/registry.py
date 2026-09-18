@@ -53,39 +53,39 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
         {
             "_ident": ident,
             "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": lambda s, cell: s._spec["title"],
-            "short_title": lambda s, cell: s._spec.get("short", s.title),
-            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
-            "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell, user: paint_function(row),
+            "ident": property(lambda s: s._ident),  # noqa: SLF001
+            "title": lambda s, cell: s._spec["title"],  # noqa: ARG005, SLF001
+            "short_title": lambda s, cell: s._spec.get("short", s.title),  # noqa: ARG005, SLF001
+            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),  # noqa: ARG005, SLF001
+            "columns": property(lambda s: s._spec["columns"]),  # noqa: SLF001
+            "render": lambda self, row, cell, user: paint_function(row),  # noqa: ARG005
             "export_for_python": (
-                lambda self, row, cell, user: (
+                lambda self, row, cell, user: (  # noqa: ARG005
                     spec["export_for_python"](row, cell)
                     if "export_for_python" in spec
                     else paint_function(row)[1]
                 )
             ),
             "export_for_csv": (
-                lambda self, row, cell, user: (
+                lambda self, row, cell, user: (  # noqa: ARG005
                     spec["export_for_csv"](row, cell)
                     if "export_for_csv" in spec
                     else paint_function(row)[1]
                 )
             ),
             "export_for_json": (
-                lambda self, row, cell, user: (
+                lambda self, row, cell, user: (  # noqa: ARG005
                     spec["export_for_json"](row, cell)
                     if "export_for_json" in spec
                     else paint_function(row)[1]
                 )
             ),
-            "group_by": lambda self, row, cell: self._spec.get("groupby"),
-            "parameters": property(lambda s: s._spec.get("params")),
-            "painter_options": property(lambda s: s._spec.get("options", [])),
-            "printable": property(lambda s: s._spec.get("printable", True)),
-            "sorter": property(lambda s: s._spec.get("sorter", None)),
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
+            "group_by": lambda self, row, cell: self._spec.get("groupby"),  # noqa: ARG005
+            "parameters": property(lambda s: s._spec.get("params")),  # noqa: SLF001
+            "painter_options": property(lambda s: s._spec.get("options", [])),  # noqa: SLF001
+            "printable": property(lambda s: s._spec.get("printable", True)),  # noqa: SLF001
+            "sorter": property(lambda s: s._spec.get("sorter", None)),  # noqa: SLF001
+            "load_inv": property(lambda s: s._spec.get("load_inv", False)),  # noqa: SLF001
         },
     )
     painter_registry.register(cls)

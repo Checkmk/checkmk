@@ -13,8 +13,11 @@ windows_python_wheels = use_repo_rule("//agents/modules/windows:windows_python_w
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "aspect_rules_js", version = "3.4.1")
-bazel_dep(name = "aspect_rules_lint", version = "2.9.0")
-bazel_dep(name = "aspect_rules_py", version = "1.11.5")
+
+# Both of the next two are pinned by a single_version_override below, which wins
+# unconditionally, so these versions have to match it or they merely mislead.
+bazel_dep(name = "aspect_rules_lint", version = "2.0.0")
+bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.10.1")
 bazel_dep(name = "aspect_rules_webpack", version = "0.18.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
@@ -142,6 +145,10 @@ single_version_override(
     ],
 )
 
+# Held at 2.0.0 by the stack of patches below. Note that this does not leave us
+# behind on aspect_rules_js: every 2.x release of rules_lint, 2.9.0 included,
+# declares a floor of aspect_rules_js 1.40.0 and relies on version resolution to
+# supply something newer, so upgrading would not change which rules_js it gets.
 single_version_override(
     module_name = "aspect_rules_lint",
     patch_strip = 1,

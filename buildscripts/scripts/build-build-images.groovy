@@ -166,7 +166,7 @@ void main() {
             // centos:6 is EOL and has no docker_image_aliases entry, hence
             // base_image instead of image_alias_name. tag_name is fixed
             // (not branch-suffixed): Bazel pins this image by digest at
-            // one name (see oci.MODULE.bazel).
+            // one name (see non-free/packages/cmk-update-agent/BUILD).
             "cmk-update-agent": [
                 "tag_name": "cmk-update-agent-toolchain",
                 "base_image": "${docker_registry_no_http}/centos:6",

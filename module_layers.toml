@@ -369,9 +369,8 @@ allows = ["cmk.utils.paths"]
 [components."cmk.agent_based"]
 allows = []
 
-# empty until code needs a first-party import
 [components."cmk.ai_control_plane"]
-allows = []
+allows = ["@ccc", "cmk.ai_control_plane.protocols"]
 
 [components."cmk.ai_control_plane.protocols"]
 allows = []

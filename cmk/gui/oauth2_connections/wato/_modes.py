@@ -45,7 +45,7 @@ from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.passwords import load_passwords, remove_password
 from cmk.gui.watolib.pending_changes import (
@@ -615,7 +615,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         ]:
             for folder, index, rule in (
                 SingleRulesetRecursively.load_single_ruleset_recursively(
-                    folder_tree(), ruleset_name
+                    make_folder_tree(config), ruleset_name
                 )
                 .get_rulesets()[ruleset_name]
                 .get_rules()

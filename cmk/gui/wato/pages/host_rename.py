@@ -66,7 +66,6 @@ from cmk.gui.watolib.host_rename import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_tree,
     FolderTree,
     make_folder_tree,
     validate_host_uniqueness,
@@ -150,7 +149,7 @@ class ModeBulkRenameHost(WatoMode):
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         try:
-            renamings = self._collect_host_renamings(folder_tree(), renaming_config)
+            renamings = self._collect_host_renamings(make_folder_tree(config), renaming_config)
         except HostRenamingException as e:
             flash(e.message)
             return None

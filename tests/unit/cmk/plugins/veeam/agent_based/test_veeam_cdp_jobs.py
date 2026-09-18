@@ -51,7 +51,7 @@ def test_veeam_cdp_jobs_discovery(
     [
         (
             "Test 1",
-            veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
+            veeam_cdp_jobs.CheckParams(age=("fixed", (108000.0, 172800.0))),
             DATA,
             [
                 Result(state=State.OK, summary="State: Running"),
@@ -60,7 +60,7 @@ def test_veeam_cdp_jobs_discovery(
         ),
         (
             "Test 2",
-            veeam_cdp_jobs.CheckParams(age=(100, 300)),
+            veeam_cdp_jobs.CheckParams(age=("fixed", (100.0, 300.0))),
             DATA,
             [
                 Result(state=State.CRIT, summary="State: Failed"),
@@ -72,7 +72,7 @@ def test_veeam_cdp_jobs_discovery(
         ),
         (
             "Test 3",
-            veeam_cdp_jobs.CheckParams(age=(60, 80)),
+            veeam_cdp_jobs.CheckParams(age=("fixed", (60.0, 80.0))),
             DATA,
             [
                 Result(state=State.CRIT, summary="State: Stopped"),
@@ -84,7 +84,7 @@ def test_veeam_cdp_jobs_discovery(
         ),
         (
             "Test 4",
-            veeam_cdp_jobs.CheckParams(age=(60, 80)),
+            veeam_cdp_jobs.CheckParams(age=("fixed", (60.0, 80.0))),
             DATA,
             [
                 Result(state=State.OK, summary="State: Disabled"),
@@ -92,7 +92,7 @@ def test_veeam_cdp_jobs_discovery(
         ),
         (
             "Test 5",
-            veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
+            veeam_cdp_jobs.CheckParams(age=("fixed", (108000.0, 172800.0))),
             DATA,
             [
                 Result(state=State.OK, summary="State: Running"),
@@ -101,7 +101,7 @@ def test_veeam_cdp_jobs_discovery(
         ),
         pytest.param(
             "Test 6",
-            veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
+            veeam_cdp_jobs.CheckParams(age=("fixed", (108000.0, 172800.0))),
             DATA,
             [
                 Result(state=State.OK, summary="State: Running"),
@@ -130,7 +130,7 @@ def test_unmodelled_policy_state_is_reported_as_unknown() -> None:
 
     assert list(
         veeam_cdp_jobs.check_veeam_cdp_jobs(
-            "Test 1", veeam_cdp_jobs.CheckParams(age=(108000, 172800)), section
+            "Test 1", veeam_cdp_jobs.CheckParams(age=("fixed", (108000.0, 172800.0))), section
         )
     ) == [Result(state=State.UNKNOWN, summary="State: Starting")]
 
@@ -148,6 +148,6 @@ def test_unparseable_last_sync_omits_the_age_check() -> None:
 
     assert list(
         veeam_cdp_jobs.check_veeam_cdp_jobs(
-            "Test 1", veeam_cdp_jobs.CheckParams(age=(108000, 172800)), section
+            "Test 1", veeam_cdp_jobs.CheckParams(age=("fixed", (108000.0, 172800.0))), section
         )
     ) == [Result(state=State.OK, summary="State: Running")]

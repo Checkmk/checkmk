@@ -8,12 +8,13 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
     Result,
     Service,
@@ -49,7 +50,7 @@ Section = Mapping[str, CDPJob]
 
 
 class CheckParams(TypedDict):
-    age: tuple[float, float]
+    age: LevelsT[float]
 
 
 def _parse_time_diff(last_sync: str) -> float | None:
@@ -112,9 +113,9 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
         yield Result(state=State.WARN, summary=warning_message)
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=cdp.time_diff,
-        levels_upper=params.get("age"),
+        levels_upper=params["age"],
         metric_name=None,
         render_func=render.timespan,
         label="Time since last CDP Run",
@@ -127,5 +128,5 @@ check_plugin_veeam_cdp_jobs = CheckPlugin(
     discovery_function=discovery_veeam_cdp_jobs,
     check_function=check_veeam_cdp_jobs,
     check_ruleset_name="veeam_cdp_jobs",
-    check_default_parameters=CheckParams(age=(108000, 172800)),
+    check_default_parameters=CheckParams(age=("fixed", (108000.0, 172800.0))),
 )

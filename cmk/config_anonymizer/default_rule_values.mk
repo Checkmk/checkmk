@@ -7588,7 +7588,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('veeam_cdp_jobs', [])
 
 checkgroup_parameters['veeam_cdp_jobs'] = [
-{'id': '3ef4b142-7fa5-4fa3-aafa-fe95927d6ae9', 'value': {'age': (108000, 172800)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '3ef4b142-7fa5-4fa3-aafa-fe95927d6ae9', 'value': {'age': ('fixed', (108000.0, 172800.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['veeam_cdp_jobs']
 
 
@@ -14829,7 +14829,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('veeam_cdp_jobs', [])
 
 static_checks['veeam_cdp_jobs'] = [
-{'id': '72498fec-2172-40d9-a43f-d7babd8e0600', 'value': ('veeam_cdp_jobs', 'example', {'age': (108000, 172800)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '72498fec-2172-40d9-a43f-d7babd8e0600', 'value': ('veeam_cdp_jobs', 'example', {'age': ('fixed', (108000.0, 172800.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['veeam_cdp_jobs']
 
 

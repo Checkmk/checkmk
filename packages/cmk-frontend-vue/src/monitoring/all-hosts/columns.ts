@@ -192,32 +192,44 @@ export function buildHostColumns({
 
   const totalServicesFilter: NumericFilter<'num_services'> = {
     type: 'numeric',
-    field: 'num_services'
+    field: 'num_services',
+    anyInfo: _t('Shows hosts with at least one service.'),
+    noneInfo: _t('Shows hosts with no services.')
   }
 
   const okServicesFilter: NumericFilter<'num_services_ok'> = {
     type: 'numeric',
-    field: 'num_services_ok'
+    field: 'num_services_ok',
+    anyInfo: _t('Shows hosts with at least one service in OK.'),
+    noneInfo: _t('Shows hosts with no service in OK.')
   }
 
   const warnServicesFilter: NumericFilter<'num_services_warn'> = {
     type: 'numeric',
-    field: 'num_services_warn'
+    field: 'num_services_warn',
+    anyInfo: _t('Shows hosts with at least one service in WARN.'),
+    noneInfo: _t('Shows hosts with no service in WARN.')
   }
 
   const critServicesFilter: NumericFilter<'num_services_crit'> = {
     type: 'numeric',
-    field: 'num_services_crit'
+    field: 'num_services_crit',
+    anyInfo: _t('Shows hosts with at least one service in CRIT.'),
+    noneInfo: _t('Shows hosts with no service in CRIT.')
   }
 
   const unknownServicesFilter: NumericFilter<'num_services_unknown'> = {
     type: 'numeric',
-    field: 'num_services_unknown'
+    field: 'num_services_unknown',
+    anyInfo: _t('Shows hosts with at least one service in UNKNOWN.'),
+    noneInfo: _t('Shows hosts with no service in UNKNOWN.')
   }
 
   const pendingServicesFilter: NumericFilter<'num_services_pending'> = {
     type: 'numeric',
-    field: 'num_services_pending'
+    field: 'num_services_pending',
+    anyInfo: _t('Shows hosts with at least one pending service.'),
+    noneInfo: _t('Shows hosts with no pending service.')
   }
 
   const lastCheckFilter: DateTimeRangeFilter<'last_check'> = {

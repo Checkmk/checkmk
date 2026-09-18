@@ -52,8 +52,7 @@ def add_to_container_v1(
         )
 
     try:
-        # The target page is always None here; only the sidebar hint carries information.
-        _target_page, sidebar_reload_required = page_type.add_element_via_popup(
+        redirect_url, sidebar_reload_required = page_type.add_element_via_popup(
             body.id,
             addable.add_type,
             {"context": None, "parameters": addable.parameters()},
@@ -73,7 +72,16 @@ def add_to_container_v1(
             detail=str(exc),
         ) from exc
 
-    return AddToContainerResponse(sidebar_reload_required=sidebar_reload_required)
+    if redirect_url is None:
+        raise ProblemException(
+            status=500,
+            title="Add-to-container action produced no redirect target",
+            detail=f"The container type '{body.family}' did not report a page to navigate to.",
+        )
+
+    return AddToContainerResponse(
+        redirect_url=redirect_url, sidebar_reload_required=sidebar_reload_required
+    )
 
 
 ENDPOINT_ADD_TO_CONTAINER = VersionedEndpoint(

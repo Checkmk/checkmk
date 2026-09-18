@@ -8,8 +8,8 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.graphing.openapi._add_to import AddableGraph
 from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
-from cmk.gui.graphing.openapi.models import AddToRequest
-from cmk.gui.http import request
+from cmk.gui.graphing.openapi.models import AddToRequest, AddToVisualResponse
+from cmk.gui.http import request, response
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -29,7 +29,7 @@ from cmk.web.utils import permission_verification as permissions
 _GRAPH_TARGET_VISUAL_TYPES = ("dashboards", "reports")
 
 
-def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> None:
+def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisualResponse:
     """Add a graph to a visual container"""
     addable = AddableGraph.parse(body.specification)
     if body.family not in _GRAPH_TARGET_VISUAL_TYPES:
@@ -76,14 +76,23 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> None:
             detail=str(exc),
         ) from exc
 
+    # add_visual_handler reports success by writing "OK <url>" into the shared response object,
+    # a leftover from the legacy AJAX handler it was written for (cmk.gui.visuals.ajax_add_visual).
+    reported = response.get_data(as_text=True)
+    if not reported.startswith("OK "):
+        raise ProblemException(
+            status=500,
+            title="Add-to-visual action produced no redirect target",
+            detail=f"Unexpected response from the visual type handler: {reported!r}",
+        )
+    return AddToVisualResponse(redirect_url=reported.removeprefix("OK "))
+
 
 ENDPOINT_ADD_TO_VISUAL = VersionedEndpoint(
     metadata=EndpointMetadata(
         path=domain_type_action_href("graph", "add_to_visual"),
         link_relation=".../action-param",
         method="post",
-        # No response model: add_visual_handler reports nothing back, unlike the container side.
-        content_type=None,
     ),
     permissions=EndpointPermissions(
         # Which permission applies depends on the visual type the caller targets.

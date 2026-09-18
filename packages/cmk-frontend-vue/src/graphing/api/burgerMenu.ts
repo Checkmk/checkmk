@@ -24,7 +24,7 @@ export const addToContainer = async (
   specification: Record<string, unknown>,
   internal: string
 ) => {
-  unwrap(
+  const { redirect_url: redirectUrl } = unwrap(
     await client.POST(_ADD_TO_CONTAINER_URL, {
       params: {
         header: {
@@ -39,6 +39,7 @@ export const addToContainer = async (
       }
     })
   )
+  window.location.href = redirectUrl
 }
 
 export const addToVisual = async (
@@ -46,7 +47,7 @@ export const addToVisual = async (
   visualName: string,
   specification: Record<string, unknown>
 ) => {
-  unwrap(
+  const { redirect_url: redirectUrl } = unwrap(
     await client.POST(_ADD_TO_VISUAL_URL, {
       params: {
         header: {
@@ -60,6 +61,7 @@ export const addToVisual = async (
       }
     })
   )
+  window.location.href = redirectUrl
 }
 
 export const graphExport = async (

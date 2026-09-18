@@ -463,12 +463,24 @@ class AddToContainerRequest(AddToRequest):
 
 @api_model
 class AddToContainerResponse:
+    redirect_url: str = api_field(
+        description="The URL of the container page the graph was added to, to navigate to.",
+        example="custom_graph.py?name=my_custom_graph&owner=my_user",
+    )
     sidebar_reload_required: bool = api_field(
         description=(
             "Whether the sidebar has to be reloaded. Adding to a container the user does not own "
             "clones it first, which makes a new page appear in the sidebar."
         ),
         example=False,
+    )
+
+
+@api_model
+class AddToVisualResponse:
+    redirect_url: str = api_field(
+        description="The URL of the visual the graph was added to, to navigate to.",
+        example="dashboard.py?name=my_dashboard",
     )
 
 

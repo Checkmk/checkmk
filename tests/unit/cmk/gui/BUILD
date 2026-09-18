@@ -273,6 +273,7 @@ py_cmk_test(
         "//packages/cmk-livestatus-client:livestatus-api",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("fido2"),
         requirement("matplotlib"),

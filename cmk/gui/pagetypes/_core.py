@@ -1885,9 +1885,12 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         page.add_element(create_info)  # can be overridden
         assert user.id is not None
         cls.save_user_instances(instances, user_permissions, user.id)
-        return None, need_sidebar_reload
-        # With a redirect directly to the page afterwards do it like this:
-        # return page, need_sidebar_reload
+        # The add_to_container REST endpoint (cmk.gui.graphing.openapi.add_to_container) treats
+        # redirect_url as mandatory and 500s if it comes back None. Every OverridableContainer it
+        # can currently reach (GraphCollection, CustomGraphPage) is a PageRenderer, so this branch
+        # is not taken in practice - test_all_add_to_containers_are_page_renderers pins that down.
+        redirect_url = page.page_url() if isinstance(page, PageRenderer) else None
+        return redirect_url, need_sidebar_reload
 
     def elements(self) -> Sequence[ElementSpec]:
         return self.config.elements

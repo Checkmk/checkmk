@@ -126,6 +126,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     Host,
     make_action_link,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.main_menu import main_module_registry
@@ -293,6 +294,8 @@ class ABCRulesetMode(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
+
         #  Explicitly hide deprecated rulesets by default
         if not request.has_var("search_p_ruleset_deprecated"):
             request.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False))
@@ -362,10 +365,10 @@ class ABCRulesetMode(WatoMode):
                         )
                     }
                 ),
-                folder_tree(),
+                self._tree,
             )
         else:
-            rulesets = AllRulesets(visible_rulesets(self._rulesets().get_rulesets()), folder_tree())
+            rulesets = AllRulesets(visible_rulesets(self._rulesets().get_rulesets()), self._tree)
 
         if self._page_type is PageType.RuleSearch and not html.form_submitted():
             return  # Do not show the result list when no query has been made
@@ -460,7 +463,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
     @override
     def _rulesets(self) -> RulesetCollection:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         if self._group_name == "static":
             return RulesetCollection(
                 {
@@ -732,7 +735,7 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     @override
     def _rulesets(self) -> RulesetCollection:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         if self._group_name == "static":
             return RulesetCollection(
                 {
@@ -777,7 +780,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         if user.may("wato.hosts") or user.may("wato.seeall"):
             current_folder = folder_from_request(
-                folder_tree(), request.var("folder"), request.get_ascii_input("host")
+                self._tree, request.var("folder"), request.get_ascii_input("host")
             )
             yield PageMenuEntry(
                 title=_("Hosts in folder: %(folder)s") % {"folder": current_folder.title()},
@@ -1835,20 +1838,22 @@ class ModeRuleSearchForm(WatoMode):
         with html.form_context("rule_search", method="POST"):
             html.hidden_field("mode", self.back_mode, add_var=True)
 
-            valuespec = self._valuespec(folder_tree())
+            valuespec = self._valuespec(self._tree)
             valuespec.render_input_as_form("search", self.search_options)
 
             html.hidden_fields()
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
+
         if request.var("_reset_search"):
             request.del_vars("search_")
             self.search_options: SearchOptions = {}
             return
 
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
-        value = (vs := self._valuespec(folder_tree())).from_html_vars("search")
+        value = (vs := self._valuespec(self._tree)).from_html_vars("search")
         vs.validate_value(value, "search")
 
         # In case all checkboxes are unchecked, treat this like the reset search button press

@@ -43,17 +43,22 @@ def navigate_to_edit_user_page(dashboard_page: MainDashboard, user_name: str) ->
 def set_number_of_character_groups_password_policy(
     request: pytest.FixtureRequest, test_site: Site
 ) -> Iterator[None]:
-    """Set the number of character groups required in the password policy.
-
-    Require N(parameter) character groups and reset the policy again when done.
+    """Require only N(parameter) character groups, restoring the previous policy when done.
 
     This fixture uses indirect pytest parametrization to define the number of character groups.
     """
-    test_site.openapi.global_settings.update("password_policy", {"num_groups": request.param})
+    policy = test_site.openapi.global_settings.get("password_policy")
+    etag = test_site.openapi.global_settings.update(
+        "password_policy", {"num_groups": request.param}, etag=policy.etag
+    )
     try:
         yield
     finally:
-        test_site.openapi.global_settings.reset("password_policy")
+        # Writing a factory value back would turn it into an explicitly set one
+        if policy.origin == "factory":
+            test_site.openapi.global_settings.reset("password_policy", etag=etag)
+        else:
+            test_site.openapi.global_settings.update("password_policy", policy.value, etag=etag)
         test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 

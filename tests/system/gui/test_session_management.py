@@ -26,7 +26,7 @@ def fixture_short_session_timeouts(test_site: Site) -> Iterator[None]:
                 "enforce_reauth": 80.0,
                 "enforce_reauth_warning_threshold": 60.0,
             },
-            "user_idle_timeout": 100.0,
+            "user_idle_timeout": 3600.0,
         },
     )
     try:
@@ -44,11 +44,13 @@ def test_session_expiry_warning_and_logout(
 ) -> None:
     """
     Validate that with the session timeouts set to
-        advise re-authentication after 60 sec,
-        max duration 80 sec
-        and user idle timeout 100 sec
+        maximum session duration 80 sec,
+        re-authentication advised 60 sec before that, so from 20 sec in,
+        and user idle timeout 3600 sec
     then
-        after 60 seconds:
+        immediately after login:
+            no session expiration warning is shown;
+        after 20 seconds:
             session expiration warning is shown;
         after 80 seconds:
             session expires and user is redirected to login page.
@@ -58,17 +60,21 @@ def test_session_expiry_warning_and_logout(
     login_page = LoginPage(page, test_site.internal_url)
     login_page.login(credentials)
     users_page = Users(page)
+    expect(
+        users_page.session_warning_message,
+        "Session expiration warning was shown immediately after login",
+    ).not_to_be_visible()
 
-    logger.info("Waiting 60 seconds for session expiration warning...")
-    time.sleep(62)
+    logger.info("Waiting 20 seconds (+ margin) for session expiration warning...")
+    time.sleep(25)
     users_page.page.reload()
     expect(
         users_page.session_warning_message,
-        "Session expiration warning was not shown after 60 seconds",
+        "Session expiration warning was not shown after 20 seconds",
     ).to_be_visible()
 
-    logger.info("Waiting another 20 seconds for session to expire...")
-    time.sleep(22)
+    logger.info("Waiting another 60 seconds for session to expire...")
+    time.sleep(60)
     users_page.page.reload()
     login_page = LoginPage(users_page.page, navigate_to_page=False)
     try:

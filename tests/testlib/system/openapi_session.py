@@ -580,22 +580,43 @@ class ChangesAPI(BaseAPI):
         raise AssertionError("unreachable")
 
 
+@dataclass(frozen=True)
+class GlobalSetting:
+    value: object
+    origin: Literal["factory", "global", "site"]
+    etag: str
+
+
 class GlobalSettingsAPI(BaseAPI):
-    def update(self, varname: str, value: object) -> None:
+    def get(self, varname: str) -> GlobalSetting:
+        response = self.session.get(
+            f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        body = response.json()
+        return GlobalSetting(
+            value=body["value"], origin=body["origin"], etag=response.headers["ETag"]
+        )
+
+    def update(self, varname: str, value: object, etag: str = "*") -> str:
+        """Returns the Etag of the written setting"""
         response = self.session.put(
             f"/objects/global_setting/{varname}",
             api_version=APIVersion.INTERNAL,
-            headers={"If-Match": "*"},
+            headers={"If-Match": etag},
             json={"value": value},
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+        return response.headers["ETag"]
 
-    def reset(self, varname: str) -> None:
+    def reset(self, varname: str, etag: str = "*") -> None:
         response = self.session.delete(
             f"/objects/global_setting/{varname}",
             api_version=APIVersion.INTERNAL,
-            headers={"If-Match": "*"},
+            headers={"If-Match": etag},
         )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)

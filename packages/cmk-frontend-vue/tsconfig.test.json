@@ -13,10 +13,19 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
     "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
     "paths": {
-      "cmk-ui-library/lib/i18nString": ["weaki18nString.d.ts"],
+      "cmk-ui-library/lib/i18nString": ["./weaki18nString.d.ts"],
       "@/*": ["./src/*"],
       "@ucl/*": ["./ui-component-library/*"],
-      "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"]
+      "*": [
+        // @types/* first: "Bundler" resolution resolves a typeless
+        // package to its .js and stops, so the @types package would
+        // never be reached if it came second. "node" resolution used
+        // to fail on the .js and fall through on its own.
+        "./node_modules/@types/*",
+        "./node_modules/*",
+        "../../bazel-bin/packages/cmk-frontend-vue/node_modules/@types/*",
+        "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"
+      ]
     }
   }
 }

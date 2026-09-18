@@ -1,9 +1,8 @@
 {
   // Shared compiler options for every Checkmk Vue package (cmk-ui-library itself,
   // cmk-frontend-vue, and future extractions). Packages extend this and add
-  // only project shape: include/exclude, baseUrl, paths, build-info location.
+  // only project shape: include/exclude, paths, build-info location.
   "compilerOptions": {
-    "ignoreDeprecations": "6.0", // for now
     /*
      *
      * Begin "@vue/tsconfig/tsconfig.dom.json",
@@ -23,7 +22,7 @@
 
     // We expect users to use bundlers.
     // So here we enable some resolution features that are only available in bundlers.
-    // "moduleResolution": "Bundler", // CMK OVERRIDE: We are using "node" below.
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     // Even files without `import` or `export` are treated as modules.
@@ -80,7 +79,6 @@
      *
      */
 
-    "moduleResolution": "node",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "exactOptionalPropertyTypes": true,

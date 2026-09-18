@@ -10,37 +10,32 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Final, Literal, NamedTuple
 
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset
-from cmk.plugins.oracle.bakery.mk_oracle_unified import (
-    GuiAdditionalOptionsConf,
-    GuiAsmAuthConf,
-    GuiAuthConf,
-    GuiAuthUserPasswordData,
-    GuiConfig,
-    GuiConnectionConf,
-    GuiDiscoveryConf,
-    GuiExcludedSectionConf,
-    GuiInstanceConf,
-    GuiMainConf,
-    GuiOracleIdentificationConf,
-    GuiOracleSafeEntries,
-    OracleAuthType,
+from cmk.plugins.oracle.lib.unified_config import (
+    AuthType,
+    StoredAdditionalOptionsConf,
+    StoredAsmAuthConf,
+    StoredAuthConf,
+    StoredAuthUserPasswordData,
+    StoredConfig,
+    StoredConnectionConf,
+    StoredDiscoveryConf,
+    StoredExcludedSectionConf,
+    StoredInstanceConf,
+    StoredMainConf,
+    StoredOracleIdentificationConf,
+    StoredOracleSafeEntries,
+    StoredPassword,
 )
 
 MIGRATION_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "checkmk.com/oracle-migration")
 
-RawSecret = tuple[
-    Literal["cmk_postprocessed"],
-    Literal["explicit_password", "stored_password"],
-    tuple[str, str],
-]
-
-GuiValidatePermissions = (
-    tuple[Literal["enabled"], GuiOracleSafeEntries | None] | tuple[Literal["disabled"], None]
+StoredValidatePermissions = (
+    tuple[Literal["enabled"], StoredOracleSafeEntries | None] | tuple[Literal["disabled"], None]
 )
 
 
 class MigratedRule(NamedTuple):
-    rule: GuiConfig[RawSecret]
+    rule: StoredConfig
     warnings: list[str]
 
 
@@ -110,7 +105,7 @@ LEGACY_DEFAULT_SECTIONS: Final[Mapping[str, str | None]] = {
 
 def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     warnings: list[str] = []
-    instances: list[GuiInstanceConf[RawSecret]] = []
+    instances: list[StoredInstanceConf] = []
 
     deploy: tuple[Literal["deploy", "do_not_deploy"], None] = (
         ("deploy", None) if legacy.get("activated") else ("do_not_deploy", None)
@@ -122,7 +117,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     options = (
         None
         if validate_permissions is None
-        else GuiAdditionalOptionsConf(validate_permissions=validate_permissions)
+        else StoredAdditionalOptionsConf(validate_permissions=validate_permissions)
     )
 
     if legacy_sections := legacy.get("sections"):
@@ -134,12 +129,12 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
             "default has been written out explicitly. The new rule pins that selection "
             "instead of deferring to the plugin later."
         )
-    excluded_sections: list[GuiExcludedSectionConf] | None = None
+    excluded_sections: list[StoredExcludedSectionConf] | None = None
 
     if legacy_excluded_sections := legacy.get("excluded_sections"):
         excluded_sections = [
-            GuiExcludedSectionConf(
-                target_id=("sid", GuiOracleIdentificationConf(sid=sid)), sections=exclusions
+            StoredExcludedSectionConf(
+                target_id=("sid", StoredOracleIdentificationConf(sid=sid)), sections=exclusions
             )
             for sid, exclusions in legacy_excluded_sections
             if exclusions
@@ -156,20 +151,18 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     if asm_auth := _convert_login_asm(legacy.get("login_asm"), login_exceptions, warnings):
         if auth is None:
-            auth = GuiAuthConf[RawSecret]()
+            auth = StoredAuthConf()
         auth.asm_auth = asm_auth
 
     instances.extend(_convert_login_exceptions(login_exceptions, warnings))
 
     if auth is None or auth.auth_type is None:
-        auth = (auth or GuiAuthConf[RawSecret]()).model_copy(
-            update={"auth_type": (OracleAuthType.WALLET.value, None)}
-        )
+        auth = (auth or StoredAuthConf()).model_copy(update={"auth_type": ("wallet", None)})
         warnings.append("No auth defined in legacy rule. Defaulting to Oracle wallet.")
 
-    main = GuiMainConf[RawSecret](
+    main = StoredMainConf(
         auth=auth,
-        connection=connection or GuiConnectionConf(),
+        connection=connection or StoredConnectionConf(),
         cache_age=cache_age,
         discovery=discovery,
         sections=sections,
@@ -179,12 +172,12 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     warnings.extend(msg for key, msg in field_warning_messages.items() if key in legacy)
 
     return MigratedRule(
-        rule=GuiConfig[RawSecret](deploy=deploy, instances=instances, main=main, options=options),
+        rule=StoredConfig(deploy=deploy, instances=instances, main=main, options=options),
         warnings=warnings,
     )
 
 
-def _convert_permissions(validate_permissions: Any) -> GuiValidatePermissions | None:
+def _convert_permissions(validate_permissions: Any) -> StoredValidatePermissions | None:
     """Map the legacy 'validate_permissions' value to the unified binaries permissions check.
 
     The legacy value is either 'disable' or
@@ -196,9 +189,9 @@ def _convert_permissions(validate_permissions: Any) -> GuiValidatePermissions | 
     """
     match validate_permissions:
         case ("enable", {"groups_and_users_white_list": [*safe_entries]}) if safe_entries:
-            return ("enabled", GuiOracleSafeEntries(safe_entries=list(safe_entries)))
+            return ("enabled", StoredOracleSafeEntries(safe_entries=list(safe_entries)))
         case ("enable", Mapping()):
-            return ("enabled", GuiOracleSafeEntries())
+            return ("enabled", StoredOracleSafeEntries())
         case "disable":
             return ("disabled", None)
         case _:
@@ -241,30 +234,30 @@ def _convert_sections(
     return new_sections
 
 
-def _convert_discovery(sids: tuple[str, Sequence[str]] | None) -> GuiDiscoveryConf | None:
+def _convert_discovery(sids: tuple[str, Sequence[str]] | None) -> StoredDiscoveryConf | None:
     """Map the legacy (mode, names) sids tuple to the unified discovery include/exclude dict."""
     if not sids:
         return None
 
     how, names = sids
     if how == "only":
-        return GuiDiscoveryConf(enabled=True, include=list(names))
+        return StoredDiscoveryConf(enabled=True, include=list(names))
     if how in ("skip", "exclude"):
-        return GuiDiscoveryConf(enabled=True, exclude=list(names))
+        return StoredDiscoveryConf(enabled=True, exclude=list(names))
     return None
 
 
 def _convert_login(
     legacy: Mapping[str, Any], warnings: list[str]
-) -> tuple[GuiAuthConf[RawSecret] | None, GuiConnectionConf | None]:
+) -> tuple[StoredAuthConf | None, StoredConnectionConf | None]:
     """Convert the legacy 'login' block into the unified main auth/connection."""
     login = legacy.get("login")
     if not isinstance(login, Mapping):
         return None, None
 
     auth = _convert_auth(login, auth_required=True, warnings=warnings)
-    assert auth is not None  # auth_required=True always yields a real GuiAuthConf
-    connection = _convert_connection(login) or GuiConnectionConf()
+    assert auth is not None  # auth_required=True always yields a real StoredAuthConf
+    connection = _convert_connection(login) or StoredConnectionConf()
     if admin := legacy.get("tns_admin"):
         connection.tns_admin = admin
 
@@ -284,7 +277,7 @@ def _convert_remote_instances(
     remote_instances: Sequence[Mapping[str, Any]],
     login_exceptions: dict[str, Any],
     warnings: list[str],
-) -> list[GuiInstanceConf[RawSecret]]:
+) -> list[StoredInstanceConf]:
     """Build instances for remote_instances entries, consuming matching
     login_exceptions entries (looked up by sid/piggyhost/explicit id) for their auth."""
     instances = []
@@ -293,16 +286,18 @@ def _convert_remote_instances(
             continue
 
         if tns_alias := remote.get("tnsalias"):
-            oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf] = (
+            oracle_id: tuple[
+                Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf
+            ] = (
                 "alias",
-                GuiOracleIdentificationConf(alias=tns_alias),
+                StoredOracleIdentificationConf(alias=tns_alias),
             )
         else:
-            oracle_id = ("sid", GuiOracleIdentificationConf(sid=remote["sid"]))
+            oracle_id = ("sid", StoredOracleIdentificationConf(sid=remote["sid"]))
 
         # The remote instance is valid at this point,
         # because the login is optional
-        new_instance = GuiInstanceConf[RawSecret](
+        new_instance = StoredInstanceConf(
             connection=_convert_connection(remote),
             oracle_id=oracle_id,
             piggyback_host=remote.get("piggyhost") or None,
@@ -334,7 +329,7 @@ def _convert_remote_instances(
 
 def _convert_login_exceptions(
     login_exceptions: Mapping[str, Any], warnings: list[str]
-) -> list[GuiInstanceConf[RawSecret]]:
+) -> list[StoredInstanceConf]:
     """Build instances for login_exceptions entries not consumed by remote_instances
     (i.e. plain SID-keyed logins, and any ASM login routed here via '+ASM')."""
     instances = []
@@ -343,15 +338,17 @@ def _convert_login_exceptions(
             continue
 
         if tns_alias := login.get("tnsalias"):
-            oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf] = (
+            oracle_id: tuple[
+                Literal["alias", "descriptor", "sid"], StoredOracleIdentificationConf
+            ] = (
                 "alias",
-                GuiOracleIdentificationConf(alias=tns_alias),
+                StoredOracleIdentificationConf(alias=tns_alias),
             )
         else:
-            oracle_id = ("sid", GuiOracleIdentificationConf(sid=sid))
+            oracle_id = ("sid", StoredOracleIdentificationConf(sid=sid))
 
         instances.append(
-            GuiInstanceConf[RawSecret](
+            StoredInstanceConf(
                 auth=_convert_auth(login, auth_required=False, warnings=warnings),
                 connection=_convert_connection(login),
                 oracle_id=oracle_id,
@@ -365,7 +362,7 @@ def _convert_login_asm(
     login_asm: Mapping[str, Any] | None,
     login_exceptions: dict[str, Any],
     warnings: list[str],
-) -> GuiAsmAuthConf[RawSecret] | None:
+) -> StoredAsmAuthConf | None:
     """Route an ASM login either into login_exceptions as a '+ASM' fallback instance
     (dedicated host, or wallet auth), or return an asm_auth object for the main section
     (explicit auth without a dedicated host)."""
@@ -384,14 +381,14 @@ def _convert_login_asm(
 
     if isinstance(asm_auth, tuple) and asm_auth[0] == "explicit":
         username, password = _convert_username_password(asm_auth)
-        return GuiAsmAuthConf[RawSecret](
+        return StoredAsmAuthConf(
             username=username, password=password, role=login_asm.get("as") or None
         )
 
     return None
 
 
-def _convert_username_password(auth: tuple[Any, ...]) -> tuple[str, RawSecret]:
+def _convert_username_password(auth: tuple[Any, ...]) -> tuple[str, StoredPassword]:
     username, password = auth[1]
     password_type, password_value = password
     final_type: Literal["explicit_password", "stored_password"] = (
@@ -405,39 +402,39 @@ def _convert_username_password(auth: tuple[Any, ...]) -> tuple[str, RawSecret]:
 
 def _convert_auth(
     login: Mapping[str, Any], auth_required: bool, warnings: list[str]
-) -> GuiAuthConf[RawSecret] | None:
+) -> StoredAuthConf | None:
     auth = login.get("auth")
-    auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData[RawSecret] | None] | None = None
+    auth_type: tuple[AuthType, StoredAuthUserPasswordData | None] | None = None
     if isinstance(auth, tuple) and auth[0] == "explicit":
         username, password = _convert_username_password(auth)
         auth_type = (
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData[RawSecret](username=username, password=password),
+            "standard",
+            StoredAuthUserPasswordData(username=username, password=password),
         )
     elif auth == "wallet":
-        auth_type = (OracleAuthType.WALLET, None)
+        auth_type = ("wallet", None)
     elif auth_required:
         warnings.append(
             "Unknown auth type, defaulting to wallet because auth-type is mandatory in the unified plugin."
         )
-        auth_type = (OracleAuthType.WALLET, None)
+        auth_type = ("wallet", None)
 
     role = login.get("as") or None
     if auth_type is None and role is None:
         return None
-    return GuiAuthConf[RawSecret](auth_type=auth_type, role=role)
+    return StoredAuthConf(auth_type=auth_type, role=role)
 
 
-def _convert_connection(login: Mapping[str, Any]) -> GuiConnectionConf | None:
+def _convert_connection(login: Mapping[str, Any]) -> StoredConnectionConf | None:
     kwargs: dict[str, Any] = {}
     if host := login.get("host"):
         kwargs["host"] = host
     if port := login.get("port"):
         kwargs["port"] = port
-    return GuiConnectionConf(**kwargs) if kwargs else None
+    return StoredConnectionConf(**kwargs) if kwargs else None
 
 
-def dump(config: GuiConfig[RawSecret]) -> dict[str, Any]:
+def dump(config: StoredConfig) -> dict[str, Any]:
     return config.model_dump(exclude_unset=True, exclude_none=True, mode="python")
 
 

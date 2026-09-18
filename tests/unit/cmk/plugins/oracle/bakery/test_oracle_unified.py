@@ -11,20 +11,21 @@ import pytest
 
 from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret, SystemBinary, SystemConfig
 from cmk.plugins.oracle.bakery.mk_oracle_unified import (
+    BakedAuthConf,
+    BakedAuthUserPasswordData,
+    BakedConfig,
+    BakedInstanceConf,
+    BakedMainConf,
     bakery_plugin_oracle,
-    GuiAdditionalOptionsConf,
-    GuiAuthConf,
-    GuiAuthUserPasswordData,
-    GuiConfig,
-    GuiConnectionConf,
-    GuiDiscoveryConf,
-    GuiExcludedSectionConf,
-    GuiInstanceConf,
-    GuiMainConf,
-    GuiOracleClientLibOptions,
-    GuiOracleIdentificationConf,
-    GuiOracleSafeEntries,
-    OracleAuthType,
+)
+from cmk.plugins.oracle.lib.unified_config import (
+    StoredAdditionalOptionsConf,
+    StoredConnectionConf,
+    StoredDiscoveryConf,
+    StoredExcludedSectionConf,
+    StoredOracleClientLibOptions,
+    StoredOracleIdentificationConf,
+    StoredOracleSafeEntries,
 )
 
 PLUGIN_NAME = "mk_oracle_unified"
@@ -153,20 +154,20 @@ def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plu
 
 
 # 1. Minimal config (already present)
-oracle_config_min: GuiConfig = GuiConfig(
+oracle_config_min: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="cmk",
                     password=Secret("pw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=None,
             timeout=None,
@@ -194,32 +195,32 @@ expected_yaml_lines_min = [
 ]
 
 # 2. Full config
-oracle_config_full: GuiConfig = GuiConfig(
+oracle_config_full: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    options=GuiAdditionalOptionsConf(
+    options=StoredAdditionalOptionsConf(
         max_connections=10,
         ignore_db_name=True,
         oracle_client_library=None,
     ),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="admin",
                     password=Secret("adminpw", "", ""),
                 ),
             ),
             role="sysdba",
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="dbhost",
             port=1521,
             timeout=10,
             tns_admin="/etc/oracle/tns",
         ),
         cache_age=600,
-        discovery=GuiDiscoveryConf(
+        discovery=StoredDiscoveryConf(
             enabled=True,
             include=["prod*", "test*"],
             exclude=["old*"],
@@ -247,33 +248,33 @@ oracle_config_full: GuiConfig = GuiConfig(
         },
     ),
     instances=[
-        GuiInstanceConf(
+        BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                GuiOracleIdentificationConf(
+                StoredOracleIdentificationConf(
                     service_name="Service_Name_1",
                 ),
             ),
         ),
-        GuiInstanceConf(
+        BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                GuiOracleIdentificationConf(
+                StoredOracleIdentificationConf(
                     service_name="Service_Name_2",
                     instance_name="Instance_Name_2",
                 ),
             ),
-            auth=GuiAuthConf(
+            auth=BakedAuthConf(
                 auth_type=(
-                    OracleAuthType.STANDARD,
-                    GuiAuthUserPasswordData(
+                    "standard",
+                    BakedAuthUserPasswordData(
                         username="inst2",
                         password=Secret("inst2pw", "", ""),
                     ),
                 ),
                 role=None,
             ),
-            connection=GuiConnectionConf(
+            connection=StoredConnectionConf(
                 host="dbhost2",
                 port=1522,
                 timeout=20,
@@ -281,8 +282,8 @@ oracle_config_full: GuiConfig = GuiConfig(
                 tns_admin="/etc/oracle/tns2",
             ),
         ),
-        GuiInstanceConf(
-            oracle_id=("sid", GuiOracleIdentificationConf()),
+        BakedInstanceConf(
+            oracle_id=("sid", StoredOracleIdentificationConf()),
         ),
     ],
 )
@@ -333,20 +334,20 @@ expected_yaml_lines_full = [
 ]
 
 # 3. Main config with auth, connection and one section
-oracle_config_section: GuiConfig = GuiConfig(
+oracle_config_section: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="secuser",
                     password=Secret("secpw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=1521,
             timeout=None,
@@ -401,20 +402,20 @@ expected_yaml_lines_section = [
 ]
 
 # 4. Main config with auth, connection and instances with only one instance (only sid)
-oracle_config_instance_sid: GuiConfig = GuiConfig(
+oracle_config_instance_sid: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="onlysid",
                     password=Secret("sidpw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=None,
             timeout=None,
@@ -425,10 +426,10 @@ oracle_config_instance_sid: GuiConfig = GuiConfig(
         sections=None,
     ),
     instances=[
-        GuiInstanceConf(
+        BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                GuiOracleIdentificationConf(
+                StoredOracleIdentificationConf(
                     service_name="SIDONLY",
                 ),
             ),
@@ -453,27 +454,27 @@ expected_yaml_lines_instance_sid = [
 ]
 
 # 5. Main config with auth, connection, discovery and two instances (one only sid, one full)
-oracle_config_discovery_instances: GuiConfig = GuiConfig(
+oracle_config_discovery_instances: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="mainuser",
                     password=Secret("mainpw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=1521,
             timeout=5,
             tns_admin=None,
         ),
         cache_age=None,
-        discovery=GuiDiscoveryConf(
+        discovery=StoredDiscoveryConf(
             enabled=True,
             include=None,
             exclude=None,
@@ -481,32 +482,32 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
         sections=None,
     ),
     instances=[
-        GuiInstanceConf(
+        BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                GuiOracleIdentificationConf(
+                StoredOracleIdentificationConf(
                     instance_name="SID_A",
                 ),
             ),
         ),
-        GuiInstanceConf(
+        BakedInstanceConf(
             oracle_id=(
                 "descriptor",
-                GuiOracleIdentificationConf(
+                StoredOracleIdentificationConf(
                     instance_name="SID_B",
                 ),
             ),
-            auth=GuiAuthConf(
+            auth=BakedAuthConf(
                 auth_type=(
-                    OracleAuthType.STANDARD,
-                    GuiAuthUserPasswordData(
+                    "standard",
+                    BakedAuthUserPasswordData(
                         username="buser",
                         password=Secret("bpw", "", ""),
                     ),
                 ),
                 role="sysdba",
             ),
-            connection=GuiConnectionConf(
+            connection=StoredConnectionConf(
                 host="hostb",
                 port=1522,
                 timeout=10,
@@ -548,25 +549,25 @@ expected_yaml_lines_discovery_instances = [
 ]
 
 # 6. Main config with auth, connection and additional option use_host_client set to 'always'
-oracle_config_use_host_client_always: GuiConfig = GuiConfig(
+oracle_config_use_host_client_always: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    options=GuiAdditionalOptionsConf(
-        oracle_client_library=GuiOracleClientLibOptions(
+    options=StoredAdditionalOptionsConf(
+        oracle_client_library=StoredOracleClientLibOptions(
             use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
         )
     ),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="user",
                     password=Secret("pw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=1521,
             timeout=None,
@@ -598,25 +599,25 @@ expected_yaml_lines_use_host_client_always = [
 ]
 
 # 7. Main config with auth, connection and additional option use_host_client set to path
-oracle_config_use_host_client_path: GuiConfig = GuiConfig(
+oracle_config_use_host_client_path: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    options=GuiAdditionalOptionsConf(
-        oracle_client_library=GuiOracleClientLibOptions(
+    options=StoredAdditionalOptionsConf(
+        oracle_client_library=StoredOracleClientLibOptions(
             use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
         )
     ),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="user",
                     password=Secret("pw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=1521,
             timeout=None,
@@ -649,25 +650,25 @@ expected_yaml_lines_use_host_client_path = [
 
 # 8. Main config with auth, connection and additional option deploy_lib
 # set to True to deploy oracle binaries
-oracle_config_deploy_oracle_binaries: GuiConfig = GuiConfig(
+oracle_config_deploy_oracle_binaries: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    options=GuiAdditionalOptionsConf(
-        oracle_client_library=GuiOracleClientLibOptions(
+    options=StoredAdditionalOptionsConf(
+        oracle_client_library=StoredOracleClientLibOptions(
             deploy_lib=True,
         )
     ),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="user",
                     password=Secret("pw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=1521,
             timeout=None,
@@ -697,22 +698,22 @@ expected_yaml_lines_deploy_oracle_binaries = [
 ]
 
 # 9. Main config with wallet auth, connection
-oracle_config_wallet_auth: GuiConfig = GuiConfig(
+oracle_config_wallet_auth: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    options=GuiAdditionalOptionsConf(
-        oracle_client_library=GuiOracleClientLibOptions(
+    options=StoredAdditionalOptionsConf(
+        oracle_client_library=StoredOracleClientLibOptions(
             deploy_lib=True,
         )
     ),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.WALLET,
+                "wallet",
                 None,
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=1521,
             timeout=None,
@@ -740,7 +741,7 @@ expected_yaml_lines_wallet_auth = [
 ]
 
 
-def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary | SystemConfig]:
+def _process(config: BakedConfig) -> Sequence[Plugin | PluginConfig | SystemBinary | SystemConfig]:
     return sorted(
         bakery_plugin_oracle.files_function(
             bakery_plugin_oracle.parameter_parser(config.model_dump())
@@ -763,26 +764,26 @@ def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary
         (oracle_config_wallet_auth, expected_yaml_lines_wallet_auth),
     ],
 )
-def test_oracle_min(config: GuiConfig, expected: Sequence[str]) -> None:
+def test_oracle_min(config: BakedConfig, expected: Sequence[str]) -> None:
     assert _process(config) == _combine(files_base, expected), "name"
 
 
 # --- custom_metrics_cache_age tests ---
 
-oracle_config_custom_metrics_cache_age: GuiConfig = GuiConfig(
+oracle_config_custom_metrics_cache_age: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="cmk",
                     password=Secret("pw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host="localhost",
             port=None,
             timeout=None,
@@ -842,20 +843,20 @@ custom_metrics_files: list[Plugin] = [
 # The rule may leave the host unset. The plug-in then picks its own default,
 # which is the node name on a host running Grid Infrastructure and localhost
 # elsewhere, so the bakery must not decide it here.
-oracle_config_no_host: GuiConfig = GuiConfig(
+oracle_config_no_host: BakedConfig = BakedConfig(
     deploy=(DEPLOY, None),
-    main=GuiMainConf(
-        auth=GuiAuthConf(
+    main=BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(
+                "standard",
+                BakedAuthUserPasswordData(
                     username="cmk",
                     password=Secret("pw", "", ""),
                 ),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(
+        connection=StoredConnectionConf(
             host=None,
             port=None,
             timeout=None,
@@ -887,7 +888,9 @@ def test_oracle_without_host_omits_hostname() -> None:
 
 def test_oracle_without_host_keeps_other_connection_keys() -> None:
     config = oracle_config_no_host.model_copy(deep=True)
-    config.main.connection = GuiConnectionConf(host=None, port=1234, timeout=None, tns_admin=None)
+    config.main.connection = StoredConnectionConf(
+        host=None, port=1234, timeout=None, tns_admin=None
+    )
     lines = [
         line
         for entry in _process(config)
@@ -905,17 +908,19 @@ def test_custom_metrics_cache_age_in_yaml() -> None:
 
 
 def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
-    config = GuiConfig(
+    config = BakedConfig(
         deploy=(DEPLOY, None),
-        main=GuiMainConf(
-            auth=GuiAuthConf(
+        main=BakedMainConf(
+            auth=BakedAuthConf(
                 auth_type=(
-                    OracleAuthType.STANDARD,
-                    GuiAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
+                    "standard",
+                    BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
                 ),
                 role=None,
             ),
-            connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+            connection=StoredConnectionConf(
+                host="localhost", port=None, timeout=None, tns_admin=None
+            ),
             cache_age=300,
             custom_metrics_cache_age=300,
         ),
@@ -940,39 +945,41 @@ def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
 def test_get_active_custom_metrics_cache_age(
     custom_metrics_cache_age: int | None, expected: int
 ) -> None:
-    conf = GuiMainConf(
-        auth=GuiAuthConf(
+    conf = BakedMainConf(
+        auth=BakedAuthConf(
             auth_type=(
-                OracleAuthType.STANDARD,
-                GuiAuthUserPasswordData(username="u", password=Secret("p", "", "")),
+                "standard",
+                BakedAuthUserPasswordData(username="u", password=Secret("p", "", "")),
             ),
             role=None,
         ),
-        connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        connection=StoredConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
         custom_metrics_cache_age=custom_metrics_cache_age,
     )
     assert conf.get_active_custom_metrics_cache_age() == expected
 
 
 def test_additional_options_parses_validate_permissions_enabled() -> None:
-    options = GuiAdditionalOptionsConf.model_validate(
+    options = StoredAdditionalOptionsConf.model_validate(
         {"validate_permissions": ("enabled", {"safe_entries": ["grp1", "user2"]})}
     )
     assert options.validate_permissions == (
         "enabled",
-        GuiOracleSafeEntries(safe_entries=["grp1", "user2"]),
+        StoredOracleSafeEntries(safe_entries=["grp1", "user2"]),
     )
 
 
 def test_additional_options_parses_validate_permissions_disabled() -> None:
-    options = GuiAdditionalOptionsConf.model_validate({"validate_permissions": ("disabled", None)})
+    options = StoredAdditionalOptionsConf.model_validate(
+        {"validate_permissions": ("disabled", None)}
+    )
     assert options.validate_permissions == ("disabled", None)
 
 
 def test_additional_options_ignores_legacy_permissions_check_key() -> None:
     # Regression guard: the ruleset key is `validate_permissions`. A stray `permissions_check`
     # key (the previous, wrong field name) must not bind and is ignored.
-    options = GuiAdditionalOptionsConf.model_validate(
+    options = StoredAdditionalOptionsConf.model_validate(
         {"permissions_check": ("enabled", {"safe_entries": ["x"]})}
     )
     assert options.validate_permissions is None
@@ -986,26 +993,28 @@ ALIAS: Literal["alias"] = "alias"
 
 
 def _config_with_excluded_sections(
-    excluded_sections: list[GuiExcludedSectionConf] | None,
-) -> GuiConfig:
-    return GuiConfig(
+    excluded_sections: list[StoredExcludedSectionConf] | None,
+) -> BakedConfig:
+    return BakedConfig(
         deploy=(DEPLOY, None),
-        main=GuiMainConf(
-            auth=GuiAuthConf(
+        main=BakedMainConf(
+            auth=BakedAuthConf(
                 auth_type=(
-                    OracleAuthType.STANDARD,
-                    GuiAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
+                    "standard",
+                    BakedAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
                 ),
                 role=None,
             ),
-            connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+            connection=StoredConnectionConf(
+                host="localhost", port=None, timeout=None, tns_admin=None
+            ),
             excluded_sections=excluded_sections,
         ),
         instances=None,
     )
 
 
-def _yaml_lines(config: GuiConfig) -> Sequence[str]:
+def _yaml_lines(config: BakedConfig) -> Sequence[str]:
     entries = [entry for entry in _process(config) if isinstance(entry, PluginConfig)]
     assert entries, "no plugin config emitted"
     return list(entries[0].lines)
@@ -1016,8 +1025,8 @@ def test_excluded_sections_emits_the_target_fields_and_the_sections() -> None:
     # fields are written next to `sections`, without a `target_id` level.
     config = _config_with_excluded_sections(
         [
-            GuiExcludedSectionConf(
-                target_id=(SID, GuiOracleIdentificationConf(sid="XE")),
+            StoredExcludedSectionConf(
+                target_id=(SID, StoredOracleIdentificationConf(sid="XE")),
                 sections=["jobs", "tablespaces"],
             )
         ]
@@ -1037,10 +1046,12 @@ def test_excluded_sections_emits_the_target_fields_and_the_sections() -> None:
 def test_excluded_sections_emits_every_identifying_field_of_a_descriptor() -> None:
     config = _config_with_excluded_sections(
         [
-            GuiExcludedSectionConf(
+            StoredExcludedSectionConf(
                 target_id=(
                     DESCRIPTOR,
-                    GuiOracleIdentificationConf(service_name="srv", instance_name="inst", sid="XE"),
+                    StoredOracleIdentificationConf(
+                        service_name="srv", instance_name="inst", sid="XE"
+                    ),
                 ),
                 sections=["jobs"],
             )
@@ -1058,8 +1069,8 @@ def test_excluded_sections_emits_every_identifying_field_of_a_descriptor() -> No
 def test_excluded_sections_emits_an_alias_target() -> None:
     config = _config_with_excluded_sections(
         [
-            GuiExcludedSectionConf(
-                target_id=(ALIAS, GuiOracleIdentificationConf(alias="my_alias")),
+            StoredExcludedSectionConf(
+                target_id=(ALIAS, StoredOracleIdentificationConf(alias="my_alias")),
                 sections=["locks"],
             )
         ]
@@ -1071,11 +1082,11 @@ def test_excluded_sections_emits_an_alias_target() -> None:
 def test_excluded_sections_emits_one_entry_per_rule() -> None:
     config = _config_with_excluded_sections(
         [
-            GuiExcludedSectionConf(
-                target_id=(SID, GuiOracleIdentificationConf(sid="A")), sections=["jobs"]
+            StoredExcludedSectionConf(
+                target_id=(SID, StoredOracleIdentificationConf(sid="A")), sections=["jobs"]
             ),
-            GuiExcludedSectionConf(
-                target_id=(SID, GuiOracleIdentificationConf(sid="B")), sections=["locks"]
+            StoredExcludedSectionConf(
+                target_id=(SID, StoredOracleIdentificationConf(sid="B")), sections=["locks"]
             ),
         ]
     )
@@ -1089,7 +1100,7 @@ def test_excluded_sections_emits_one_entry_per_rule() -> None:
 
 @pytest.mark.parametrize("excluded_sections", [None, []])
 def test_excluded_sections_absent_when_no_rules(
-    excluded_sections: list[GuiExcludedSectionConf] | None,
+    excluded_sections: list[StoredExcludedSectionConf] | None,
 ) -> None:
     lines = _yaml_lines(_config_with_excluded_sections(excluded_sections))
     assert not any("excluded_sections" in line for line in lines)
@@ -1099,7 +1110,11 @@ def test_excluded_sections_skips_a_rule_without_any_identifying_field() -> None:
     # A target that names nothing can never be matched, so the rule is dropped.
     # The key itself still appears, as an empty list.
     config = _config_with_excluded_sections(
-        [GuiExcludedSectionConf(target_id=(SID, GuiOracleIdentificationConf()), sections=["jobs"])]
+        [
+            StoredExcludedSectionConf(
+                target_id=(SID, StoredOracleIdentificationConf()), sections=["jobs"]
+            )
+        ]
     )
 
     assert "    excluded_sections: []" in _yaml_lines(config)
@@ -1108,7 +1123,7 @@ def test_excluded_sections_skips_a_rule_without_any_identifying_field() -> None:
 def test_excluded_sections_keeps_a_target_without_sections() -> None:
     # `sections` is optional in the ruleset, so the target survives with no list.
     config = _config_with_excluded_sections(
-        [GuiExcludedSectionConf(target_id=(SID, GuiOracleIdentificationConf(sid="XE")))]
+        [StoredExcludedSectionConf(target_id=(SID, StoredOracleIdentificationConf(sid="XE")))]
     )
 
     lines = _yaml_lines(config)

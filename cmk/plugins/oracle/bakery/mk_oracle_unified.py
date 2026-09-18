@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import NamedTuple
 
 import yaml
 from pydantic import BaseModel, ConfigDict
@@ -22,6 +22,20 @@ from cmk.bakery.v2 import (
     RpmStep,
     Scriptlet,
     Secret,
+)
+from cmk.plugins.oracle.lib.unified_config import (
+    StoredAdditionalOptionsConf,
+    StoredAsmAuthConf,
+    StoredAuthConf,
+    StoredAuthUserPasswordData,
+    StoredConfig,
+    StoredConnectionConf,
+    StoredDiscoveryConf,
+    StoredExcludedSectionConf,
+    StoredInstanceConf,
+    StoredMainConf,
+    StoredOracleSafeEntries,
+    StoredSectionOptions,
 )
 
 
@@ -137,119 +151,20 @@ CUSTOM_METRICS_ASYNC_FILES: Mapping[OS, OraclePluginFile] = {
     ),
 }
 
-GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
-
 
 class OracleAuthType(StrEnum):
     STANDARD = "standard"
     WALLET = "wallet"
 
 
-class GuiAuthUserPasswordData[SecretT = Secret](BaseModel):
-    username: str | None
-    password: SecretT | None
-
-
-class GuiAsmAuthConf[SecretT = Secret](BaseModel):
-    username: str
-    password: SecretT
-    role: str | None = None
-
-
-class GuiAuthConf[SecretT = Secret](BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-
-    auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData[SecretT] | None] | None = None
-    role: str | None = None
-    asm_auth: GuiAsmAuthConf[SecretT] | None = None
-
-
-class GuiOracleIdentificationConf(BaseModel):
-    service_name: str | None = None
-    instance_name: str | None = None
-    sid: str | None = None
-    alias: str | None = None
-
-
-class GuiConnectionConf(BaseModel):
-    host: str | None = None
-    port: int | None = None
-    timeout: int | None = None
-    tns_admin: str | None = None
-    oracle_local_registry: str | None = None
-
-
-class GuiDiscoveryConf(BaseModel):
-    enabled: bool
-    include: list[str] | None = None
-    exclude: list[str] | None = None
-
-
-class GuiOracleClientLibOptions(BaseModel):
-    deploy_lib: bool = False
-    use_host_client: (
-        tuple[Literal["auto", "never", "always"], None] | tuple[Literal["custom"], str] | None
-    ) = None
-
-
-class GuiOracleSafeEntries(BaseModel):
-    safe_entries: list[str] | None = None
-
-
-class GuiAdditionalOptionsConf(BaseModel):
-    max_connections: int | None = None
-    ignore_db_name: bool | None = None
-    oracle_client_library: GuiOracleClientLibOptions | None = None
-    # `validate_permissions` is a CascadingSingleChoice in the ruleset, so its value is a bare
-    # tuple, and the field name must match the ruleset key for Pydantic to bind it.
-    validate_permissions: (
-        tuple[Literal["enabled"], GuiOracleSafeEntries | None]
-        | tuple[Literal["disabled"], None]
-        | None
-    ) = None
-
-
-class GuiExcludedSectionConf(BaseModel):
-    target_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
-    sections: list[str] | None = None
-
-
-class GuiMainConf[SecretT = Secret](BaseModel):
-    auth: GuiAuthConf[SecretT]
-    connection: GuiConnectionConf
-    cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
-    discovery: GuiDiscoveryConf | None = None
-    sections: GuiSectionOptions | None = None
-    excluded_sections: list[GuiExcludedSectionConf] | None = None
-
-    def get_active_cache_age(self) -> int:
-        """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.cache_age or 600
-
-    def get_active_custom_metrics_cache_age(self) -> int:
-        """Return metrics cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.custom_metrics_cache_age or 600
-
-
-class GuiInstanceAdditionalOptionsConf(BaseModel):
-    ignore_db_name: bool | None = None
-    oracle_client_library: GuiOracleClientLibOptions | None = None
-
-
-class GuiInstanceConf[SecretT = Secret](BaseModel):
-    oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
-    auth: GuiAuthConf[SecretT] | None = None
-    connection: GuiConnectionConf | None = None
-    piggyback_host: str | None = None
-
-
-class GuiConfig[SecretT = Secret](BaseModel):
-    deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
-    # `options` is a top-level GUI section; it is baked into `oracle.main.options`.
-    options: GuiAdditionalOptionsConf | None = None
-    main: GuiMainConf[SecretT]
-    instances: list[GuiInstanceConf[SecretT]] | None = None
+# The rule value as the bakery sees it: the backend has replaced every password
+# store reference with a Secret by now.
+BakedAuthUserPasswordData = StoredAuthUserPasswordData[Secret]
+BakedAsmAuthConf = StoredAsmAuthConf[Secret]
+BakedAuthConf = StoredAuthConf[Secret]
+BakedMainConf = StoredMainConf[Secret]
+BakedInstanceConf = StoredInstanceConf[Secret]
+BakedConfig = StoredConfig[Secret]
 
 
 class OracleAdditionalOptions(BaseModel):
@@ -336,7 +251,7 @@ class OracleConfig(BaseModel):
     main: OracleMain
 
 
-def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
+def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
     if confm.deploy[0] == "do_not_deploy":
         return
 
@@ -370,13 +285,13 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
         )
 
 
-def _get_oracle_yaml_lines(config: GuiConfig) -> Iterable[str]:
+def _get_oracle_yaml_lines(config: BakedConfig) -> Iterable[str]:
     result = {"oracle": OracleConfig(main=_get_oracle_dict(config)).model_dump(exclude_none=True)}
     yield "---"
     yield from yaml.dump(result).splitlines()
 
 
-def _get_oracle_dict(config: GuiConfig) -> OracleMain:
+def _get_oracle_dict(config: BakedConfig) -> OracleMain:
     main_config = config.main
     instances_config = config.instances
 
@@ -396,7 +311,7 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
     )
 
 
-def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | None:
+def _get_oracle_authentication(auth_config: BakedAuthConf | None) -> OracleAuth | None:
     if auth_config is None:
         return None
 
@@ -413,7 +328,7 @@ def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | 
                 return None
         case (OracleAuthType.WALLET.value, _):
             auth_type = OracleAuthType.WALLET
-        case (OracleAuthType.STANDARD.value, GuiAuthUserPasswordData() as auth_data):
+        case (OracleAuthType.STANDARD.value, StoredAuthUserPasswordData() as auth_data):
             username = auth_data.username
             password = auth_data.password.revealed if auth_data.password else None
             auth_type = OracleAuthType.STANDARD
@@ -431,7 +346,7 @@ def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | 
 
 
 def _get_oracle_connection(
-    conn: GuiConnectionConf | None, *, include_tns_admin: bool = True
+    conn: StoredConnectionConf | None, *, include_tns_admin: bool = True
 ) -> OracleConnection | None:
     if conn is None:
         return None
@@ -453,7 +368,7 @@ def _get_oracle_connection(
 
 
 def _get_oracle_additional_options(
-    options: GuiAdditionalOptionsConf | None,
+    options: StoredAdditionalOptionsConf | None,
 ) -> OracleAdditionalOptions | None:
     if options is None:
         return None
@@ -480,7 +395,7 @@ def _get_oracle_additional_options(
     permissions_check: bool | None = None
     permissions_safe_entries: list[str] | None = None
     match options.validate_permissions:  # type: ignore[exhaustive-match]
-        case ("enabled", GuiOracleSafeEntries(safe_entries=entries)):
+        case ("enabled", StoredOracleSafeEntries(safe_entries=entries)):
             permissions_check = True
             permissions_safe_entries = entries
         case ("disabled", None):
@@ -497,7 +412,7 @@ def _get_oracle_additional_options(
     )
 
 
-def _get_oracle_discovery(discovery: GuiDiscoveryConf | None) -> OracleDiscovery | None:
+def _get_oracle_discovery(discovery: StoredDiscoveryConf | None) -> OracleDiscovery | None:
     if discovery is None:
         return None
 
@@ -509,7 +424,7 @@ def _get_oracle_discovery(discovery: GuiDiscoveryConf | None) -> OracleDiscovery
 
 
 def _get_oracle_sections(
-    sections: GuiSectionOptions | None,
+    sections: StoredSectionOptions | None,
 ) -> Sequence[Mapping[str, OracleSection]] | None:
     if sections is None:
         return None
@@ -526,7 +441,7 @@ def _get_oracle_sections(
     return result
 
 
-def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[OracleInstance] | None:
+def _get_oracle_instances(instances: list[BakedInstanceConf] | None) -> list[OracleInstance] | None:
     if instances is None:
         return None
 
@@ -558,7 +473,7 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
 
 
 def _get_oracle_excluded_sections(
-    rules: list[GuiExcludedSectionConf] | None,
+    rules: list[StoredExcludedSectionConf] | None,
 ) -> list[OracleExcludedSection] | None:
     if not rules:
         return None
@@ -598,7 +513,7 @@ def _get_arm_warning_lines() -> list[str]:
     ]
 
 
-def get_oracle_plugin_scriplets(confm: GuiConfig) -> Iterable[Scriptlet]:
+def get_oracle_plugin_scriplets(confm: BakedConfig) -> Iterable[Scriptlet]:
     if confm.deploy[0] == "do_not_deploy":
         return
 
@@ -610,7 +525,7 @@ def get_oracle_plugin_scriplets(confm: GuiConfig) -> Iterable[Scriptlet]:
 
 bakery_plugin_oracle = BakeryPlugin(
     name="mk_oracle_unified",
-    parameter_parser=GuiConfig.model_validate,
+    parameter_parser=BakedConfig.model_validate,
     default_parameters=None,
     files_function=get_oracle_plugin_files,
     scriptlets_function=get_oracle_plugin_scriplets,

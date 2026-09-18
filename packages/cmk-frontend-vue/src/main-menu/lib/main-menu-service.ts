@@ -29,6 +29,7 @@ import type {
   OnUserPopupMessagesCallback,
   UnackIncompWerksResult,
   UserHintMessages,
+  UserMessagesResult,
   UserPopupMessageRef
 } from './type-defs'
 
@@ -215,7 +216,14 @@ export class MainMenuService extends ServiceBase {
   }
 
   protected async updateUserMessages() {
-    const res = await this.api.getUserMessages()
+    let res: UserMessagesResult
+    try {
+      res = await this.api.getUserMessages()
+    } catch (error) {
+      console.error('Could not load the user messages', error)
+      this.resetNavItemBadge('user')
+      return
+    }
 
     this.userMessageTrigger.value = res.hint_messages
     if (this.userMessageTrigger.value.count > 0) {
@@ -240,7 +248,14 @@ export class MainMenuService extends ServiceBase {
   }
 
   protected async updateUnacknowledgedIncompatibleWerks() {
-    this.unackIncompWerksTrigger.value = await this.api.getUnacknowledgedIncompatibleWerks()
+    try {
+      this.unackIncompWerksTrigger.value = await this.api.getUnacknowledgedIncompatibleWerks()
+    } catch (error) {
+      console.error('Could not load the unacknowledged incompatible werks', error)
+      this.resetNavItemBadge('help')
+      return
+    }
+
     if (this.unackIncompWerksTrigger.value.count === 0) {
       this.setNavItemBadge('help', null)
     } else {

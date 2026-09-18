@@ -36,14 +36,15 @@ use winapi::um::lmaccess::{NetLocalGroupGetMembers, LOCALGROUP_MEMBERS_INFO_0};
 use winapi::um::lmapibuf::NetApiBufferFree;
 use winapi::um::securitybaseapi::{GetAce, IsValidSid};
 use winapi::um::winbase::{
-    LocalFree, LookupAccountSidW, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT,
+    LocalFree, LookupAccountNameW, LookupAccountSidW, FILE_FLAG_BACKUP_SEMANTICS,
+    FILE_FLAG_OPEN_REPARSE_POINT,
 };
 use winapi::um::winnt::{
     ACCESS_ALLOWED_ACE, ACCESS_ALLOWED_ACE_TYPE, ACE_HEADER, DACL_SECURITY_INFORMATION, DELETE,
     FILE_APPEND_DATA, FILE_ATTRIBUTE_REPARSE_POINT, FILE_SHARE_DELETE, FILE_SHARE_READ,
     FILE_SHARE_WRITE, FILE_WRITE_ATTRIBUTES, FILE_WRITE_DATA, FILE_WRITE_EA, GENERIC_ALL,
-    GENERIC_WRITE, OWNER_SECURITY_INFORMATION, PACL, PSID, READ_CONTROL, SID_NAME_USE, WRITE_DAC,
-    WRITE_OWNER,
+    GENERIC_WRITE, OWNER_SECURITY_INFORMATION, PACL, PSID, READ_CONTROL, SECURITY_MAX_SID_SIZE,
+    SID_NAME_USE, WRITE_DAC, WRITE_OWNER,
 };
 
 // Bounds tree recursion so admin-made junction cycles still terminate.
@@ -237,6 +238,65 @@ fn local_administrators() -> HashSet<String> {
         NetApiBufferFree(buf as *mut c_void);
     }
     members
+}
+
+/// Resolve an account name to its SID string. Takes every spelling
+/// `LookupAccountNameW` does: `DOMAIN\name`, `MACHINE\name`, a bare name, a
+/// UPN, and the well-known names such as `BUILTIN\Users`. Case-insensitive.
+fn account_name_to_sid(account: &str) -> Option<String> {
+    // A SID is at most SECURITY_MAX_SID_SIZE bytes; u32 to get its alignment.
+    let mut sid_buf = [0u32; SECURITY_MAX_SID_SIZE / 4];
+    let mut domain_buf = [0u16; 256];
+    let mut sid_len = std::mem::size_of_val(&sid_buf) as DWORD;
+    let mut domain_len = domain_buf.len() as DWORD;
+    let mut sid_use: SID_NAME_USE = 0;
+    let name = str_to_wide(account);
+    let ok = unsafe {
+        LookupAccountNameW(
+            ptr::null(),
+            name.as_ptr(),
+            sid_buf.as_mut_ptr() as PSID,
+            &mut sid_len,
+            domain_buf.as_mut_ptr(),
+            &mut domain_len,
+            &mut sid_use,
+        )
+    };
+    if ok == 0 {
+        return None;
+    }
+    sid_to_string(sid_buf.as_mut_ptr() as PSID)
+}
+
+/// A `permissions_safe_entries` entry as the SID string the ACL walk compares
+/// against. An entry may be written either as a SID or as an account name. A
+/// SID is round-tripped, so a malformed one is reported rather than silently
+/// never matching.
+fn canonical_sid(entry: &str) -> Option<String> {
+    let wide = str_to_wide(entry);
+    let mut psid: PSID = ptr::null_mut();
+    if unsafe { ConvertStringSidToSidW(wide.as_ptr(), &mut psid) } == 0 {
+        return account_name_to_sid(entry);
+    }
+    let sid_str = sid_to_string(psid);
+    unsafe {
+        LocalFree(psid);
+    }
+    sid_str
+}
+
+fn resolve_safe_entries(entries: &[String]) -> HashSet<String> {
+    entries
+        .iter()
+        .filter_map(|entry| {
+            canonical_sid(entry).or_else(|| {
+                log::warn!(
+                    "permissions_safe_entries: {entry:?} is neither a SID nor a known account, ignoring it"
+                );
+                None
+            })
+        })
+        .collect()
 }
 
 /// Full-parity port of the legacy `Invoke-SafetyCheck`. An ACE granting
@@ -500,7 +560,7 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
     // Resolved once per validation run instead of per-ACL-walk: the tree walk
     // below can call only_admins_can_modify for every file under `path`.
     let mut safe_users = local_administrators();
-    safe_users.extend(safe_entries.iter().cloned());
+    safe_users.extend(resolve_safe_entries(safe_entries));
     if !check_reparse_point(path, &md, &safe_users) {
         return false;
     }
@@ -520,9 +580,31 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_privileged_sid, is_trusted_sid, local_administrators, only_admins_can_modify};
+    use super::{
+        canonical_sid, is_privileged_sid, is_trusted_sid, local_administrators,
+        only_admins_can_modify, resolve_account_name, resolve_safe_entries, str_to_wide,
+    };
     use std::collections::HashSet;
     use std::path::PathBuf;
+    use std::ptr;
+    use winapi::shared::sddl::ConvertStringSidToSidW;
+    use winapi::um::winbase::LocalFree;
+    use winapi::um::winnt::PSID;
+
+    /// Account names are localized, so the expected one has to come from Windows.
+    fn account_name_of(sid_str: &str) -> String {
+        let wide = str_to_wide(sid_str);
+        let mut psid: PSID = ptr::null_mut();
+        assert!(
+            unsafe { ConvertStringSidToSidW(wide.as_ptr(), &mut psid) } != 0,
+            "{sid_str} is not a SID"
+        );
+        let name = resolve_account_name(psid);
+        unsafe {
+            LocalFree(psid);
+        }
+        name.unwrap_or_else(|| panic!("{sid_str} has no account name here"))
+    }
 
     #[test]
     fn test_is_privileged_sid_system_and_builtin_admins() {
@@ -600,6 +682,44 @@ mod tests {
         assert!(
             !only_admins_can_modify(un_protected_path.as_path(), &local_administrators()),
             "This is wrong: {un_protected_path:?} is not protected"
+        );
+    }
+
+    #[test]
+    fn test_canonical_sid_takes_a_sid() {
+        assert_eq!(
+            canonical_sid("S-1-5-32-544").as_deref(),
+            Some("S-1-5-32-544")
+        );
+    }
+
+    #[test]
+    fn test_canonical_sid_takes_an_account_name() {
+        let name = account_name_of("S-1-5-32-544");
+        assert_eq!(
+            canonical_sid(&name).as_deref(),
+            Some("S-1-5-32-544"),
+            "{name}"
+        );
+    }
+
+    #[test]
+    fn test_canonical_sid_rejects_an_unknown_entry() {
+        assert_eq!(canonical_sid("S-1-5-32-not-a-sid"), None);
+        assert_eq!(canonical_sid("no such account"), None);
+    }
+
+    // A typo in one entry must not silently drop the rest of the list.
+    #[test]
+    fn test_resolve_safe_entries_keeps_the_resolvable_ones() {
+        let entries = [
+            "S-1-5-18".to_string(),
+            account_name_of("S-1-5-32-544"),
+            "no such account".to_string(),
+        ];
+        assert_eq!(
+            resolve_safe_entries(&entries),
+            HashSet::from(["S-1-5-18".to_string(), "S-1-5-32-544".to_string()])
         );
     }
 }

@@ -1466,6 +1466,58 @@ oracle:
         );
     }
 
+    /// A predefined section with `pdbs:` runs in the root as well, because it
+    /// describes the whole instance. `v$pgastat` and its kin only yield a
+    /// container's rows inside that container, so the root needs its own pass -
+    /// unlike a custom metric, where `pdbs:` names the scope and excludes root.
+    #[test]
+    fn test_predefined_section_with_pdbs_also_runs_in_root() {
+        let config = config_from(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    sections:
+      - instance:
+          pdbs:
+            - PDB1
+"#,
+        );
+        let db = MiniOra {
+            instance_rows: vec![instance_row("ORCL", "19.1.0.0", "YES")],
+            version_rows: vec![vec!["19.1.0.0".to_string()]],
+            pdb_rows: vec![
+                vec!["CDB$ROOT".to_string()],
+                vec!["PDB$SEED".to_string()],
+                vec!["PDB1".to_string()],
+            ],
+            default_rows: vec![vec!["details:ok".to_string()]],
+            ..Default::default()
+        };
+
+        let sections: Vec<Section> = config
+            .product()
+            .sections()
+            .iter()
+            .filter(|s| !s.is_custom_metric())
+            .map(|s| Section::new(s, Some(600), config.options()))
+            .collect();
+
+        let out = emit(vec![open_spot(db, None)], sections, &[], 600);
+
+        // Two passes: the root first, then PDB1.
+        assert_eq!(
+            out.matches("details:ok").count(),
+            2,
+            "root and PDB1 must both be queried: {out}"
+        );
+    }
+
     // TC-ORA-102: one global query -> one subsection per instance (ORACLE_ID = SID).
     #[test]
     fn test_global_custom_metric_emitted_per_instance() {

@@ -738,10 +738,12 @@ _STRING_TABLE_ERROR = [
     ]
 ]
 
+_DISCOVERY_PARAMS = {"discover_schedule_disabled": True}
+
 
 def test_discover_single_instance_single_job() -> None:
     assert list(
-        discover_mssql_jobs(parse_mssql_jobs(_make_job(enabled=True, scheduled=False)))
+        discover_mssql_jobs(_DISCOVERY_PARAMS, parse_mssql_jobs(_make_job(enabled=True, scheduled=False)))
     ) == [
         Service(item="teststsssss - MSSQLSERVER"),
     ]
@@ -749,7 +751,7 @@ def test_discover_single_instance_single_job() -> None:
 
 def test_discover_single_instance_multiple_jobs() -> None:
     assert list(
-        discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS))
+        discover_mssql_jobs(_DISCOVERY_PARAMS, parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS))
     ) == [
         Service(item="täglich 00:03 - MSSQLSERVER"),
         Service(item="4x Täglich Infomanagement - MSSQLSERVER"),
@@ -773,7 +775,7 @@ def test_discover_single_instance_multiple_jobs() -> None:
 
 
 def test_discover_multiple_instances() -> None:
-    assert list(discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_MULTIPLE_INSTANCES))) == [
+    assert list(discover_mssql_jobs(_DISCOVERY_PARAMS, parse_mssql_jobs(_STRING_TABLE_MULTIPLE_INSTANCES))) == [
         Service(item="CommandLog Cleanup - SERVICES"),
         Service(item="DatabaseBackup - SYSTEM_DATABASES - FULL - SERVICES"),
         Service(item="DatabaseBackup - USER_DATABASES - DIFF - SERVICES"),
@@ -801,7 +803,7 @@ def test_discover_multiple_instances() -> None:
 
 
 def test_discover_error() -> None:
-    assert not list(discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_ERROR)))
+    assert not list(discover_mssql_jobs(_DISCOVERY_PARAMS, parse_mssql_jobs(_STRING_TABLE_ERROR)))
 
 
 @pytest.mark.parametrize(
@@ -1032,6 +1034,6 @@ INFO_NO_JOB_NAME = [
 
 
 def test_discovery_empty_job_name() -> None:
-    assert list(discover_mssql_jobs(parse_mssql_jobs(INFO_NO_JOB_NAME))) == [
+    assert list(discover_mssql_jobs(_DISCOVERY_PARAMS, parse_mssql_jobs(INFO_NO_JOB_NAME))) == [
         Service(item="{2C32E575-3C76-48E0-9E04-43BD2A15B2E1} - MSSQLSERVER"),
     ]

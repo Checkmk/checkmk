@@ -215,17 +215,13 @@ def _site_not_started_html(site_name: str) -> str:
     return header + instructions + footer
 
 
-def create_apache_hook(
-    apache_config: Path,
+def _render_apache_hook(
     site_name: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
-) -> None:
+) -> str:
     not_started_html = _site_not_started_html(site_name)
-    apache_config.parent.mkdir(parents=True, exist_ok=True)
-    with open(apache_config, "w") as f:
-        f.write(
-            f"""# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
+    return f"""# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
 
 # Make sure that symlink /omd does not make problems
 <Directory />
@@ -320,8 +316,18 @@ def create_apache_hook(
   ErrorDocument 503 "{not_started_html}"
 </Location>
 """
-        )
-        os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
+
+
+def create_apache_hook(
+    apache_config: Path,
+    site_name: str,
+    apache_tcp_addr: str,
+    apache_tcp_port: str,
+) -> None:
+    apache_config.parent.mkdir(parents=True, exist_ok=True)
+    with open(apache_config, "w") as f:
+        f.write(_render_apache_hook(site_name, apache_tcp_addr, apache_tcp_port))
+    os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
 
 
 def delete_apache_hook(apache_config: Path) -> None:

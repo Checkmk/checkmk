@@ -151,7 +151,7 @@ def create_sample(
     num_synthetic_tests, num_synthetic_tests_excluded, num_synthetic_kpis,
     num_synthetic_kpis_excluded: provided by the synthetic monitoring feature
         via its license usage counter plug-in
-    num_active_metric_series: provided by the metric backend feature via its
+    num_active_metric_series: provided by the data backend feature via its
         license usage counter plug-in
 
     Shadow objects: 0: active, 1: passive, 2: shadow

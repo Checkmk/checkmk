@@ -6016,7 +6016,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                         (
                             "otel_metrics",
                             # weblate-flags: read-only, domain-specific
-                            _individual_spec(_("Metric Backend")),
+                            _individual_spec(_("Telemetry metrics")),
                         ),
                     ],
                 ),

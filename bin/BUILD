@@ -56,7 +56,6 @@ pkg_files(
     srcs = [
         ":cmk-generate-api-spec",
         ":cmk-monitor-core",
-        ":cmk-monitor-otel-collector",
         ":cmk-ui-job-scheduler-health",
         ":mkevent",
     ],
@@ -82,7 +81,6 @@ sh_library(
         ".f12",
         "apply_unsign_msi_patch.sh",
         "cmk-monitor-core",
-        "cmk-monitor-otel-collector",
         "cmk-ui-job-scheduler-health",
     ],
 )

@@ -5,8 +5,6 @@
 # See doc/documentation/arch-migrations.rst
 #
 
-per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_collector/OWNERS_DEFINITION
-per-file cmk-monitor-otel-collector=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

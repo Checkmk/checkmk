@@ -178,13 +178,13 @@ class CustomGraphDesigner(CmkPage):
         self._fill_autocompleter(form, "Service metric", metric_title)
 
     def add_telemetry_metrics_metric(self, metric_name: str, metric_type: str) -> Locator:
-        """Add a metric backend metric as a data source; return the row it appended.
+        """Add a telemetry metrics metric as a data source; return the row it appended.
 
         The dropdown titles a metric with the types it carries ("metric1 (gauge)"), so the
         caller states the type it ingested. The untyped entry the app echoes back while its
         own query is still in flight then cannot satisfy the selection.
         """
-        logger.info("Add metric backend metric '%s (%s)'", metric_name, metric_type)
+        logger.info("Add telemetry metrics metric '%s (%s)'", metric_name, metric_type)
         rows_before = self.source_rows.count()
         self.main_area.locator(_ADD_SOURCE_SELECTOR).click()
         # The source types are a fixed list, offered in full and without a filter box.
@@ -218,7 +218,7 @@ class CustomGraphDesigner(CmkPage):
     def open_create_custom_service(self, row: Locator) -> Locator:
         """Open the "Create custom service" slide-in of a row; return its dialog.
 
-        The action is offered on a metric backend row whose query is complete.
+        The action is offered on a telemetry metrics row whose query is complete.
         """
         logger.info("Open the '%s' slide-in", _CREATE_CUSTOM_SERVICE)
         row.get_by_role("button", name=_CREATE_CUSTOM_SERVICE, exact=True).click()

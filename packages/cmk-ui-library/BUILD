@@ -1,15 +1,7 @@
-load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:vue_package.bzl", "vue_package")
 
-# cmk-shared-typing's typescript definitions are bazel-generated, so they are
-# linked directly rather than through the pnpm lockfile (same pattern as in
-# cmk-frontend-vue). Resolved via the `*` fallback path in tsconfig.json.
-npm_link_package(
-    name = "node_modules/cmk-shared-typing-bzl",
-    src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
-    package = "cmk-shared-typing",
-    visibility = ["//visibility:private"],
-)
+link_shared_typing()
 
 vue_package(
     name = "cmk-ui-library",

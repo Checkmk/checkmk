@@ -1,5 +1,4 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
-load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
@@ -10,6 +9,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
+load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:vue_library.bzl", "vue_library")
 
@@ -274,12 +274,7 @@ js_library(
 
 SRCS_AND_TESTS = SRCS + [":test_ts"]
 
-npm_link_package(
-    name = "node_modules/cmk-shared-typing-bzl",
-    src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
-    package = "cmk-shared-typing",
-    visibility = ["//visibility:private"],
-)
+link_shared_typing()
 
 vite_bin.vite(
     name = "dist",

@@ -110,6 +110,42 @@ const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
     names::ASM_DISK_GROUP,
 ];
 
+/// Sections that have to be queried inside every container, not only in the
+/// root.
+///
+/// They read a view with no `v$con_` twin - `v$pgastat` in `performance` above
+/// all - which yields a container's rows only when the query runs inside that
+/// container. The legacy plugin reached the same result by re-parsing the
+/// statement per container with `dbms_sql.parse(container => ...)`.
+///
+/// Listed sections default to [`ALL_PDBS_PATTERN`] when the configuration names
+/// no `pdbs` of its own, so the per-container pass needs no configuration. An
+/// explicit `pdbs` in the configuration still wins.
+///
+// TODO(sk): split the per-container statements out of `performance` into a
+// section of their own (an extra `.sql` plus `header_name: oracle_performance`,
+// so the agent output is unchanged). Today the whole section repeats per
+// container and only its PGA statement needs to: the other five are held back
+// by a `SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1')` guard in
+// `sqls/performance.0.all.sql` and run to no effect once per PDB - 5 round
+// trips per PDB per run, negligible with two PDBs and not with twenty. Drop
+// those guards when the split lands, they become dead weight.
+const PER_PDB_SECTIONS: [&str; 1] = [names::PERFORMANCE];
+
+/// Matches every PDB discovered at runtime.
+const ALL_PDBS_PATTERN: &str = ".*";
+
+/// The `pdbs` patterns a section runs with: what the configuration asked for,
+/// or every PDB when the section needs a per-container pass and the
+/// configuration is silent.
+fn default_pdb_patterns(name: &str, configured: Vec<String>) -> Vec<String> {
+    if configured.is_empty() && PER_PDB_SECTIONS.contains(&name) {
+        vec![ALL_PDBS_PATTERN.to_string()]
+    } else {
+        configured
+    }
+}
+
 impl SectionAffinity {
     pub fn from_text<T: AsRef<str>>(s: T) -> Self {
         match s.as_ref().to_lowercase().as_str() {
@@ -252,6 +288,9 @@ impl SectionBuilder {
         } else {
             (self.name, self.sep)
         };
+        // A custom metric is renamed to `custom_metric` above, so it never picks
+        // the per-container default up - only a predefined section can.
+        let pdb_patterns = default_pdb_patterns(&name, self.pdb_patterns);
         Section {
             name: SectionName::from(name),
             sep,
@@ -267,7 +306,7 @@ impl SectionBuilder {
             path: self.path,
             affinity: self.affinity,
             item_value: self.item_value,
-            pdb_patterns: self.pdb_patterns,
+            pdb_patterns,
             custom_header: self.custom_header,
         }
     }
@@ -926,6 +965,43 @@ sections:
     fn test_section_builder_path_setter() {
         let section = SectionBuilder::new("foo").path("queries/foo.sql").build();
         assert_eq!(section.path(), Some(Path::new("queries/foo.sql")));
+    }
+
+    /// A section that must be queried inside every container defaults to all
+    /// PDBs, so the per-container pass needs no configuration.
+    #[test]
+    fn test_per_pdb_section_defaults_to_all_pdbs() {
+        assert_eq!(
+            Section::new(names::PERFORMANCE).pdb_patterns(),
+            &[ALL_PDBS_PATTERN.to_string()]
+        );
+    }
+
+    /// Every other predefined section stays root-only.
+    #[test]
+    fn test_other_sections_have_no_pdb_patterns() {
+        for name in PREDEFINED_SECTIONS
+            .iter()
+            .filter(|n| **n != names::PERFORMANCE)
+        {
+            assert!(
+                Section::new(*name).pdb_patterns().is_empty(),
+                "{name} must not run per container"
+            );
+        }
+    }
+
+    /// An explicit `pdbs` wins over the default.
+    #[test]
+    fn test_configured_pdbs_win_over_default() {
+        let yaml = create_yaml(
+            r#"
+- performance:
+    pdbs: ["PDB1"]
+"#,
+        );
+        let section = Section::from_yaml(&yaml[0]).unwrap();
+        assert_eq!(section.pdb_patterns(), &["PDB1".to_string()]);
     }
 
     #[test]

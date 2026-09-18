@@ -498,6 +498,7 @@ Each section can optionally specify:
 - `affinity`: determines which database types the section applies to (`"db"`, `"asm"`, or `"all"`).
 - `is_async`: when `yes`, the section runs asynchronously and its results are cached (controlled by `cache_age`).
 - `path`: load the SQL body from an external file instead of the bundled query. See [External SQL files (`path:`)](#external-sql-files-path) under custom metrics — the same rules apply to predefined sections.
+- `pdbs`: also run the section inside the listed Pluggable Databases, not only in the CDB root. See [Targeting Pluggable Databases (PDBs)](#targeting-pluggable-databases-pdbs). `performance` needs a container pass and therefore uses every open PDB unless `pdbs` says otherwise.
 
 ```yaml
 sections:
@@ -725,7 +726,7 @@ Custom SQL metrics in this plugin replace the legacy `SQLS_*` configuration vari
 
 #### Targeting Pluggable Databases (PDBs)
 
-A `custom_metrics` entry can target one or more Pluggable Databases inside a Container Database by adding a `pdbs` list. Each entry is a case-insensitive regular expression matched against the full PDB name. The plugin connects to the CDB root and issues `ALTER SESSION SET CONTAINER = <PDB>` before each query, then resets the session back to `CDB$ROOT` afterwards.
+A `custom_metrics` entry, and a predefined section under `sections`, can target one or more Pluggable Databases inside a Container Database by adding a `pdbs` list. Each entry is a case-insensitive regular expression matched against the full PDB name. The plugin connects to the CDB root and issues `ALTER SESSION SET CONTAINER = <PDB>` before each query, then resets the session back to `CDB$ROOT` afterwards.
 
 ```yaml
 custom_metrics:
@@ -748,12 +749,27 @@ details:...
 details:...
 ```
 
-- If `pdbs` is **omitted or empty**, the query runs against the CDB root — existing behaviour, unchanged.
+- If `pdbs` is **omitted or empty**, the query runs against the CDB root — existing behaviour, unchanged. The `performance` section is the exception, see [Per-container sections](#per-container-sections) below.
 - Patterns are anchored (`^pattern$`) and case-insensitive. A bare `PDB1` matches only `PDB1`, not `PDB10`. Use `PDB1.*` or `(PDB1|PDB10)` for broader matching.
-- PDB names are discovered at runtime via `V$PDBS`. A pattern that matches no discovered PDB is logged as a warning and skipped; other patterns still execute.
+- PDB names are discovered at runtime via `V$PDBS`, closed containers excluded — only a PDB in a `READ` open mode can be switched into. A pattern that matches no discovered PDB is logged as a warning and skipped; other patterns still execute.
 - The same PDB is only queried once even if multiple patterns match it.
 - The monitoring user must hold the `SET CONTAINER` privilege: `GRANT SET CONTAINER TO <user> CONTAINER = ALL`.
 - The connection must target the **CDB root service** (e.g. `service_name: FREE`), not a PDB service name. Connecting directly to a PDB service bypasses the container-switching mechanism.
+
+##### Per-container sections
+
+`performance` reads `v$pgastat`, a view with no `v$con_` twin: it yields a container's rows only when the query runs inside that container. The section therefore runs in every open PDB in addition to the root, without any configuration — as if `pdbs: ['.*']` were set. An explicit `pdbs` still wins, and `excluded_sections` still turns the section off.
+
+The section header stays the same, there is no PDB subsection line. Container rows are told apart by the first column, which carries the container name:
+
+```
+<<<oracle_performance:sep(124)>>>
+FREE.CDB$ROOT|PGA_info|total PGA allocated|429467648|bytes
+<<<oracle_performance:sep(124)>>>
+FREE.TESTPDB1|PGA_info|total PGA allocated|10485760|bytes
+```
+
+How much a PDB reports of itself depends on the release: 23ai keeps per-container `v$pgastat` rows, while 21c and older know only instance-wide ones and a PDB repeats the root figures — the same output the legacy `mk_oracle` plugin produced there.
 
 ### User Configuration File
 

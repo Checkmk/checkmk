@@ -227,10 +227,16 @@ SELECT
         /// Lists PDBs of the connected CDB. The root container (CDB$ROOT) is
         /// not in V$PDBS, but we exclude it defensively. PDB$SEED is the
         /// read-only template and must always be filtered out.
+        ///
+        /// Only open containers are listed: a MOUNTED or otherwise closed PDB
+        /// cannot serve a query, so switching into it would cost a failed
+        /// container switch per run. The legacy plugin filtered the same way
+        /// (`open_mode LIKE 'READ %'`).
         pub const PDB_DISCOVERY_SQL: &str = r"
 SELECT NAME
     FROM V$PDBS
-    WHERE NAME NOT IN ('CDB$ROOT', 'PDB$SEED')";
+    WHERE NAME NOT IN ('CDB$ROOT', 'PDB$SEED')
+      AND OPEN_MODE LIKE 'READ %'";
     }
 }
 

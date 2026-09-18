@@ -226,6 +226,16 @@ def test_the_oracle_file_paths_are_offered_once_and_not_per_database() -> None:
         assert not {"tns_admin", "oracle_local_registry"} & set(form.elements)
 
 
+def test_no_top_level_entry_is_required() -> None:
+    # A required entry is stored by every rule, so only the most specific rule
+    # could ever set it. The merged value is what has to be complete, and the
+    # bakery says so when it is not.
+    form = _agent_config_mk_oracle()
+    assert not [key for key, element in form.elements.items() if element.required]
+    assert isinstance(form, DictionaryExtended)
+    assert form.default_checked == ["deploy_rev2", "auth"]
+
+
 def test_every_setting_that_stands_alone_merges_on_its_own_key() -> None:
     # Two rules merge on the top-level keys they store, so a setting nested one
     # level deeper can only be overridden together with its neighbours.

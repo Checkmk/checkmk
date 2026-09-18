@@ -908,6 +908,29 @@ def _config_with_excluded_sections(
     )
 
 
+def test_the_bakery_says_so_when_no_rule_asked_for_a_deployment() -> None:
+    config = BakedConfig.model_validate({"auth": {"auth_type": ("wallet", None)}})
+    with pytest.raises(ValueError, match="whether to deploy"):
+        _process(config)
+
+
+def test_the_bakery_says_so_when_no_rule_named_credentials() -> None:
+    config = BakedConfig.model_validate({"deploy_rev2": DEPLOY})
+    with pytest.raises(ValueError, match="no credentials"):
+        _process(config)
+
+
+def test_the_oracle_file_paths_survive_without_a_connection() -> None:
+    config = BakedConfig.model_validate(
+        {
+            "deploy_rev2": DEPLOY,
+            "auth": {"auth_type": ("wallet", None)},
+            "tns_admin": "/etc/oracle",
+        }
+    )
+    assert "      tns_admin: /etc/oracle" in _yaml_lines(config)
+
+
 def _yaml_lines(config: BakedConfig) -> Sequence[str]:
     entries = [entry for entry in _process(config) if isinstance(entry, PluginConfig)]
     assert entries, "no plugin config emitted"

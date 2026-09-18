@@ -732,11 +732,11 @@ def _endpoint(
     return {
         "auth": DictElement(
             parameter_form=_auth_options(is_default_options=is_main_entry),
-            required=is_main_entry,
+            required=False,
         ),
         "connection": DictElement(
             parameter_form=_connection_options(),
-            required=is_main_entry,
+            required=False,
         ),
     }
 
@@ -997,11 +997,15 @@ def _migrate(value: object) -> Mapping[str, object]:
 
 
 def _agent_config_mk_oracle() -> Dictionary:
-    return Dictionary(
+    return DictionaryExtended(
         migrate=_migrate,
+        # A rule says what it changes, and the bakery merges the rules key by
+        # key, so nothing here may be required. A new rule still opens with the
+        # two entries that no Oracle configuration works without.
+        default_checked=["deploy_rev2", "auth"],
         elements={
             "deploy_rev2": DictElement(
-                required=True,
+                required=False,
                 parameter_form=SingleChoice(
                     title=Title("Deployment"),
                     prefill=DefaultValue("deploy"),
@@ -1024,7 +1028,7 @@ def _agent_config_mk_oracle() -> Dictionary:
             ),
             "instances_rev2": DictElement(
                 parameter_form=_instances(),
-                required=True,
+                required=False,
             ),
             "sections": DictElement(
                 parameter_form=_sections(),

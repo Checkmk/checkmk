@@ -249,8 +249,22 @@ class OracleConfig(BaseModel):
     main: OracleMain
 
 
+def _deploys(confm: BakedConfig) -> bool:
+    """Whether the merged rules ask for the plug-in, saying so when they do not."""
+    match confm.deploy_rev2:
+        case None:
+            raise ValueError(
+                "The rules for the unified Oracle plug-in do not say whether to deploy it. "
+                "Please enable or disable it explicitly."
+            )
+        case "do_not_deploy":
+            return False
+        case "deploy":
+            return True
+
+
 def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
-    if confm.deploy_rev2 == "do_not_deploy":
+    if not _deploys(confm):
         return
 
     config_lines = list(_get_oracle_yaml_lines(confm))
@@ -291,7 +305,10 @@ def _get_oracle_yaml_lines(config: BakedConfig) -> Iterable[str]:
 
 def _get_oracle_dict(config: BakedConfig) -> OracleMain:
     if not (auth := _get_oracle_authentication(config.auth)):
-        raise ValueError("Authentication details must be provided.")
+        raise ValueError(
+            "The rules for the unified Oracle plug-in name no credentials. "
+            "Please configure the authentication of the default connection."
+        )
 
     return OracleMain(
         authentication=auth,
@@ -350,13 +367,10 @@ def _get_oracle_connection(
     tns_admin: str | None = None,
     oracle_local_registry: str | None = None,
 ) -> OracleConnection | None:
-    if conn is None:
-        return None
-
     connection = OracleConnection(
-        hostname=conn.host,
-        port=conn.port,
-        timeout=conn.timeout,
+        hostname=conn.host if conn else None,
+        port=conn.port if conn else None,
+        timeout=conn.timeout if conn else None,
         tns_admin=tns_admin,
         oracle_local_registry=oracle_local_registry,
     )
@@ -514,7 +528,7 @@ def _get_arm_warning_lines() -> list[str]:
 
 
 def get_oracle_plugin_scriplets(confm: BakedConfig) -> Iterable[Scriptlet]:
-    if confm.deploy_rev2 == "do_not_deploy":
+    if not _deploys(confm):
         return
 
     arm_warning_lines = _get_arm_warning_lines()

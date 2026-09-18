@@ -101,9 +101,12 @@ class StoredInstanceConf[SecretT = StoredPassword](BaseModel):
 
 
 class StoredConfig[SecretT = StoredPassword](BaseModel):
-    deploy_rev2: Literal["deploy", "do_not_deploy"]
-    auth: StoredAuthConf[SecretT]
-    connection: StoredConnectionConf
+    # Every key is optional, because a rule only says what it changes and the
+    # bakery sees the rules merged. It is the merged value that has to be
+    # complete, and _get_oracle_dict says so when it is not.
+    deploy_rev2: Literal["deploy", "do_not_deploy"] | None = None
+    auth: StoredAuthConf[SecretT] | None = None
+    connection: StoredConnectionConf | None = None
     # The plug-in reads both once per run, never per database.
     tns_admin: str | None = None
     oracle_local_registry: str | None = None

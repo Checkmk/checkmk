@@ -205,7 +205,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs import (
     List as FSList,
 )
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
@@ -2727,7 +2727,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
                     table.cell(_("Move to pack..."))
-                    choices: Choices = [("", "")]
+                    choices: list[Choice] = [("", "")]
                     choices += [
                         (pack["id"], pack["title"])
                         for pack in self._rule_packs

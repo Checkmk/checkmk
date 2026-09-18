@@ -36,7 +36,7 @@ from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.ruleset_matcher.tags import TagGroup
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -49,7 +49,7 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-def attr_choices_with_tag_groups_and_host_attrs(tag_groups: Sequence[TagGroup]) -> Choices:
+def attr_choices_with_tag_groups_and_host_attrs(tag_groups: Sequence[TagGroup]) -> list[Choice]:
     host_attrs = [
         CustomHostAttrSpec(
             add_custom_macro=False,

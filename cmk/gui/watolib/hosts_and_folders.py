@@ -145,7 +145,7 @@ from cmk.utils.host_storage import (
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.web.utils import urls
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import HTTPVariable
@@ -432,7 +432,7 @@ class _RedisHelper:
         *,
         may_see_all_folders: bool,
         user_contact_groups: set[str],
-    ) -> Choices:
+    ) -> list[Choice]:
         self._fetch_all_metadata()
         path_to_title = {x.path: x.title_path_without_root for x in self._folder_metadata.values()}
 
@@ -813,7 +813,7 @@ class WATOFolderCache(Protocol):
 
     def choices_for_moving(
         self, path: PathWithoutSlash, move_type: _MoveType, acting_user: LoggedInUser
-    ) -> Choices | None: ...
+    ) -> list[Choice] | None: ...
 
     def recursive_subfolders_for_path(
         self, path: PathWithSlash
@@ -853,7 +853,7 @@ class NullFolderCache:
         path: PathWithoutSlash,  # noqa: ARG002
         move_type: _MoveType,  # noqa: ARG002
         acting_user: LoggedInUser,  # noqa: ARG002
-    ) -> Choices | None:
+    ) -> list[Choice] | None:
         return None
 
     def recursive_subfolders_for_path(self, path: PathWithSlash) -> Sequence[PathWithSlash] | None:  # noqa: ARG002
@@ -965,7 +965,7 @@ class RedisFolderCache:
     @_degrade_to_cache_miss
     def choices_for_moving(
         self, path: PathWithoutSlash, move_type: _MoveType, acting_user: LoggedInUser
-    ) -> Choices | None:
+    ) -> list[Choice] | None:
         return self._redis.choices_for_moving(
             path,
             move_type,
@@ -1950,7 +1950,7 @@ class Folder:
         self._hosts = hosts
 
         self._loaded_subfolders: dict[PathWithoutSlash, Folder] | None = None
-        self._choices_for_moving_host: Choices | None = None
+        self._choices_for_moving_host: list[Choice] | None = None
 
     @property
     def _subfolders(self) -> dict[PathWithoutSlash, Folder]:
@@ -2542,10 +2542,10 @@ class Folder:
         result.reverse()
         return result
 
-    def choices_for_moving_folder(self, acting_user: LoggedInUser) -> Choices:
+    def choices_for_moving_folder(self, acting_user: LoggedInUser) -> list[Choice]:
         return self._choices_for_moving("folder", acting_user)
 
-    def choices_for_moving_host(self, acting_user: LoggedInUser) -> Choices:
+    def choices_for_moving_host(self, acting_user: LoggedInUser) -> list[Choice]:
         if self._choices_for_moving_host is not None:
             return self._choices_for_moving_host  # Cached
 
@@ -2566,8 +2566,8 @@ class Folder:
 
         return has_permission
 
-    def _choices_for_moving(self, what: str, acting_user: LoggedInUser) -> Choices:
-        choices: Choices = []
+    def _choices_for_moving(self, what: str, acting_user: LoggedInUser) -> list[Choice]:
+        choices: list[Choice] = []
 
         if (
             cached_choices := self.tree.cache.choices_for_moving(
@@ -2594,9 +2594,8 @@ class Folder:
 
         return self._get_sorted_choices(choices)
 
-    def _get_sorted_choices(self, choices: Choices) -> Choices:
-        choices.sort(key=lambda x: x[1].lower())
-        return choices
+    def _get_sorted_choices(self, choices: Sequence[Choice]) -> list[Choice]:
+        return sorted(choices, key=lambda x: x[1].lower())
 
     def site_id(self) -> SiteId:
         """Returns the ID of the site that responsible for hosts in this folder

@@ -56,7 +56,7 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
 )
 from cmk.utils.servicename import ServiceName
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 from ..base import (
     Dashlet,
@@ -305,7 +305,7 @@ def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
 
 def graph_templates_autocompleter(
     config: Config, value_entered_by_user: str, params: dict
-) -> Choices:
+) -> list[Choice]:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
@@ -327,7 +327,7 @@ def _graph_templates_autocompleter_testable(
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
-) -> Choices:
+) -> list[Choice]:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
             value_entered_by_user,
@@ -395,7 +395,7 @@ def _graph_and_single_metric_templates_choices_for_context(
 def _sorted_matching_graph_template_choices(
     value_entered_by_user: str,
     all_choices: Iterable[GraphPluginChoice],
-) -> Choices:
+) -> list[Choice]:
     return [
         (graph_template_choice.id, graph_template_choice.title)
         for graph_template_choice in sorted(

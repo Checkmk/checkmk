@@ -6,7 +6,7 @@
 
 """Autocompleter infrastructure: registry, AJAX handler, and page registration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
@@ -14,9 +14,9 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
-AutocompleterFunc = Callable[[Config, str, dict[str, object]], Choices]
+AutocompleterFunc = Callable[[Config, str, dict[str, object]], list[Choice]]
 
 
 class AutocompleterRegistry(Registry[AutocompleterFunc]):
@@ -41,7 +41,7 @@ class AutocompleterBackendWarning(Exception):
     The exception carries both a warning message and the fallback choices to display.
     """
 
-    def __init__(self, message: str, choices: Choices) -> None:
+    def __init__(self, message: str, choices: Sequence[Choice]) -> None:
         super().__init__(message)
         self.choices = choices
 

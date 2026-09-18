@@ -102,7 +102,7 @@ from cmk.gui.watolib.users import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths, render
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
@@ -1718,7 +1718,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user_spec: UserSpec, default_language: str) -> None:
-    languages: Choices = [(ident, alias) for (ident, alias) in get_languages()]
+    languages: list[Choice] = [(ident, alias) for (ident, alias) in get_languages()]
     if not languages:
         return
 

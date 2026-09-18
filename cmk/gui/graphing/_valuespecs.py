@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
 )
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
-from cmk.web.utils.choices import Choice, Choices
+from cmk.web.utils.choices import Choice
 
 from ._decoding import ensure_type
 from ._from_api import metrics_from_api, RegisteredMetric
@@ -559,7 +559,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         super()._validate_value(value, varprefix)
 
     @override
-    def _choices_from_value(self, value: str | None) -> Choices:
+    def _choices_from_value(self, value: str | None) -> list[Choice]:
         if value is None:
             return list(self.choices())
         # Need to create an on the fly metric option

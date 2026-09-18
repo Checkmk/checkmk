@@ -15,14 +15,14 @@ from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
 from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.groups_io import all_groups
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 
 def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
     return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
 
 
-def hostgroup_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def hostgroup_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
@@ -34,25 +34,25 @@ def hostgroup_autocompleter(config: Config, value: str, params: dict) -> Choices
             _("you need to set %(parameter)s parameter to either %(values)s.")
             % {"parameter": "group_type", "values": str(valid_group_types)},
         )
-    choices: Choices = sorted(
+    choices: list[Choice] = sorted(
         (v for v in all_groups(group_type) if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
     if not params.get("strict"):
-        empty_choice: Choices = [("", "")]
+        empty_choice: list[Choice] = [("", "")]
         choices = empty_choice + choices
     return choices
 
 
-def tag_group_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def tag_group_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     return sorted(
         (v for v in config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
 
-def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> Choices:
-    grouped: Choices = []
+def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:
+    grouped: list[Choice] = []
 
     for tag_group in config.tags.tag_groups:
         if tag_group.id == params["group_id"]:
@@ -64,7 +64,7 @@ def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> Cho
     return grouped
 
 
-def check_types_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def check_types_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     return [
         (str(cn), f"{cn} - {c['title']}")
         for (cn, c) in get_check_information_cached(debug=config.debug).items()

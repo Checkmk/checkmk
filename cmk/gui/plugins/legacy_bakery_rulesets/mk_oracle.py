@@ -34,7 +34,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec.definitions import DictionaryEntry
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 
 def _validate_oracle_password(forbidden_chars: str) -> Callable[[tuple[str, str], str], None]:
@@ -76,7 +76,7 @@ class SectionWithHelp(NamedTuple):
 def _agent_config_mk_oracle_oracle_section_choices() -> list[DictionaryEntry]:
     dict_elements: list[DictionaryEntry] = []
     for section in _agent_config_mk_oracle_oracle_sections():
-        choices: Choices = [("sync", _("Run synchronously"))]
+        choices: list[Choice] = [("sync", _("Run synchronously"))]
         if section.name not in ["instance", "asm:instance"]:
             choices += [
                 ("async", _("Run asynchronously and cached")),
@@ -133,7 +133,7 @@ def _agent_config_mk_oracle_oracle_sections() -> Sequence[Section | SectionWithH
 
 
 def _agent_config_mk_oracle_oracle_auth_choices(title: str, asm: bool) -> Dictionary:
-    as_choices: Choices = []
+    as_choices: list[Choice] = []
     if not asm:
         as_choices.append((None, _("normal connection")))
     as_choices += [

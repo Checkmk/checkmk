@@ -77,7 +77,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import TagGroup
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
@@ -117,7 +117,7 @@ def _prevent_reused_attr_names(attr_names: Sequence[str | None]) -> None:
 def _attribute_choices(
     tag_groups: Sequence[TagGroup],
     custom_host_attrs: Sequence[CustomHostAttrSpec],
-) -> Choices:
+) -> list[Choice]:
     attributes = [
         (None, _("(please select)")),
         ("-", _("Don't import")),
@@ -141,9 +141,9 @@ def _attribute_choices(
     return attributes
 
 
-def _detect_attribute(attributes: Choices, header: str) -> str:
+def _detect_attribute(attributes: Sequence[Choice], header: str) -> str:
     """
-    Given a 'Choices' of possible host attributes, and assuming there is a
+    Given the possible host attributes as choices, and assuming there is a
     title line in the CSV, try to match the given title (for a particular
     column) with the attribute key most likely related to it.
     """

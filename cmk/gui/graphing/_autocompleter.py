@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 from cmk.gui.autocompleters import AutocompleterFunc
 from cmk.gui.config import Config
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 from ._decoding import context_from_json
 from ._from_api import metrics_from_api
@@ -21,7 +21,7 @@ def metrics_autocompleter(
     value: str,
     params: Mapping[str, object],
     livestatus_query: LivestatusQueryFunc,
-) -> Choices:
+) -> list[Choice]:
     context = context_from_json(params.get("context", {}))
     host = context.get("host", {}).get("host", "")
     service = context.get("service", {}).get("service", "")
@@ -44,7 +44,7 @@ def metrics_autocompleter(
 
 
 def monitored_metrics_autocompleter(livestatus_query: LivestatusQueryFunc) -> AutocompleterFunc:
-    def autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:  # noqa: ARG001
+    def autocompleter(config: Config, value: str, params: dict[str, object]) -> list[Choice]:  # noqa: ARG001
         return metrics_autocompleter(value, params, livestatus_query=livestatus_query)
 
     return autocompleter

@@ -104,7 +104,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.web.utils import escaping
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
@@ -2441,7 +2441,7 @@ class BIModeAggregations(ABCBIMode):
             )
             return HTML.without_escaping(output_funnel.drain())
 
-    def _show_bulk_move_choices(self) -> Choices:
+    def _show_bulk_move_choices(self) -> list[Choice]:
         return [
             (pack_id, bi_pack.title)
             for pack_id, bi_pack in self._bi_packs.get_packs().items()

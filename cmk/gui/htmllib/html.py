@@ -1094,7 +1094,7 @@ class HTMLGenerator(HTMLWriter):
         if error:
             self.close_x()
 
-    # Choices is a list pairs of (key, title). They keys of the choices
+    # A choice is a pair of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def dropdown(
         self,

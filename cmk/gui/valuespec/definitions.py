@@ -98,7 +98,7 @@ from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
 from cmk.web.utils import escaping
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
-from cmk.web.utils.choices import ChoiceId, Choices, ChoiceText
+from cmk.web.utils.choices import Choice, ChoiceId, ChoiceText
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import (
     DynamicIcon,
@@ -804,7 +804,7 @@ class Filesize(Integer):
         exp, count = self.get_exponent(value)
         self._renderer.text_input(varprefix + "_size", str(count))
         html.nbsp()
-        choices: Choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]
+        choices: list[Choice] = [(str(nr), name) for (nr, name) in enumerate(self._names)]
         html.dropdown(varprefix + "_unit", choices, deflt=str(exp))
 
     @override
@@ -913,7 +913,7 @@ class LegacyDataSize(Integer):
         selected_unit, scaled_value = self._scale_value(value)
         self._renderer.text_input(varprefix + "_size", scaled_value)
         html.nbsp()
-        choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
+        choices: list[Choice] = [(str(unit.value), unit.name) for unit in self._units]
         html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
 
     @override
@@ -3368,7 +3368,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
             )
         return value
 
-    def _options_for_html(self, orig_options: DropdownChoiceEntries) -> Choices:
+    def _options_for_html(self, orig_options: DropdownChoiceEntries) -> list[Choice]:
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
@@ -3590,7 +3590,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         self._css_spec = css_spec
         self._hint_label = hint_label
 
-    def _choices_from_value(self, value: str | None) -> Choices:
+    def _choices_from_value(self, value: str | None) -> list[Choice]:
         raise NotImplementedError
 
     @override
@@ -3908,7 +3908,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         value: CascadingDropdownChoiceValue,
     ) -> None:
         def_val = "0"
-        options: Choices = []
+        options: list[Choice] = []
         choices = self.choices()
         if not choices:
             html.write_text_permissive(self._no_elements_text)

@@ -38,7 +38,7 @@ from cmk.gui.utils.session import session
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils import paths
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
@@ -237,7 +237,11 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
     ]
 
 
-def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def add_to_dashboard_choices_autocompleter(
+    config: Config,
+    value: str,
+    params: dict,  # noqa: ARG001
+) -> list[Choice]:
     return get_visual_choices(
         visual_type_name="dashboards",
         value=value,
@@ -247,10 +251,10 @@ def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: d
 
 def get_visual_choices(
     visual_type_name: str, value: str, user_permissions: UserPermissions
-) -> Choices:
+) -> list[Choice]:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
-    matching_visuals: Choices = []
+    matching_visuals: list[Choice] = []
     visual_type = visual_type_registry[visual_type_name]()
     for entry in visual_type.page_menu_add_to_entries("unknown", user_permissions):
         if entry.name is not None and match_pattern.search(entry.title) is not None:

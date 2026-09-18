@@ -13,7 +13,7 @@ from cmk.gui.query_filters import AllLabelGroupsQuery
 from cmk.gui.type_defs import ChoiceMapping, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, LabelGroups
 from cmk.web.utils.autocompleter_config import AutocompleterConfig
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 
 @dataclass(kw_only=True, slots=True)
@@ -405,7 +405,7 @@ class TagFilterComponent(BaseComponent):
 
     @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
-        operators: Choices = [
+        operators: list[Choice] = [
             ("is", "="),
             ("isnot", "≠"),
         ]

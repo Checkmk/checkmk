@@ -16,7 +16,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import FilterHTTPVariables, Row
 from cmk.web.utils.autocompleter_config import AutocompleterConfig
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.speaklater import LazyString
 
 from .filter import Filter, FilterGroup, FilterRegistry
@@ -146,16 +146,16 @@ def sites_autocompleter(
     value: str,
     params: dict,
     sites_options: Callable[[Config], list[tuple[str, str]]],
-) -> Choices:
+) -> list[Choice]:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
 
-    choices: Choices = [v for v in sites_options(config) if _matches_id_or_title(value, v)]
+    choices: list[Choice] = [v for v in sites_options(config) if _matches_id_or_title(value, v)]
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):
-        empty_choice: Choices = [("", "All Sites")]
+        empty_choice: list[Choice] = [("", "All Sites")]
         choices = empty_choice + choices
     return choices
 

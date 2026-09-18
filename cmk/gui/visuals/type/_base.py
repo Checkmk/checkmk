@@ -13,7 +13,7 @@ from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import Rows, SingleInfos, Visual, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import get_labels
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.urls import HTTPVariable
 
 
@@ -86,7 +86,7 @@ class VisualType(abc.ABC):
         """Get the permitted visuals of this type"""
         raise NotImplementedError
 
-    def choices(self, visuals: dict, user_permissions: UserPermissions) -> Choices:
+    def choices(self, visuals: dict, user_permissions: UserPermissions) -> list[Choice]:
         return [
             (k, v["title"]) for k, v in self.permitted_visuals(visuals, user_permissions).items()
         ]

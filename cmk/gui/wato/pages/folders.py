@@ -112,7 +112,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference, YouTubeReference
@@ -195,10 +195,10 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     )
 
 
-def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
-    matching_folders: Choices = []
+    matching_folders: list[Choice] = []
     for path, name in folder_tree().folder_choices_fulltitle(user):
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
@@ -1524,8 +1524,8 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
             return _("Move this host to:")
         return _("Move this folder to:")
 
-    def _get_choices(self, tree: FolderTree) -> Choices:
-        choices: Choices = [
+    def _get_choices(self, tree: FolderTree) -> list[Choice]:
+        choices: list[Choice] = [
             ("@", _("(select target folder)")),
         ]
 

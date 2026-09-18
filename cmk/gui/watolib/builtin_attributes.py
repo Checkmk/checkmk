@@ -106,7 +106,7 @@ from cmk.rulesets.v1.form_specs import (
     MonitoredHost,
     String,
 )
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import urlencode_vars
 
@@ -1666,7 +1666,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         )
 
 
-def _host_attribute_choices() -> Choices:
+def _host_attribute_choices() -> list[Choice]:
     return [
         (a.name(), a.title())
         for a in sorted_host_attributes(

@@ -81,7 +81,7 @@ from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
@@ -1450,7 +1450,7 @@ class CommandGroupDowntimes(CommandGroup):
 
 
 class RecurringDowntimes(Protocol):
-    def choices(self) -> Choices: ...
+    def choices(self) -> list[Choice]: ...
 
     def recurrences(self) -> Sequence[DowntimeRecurrence]: ...
 
@@ -1462,7 +1462,7 @@ class RecurringDowntimes(Protocol):
 
 
 class NoRecurringDowntimes:
-    def choices(self) -> Choices:
+    def choices(self) -> list[Choice]:
         return [("0", "never")]
 
     def recurrences(self) -> Sequence[DowntimeRecurrence]:

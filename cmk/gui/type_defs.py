@@ -35,7 +35,7 @@ from cmk.gui.exceptions import FinalizeRequest
 from cmk.inventory.trees import SDPath
 from cmk.ruleset_matcher.labels import Labels
 from cmk.utils.password_store import PasswordId
-from cmk.web.utils.choices import Choices, ChoiceText
+from cmk.web.utils.choices import Choice, ChoiceText
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 from cmk.web.utils.speaklater import LazyString
 
@@ -58,7 +58,7 @@ class TrustedCertificateAuthorities(TypedDict):
 
 class ChoiceGroup(NamedTuple):
     title: str
-    choices: Choices
+    choices: list[Choice]
 
 
 GroupedChoices = list[ChoiceGroup]

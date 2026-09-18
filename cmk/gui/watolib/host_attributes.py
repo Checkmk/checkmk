@@ -57,7 +57,7 @@ from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, Single
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import String as StringFormSpec
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 
 # A host attribute's labels() may return this sentinel as the value for a label
@@ -274,7 +274,7 @@ class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeT
     def plugin_name(self, instance: HostAttributeTopic) -> str:
         return instance.ident
 
-    def get_choices(self) -> Choices:
+    def get_choices(self) -> list[Choice]:
         return [(t.ident, t.title) for t in sorted(self.values(), key=lambda e: e.sort_index)]
 
 

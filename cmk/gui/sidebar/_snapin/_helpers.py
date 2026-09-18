@@ -27,7 +27,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
@@ -158,7 +158,7 @@ def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[Si
     if len(available_site_choices) <= 1:
         return None
 
-    dropdown_choices: Choices = [
+    dropdown_choices: list[Choice] = [
         ("", _("All sites")),
     ]
     dropdown_choices += available_site_choices

@@ -47,7 +47,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.icons import IconNames, StaticIcon
 
 
@@ -369,7 +369,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         ]
 
         topics = make_main_menu(visuals_to_show, user_permissions)
-        topic_choices: Choices = [(topic.title, topic.title) for topic in topics]
+        topic_choices: list[Choice] = [(topic.title, topic.title) for topic in topics]
 
         html.open_table()
         html.open_tr()
@@ -387,7 +387,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.open_td()
 
         for topic in topics:
-            targets: Choices = []
+            targets: list[Choice] = []
             for item in get_main_menu_items_prefixed_by_segment(topic):
                 if item.url and item.url.startswith("dashboard.py"):
                     id = "dashboard|" + item.id  # noqa: A001

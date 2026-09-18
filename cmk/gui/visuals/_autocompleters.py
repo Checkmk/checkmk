@@ -16,7 +16,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.gui.utils.user_errors import user_errors
 from cmk.livestatus_client import LivestatusColumn, MultiSiteConnection
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 from ._livestatus import get_only_sites_from_context, livestatus_query_bare_string
 
@@ -26,7 +26,7 @@ def live_query_to_choices(
     limit: int,
     value: str,
     params: dict,
-) -> Choices:
+) -> list[Choice]:
     selected_sites = get_only_sites_from_context(params.get("context", {}))
     with sites.only_sites(selected_sites), sites.set_limit(limit):
         query_result = query_callback(sites.live())
@@ -51,7 +51,7 @@ def live_query_to_choices(
     return choices
 
 
-def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> Choices:
+def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> list[Choice]:
     """Livestatus query of single column of unique elements."""
 
     def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
@@ -69,7 +69,7 @@ def _build_regex_pattern(value: str, *, literal_search: bool) -> str:
     return value
 
 
-def monitored_hostname_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def monitored_hostname_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
@@ -88,7 +88,7 @@ def monitored_service_description_autocompleter(
     config: Config,  # noqa: ARG001
     value: str,
     params: dict,
-) -> Choices:
+) -> list[Choice]:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
@@ -111,21 +111,21 @@ def monitored_service_description_autocompleter(
     return _sorted_unique_lq(query, 200, value, params)
 
 
-def check_command_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def check_command_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get
     the list of choices
     """
-    choices: Choices = [
+    choices: list[Choice] = [
         (x, x)
         for x in sites.live().query_column_unique("GET commands\nCache: reload\nColumns: name\n")
         if value.lower() in x.lower()
     ]
-    empty_choices: Choices = [("", "")]
+    empty_choices: list[Choice] = [("", "")]
     return empty_choices + choices
 
 
-def label_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def label_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     """Return all known labels to support tagify label input dropdown completion"""
     from cmk.ccc.regex import regex
     from cmk.gui.utils.labels import LABEL_REGEX
@@ -140,7 +140,7 @@ def label_autocompleter(config: Config, value: str, params: dict) -> Choices:  #
         search_label=value,
         object_type=object_type,
     )
-    label_choices: Choices = [((f"{id_}:{val}"),) * 2 for id_, val in all_labels]
+    label_choices: list[Choice] = [((f"{id_}:{val}"),) * 2 for id_, val in all_labels]
 
     if filtered_choices := [
         (id_, val) for id_, val in sorted(set(label_choices)) if id_ not in group_labels
@@ -150,7 +150,7 @@ def label_autocompleter(config: Config, value: str, params: dict) -> Choices:  #
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
-def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) -> Choices:  # noqa: ARG001
+def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     filter_id = params["group_type"]
     object_type = filter_id.removeprefix("kubernetes_")
     label_name = f"cmk/kubernetes/{object_type}"

@@ -71,7 +71,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.userroles import RoleID
 from cmk.livestatus_client import SiteConfigurations
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
@@ -505,7 +505,7 @@ class ModeEditRole(WatoMode):
                     "based on."
                 )
             )
-            role_choices: Choices = [
+            role_choices: list[Choice] = [
                 (r.name, r.alias) for r in userroles.get_all_roles().values() if r.builtin
             ]
             default = "user" if self._role.basedon is None else self._role.basedon
@@ -549,7 +549,7 @@ class ModeEditRole(WatoMode):
                 pvalue = self._role.permissions.get(perm.name)
                 def_value = base_role_id in perm.defaults
 
-                choices: Choices = [
+                choices: list[Choice] = [
                     ("yes", _("yes")),
                     ("no", _("no")),
                     (

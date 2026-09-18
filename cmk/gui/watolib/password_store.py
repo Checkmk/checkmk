@@ -19,7 +19,7 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleCon
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils import password_store
 from cmk.utils.password_store import ad_hoc_password_id, PasswordConfig
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 
 
 class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
@@ -114,7 +114,7 @@ def split_password_specs(
 
 
 @request_memoize()
-def passwordstore_choices() -> Choices:
+def passwordstore_choices() -> list[Choice]:
     pw_store = PasswordStore()
     return [
         (ident, pw["title"])
@@ -124,7 +124,7 @@ def passwordstore_choices() -> Choices:
 
 # TODO remove this once a solution for use of passwordstore_choices is found
 @request_memoize()
-def passwordstore_choices_without_user() -> Choices:
+def passwordstore_choices_without_user() -> list[Choice]:
     pw_store = PasswordStore()
     return [(ident, pw["title"]) for ident, pw in pw_store.load_for_reading().items()]
 

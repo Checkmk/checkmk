@@ -121,6 +121,10 @@ whitelist-ro ${HOME}/.local
 # pyenv - Python version manager (provides pre-commit and other Python tools)
 whitelist-ro ${HOME}/.pyenv
 
+# Werks
+whitelist-ro ${HOME}/.config/cmk-werks
+mkdir ${HOME}/.local/state/cmk-werks
+read-write ${HOME}/.local/state/cmk-werks
 
 # ============================================================================
 # CUSTOM USER CONFIGURATION

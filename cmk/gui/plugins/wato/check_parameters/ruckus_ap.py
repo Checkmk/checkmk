@@ -16,7 +16,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
     Integer,
-    Migrate,
     TextInput,
     Tuple,
 )
@@ -29,79 +28,66 @@ def _item_spec_ruckus_ap() -> TextInput:
     )
 
 
-def _migrate(params: tuple | dict) -> dict:
-    if isinstance(params, dict):
-        return params
-    drifted, not_responding = params
-    return {
-        "levels_drifted": None if drifted == (None, None) else drifted,
-        "levels_not_responding": None if not_responding == (None, None) else not_responding,
-    }
-
-
-def _parameter_valuespec_ruckus_ap() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels_drifted",
-                    Alternative(
-                        title=_("Upper levels for drifted access points"),
-                        elements=[
-                            FixedValue(
-                                title=_("Do not impose levels"),
-                                value=None,
-                                totext="no levels (always OK)",
-                            ),
-                            Tuple(
-                                elements=[
-                                    Integer(
-                                        title=_("Warning at"),
-                                        default_value=1,
-                                        unit=_("devices"),
-                                    ),
-                                    Integer(
-                                        title=_("Critical at"),
-                                        default_value=1,
-                                        unit=_("devices"),
-                                    ),
-                                ],
-                                title=_("Upper levels"),
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_ruckus_ap() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_drifted",
+                Alternative(
+                    title=_("Upper levels for drifted access points"),
+                    elements=[
+                        FixedValue(
+                            title=_("Do not impose levels"),
+                            value=None,
+                            totext="no levels (always OK)",
+                        ),
+                        Tuple(
+                            elements=[
+                                Integer(
+                                    title=_("Warning at"),
+                                    default_value=1,
+                                    unit=_("devices"),
+                                ),
+                                Integer(
+                                    title=_("Critical at"),
+                                    default_value=1,
+                                    unit=_("devices"),
+                                ),
+                            ],
+                            title=_("Upper levels"),
+                        ),
+                    ],
                 ),
-                (
-                    "levels_not_responding",
-                    Alternative(
-                        title=_("Upper levels for unresponsive access points"),
-                        elements=[
-                            FixedValue(
-                                title=_("Do not impose levels"),
-                                value=None,
-                                totext="no levels (always OK)",
-                            ),
-                            Tuple(
-                                elements=[
-                                    Integer(
-                                        title=_("Warning at"),
-                                        default_value=1,
-                                        unit=_("devices"),
-                                    ),
-                                    Integer(
-                                        title=_("Critical at"),
-                                        default_value=1,
-                                        unit=_("devices"),
-                                    ),
-                                ],
-                                title=_("Upper levels"),
-                            ),
-                        ],
-                    ),
+            ),
+            (
+                "levels_not_responding",
+                Alternative(
+                    title=_("Upper levels for unresponsive access points"),
+                    elements=[
+                        FixedValue(
+                            title=_("Do not impose levels"),
+                            value=None,
+                            totext="no levels (always OK)",
+                        ),
+                        Tuple(
+                            elements=[
+                                Integer(
+                                    title=_("Warning at"),
+                                    default_value=1,
+                                    unit=_("devices"),
+                                ),
+                                Integer(
+                                    title=_("Critical at"),
+                                    default_value=1,
+                                    unit=_("devices"),
+                                ),
+                            ],
+                            title=_("Upper levels"),
+                        ),
+                    ],
                 ),
-            ]
-        ),
-        migrate=_migrate,
+            ),
+        ]
     )
 
 

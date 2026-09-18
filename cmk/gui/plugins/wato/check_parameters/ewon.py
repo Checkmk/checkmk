@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -15,33 +13,30 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Percentage, TextInput, Tuple
 from cmk.ruleset_matcher.definition import RuleGroup
 
 
-def _valuespec_ewon_discovery_rules() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        Dictionary(
-            title=_("eWON discovery"),
-            elements=[
-                (
-                    "device",
-                    DropdownChoice(
-                        help=_(
-                            "The eWon VPN routers can rely on data from a secondary device via SNMP. It doesn't however allow discovery of the device type relayed this way. To allow interpretation of the data you need to pick the device manually."
-                        ),
-                        label=_("Select device type"),
-                        choices=[
-                            (None, _("None selected")),
-                            ("oxyreduct", _("Wagner OxyReduct")),
-                        ],
-                        default_value=None,
+def _valuespec_ewon_discovery_rules() -> Dictionary:
+    return Dictionary(
+        title=_("eWON discovery"),
+        elements=[
+            (
+                "device",
+                DropdownChoice(
+                    help=_(
+                        "The eWon VPN routers can rely on data from a secondary device via SNMP. It doesn't however allow discovery of the device type relayed this way. To allow interpretation of the data you need to pick the device manually."
                     ),
+                    label=_("Select device type"),
+                    choices=[
+                        (None, _("None selected")),
+                        ("oxyreduct", _("Wagner OxyReduct")),
+                    ],
+                    default_value=None,
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda x: x if isinstance(x, dict) else {"device": x},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

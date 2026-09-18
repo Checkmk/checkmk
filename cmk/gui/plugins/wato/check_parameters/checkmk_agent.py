@@ -22,7 +22,6 @@ from cmk.gui.valuespec import (
     FixedValue,
     Hostname,
     ListOf,
-    Migrate,
     MonitoringState,
     RegExp,
     SetupSiteChoice,
@@ -38,33 +37,6 @@ def _validate_version(value: str, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Can't parse version %(value)r") % {"value": value})
 
 
-def _migrate_version_spec(
-    param: str | tuple[str, str] | tuple[str, dict[str, str]],
-) -> tuple[str, dict[str, str]]:
-    """
-    >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))
-    ('at_least', {'build': '1.1.1'})
-    >>> _migrate_version_spec(("specific", "2.1.0b2"))
-    ('specific', {'literal': '2.1.0b2'})
-    >>> _migrate_version_spec("1.2.3")
-    ('specific', {'literal': '1.2.3'})
-    >>> _migrate_version_spec("site")
-    ('site', {})
-    >>> _migrate_version_spec("ignore")
-    ('ignore', {})
-
-    """
-    if isinstance(param, tuple):
-        type_, spec = param
-        if isinstance(spec, dict):
-            return type_, spec
-        return "specific", {"literal": str(spec)}
-
-    if param in ("ignore", "site"):
-        return param, {}
-    return "specific", {"literal": param}
-
-
 def _parameter_valuespec_checkmk_agent() -> Dictionary:
     return Dictionary(
         ignored_keys=[
@@ -75,66 +47,61 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
         elements=[
             (
                 "agent_version",
-                Migrate(
-                    valuespec=CascadingDropdown(
-                        title=_("Check version of Checkmk agent"),
-                        help=_(
-                            "Here, you can make sure that all of your Checkmk agents are running"
-                            " one specific version. Agents running"
-                            " a different version return a non-OK state."
-                        ),
-                        choices=[
-                            (
-                                "ignore",
-                                _("Ignore the version"),
-                                FixedValue(value={}, totext=""),
-                            ),
-                            (
-                                "site",
-                                _("Same version as the monitoring site"),
-                                FixedValue(value={}, totext=""),
-                            ),
-                            (
-                                "specific",
-                                _("Specific version"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "literal",
-                                            TextInput(allow_empty=False, title=_("Expected")),
-                                        ),
-                                    ],
-                                    optional_keys=[],
-                                ),
-                            ),
-                            (
-                                "at_least",
-                                _("At least"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "release",
-                                            TextInput(
-                                                title=_("Official Release version"),
-                                                allow_empty=False,
-                                            ),
-                                        ),
-                                        (
-                                            "daily_build",
-                                            TextInput(
-                                                title=_("Daily build"),
-                                                allow_empty=False,
-                                            ),
-                                        ),
-                                    ]
-                                ),
-                            ),
-                        ],
-                        default_value=("ignore", {}),
+                CascadingDropdown(
+                    title=_("Check version of Checkmk agent"),
+                    help=_(
+                        "Here, you can make sure that all of your Checkmk agents are running"
+                        " one specific version. Agents running"
+                        " a different version return a non-OK state."
                     ),
-                    # In the past, this was a OptionalDropdownChoice() which values could be strings:
-                    # ignore, site or a custom string representing a version number.
-                    migrate=_migrate_version_spec,
+                    choices=[
+                        (
+                            "ignore",
+                            _("Ignore the version"),
+                            FixedValue(value={}, totext=""),
+                        ),
+                        (
+                            "site",
+                            _("Same version as the monitoring site"),
+                            FixedValue(value={}, totext=""),
+                        ),
+                        (
+                            "specific",
+                            _("Specific version"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        "literal",
+                                        TextInput(allow_empty=False, title=_("Expected")),
+                                    ),
+                                ],
+                                optional_keys=[],
+                            ),
+                        ),
+                        (
+                            "at_least",
+                            _("At least"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        "release",
+                                        TextInput(
+                                            title=_("Official Release version"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                    (
+                                        "daily_build",
+                                        TextInput(
+                                            title=_("Daily build"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_value=("ignore", {}),
                 ),
             ),
             (

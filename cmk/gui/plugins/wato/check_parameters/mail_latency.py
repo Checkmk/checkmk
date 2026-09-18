@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -14,25 +12,22 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, Migrate
+from cmk.gui.valuespec import Age, Dictionary
 
 
-def _parameter_valuespec_mail_latency() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        spec=Age,
-                        default_levels=(40, 60),
-                        title=_("Upper levels for mail latency"),
-                    ),
+def _parameter_valuespec_mail_latency() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    spec=Age,
+                    default_levels=(40, 60),
+                    title=_("Upper levels for mail latency"),
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

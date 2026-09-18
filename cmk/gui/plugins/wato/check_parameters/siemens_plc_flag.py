@@ -5,15 +5,13 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 
 def _item_spec_siemens_plc_flag() -> TextInput:
@@ -28,29 +26,26 @@ def _item_spec_siemens_plc_flag() -> TextInput:
     )
 
 
-def _parameter_valuespec_siemens_plc_flag() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "expected_state",
-                    DropdownChoice(
-                        help=_(
-                            "This rule sets the expected state, the one which should result in an OK state, "
-                            "of the monitored flags of Siemens PLC devices."
-                        ),
-                        title=_("Expected flag state"),
-                        choices=[
-                            (True, _("Expect the flag to be: On")),
-                            (False, _("Expect the flag to be: Off")),
-                        ],
-                        default_value=True,
+def _parameter_valuespec_siemens_plc_flag() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "expected_state",
+                DropdownChoice(
+                    help=_(
+                        "This rule sets the expected state, the one which should result in an OK state, "
+                        "of the monitored flags of Siemens PLC devices."
                     ),
+                    title=_("Expected flag state"),
+                    choices=[
+                        (True, _("Expect the flag to be: On")),
+                        (False, _("Expect the flag to be: Off")),
+                    ],
+                    default_value=True,
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"expected_state": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

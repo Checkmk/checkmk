@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -11,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, DictionaryModel, Migrate, TextInput
+from cmk.gui.valuespec import Age, Dictionary, TextInput
 
 
 def _item_spec_db2_backup() -> TextInput:
@@ -20,22 +19,19 @@ def _item_spec_db2_backup() -> TextInput:
     )
 
 
-def _parameter_valuespec_db2_backup() -> Migrate[DictionaryModel]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        title=_("Levels on time since last successful backup"),
-                        spec=Age,
-                        default_levels=(86400 * 14, 86400 * 28),
-                    ),
+def _parameter_valuespec_db2_backup() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    title=_("Levels on time since last successful backup"),
+                    spec=Age,
+                    default_levels=(86400 * 14, 86400 * 28),
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

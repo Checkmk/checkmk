@@ -6,45 +6,34 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 
-def _migrate(p: str | dict) -> dict[str, Any]:
-    if isinstance(p, dict):
-        return p
-    return {"state": p}
-
-
-def _parameter_valuespec_switch_contact() -> Migrate:
-    return Migrate(
-        migrate=_migrate,
-        valuespec=Dictionary(
-            title=_("Required switch contact state"),
-            help=_("This rule sets the required state of a switch contact"),
-            required_keys="state",
-            elements=[
-                (
-                    "state",
-                    DropdownChoice(
-                        help=_("This rule sets the required state of a switch contact"),
-                        label=_("Required switch contact state"),
-                        choices=[
-                            ("open", "Switch contact is <b>open</b>"),
-                            ("closed", "Switch contact is <b>closed</b>"),
-                            ("ignore", "Ignore switch contact state"),
-                        ],
-                    ),
-                )
-            ],
-        ),
+def _parameter_valuespec_switch_contact() -> Dictionary:
+    return Dictionary(
+        title=_("Required switch contact state"),
+        help=_("This rule sets the required state of a switch contact"),
+        required_keys="state",
+        elements=[
+            (
+                "state",
+                DropdownChoice(
+                    help=_("This rule sets the required state of a switch contact"),
+                    label=_("Required switch contact state"),
+                    choices=[
+                        ("open", "Switch contact is <b>open</b>"),
+                        ("closed", "Switch contact is <b>closed</b>"),
+                        ("ignore", "Ignore switch contact state"),
+                    ],
+                ),
+            )
+        ],
     )
 
 

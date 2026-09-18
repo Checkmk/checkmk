@@ -5,35 +5,30 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, Dictionary, Migrate, TextInput, Tuple
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
-def _parameter_valuespec_veeam_tapejobs() -> Migrate[dict[str, Any]]:
-    return Migrate[dict[str, Any]](
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels_upper",
-                    Tuple(
-                        title=_("Levels for duration of backup job"),
-                        elements=[
-                            Age(title="Warning at"),
-                            Age(title="Critical at"),
-                        ],
-                    ),
+def _parameter_valuespec_veeam_tapejobs() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_upper",
+                Tuple(
+                    title=_("Levels for duration of backup job"),
+                    elements=[
+                        Age(title="Warning at"),
+                        Age(title="Critical at"),
+                    ],
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels_upper": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

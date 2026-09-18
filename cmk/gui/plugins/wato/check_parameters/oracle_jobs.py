@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_oracle_jobs() -> TextInput:
@@ -33,30 +33,19 @@ def _item_spec_oracle_jobs() -> TextInput:
     )
 
 
-# the migration is introduced in 2.2.0i1
-def migrate_disabled(v: dict[str, object]) -> dict[str, object]:
-    if (disabled := v.pop("disabled", None)) is not None:
-        v["consider_job_status"] = "ignore" if disabled else "consider"
-
-    return v
-
-
-def _parameter_valuespec_oracle_jobs() -> Migrate:
-    return Migrate(
-        Dictionary(
-            help=_(
-                "A scheduler job is an object in an Oracle database which could be "
-                "compared to a cronjob on Unix."
-            ),
-            elements=[
-                ("run_duration", run_duration),
-                ("consider_job_status", get_consider_job_status_valuespec()),
-                ("status_disabled_jobs", status_disabled_jobs),
-                ("status_missing_jobs", status_missing_jobs),
-                ("missinglog", missinglog),
-            ],
+def _parameter_valuespec_oracle_jobs() -> Dictionary:
+    return Dictionary(
+        help=_(
+            "A scheduler job is an object in an Oracle database which could be "
+            "compared to a cronjob on Unix."
         ),
-        migrate=migrate_disabled,
+        elements=[
+            ("run_duration", run_duration),
+            ("consider_job_status", get_consider_job_status_valuespec()),
+            ("status_disabled_jobs", status_disabled_jobs),
+            ("status_missing_jobs", status_missing_jobs),
+            ("missinglog", missinglog),
+        ],
     )
 
 

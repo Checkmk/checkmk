@@ -15,7 +15,6 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     FixedValue,
-    Migrate,
     MonitoringState,
     TextInput,
 )
@@ -95,55 +94,35 @@ def _discovery_state() -> FixedValue:
     )
 
 
-def _parameter_valuespec_hyperv_vms() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "vm_target_state",
-                    CascadingDropdown(
-                        title=_("Translation of VM state to monitoring state"),
-                        choices=[
-                            (
-                                "map",
-                                _("Direct mapping of VM state to monitoring state"),
-                                _expected_state_map(),
-                            ),
-                            (
-                                "discovery",
-                                _("Compare against discovered state"),
-                                _discovery_state(),
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_hyperv_vms() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "vm_target_state",
+                CascadingDropdown(
+                    title=_("Translation of VM state to monitoring state"),
+                    choices=[
+                        (
+                            "map",
+                            _("Direct mapping of VM state to monitoring state"),
+                            _expected_state_map(),
+                        ),
+                        (
+                            "discovery",
+                            _("Compare against discovered state"),
+                            _discovery_state(),
+                        ),
+                    ],
                 ),
-                (
-                    "discovered_state",
-                    TextInput(title=_("State during discovery of the service")),
-                ),
-            ],
-            optional_keys=["discovered_state"],
-            hidden_keys=["discovered_state"],  # not shown when editing the rule
-        ),
-        migrate=_migrate_hyperv_vmstate,
+            ),
+            (
+                "discovered_state",
+                TextInput(title=_("State during discovery of the service")),
+            ),
+        ],
+        optional_keys=["discovered_state"],
+        hidden_keys=["discovered_state"],  # not shown when editing the rule
     )
-
-
-def _migrate_hyperv_vmstate(p: dict) -> dict:
-    if "vm_target_state" in p or "discovered_state" in p:
-        return p
-    if set(p) == {"state"}:  # properly migrate autochecks:
-        return {"discovered_state": p["state"]}
-    new = {
-        "vm_target_state": (
-            ("discovery", True)
-            if "compare_discovery" in p
-            else ("map", {k: v for k, v in p.items() if k != "state"})
-        )
-    }
-    if "state" in p:
-        new["discovered_state"] = p["state"]
-    return new
 
 
 rulespec_registry.register(

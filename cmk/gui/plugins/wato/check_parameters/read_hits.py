@@ -11,27 +11,24 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Float, Migrate, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
-def _parameter_valuespec_read_hits() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels_lower",
-                    Tuple(
-                        title=_("Prefetch hits"),
-                        elements=[
-                            Float(title=_("Warning at or below"), default_value=85.0),
-                            Float(title=_("Critical at or below"), default_value=70.0),
-                        ],
-                    ),
+def _parameter_valuespec_read_hits() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Prefetch hits"),
+                    elements=[
+                        Float(title=_("Warning at or below"), default_value=85.0),
+                        Float(title=_("Critical at or below"), default_value=70.0),
+                    ],
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

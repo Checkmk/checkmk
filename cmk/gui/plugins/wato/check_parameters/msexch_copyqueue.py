@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
 
 def _item_spec_msexch_copyqueue() -> TextInput:
@@ -24,26 +22,23 @@ def _item_spec_msexch_copyqueue() -> TextInput:
     )
 
 
-def _parameter_valuespec_msexch_copyqueue() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            help=_(
-                "This rule sets upper levels to the number of transaction logs waiting to be copied "
-                "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
-                "(DAG). This is also known as the CopyQueue length."
-            ),
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        spec=Integer,
-                        title=_("Upper levels for CopyQueue length"),
-                    ),
-                ),
-            ],
-            optional_keys=[],
+def _parameter_valuespec_msexch_copyqueue() -> Dictionary:
+    return Dictionary(
+        help=_(
+            "This rule sets upper levels to the number of transaction logs waiting to be copied "
+            "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
+            "(DAG). This is also known as the CopyQueue length."
         ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    spec=Integer,
+                    title=_("Upper levels for CopyQueue length"),
+                ),
+            ),
+        ],
+        optional_keys=[],
     )
 
 

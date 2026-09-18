@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_mssql_jobs() -> TextInput:
@@ -40,37 +40,17 @@ def get_consider_job_status_choices() -> tuple[tuple[str, str], tuple[str, str],
     )
 
 
-def migrate_mssql_job_status(v: dict[str, object]) -> dict[str, object]:
-    _patch_ignore_status_optionally(v)
-    return _patch_schedule_status_optionally(v)
-
-
-def _patch_ignore_status_optionally(v: dict[str, object]) -> None:
-    if (ignore_status := v.pop("ignore_db_status", None)) is not None:
-        v["consider_job_status"] = "ignore" if ignore_status else "consider"
-
-
-def _patch_schedule_status_optionally(v: dict[str, object]) -> dict[str, object]:
-    if "disabled_schedule_status" in v or "disabled_job_status" not in v:
-        return v
-    # in 2.4.0b1 end earlier disabled_job_status has been used as disabled_schedule_status
-    return v | {"disabled_schedule_status": v["disabled_job_status"]}
-
-
-def _parameter_valuespec_mssql_jobs() -> Migrate:
+def _parameter_valuespec_mssql_jobs() -> Dictionary:
     choices = get_consider_job_status_choices()
-    return Migrate(
-        Dictionary(
-            help=_("A scheduled job on Microsoft SQL Server."),
-            elements=[
-                ("run_duration", run_duration),
-                ("consider_job_status", get_consider_job_status_valuespec(choices)),
-                ("status_disabled_jobs", status_disabled_jobs),
-                ("status_disabled_schedule", status_disabled_schedule),
-                ("status_missing_jobs", status_missing_jobs),
-            ],
-        ),
-        migrate=migrate_mssql_job_status,
+    return Dictionary(
+        help=_("A scheduled job on Microsoft SQL Server."),
+        elements=[
+            ("run_duration", run_duration),
+            ("consider_job_status", get_consider_job_status_valuespec(choices)),
+            ("status_disabled_jobs", status_disabled_jobs),
+            ("status_disabled_schedule", status_disabled_schedule),
+            ("status_missing_jobs", status_missing_jobs),
+        ],
     )
 
 

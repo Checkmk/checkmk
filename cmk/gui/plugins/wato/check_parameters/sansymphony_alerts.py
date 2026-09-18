@@ -11,35 +11,32 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
-def _parameter_valuespec_sansymphony_alerts() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Number of unacknowlegded alerts"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at"),
-                                unit=_("alerts"),
-                                default_value=1,
-                            ),
-                            Integer(
-                                title=_("Critical at"),
-                                unit=_("alerts"),
-                                default_value=2,
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_sansymphony_alerts() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Number of unacknowlegded alerts"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            unit=_("alerts"),
+                            default_value=1,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("alerts"),
+                            default_value=2,
+                        ),
+                    ],
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

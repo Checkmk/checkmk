@@ -5,42 +5,37 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Age, Dictionary, Migrate, Tuple
+from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
-def _parameter_valuespec_lamp_operation_time() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        elements=[
-                            Age(
-                                title=_("Warning at"),
-                                default_value=1000 * 3600,
-                                display=["hours"],
-                            ),
-                            Age(
-                                title=_("Critical at"),
-                                default_value=1500 * 3600,
-                                display=["hours"],
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_lamp_operation_time() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    elements=[
+                        Age(
+                            title=_("Warning at"),
+                            default_value=1000 * 3600,
+                            display=["hours"],
+                        ),
+                        Age(
+                            title=_("Critical at"),
+                            default_value=1500 * 3600,
+                            display=["hours"],
+                        ),
+                    ],
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

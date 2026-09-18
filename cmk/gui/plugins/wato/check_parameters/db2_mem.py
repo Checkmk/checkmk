@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,26 +12,23 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Migrate, Percentage, TextInput
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput
 
 
-def _parameter_valuespec_db2_mem() -> Migrate[dict[str, Any]]:
-    return Migrate[dict[str, Any]](
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels_lower",
-                    SimpleLevels(
-                        spec=Percentage,
-                        # xgettext: no-python-format
-                        unit=_("% memory left"),
-                        direction="lower",
-                    ),
-                )
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
+def _parameter_valuespec_db2_mem() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower",
+                SimpleLevels(
+                    spec=Percentage,
+                    # xgettext: no-python-format
+                    unit=_("% memory left"),
+                    direction="lower",
+                ),
+            )
+        ],
+        optional_keys=[],
     )
 
 

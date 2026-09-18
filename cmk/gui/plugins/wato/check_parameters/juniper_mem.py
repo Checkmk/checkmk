@@ -5,28 +5,23 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Migrate
+from cmk.gui.valuespec import Dictionary
 
 from .memory_arbor import DualMemoryLevels
 
 
-def _parameter_valuespec_juniper_mem() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                ("levels", DualMemoryLevels("memory", default_percents=(80.0, 90.0))),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": ("perc_used", p)},
+def _parameter_valuespec_juniper_mem() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("levels", DualMemoryLevels("memory", default_percents=(80.0, 90.0))),
+        ],
+        optional_keys=[],
     )
 
 

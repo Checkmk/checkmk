@@ -5,15 +5,13 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Float, Migrate, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _item_spec_efreq() -> TextInput:
@@ -22,62 +20,59 @@ def _item_spec_efreq() -> TextInput:
     )
 
 
-def _parameter_valuespec_efreq() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels_lower",
-                    Tuple(
-                        title=_("Lower levels"),
-                        help=_(
-                            "Levels for the nominal frequencies of AC devices "
-                            "like UPSs or PDUs. Several phases may be addressed independently."
-                        ),
-                        elements=[
-                            Float(
-                                title=_("warning if below"),
-                                unit="Hz",
-                                default_value=49.0,
-                                allow_int=True,
-                            ),
-                            Float(
-                                title=_("critical if below"),
-                                unit="Hz",
-                                default_value=48.5,
-                                allow_int=True,
-                            ),
-                        ],
+def _parameter_valuespec_efreq() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower levels"),
+                    help=_(
+                        "Levels for the nominal frequencies of AC devices "
+                        "like UPSs or PDUs. Several phases may be addressed independently."
                     ),
-                ),
-                (
-                    "levels_upper",
-                    Tuple(
-                        title=_("Upper levels"),
-                        help=_(
-                            "Upper levels for the nominal frequencies of AC devices "
-                            "like UPSs or PDUs. Leave unset where over-frequency is not a concern."
+                    elements=[
+                        Float(
+                            title=_("warning if below"),
+                            unit="Hz",
+                            default_value=49.0,
+                            allow_int=True,
                         ),
-                        elements=[
-                            Float(
-                                title=_("warning if above"),
-                                unit="Hz",
-                                default_value=51.0,
-                                allow_int=True,
-                            ),
-                            Float(
-                                title=_("critical if above"),
-                                unit="Hz",
-                                default_value=51.5,
-                                allow_int=True,
-                            ),
-                        ],
-                    ),
+                        Float(
+                            title=_("critical if below"),
+                            unit="Hz",
+                            default_value=48.5,
+                            allow_int=True,
+                        ),
+                    ],
                 ),
-            ],
-            optional_keys=("levels_lower", "levels_upper"),
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
+            ),
+            (
+                "levels_upper",
+                Tuple(
+                    title=_("Upper levels"),
+                    help=_(
+                        "Upper levels for the nominal frequencies of AC devices "
+                        "like UPSs or PDUs. Leave unset where over-frequency is not a concern."
+                    ),
+                    elements=[
+                        Float(
+                            title=_("warning if above"),
+                            unit="Hz",
+                            default_value=51.0,
+                            allow_int=True,
+                        ),
+                        Float(
+                            title=_("critical if above"),
+                            unit="Hz",
+                            default_value=51.5,
+                            allow_int=True,
+                        ),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=("levels_lower", "levels_upper"),
     )
 
 

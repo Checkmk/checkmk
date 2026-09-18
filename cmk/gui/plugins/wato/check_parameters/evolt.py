@@ -5,15 +5,13 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Float, Migrate, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _item_spec_evolt() -> TextInput:
@@ -22,44 +20,39 @@ def _item_spec_evolt() -> TextInput:
     )
 
 
-def _parameter_valuespec_evolt() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels_lower",
-                    Tuple(
-                        title=_("Lower voltage levels"),
-                        help=_(
-                            "Voltage levels for devices like UPS or PDUs. "
-                            "Several phases may be addressed independently."
-                        ),
-                        elements=[
-                            Float(title=_("Warning at/below"), unit="V", default_value=215),
-                            Float(title=_("Critical at/below"), unit="V", default_value=210),
-                        ],
+def _parameter_valuespec_evolt() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower voltage levels"),
+                    help=_(
+                        "Voltage levels for devices like UPS or PDUs. "
+                        "Several phases may be addressed independently."
                     ),
+                    elements=[
+                        Float(title=_("Warning at/below"), unit="V", default_value=215),
+                        Float(title=_("Critical at/below"), unit="V", default_value=210),
+                    ],
                 ),
-                (
-                    "levels_upper",
-                    Tuple(
-                        title=_("Upper voltage levels"),
-                        help=_(
-                            "Upper voltage levels for devices like UPS or PDUs. "
-                            "Leave unset on installations where over-voltage is not a concern."
-                        ),
-                        elements=[
-                            Float(title=_("Warning at/above"), unit="V", default_value=245),
-                            Float(title=_("Critical at/above"), unit="V", default_value=250),
-                        ],
+            ),
+            (
+                "levels_upper",
+                Tuple(
+                    title=_("Upper voltage levels"),
+                    help=_(
+                        "Upper voltage levels for devices like UPS or PDUs. "
+                        "Leave unset on installations where over-voltage is not a concern."
                     ),
+                    elements=[
+                        Float(title=_("Warning at/above"), unit="V", default_value=245),
+                        Float(title=_("Critical at/above"), unit="V", default_value=250),
+                    ],
                 ),
-            ],
-            optional_keys=("levels_lower", "levels_upper"),
-        ),
-        migrate=lambda p: (
-            p if isinstance(p, dict) else {"levels_lower": (float(p[0]), float(p[1]))}
-        ),
+            ),
+        ],
+        optional_keys=("levels_lower", "levels_upper"),
     )
 
 

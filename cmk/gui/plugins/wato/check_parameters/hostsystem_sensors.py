@@ -5,62 +5,57 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, ListOf, Migrate, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
 
 
-def _parameter_valuespec_hostsystem_sensors() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "rules",
-                    ListOf(
-                        valuespec=Dictionary(
-                            help=_(
-                                "This rule allows to override alert levels for the given sensor names."
-                            ),
-                            elements=[
-                                ("name", TextInput(title=_("Sensor name"))),
-                                (
-                                    "states",
-                                    Dictionary(
-                                        title=_("Custom states"),
-                                        elements=[
-                                            (
-                                                element,
-                                                MonitoringState(
-                                                    title="Sensor %s" % description,
-                                                    label=_("Set state to"),
-                                                    default_value=int(element),
-                                                ),
-                                            )
-                                            for (element, description) in [
-                                                ("0", _("OK")),
-                                                ("1", _("WARNING")),
-                                                ("2", _("CRITICAL")),
-                                                ("3", _("UNKNOWN")),
-                                            ]
-                                        ],
-                                    ),
-                                ),
-                            ],
-                            optional_keys=False,
+def _parameter_valuespec_hostsystem_sensors() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "rules",
+                ListOf(
+                    valuespec=Dictionary(
+                        help=_(
+                            "This rule allows to override alert levels for the given sensor names."
                         ),
-                        add_label=_("Add sensor name"),
+                        elements=[
+                            ("name", TextInput(title=_("Sensor name"))),
+                            (
+                                "states",
+                                Dictionary(
+                                    title=_("Custom states"),
+                                    elements=[
+                                        (
+                                            element,
+                                            MonitoringState(
+                                                title="Sensor %s" % description,
+                                                label=_("Set state to"),
+                                                default_value=int(element),
+                                            ),
+                                        )
+                                        for (element, description) in [
+                                            ("0", _("OK")),
+                                            ("1", _("WARNING")),
+                                            ("2", _("CRITICAL")),
+                                            ("3", _("UNKNOWN")),
+                                        ]
+                                    ],
+                                ),
+                            ),
+                        ],
+                        optional_keys=False,
                     ),
+                    add_label=_("Add sensor name"),
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"rules": []},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

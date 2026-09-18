@@ -12,25 +12,22 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersOperatingSystem,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Migrate, Percentage
+from cmk.gui.valuespec import Dictionary, Percentage
 
 
-def _parameter_valuespec_cisco_supervisor_mem() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        spec=Percentage,
-                        title=_("Average utilization of memory on the active supervisor"),
-                        default_levels=(80.0, 90.0),
-                    ),
-                )
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+def _parameter_valuespec_cisco_supervisor_mem() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    spec=Percentage,
+                    title=_("Average utilization of memory on the active supervisor"),
+                    default_levels=(80.0, 90.0),
+                ),
+            )
+        ],
+        optional_keys=[],
     )
 
 

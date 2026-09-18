@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_brightness() -> TextInput:
@@ -24,24 +22,21 @@ def _item_spec_brightness() -> TextInput:
     )
 
 
-def _parameter_valuespec_brightness() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Levels(
-                        title=_("Brightness"),
-                        unit=_("lx"),
-                        default_value=None,
-                        default_difference=(2.0, 4.0),
-                        default_levels=(50.0, 100.0),
-                    ),
-                )
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) and "period" not in p else {"levels": p},
+def _parameter_valuespec_brightness() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Levels(
+                    title=_("Brightness"),
+                    unit=_("lx"),
+                    default_value=None,
+                    default_difference=(2.0, 4.0),
+                    default_levels=(50.0, 100.0),
+                ),
+            )
+        ],
+        optional_keys=[],
     )
 
 

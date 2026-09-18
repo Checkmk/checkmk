@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -20,7 +18,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     ListOf,
     ListOfStrings,
-    Migrate,
     MonitoringState,
     TextInput,
     Tuple,
@@ -107,78 +104,69 @@ def _item_spec_services() -> TextInput:
     )
 
 
-def _drop_icon_key(p: Any) -> dict[str, object]:
-    if not isinstance(p, dict):
-        raise ValueError
-    return {k: v for k, v in p.items() if k != "icon"}
-
-
-def _parameter_valuespec_services() -> Migrate[dict[str, object]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "additional_servicenames",
-                    ListOfStrings(
-                        title=_("Alternative names for the service"),
-                        help=_(
-                            "Here, you can specify alternative names that the service might have. "
-                            "This helps, when the exact spelling of the services can change from "
-                            "one version to another."
-                        ),
+def _parameter_valuespec_services() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "additional_servicenames",
+                ListOfStrings(
+                    title=_("Alternative names for the service"),
+                    help=_(
+                        "Here, you can specify alternative names that the service might have. "
+                        "This helps, when the exact spelling of the services can change from "
+                        "one version to another."
                     ),
                 ),
-                (
-                    "states",
-                    ListOf(
-                        valuespec=Tuple(
-                            orientation="horizontal",
-                            elements=[
-                                DropdownChoice(
-                                    title=_("Expected state"),
-                                    default_value="running",
-                                    choices=[
-                                        (None, _("ignore the state")),
-                                        ("running", _("running")),
-                                        ("paused", _("paused")),
-                                        ("stopped", _("stopped")),
-                                    ],
-                                ),
-                                DropdownChoice(
-                                    title=_("Start type"),
-                                    default_value="auto",
-                                    choices=[
-                                        (None, _("ignore the start type")),
-                                        ("demand", _("demand")),
-                                        ("disabled", _("disabled")),
-                                        ("auto", _("auto")),
-                                        ("unknown", _("unknown (old agent)")),
-                                    ],
-                                ),
-                                MonitoringState(
-                                    title=_("Resulting state"),
-                                    default_value=0,
-                                ),
-                            ],
-                        ),
-                        title=_("Services states"),
-                        help=_(
-                            "You can specify a separate monitoring state for each possible "
-                            "combination of service state and start type. If you do not use "
-                            "this parameter, then only running/auto will be assumed to be OK."
-                        ),
+            ),
+            (
+                "states",
+                ListOf(
+                    valuespec=Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            DropdownChoice(
+                                title=_("Expected state"),
+                                default_value="running",
+                                choices=[
+                                    (None, _("ignore the state")),
+                                    ("running", _("running")),
+                                    ("paused", _("paused")),
+                                    ("stopped", _("stopped")),
+                                ],
+                            ),
+                            DropdownChoice(
+                                title=_("Start type"),
+                                default_value="auto",
+                                choices=[
+                                    (None, _("ignore the start type")),
+                                    ("demand", _("demand")),
+                                    ("disabled", _("disabled")),
+                                    ("auto", _("auto")),
+                                    ("unknown", _("unknown (old agent)")),
+                                ],
+                            ),
+                            MonitoringState(
+                                title=_("Resulting state"),
+                                default_value=0,
+                            ),
+                        ],
+                    ),
+                    title=_("Services states"),
+                    help=_(
+                        "You can specify a separate monitoring state for each possible "
+                        "combination of service state and start type. If you do not use "
+                        "this parameter, then only running/auto will be assumed to be OK."
                     ),
                 ),
-                (
-                    "else",
-                    MonitoringState(
-                        title=_("State if no entry matches"),
-                        default_value=2,
-                    ),
+            ),
+            (
+                "else",
+                MonitoringState(
+                    title=_("State if no entry matches"),
+                    default_value=2,
                 ),
-            ],
-        ),
-        migrate=_drop_icon_key,
+            ),
+        ],
     )
 
 

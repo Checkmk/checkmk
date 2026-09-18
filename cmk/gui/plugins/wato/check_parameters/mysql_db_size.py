@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Filesize, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, Filesize, TextInput
 
 
 def _item_spec_mysql_db_size() -> TextInput:
@@ -22,33 +22,22 @@ def _item_spec_mysql_db_size() -> TextInput:
     )
 
 
-def _migrate(params: dict | tuple[float, float]) -> dict[str, tuple[float, float]]:
-    if isinstance(params, dict):
-        if "levels" not in params:
-            params["levels"] = None
-        return params
-    return {"levels": params}
-
-
-def _parameter_valuespec_mysql_db_size() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        Filesize,
-                        help=_(
-                            "The service will trigger a WARNING or CRITICAL state if the size of the "
-                            "database exceeds these levels."
-                        ),
-                        title=_("Impose limits on the size of the database"),
+def _parameter_valuespec_mysql_db_size() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    Filesize,
+                    help=_(
+                        "The service will trigger a WARNING or CRITICAL state if the size of the "
+                        "database exceeds these levels."
                     ),
-                )
-            ],
-            optional_keys=False,
-        ),
-        migrate=_migrate,
+                    title=_("Impose limits on the size of the database"),
+                ),
+            )
+        ],
+        optional_keys=False,
     )
 
 

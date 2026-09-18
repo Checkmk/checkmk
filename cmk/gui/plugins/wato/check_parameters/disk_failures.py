@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -14,25 +12,22 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Migrate
+from cmk.gui.valuespec import Dictionary, Integer
 
 
-def _parameter_valuespec_disk_failures() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        spec=Integer,
-                        title=_("Number of disk failures"),
-                        default_levels=(1, 2),
-                    ),
+def _parameter_valuespec_disk_failures() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    spec=Integer,
+                    title=_("Number of disk failures"),
+                    default_levels=(1, 2),
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

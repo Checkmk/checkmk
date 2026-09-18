@@ -6,8 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -15,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersEnvironment,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
 
 def _item_spec_epower() -> TextInput:
@@ -24,41 +22,32 @@ def _item_spec_epower() -> TextInput:
     )
 
 
-def _migrate(value: tuple | dict) -> dict:
-    if isinstance(value, tuple):
-        return {"levels_lower": value}
-    return value
-
-
-def _parameter_valuespec_epower() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        Dictionary(
-            elements=[
-                (
-                    "levels_lower",
-                    SimpleLevels(
-                        Integer,
-                        title=_("Configure lower levels"),
-                        default_levels=(20, 1),
-                        unit="Watt",
-                    ),
+def _parameter_valuespec_epower() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower",
+                SimpleLevels(
+                    Integer,
+                    title=_("Configure lower levels"),
+                    default_levels=(20, 1),
+                    unit="Watt",
                 ),
-                (
-                    "levels_upper",
-                    SimpleLevels(
-                        Integer,
-                        title=_("Configure upper levels"),
-                        default_levels=(2000, 4000),
-                        unit="Watt",
-                    ),
-                ),
-            ],
-            help=_(
-                "Levels for the electrical power consumption of a device "
-                "like a UPS or a PDU. Several phases may be addressed independently."
             ),
+            (
+                "levels_upper",
+                SimpleLevels(
+                    Integer,
+                    title=_("Configure upper levels"),
+                    default_levels=(2000, 4000),
+                    unit="Watt",
+                ),
+            ),
+        ],
+        help=_(
+            "Levels for the electrical power consumption of a device "
+            "like a UPS or a PDU. Several phases may be addressed independently."
         ),
-        migrate=_migrate,
     )
 
 

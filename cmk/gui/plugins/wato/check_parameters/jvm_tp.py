@@ -15,7 +15,6 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     Integer,
-    Migrate,
     TextInput,
     Tuple,
 )
@@ -38,56 +37,44 @@ def _levels(unit: str = "") -> Tuple:
     )
 
 
-def _migrate(x: tuple[int, int] | tuple[str, tuple[int, int]]) -> tuple[str, tuple[int, int]]:
-    return (
-        x if isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], str) else ("percentage", x)  # type: ignore[redundant-expr]
-    )
-
-
 def _parameter_valuespec_jvm_tp() -> Dictionary:
     return Dictionary(
         help=_("This rule set also covers Tomcat, Jolokia and JMX. "),
         elements=[
             (
                 "currentThreadCount",
-                Migrate(
-                    valuespec=CascadingDropdown(
-                        title=_("Current thread count levels"),
-                        choices=[
-                            (
-                                "percentage",
-                                _("Percentage levels of current thread count in threadpool"),
-                                _levels(unit="%"),
-                            ),
-                            (
-                                "absolute",
-                                _("Number of current thread count in threadpool"),
-                                _levels(),
-                            ),
-                        ],
-                    ),
-                    migrate=_migrate,
+                CascadingDropdown(
+                    title=_("Current thread count levels"),
+                    choices=[
+                        (
+                            "percentage",
+                            _("Percentage levels of current thread count in threadpool"),
+                            _levels(unit="%"),
+                        ),
+                        (
+                            "absolute",
+                            _("Number of current thread count in threadpool"),
+                            _levels(),
+                        ),
+                    ],
                 ),
             ),
             (
                 "currentThreadsBusy",
-                Migrate(
-                    valuespec=CascadingDropdown(
-                        title=_("Current threads busy levels"),
-                        choices=[
-                            (
-                                "percentage",
-                                _("Percentage of current threads busy in threadpool"),
-                                _levels(unit="%"),
-                            ),
-                            (
-                                "absolute",
-                                _("Number of current threads busy in threadpool"),
-                                _levels(),
-                            ),
-                        ],
-                    ),
-                    migrate=_migrate,
+                CascadingDropdown(
+                    title=_("Current threads busy levels"),
+                    choices=[
+                        (
+                            "percentage",
+                            _("Percentage of current threads busy in threadpool"),
+                            _levels(unit="%"),
+                        ),
+                        (
+                            "absolute",
+                            _("Number of current threads busy in threadpool"),
+                            _levels(),
+                        ),
+                    ],
                 ),
             ),
         ],

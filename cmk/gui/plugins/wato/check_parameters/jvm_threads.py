@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
 
 def _item_spec_jvm_threads() -> TextInput:
@@ -23,23 +23,20 @@ def _item_spec_jvm_threads() -> TextInput:
     )
 
 
-def _parameter_valuespec_jvm_threads() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        spec=Integer,
-                        title=_("Levels for the number of threads running in a JVM"),
-                        default_levels=(80, 100),
-                        unit=_("threads"),
-                    ),
+def _parameter_valuespec_jvm_threads() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    spec=Integer,
+                    title=_("Levels for the number of threads running in a JVM"),
+                    default_levels=(80, 100),
+                    unit=_("threads"),
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 
